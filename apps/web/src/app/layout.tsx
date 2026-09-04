@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 
 import "./globals.css";
+import { LocalNavigation } from "../components/discovery/local-navigation";
 import { Logo } from "../components/tool402/logo";
 
 export const metadata: Metadata = {
   title: "Tool402",
-  description: "Tool402 web foundation.",
+  description: "A starting point for thoughtful tool discovery.",
 };
 
 export default function RootLayout({
@@ -18,8 +19,9 @@ export default function RootLayout({
       <body className="min-h-svh bg-background text-foreground antialiased">
         <div data-ui-shell="s00" className="min-h-svh">
           <header aria-label="Tool402" className="border-b border-border bg-background">
-            <div className="mx-auto flex h-18 max-w-6xl items-center px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto flex min-h-18 max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
               <Logo />
+              <LocalNavigation />
             </div>
           </header>
           <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">{children}</div>

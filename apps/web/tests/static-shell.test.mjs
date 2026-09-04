@@ -41,7 +41,7 @@ test("enables Cache Components without a legacy cache opt-out", async () => {
   assert.doesNotMatch(config, /\b(?:dynamicIO|useCache|dynamic|revalidate|fetchCache)\b/);
 });
 
-test("renders only the static Tool402 foundation shell", async () => {
+test("renders the static Tool402 shell and home composition", async () => {
   const [layout, page] = await Promise.all([
     readAppFile("src/app/layout.tsx"),
     readAppFile("src/app/page.tsx"),
@@ -52,8 +52,8 @@ test("renders only the static Tool402 foundation shell", async () => {
   assert.match(layout, /<Logo\b/);
   assert.match(layout, /<html\s+lang=["']en["']>/);
   assert.match(layout, /<body\b/);
-  assert.match(page, /<main>/);
-  assert.match(page, /Tool402 foundation/);
+  assert.equal((page.match(/<main\b/g) ?? []).length, 1);
+  assert.match(page, /<LandingHero\s*\/>/);
   assert.doesNotMatch(
     `${layout}\n${page}`,
     /\b(?:wallet|payment|provider|credential|deploy|auth|onboarding|analytics|evidence|metric)\b/i,
