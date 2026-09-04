@@ -2,7 +2,7 @@
 
 ## Outcome
 
-Create `@tool402/web` as a strict TypeScript Next App Router workspace using the exact Next 16.3.3 and React 19.2.8 baseline. Its first route is a static foundation shell with top-level Cache Components enabled.
+Create `@tool402/web` as a strict TypeScript Next App Router workspace using the exact Next 16.3.4 and React 19.2.8 baseline. Its first route is a static foundation shell with top-level Cache Components enabled.
 
 ## Boundary
 
