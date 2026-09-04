@@ -3,15 +3,17 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T040 accepted
 - Integration evidence: D-M01-FOUND-001 accepted
-- Owner: implementation lane owns `apps/web/src/app/layout.tsx`, `apps/web/src/app/globals.css`, `apps/web/src/components/ui/**`, `apps/web/src/components/tool402/logo.tsx`, focused tests, and the local UI manifest; root owns this card, package metadata, lockfile, and queue records.
+- Owner: implementation lane owns `apps/web/src/app/layout.tsx`, `apps/web/src/app/globals.css`, `apps/web/src/components/ui/**`, `apps/web/src/components/tool402/logo.tsx`, `apps/web/public/brand/**`, `apps/web/postcss.config.mjs`, focused tests, and the local UI manifest; root owns this card, package metadata, lockfile, and queue records.
 - Human actions: none
 
 ## Scope
 
 Create only the local visual tokens, reusable primitives, and honest application shell required by later discovery work. Adapt only the selected local visual patterns that have no mock data, analytics, hosted font, provider, authentication, payment, or evidence dependency. The shell must make no claim about tools, settlement, providers, metrics, accounts, or live integrations.
+
+The local UI manifest is [UI-S00](../../../ui/UI-S00.md) and the slice is recorded in the [local UI ledger](../../../ui/IMPORT-LEDGER.md).
 
 ## Validation
 
@@ -25,4 +27,4 @@ Create only the local visual tokens, reusable primitives, and honest application
 
 ## Completion transition
 
-Move to 10-ready only after the local manifest, owned-path preflight, and concrete commands are committed. UI-S01 may use this shell; detail and paid-state screens remain separate cards.
+Ready at 2026-09-04T21:02:00Z after the local manifest, owned-path preflight, and concrete commands were committed. UI-S01 may use this shell; detail and paid-state screens remain separate cards.

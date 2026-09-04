@@ -12,6 +12,8 @@ M01-T090 is accepted; its record comprises its card, docs/specs/m01-queue-check.
 
 M01-T011 is accepted; its record comprises its card, docs/specs/m01-node-runtime-selection.md, docs/superpowers/plans/2026-09-04-m01-node-runtime-selection.md, .nvmrc, README.md, and its root-integrator queue records.
 
-M01-T020 reserves its card, docs/specs/m01-core-workspace.md, and packages/core/**. M01-T030 reserves its card, docs/specs/m01-backend-workspace.md, and packages/backend/**. M01-T040 reserves its card, docs/specs/m01-web-workspace.md, and apps/web/**. The root integrator alone owns root package metadata, the lockfile, queue state, and integration evidence.
+M01-T020, M01-T030, and M01-T040 are accepted foundation records. The root integrator alone owns root package metadata, the lockfile, queue state, and integration evidence.
+
+M02-T010 reserves its card, docs/specs/m02-riskscan-contract.md, packages/core/src/risk-scan.ts, packages/core/src/index.ts, and packages/core/test/risk-scan.test.mjs. M02-T020 reserves its card, docs/ui/UI-S00.md, docs/ui/IMPORT-LEDGER.md, apps/web/src/app/layout.tsx, apps/web/src/app/globals.css, apps/web/src/components/ui/**, apps/web/src/components/tool402/logo.tsx, apps/web/public/brand/**, apps/web/postcss.config.mjs, and focused tests. The root alone owns any package-manifest and lockfile integration.
 
 Two active implementation cards must have disjoint owned paths and resource boundaries. Shared-file work is an explicit root integration reservation. Wallets, credentials, funded accounts, partner configuration, and deployments remain human-controlled resources; no card or agent infers authority over them.
