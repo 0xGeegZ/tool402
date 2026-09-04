@@ -7,7 +7,7 @@ Create the local queue-validation gate that prevents dependency, ownership, stat
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependency: M01-T010 accepted
 - Owner: root integrator owns queue state and integration; an implementer may modify only the validator records named in the committed local specification.
 
