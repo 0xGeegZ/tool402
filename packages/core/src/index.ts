@@ -27,3 +27,11 @@ export type {
   RiskScanUnavailable,
   RiskScanVerifiedSettlement,
 } from "./risk-scan.ts";
+export { assessRiskScanQuick } from "./risk-scan-quick.ts";
+export type {
+  RiskScanQuickDeclaration,
+  RiskScanQuickDeclarations,
+  RiskScanQuickDisposition,
+  RiskScanQuickInput,
+  RiskScanQuickResult,
+} from "./risk-scan-quick.ts";
