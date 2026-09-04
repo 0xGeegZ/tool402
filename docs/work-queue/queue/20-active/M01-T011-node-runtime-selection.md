@@ -7,7 +7,7 @@ Prevent routine local commands from silently running under a Node major outside 
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependency: M01-T010 accepted
 - Owner: root integrator owns queue state and integration; an implementer may modify only the runtime-selection files named in the committed local specification.
 
