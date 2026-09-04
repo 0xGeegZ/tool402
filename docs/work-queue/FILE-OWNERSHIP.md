@@ -12,4 +12,6 @@ M01-T090 is accepted; its record comprises its card, docs/specs/m01-queue-check.
 
 M01-T011 is accepted; its record comprises its card, docs/specs/m01-node-runtime-selection.md, docs/superpowers/plans/2026-09-04-m01-node-runtime-selection.md, .nvmrc, README.md, and its root-integrator queue records.
 
+M01-T020 reserves its card, docs/specs/m01-core-workspace.md, and packages/core/**. M01-T030 reserves its card, docs/specs/m01-backend-workspace.md, and packages/backend/**. M01-T040 reserves its card, docs/specs/m01-web-workspace.md, and apps/web/**. The root integrator alone owns root package metadata, the lockfile, queue state, and integration evidence.
+
 Two active implementation cards must have disjoint owned paths and resource boundaries. Shared-file work is an explicit root integration reservation. Wallets, credentials, funded accounts, partner configuration, and deployments remain human-controlled resources; no card or agent infers authority over them.
