@@ -10,4 +10,4 @@ Setup commands, sponsor claims, and runtime claims are added only when the corre
 
 Run `nvm use` before running npm commands.
 
-The root npm workspace currently contains no application or package implementation. It requires Node 22 and npm 10. The `queue:check` command is deliberately unavailable until M01-T090 creates its validator.
+The root npm workspace currently contains no application or package implementation. It requires Node 22 and npm 10. Run `npm run queue:check` to validate the local work queue.
