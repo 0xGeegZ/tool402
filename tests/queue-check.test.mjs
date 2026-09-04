@@ -23,6 +23,7 @@ function fixture(mutate = () => {}) {
       typecheck: 'true', lint: 'true', test: 'true', build: 'true',
       'queue:check': 'node scripts/queue-check.mjs',
     },
+    devDependencies: { marked: '18.0.11' },
   };
   const rows = [
     ['P00-T010', 'Product', 'CORE_P0', '60-done', 'docs/work-queue/queue/60-done/P00-T010.md', 'none', 'none', 'none', 'none'],
@@ -226,4 +227,49 @@ test('reports missing leaves under outward symlinked directories as escapes', ()
     symlinkSync(outside, join(root, 'docs/external'));
     assertFailure(run(root), 'LOCAL_REFERENCE_ESCAPE');
   } finally { rmSync(root, { recursive: true, force: true }); rmSync(outside, { recursive: true, force: true }); }
+});
+
+test('rejects raw dot-dot traversal after an outward symlink', () => {
+  const root = fixture(({ files }) => {
+    files['README.md'] = '# Fixture\n\n[decoy](docs/out/../decoy.md)\n';
+    files['docs/decoy.md'] = '# Decoy\n';
+  });
+  const outside = mkdtempSync(join(tmpdir(), 'queue-check-outside-'));
+  try {
+    symlinkSync(outside, join(root, 'docs/out'));
+    assertFailure(run(root), 'LOCAL_REFERENCE_ESCAPE');
+  } finally { rmSync(root, { recursive: true, force: true }); rmSync(outside, { recursive: true, force: true }); }
+});
+
+test('accepts an existing titled inline link', () => {
+  withFixture(({ files }) => { files['README.md'] = '# Fixture\n\n[x](docs/specs/fixture.md "title")\n'; }, ({ status, stdout, stderr }) => {
+    assert.equal(status, 0); assert.equal(stdout, 'QUEUE_CHECK_OK\n'); assert.equal(stderr, '');
+  });
+});
+
+test('rejects a missing titled angle-bracket inline link', () => {
+  withFixture(({ files }) => { files['README.md'] = '# Fixture\n\n[x](<missing.md> "title")\n'; }, (result) => {
+    assertFailure(result, 'LOCAL_REFERENCE_MISSING');
+  });
+});
+
+test('accepts escaped punctuation in an inline destination', () => {
+  withFixture(({ files }) => {
+    files['README.md'] = '# Fixture\n\n[x](docs/a\\(b\\).md)\n';
+    files['docs/a(b).md'] = '# Escaped\n';
+  }, ({ status, stdout, stderr }) => {
+    assert.equal(status, 0); assert.equal(stdout, 'QUEUE_CHECK_OK\n'); assert.equal(stderr, '');
+  });
+});
+
+test('does not let an unmatched backtick mask a broken link', () => {
+  withFixture(({ files }) => { files['README.md'] = '# Fixture\n\n`unclosed [x](missing.md)\n'; }, (result) => {
+    assertFailure(result, 'LOCAL_REFERENCE_MISSING');
+  });
+});
+
+test('rejects nested link text with a missing target', () => {
+  withFixture(({ files }) => { files['README.md'] = '# Fixture\n\n[outer [inner]](missing.md)\n'; }, (result) => {
+    assertFailure(result, 'LOCAL_REFERENCE_MISSING');
+  });
 });
