@@ -6,7 +6,7 @@ Run at most three implementation lanes and one read-only review/investigation la
 
 Before meaningful product behavior begins, create one small runtime-local Product Overview v0.1 item in 00-inbox, assign a normal gapped local ID, record its tier decision, and complete it.
 
-Record only a local card and its minimum local specification/UI record, validate completed dependencies, ownership, tier, and human actions, then move it to 10-ready. Root creates an eligible clean module worktree, dispatches, requests task review, integrates accepted changes, and records evidence.
+Record only a local card and its minimum local specification/UI record, validate completed dependencies, ownership, tier, and human actions, then move it to 10-ready. The root works in the current workspace by default; create an eligible clean module worktree only after an explicit human request. The root dispatches, requests task review, integrates accepted changes, and records evidence.
 
 For behavioral work, commit the minimum implementation-local specification before RED tests or implementation. Use: local specification, RED executable contract where applicable, minimal implementation, verification, independent review, and integration. Detailed specifications and UI manifests are written only when their task is eligible.
 
