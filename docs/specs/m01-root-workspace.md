@@ -16,7 +16,7 @@ The repository gains one npm root workspace boundary that can safely host later 
 - The workspace list is exactly apps/* followed by packages/*.
 - The root is private and has no runtime, development, optional, or peer dependencies.
 - npm exact-version saving and engine enforcement are enabled at the root.
-- The root exposes typecheck, lint, test, and build scripts. Each forwards only to declared workspaces and tolerates the intentionally empty workspace set.
+- The root exposes typecheck, lint, test, and build scripts. Each no-ops only while both workspace roots are absent; once either root exists, it forwards only to declared workspaces. This tolerates npm's nonzero empty-workspace behavior without hiding a later workspace failure.
 - The root exposes queue:check as a future validator contract. It must fail visibly until M01-T090 creates the validator; M01-T010 does not add a placeholder or validator file.
 
 ## Allowed and forbidden change boundary
@@ -31,7 +31,7 @@ Before the root boundary exists, capture the RED condition: the workspace manife
 
 1. The Node 22/npm 10 runtime check passes.
 2. The workspace query reports exactly the two declared workspace globs.
-3. The workspace typecheck fan-out exits successfully with no application/package directories present.
+3. The root typecheck command exits successfully with no application/package directories present. Once a workspace root exists, that command fans out only to declared workspaces.
 4. An unknown-workspace invocation exits nonzero.
 5. The manifest contains no ranged dependency declaration; this is vacuously true until later cards add dependencies and remains a boundary rule afterward.
 6. The queue-validation command exits nonzero because its validator is intentionally not present yet.

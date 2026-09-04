@@ -17,6 +17,7 @@
 - Create only the root manifest, root lockfile, root npm configuration, and README update in the scaffold task.
 - Declare workspaces exactly as apps/* then packages/*.
 - Add no dependency, application/package directory, build orchestrator, queue-validator file, product behavior, credential, or external side effect.
+- Each root quality command may no-op only while both workspace roots are absent; once either exists, it must fan out to declared workspaces.
 - The deferred queue-validation command must remain nonzero until M01-T090.
 - Every tracked document reference resolves in the commit that introduces it.
 
@@ -41,7 +42,7 @@
 Run:
 
     npm pkg get workspaces
-    npm run --workspaces --if-present typecheck
+    npm run typecheck
 
 Expected: both commands exit nonzero because no root npm workspace manifest exists.
 
@@ -63,11 +64,11 @@ Create the root manifest with exactly this behavior:
         "packages/*"
       ],
       "scripts": {
-        "build": "npm run --workspaces --if-present build",
-        "lint": "npm run --workspaces --if-present lint",
+        "build": "if [ -d apps ] || [ -d packages ]; then npm run --workspaces --if-present build; fi",
+        "lint": "if [ -d apps ] || [ -d packages ]; then npm run --workspaces --if-present lint; fi",
         "queue:check": "node scripts/queue-check.mjs",
-        "test": "npm run --workspaces --if-present test",
-        "typecheck": "npm run --workspaces --if-present typecheck"
+        "test": "if [ -d apps ] || [ -d packages ]; then npm run --workspaces --if-present test; fi",
+        "typecheck": "if [ -d apps ] || [ -d packages ]; then npm run --workspaces --if-present typecheck; fi"
       }
     }
 
@@ -89,13 +90,13 @@ Run:
     node --version
     npm --version
     npm pkg get workspaces
-    npm run --workspaces --if-present typecheck
+    npm run typecheck
     npm --workspace=@tool402/not-present run typecheck
     node -e 'const p=require("./package.json"); const sections=[p.dependencies,p.devDependencies,p.optionalDependencies,p.peerDependencies].filter(Boolean); if (sections.flatMap(Object.values).some((v) => /^[~^*<>=]/.test(v))) process.exit(1)'
     npm run queue:check
     git diff --check
 
-Expected: the runtime reports Node 22/npm 10; the workspace query and workspace typecheck pass; the unknown-workspace and queue-validation commands exit nonzero; the exact-version check and whitespace check pass.
+Expected: the runtime reports Node 22/npm 10; the workspace query and root typecheck pass; the unknown-workspace and queue-validation commands exit nonzero; the exact-version check and whitespace check pass.
 
 - [ ] **Step 4: Review and commit the scaffold**
 
@@ -131,6 +132,6 @@ Move the card to 60-done, record the independent review outcome, and state that 
 
 ## Plan self-review
 
-- Spec coverage: Task 1 covers the toolchain, exact workspace layout, root scripts, deferred validator, RED/GREEN smoke, negative checks, and root-only file boundary. Task 2 covers independent review, local acceptance, ownership, and the next gate.
+- Spec coverage: Task 1 covers the toolchain, exact workspace layout, no-workspace script guard, deferred validator, RED/GREEN smoke, negative checks, and root-only file boundary. Task 2 covers independent review, local acceptance, ownership, and the next gate.
 - Placeholder scan: no open placeholder or unspecified implementation step remains.
 - Interface consistency: Task 1 produces the named root scripts and evidence that Task 2 consumes; Task 2 does not create product behavior or widen the root boundary.
