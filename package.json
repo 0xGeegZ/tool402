@@ -1,0 +1,21 @@
+{
+  "name": "tool402",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "npm@10.9.4",
+  "engines": {
+    "node": ">=22 <23",
+    "npm": ">=10 <11"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "if [ -d apps ] || [ -d packages ]; then npm run --workspaces --if-present build; fi",
+    "lint": "if [ -d apps ] || [ -d packages ]; then npm run --workspaces --if-present lint; fi",
+    "queue:check": "node scripts/queue-check.mjs",
+    "test": "if [ -d apps ] || [ -d packages ]; then npm run --workspaces --if-present test; fi",
+    "typecheck": "if [ -d apps ] || [ -d packages ]; then npm run --workspaces --if-present typecheck; fi"
+  }
+}
