@@ -17,5 +17,8 @@
     "queue:check": "node scripts/queue-check.mjs",
     "test": "if [ -d apps ] || [ -d packages ]; then npm run --workspaces --if-present test; fi",
     "typecheck": "if [ -d apps ] || [ -d packages ]; then npm run --workspaces --if-present typecheck; fi"
+  },
+  "devDependencies": {
+    "marked": "18.0.11"
   }
 }
