@@ -79,4 +79,4 @@ Run the targeted Node native test file, npm run queue:check, npm root quality co
 
 ## Failure semantics
 
-The validator never masks malformed input, parser failures, a missing file, an escaping component, or an unknown argument as success. It emits only local paths and diagnostic codes, never credentials or external-source values. A failure blocks the current card's acceptance and must be fixed through the RED/GREEN/review sequence.
+The validator never masks malformed input, parser failures, a missing file, an escaping component, or an unknown argument as success. It emits only local paths and diagnostic codes, never credentials or external-source values. A failure blocks the current card's acceptance and must be fixed through the RED/GREEN sequence plus independent review, unless the human records a card-specific delivery cap.
