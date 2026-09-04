@@ -7,7 +7,7 @@ Prevent routine local commands from silently running under a Node major outside 
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependency: M01-T010 accepted
 - Owner: root integrator owns queue state and integration; an implementer may modify only the runtime-selection files named in the committed local specification.
 
@@ -19,7 +19,7 @@ This card adds only the versioned local runtime selector and the concise local s
 
 ## Readiness criteria
 
-1. M01-T010 remains accepted locally.
+1. M01-T010 is accepted locally.
 2. The local specification and plan are committed.
 3. The owned paths are disjoint from the active validator implementation paths.
 4. The Node release named by the selector is available locally for reproducible verification.
