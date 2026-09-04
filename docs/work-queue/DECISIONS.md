@@ -20,5 +20,6 @@ Record only decisions made or adopted for this clean implementation repository. 
 | D-M01-020-001 | ACCEPTED | Ruling: the core foundation is a pure TypeScript workspace with no I/O, React, database, protocol, or network dependency. It exposes only its local package boundary and tests that boundary. | M01-T020 | 2026-09-04T20:18:00Z |
 | D-M01-030-001 | ACCEPTED | Ruling: the backend foundation owns a local Convex boundary but creates no deployment, credential, generated API, or public state-changing command. Domain behavior stays outside this scaffold. | M01-T030 | 2026-09-04T20:18:00Z |
 | D-M01-040-001 | ACCEPTED | Ruling: the web foundation pins the current local Next baseline, enables Cache Components from its first route, and renders only a static shell. It does not create a wallet, payment, or product route. | M01-T040 | 2026-09-04T20:18:00Z |
+| D-M01-FOUND-001 | ACCEPTED | The core, backend, and web foundations are accepted after their targeted RED/GREEN checks, root test/typecheck/lint/build, queue validation, local-reference guard, browser diagnostics where applicable, and independent task review. The web workspace generates local route types before TypeScript so a fresh local run does not depend on prior build output. | M01-T020, M01-T030, M01-T040 | 2026-09-04T20:52:36Z |
 
 No decision is inferred from silence, model output, or a mock result.

@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T010 accepted; M01-T090 accepted
 - Owner: implementation lane owns `packages/core/**`; root owns queue state and root integration.
 
@@ -21,4 +21,4 @@ The local specification is [M01 core workspace](../../../specs/m01-core-workspac
 
 ## Completion transition
 
-After targeted verification and root integration, move this card to `60-done`.
+Accepted at 2026-09-04T20:52:36Z after RED/GREEN evidence, focused typecheck, test, lint, no-I/O boundary checks, root workspace verification, and independent task review. No adapter, network, product, payment, or external behavior was added.
