@@ -190,3 +190,40 @@ test('reports an in-repository directory target as missing', () => {
     assertFailure(result, 'LOCAL_REFERENCE_MISSING');
   });
 });
+
+test('does not resolve escaped or inline-code shortcut labels', () => {
+  withFixture(({ files }) => { files['README.md'] = '# Fixture\n\n\\[x]\n\n`[x]`\n\n[x]: missing.md\n'; }, ({ status, stdout, stderr }) => {
+    assert.equal(status, 0); assert.equal(stdout, 'QUEUE_CHECK_OK\n'); assert.equal(stderr, '');
+  });
+});
+
+test('accepts inline destinations with spaces and balanced parentheses', () => {
+  withFixture(({ files }) => {
+    files['README.md'] = '# Fixture\n\n[space](<docs/my file.md>)\n\n[paren](docs/(guide).md)\n';
+    files['docs/my file.md'] = '# Space\n';
+    files['docs/(guide).md'] = '# Parentheses\n';
+  }, ({ status, stdout, stderr }) => {
+    assert.equal(status, 0); assert.equal(stdout, 'QUEUE_CHECK_OK\n'); assert.equal(stderr, '');
+  });
+});
+
+test('uses the first duplicate reference definition', () => {
+  withFixture(({ files }) => { files['README.md'] = '# Fixture\n\n[x]\n\n[x]: missing.md\n[x]: docs/specs/fixture.md\n'; }, (result) => {
+    assertFailure(result, 'LOCAL_REFERENCE_MISSING');
+  });
+});
+
+test('does not treat a backtick in fence info as a fence opener', () => {
+  withFixture(({ files }) => { files['README.md'] = '# Fixture\n\n```md`invalid\n[missing](missing.md)\n'; }, (result) => {
+    assertFailure(result, 'LOCAL_REFERENCE_MISSING');
+  });
+});
+
+test('reports missing leaves under outward symlinked directories as escapes', () => {
+  const root = fixture(({ files }) => { files['README.md'] = '# Fixture\n\n[missing](docs/external/missing.md)\n'; });
+  const outside = mkdtempSync(join(tmpdir(), 'queue-check-outside-'));
+  try {
+    symlinkSync(outside, join(root, 'docs/external'));
+    assertFailure(run(root), 'LOCAL_REFERENCE_ESCAPE');
+  } finally { rmSync(root, { recursive: true, force: true }); rmSync(outside, { recursive: true, force: true }); }
+});

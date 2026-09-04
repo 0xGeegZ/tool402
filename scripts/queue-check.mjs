@@ -75,22 +75,7 @@ function main(args) {
   if (!specs || (specs !== 'none' && specs.split(',').some((item) => { const path = localFile(item.trim()); return !path || !file(path); }))) add('LOCAL_SPECIFICATION_MISSING', 'local specification path is missing');
 
   for (const markdown of markdownFiles(root)) {
-    const text = stripFences(readFileSync(markdown, 'utf8'));
-    for (const match of text.matchAll(/!?\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/g)) {
-      const target = match[1].replace(/^<|>$/g, '');
-      if (!target || target.startsWith('#') || /^[a-z][a-z0-9+.-]*:/i.test(target) || target.startsWith('//')) continue;
-      validateReference(target, markdown, root, inside, file, add);
-    }
-    const definitions = new Map([...text.matchAll(/^\s*\[([^\]]+)\]:\s*(?:<([^>]+)>|(\S+))/gm)].map((match) => [match[1].replace(/\s+/g, ' ').toLowerCase(), match[2] ?? match[3]]));
-    const references = text.replace(/^\s*\[[^\]]+\]:.*$/gm, '');
-    for (const match of references.matchAll(/!?\[([^\]]+)\]\[([^\]]*)\]/g)) {
-      const target = definitions.get((match[2] || match[1]).replace(/\s+/g, ' ').toLowerCase());
-      if (target) validateReference(target, markdown, root, inside, file, add);
-    }
-    for (const match of references.matchAll(/(?<!!)\[([^\]]+)\](?![\[(])/g)) {
-      const target = definitions.get(match[1].replace(/\s+/g, ' ').toLowerCase());
-      if (target) validateReference(target, markdown, root, inside, file, add);
-    }
+    for (const target of markdownTargets(readFileSync(markdown, 'utf8'))) validateReference(target, markdown, root, inside, file, add);
   }
   finish(diagnostics);
 }
@@ -118,8 +103,107 @@ function validateReference(target, markdown, root, inside, file, add) {
   try { decoded = decodeURIComponent(target.split('#')[0]); } catch { add('LOCAL_REFERENCE_MISSING', `local reference is malformed from ${relative(root, markdown)}`); return; }
   const path = resolve(dirname(markdown), decoded);
   if (!inside(path, root)) add('LOCAL_REFERENCE_ESCAPE', `local reference escapes from ${relative(root, markdown)}`);
-  else if (existsSync(path) && !inside(realpathSync(path))) add('LOCAL_REFERENCE_ESCAPE', `local reference escapes from ${relative(root, markdown)}`);
+  else if (escapesThroughAncestor(path, inside)) add('LOCAL_REFERENCE_ESCAPE', `local reference escapes from ${relative(root, markdown)}`);
   else if (!file(path)) add('LOCAL_REFERENCE_MISSING', `local reference is missing from ${relative(root, markdown)}`);
+}
+
+function escapesThroughAncestor(path, inside) {
+  let cursor = path;
+  while (!existsSync(cursor) && dirname(cursor) !== cursor) cursor = dirname(cursor);
+  try { return existsSync(cursor) && !inside(realpathSync(cursor)); } catch { return false; }
+}
+
+function markdownTargets(text) {
+  const definitions = new Map();
+  const lines = stripFences(text).split(/\r?\n/);
+  for (const line of lines) {
+    const definition = referenceDefinition(line);
+    if (definition && !definitions.has(definition.label)) definitions.set(definition.label, definition.target);
+  }
+  const targets = [];
+  for (const line of lines) {
+    if (referenceDefinition(line)) continue;
+    for (const link of inlineAndReferenceLinks(line)) {
+      if (link.target) targets.push(link.target);
+      else {
+        const target = definitions.get(link.label);
+        if (target) targets.push(target);
+      }
+    }
+  }
+  return targets;
+}
+
+function referenceDefinition(line) {
+  const match = line.match(/^ {0,3}\[([^\]]+)\]:[ \t]*(.*)$/);
+  if (!match) return null;
+  const body = match[2];
+  const target = body.startsWith('<') ? body.slice(1, body.indexOf('>')) : body.match(/^\S+/)?.[0];
+  return target ? { label: normalizeLabel(match[1]), target } : null;
+}
+
+function inlineAndReferenceLinks(line) {
+  const links = [];
+  for (let index = 0; index < line.length;) {
+    if (line[index] === '\\') { index += 2; continue; }
+    if (line[index] === '`') { index = skipInlineCode(line, index); continue; }
+    if (line[index] !== '[' && !(line[index] === '!' && line[index + 1] === '[')) { index += 1; continue; }
+    const start = line[index] === '!' ? index + 1 : index;
+    const text = bracketAt(line, start);
+    if (!text) { index += 1; continue; }
+    const next = text.end + 1;
+    if (line[next] === '(') {
+      const target = destinationAt(line, next);
+      if (target) { links.push({ target: target.value }); index = target.end + 1; continue; }
+    }
+    if (line[next] === '[') {
+      const label = bracketAt(line, next);
+      if (label) { links.push({ label: normalizeLabel(label.value || text.value) }); index = label.end + 1; continue; }
+    }
+    links.push({ label: normalizeLabel(text.value) });
+    index = next;
+  }
+  return links;
+}
+
+function bracketAt(text, start) {
+  if (text[start] !== '[') return null;
+  let value = '';
+  for (let index = start + 1; index < text.length; index += 1) {
+    if (text[index] === '\\') { value += text[index + 1] ?? ''; index += 1; continue; }
+    if (text[index] === ']') return { value, end: index };
+    value += text[index];
+  }
+  return null;
+}
+
+function destinationAt(text, start) {
+  let index = start + 1;
+  while (/\s/.test(text[index] ?? '')) index += 1;
+  if (text[index] === '<') {
+    const end = text.indexOf('>', index + 1);
+    return end < 0 || text[end + 1] !== ')' ? null : { value: text.slice(index + 1, end), end: end + 1 };
+  }
+  let depth = 0;
+  for (; index < text.length; index += 1) {
+    if (text[index] === '\\') { index += 1; continue; }
+    if (text[index] === '(') depth += 1;
+    if (text[index] === ')') {
+      if (depth === 0) return { value: text.slice(start + 1, index).trim(), end: index };
+      depth -= 1;
+    }
+  }
+  return null;
+}
+
+function skipInlineCode(text, start) {
+  const ticks = text.slice(start).match(/^`+/)[0];
+  const end = text.indexOf(ticks, start + ticks.length);
+  return end < 0 ? text.length : end + ticks.length;
+}
+
+function normalizeLabel(label) {
+  return label.replace(/\s+/g, ' ').toLowerCase();
 }
 
 function stripFences(text) {
@@ -130,7 +214,7 @@ function stripFences(text) {
       if (marker && marker[1][0] === fence[0] && marker[1].length >= fence.length && /^ {0,3}(`{3,}|~{3,})[ \t]*$/.test(line)) fence = null;
       return false;
     }
-    if (marker) { fence = marker[1]; return false; }
+    if (marker && (marker[1][0] !== '`' || !line.slice(marker[0].length).includes('`'))) { fence = marker[1]; return false; }
     return true;
   }).join('\n');
 }
