@@ -11,6 +11,9 @@
     "test": "node --test tests/*.test.mjs",
     "lint": "node --check src/index.ts && node --check convex/convex.config.ts"
   },
+  "dependencies": {
+    "@tool402/core": "file:../core"
+  },
   "devDependencies": {
     "convex": "1.45.0",
     "typescript": "5.9.3"
