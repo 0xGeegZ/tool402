@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T040 accepted; M02-T020 accepted
 - Integration evidence: D-M01-FOUND-001 and D-M02-020-002 accepted
 - Owner: implementation lane owns `apps/web/src/app/page.tsx`, `apps/web/src/app/explore/page.tsx`, `apps/web/src/components/landing/**`, `apps/web/src/components/discovery/**`, and focused UI-S01 tests; the root owns the local UI record, this card, and queue records.
@@ -25,4 +25,4 @@ The local manifest is [UI-S01](../../../ui/UI-S01.md), its selected slice is rec
 
 ## Completion transition
 
-Active at 2026-09-04T22:00:05Z after the local UI manifest, plan, dependency, and disjoint-owned-path preflight. RiskScan detail and paid-state UI remain separate work until their typed domain states are ready.
+Activated at 2026-09-04T22:00:05Z after the local UI manifest, plan, dependency, and disjoint-owned-path preflight. Accepted at 2026-09-04T22:21:31Z after focused RED/GREEN coverage, web typecheck/test, production webpack build with Cache Components, desktop and narrow browser checks, local-reference guard, and two fresh clean review generations. RiskScan detail and paid-state UI remain separate work until their typed domain states are ready.
