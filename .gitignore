@@ -29,4 +29,4 @@ test-results/
 .idea/
 .vscode/
 
-# Do not ignore committed provenance, import ledgers, queue state, or cards.
+# Do not ignore committed queue state or local cards.

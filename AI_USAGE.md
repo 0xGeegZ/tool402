@@ -1,6 +1,6 @@
 # AI usage ledger
 
-Append one row for every material AI contribution. Preserve prompts, human decisions/review, verification, and imported-source provenance.
+Append one row for every material AI contribution. Preserve prompts, human decisions/review, verification, and the local implementation context.
 
 Every reference in this ledger must resolve to a record committed in this repository.
 
