@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { resolve, relative, dirname, extname } from 'node:path';
 import { marked } from 'marked';
 
@@ -94,7 +94,11 @@ function markdownFiles(root) {
   const docs = resolve(root, 'docs');
   if (existsSync(docs)) visit(docs);
   for (const entry of readdirSync(root, { withFileTypes: true })) if (entry.isFile() && extname(entry.name) === '.md') files.push(resolve(root, entry.name));
-  return files;
+  return files.sort((left, right) => {
+    const leftRelative = relative(root, left);
+    const rightRelative = relative(root, right);
+    return leftRelative < rightRelative ? -1 : leftRelative > rightRelative ? 1 : 0;
+  });
 }
 
 function validateReference(target, markdown, root, inside, file, add) {
@@ -113,10 +117,9 @@ function resolveLocalTarget(target, markdown, root, inside) {
     if (!component || component === '.') continue;
     path = component === '..' ? dirname(path) : resolve(path, component);
     if (!inside(path, root)) return 'escape';
-    if (existsSync(path)) {
-      try { path = realpathSync(path); } catch { return null; }
-      if (!inside(path)) return 'escape';
-    }
+    try { lstatSync(path); } catch { continue; }
+    try { path = realpathSync(path); } catch { return 'escape'; }
+    if (!inside(path)) return 'escape';
   }
   return path;
 }
@@ -132,6 +135,8 @@ function collectLinkTargets(tokens, targets) {
     if (token.type === 'link' || token.type === 'image') targets.push(token.href);
     if (Array.isArray(token.tokens)) collectLinkTargets(token.tokens, targets);
     if (Array.isArray(token.items)) collectLinkTargets(token.items, targets);
+    if (Array.isArray(token.header)) collectLinkTargets(token.header, targets);
+    if (Array.isArray(token.rows)) for (const row of token.rows) collectLinkTargets(row, targets);
   }
 }
 

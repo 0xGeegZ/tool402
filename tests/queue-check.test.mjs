@@ -82,6 +82,30 @@ test('rejects root package workspace drift', () => {
   });
 });
 
+test('rejects a root package missing the required parser version', () => {
+  withFixture(({ manifest }) => { delete manifest.devDependencies.marked; }, (result) => {
+    assertFailure(result, 'PACKAGE_CONTRACT_INVALID');
+  });
+});
+
+test('rejects a root package with the wrong parser version', () => {
+  withFixture(({ manifest }) => { manifest.devDependencies.marked = '18.0.10'; }, (result) => {
+    assertFailure(result, 'PACKAGE_CONTRACT_INVALID');
+  });
+});
+
+test('rejects a root package with an extra development dependency', () => {
+  withFixture(({ manifest }) => { manifest.devDependencies.extra = '1.0.0'; }, (result) => {
+    assertFailure(result, 'PACKAGE_CONTRACT_INVALID');
+  });
+});
+
+test('rejects a root package with a runtime dependency', () => {
+  withFixture(({ manifest }) => { manifest.dependencies = { marked: '18.0.11' }; }, (result) => {
+    assertFailure(result, 'PACKAGE_CONTRACT_INVALID');
+  });
+});
+
 test('rejects a card state differing from its catalog row', () => {
   withFixture(({ files }) => { files['docs/work-queue/queue/00-inbox/M01-T090.md'] = '# M01\n\n- Tier: CORE_P0\n- Queue state: 20-active\n'; }, ({ status, stderr }) => {
     assertFailure({ status, stdout: '', stderr }, 'TASK_STATE_MISMATCH');
@@ -103,6 +127,31 @@ test('rejects a missing local specification', () => {
 test('rejects a missing local Markdown link', () => {
   withFixture(({ files }) => { files['README.md'] = '# Fixture\n\n[missing](missing.md)\n'; }, ({ status, stderr }) => {
     assertFailure({ status, stdout: '', stderr }, 'LOCAL_REFERENCE_MISSING');
+  });
+});
+
+test('rejects missing Markdown links in GFM table headers and rows', () => {
+  withFixture(({ files }) => {
+    files['README.md'] = '# Fixture\n\n| [header](header-missing.md) |\n|---|\n| [row](row-missing.md) |\n';
+  }, (result) => {
+    assert.deepEqual(result, {
+      status: 1,
+      stdout: '',
+      stderr: 'LOCAL_REFERENCE_MISSING: local reference is missing from README.md\nLOCAL_REFERENCE_MISSING: local reference is missing from README.md\n',
+    });
+  });
+});
+
+test('orders diagnostics by root-relative Markdown path', () => {
+  withFixture(({ files }) => {
+    files['README.md'] = '# Fixture\n\n[root](root-missing.md)\n';
+    files['docs/a.md'] = '# A\n\n[docs](docs-missing.md)\n';
+  }, (result) => {
+    assert.deepEqual(result, {
+      status: 1,
+      stdout: '',
+      stderr: 'LOCAL_REFERENCE_MISSING: local reference is missing from README.md\nLOCAL_REFERENCE_MISSING: local reference is missing from docs/a.md\n',
+    });
   });
 });
 
@@ -237,6 +286,18 @@ test('rejects raw dot-dot traversal after an outward symlink', () => {
   const outside = mkdtempSync(join(tmpdir(), 'queue-check-outside-'));
   try {
     symlinkSync(outside, join(root, 'docs/out'));
+    assertFailure(run(root), 'LOCAL_REFERENCE_ESCAPE');
+  } finally { rmSync(root, { recursive: true, force: true }); rmSync(outside, { recursive: true, force: true }); }
+});
+
+test('rejects raw dot-dot traversal after a dangling outward symlink', () => {
+  const root = fixture(({ files }) => {
+    files['README.md'] = '# Fixture\n\n[decoy](docs/out/../decoy.md)\n';
+    files['docs/decoy.md'] = '# Decoy\n';
+  });
+  const outside = mkdtempSync(join(tmpdir(), 'queue-check-outside-'));
+  try {
+    symlinkSync(join(outside, 'missing-target'), join(root, 'docs/out'));
     assertFailure(run(root), 'LOCAL_REFERENCE_ESCAPE');
   } finally { rmSync(root, { recursive: true, force: true }); rmSync(outside, { recursive: true, force: true }); }
 });
