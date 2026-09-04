@@ -1,0 +1,32 @@
+# Dependencies and build output
+node_modules/
+.next/
+out/
+dist/
+coverage/
+.turbo/
+.superpowers/sdd/
+playwright-report/
+test-results/
+.vercel/
+*.tsbuildinfo
+
+# Convex local state
+.convex/
+
+# Local environment and logs
+.env
+.env.*
+!.env.example
+*.log
+
+# Local worktrees and reviewed UI inspection cache
+.worktrees/
+.ui-source-quarantine/
+
+# Editor and operating-system files
+.DS_Store
+.idea/
+.vscode/
+
+# Do not ignore committed provenance, import ledgers, queue state, or cards.
