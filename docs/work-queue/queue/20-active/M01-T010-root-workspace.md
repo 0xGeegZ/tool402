@@ -7,7 +7,7 @@ Establish the smallest local monorepo boundary as the first technical foundation
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependency: P00-T010 accepted
 - Owner: root integrator owns queue records and integration; an implementer may modify only the constrained root workspace records, then an independent reviewer validates the task.
 
