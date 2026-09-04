@@ -12,5 +12,6 @@ The app may contain its manifest, Next configuration, TypeScript configuration, 
 
 1. Before creation, the web workspace build fails because the application boundary is absent.
 2. `next.config` enables `cacheComponents: true` at the top level with no broad cache opt-out.
-3. The root layout and static page build, typecheck, and render a truthful foundation shell.
-4. No product, payment, account, deployment, or live integration behavior is introduced.
+3. The workspace typecheck generates the local Next route-type artifacts before invoking TypeScript.
+4. The root layout and static page build, typecheck, and render a truthful foundation shell.
+5. No product, payment, account, deployment, or live integration behavior is introduced.
