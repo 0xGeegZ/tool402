@@ -6,6 +6,8 @@ M00-T070 reserves its card, qualification matrix, STATE.md, HUMAN-ACTIONS.md, DE
 
 P00-T010 reserves its card, docs/product/OVERVIEW.md, STATE.md, TASK-CATALOG.md, FILE-OWNERSHIP.md, DECISIONS.md, and AI_USAGE.md to the root integrator.
 
-M01-T010 reserves its card, docs/specs/m01-root-workspace.md, docs/superpowers/plans/2026-09-04-m01-root-workspace.md, and its root-integrator queue records. Exact root-boundary implementation paths are added only in the commit that creates them.
+M01-T010 reserves its card, docs/specs/m01-root-workspace.md, docs/superpowers/plans/2026-09-04-m01-root-workspace.md, package.json, package-lock.json, .npmrc, README.md, and its root-integrator queue records.
+
+M01-T090 reserves its card and its root-integrator queue records. Exact validator implementation paths are added only in the commit that creates them.
 
 Two active implementation cards must have disjoint owned paths and resource boundaries. Shared-file work is an explicit root integration reservation. Wallets, credentials, funded accounts, partner configuration, and deployments remain human-controlled resources; no card or agent infers authority over them.
