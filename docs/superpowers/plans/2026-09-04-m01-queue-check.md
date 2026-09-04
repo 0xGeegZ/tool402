@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development. Steps use checkbox syntax for tracking.
 
-**Goal:** Deliver a dependency-free Node validator that makes the local queue state mechanically trustworthy before broader M01 scaffolds begin.
+**Goal:** Deliver a Node validator that uses one exact local Markdown parser to make the local queue state mechanically trustworthy before broader M01 scaffolds begin.
 
-**Architecture:** A Node command reads only local files and builds a list of stable diagnostics. Its command-line interface resolves a repository root, emits QUEUE_CHECK_OK for a coherent state, and otherwise exits one after writing all diagnostics. Node native tests create isolated temporary repositories and exercise the executable interface rather than a mock.
+**Architecture:** A Node command reads only local files and builds a list of stable diagnostics. `marked@18.0.11` tokenizes local Markdown, while a small physical path resolver preserves component order and rejects symlink escapes. Its command-line interface resolves a repository root, emits QUEUE_CHECK_OK for a coherent state, and otherwise exits one after writing all diagnostics. Node native tests create isolated temporary repositories and exercise the executable interface rather than a mock.
 
-**Tech Stack:** Node 22, npm 10, Node native test runner, no dependency.
+**Tech Stack:** Node 22, npm 10, Node native test runner, exact devDependency `marked@18.0.11`.
 
 **Spec:** [M01 Queue Check Foundation Specification](../../specs/m01-queue-check.md)
 
@@ -15,7 +15,7 @@
 - Work in the current checkout; no Git worktree is authorized.
 - Use Node 22/npm 10 for every command.
 - Create only the validator and its Node native test records; root queue controls remain the root integrator's responsibility.
-- Do not modify the root package manifest, lockfile, npm configuration, README, product files, application/package directories, or add any dependency.
+- The root integrator alone may add the exact parser devDependency and lockfile record authorized by the amended local specification. Do not modify npm configuration, README, product files, or application/package directories.
 - Check local repository state only. Do not make network calls, inspect remotes, read credentials, or output external-source values.
 - A valid queue prints exactly QUEUE_CHECK_OK and exits zero. Invalid state emits stable local diagnostic codes and exits one.
 - Every tracked document reference resolves in the commit that introduces it.
@@ -65,7 +65,7 @@ Create scripts/queue-check.mjs with these pure stages, each appending diagnostic
 4. For every catalog row, resolve its local-record path inside the repository, require the queue-state directory to match, read its card, and compare Queue state and Tier. Use LOCAL_RECORD_MISSING, TASK_STATE_MISMATCH, or TASK_TIER_MISMATCH as appropriate.
 5. Parse accepted dependencies, reject a self-dependency, unknown dependency, or anything not in 60-done with DEPENDENCY_NOT_ACCEPTED.
 6. Parse CURRENT_TASK and local specification paths from queue state. Use CURRENT_TASK_MISMATCH or LOCAL_SPECIFICATION_MISSING for any invalid value.
-7. Recursively scan local Markdown files under docs and root Markdown records, strip fenced code blocks, resolve relative links, and use LOCAL_REFERENCE_ESCAPE or LOCAL_REFERENCE_MISSING for invalid targets.
+7. Recursively scan local Markdown files under docs and root Markdown records with the exact parser, resolve relative links through a component-preserving physical resolver, and use LOCAL_REFERENCE_ESCAPE or LOCAL_REFERENCE_MISSING for invalid targets.
 8. Print exactly QUEUE_CHECK_OK and exit zero when no diagnostics exist. Otherwise print every CODE: message line to standard error and exit one.
 
 Keep all filesystem resolution inside the requested root and never write to it.
@@ -92,6 +92,27 @@ Run:
     git diff --check
 
 Expected: every positive command exits zero; each negative case is asserted by the Node test suite rather than ignored.
+
+### Task 1A: Controlled Markdown-parser migration
+
+**Files:**
+
+- Modify: package.json
+- Modify: package-lock.json
+- Modify: scripts/queue-check.mjs
+- Modify: tests/queue-check.test.mjs
+
+- [ ] **Step 1: Add RED parser and confinement cases**
+
+Add executable cases for titled inline links, escaped punctuation, unmatched code delimiters, nested link text, and raw traversal through an outward symlink followed by `..`. Each case must fail against the preceding scanner implementation.
+
+- [ ] **Step 2: Add the exact parser through root integration**
+
+The root integrator installs only `marked@18.0.11` as an exact devDependency, updates the lockfile, and confirms that no other direct dependency section appears. The validator replaces handwritten Markdown tokenization with parser tokens and retains only a small component-preserving filesystem resolver.
+
+- [ ] **Step 3: Verify and review the migration**
+
+Run the native suite, queue command, root quality commands, dependency-boundary assertion, whitespace check, and local reference guard under Node 22/npm 10. Obtain fresh independent review before acceptance.
 
 - [ ] **Step 4: Review and commit the validator**
 

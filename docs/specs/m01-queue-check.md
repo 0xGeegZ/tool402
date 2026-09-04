@@ -19,6 +19,7 @@ The validator reads only:
 3. Local task cards named by the catalog.
 4. The local specification paths named by queue state.
 5. Relative Markdown links in local Markdown files under docs and in root Markdown records.
+6. The exact local Markdown parser declared by the root package boundary.
 
 It does not make network requests, inspect Git remotes, read credentials, write repository files, invoke a package installation, or make a runtime/product claim.
 
@@ -28,7 +29,7 @@ The validator must report all detected failures in one run. A valid repository p
 
 ### Root package boundary
 
-The manifest must remain private, use npm 10.9.4, require Node >=22 <23 and npm >=10 <11, and declare exactly apps/* then packages/*. It must expose typecheck, lint, test, build, and queue:check scripts. The queue:check script must target the local validator path. Dependency sections must be absent at this foundation stage.
+The manifest must remain private, use npm 10.9.4, require Node >=22 <23 and npm >=10 <11, and declare exactly apps/* then packages/*. It must expose typecheck, lint, test, build, and queue:check scripts. The queue:check script must target the local validator path. Its sole allowed dependency declaration is exact devDependency `marked` at `18.0.11`; runtime, optional, peer, bundled, and all other development dependency declarations must be absent.
 
 ### Catalog and task-card coherence
 
@@ -44,7 +45,7 @@ Every comma-separated local specification path in queue state must be repository
 
 ### Local Markdown links
 
-For local Markdown files under docs and root Markdown records, resolve standard relative Markdown links outside fenced code blocks. Ignore fragment-only, mail, and web links. A local link must remain inside the repository and name an existing file after its optional fragment is removed. A missing or escaping target is invalid.
+For local Markdown files under docs and root Markdown records, use the exact parser to resolve standard relative Markdown links, including inline destinations, titles, references, escaped text, nested link text, and code semantics. Ignore fragment-only, mail, and web links. A local link must remain inside the repository and name an existing file after its optional fragment is removed. Resolve original decoded path components in order: inspect every existing component physically before processing a later `..` component, so a symlink traversal outside the repository is always an escape. A missing or escaping target is invalid.
 
 ## Required diagnostics
 
@@ -65,7 +66,7 @@ Use these stable diagnostic codes:
 
 ## Tests and evidence
 
-Use Node native tests with no third-party dependency. The executable RED contract must assert that a coherent temporary repository exits zero before the validator exists; it fails by assertion while the validator is absent. The GREEN suite must cover:
+Use the Node native test runner. The validator may use only the exact parser declared above; no other dependency is authorized. The executable RED contract must assert that a coherent temporary repository exits zero before the validator exists; it fails by assertion while the validator is absent. The GREEN suite must cover:
 
 1. A coherent temporary repository that exits zero and prints QUEUE_CHECK_OK.
 2. A root package contract drift that reports PACKAGE_CONTRACT_INVALID.
@@ -78,4 +79,4 @@ Run the targeted Node native test file, npm run queue:check, npm root quality co
 
 ## Failure semantics
 
-The validator never masks malformed input, a missing file, or an unknown argument as success. It emits only local paths and diagnostic codes, never credentials or external-source values. A failure blocks the current card's acceptance and must be fixed through the RED/GREEN/review sequence.
+The validator never masks malformed input, parser failures, a missing file, an escaping component, or an unknown argument as success. It emits only local paths and diagnostic codes, never credentials or external-source values. A failure blocks the current card's acceptance and must be fixed through the RED/GREEN/review sequence.

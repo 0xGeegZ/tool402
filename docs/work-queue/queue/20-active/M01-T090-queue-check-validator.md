@@ -15,9 +15,9 @@ Create the local queue-validation gate that prevents dependency, ownership, stat
 
 The committed local validation specification is [M01 queue check](../../../specs/m01-queue-check.md). The implementation plan is [M01 queue check plan](../../../superpowers/plans/2026-09-04-m01-queue-check.md).
 
-The validator checks only committed local package boundary, catalog/card/state coherence, accepted dependencies, local specification paths, and local Markdown-link resolution. It fails closed with stable local diagnostics. It must not validate or infer product claims, deployments, accounts, wallets, payments, external systems, or external-source truth.
+The validator checks only committed local package boundary, catalog/card/state coherence, accepted dependencies, local specification paths, and local Markdown-link resolution. A user-authorized, exact local Markdown parser is limited to this command; the root integrator alone owns its manifest and lockfile update. It fails closed with stable local diagnostics. It must not validate or infer product claims, deployments, accounts, wallets, payments, external systems, or external-source truth.
 
-Exact validator implementation and test paths are recorded only in the commit that creates them. No dependency, application/package implementation, credential, deployment, or live interaction is part of this card.
+Exact validator implementation and test paths are `scripts/queue-check.mjs` and `tests/queue-check.test.mjs`. The controlled parser is a developer-only foundation dependency, not product behavior. No application/package implementation, credential, deployment, or live interaction is part of this card.
 
 ## Acceptance criteria
 

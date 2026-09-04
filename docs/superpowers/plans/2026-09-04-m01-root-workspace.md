@@ -16,7 +16,7 @@
 - Use a Node 22/npm 10 runtime for every npm command.
 - Create only the root manifest, root lockfile, root npm configuration, and README update in the scaffold task.
 - Declare workspaces exactly as apps/* then packages/*.
-- Add no dependency, application/package directory, build orchestrator, queue-validator file, product behavior, credential, or external side effect.
+- Add no dependency, application/package directory, build orchestrator, queue-validator file, product behavior, credential, or external side effect during M01-T010. A later M01-T090 specification amendment may add its single exact parser dependency through root integration.
 - Each root quality command may no-op only while both workspace roots are absent; once either exists, it must fan out to declared workspaces.
 - The deferred queue-validation command must remain nonzero until M01-T090.
 - Every tracked document reference resolves in the commit that introduces it.

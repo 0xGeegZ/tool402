@@ -15,7 +15,7 @@ Establish the smallest local monorepo boundary as the first technical foundation
 
 The committed local foundation specification is [M01 root workspace](../../../specs/m01-root-workspace.md). The implementation plan is [M01 root workspace plan](../../../superpowers/plans/2026-09-04-m01-root-workspace.md).
 
-The accepted scaffold contains only the root manifest, root lockfile, root npm configuration, and a root README update. It declares the apps/* and packages/* workspace layout, Node 22/npm 10 toolchain boundary, and root quality-command entry points. Quality commands no-op only while both workspace roots are absent, then fan out to declared workspaces when either root exists.
+The accepted scaffold contains only the root manifest, root lockfile, root npm configuration, and a root README update. It declares the apps/* and packages/* workspace layout, Node 22/npm 10 toolchain boundary, and root quality-command entry points. Quality commands no-op only while both workspace roots are absent, then fan out to declared workspaces when either root exists. The later M01-T090 controlled parser exception is governed by its own local specification; it does not authorize product or workspace dependencies.
 
 The root queue:check command remains an intentionally failing deferred contract until M01-T090 creates the validator. No stub or product behavior landed with this card.
 

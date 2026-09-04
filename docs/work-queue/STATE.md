@@ -9,6 +9,6 @@
 - LOCAL_UI_RECORDS: none
 - PENDING_HUMAN_ACTIONS: none
 - NEXT_ELIGIBLE_TASKS: M01-T090 and M01-T011 are active in disjoint lanes; no broader M01 scaffold card may enter readiness until M01-T090 is accepted
-- LAST_QUEUE_VALIDATION: M01-T090 moved from 10-ready to 20-active after its local specification, diagnostic contract, ownership, and accepted dependency were confirmed
+- LAST_QUEUE_VALIDATION: M01-T090 remains active; its user-authorized exact parser migration is specified before implementation and review
 
 No secrets, account keys, or private evidence belong in this file.
