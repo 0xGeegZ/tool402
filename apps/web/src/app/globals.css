@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-tool402-sans);
+  --font-mono: var(--font-tool402-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-brand-purple: var(--brand-purple);
+  --color-brand-green: var(--brand-green);
+  --color-brand-coral: var(--brand-coral);
+  --color-brand-yellow: var(--brand-yellow);
+}
+
+:root {
+  color-scheme: light;
+  --font-tool402-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-tool402-mono: ui-monospace, "SFMono-Regular", monospace;
+  --background: #faf6ec;
+  --foreground: #16162a;
+  --card: #ffffff;
+  --card-foreground: #16162a;
+  --primary: #5b4fe0;
+  --primary-foreground: #ffffff;
+  --secondary: #ece7fa;
+  --secondary-foreground: #16162a;
+  --muted: #f0ebdd;
+  --muted-foreground: #6d6a7c;
+  --border: #e7e0cd;
+  --ring: #5b4fe0;
+  --brand-purple: #6a5cf0;
+  --brand-green: #2fa876;
+  --brand-coral: #f0724a;
+  --brand-yellow: #f2b93c;
+  --radius: 0.85rem;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 20rem;
+  min-height: 100svh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-tool402-sans);
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--brand-purple) 24%, transparent);
+  color: var(--foreground);
+}
