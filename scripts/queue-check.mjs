@@ -1,21 +1,26 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { resolve, relative, dirname, extname, basename } from 'node:path';
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { resolve, relative, dirname, extname } from 'node:path';
 
 const states = new Set(['00-inbox', '10-ready', '20-active', '30-task-review', '40-module-review', '50-blocked', '60-done', '90-cancelled']);
 const requiredScripts = ['typecheck', 'lint', 'test', 'build', 'queue:check'];
 const dependencyKeys = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies', 'bundledDependencies', 'bundleDependencies'];
+const catalogHeaders = ['Task ID', 'Module', 'Tier', 'State', 'Local record', 'Dependencies', 'Owned paths/resources', 'Human actions', 'Validation'];
 
 function main(args) {
   const diagnostics = [];
   const add = (code, message) => diagnostics.push({ code, message });
   if (args.length !== 0 && (args.length !== 2 || args[0] !== '--root' || !args[1])) return finish([{ code: 'ARGUMENT_ERROR', message: 'expected --root PATH' }]);
-  const root = resolve(args.length === 0 ? process.cwd() : args[1]);
-  const inside = (path) => relative(root, path) === '' || !relative(root, path).startsWith('..');
-  const file = (path) => inside(path) && existsSync(path) && statSync(path).isFile();
+  const requestedRoot = resolve(args.length === 0 ? process.cwd() : args[1]);
+  const root = existsSync(requestedRoot) ? realpathSync(requestedRoot) : requestedRoot;
+  const physicalRoot = root;
+  const inside = (path, boundary = physicalRoot) => relative(boundary, path) === '' || !relative(boundary, path).startsWith('..');
+  const file = (path) => {
+    try { return inside(realpathSync(path)) && statSync(path).isFile(); } catch { return false; }
+  };
   const localFile = (path) => {
     if (!path || path.startsWith('/') || path.includes('\\')) return null;
     const resolved = resolve(root, path);
-    return inside(resolved) ? resolved : null;
+    return inside(resolved, root) ? resolved : null;
   };
 
   let manifest;
@@ -27,7 +32,9 @@ function main(args) {
   try {
     const lines = readFileSync(catalogPath, 'utf8').split(/\r?\n/);
     const header = lines.findIndex((line) => /^\|\s*Task ID\s*\|/.test(line));
-    if (header < 0 || lines[header].split('|').slice(1, -1).length !== 9) throw new Error('header');
+    const headerFields = header < 0 ? [] : lines[header].split('|').slice(1, -1).map((value) => value.trim());
+    const separatorFields = header < 0 ? [] : (lines[header + 1] ?? '').split('|').slice(1, -1).map((value) => value.trim());
+    if (header < 0 || JSON.stringify(headerFields) !== JSON.stringify(catalogHeaders) || separatorFields.length !== 9 || separatorFields.some((value) => !/^:?-{3,}:?$/.test(value))) throw new Error('header');
     for (const line of lines.slice(header + 2)) {
       if (!line.trim()) break;
       if (!line.startsWith('|')) throw new Error('row');
@@ -68,13 +75,16 @@ function main(args) {
   if (!specs || (specs !== 'none' && specs.split(',').some((item) => { const path = localFile(item.trim()); return !path || !file(path); }))) add('LOCAL_SPECIFICATION_MISSING', 'local specification path is missing');
 
   for (const markdown of markdownFiles(root)) {
-    const text = readFileSync(markdown, 'utf8').replace(/^```[\s\S]*?^```\s*$/gm, '');
+    const text = stripFences(readFileSync(markdown, 'utf8'));
     for (const match of text.matchAll(/!?\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/g)) {
       const target = match[1].replace(/^<|>$/g, '');
       if (!target || target.startsWith('#') || /^[a-z][a-z0-9+.-]*:/i.test(target) || target.startsWith('//')) continue;
-      const path = resolve(dirname(markdown), decodeURIComponent(target.split('#')[0]));
-      if (!inside(path)) add('LOCAL_REFERENCE_ESCAPE', `local reference escapes from ${relative(root, markdown)}`);
-      else if (!file(path)) add('LOCAL_REFERENCE_MISSING', `local reference is missing from ${relative(root, markdown)}`);
+      validateReference(target, markdown, root, inside, file, add);
+    }
+    const definitions = new Map([...text.matchAll(/^\s*\[([^\]]+)\]:\s*(\S+)/gm)].map((match) => [match[1].replace(/\s+/g, ' ').toLowerCase(), match[2]]));
+    for (const match of text.matchAll(/!?\[([^\]]+)\]\[([^\]]*)\]/g)) {
+      const target = definitions.get((match[2] || match[1]).replace(/\s+/g, ' ').toLowerCase());
+      if (target) validateReference(target, markdown, root, inside, file, add);
     }
   }
   finish(diagnostics);
@@ -94,6 +104,30 @@ function markdownFiles(root) {
   if (existsSync(docs)) visit(docs);
   for (const entry of readdirSync(root, { withFileTypes: true })) if (entry.isFile() && extname(entry.name) === '.md') files.push(resolve(root, entry.name));
   return files;
+}
+
+function validateReference(target, markdown, root, inside, file, add) {
+  target = target.replace(/^<|>$/g, '');
+  if (!target || target.startsWith('#') || /^[a-z][a-z0-9+.-]*:/i.test(target) || target.startsWith('//')) return;
+  let decoded;
+  try { decoded = decodeURIComponent(target.split('#')[0]); } catch { add('LOCAL_REFERENCE_MISSING', `local reference is malformed from ${relative(root, markdown)}`); return; }
+  const path = resolve(dirname(markdown), decoded);
+  if (!inside(path, root)) add('LOCAL_REFERENCE_ESCAPE', `local reference escapes from ${relative(root, markdown)}`);
+  else if (existsSync(path) && !file(path)) add('LOCAL_REFERENCE_ESCAPE', `local reference escapes from ${relative(root, markdown)}`);
+  else if (!file(path)) add('LOCAL_REFERENCE_MISSING', `local reference is missing from ${relative(root, markdown)}`);
+}
+
+function stripFences(text) {
+  let fence = null;
+  return text.split(/\r?\n/).filter((line) => {
+    const marker = line.match(/^ {0,3}(`{3,}|~{3,})/);
+    if (fence) {
+      if (marker && marker[1][0] === fence[0] && marker[1].length >= fence.length) fence = null;
+      return false;
+    }
+    if (marker) { fence = marker[1]; return false; }
+    return true;
+  }).join('\n');
 }
 
 function finish(diagnostics) {

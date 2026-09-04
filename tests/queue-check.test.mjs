@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -62,6 +62,12 @@ function withFixture(mutate, assertion) {
   try { assertion(run(root)); } finally { rmSync(root, { recursive: true, force: true }); }
 }
 
+function assertFailure(result, code) {
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.match(result.stderr, new RegExp(`(?:^|\\n)${code}: .+\\n`));
+}
+
 test('accepts a coherent queue repository', () => {
   withFixture(() => {}, ({ status, stdout }) => {
     assert.equal(status, 0);
@@ -71,30 +77,89 @@ test('accepts a coherent queue repository', () => {
 
 test('rejects root package workspace drift', () => {
   withFixture(({ manifest }) => { manifest.workspaces = ['apps/*']; }, ({ status, stderr }) => {
-    assert.equal(status, 1); assert.match(stderr, /PACKAGE_CONTRACT_INVALID/);
+    assertFailure({ status, stdout: '', stderr }, 'PACKAGE_CONTRACT_INVALID');
   });
 });
 
 test('rejects a card state differing from its catalog row', () => {
   withFixture(({ files }) => { files['docs/work-queue/queue/00-inbox/M01-T090.md'] = '# M01\n\n- Tier: CORE_P0\n- Queue state: 20-active\n'; }, ({ status, stderr }) => {
-    assert.equal(status, 1); assert.match(stderr, /TASK_STATE_MISMATCH/);
+    assertFailure({ status, stdout: '', stderr }, 'TASK_STATE_MISMATCH');
   });
 });
 
 test('rejects a dependency outside 60-done', () => {
   withFixture(({ rows }) => { rows[0][3] = '00-inbox'; rows[0][4] = 'docs/work-queue/queue/00-inbox/P00-T010.md'; }, ({ status, stderr }) => {
-    assert.equal(status, 1); assert.match(stderr, /DEPENDENCY_NOT_ACCEPTED/);
+    assertFailure({ status, stdout: '', stderr }, 'DEPENDENCY_NOT_ACCEPTED');
   });
 });
 
 test('rejects a missing local specification', () => {
   withFixture(({ files }) => { files['docs/work-queue/STATE.md'] = '# State\n\n- CURRENT_TASK: M01-T090 (00-inbox)\n- LOCAL_SPECIFICATIONS: docs/specs/missing.md\n'; }, ({ status, stderr }) => {
-    assert.equal(status, 1); assert.match(stderr, /LOCAL_SPECIFICATION_MISSING/);
+    assertFailure({ status, stdout: '', stderr }, 'LOCAL_SPECIFICATION_MISSING');
   });
 });
 
 test('rejects a missing local Markdown link', () => {
   withFixture(({ files }) => { files['README.md'] = '# Fixture\n\n[missing](missing.md)\n'; }, ({ status, stderr }) => {
-    assert.equal(status, 1); assert.match(stderr, /LOCAL_REFERENCE_MISSING/);
+    assertFailure({ status, stdout: '', stderr }, 'LOCAL_REFERENCE_MISSING');
   });
+});
+
+test('rejects catalog cards symlinked outside the repository', () => {
+  const root = fixture();
+  const outside = mkdtempSync(join(tmpdir(), 'queue-check-outside-'));
+  try {
+    write(outside, 'card.md', '# P00\n\n- Tier: CORE_P0\n- Queue state: 60-done\n');
+    rmSync(join(root, 'docs/work-queue/queue/60-done/P00-T010.md'));
+    symlinkSync(join(outside, 'card.md'), join(root, 'docs/work-queue/queue/60-done/P00-T010.md'));
+    assertFailure(run(root), 'LOCAL_RECORD_MISSING');
+  } finally { rmSync(root, { recursive: true, force: true }); rmSync(outside, { recursive: true, force: true }); }
+});
+
+test('rejects local specifications symlinked outside the repository', () => {
+  const root = fixture();
+  const outside = mkdtempSync(join(tmpdir(), 'queue-check-outside-'));
+  try {
+    write(outside, 'spec.md', '# Outside\n');
+    rmSync(join(root, 'docs/specs/fixture.md'));
+    symlinkSync(join(outside, 'spec.md'), join(root, 'docs/specs/fixture.md'));
+    assertFailure(run(root), 'LOCAL_SPECIFICATION_MISSING');
+  } finally { rmSync(root, { recursive: true, force: true }); rmSync(outside, { recursive: true, force: true }); }
+});
+
+test('rejects Markdown targets symlinked outside the repository', () => {
+  const root = fixture(({ files }) => { files['README.md'] = '# Fixture\n\n[target](docs/specs/fixture.md)\n'; });
+  const outside = mkdtempSync(join(tmpdir(), 'queue-check-outside-'));
+  try {
+    write(outside, 'target.md', '# Outside\n');
+    rmSync(join(root, 'docs/specs/fixture.md'));
+    symlinkSync(join(outside, 'target.md'), join(root, 'docs/specs/fixture.md'));
+    assertFailure(run(root), 'LOCAL_REFERENCE_ESCAPE');
+  } finally { rmSync(root, { recursive: true, force: true }); rmSync(outside, { recursive: true, force: true }); }
+});
+
+test('rejects a missing reference-style Markdown link', () => {
+  withFixture(({ files }) => { files['README.md'] = '# Fixture\n\n[missing][target]\n\n[target]: missing.md\n'; }, (result) => {
+    assertFailure(result, 'LOCAL_REFERENCE_MISSING');
+  });
+});
+
+test('ignores broken links inside tilde fenced code blocks', () => {
+  withFixture(({ files }) => { files['README.md'] = '# Fixture\n\n~~~md\n[missing](missing.md)\n~~~\n'; }, ({ status, stdout, stderr }) => {
+    assert.equal(status, 0); assert.equal(stdout, 'QUEUE_CHECK_OK\n'); assert.equal(stderr, '');
+  });
+});
+
+test('reports malformed percent encoding as a stable diagnostic', () => {
+  withFixture(({ files }) => { files['README.md'] = '# Fixture\n\n[bad](%ZZ.md)\n'; }, (result) => {
+    assertFailure(result, 'LOCAL_REFERENCE_MISSING');
+  });
+});
+
+test('rejects renamed catalog headers', () => {
+  const root = fixture();
+  try {
+    write(root, 'docs/work-queue/TASK-CATALOG.md', '# Catalog\n\n| Identifier | Module | Tier | State | Local record | Dependencies | Owned paths/resources | Human actions | Validation |\n|---|---|---|---|---|---|---|---|---|\n');
+    assertFailure(run(root), 'CATALOG_PARSE_ERROR');
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });
