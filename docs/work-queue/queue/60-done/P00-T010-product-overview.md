@@ -7,13 +7,13 @@ Create the concise runtime-local product brief that governs the first technical 
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependency: M00-T080 accepted
-- Owner: root integrator
+- Owner: root integrator; independent task review accepted the brief.
 
 ## Scope
 
-The deliverable is a two-to-four-page local overview covering the problem, thesis, first tool, actors, D-Day loop and scope, non-goals, high-level system shape, success criteria, conditional integrations, and experimental testnet limitations. It is a brief, not a detailed protocol contract or runtime claim.
+The deliverable is `docs/product/OVERVIEW.md`, a two-to-four-page local overview covering the problem, thesis, first tool, actors, D-Day loop and scope, non-goals, high-level system shape, success criteria, conditional integrations, and experimental testnet limitations. It is a brief, not a detailed protocol contract or runtime claim.
 
 ## Acceptance criteria
 
@@ -30,4 +30,4 @@ The deliverable is a two-to-four-page local overview covering the problem, thesi
 
 ## Completion transition
 
-After acceptance, move this card to `docs/work-queue/queue/60-done/`, update the local records, then create M01-T010 as the first technical foundation card.
+Accepted after independent task review. The local records now place this card in `docs/work-queue/queue/60-done/`; M01-T010 is the next technical foundation card and remains blocked on its minimum local foundation specification.
