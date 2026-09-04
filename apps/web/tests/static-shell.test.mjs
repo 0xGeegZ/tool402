@@ -17,14 +17,19 @@ test("declares the strict Next workspace boundary", async () => {
   assert.equal(manifest.private, true);
   assert.equal(manifest.scripts.typecheck, "next typegen && tsc --noEmit");
   assert.deepEqual(manifest.dependencies, {
+    clsx: "2.1.1",
     next: "16.3.4",
     react: "19.2.8",
     "react-dom": "19.2.8",
+    "tailwind-merge": "3.6.0",
   });
   assert.deepEqual(manifest.devDependencies, {
+    "@tailwindcss/postcss": "4.3.3",
     "@types/node": "22.15.0",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
+    postcss: "8.5.28",
+    tailwindcss: "4.3.3",
     typescript: "5.9.3",
   });
 });

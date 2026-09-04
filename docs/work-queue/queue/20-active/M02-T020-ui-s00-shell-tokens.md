@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T040 accepted
 - Integration evidence: D-M01-FOUND-001 accepted
 - Owner: implementation lane owns `apps/web/src/app/layout.tsx`, `apps/web/src/app/globals.css`, `apps/web/src/components/ui/**`, `apps/web/src/components/tool402/logo.tsx`, `apps/web/public/brand/**`, `apps/web/postcss.config.mjs`, focused tests, and the local UI manifest; root owns this card, package metadata, lockfile, and queue records.

@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T020 accepted
 - Integration evidence: D-M01-FOUND-001 accepted
 - Owner: implementation lane owns `packages/core/src/risk-scan.ts`, `packages/core/src/index.ts`, `packages/core/test/risk-scan.test.mjs`, and the local specification; root owns this card and queue records.
