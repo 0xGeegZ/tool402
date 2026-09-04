@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T040 accepted; M02-T020 accepted
 - Integration evidence: D-M01-FOUND-001 and D-M02-020-002 accepted
 - Owner: implementation lane owns `apps/web/src/app/page.tsx`, `apps/web/src/app/explore/page.tsx`, `apps/web/src/components/landing/**`, `apps/web/src/components/discovery/**`, and focused UI-S01 tests; the root owns the local UI record, this card, and queue records.
@@ -12,6 +12,8 @@
 ## Scope
 
 Create the first honest landing and Explore surfaces from the accepted local shell. They may introduce read-only discovery copy and one locally scoped RiskScan discovery item, but no price, wallet, payment, provider, account, metric, evidence, external link, request action, detail route, paid state, mock result, or claim of live availability.
+
+The local manifest is [UI-S01](../../../ui/UI-S01.md), its selected slice is recorded in the [local UI ledger](../../../ui/IMPORT-LEDGER.md), and the implementation plan is [UI-S01 landing and Explore plan](../../../superpowers/plans/2026-09-04-m02-ui-s01-landing-explore.md).
 
 ## Validation
 
@@ -23,4 +25,4 @@ Create the first honest landing and Explore surfaces from the accepted local she
 
 ## Completion transition
 
-Move to 10-ready only after the local UI manifest, owned-path preflight, and concrete commands are committed. RiskScan detail and paid-state UI remain separate work until their typed domain states are ready.
+Ready at 2026-09-04T21:57:28Z after the local UI manifest, plan, owned-path preflight, and concrete commands were committed. RiskScan detail and paid-state UI remain separate work until their typed domain states are ready.

@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T030 accepted; M02-T010 accepted
 - Integration evidence: D-M01-FOUND-001 and D-M02-010-002 accepted
 - Owner: implementation lane owns `packages/backend/src/risk-scan-projection.ts`, `packages/backend/src/index.ts`, and `packages/backend/tests/risk-scan-projection.test.mjs`; the root owns package metadata, the lockfile, this card, and queue records.
@@ -12,6 +12,8 @@
 ## Scope
 
 Define a small pure backend projection from the accepted local RiskScan lifecycle into a serializable read model. It must preserve only the state-specific fields that the source state carries, avoid inventing a result, payment, receipt, evidence, or live service claim, and avoid every database, Convex function, endpoint, deployment, network, credential, and payment action.
+
+The local contract is [M02 RiskScan backend projection contract](../../../specs/m02-riskscan-backend-projection.md). The implementation plan is [RiskScan backend projection plan](../../../superpowers/plans/2026-09-04-m02-riskscan-backend-projection.md).
 
 ## Validation
 
@@ -23,4 +25,4 @@ Define a small pure backend projection from the accepted local RiskScan lifecycl
 
 ## Completion transition
 
-Move to 10-ready only after the minimum local specification, owned-path preflight, and concrete commands are committed. Persistence, public backend functions, payment verification, and live evidence remain separate work.
+Ready at 2026-09-04T21:57:28Z after the local contract, plan, owned-path preflight, and concrete commands were committed. Persistence, public backend functions, payment verification, and live evidence remain separate work.
