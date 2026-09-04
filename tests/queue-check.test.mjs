@@ -163,3 +163,30 @@ test('rejects renamed catalog headers', () => {
     assertFailure(run(root), 'CATALOG_PARSE_ERROR');
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+test('rejects a missing shortcut reference-style Markdown link', () => {
+  withFixture(({ files }) => { files['README.md'] = '# Fixture\n\n[missing]\n\n[missing]: missing.md\n'; }, (result) => {
+    assertFailure(result, 'LOCAL_REFERENCE_MISSING');
+  });
+});
+
+test('accepts angle-bracket reference destinations with spaces', () => {
+  withFixture(({ files }) => {
+    files['README.md'] = '# Fixture\n\n[guide][guide]\n\n[guide]: <docs/my file.md>\n';
+    files['docs/my file.md'] = '# Guide\n';
+  }, ({ status, stdout, stderr }) => {
+    assert.equal(status, 0); assert.equal(stdout, 'QUEUE_CHECK_OK\n'); assert.equal(stderr, '');
+  });
+});
+
+test('keeps links after an invalid tilde fence closer inside the fence', () => {
+  withFixture(({ files }) => { files['README.md'] = '# Fixture\n\n~~~\n~~~not-a-close\n[missing](missing.md)\n~~~\n'; }, ({ status, stdout, stderr }) => {
+    assert.equal(status, 0); assert.equal(stdout, 'QUEUE_CHECK_OK\n'); assert.equal(stderr, '');
+  });
+});
+
+test('reports an in-repository directory target as missing', () => {
+  withFixture(({ files }) => { files['README.md'] = '# Fixture\n\n[docs](docs)\n'; }, (result) => {
+    assertFailure(result, 'LOCAL_REFERENCE_MISSING');
+  });
+});

@@ -81,9 +81,14 @@ function main(args) {
       if (!target || target.startsWith('#') || /^[a-z][a-z0-9+.-]*:/i.test(target) || target.startsWith('//')) continue;
       validateReference(target, markdown, root, inside, file, add);
     }
-    const definitions = new Map([...text.matchAll(/^\s*\[([^\]]+)\]:\s*(\S+)/gm)].map((match) => [match[1].replace(/\s+/g, ' ').toLowerCase(), match[2]]));
-    for (const match of text.matchAll(/!?\[([^\]]+)\]\[([^\]]*)\]/g)) {
+    const definitions = new Map([...text.matchAll(/^\s*\[([^\]]+)\]:\s*(?:<([^>]+)>|(\S+))/gm)].map((match) => [match[1].replace(/\s+/g, ' ').toLowerCase(), match[2] ?? match[3]]));
+    const references = text.replace(/^\s*\[[^\]]+\]:.*$/gm, '');
+    for (const match of references.matchAll(/!?\[([^\]]+)\]\[([^\]]*)\]/g)) {
       const target = definitions.get((match[2] || match[1]).replace(/\s+/g, ' ').toLowerCase());
+      if (target) validateReference(target, markdown, root, inside, file, add);
+    }
+    for (const match of references.matchAll(/(?<!!)\[([^\]]+)\](?![\[(])/g)) {
+      const target = definitions.get(match[1].replace(/\s+/g, ' ').toLowerCase());
       if (target) validateReference(target, markdown, root, inside, file, add);
     }
   }
@@ -113,7 +118,7 @@ function validateReference(target, markdown, root, inside, file, add) {
   try { decoded = decodeURIComponent(target.split('#')[0]); } catch { add('LOCAL_REFERENCE_MISSING', `local reference is malformed from ${relative(root, markdown)}`); return; }
   const path = resolve(dirname(markdown), decoded);
   if (!inside(path, root)) add('LOCAL_REFERENCE_ESCAPE', `local reference escapes from ${relative(root, markdown)}`);
-  else if (existsSync(path) && !file(path)) add('LOCAL_REFERENCE_ESCAPE', `local reference escapes from ${relative(root, markdown)}`);
+  else if (existsSync(path) && !inside(realpathSync(path))) add('LOCAL_REFERENCE_ESCAPE', `local reference escapes from ${relative(root, markdown)}`);
   else if (!file(path)) add('LOCAL_REFERENCE_MISSING', `local reference is missing from ${relative(root, markdown)}`);
 }
 
@@ -122,7 +127,7 @@ function stripFences(text) {
   return text.split(/\r?\n/).filter((line) => {
     const marker = line.match(/^ {0,3}(`{3,}|~{3,})/);
     if (fence) {
-      if (marker && marker[1][0] === fence[0] && marker[1].length >= fence.length) fence = null;
+      if (marker && marker[1][0] === fence[0] && marker[1].length >= fence.length && /^ {0,3}(`{3,}|~{3,})[ \t]*$/.test(line)) fence = null;
       return false;
     }
     if (marker) { fence = marker[1]; return false; }
