@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T010 accepted
 - Integration evidence: D-M02-010-002 accepted
 - Owner: implementation lane owns `packages/core/src/risk-scan-quick.ts`, `packages/core/src/index.ts`, and `packages/core/test/risk-scan-quick.test.mjs`; the root owns this card and queue records.
@@ -25,4 +25,4 @@ The local contract is [M02 RiskScan Quick contract](../../../specs/m02-riskscan-
 
 ## Completion transition
 
-Active at 2026-09-04T22:26:58Z after the local contract, plan, dependency, and owned-path preflight. Backend execution, paid HTTP handling, settlement, and UI detail remain separate work.
+Activated at 2026-09-04T22:26:58Z after the local contract, plan, dependency, and owned-path preflight. Accepted at 2026-09-04T22:42:18Z after focused RED/GREEN coverage, core typecheck/test/lint, the local-reference guard, and two fresh clean review generations. Backend execution, paid HTTP handling, settlement, and UI detail remain separate work.
