@@ -10,4 +10,6 @@ M01-T010 reserves its card, docs/specs/m01-root-workspace.md, docs/superpowers/p
 
 M01-T090 reserves its card, docs/specs/m01-queue-check.md, docs/superpowers/plans/2026-09-04-m01-queue-check.md, and its root-integrator queue records. Exact validator implementation paths are added only in the commit that creates them.
 
+M01-T011 reserves its card, docs/specs/m01-node-runtime-selection.md, docs/superpowers/plans/2026-09-04-m01-node-runtime-selection.md, .nvmrc, README.md, and its root-integrator queue records.
+
 Two active implementation cards must have disjoint owned paths and resource boundaries. Shared-file work is an explicit root integration reservation. Wallets, credentials, funded accounts, partner configuration, and deployments remain human-controlled resources; no card or agent infers authority over them.
