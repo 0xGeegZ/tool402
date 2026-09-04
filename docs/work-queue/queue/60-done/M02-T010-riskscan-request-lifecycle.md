@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T020 accepted
 - Integration evidence: D-M01-FOUND-001 accepted
 - Owner: implementation lane owns `packages/core/src/risk-scan.ts`, `packages/core/src/index.ts`, `packages/core/test/risk-scan.test.mjs`, and the local specification; root owns this card and queue records.
@@ -27,4 +27,4 @@ The local specification is [M02 RiskScan request lifecycle contract](../../../sp
 
 ## Completion transition
 
-Ready at 2026-09-04T21:02:00Z after the local specification, owned-path preflight, and concrete commands were committed. Later payment, persistence, API, and UI-detail work are separate cards.
+Accepted at 2026-09-04T21:48:40Z after RED/GREEN lifecycle tests, focused core typecheck/test/lint, the local-reference guard, and two consecutive fresh clean review generations. The frozen verified-settlement identity is retained in a private in-process registry, so a reflective copy cannot complete an unrelated request. MODULE_BASE: `35a45debbdb878891c547155db6dd6e56de23e49`; MODULE_HEAD: `a796b26f640970b07f57ff35dd7d57c49b23e4af`. Later payment, persistence, API, and UI-detail work are separate cards.
