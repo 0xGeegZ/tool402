@@ -71,7 +71,11 @@ function isOpaqueAttemptId(
 function readStoredSettlementAttempt(
   existing: unknown,
 ): StoredSettlementAttempt | null {
-  if (existing === null || typeof existing !== "object") {
+  if (
+    existing === null
+    || typeof existing !== "object"
+    || Array.isArray(existing)
+  ) {
     return null;
   }
 

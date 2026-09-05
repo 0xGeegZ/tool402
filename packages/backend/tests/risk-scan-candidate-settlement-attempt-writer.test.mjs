@@ -311,6 +311,22 @@ test("rejects null, missing-ID, non-string-ID, and malformed durable attempts be
   }
 });
 
+test("rejects decorated arrays rather than replaying them", async () => {
+  const { recordInitialRiskScanSettlementAttempt } = await loadWriter();
+  const decoratedRow = Object.assign([], {
+    _id: "riskScanSettlementAttempts:array",
+    ...canonicalAttempt,
+  });
+  const { calls, handlerContext } = createControlledDatabase({
+    existingRows: [decoratedRow],
+  });
+
+  await assertConflict(recordInitialRiskScanSettlementAttempt._handler, handlerContext);
+  assertRequestLookup(calls);
+  assertCanonicalQuery(calls);
+  assert.deepEqual(calls.inserts, []);
+});
+
 test("rejects inherited canonical fields rather than replaying them", async () => {
   const { recordInitialRiskScanSettlementAttempt } = await loadWriter();
   const inheritedRow = Object.create(canonicalAttempt);
