@@ -125,8 +125,9 @@ export async function requestRiskScanQuickChallenge(
     return { kind: "transport_failure" };
   }
   try {
-    if (response.status === 503) return { kind: "unavailable" };
-    if (response.status !== 402) return { kind: "unexpected_response" };
+    const status = response.status;
+    if (status === 503) return { kind: "unavailable" };
+    if (status !== 402) return { kind: "unexpected_response" };
     const challenge = response.headers.get("payment-required");
     return typeof challenge === "string" && challenge.trim().length > 0
       ? { kind: "payment_required" }

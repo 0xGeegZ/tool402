@@ -148,6 +148,45 @@ test("trims text into an isolated local input snapshot", async () => {
   assert.equal(calls[0][1].body, JSON.stringify(input));
 });
 
+test("accepts exact text limits and false declarations", async () => {
+  const cases = [
+    ["requestRef", 96],
+    ["subjectRef", 160],
+    ["context", 280],
+  ];
+  for (const [key, length] of cases) {
+    let calls = 0;
+    const value = { ...input, declarations: { identity: false, pricing: false, limitations: false, evidence: false }, [key]: "a".repeat(length) };
+    const result = await requestRiskScanQuickChallenge(base, selected, value, async () => { calls += 1; return response(503); });
+    assert.deepEqual(result, { kind: "unavailable" });
+    assert.equal(calls, 1);
+  }
+});
+
+test("rejects text beyond limits and wrong primitive inputs without I/O", async () => {
+  const textCases = [
+    ["requestRef", 96],
+    ["subjectRef", 160],
+    ["context", 280],
+  ].map(([key, limit]) => ({ ...input, [key]: "a".repeat(limit + 1) }));
+  const primitiveCases = [
+    ...["requestRef", "subjectRef", "context"].flatMap((key) => [
+      { ...input, [key]: 1 },
+      { ...input, [key]: null },
+    ]),
+    ...["identity", "pricing", "limitations", "evidence"].flatMap((key) => [
+      { ...input, declarations: { ...input.declarations, [key]: "true" } },
+      { ...input, declarations: { ...input.declarations, [key]: null } },
+    ]),
+  ];
+  for (const value of [...textCases, ...primitiveCases]) {
+    let calls = 0;
+    const result = await requestRiskScanQuickChallenge(base, selected, value, async () => { calls += 1; return response(503); });
+    assert.deepEqual(result, { kind: "input_invalid" });
+    assert.equal(calls, 0);
+  }
+});
+
 test("rejects invalid, hostile, and unsafe base or derived targets without I/O", async () => {
   class ThrowingUrl extends URL { toString() { throw new Error("target conversion"); } }
   class FtpUrl extends URL { toString() { return "ftp://service.test/"; } }
@@ -197,5 +236,24 @@ test("maps sender, status, and hostile response metadata without reading a body"
     const result = await requestRiskScanQuickChallenge(base, selected, input, sender);
     assert.deepEqual(result, expected);
   }
+  assert.deepEqual(bodyReads, []);
+});
+
+test("snapshots response status once before classification without header or body access", async () => {
+  let statusReads = 0;
+  let headerReads = 0;
+  const bodyReads = [];
+  const result = await requestRiskScanQuickChallenge(base, selected, input, async () => ({
+    get status() { statusReads += 1; return statusReads === 1 ? 200 : 402; },
+    get headers() { headerReads += 1; throw new Error("headers must not be read for a 200 snapshot"); },
+    json() { bodyReads.push("json"); throw new Error("body must not be read"); },
+    text() { bodyReads.push("text"); throw new Error("body must not be read"); },
+    arrayBuffer() { bodyReads.push("arrayBuffer"); throw new Error("body must not be read"); },
+    blob() { bodyReads.push("blob"); throw new Error("body must not be read"); },
+    formData() { bodyReads.push("formData"); throw new Error("body must not be read"); },
+  }));
+  assert.deepEqual(result, { kind: "unexpected_response" });
+  assert.equal(statusReads, 1);
+  assert.equal(headerReads, 0);
   assert.deepEqual(bodyReads, []);
 });
