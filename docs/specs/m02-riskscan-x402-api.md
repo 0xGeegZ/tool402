@@ -22,6 +22,7 @@ With valid configuration, the route uses the exact EVM x402 v2 server scheme and
 - An unsigned request receives the payment protocol's `402` response with a nonempty `PAYMENT-REQUIRED` header; the Quick handler does not run.
 - A validly authorized request parses a RiskScan Quick input and returns only the deterministic Quick result. A malformed request produces an explicit client error and does not settle a payment.
 - The integration settles only after a successful handler response. It does not fabricate payment success, a receipt, evidence, a transaction, or a completed lifecycle state.
+- Before the x402 resource server receives a settlement result, the local facilitator boundary must convert a malformed `success: true` result into a normal settlement failure. A successful result must carry both the configured and accepted network plus a nonblank string transaction reference; a wrong network or blank/non-string transaction must never release the protected Quick response.
 
 The local test configuration must disable startup synchronization and must never call a live facilitator, wallet, or network.
 
@@ -34,6 +35,7 @@ The web package owns the App Router handler and a server-only configuration/prot
 - Tests prove missing or malformed configuration returns `503` without a payment header or Quick result.
 - Tests prove a valid local configuration yields `402` and `PAYMENT-REQUIRED` for an unsigned request without running the handler or calling a live service.
 - Tests prove the local Quick handler maps only a valid Quick input to the Quick result; malformed input is not settled when reached through the wrapper.
+- Tests prove wrong-network, blank-transaction, and non-string-transaction settlement successes return a non-success response without releasing the Quick result.
 - Web typecheck/test, production webpack build, local-reference guard, and independent review pass.
 
 Providing a testnet recipient, selecting a facilitator, funding/signing a payment, deploying the route, and capturing settlement/evidence are later human-authorized actions.
