@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M04-T010 accepted; M04-T030 accepted
 - Integration evidence: D-M04-010-002 and D-M04-030-002 accepted
 - Owner: the proposed implementation scope is `packages/backend/src/risk-scan-settlement-attempt-admission.ts`, `packages/backend/convex/riskscan-settlement-attempts.ts`, `packages/backend/tests/risk-scan-settlement-attempt-admission.test.mjs`, and `packages/backend/tests/risk-scan-candidate-settlement-attempt-writer.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -31,3 +31,7 @@ The mutation is internal-only and becomes a real transactional writer only when 
 - `npm run test --workspace @tool402/backend`
 - `npm run lint --workspace @tool402/backend`
 - Root `npm run typecheck`, `npm run test`, `npm run queue:check`, the enabled local-reference guard, independent task review, and two fresh clean module-review generations.
+
+## Ready transition
+
+Ready at 2026-09-05T15:39:32Z after the root revalidated all accepted dependencies and their recorded integration evidence, the committed local specification and plan, no active lane, disjoint four-path backend ownership, no pending human action, concrete executable validation, and queue validation. This is candidate-admission and internal writer code only; no configured runtime, deployed store, payment/settlement/finality, verification, evidence, or live claim is included.
