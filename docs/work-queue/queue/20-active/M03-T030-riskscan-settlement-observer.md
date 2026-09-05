@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T050 accepted; M02-T060 accepted; M03-T020 accepted
 - Integration evidence: D-M02-050-002, D-M02-060-002, and D-M03-020-002 accepted
 - Owner: implementation scope is reserved for `apps/web/src/lib/riskscan-x402.ts` and `apps/web/tests/riskscan-api.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -33,3 +33,7 @@ The local contract is [M03 RiskScan settlement observer](../../../specs/m03-risk
 ## Ready transition
 
 Ready at 2026-09-05T11:01:41Z after the root revalidated all accepted dependencies and their recorded integration evidence, committed local specification and plan, disjoint two-file web ownership, no active lane, no pending human action, concrete executable validation, and queue/reference checks. An independent readiness audit corrected the non-existent lint command and made rejected-Promise consumer isolation explicit before this transition. No external payment, durable state, evidence, deployment, or live action is included.
+
+## Activation
+
+Activated at 2026-09-05T11:02:49Z after a fresh queue rescan confirmed the pushed ready state, no active lane, and the same disjoint web ownership boundary. Task 1 starts with its protected-handler RED contract. The observer remains optional and local-only; no payment, account, wallet, evidence, persistence, deployment, or live action is authorized.
