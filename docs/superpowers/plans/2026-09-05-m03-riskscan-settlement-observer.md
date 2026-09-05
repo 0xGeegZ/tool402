@@ -4,7 +4,7 @@
 
 **Goal:** Add an optional, private, best-effort server observation seam that delivers an exact core verified-settlement capability only after a successful compatible protected Quick settlement.
 
-**Architecture:** Keep all state closure-local to the x402 server helper. The pure public Quick helper stays assessment-only. When a server-owned consumer is supplied, a private protected Quick handler registers an issued core pending capability under digests of the selected v2 payment-signature string and the exact generated response bytes. x402 lifecycle hooks consume it only on a successful, after-handler, same-network settlement with a nonblank transaction. Every abnormal path deletes the entry; no response, persistence, UI state, or external claim is created.
+**Architecture:** Keep all state closure-local to the x402 server helper. The pure public Quick helper stays assessment-only. The protected route explicitly declares the installed Exact authorization flow so settlement occurs after the private Quick handler. When a server-owned consumer is supplied, that handler registers an issued core pending capability under digests of the selected v2 payment-signature string and the exact generated response bytes. x402 lifecycle hooks consume it only on a successful, after-handler, same-network settlement with a nonblank transaction. Every abnormal path deletes the entry; no response, persistence, UI state, or external claim is created.
 
 **Tech Stack:** TypeScript, Next.js route handlers, installed x402 packages, Node.js `crypto`, Node.js built-in test runner, npm workspaces.
 
@@ -16,6 +16,7 @@
 - Modify only `apps/web/src/lib/riskscan-x402.ts` and `apps/web/tests/riskscan-api.test.mjs` for implementation.
 - Do not make `runRiskScanQuick` an issuance path or expose the observer map, header string, digest, pending state, or settlement capability through HTTP.
 - Use only `payment-signature` for registration; never deliberately fall back to another header representation.
+- Declare the supported Exact authorization payment flow in the protected route; do not rely on a mutable scheme default or support a pre-handler observer flow.
 - Keep the observer disabled when no explicit server-owned consumer is supplied.
 - Preserve native x402 response status, body, and payment headers even if local observation fails.
 - Add no persistence, replay guarantee, backend/API/UI feature, runtime configuration, wallet/account action, payment action, receipt/evidence capture, deployment, or live claim.
@@ -73,7 +74,7 @@ Expected: FAIL because the current handler has no optional consumer, no private 
 
 Refactor the private parsing/evaluation flow so `runRiskScanQuick` remains behaviorally identical and never receives an observer callback. Add a private protected-only wrapper that sees a validated Quick result, creates the response, and registers an issued core pending state only if an explicit server-owned consumer exists and the request has a nonblank `payment-signature` string.
 
-Add a private closure-local observer that:
+Declare the installed Exact authorization flow in the protected route, then add a private closure-local observer that:
 
 1. hashes the selected header string and exact generated response bytes without returning or logging either value;
 2. retains at most the first active entry per header digest and sets a fixed bounded cleanup timeout;

@@ -19,12 +19,12 @@ The local contract is [M03 RiskScan settlement observer](../../../specs/m03-risk
 
 - The local specification and implementation plan are committed before RED tests or production code.
 - M02-T050, M02-T060, and M03-T020 are accepted locally, their integration evidence is recorded, and no active lane owns the two reserved web paths.
-- The card records CORE_P0 priority, protected-only issuance, transient digest boundary, duplicate fail-closed behavior, human-action boundary, and concrete validation commands.
+- The card records CORE_P0 priority, protected-only issuance, an explicit Exact authorization/after-handler flow, transient digest boundary, duplicate fail-closed behavior, human-action boundary, and concrete validation commands.
 - The delivery excludes persistence, replay protection, external payment or settlement assertion, receipt/evidence, completion, backend/API/UI behavior, configuration, dependencies, accounts, wallets, deployment, and live claims.
 
 ## Validation
 
-- RED/GREEN web tests cover valid capability delivery, direct/unsigned/invalid paths, settlement/cancellation failures, result validation, duplicate collision isolation, timeout cleanup, synchronous/rejected-Promise consumer failure isolation, and native response preservation.
+- RED/GREEN web tests cover valid capability delivery, explicit authorization/after-handler flow selection, direct/unsigned/invalid paths, settlement/cancellation failures, result validation, duplicate collision isolation, timeout cleanup, synchronous/rejected-Promise consumer failure isolation, and native response preservation.
 - `npm run typecheck --workspace @tool402/web`
 - `npm run test --workspace @tool402/web`
 - `npm run build --workspace @tool402/web`
