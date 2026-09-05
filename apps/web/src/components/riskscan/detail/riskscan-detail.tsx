@@ -1,4 +1,9 @@
 import Link from "next/link";
+import type {
+  RiskScanQuickDeclaration,
+  RiskScanQuickDisposition,
+  RiskScanRequestInput,
+} from "@tool402/core";
 
 import { Badge } from "../../ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
@@ -11,12 +16,12 @@ const inputFields = [
   ["pricing", "Whether the caller reports a pricing disclosure."],
   ["limitations", "Whether the caller reports a limitations disclosure."],
   ["evidence", "Whether the caller reports an evidence disclosure."],
-] as const;
+] as const satisfies readonly [keyof RiskScanRequestInput | RiskScanQuickDeclaration, string][];
 
 const dispositions = [
   ["needs_disclosure", "One or more caller-reported declarations are absent."],
   ["disclosures_reported", "The caller reports all four declarations without certifying a claim."],
-] as const;
+] as const satisfies readonly [RiskScanQuickDisposition, string][];
 
 export function RiskScanDetail() {
   return (
