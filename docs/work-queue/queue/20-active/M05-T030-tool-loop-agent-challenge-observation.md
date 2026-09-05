@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M05-T010 accepted; M05-T020 accepted; M02-T050 accepted;
   M02-T060 accepted
 - Integration evidence: D-M05-010-002, D-M05-020-002, D-M02-050-002, and
@@ -90,3 +90,12 @@ the independent design review plus its scoped re-review. The card remains
 unsigned challenge observation only: no configured route assertion, payment,
 signing, wallet/account action, deployment, transaction verification,
 finality, evidence, result, or external claim is authorized.
+
+## Activation
+
+Activated at 2026-09-05T20:39:30Z after a fresh queue rescan confirmed the
+pushed ready state, accepted dependencies, no active lane, no human blocker,
+and the same disjoint three-path agent ownership. The task starts with its
+ToolLoopAgent RED contract. No configured route assertion, payment, signing,
+wallet/account action, deployment, transaction verification, finality,
+evidence, result, or external claim is authorized.
