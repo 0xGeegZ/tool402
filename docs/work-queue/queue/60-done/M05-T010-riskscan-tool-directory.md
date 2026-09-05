@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T040 accepted; M02-T050 accepted; M02-T060 accepted
 - Integration evidence: D-M01-FOUND-001, D-M02-050-002, and D-M02-060-002 accepted
 - Owner: the proposed implementation scope is `apps/web/src/lib/tool-directory.ts`, `apps/web/src/app/api/tools/route.ts`, and `apps/web/tests/tool-directory-api.test.mjs`. The root owns this card, its local specification and plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -80,3 +80,20 @@ disjoint web ownership boundary. The task starts with its Tool Directory RED
 contract. No external directory registration, configured runtime, payment,
 wallet/account action, deployment, transaction verification, finality,
 evidence, or live claim is authorized.
+
+## Acceptance
+
+Accepted at 2026-09-05T18:56:15Z. `MODULE_BASE` is
+`053c79a7b8a31fe6121066da7ea09ce28e404870`; `MODULE_HEAD` is
+`62377cdd1c0bf16dcf8749128c6cc201f6aac417`. The observed missing-module RED
+became seven focused Green contracts. Web typecheck and 51-test suite, root
+Node 22.21.1 typecheck, 136-test suite, lint, production Webpack build, queue
+validation, whitespace check, and enabled local-reference guard passed. A real
+local Next HTTP `GET /api/tools` returned `200` JSON with `cache-control:
+no-store` and the controlled `configuration_required` state. The independent
+task review and two fresh final module-review generations returned PASS with no
+P0, P1, or P2 finding. This acceptance covers only controlled local discovery
+metadata and parser-derived configuration summary behavior; it does not assert
+directory registration, configured/live runtime, payment, settlement,
+transaction verification, finality, evidence, result, deployment, or any
+external fact.
