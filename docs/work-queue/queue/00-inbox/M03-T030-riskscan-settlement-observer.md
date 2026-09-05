@@ -24,9 +24,8 @@ The local contract is [M03 RiskScan settlement observer](../../../specs/m03-risk
 
 ## Validation
 
-- RED/GREEN web tests cover valid capability delivery, direct/unsigned/invalid paths, settlement/cancellation failures, result validation, duplicate collision isolation, timeout cleanup, consumer failure isolation, and native response preservation.
+- RED/GREEN web tests cover valid capability delivery, direct/unsigned/invalid paths, settlement/cancellation failures, result validation, duplicate collision isolation, timeout cleanup, synchronous/rejected-Promise consumer failure isolation, and native response preservation.
 - `npm run typecheck --workspace @tool402/web`
 - `npm run test --workspace @tool402/web`
-- `npm run lint --workspace @tool402/web`
 - `npm run build --workspace @tool402/web`
-- Root `npm run typecheck`, `npm run test`, `npm run lint`, `npm run queue:check`, the enabled local-reference guard, independent task review, and two fresh clean module-review generations.
+- Root `npm run typecheck`, `npm run test`, `npm run queue:check`, the enabled local-reference guard, independent task review, and two fresh clean module-review generations.

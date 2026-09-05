@@ -38,7 +38,7 @@
 **Interfaces:**
 
 - Consumes: accepted `@tool402/core` request/pending/verified-settlement lifecycle functions and the installed x402 HTTP hook contexts.
-- Produces: an optional server-owned callback receiving an exact `RiskScanVerifiedSettlement`; no HTTP output, persistence, or public registry.
+- Produces: an optional server-owned callback `(settlement: RiskScanVerifiedSettlement) => void | Promise<void>`, always awaited inside the observer's catch boundary; no HTTP output, persistence, or public registry.
 
 - [ ] **Step 1: Write the failing protected-handler contracts**
 
@@ -57,7 +57,7 @@ assert.match(response.headers.get("payment-response") ?? "", /\S/u);
 assert.equal(settlements.length, 1);
 ```
 
-Use an accepted core transition such as receipt/evidence binding to prove the callback value is a genuine exact core capability. Add negative tests for settlement failure, wrong result network, blank/whitespace/non-string transaction, a consumer throw, duplicate active header with a differing Quick response, and a short test-only local timeout. Assert all negative paths emit no capability and preserve the relevant native x402 response shape.
+Use an accepted core transition such as receipt/evidence binding to prove the callback value is a genuine exact core capability. Add negative tests for settlement failure, wrong result network, blank/whitespace/non-string transaction, a consumer throw or rejected Promise, duplicate active header with a differing Quick response, and a short test-only local timeout. Assert all negative paths emit no capability and preserve the relevant native x402 response shape.
 
 - [ ] **Step 2: Run the focused web test to verify RED**
 
@@ -79,8 +79,8 @@ Add a private closure-local observer that:
 2. retains at most the first active entry per header digest and sets a fixed bounded cleanup timeout;
 3. registers x402 after-settle, settle-failure, and verified-payment-cancel hooks;
 4. accepts an entry only for v2, `after-handler`, successful, configured-network result/requirements, nonblank trimmed transaction, and matching response digest;
-5. deletes before calling `createRiskScanVerifiedSettlement` and the consumer; and
-6. catches every observer/core/consumer failure internally and fail-closes by deleting the entry.
+5. deletes before calling `createRiskScanVerifiedSettlement`, then awaits the consumer; and
+6. catches every observer/core/consumer failure, including a rejected consumer Promise, internally and fail-closes by deleting the entry.
 
 When no consumer is supplied, do not construct the observer or alter the cached/default protected handler.
 
@@ -91,7 +91,6 @@ Run:
 ```bash
 env PATH=/Users/guillaumedieudonne/.nvm/versions/node/v22.21.1/bin:$PATH npm run typecheck --workspace @tool402/web
 env PATH=/Users/guillaumedieudonne/.nvm/versions/node/v22.21.1/bin:$PATH npm run test --workspace @tool402/web
-env PATH=/Users/guillaumedieudonne/.nvm/versions/node/v22.21.1/bin:$PATH npm run lint --workspace @tool402/web
 ```
 
 Expected: PASS. A successful local settlement invokes the supplied consumer exactly once with a genuine capability; all observer failures and duplicates fail closed without changing the protected response contract.
