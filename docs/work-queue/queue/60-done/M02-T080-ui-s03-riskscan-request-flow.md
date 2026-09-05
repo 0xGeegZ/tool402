@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 40-module-review
+- Queue state: 60-done
 - Dependencies: M01-T040 accepted; M02-T010 accepted; M02-T020 accepted; M02-T050 accepted; M02-T060 accepted; M02-T070 accepted
 - Integration evidence: D-M01-FOUND-001, D-M02-010-002, D-M02-020-002, D-M02-050-002, D-M02-060-002, and D-M02-070-002 accepted
 - Owner: implementation lane will own `apps/web/src/app/explore/riskscan/try/page.tsx`, `apps/web/src/components/riskscan/request/**`, `apps/web/tests/riskscan-request-state.test.mjs`, and `apps/web/tests/riskscan-try.test.mjs`; it may amend `apps/web/src/components/riskscan/detail/riskscan-detail.tsx` and `apps/web/tests/riskscan-detail.test.mjs` only to add the committed local Try link. The root owns this card, the manifest, ledger, plan, and queue records.
@@ -37,4 +37,8 @@ Activated at 2026-09-05T08:13:01Z after the root verified the committed local ma
 
 ## Module-review transition
 
-Entered module review at 2026-09-05T08:53:00Z after the bounded Try route and adapter were committed, independently task-reviewed, verified through the local browser, and pushed. The first fresh module-review generation was clean. The second identified a response-validation defect: a structurally shaped but semantically incoherent success payload must not be rendered. At 2026-09-05T08:59:03Z, the adapter received a TDD correction that compares its allow-listed projection with the pure canonical Quick assessment for the submitted input; focused and full web verification plus scoped re-review are clean. This card remains unaccepted while the two fresh module-review generations restart.
+Entered module review at 2026-09-05T08:53:00Z after the bounded Try route and adapter were committed, independently task-reviewed, verified through the local browser, and pushed. The first fresh module-review generation was clean. The second identified a response-validation defect: a structurally shaped but semantically incoherent success payload must not be rendered. At 2026-09-05T08:59:03Z, the adapter received a TDD correction that compares its allow-listed projection with the pure canonical Quick assessment for the submitted input; focused and full web verification plus scoped re-review are clean.
+
+## Completion transition
+
+Accepted at 2026-09-05T09:07:02Z after root Node 22.21.1 workspace typecheck/test/lint, production webpack build, queue/reference checks, Turbopack diagnostics, desktop and narrow browser verification, WCAG audits, and two consecutive fresh clean Standards/Spec module-review generations. The delivered browser flow remains limited to local API response boundaries; configuration, payment, settlement, evidence, and deployment remain separate human-authorized work.
