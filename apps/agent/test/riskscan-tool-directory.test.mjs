@@ -1,0 +1,143 @@
+import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+import test from "node:test";
+
+const require = createRequire(import.meta.url);
+const { discoverRiskScanQuick } = require("../src/riskscan-tool-directory.ts");
+
+function directory(payment = { state: "configuration_required" }) {
+  return {
+    version: "v1",
+    tools: [{
+      id: "riskscan.quick",
+      name: "RiskScan Quick",
+      request: { method: "POST", path: "/api/riskscan", contentType: "application/json" },
+      input: {
+        type: "object",
+        required: ["requestRef", "subjectRef", "context", "declarations"],
+        properties: {
+          requestRef: { type: "string", minLength: 1, maxLength: 96 },
+          subjectRef: { type: "string", minLength: 1, maxLength: 160 },
+          context: { type: "string", minLength: 1, maxLength: 280 },
+          declarations: {
+            type: "object",
+            additionalProperties: false,
+            required: ["identity", "pricing", "limitations", "evidence"],
+            properties: {
+              identity: { type: "boolean" }, pricing: { type: "boolean" },
+              limitations: { type: "boolean" }, evidence: { type: "boolean" },
+            },
+          },
+        },
+      },
+      limitations: ["quick_assessment_only", "caller_declarations_are_not_external_verification"],
+      payment,
+    }],
+  };
+}
+
+const base = new URL("http://service.test/example");
+
+async function select(value = directory()) {
+  let calls = 0;
+  const result = await discoverRiskScanQuick(base, async () => {
+    calls += 1;
+    return Response.json(value);
+  });
+  return { result, calls };
+}
+
+test("selects the canonical descriptor", async () => {
+  const { result } = await select();
+  assert.deepEqual(result, {
+    kind: "tool_selected",
+    tool: directory().tools[0],
+  });
+});
+
+test("makes exactly one credential-free GET request to the directory", async () => {
+  const calls = [];
+  await discoverRiskScanQuick(base, async (input, init) => {
+    calls.push([input, init]);
+    return Response.json(directory());
+  });
+  assert.equal(calls.length, 1);
+  assert.deepEqual(calls[0], [
+    new URL("http://service.test/api/tools"),
+    { method: "GET", headers: { accept: "application/json" }, credentials: "omit", redirect: "error" },
+  ]);
+});
+
+test("accepts both approved payment states", async () => {
+  for (const payment of [
+    { state: "configuration_required" },
+    { state: "locally_configured", protocol: "x402", network: "eip155:8453", price: "$0.01" },
+  ]) {
+    const { result } = await select(directory(payment));
+    assert.equal(result.kind, "tool_selected");
+  }
+});
+
+test("rejects invalid bases without fetching", async () => {
+  for (const invalidBase of [new URL("ftp://service.test/"), new URL("http://user@service.test/")]) {
+    let calls = 0;
+    const result = await discoverRiskScanQuick(invalidBase, async () => {
+      calls += 1;
+      return Response.json(directory());
+    });
+    assert.deepEqual(result, { kind: "directory_invalid" });
+    assert.equal(calls, 0);
+  }
+});
+
+test("maps fetch failures and non-200 responses to unavailable", async () => {
+  for (const fetcher of [
+    async () => { throw new Error("offline"); },
+    async () => new Response(null, { status: 503 }),
+  ]) {
+    const result = await discoverRiskScanQuick(base, fetcher);
+    assert.deepEqual(result, { kind: "directory_unavailable" });
+  }
+});
+
+test("rejects invalid directory representations without another request", async () => {
+  const invalid = [
+    async () => new Response(JSON.stringify(directory()), { headers: { "content-type": "text/plain" } }),
+    async () => new Response("{", { headers: { "content-type": "application/json" } }),
+    async () => Response.json({ ...directory(), unexpected: true }),
+    async () => Response.json({ ...directory(), tools: [] }),
+    async () => Response.json({ ...directory(), tools: [{ ...directory().tools[0], request: { method: "POST" } }] }),
+    async () => Response.json({ ...directory(), tools: [{ ...directory().tools[0], payment: { state: "locally_configured", protocol: "x402", network: "eip155:0", price: "$0.01" } }] }),
+    async () => Response.json({ ...directory(), tools: [{ ...directory().tools[0], payment: { state: "locally_configured", protocol: "x402", network: "eip155:01", price: "$0.01" } }] }),
+    async () => Response.json({ ...directory(), tools: [{ ...directory().tools[0], payment: { state: "locally_configured", protocol: "x402", network: "", price: "$0.01" } }] }),
+    async () => Response.json({ ...directory(), tools: [{ ...directory().tools[0], payment: { state: "locally_configured", protocol: "x402", network: "eip155:1", price: "$0.00" } }] }),
+    async () => Response.json({ ...directory(), tools: [{ ...directory().tools[0], payment: { state: "locally_configured", protocol: "x402", network: "eip155:1", price: "$" } }] }),
+  ];
+  for (const fetcher of invalid) {
+    let calls = 0;
+    const result = await discoverRiskScanQuick(base, async (...arguments_) => {
+      calls += 1;
+      return fetcher(...arguments_);
+    });
+    assert.deepEqual(result, { kind: "directory_invalid" });
+    assert.equal(calls, 1);
+  }
+});
+
+test("rejects non-data own properties returned by a fetcher", async () => {
+  const value = directory();
+  Object.defineProperty(value, "version", { enumerable: true, get: () => "v1" });
+  const result = await discoverRiskScanQuick(base, async () => ({
+    status: 200,
+    headers: new Headers({ "content-type": "application/json" }),
+    json: async () => value,
+  }));
+  assert.deepEqual(result, { kind: "directory_invalid" });
+});
+
+test("returns a cloned selection rather than retaining decoded directory data", async () => {
+  const value = directory({ state: "locally_configured", protocol: "x402", network: "eip155:1", price: "$1" });
+  const { result } = await select(value);
+  value.tools[0].payment.price = "$999";
+  assert.deepEqual(result.tool.payment, { state: "locally_configured", protocol: "x402", network: "eip155:1", price: "$1" });
+});
