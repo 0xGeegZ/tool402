@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T040 accepted; M02-T010 accepted; M02-T020 accepted; M02-T050 accepted; M02-T060 accepted; M02-T070 accepted
 - Integration evidence: D-M01-FOUND-001, D-M02-010-002, D-M02-020-002, D-M02-050-002, D-M02-060-002, and D-M02-070-002 accepted
 - Owner: implementation lane will own `apps/web/src/app/explore/riskscan/try/page.tsx`, `apps/web/src/components/riskscan/request/**`, `apps/web/tests/riskscan-request-state.test.mjs`, and `apps/web/tests/riskscan-try.test.mjs`; it may amend `apps/web/src/components/riskscan/detail/riskscan-detail.tsx` and `apps/web/tests/riskscan-detail.test.mjs` only to add the committed local Try link. The root owns this card, the manifest, ledger, plan, and queue records.
