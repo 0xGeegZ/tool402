@@ -3,10 +3,10 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 20-active
 - Dependencies: M01-T040 accepted; M02-T010 accepted; M02-T020 accepted; M02-T030 accepted; M02-T050 accepted; M02-T060 accepted
 - Integration evidence: D-M01-FOUND-001, D-M02-010-002, D-M02-020-002, D-M02-030-002, D-M02-050-002, and D-M02-060-002 accepted
-- Owner: when activated, the implementation lane owns `apps/web/src/app/explore/riskscan/page.tsx`, `apps/web/src/components/riskscan/detail/**`, `apps/web/src/components/discovery/riskscan-discovery-card.tsx`, `apps/web/tests/riskscan-detail.test.mjs`, and `apps/web/tests/landing-explore.test.mjs`; the root owns the manifest, ledger, this card, and queue records.
+- Owner: implementation lane owns `apps/web/src/app/explore/riskscan/page.tsx`, `apps/web/src/components/riskscan/detail/**`, `apps/web/src/components/discovery/riskscan-discovery-card.tsx`, `apps/web/tests/riskscan-detail.test.mjs`, and `apps/web/tests/landing-explore.test.mjs`; the root owns this card, the manifest, ledger, and queue records.
 - Human actions: none for local detail delivery; live configuration, payment, deployment, and evidence remain separate human-authorized work.
 
 ## Scope
@@ -25,4 +25,4 @@ The local manifest is [UI-S02](../../../ui/UI-S02.md), the selected local bounda
 
 ## Completion transition
 
-Inbox record created at 2026-09-05T07:02:44Z after all named dependencies were accepted and the local manifest, plan, ownership boundary, human-action boundary, and concrete validation commands were recorded. It may move to ready only after root revalidates its disjoint paths and local references.
+Active at 2026-09-05T07:27:01Z after root revalidated every accepted dependency, committed local record, local link, disjoint implementation path, human-action boundary, and concrete validation command. UI-S03 remains a separate local card.
