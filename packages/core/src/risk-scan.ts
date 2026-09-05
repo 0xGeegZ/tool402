@@ -46,6 +46,11 @@ export interface RiskScanSettlementCorrelationInput {
 }
 
 const verifiedRiskScanSettlements = new WeakSet<object>();
+const boundRiskScanReceiptEvidence = new WeakSet<object>();
+const verifiedSettlementByReceiptEvidence = new WeakMap<
+  object,
+  RiskScanVerifiedSettlement
+>();
 
 export interface RiskScanVerifiedSettlement {
   readonly requestRef: string;
@@ -63,12 +68,20 @@ export interface RiskScanExecutionFailed {
   reason: string;
 }
 
-export interface RiskScanCompletionInput {
-  requestRef: string;
-  settlementRef: string;
-  resultRef: string;
+export interface RiskScanReceiptEvidenceInput {
   receiptRef: string;
   evidenceRef: string;
+}
+
+export interface RiskScanBoundReceiptEvidence {
+  readonly requestRef: string;
+  readonly settlementRef: string;
+  readonly receiptRef: string;
+  readonly evidenceRef: string;
+}
+
+export interface RiskScanAssessmentCompletionInput {
+  resultRef: string;
   salientReasons: readonly string[];
   limitations: readonly string[];
 }
@@ -224,6 +237,23 @@ function requireVerifiedRiskScanSettlement(
   return settlement as RiskScanVerifiedSettlement;
 }
 
+export function bindRiskScanReceiptEvidence(
+  settlement: RiskScanVerifiedSettlement,
+  input: RiskScanReceiptEvidenceInput,
+): RiskScanBoundReceiptEvidence {
+  const verifiedSettlement = requireVerifiedRiskScanSettlement(settlement);
+  const artifacts = Object.freeze({
+    requestRef: verifiedSettlement.requestRef,
+    settlementRef: verifiedSettlement.settlementRef,
+    receiptRef: requiredTrimmedString(input.receiptRef, "receiptRef"),
+    evidenceRef: requiredTrimmedString(input.evidenceRef, "evidenceRef"),
+  }) as RiskScanBoundReceiptEvidence;
+
+  boundRiskScanReceiptEvidence.add(artifacts);
+  verifiedSettlementByReceiptEvidence.set(artifacts, verifiedSettlement);
+  return artifacts;
+}
+
 export function markRiskScanExecutionFailed(
   settlement: RiskScanVerifiedSettlement,
   reason: string,
@@ -242,22 +272,17 @@ export function markRiskScanExecutionFailed(
 
 export function completeRiskScanRequest(
   settlement: RiskScanVerifiedSettlement,
-  completion: RiskScanCompletionInput,
+  artifacts: RiskScanBoundReceiptEvidence,
+  completion: RiskScanAssessmentCompletionInput,
 ): RiskScanCompleted {
   const verifiedSettlement = requireVerifiedRiskScanSettlement(settlement);
-  const requestRef = requiredTrimmedString(completion.requestRef, "requestRef");
-
-  if (requestRef !== verifiedSettlement.requestRef) {
-    throw new RangeError("requestRef must match the verified settlement");
-  }
-
-  const settlementRef = requiredTrimmedString(
-    completion.settlementRef,
-    "settlementRef",
-  );
-
-  if (settlementRef !== verifiedSettlement.settlementRef) {
-    throw new RangeError("settlementRef must match the verified settlement");
+  if (
+    typeof artifacts !== "object" ||
+    artifacts === null ||
+    !boundRiskScanReceiptEvidence.has(artifacts) ||
+    verifiedSettlementByReceiptEvidence.get(artifacts) !== verifiedSettlement
+  ) {
+    throw new TypeError("a bound receipt and evidence artifact is required");
   }
 
   return {
@@ -274,7 +299,7 @@ export function completeRiskScanRequest(
       ),
       limitations: requiredTrimmedStrings(completion.limitations, "limitations"),
     },
-    receiptRef: requiredTrimmedString(completion.receiptRef, "receiptRef"),
-    evidenceRef: requiredTrimmedString(completion.evidenceRef, "evidenceRef"),
+    receiptRef: artifacts.receiptRef,
+    evidenceRef: artifacts.evidenceRef,
   };
 }

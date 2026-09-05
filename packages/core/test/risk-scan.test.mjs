@@ -234,17 +234,58 @@ test("makes verified settlement correlations immutable", () => {
 
   assert.throws(
     () =>
-      core.completeRiskScanRequest(reflectiveCopy, {
-        requestRef: "request-immutable",
-        settlementRef: "settlement-immutable",
-        resultRef: "result-immutable",
-        receiptRef: "receipt-immutable",
-        evidenceRef: "evidence-immutable",
-        salientReasons: ["bounded input was assessed"],
-        limitations: ["source coverage is limited"],
-      }),
+      core.markRiskScanExecutionFailed(
+        reflectiveCopy,
+        "assessment execution failed",
+      ),
     /verified settlement correlation/u,
   );
+});
+
+test("binds receipt and evidence references to a verified settlement", () => {
+  assert.equal(
+    typeof core.bindRiskScanReceiptEvidence,
+    "function",
+    "the receipt/evidence binder must be exported",
+  );
+
+  const initial = core.startRiskScanRequest({
+    requestRef: "request-46",
+    subjectRef: "wallet:0x789",
+    context: "bounded assessment",
+  });
+  const pending = core.markRiskScanPaymentPending(initial);
+  const settlement = core.createRiskScanVerifiedSettlement(pending, {
+    requestRef: "request-46",
+    settlementRef: "settlement-46",
+  });
+  const artifacts = core.bindRiskScanReceiptEvidence(settlement, {
+    receiptRef: " receipt-46 ",
+    evidenceRef: " evidence-46 ",
+  });
+
+  assert.equal(Object.isFrozen(artifacts), true);
+  assert.deepEqual(artifacts, {
+    requestRef: "request-46",
+    settlementRef: "settlement-46",
+    receiptRef: "receipt-46",
+    evidenceRef: "evidence-46",
+  });
+
+  for (const [field, invalidValue] of [
+    ["receiptRef", "   "],
+    ["evidenceRef", "   "],
+  ]) {
+    assert.throws(
+      () =>
+        core.bindRiskScanReceiptEvidence(settlement, {
+          receiptRef: field === "receiptRef" ? invalidValue : "evidence-46",
+          evidenceRef:
+            field === "evidenceRef" ? invalidValue : "evidence-46",
+        }),
+      new RegExp(field, "u"),
+    );
+  }
 });
 
 test("completes only matching verified correlations with structured assessment content", () => {
@@ -264,70 +305,87 @@ test("completes only matching verified correlations with structured assessment c
     requestRef: "request-46",
     settlementRef: "settlement-46",
   });
-  const completion = {
-    requestRef: "request-46",
-    settlementRef: "settlement-46",
-    resultRef: "result-46",
+  const artifacts = core.bindRiskScanReceiptEvidence(settlement, {
     receiptRef: "receipt-46",
     evidenceRef: "evidence-46",
+  });
+  const completion = {
+    resultRef: "result-46",
     salientReasons: [" bounded input was assessed "],
     limitations: [" source coverage is limited "],
   };
 
   assert.throws(
-    () => core.completeRiskScanRequest(undefined, completion),
+    () => core.completeRiskScanRequest(undefined, artifacts, completion),
     /verified settlement correlation/u,
   );
   assert.throws(
     () =>
-      core.completeRiskScanRequest(settlement, {
-        ...completion,
-        requestRef: "request-other",
-      }),
-    /requestRef must match the verified settlement/u,
+      core.completeRiskScanRequest(
+        settlement,
+        Object.defineProperties({}, Object.getOwnPropertyDescriptors(artifacts)),
+        completion,
+      ),
+    /bound receipt and evidence/u,
+  );
+
+  assert.throws(
+    () => core.completeRiskScanRequest(settlement, {}, completion),
+    /bound receipt and evidence/u,
+  );
+
+  const otherInitial = core.startRiskScanRequest({
+    requestRef: "request-identity",
+    subjectRef: "wallet:other",
+    context: "bounded assessment",
+  });
+  const otherPending = core.markRiskScanPaymentPending(otherInitial);
+  const firstIdentitySettlement = core.createRiskScanVerifiedSettlement(
+    otherPending,
+    { requestRef: "request-identity", settlementRef: "settlement-identity" },
+  );
+  const secondIdentitySettlement = core.createRiskScanVerifiedSettlement(
+    otherPending,
+    { requestRef: "request-identity", settlementRef: "settlement-identity" },
+  );
+  const identityArtifacts = core.bindRiskScanReceiptEvidence(
+    firstIdentitySettlement,
+    { receiptRef: "receipt-identity", evidenceRef: "evidence-identity" },
   );
   assert.throws(
     () =>
-      core.completeRiskScanRequest(settlement, {
-        ...completion,
-        settlementRef: "settlement-other",
-      }),
-    /settlementRef must match the verified settlement/u,
+      core.completeRiskScanRequest(
+        secondIdentitySettlement,
+        identityArtifacts,
+        completion,
+      ),
+    /bound receipt and evidence/u,
   );
 
-  for (const [field, invalidValue] of [
-    ["resultRef", "   "],
-    ["receiptRef", "   "],
-    ["evidenceRef", "   "],
-  ]) {
-    assert.throws(
-      () =>
-        core.completeRiskScanRequest(settlement, {
-          ...completion,
-          [field]: invalidValue,
-        }),
-      new RegExp(field, "u"),
-    );
-  }
+  assert.throws(
+    () => core.completeRiskScanRequest(settlement, artifacts, {
+      ...completion,
+      resultRef: "   ",
+    }),
+    /resultRef/u,
+  );
 
   assert.throws(
-    () =>
-      core.completeRiskScanRequest(settlement, {
-        ...completion,
-        salientReasons: [],
-      }),
+    () => core.completeRiskScanRequest(settlement, artifacts, {
+      ...completion,
+      salientReasons: [],
+    }),
     /salientReasons/u,
   );
   assert.throws(
-    () =>
-      core.completeRiskScanRequest(settlement, {
-        ...completion,
-        limitations: ["   "],
-      }),
+    () => core.completeRiskScanRequest(settlement, artifacts, {
+      ...completion,
+      limitations: ["   "],
+    }),
     /limitations/u,
   );
 
-  assert.deepEqual(core.completeRiskScanRequest(settlement, completion), {
+  assert.deepEqual(core.completeRiskScanRequest(settlement, artifacts, completion), {
     state: "completed",
     requestRef: "request-46",
     subjectRef: "wallet:0x789",

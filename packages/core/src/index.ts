@@ -3,6 +3,7 @@ export const coreFoundation = {
 } as const;
 
 export {
+  bindRiskScanReceiptEvidence,
   completeRiskScanRequest,
   createRiskScanVerifiedSettlement,
   markRiskScanExecutionFailed,
@@ -14,8 +15,9 @@ export {
 } from "./risk-scan.ts";
 export type {
   RiskScanAssessmentResult,
+  RiskScanAssessmentCompletionInput,
+  RiskScanBoundReceiptEvidence,
   RiskScanCompleted,
-  RiskScanCompletionInput,
   RiskScanExecutionFailed,
   RiskScanLifecycleState,
   RiskScanPaymentFailed,
@@ -23,6 +25,7 @@ export type {
   RiskScanPaymentRequired,
   RiskScanRequest,
   RiskScanRequestInput,
+  RiskScanReceiptEvidenceInput,
   RiskScanSettlementCorrelationInput,
   RiskScanUnavailable,
   RiskScanVerifiedSettlement,
