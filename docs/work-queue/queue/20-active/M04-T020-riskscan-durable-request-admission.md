@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T010 accepted; M04-T010 accepted
 - Integration evidence: D-M02-010-002 and D-M04-010-002 accepted
 - Owner: the proposed implementation scope is `packages/backend/src/risk-scan-durable-request-admission.ts` and `packages/backend/tests/risk-scan-durable-request-admission.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -33,3 +33,7 @@ The local contract is [M04 RiskScan durable request admission](../../../specs/m0
 ## Ready transition
 
 Ready at 2026-09-05T13:54:27Z after the root revalidated all accepted dependencies and their recorded integration evidence, the committed local specification and plan, no active lane, disjoint two-file backend ownership, no pending human action, concrete executable validation, and queue validation. This remains a pure candidate boundary; no writer, reader, generated API, external connection, payment action, deployment, verification, evidence, or live claim is included.
+
+## Activation
+
+Activated at 2026-09-05T13:55:44Z after a fresh queue rescan confirmed the pushed ready state, no active lane, and the same disjoint backend ownership boundary. Task 1 starts with its durable-request-admission RED contract. No writer, reader, generated API, external action, payment, wallet/account action, deployment, verification, evidence, or live claim is authorized.
