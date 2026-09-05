@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M04-T010 accepted; M04-T040 accepted; M04-T050 accepted
 - Integration evidence: D-M04-010-002, D-M04-040-002, and D-M04-050-002 accepted
 - Owner: the proposed implementation scope is `packages/backend/convex/riskscan-pending-settlement-reader.ts` and `packages/backend/tests/risk-scan-pending-settlement-reader.test.mjs`. The root owns this card, its local specification and plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -35,3 +35,7 @@ The local contract is [M04 RiskScan internal pending-settlement reader](../../..
 ## Inbox transition
 
 Recorded at 2026-09-05T17:36:12Z after a fresh queue rescan confirmed M04-T010, M04-T040, and M04-T050—including their integration evidence—are accepted; no active lane owns the new two-path backend boundary; and no human action blocks a local read-only query specification or controlled handler work. This inbox card authorizes neither RED/code nor an external runtime, store, payment, settlement, transaction verification, finality, evidence, result, API/UI, deployment, or live claim.
+
+## Ready transition
+
+Ready at 2026-09-05T17:46:02Z after the root revalidated accepted M04-T010, M04-T040, and M04-T050 dependencies and their integration evidence; the pushed corrected local specification and plan; disjoint two-path backend ownership; no active lane; no pending human action; concrete validation commands; queue validation; and the independent design review plus scoped re-review. The card remains a local internal read-only query only; no configured runtime, external store, payment, settlement, transaction verification, finality, evidence, result, API/UI, deployment, or live claim is authorized.
