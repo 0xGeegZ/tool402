@@ -17,6 +17,14 @@ function isNonblankString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+function isNonemptyNonblankStringArray(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every(isNonblankString)
+  );
+}
+
 function readRiskScanQuickResult(
   value: unknown,
 ): RiskScanQuickResult | undefined {
@@ -25,30 +33,32 @@ function readRiskScanQuickResult(
   }
 
   const result = value as Record<string, unknown>;
-  const isValid =
-    isNonblankString(result.requestRef) &&
-    isNonblankString(result.subjectRef) &&
-    isNonblankString(result.context) &&
-    (result.disposition === "needs_disclosure" ||
-      result.disposition === "disclosures_reported") &&
-    Array.isArray(result.reasons) &&
-    result.reasons.length > 0 &&
-    result.reasons.every(isNonblankString) &&
-    Array.isArray(result.limitations) &&
-    result.limitations.length > 0 &&
-    result.limitations.every(isNonblankString);
+  const requestRef = result.requestRef;
+  const subjectRef = result.subjectRef;
+  const context = result.context;
+  const disposition = result.disposition;
+  const reasons = result.reasons;
+  const limitations = result.limitations;
 
-  if (!isValid) {
+  if (
+    !isNonblankString(requestRef) ||
+    !isNonblankString(subjectRef) ||
+    !isNonblankString(context) ||
+    (disposition !== "needs_disclosure" &&
+      disposition !== "disclosures_reported") ||
+    !isNonemptyNonblankStringArray(reasons) ||
+    !isNonemptyNonblankStringArray(limitations)
+  ) {
     return undefined;
   }
 
   return {
-    requestRef: result.requestRef,
-    subjectRef: result.subjectRef,
-    context: result.context,
-    disposition: result.disposition,
-    reasons: [...result.reasons],
-    limitations: [...result.limitations],
+    requestRef,
+    subjectRef,
+    context,
+    disposition,
+    reasons: [...reasons],
+    limitations: [...limitations],
   };
 }
 
