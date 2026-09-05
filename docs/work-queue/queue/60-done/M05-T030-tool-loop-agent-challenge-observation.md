@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M05-T010 accepted; M05-T020 accepted; M02-T050 accepted;
   M02-T060 accepted
 - Integration evidence: D-M05-010-002, D-M05-020-002, D-M02-050-002, and
@@ -99,3 +99,23 @@ and the same disjoint three-path agent ownership. The task starts with its
 ToolLoopAgent RED contract. No configured route assertion, payment, signing,
 wallet/account action, deployment, transaction verification, finality,
 evidence, result, or external claim is authorized.
+
+## Acceptance
+
+Accepted at 2026-09-05T21:04:46Z. `MODULE_BASE` is
+`ca6b272c6458d2196b32b3e96bb15df25ba3f654`; `MODULE_HEAD` is
+`bccc75c0af25a4ca32f78c6099fe616d75cf951c`. An observed missing-module RED,
+then scoped opacity and single-status-read RED regressions, became 32 focused
+Green Agent contracts. Root Node 22.21.1 clean-install dry-run, typecheck,
+test, lint, production Webpack build, queue validation, whitespace check, and
+enabled local-reference guard passed. The successful Webpack build retains an
+unrelated optional upstream peer-resolution warning from `@x402/core`; this
+card does not change package metadata or the lockfile. A real local Next
+exercise returned only `tool_selected` followed by `unavailable`; it used no
+configured payment route, payment header, or payment action. The independent
+task review, two scoped re-reviews, and two fresh final module-review
+generations found no outstanding P0, P1, or P2 finding. This acceptance covers
+only controlled local unsigned challenge observation. It does not assert a
+configured or live payment route, payment, settlement, transaction
+verification, finality, receipt/evidence, result release, deployment, or any
+external fact.
