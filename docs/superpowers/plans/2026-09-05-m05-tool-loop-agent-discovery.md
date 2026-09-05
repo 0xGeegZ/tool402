@@ -77,11 +77,15 @@ the built-in Node test runner with controlled `Response` fixtures.
   Add negative cases for a credential-bearing or non-HTTP base, rejected
   fetch, non-200 response, missing JSON content type, invalid JSON, unknown or
   extra directory fields, incomplete request/declarations metadata, invalid
-  payment metadata, and directory mutation after selection. Each negative case
-  must assert a safe `directory_invalid` or `directory_unavailable` result and
-  no extra fetch call. Add a boundary test that reads the source and rejects
-  `POST`, `body:`, payment/authorization headers, x402, wallet, signer,
-  account, `process.env`, backend, timer, retry, and dynamic import use.
+  payment metadata (including blank, zero, or non-canonical EVM network/price
+  values), and directory mutation after selection. Each negative case must
+  assert a safe `directory_invalid` or `directory_unavailable` result and no
+  extra fetch call. Add a boundary test that reads the source and rejects
+  outbound POST/request-body/payment-or-authorization-header construction,
+  `@x402/*` imports/access, wallet, signer, account, `process.env`, backend,
+  timer, retry, and dynamic import use. The boundary test must allow static
+  descriptor metadata; the controlled fetcher test proves that the only
+  outbound request is GET.
 
 - [ ] **Step 2: Observe RED**
 

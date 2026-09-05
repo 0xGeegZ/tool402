@@ -69,8 +69,8 @@ export type RiskScanConsumerDiscovery =
           | {
               state: "locally_configured";
               protocol: "x402";
-              network: string;
-              price: string;
+              network: `eip155:${number}`;
+              price: `$${string}`;
             };
       };
     };
@@ -112,7 +112,11 @@ the exact `riskscan.quick` identifier/name/request metadata, the complete
 bounded input/declarations descriptor, both limitations in order, and exactly
 one of the two approved payment summary shapes above. Objects or arrays with
 extra, missing, inherited, accessor-backed, non-enumerable, or malformed
-fields are invalid.
+fields are invalid. A `locally_configured` network must independently match
+`/^eip155:[1-9]\d*$/u`; its price must independently match
+`/^\$(?:0\.\d*[1-9]\d*|[1-9]\d*(?:\.\d+)?)$/u`. Blank, zero, non-canonical,
+or otherwise malformed values are invalid even though the Consumer Agent does
+not import the provider's parser.
 
 The agent creates a new selection object from validated primitive values and
 fixed metadata. It never returns a provider-owned object reference and never
@@ -136,9 +140,13 @@ this discovery boundary is accepted.
 - RED/GREEN agent tests prove exact discovery request construction, strict
   directory/payment validation, safe cloning, invalid/unavailable mapping, no
   extra calls, and no secret/header/body leakage.
-- An agent boundary test rejects `POST`, request-body/payment/wallet/x402/
-  backend/environment imports or access, clock/timer/retry behavior, and
-  hidden network side effects beyond the injected one-shot fetcher.
+- An agent boundary test rejects outbound POST construction, request bodies,
+  payment or authorization header construction, `@x402/*` imports/access,
+  wallet/account/backend/environment imports or access, clock/timer/retry
+  behavior, and hidden network side effects beyond the injected one-shot
+  fetcher. It permits static descriptor metadata such as its advertised POST
+  method and safe `x402` protocol label; the controlled fetcher tests prove the
+  sole outbound request is the required GET.
 - Agent/root Node 22.21.1 typecheck, test, lint, production web build,
   queue/reference checks, independent task review, and two fresh module-review
   generations pass.

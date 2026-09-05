@@ -52,9 +52,10 @@ The local contract is [M05 ToolLoopAgent RiskScan discovery](../../../specs/m05-
 - RED/GREEN agent tests cover exact injected GET construction, valid safe
   selection, malformed/unavailable directory outcomes, exact metadata/payment
   validation, no leakage, no extra fetch, and response-object isolation.
-- An agent boundary test rejects forbidden imports, POST/body/header/payment,
-  wallet/account/environment/backend, timer/retry, and hidden side-effect
-  paths.
+- An agent boundary test rejects outbound POST/body/payment-or-authorization
+  header construction, forbidden imports/access, wallet/account/environment/
+  backend, timer/retry, and hidden side-effect paths while permitting the safe
+  static descriptor metadata it validates.
 - `npm run typecheck --workspace @tool402/agent`
 - `npm run test --workspace @tool402/agent`
 - `npm run lint --workspace @tool402/agent`
