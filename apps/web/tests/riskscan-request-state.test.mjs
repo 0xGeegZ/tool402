@@ -27,8 +27,15 @@ function validQuickResult() {
     subjectRef: "service:tool402",
     context: "caller disclosure review",
     disposition: "disclosures_reported",
-    reasons: ["caller reported identity disclosure"],
-    limitations: ["Quick reflects caller-supplied declarations."],
+    reasons: [
+      "caller reported identity disclosure",
+      "caller reported pricing disclosure",
+      "caller reported limitations disclosure",
+      "caller reported evidence disclosure",
+    ],
+    limitations: [
+      "Quick reflects caller-supplied declarations and does not verify a service, payment, or evidence record.",
+    ],
   };
 }
 
@@ -116,4 +123,17 @@ test("projects a valid Quick payload without extra response properties", async (
     kind: "quick_response",
     result: validQuickResult(),
   });
+});
+
+test("rejects a structurally valid Quick payload that contradicts the submitted input", async () => {
+  const result = {
+    ...validQuickResult(),
+    disposition: "needs_disclosure",
+    reasons: ["identity disclosure"],
+  };
+  const outcome = await submitRiskScanRequest(validInput(), async () =>
+    Response.json(result),
+  );
+
+  assert.deepEqual(outcome, { kind: "unexpected_response" });
 });

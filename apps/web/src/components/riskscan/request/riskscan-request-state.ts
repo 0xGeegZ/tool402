@@ -1,4 +1,8 @@
-import type { RiskScanQuickInput, RiskScanQuickResult } from "@tool402/core";
+import {
+  assessRiskScanQuick,
+  type RiskScanQuickInput,
+  type RiskScanQuickResult,
+} from "@tool402/core";
 
 export type RiskScanRequestOutcome =
   | { kind: "unavailable" }
@@ -22,6 +26,27 @@ function isNonemptyNonblankStringArray(value: unknown): value is string[] {
     Array.isArray(value) &&
     value.length > 0 &&
     value.every(isNonblankString)
+  );
+}
+
+function hasSameStrings(actual: string[], expected: string[]): boolean {
+  return (
+    actual.length === expected.length &&
+    actual.every((value, index) => value === expected[index])
+  );
+}
+
+function matchesRiskScanQuickResult(
+  actual: RiskScanQuickResult,
+  expected: RiskScanQuickResult,
+): boolean {
+  return (
+    actual.requestRef === expected.requestRef &&
+    actual.subjectRef === expected.subjectRef &&
+    actual.context === expected.context &&
+    actual.disposition === expected.disposition &&
+    hasSameStrings(actual.reasons, expected.reasons) &&
+    hasSameStrings(actual.limitations, expected.limitations)
   );
 }
 
@@ -89,7 +114,9 @@ export async function submitRiskScanRequest(
   try {
     const result: unknown = await response.json();
     const quickResult = readRiskScanQuickResult(result);
-    return quickResult
+    const expectedQuickResult = assessRiskScanQuick(input);
+    return quickResult &&
+      matchesRiskScanQuickResult(quickResult, expectedQuickResult)
       ? { kind: "quick_response", result: quickResult }
       : { kind: "unexpected_response" };
   } catch {
