@@ -1,5 +1,5 @@
 import { internalMutationGeneric, type IndexRange } from "convex/server";
-import { v } from "convex/values";
+import { v, type GenericId } from "convex/values";
 import {
   admitRiskScanSettlementAttempt,
   type RiskScanSettlementAttemptCandidateDocument,
@@ -29,6 +29,22 @@ function matchesInitialSettlementAttempt<RequestId>(
     && existing.nextReconciliationAt === document.nextReconciliationAt
     && existing.createdAt === document.createdAt
     && existing.updatedAt === document.updatedAt;
+}
+
+function hasOpaqueAttemptId(
+  existing: unknown,
+): existing is Record<string, unknown> & {
+  readonly _id: GenericId<"riskScanSettlementAttempts">;
+} {
+  if (existing === null || typeof existing !== "object") {
+    return false;
+  }
+
+  const descriptor = Object.getOwnPropertyDescriptor(existing, "_id");
+  return descriptor !== undefined
+    && Object.hasOwn(descriptor, "value")
+    && typeof descriptor.value === "string"
+    && descriptor.value.length > 0;
 }
 
 function rejectIneligibleRequest(): never {
@@ -99,7 +115,7 @@ export const recordInitialRiskScanSettlementAttempt = internalMutationGeneric({
     const [existing] = existingRows;
     if (
       existingRows.length !== 1
-      || existing === undefined
+      || !hasOpaqueAttemptId(existing)
       || !matchesInitialSettlementAttempt(existing, document)
     ) {
       return rejectSettlementAttemptConflict();

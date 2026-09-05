@@ -291,16 +291,23 @@ test("rejects duplicate candidate attempts before inserting", async () => {
   assert.deepEqual(calls.inserts, []);
 });
 
-test("rejects malformed durable attempts before inserting", async () => {
+test("rejects null, missing-ID, and malformed durable attempts before inserting", async () => {
   const { recordInitialRiskScanSettlementAttempt } = await loadWriter();
-  const { calls, handlerContext } = createControlledDatabase({
-    existingRows: [{ _id: "riskScanSettlementAttempts:malformed", _creationTime: 0 }],
-  });
 
-  await assertConflict(recordInitialRiskScanSettlementAttempt._handler, handlerContext);
-  assertRequestLookup(calls);
-  assertCanonicalQuery(calls);
-  assert.deepEqual(calls.inserts, []);
+  for (const row of [
+    null,
+    { _creationTime: 0, ...canonicalAttempt },
+    { _id: "riskScanSettlementAttempts:malformed", _creationTime: 0 },
+  ]) {
+    const { calls, handlerContext } = createControlledDatabase({
+      existingRows: [row],
+    });
+
+    await assertConflict(recordInitialRiskScanSettlementAttempt._handler, handlerContext);
+    assertRequestLookup(calls);
+    assertCanonicalQuery(calls);
+    assert.deepEqual(calls.inserts, []);
+  }
 });
 
 test("rejects every protected-field mismatch before inserting", async () => {
