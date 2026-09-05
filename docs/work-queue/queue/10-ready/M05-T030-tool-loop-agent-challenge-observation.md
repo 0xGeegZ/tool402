@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M05-T010 accepted; M05-T020 accepted; M02-T050 accepted;
   M02-T060 accepted
 - Integration evidence: D-M05-010-002, D-M05-020-002, D-M02-050-002, and
@@ -78,3 +78,15 @@ not return to M04 persistence or reconciliation. This inbox card authorizes
 neither RED/code nor a configured route, payment, signing, wallet/account
 action, deployment, transaction verification, finality, evidence, result, or
 live claim.
+
+## Ready transition
+
+Ready at 2026-09-05T20:37:46Z after the root revalidated the accepted
+M05-T010, M05-T020, M02-T050, and M02-T060 dependencies and their integration
+evidence; the pushed `49e78c00a1d8759736ecee570ee64abd9d2c95a2` local
+specification and plan; disjoint three-path agent ownership; no active lane;
+no pending human action; concrete validation commands; queue validation; and
+the independent design review plus its scoped re-review. The card remains
+unsigned challenge observation only: no configured route assertion, payment,
+signing, wallet/account action, deployment, transaction verification,
+finality, evidence, result, or external claim is authorized.
