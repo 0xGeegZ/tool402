@@ -15,8 +15,22 @@ type IdempotencyKeyIndexRange = IndexRange & {
   eq(field: "idempotencyKeyHash", value: string): IndexRange;
 };
 
+interface StoredSettlementAttempt {
+  readonly _id: GenericId<"riskScanSettlementAttempts">;
+  readonly publicId: unknown;
+  readonly requestId: unknown;
+  readonly operation: unknown;
+  readonly idempotencyKeyHash: unknown;
+  readonly network: unknown;
+  readonly state: unknown;
+  readonly candidateSettlementRef: unknown;
+  readonly nextReconciliationAt: unknown;
+  readonly createdAt: unknown;
+  readonly updatedAt: unknown;
+}
+
 function matchesInitialSettlementAttempt<RequestId>(
-  existing: Record<string, unknown>,
+  existing: StoredSettlementAttempt,
   document: InitialSettlementAttemptDocument<RequestId>,
 ): boolean {
   return existing.publicId === document.publicId
@@ -31,20 +45,86 @@ function matchesInitialSettlementAttempt<RequestId>(
     && existing.updatedAt === document.updatedAt;
 }
 
-function hasOpaqueAttemptId(
-  existing: unknown,
-): existing is Record<string, unknown> & {
-  readonly _id: GenericId<"riskScanSettlementAttempts">;
-} {
-  if (existing === null || typeof existing !== "object") {
-    return false;
+function readOwnEnumerableDataProperty(
+  existing: object,
+  key: string,
+): unknown | undefined {
+  const descriptor = Object.getOwnPropertyDescriptor(existing, key);
+
+  if (
+    descriptor === undefined
+    || descriptor.enumerable !== true
+    || !Object.hasOwn(descriptor, "value")
+  ) {
+    return undefined;
   }
 
-  const descriptor = Object.getOwnPropertyDescriptor(existing, "_id");
-  return descriptor !== undefined
-    && Object.hasOwn(descriptor, "value")
-    && typeof descriptor.value === "string"
-    && descriptor.value.length > 0;
+  return descriptor.value;
+}
+
+function isOpaqueAttemptId(
+  value: unknown,
+): value is GenericId<"riskScanSettlementAttempts"> {
+  return typeof value === "string" && value.length > 0;
+}
+
+function readStoredSettlementAttempt(
+  existing: unknown,
+): StoredSettlementAttempt | null {
+  if (existing === null || typeof existing !== "object") {
+    return null;
+  }
+
+  const attemptId = readOwnEnumerableDataProperty(existing, "_id");
+  const publicId = readOwnEnumerableDataProperty(existing, "publicId");
+  const requestId = readOwnEnumerableDataProperty(existing, "requestId");
+  const operation = readOwnEnumerableDataProperty(existing, "operation");
+  const idempotencyKeyHash = readOwnEnumerableDataProperty(
+    existing,
+    "idempotencyKeyHash",
+  );
+  const network = readOwnEnumerableDataProperty(existing, "network");
+  const state = readOwnEnumerableDataProperty(existing, "state");
+  const candidateSettlementRef = readOwnEnumerableDataProperty(
+    existing,
+    "candidateSettlementRef",
+  );
+  const nextReconciliationAt = readOwnEnumerableDataProperty(
+    existing,
+    "nextReconciliationAt",
+  );
+  const createdAt = readOwnEnumerableDataProperty(existing, "createdAt");
+  const updatedAt = readOwnEnumerableDataProperty(existing, "updatedAt");
+
+  if (
+    !isOpaqueAttemptId(attemptId)
+    || publicId === undefined
+    || requestId === undefined
+    || operation === undefined
+    || idempotencyKeyHash === undefined
+    || network === undefined
+    || state === undefined
+    || candidateSettlementRef === undefined
+    || nextReconciliationAt === undefined
+    || createdAt === undefined
+    || updatedAt === undefined
+  ) {
+    return null;
+  }
+
+  return {
+    _id: attemptId,
+    publicId,
+    requestId,
+    operation,
+    idempotencyKeyHash,
+    network,
+    state,
+    candidateSettlementRef,
+    nextReconciliationAt,
+    createdAt,
+    updatedAt,
+  };
 }
 
 function rejectIneligibleRequest(): never {
@@ -112,18 +192,22 @@ export const recordInitialRiskScanSettlementAttempt = internalMutationGeneric({
       };
     }
 
+    if (existingRows.length !== 1) {
+      return rejectSettlementAttemptConflict();
+    }
+
     const [existing] = existingRows;
+    const storedAttempt = readStoredSettlementAttempt(existing);
     if (
-      existingRows.length !== 1
-      || !hasOpaqueAttemptId(existing)
-      || !matchesInitialSettlementAttempt(existing, document)
+      storedAttempt === null
+      || !matchesInitialSettlementAttempt(storedAttempt, document)
     ) {
       return rejectSettlementAttemptConflict();
     }
 
     return {
       status: "replayed" as const,
-      attemptId: existing._id,
+      attemptId: storedAttempt._id,
       state: "pending_reconciliation" as const,
     };
   },

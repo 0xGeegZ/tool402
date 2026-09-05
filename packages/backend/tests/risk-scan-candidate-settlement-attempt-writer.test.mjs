@@ -311,6 +311,51 @@ test("rejects null, missing-ID, non-string-ID, and malformed durable attempts be
   }
 });
 
+test("rejects inherited canonical fields rather than replaying them", async () => {
+  const { recordInitialRiskScanSettlementAttempt } = await loadWriter();
+  const inheritedRow = Object.create(canonicalAttempt);
+  Object.defineProperty(inheritedRow, "_id", {
+    configurable: true,
+    enumerable: true,
+    value: "riskScanSettlementAttempts:inherited",
+    writable: true,
+  });
+  const { calls, handlerContext } = createControlledDatabase({
+    existingRows: [inheritedRow],
+  });
+
+  await assertConflict(recordInitialRiskScanSettlementAttempt._handler, handlerContext);
+  assertRequestLookup(calls);
+  assertCanonicalQuery(calls);
+  assert.deepEqual(calls.inserts, []);
+});
+
+test("rejects stored accessor fields without invoking their getters", async () => {
+  const { recordInitialRiskScanSettlementAttempt } = await loadWriter();
+  const accessorRow = {
+    _id: "riskScanSettlementAttempts:accessor",
+    _creationTime: 0,
+    ...canonicalAttempt,
+  };
+  let accessorRead = false;
+  Object.defineProperty(accessorRow, "network", {
+    enumerable: true,
+    get() {
+      accessorRead = true;
+      throw new Error("stored accessor must not run");
+    },
+  });
+  const { calls, handlerContext } = createControlledDatabase({
+    existingRows: [accessorRow],
+  });
+
+  await assertConflict(recordInitialRiskScanSettlementAttempt._handler, handlerContext);
+  assert.equal(accessorRead, false);
+  assertRequestLookup(calls);
+  assertCanonicalQuery(calls);
+  assert.deepEqual(calls.inserts, []);
+});
+
 test("rejects every protected-field mismatch before inserting", async () => {
   const { recordInitialRiskScanSettlementAttempt } = await loadWriter();
   const mismatchCases = [
