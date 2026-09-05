@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T010 accepted; M04-T010 accepted; M04-T020 accepted
 - Integration evidence: D-M02-010-002, D-M04-010-002, and D-M04-020-002 accepted
 - Owner: the proposed implementation scope is `packages/backend/convex/riskscan-requests.ts`, `packages/backend/convex/tsconfig.json`, and `packages/backend/tests/risk-scan-internal-request-writer.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -35,3 +35,7 @@ The registered function is internal-only and becomes a real transactional writer
 ## Ready transition
 
 Ready at 2026-09-05T14:58:37Z after the root revalidated all accepted dependencies and their recorded integration evidence, the committed local specification and plan, no active lane, disjoint three-path backend ownership, no pending human action, concrete executable validation, and queue validation. This is internal writer code only; no configured runtime, deployed store, payment/settlement, verification, evidence, or live claim is included.
+
+## Activation
+
+Activated at 2026-09-05T14:59:49Z after a fresh queue rescan confirmed the pushed ready state, no active lane, and the same disjoint backend ownership boundary. Task 1 starts with its internal-writer RED contract. No public function, generated API, configured runtime, external action, payment, wallet/account action, deployment, verification, evidence, or live claim is authorized.
