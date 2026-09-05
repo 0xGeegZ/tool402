@@ -450,6 +450,54 @@ test("issues an EVM challenge without loading the native Hedera scheme", async (
   }
 });
 
+test("fails closed when x402 could select an unsafe native Hedera identity", async (t) => {
+  t.mock.method(console, "warn", () => {});
+
+  const inheritedIdentity = Object.create({
+    x402Version: 2,
+    scheme: "exact",
+    network: "hedera:testnet",
+  });
+  const accessorIdentity = (key, value) => {
+    const kind = hederaSupportedKind();
+    Object.defineProperty(kind, key, {
+      enumerable: true,
+      get() {
+        return value;
+      },
+    });
+    return kind;
+  };
+
+  for (const [description, unsafeKind] of [
+    ["inherited identity", inheritedIdentity],
+    ["accessor-backed x402 version", accessorIdentity("x402Version", 2)],
+    ["accessor-backed scheme", accessorIdentity("scheme", "exact")],
+    ["accessor-backed network", accessorIdentity("network", "hedera:testnet")],
+  ]) {
+    const localFacilitator = createHederaLocalFacilitator([
+      unsafeKind,
+      hederaSupportedKind(),
+    ]);
+    const response = await handleRiskScanPost(
+      createRequest(validQuickInput()),
+      configuredHederaEnvironment(),
+      { facilitatorClient: localFacilitator.client },
+    );
+
+    assert.equal(response.status, 503, description);
+    assert.equal(response.headers.get("payment-required"), null, description);
+    assert.deepEqual(
+      await response.json(),
+      { error: "risk_scan_unavailable" },
+      description,
+    );
+    assert.equal(localFacilitator.calls.getSupported, 1, description);
+    assert.equal(localFacilitator.calls.verify, 0, description);
+    assert.equal(localFacilitator.calls.settle, 0, description);
+  }
+});
+
 test("fails closed when the native Hedera facilitator capability is not uniquely safe", async (t) => {
   t.mock.method(console, "warn", () => {});
 

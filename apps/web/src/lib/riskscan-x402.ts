@@ -230,7 +230,25 @@ function ownDataProperty(value: unknown, key: string): unknown {
     : undefined;
 }
 
-function isNativeHederaCapabilityKind(value: unknown): boolean {
+function matchesNativeHederaCapabilityKind(value: unknown): boolean {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const kind = value as {
+    x402Version?: unknown;
+    scheme?: unknown;
+    network?: unknown;
+  };
+
+  return (
+    kind.x402Version === 2 &&
+    kind.scheme === "exact" &&
+    kind.network === "hedera:testnet"
+  );
+}
+
+function hasSafeNativeHederaCapabilityKind(value: unknown): boolean {
   return (
     ownDataProperty(value, "x402Version") === 2 &&
     ownDataProperty(value, "scheme") === "exact" &&
@@ -261,7 +279,19 @@ function assertNativeHederaFacilitatorSupport(value: unknown): void {
     throw new TypeError("native Hedera facilitator kinds are malformed");
   }
 
-  const matchingKinds = kinds.filter(isNativeHederaCapabilityKind);
+  const matchingKinds = [];
+
+  for (const kind of kinds) {
+    if (!matchesNativeHederaCapabilityKind(kind)) {
+      continue;
+    }
+
+    if (!hasSafeNativeHederaCapabilityKind(kind)) {
+      throw new RangeError("native Hedera facilitator support is unsafe");
+    }
+
+    matchingKinds.push(kind);
+  }
 
   if (matchingKinds.length !== 1 || !hasNativeHederaFeePayer(matchingKinds[0])) {
     throw new RangeError("native Hedera facilitator support is unavailable");
