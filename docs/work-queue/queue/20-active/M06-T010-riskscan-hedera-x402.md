@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T060 accepted; M03-T030 accepted; M05-T010 accepted;
   M05-T020 accepted; M05-T030 accepted
 - Integration evidence: D-M02-060-002, D-M03-030-002, D-M05-010-002,
@@ -90,3 +90,14 @@ design review plus scoped re-review with no remaining finding. The card is
 ready only for its local RED configuration/server tests. It does not authorize
 a real recipient/facilitator configuration, wallet/account/key action,
 signing, payment, transaction, deployment, or live claim.
+
+## Activation
+
+Activated at 2026-09-05T21:47:17Z after a fresh queue rescan confirmed the
+pushed `4c85e893da52a4c1820b5d138d7e12eb80d41a5d` ready state, all accepted
+dependencies/evidence, root-only lockfile integration, disjoint web/Agent
+ownership, no other active lane, and no human blocker. The task starts with
+its controlled native configuration/server RED contract in the current
+repository workspace under the project worktree policy. No real
+recipient/facilitator configuration, wallet/account/key action, signing,
+payment, transaction, deployment, or live claim is authorized.
