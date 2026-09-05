@@ -33,4 +33,4 @@ The local manifest is [UI-S03](../../../ui/UI-S03.md), the selected local bounda
 
 ## Activation
 
-Activated at 2026-09-05T08:13:01Z after the root verified the committed local manifest and plan, accepted dependencies, disjoint ownership, declared human-action boundary, and queue validation. The first implementation task is the response-state adapter RED contract.
+Activated at 2026-09-05T08:13:01Z after the root verified the committed local manifest and plan, accepted dependencies, disjoint ownership, declared human-action boundary, and queue validation. Task 1's response-state adapter was accepted at 2026-09-05T08:22:50Z after RED/GREEN coverage, root Node 22.21.1 typecheck and 34-test web verification, an independent task review, and scoped re-review of its response-projection and test-output fix. Task 2's route/presentation work may now consume only that accepted adapter.
