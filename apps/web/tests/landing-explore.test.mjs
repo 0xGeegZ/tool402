@@ -52,6 +52,9 @@ test("renders a single read-only Explore discovery surface", async () => {
   assert.match(page, /<RiskScanDiscoveryCard\s*\/>/);
   assert.match(card, /RiskScan/);
   assert.match(card, /read-only/i);
+  assert.match(card, /<Link\b[^>]*href=["']\/explore\/riskscan["']/);
+  const hrefs = [...card.matchAll(/href=["']([^"']+)["']/g)].map(([, href]) => href);
+  assert.deepEqual(hrefs, ["/explore/riskscan"]);
   assert.doesNotMatch(card, /<(?:a|button|form|input|select|textarea)\b/i);
 });
 
