@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M04-T010 accepted; M04-T040 accepted; M04-T060 accepted
 - Integration evidence: D-M04-010-002, D-M04-040-002, and D-M04-060-002 accepted
 - Owner: the proposed implementation scope is `packages/backend/convex/riskscan-pending-reconciliation-selector.ts` and `packages/backend/tests/risk-scan-pending-reconciliation-selector.test.mjs`. The root owns this card, its local specification and plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -84,3 +84,17 @@ disjoint backend ownership boundary. The task starts with its internal-selector
 RED contract. No public function, generated API, configured runtime, external
 action, payment, wallet/account action, deployment, transaction verification,
 finality, evidence, or live claim is authorized.
+
+## Acceptance
+
+Accepted at 2026-09-05T18:24:21Z. `MODULE_BASE` is
+`b55a77193717d52ede9526c76d8fa8984b247f86`; `MODULE_HEAD` is
+`540a2c5a8fab3c56bb7ff9894b29fd94119a8188`. The controlled internal-selector
+RED/GREEN contract, backend typecheck/test/lint, root Node 22.21.1 typecheck,
+129-test suite, lint, production Webpack build, queue validation, whitespace
+check, and enabled local-reference guard passed. The independent task review
+and two fresh final module-review generations returned PASS with no Critical,
+Important, or Minor finding. This acceptance covers only controlled local query
+registration and handler behavior; it does not assert a configured durable
+store, reconciliation, payment, settlement, transaction verification, finality,
+evidence, result, deployment, or live behavior.
