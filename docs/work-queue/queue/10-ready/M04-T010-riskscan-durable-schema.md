@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T030 accepted; M02-T010 accepted; M03-T020 accepted; M03-T030 accepted
 - Integration evidence: D-M01-FOUND-001, D-M02-010-002, D-M03-020-002, and D-M03-030-002 accepted
 - Owner: the proposed implementation scope is `packages/backend/convex/schema.ts` and `packages/backend/tests/risk-scan-schema.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -29,3 +29,7 @@ The local contract is [M04 RiskScan durable schema](../../../specs/m04-riskscan-
 - `npm run test --workspace @tool402/backend`
 - `npm run lint --workspace @tool402/backend`
 - Root `npm run typecheck`, `npm run test`, `npm run queue:check`, the enabled local-reference guard, independent task review, and two fresh clean module-review generations.
+
+## Ready transition
+
+Ready at 2026-09-05T13:27:57Z after the root revalidated all accepted dependencies and their recorded integration evidence, the committed local specification and plan, no active lane, disjoint two-file backend ownership, no pending human action, concrete executable validation, and queue validation. No writer, reader, generated API, external connection, payment action, deployment, or live claim is included.
