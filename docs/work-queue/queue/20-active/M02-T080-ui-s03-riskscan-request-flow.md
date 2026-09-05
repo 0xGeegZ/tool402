@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T040 accepted; M02-T010 accepted; M02-T020 accepted; M02-T050 accepted; M02-T060 accepted; M02-T070 accepted
 - Integration evidence: D-M01-FOUND-001, D-M02-010-002, D-M02-020-002, D-M02-050-002, D-M02-060-002, and D-M02-070-002 accepted
 - Owner: implementation lane will own `apps/web/src/app/explore/riskscan/try/page.tsx`, `apps/web/src/components/riskscan/request/**`, `apps/web/tests/riskscan-request-state.test.mjs`, and `apps/web/tests/riskscan-try.test.mjs`; it may amend `apps/web/src/components/riskscan/detail/riskscan-detail.tsx` and `apps/web/tests/riskscan-detail.test.mjs` only to add the committed local Try link. The root owns this card, the manifest, ledger, plan, and queue records.
@@ -30,3 +30,7 @@ The local manifest is [UI-S03](../../../ui/UI-S03.md), the selected local bounda
 - `npm run test --workspace @tool402/web`
 - `npx --no-install next build --webpack` from `apps/web` under Node 22.21.1
 - `npm run queue:check`, the local-reference guard, desktop/narrow browser checks, and a narrow accessibility audit.
+
+## Activation
+
+Activated at 2026-09-05T08:13:01Z after the root verified the committed local manifest and plan, accepted dependencies, disjoint ownership, declared human-action boundary, and queue validation. The first implementation task is the response-state adapter RED contract.
