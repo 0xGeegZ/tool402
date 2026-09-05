@@ -259,6 +259,31 @@ test("binds receipt and evidence references to a verified settlement", () => {
     requestRef: "request-46",
     settlementRef: "settlement-46",
   });
+
+  for (const invalidSettlement of [undefined, null]) {
+    assert.throws(
+      () =>
+        core.bindRiskScanReceiptEvidence(invalidSettlement, {
+          receiptRef: "receipt-46",
+          evidenceRef: "evidence-46",
+        }),
+      /verified settlement correlation/u,
+    );
+  }
+
+  const reflectiveCopy = Object.defineProperties(
+    {},
+    Object.getOwnPropertyDescriptors(settlement),
+  );
+  assert.throws(
+    () =>
+      core.bindRiskScanReceiptEvidence(reflectiveCopy, {
+        receiptRef: "receipt-46",
+        evidenceRef: "evidence-46",
+      }),
+    /verified settlement correlation/u,
+  );
+
   const artifacts = core.bindRiskScanReceiptEvidence(settlement, {
     receiptRef: " receipt-46 ",
     evidenceRef: " evidence-46 ",
