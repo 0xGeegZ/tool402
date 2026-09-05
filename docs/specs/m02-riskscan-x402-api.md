@@ -4,6 +4,11 @@
 
 This contract adds one configuration-aware `POST /api/riskscan` service boundary around the accepted RiskScan Quick assessment. It uses the local x402 v2 server integration only when all required runtime configuration is present. It does not commit a wallet, key, recipient, facilitator URL, payment payload, account, deployed address, live result, settlement, receipt, or testnet evidence.
 
+The accepted EVM configuration remains supported. The current native Hedera
+testnet extension is defined by [M06 RiskScan Hedera testnet x402 compatibility](m06-riskscan-hedera-x402.md); it is an additional closed configuration family,
+not a replacement for EVM, and retains the same protected route and local
+fail-closed behavior.
+
 ## Runtime configuration
 
 The protected boundary requires all four nonblank values at runtime:

@@ -71,6 +71,13 @@ export type RiskScanConsumerDiscovery =
               protocol: "x402";
               network: `eip155:${number}`;
               price: `$${string}`;
+            }
+          | {
+              state: "locally_configured";
+              protocol: "x402";
+              network: "hedera:testnet";
+              asset: `${number}.${number}.${number}`;
+              amount: `${bigint}`;
             };
       };
     };
@@ -110,13 +117,15 @@ Only a `200` response with JSON content is decoded. Its JSON value must match
 the exact committed Tool Directory shape: `version: "v1"`, one tool only,
 the exact `riskscan.quick` identifier/name/request metadata, the complete
 bounded input/declarations descriptor, both limitations in order, and exactly
-one of the two approved payment summary shapes above. Objects or arrays with
+one of the three approved payment summary shapes above. Objects or arrays with
 extra, missing, inherited, accessor-backed, non-enumerable, or malformed
 fields are invalid. A `locally_configured` network must independently match
 `/^eip155:[1-9]\d*$/u`; its price must independently match
-`/^\$(?:0\.\d*[1-9]\d*|[1-9]\d*(?:\.\d+)?)$/u`. Blank, zero, non-canonical,
-or otherwise malformed values are invalid even though the Consumer Agent does
-not import the provider's parser.
+`/^\$(?:0\.\d*[1-9]\d*|[1-9]\d*(?:\.\d+)?)$/u`. A native configured
+summary must instead use exactly `hedera:testnet`, a canonical numeric
+`asset` id, and a canonical nonzero atomic `amount`, with no `price` field.
+Blank, zero, non-canonical, mixed-family, or otherwise malformed values are
+invalid even though the Consumer Agent does not import the provider's parser.
 
 The agent creates a new selection object from validated primitive values and
 fixed metadata. It never returns a provider-owned object reference and never

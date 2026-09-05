@@ -87,7 +87,7 @@ operation.
 
 - When the parser returns `null`, `payment` is exactly
   `{ state: "configuration_required" }`.
-- When the parser returns a configuration, `payment` is exactly:
+- When the parser returns an EVM configuration, `payment` is exactly:
 
   ```ts
   {
@@ -98,10 +98,23 @@ operation.
   }
   ```
 
+- When the parser returns a native Hedera testnet configuration, `payment` is
+  exactly:
+
+  ```ts
+  {
+    state: "locally_configured",
+    protocol: "x402",
+    network: "hedera:testnet",
+    asset: configuration.price.asset,
+    amount: configuration.price.amount,
+  }
+  ```
+
 Neither state exposes a recipient, facilitator URL, credential, secret, account,
-wallet, payment header/payload, transaction, receipt, evidence reference, or
-result. `locally_configured` describes parser output only and is never a claim
-of network/facilitator support or live availability.
+wallet, fee payer, payment header/payload, transaction, receipt, evidence
+reference, or result. `locally_configured` describes parser output only and is
+never a claim of network/facilitator support or live availability.
 
 ## Scope and ownership
 
@@ -129,7 +142,7 @@ deployment, verification/evidence capture, and live evidence are excluded.
   route itself responds under a real Next request.
 - Tests prove absent or malformed configuration fails closed to
   `configuration_required`; a controlled valid parser configuration yields only
-  local protocol/network/price metadata.
+  local protocol/network metadata plus its EVM price or native asset/amount.
 - Tests prove a serialized response never leaks a recipient, facilitator URL,
   credential, payment payload/header, account, wallet, transaction, receipt,
   evidence reference, or result.
