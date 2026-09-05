@@ -135,6 +135,17 @@ test("rejects non-data own properties returned by a fetcher", async () => {
   assert.deepEqual(result, { kind: "directory_invalid" });
 });
 
+test("rejects a directory whose tools array has a custom prototype", async () => {
+  const value = directory();
+  Object.setPrototypeOf(value.tools, {});
+  const result = await discoverRiskScanQuick(base, async () => ({
+    status: 200,
+    headers: new Headers({ "content-type": "application/json" }),
+    json: async () => value,
+  }));
+  assert.deepEqual(result, { kind: "directory_invalid" });
+});
+
 test("returns a cloned selection rather than retaining decoded directory data", async () => {
   const value = directory({ state: "locally_configured", protocol: "x402", network: "eip155:1", price: "$1" });
   const { result } = await select(value);

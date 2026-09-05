@@ -103,7 +103,8 @@ function validPayment(value: unknown): RiskScanPayment | null {
 
 function validDirectory(value: unknown): RiskScanPayment | null {
   if (!hasKeys(value, ["version", "tools"]) || value.version !== "v1" ||
-    !Array.isArray(value.tools) || value.tools.length !== 1 || Reflect.ownKeys(value.tools).length !== 2) return null;
+    !Array.isArray(value.tools) || Object.getPrototypeOf(value.tools) !== Array.prototype ||
+    value.tools.length !== 1 || Reflect.ownKeys(value.tools).length !== 2) return null;
   const tool = value.tools[0];
   if (!hasKeys(tool, ["id", "name", "request", "input", "limitations", "payment"]) ||
     tool.id !== "riskscan.quick" || tool.name !== "RiskScan Quick" ||
