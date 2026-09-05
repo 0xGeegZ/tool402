@@ -175,9 +175,15 @@ export async function discoverRiskScanQuick(
   } catch {
     return { kind: "directory_invalid" };
   }
+  let directoryTarget: URL;
+  try {
+    directoryTarget = new URL("/api/tools", serviceBase);
+  } catch {
+    return { kind: "directory_invalid" };
+  }
   let response: Response;
   try {
-    response = await fetcher(new URL("/api/tools", serviceBase), directoryRequest());
+    response = await fetcher(directoryTarget, directoryRequest());
   } catch {
     return { kind: "directory_unavailable" };
   }

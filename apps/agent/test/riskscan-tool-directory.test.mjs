@@ -123,6 +123,19 @@ test("fails closed without fetching when an allowed URL facade throws on inspect
   assert.equal(calls, 0);
 });
 
+test("rejects a base that throws while constructing the directory target", async () => {
+  class ThrowingUrl extends URL {
+    toString() { throw new Error("target conversion must not become unavailable"); }
+  }
+  let calls = 0;
+  const result = await discoverRiskScanQuick(new ThrowingUrl("http://service.test/"), async () => {
+    calls += 1;
+    return Response.json(directory());
+  });
+  assert.deepEqual(result, { kind: "directory_invalid" });
+  assert.equal(calls, 0);
+});
+
 test("maps fetch failures and non-200 responses to unavailable", async () => {
   for (const fetcher of [
     async () => { throw new Error("offline"); },
