@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M04-T010 accepted; M04-T040 accepted; M04-T050 accepted
 - Integration evidence: D-M04-010-002, D-M04-040-002, and D-M04-050-002 accepted
 - Owner: the proposed implementation scope is `packages/backend/convex/riskscan-pending-settlement-reader.ts` and `packages/backend/tests/risk-scan-pending-settlement-reader.test.mjs`. The root owns this card, its local specification and plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -43,3 +43,7 @@ Ready at 2026-09-05T17:46:02Z after the root revalidated accepted M04-T010, M04-
 ## Activation
 
 Activated at 2026-09-05T17:47:13Z after a fresh queue rescan confirmed the pushed ready state, no active lane, accepted dependencies, and the same disjoint backend ownership boundary. The task starts with its internal-reader RED contract. No public function, generated API, configured runtime, external action, payment, wallet/account action, deployment, transaction verification, finality, evidence, or live claim is authorized.
+
+## Acceptance
+
+Accepted at 2026-09-05T18:02:38Z. `MODULE_BASE` is `3b6cf0f8b550098942738c6e1e3947244f65866b`; `MODULE_HEAD` is `623bd1835d62fe67e38961114bcfe863a891d125`. The controlled internal-reader RED/GREEN contract, backend typecheck/test/lint, root Node 22.21.1 typecheck, 120-test suite, lint, production Webpack build, queue validation, whitespace check, and enabled local-reference guard passed. The independent task review and two fresh final module-review generations returned PASS with no Critical, Important, or Minor finding. This acceptance covers only controlled local query registration and handler behavior; it does not assert a configured durable store, payment, settlement, transaction verification, finality, evidence, result, deployment, or live behavior.
