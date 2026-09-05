@@ -20,6 +20,8 @@ const canonicalDocument = {
   updatedAt: 1n,
 };
 
+const conflictMessage = "RiskScan request reference conflicts with a different durable request";
+
 async function loadWriter() {
   return import(new URL("../convex/riskscan-requests.ts", import.meta.url));
 }
@@ -29,13 +31,13 @@ function copyValidArgs() {
 }
 
 function createControlledDatabase({
-  existing = null,
+  existingRows = [],
   insertedId = "riskScanRequests:created",
 } = {}) {
   const calls = { queries: [], inserts: [] };
   const db = {
     query(table) {
-      const query = { table, indexName: null, equality: null };
+      const query = { table, indexName: null, equality: null, takeLimit: null };
       calls.queries.push(query);
 
       return {
@@ -49,8 +51,9 @@ function createControlledDatabase({
           });
 
           return {
-            async unique() {
-              return existing;
+            async take(limit) {
+              query.takeLimit = limit;
+              return existingRows.slice(0, limit);
             },
           };
         },
@@ -70,7 +73,15 @@ function assertCanonicalQuery(calls) {
     table: "riskScanRequests",
     indexName: "by_request_ref",
     equality: { field: "requestRef", value: "request-402" },
+    takeLimit: 2,
   }]);
+}
+
+async function assertGenericConflict(handler, handlerContext) {
+  await assert.rejects(
+    () => handler(handlerContext, copyValidArgs()),
+    (error) => error instanceof RangeError && error.message === conflictMessage,
+  );
 }
 
 function assertSafeResult(result, status, requestId) {
@@ -166,11 +177,11 @@ test("replays an exactly matching initial request without inserting", async () =
   const { recordInitialRiskScanRequest } = await loadWriter();
   const existingId = "riskScanRequests:existing";
   const { calls, handlerContext } = createControlledDatabase({
-    existing: {
+    existingRows: [{
       _id: existingId,
       _creationTime: 0,
       ...canonicalDocument,
-    },
+    }],
   });
 
   const result = await recordInitialRiskScanRequest._handler(
@@ -183,24 +194,46 @@ test("replays an exactly matching initial request without inserting", async () =
   assert.deepEqual(calls.inserts, []);
 });
 
-test("rejects a conflicting request reference before inserting", async () => {
+test("rejects duplicate request-reference rows before inserting", async () => {
   const { recordInitialRiskScanRequest } = await loadWriter();
   const { calls, handlerContext } = createControlledDatabase({
-    existing: {
-      _id: "riskScanRequests:conflict",
-      _creationTime: 0,
-      ...canonicalDocument,
-      inputHash: "c".repeat(64),
-    },
+    existingRows: [
+      { _id: "riskScanRequests:duplicate-one", _creationTime: 0, ...canonicalDocument },
+      { _id: "riskScanRequests:duplicate-two", _creationTime: 1, ...canonicalDocument },
+    ],
   });
 
-  await assert.rejects(
-    () => recordInitialRiskScanRequest._handler(handlerContext, copyValidArgs()),
-    (error) => error instanceof RangeError
-      && error.message === "RiskScan request reference conflicts with a different durable request",
-  );
+  await assertGenericConflict(recordInitialRiskScanRequest._handler, handlerContext);
   assertCanonicalQuery(calls);
   assert.deepEqual(calls.inserts, []);
+});
+
+test("rejects every protected-field mismatch before inserting", async () => {
+  const { recordInitialRiskScanRequest } = await loadWriter();
+  const mismatchCases = [
+    ["publicId", "risk_403"],
+    ["requestRef", "request-403"],
+    ["subjectRefHash", "c".repeat(64)],
+    ["inputHash", "c".repeat(64)],
+    ["state", "completed"],
+    ["createdAt", 2n],
+    ["updatedAt", 2n],
+  ];
+
+  for (const [field, value] of mismatchCases) {
+    const { calls, handlerContext } = createControlledDatabase({
+      existingRows: [{
+        _id: "riskScanRequests:conflict",
+        _creationTime: 0,
+        ...canonicalDocument,
+        [field]: value,
+      }],
+    });
+
+    await assertGenericConflict(recordInitialRiskScanRequest._handler, handlerContext);
+    assertCanonicalQuery(calls);
+    assert.deepEqual(calls.inserts, []);
+  }
 });
 
 test("rejects invalid admission input before querying or inserting", async () => {

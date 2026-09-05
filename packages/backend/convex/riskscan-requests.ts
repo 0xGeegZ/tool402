@@ -18,6 +18,12 @@ function matchesInitialRequest(
     && existing.updatedAt === document.updatedAt;
 }
 
+function rejectRequestReferenceConflict(): never {
+  throw new RangeError(
+    "RiskScan request reference conflicts with a different durable request",
+  );
+}
+
 export const recordInitialRiskScanRequest = internalMutationGeneric({
   args: {
     publicId: v.string(),
@@ -34,14 +40,14 @@ export const recordInitialRiskScanRequest = internalMutationGeneric({
   }),
   handler: async (ctx, args) => {
     const candidate = admitRiskScanDurableRequest(args);
-    const existing = await ctx.db
+    const existingRows = await ctx.db
       .query("riskScanRequests")
       .withIndex("by_request_ref", (query) =>
         query.eq("requestRef", candidate.document.requestRef),
       )
-      .unique();
+      .take(2);
 
-    if (existing === null) {
+    if (existingRows.length === 0) {
       const requestId = await ctx.db.insert(
         "riskScanRequests",
         candidate.document,
@@ -54,10 +60,13 @@ export const recordInitialRiskScanRequest = internalMutationGeneric({
       };
     }
 
-    if (!matchesInitialRequest(existing, candidate.document)) {
-      throw new RangeError(
-        "RiskScan request reference conflicts with a different durable request",
-      );
+    const [existing] = existingRows;
+    if (
+      existingRows.length !== 1
+      || existing === undefined
+      || !matchesInitialRequest(existing, candidate.document)
+    ) {
+      return rejectRequestReferenceConflict();
     }
 
     return {
