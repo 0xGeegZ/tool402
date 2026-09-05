@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M04-T010 accepted; M04-T040 accepted
 - Integration evidence: D-M04-010-002 and D-M04-040-002 accepted
 - Owner: the proposed implementation scope is `packages/backend/src/risk-scan-settlement-record-admission.ts`, `packages/backend/convex/riskscan-settlement-records.ts`, `packages/backend/tests/risk-scan-settlement-record-admission.test.mjs`, and `packages/backend/tests/risk-scan-pending-verification-settlement-record-writer.test.mjs`. The root owns this card, its local specification and plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -43,3 +43,7 @@ Ready at 2026-09-05T17:06:36Z after the root revalidated the accepted M04-T010 a
 ## Activation
 
 Activated at 2026-09-05T17:07:39Z after a fresh queue rescan confirmed the pushed ready state, no active lane, accepted dependencies, and the same disjoint backend ownership boundary. Task 1 starts with its candidate-record admission RED contract. No public function, generated API, configured runtime, external action, payment, wallet/account action, deployment, finality, verification, evidence, or live claim is authorized.
+
+## Acceptance
+
+Accepted at 2026-09-05T17:32:43Z. Both Task 1 admission and Task 2 internal-writer contracts began from observed missing-module RED outcomes and reached focused GREEN coverage. Root Node 22.21.1 typecheck, the 108-test workspace suite, lint, queue validation, whitespace check, enabled local-reference guard, and production Webpack build passed. Independent task reviews and two fresh Standards/Spec module-review generations found no Critical, Important, or Minor finding. `MODULE_BASE` was `537a242881e041a6d412f0e40d5ee28e5af786f3`; `MODULE_HEAD` was `b8a418d0c940746f53fcd638666ddc958e2be0cb`. This acceptance records only controlled admission, registration, and handler behavior; it does not prove a configured store, payment, settlement, transaction verification, finality, receipt/evidence capture, result completion, deployment, or live behavior.
