@@ -109,6 +109,20 @@ test("rejects invalid bases without fetching", async () => {
   }
 });
 
+test("fails closed without fetching when an allowed URL facade throws on inspection", async () => {
+  const hostileBase = new Proxy(base, { get() { throw new Error("URL inspection must not escape"); } });
+  let calls = 0;
+  let result;
+  await assert.doesNotReject(async () => {
+    result = await discoverRiskScanQuick(hostileBase, async () => {
+      calls += 1;
+      return Response.json(directory());
+    });
+  });
+  assert.deepEqual(result, { kind: "directory_invalid" });
+  assert.equal(calls, 0);
+});
+
 test("maps fetch failures and non-200 responses to unavailable", async () => {
   for (const fetcher of [
     async () => { throw new Error("offline"); },
@@ -116,6 +130,26 @@ test("maps fetch failures and non-200 responses to unavailable", async () => {
   ]) {
     const result = await discoverRiskScanQuick(base, fetcher);
     assert.deepEqual(result, { kind: "directory_unavailable" });
+  }
+});
+
+test("fails closed for hostile response metadata facades after one fetch", async () => {
+  const responses = [
+    { get status() { throw new Error("status must not escape"); } },
+    { status: 200, get headers() { throw new Error("headers must not escape"); } },
+    { status: 200, headers: { get() { throw new Error("header get must not escape"); } } },
+  ];
+  for (const response of responses) {
+    let calls = 0;
+    let result;
+    await assert.doesNotReject(async () => {
+      result = await discoverRiskScanQuick(base, async () => {
+        calls += 1;
+        return response;
+      });
+    });
+    assert.deepEqual(result, { kind: "directory_invalid" });
+    assert.equal(calls, 1);
   }
 });
 

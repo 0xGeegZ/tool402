@@ -168,7 +168,11 @@ export async function discoverRiskScanQuick(
   serviceBase: URL,
   fetcher: RiskScanDirectoryFetcher = fetch,
 ): Promise<RiskScanConsumerDiscovery> {
-  if (!(serviceBase instanceof URL) || !["http:", "https:"].includes(serviceBase.protocol) || serviceBase.username || serviceBase.password) {
+  try {
+    if (!(serviceBase instanceof URL) || !["http:", "https:"].includes(serviceBase.protocol) || serviceBase.username || serviceBase.password) {
+      return { kind: "directory_invalid" };
+    }
+  } catch {
     return { kind: "directory_invalid" };
   }
   let response: Response;
@@ -177,8 +181,12 @@ export async function discoverRiskScanQuick(
   } catch {
     return { kind: "directory_unavailable" };
   }
-  if (response.status !== 200) return { kind: "directory_unavailable" };
-  if (!/^application\/json(?:;|$)/iu.test(response.headers.get("content-type") ?? "")) return { kind: "directory_invalid" };
+  try {
+    if (response.status !== 200) return { kind: "directory_unavailable" };
+    if (!/^application\/json(?:;|$)/iu.test(response.headers.get("content-type") ?? "")) return { kind: "directory_invalid" };
+  } catch {
+    return { kind: "directory_invalid" };
+  }
   let value: unknown;
   try {
     value = await response.json();
