@@ -230,30 +230,28 @@ function ownDataProperty(value: unknown, key: string): unknown {
     : undefined;
 }
 
-function matchesNativeHederaCapabilityKind(value: unknown): boolean {
-  if (typeof value !== "object" || value === null) {
-    return false;
+function nativeHederaCapabilityIdentity(value: unknown): {
+  x402Version: number;
+  scheme: string;
+  network: string;
+} {
+  const x402Version = ownDataProperty(value, "x402Version");
+  const scheme = ownDataProperty(value, "scheme");
+  const network = ownDataProperty(value, "network");
+
+  if (
+    typeof x402Version !== "number" ||
+    !Number.isSafeInteger(x402Version) ||
+    x402Version < 1 ||
+    typeof scheme !== "string" ||
+    scheme.trim().length === 0 ||
+    typeof network !== "string" ||
+    network.trim().length === 0
+  ) {
+    throw new TypeError("native Hedera facilitator identity is malformed");
   }
 
-  const kind = value as {
-    x402Version?: unknown;
-    scheme?: unknown;
-    network?: unknown;
-  };
-
-  return (
-    kind.x402Version === 2 &&
-    kind.scheme === "exact" &&
-    kind.network === "hedera:testnet"
-  );
-}
-
-function hasSafeNativeHederaCapabilityKind(value: unknown): boolean {
-  return (
-    ownDataProperty(value, "x402Version") === 2 &&
-    ownDataProperty(value, "scheme") === "exact" &&
-    ownDataProperty(value, "network") === "hedera:testnet"
-  );
+  return { x402Version, scheme, network };
 }
 
 function hasNativeHederaFeePayer(value: unknown): boolean {
@@ -279,18 +277,18 @@ function assertNativeHederaFacilitatorSupport(value: unknown): void {
     throw new TypeError("native Hedera facilitator kinds are malformed");
   }
 
-  const matchingKinds = [];
+  const matchingKinds: unknown[] = [];
 
   for (const kind of kinds) {
-    if (!matchesNativeHederaCapabilityKind(kind)) {
-      continue;
-    }
+    const identity = nativeHederaCapabilityIdentity(kind);
 
-    if (!hasSafeNativeHederaCapabilityKind(kind)) {
-      throw new RangeError("native Hedera facilitator support is unsafe");
+    if (
+      identity.x402Version === 2 &&
+      identity.scheme === "exact" &&
+      identity.network === "hedera:testnet"
+    ) {
+      matchingKinds.push(kind);
     }
-
-    matchingKinds.push(kind);
   }
 
   if (matchingKinds.length !== 1 || !hasNativeHederaFeePayer(matchingKinds[0])) {

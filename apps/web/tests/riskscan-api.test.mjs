@@ -498,6 +498,54 @@ test("fails closed when x402 could select an unsafe native Hedera identity", asy
   }
 });
 
+test("fails closed before reading stateful native Hedera identities", async (t) => {
+  t.mock.method(console, "warn", () => {});
+
+  const statefulIdentity = (key, firstValue, nativeValue) => {
+    let reads = 0;
+    const kind = hederaSupportedKind();
+    Object.defineProperty(kind, key, {
+      enumerable: true,
+      get() {
+        reads += 1;
+        return reads === 1 ? firstValue : nativeValue;
+      },
+    });
+    return { kind, reads: () => reads };
+  };
+
+  for (const [description, unsafeIdentity] of [
+    ["stateful x402 version", statefulIdentity("x402Version", 1, 2)],
+    ["stateful scheme", statefulIdentity("scheme", "upto", "exact")],
+    [
+      "stateful network",
+      statefulIdentity("network", "hedera:mainnet", "hedera:testnet"),
+    ],
+  ]) {
+    const localFacilitator = createHederaLocalFacilitator([
+      unsafeIdentity.kind,
+      hederaSupportedKind(),
+    ]);
+    const response = await handleRiskScanPost(
+      createRequest(validQuickInput()),
+      configuredHederaEnvironment(),
+      { facilitatorClient: localFacilitator.client },
+    );
+
+    assert.equal(response.status, 503, description);
+    assert.equal(response.headers.get("payment-required"), null, description);
+    assert.deepEqual(
+      await response.json(),
+      { error: "risk_scan_unavailable" },
+      description,
+    );
+    assert.equal(unsafeIdentity.reads(), 0, description);
+    assert.equal(localFacilitator.calls.getSupported, 1, description);
+    assert.equal(localFacilitator.calls.verify, 0, description);
+    assert.equal(localFacilitator.calls.settle, 0, description);
+  }
+});
+
 test("fails closed when the native Hedera facilitator capability is not uniquely safe", async (t) => {
   t.mock.method(console, "warn", () => {});
 
