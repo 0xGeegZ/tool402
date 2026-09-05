@@ -3,10 +3,10 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T010 accepted; M03-T010 accepted
 - Integration evidence: D-M02-010-002 and D-M03-010-002 accepted
-- Owner: the proposed implementation scope is `packages/core/src/risk-scan.ts` and `packages/core/test/risk-scan.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
+- Owner: the implementation lane owns `packages/core/src/risk-scan.ts` and `packages/core/test/risk-scan.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
 - Human actions: none for the pure in-process core hardening. Any payment adapter, external settlement verification, receipt/evidence capture, deployment, or live journey remains human-authorized.
 
 ## Scope
@@ -36,3 +36,7 @@ The local contract is [M03 RiskScan payment-state provenance](../../../specs/m03
 ## Ready transition
 
 Ready at 2026-09-05T10:29:35Z after the root verified both accepted dependencies and their integration evidence, the committed local specification and plan, no active lane, disjoint two-file core ownership, explicit human-action boundary, concrete validation commands, and queue validation. No external settlement, evidence, or deployment action is included.
+
+## Activation
+
+Activated at 2026-09-05T10:31:06Z after a fresh queue rescan confirmed no active lane, a clean pushed ready state, and the accepted two-file core ownership boundary. Task 1 starts with the public RED issued-state provenance contract; no external action is included.
