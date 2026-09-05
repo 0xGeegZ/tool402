@@ -77,23 +77,22 @@
 
 - [ ] **Step 3: Implement the minimal internal query.**
 
-  Import `internalQueryGeneric`, `IndexRange`, `v`, and `GenericId`. Register:
+  Import `internalQueryGeneric`, `IndexRange`, `v`, and `GenericId`. Define these exact validators, then pass them to `internalQueryGeneric` under an export named `readRiskScanPendingSettlementCandidate`:
 
   ```ts
-  export const readRiskScanPendingSettlementCandidate = internalQueryGeneric({
-    args: { attemptId: v.id("riskScanSettlementAttempts") },
-    returns: v.union(
-      v.null(),
-      v.object({
-        recordId: v.id("riskScanSettlementRecords"),
-        network: v.string(),
-        transactionRef: v.string(),
-        verificationState: v.literal("pending_verification"),
-        observedAt: v.int64(),
-      }),
-    ),
-    handler: async (ctx, args) => { /* bounded logic below */ },
-  });
+  const readerArgs = {
+    attemptId: v.id("riskScanSettlementAttempts"),
+  };
+  const readerReturns = v.union(
+    v.null(),
+    v.object({
+      recordId: v.id("riskScanSettlementRecords"),
+      network: v.string(),
+      transactionRef: v.string(),
+      verificationState: v.literal("pending_verification"),
+      observedAt: v.int64(),
+    }),
+  );
   ```
 
   First call `ctx.db.get("riskScanSettlementAttempts", args.attemptId)`. Return `null` only when it returns `null`. For any other present value, use `Object.getOwnPropertyDescriptor` and `Object.hasOwn(descriptor, "value")` to read `_id`, `operation`, `state`, `network`, and `candidateSettlementRef` without invoking accessors. Require the opaque ID to equal `args.attemptId`, operation `risk_scan_settlement`, state `pending_reconciliation`, network `/^eip155:[1-9]\d*$/u`, and transaction reference `/^[A-Za-z0-9:_-]{1,160}$/u`; otherwise throw `new RangeError("RiskScan settlement attempt is not eligible for pending-settlement read")` before a record query.
