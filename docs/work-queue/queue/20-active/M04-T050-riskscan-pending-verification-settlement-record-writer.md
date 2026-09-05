@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M04-T010 accepted; M04-T040 accepted
 - Integration evidence: D-M04-010-002 and D-M04-040-002 accepted
 - Owner: the proposed implementation scope is `packages/backend/src/risk-scan-settlement-record-admission.ts`, `packages/backend/convex/riskscan-settlement-records.ts`, `packages/backend/tests/risk-scan-settlement-record-admission.test.mjs`, and `packages/backend/tests/risk-scan-pending-verification-settlement-record-writer.test.mjs`. The root owns this card, its local specification and plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -39,3 +39,7 @@ Recorded at 2026-09-05T16:55:43Z after a fresh queue rescan confirmed M04-T010 a
 ## Ready transition
 
 Ready at 2026-09-05T17:06:36Z after the root revalidated the accepted M04-T010 and M04-T040 dependencies and their integration evidence, the pushed local specification and plan, disjoint four-path backend ownership, no active lane, no pending human action, concrete validation commands, and queue validation. The task remains local pure admission and internal writer work only; no configured runtime, external store, payment, settlement, finality, verification, evidence, result, API/UI, deployment, or live claim is authorized.
+
+## Activation
+
+Activated at 2026-09-05T17:07:39Z after a fresh queue rescan confirmed the pushed ready state, no active lane, accepted dependencies, and the same disjoint backend ownership boundary. Task 1 starts with its candidate-record admission RED contract. No public function, generated API, configured runtime, external action, payment, wallet/account action, deployment, finality, verification, evidence, or live claim is authorized.
