@@ -3,10 +3,10 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M04-T010 accepted; M04-T030 accepted
 - Integration evidence: D-M04-010-002 and D-M04-030-002 accepted
-- Owner: the proposed implementation scope is `packages/backend/src/risk-scan-settlement-attempt-admission.ts`, `packages/backend/convex/riskscan-settlement-attempts.ts`, `packages/backend/tests/risk-scan-settlement-attempt-admission.test.mjs`, and `packages/backend/tests/risk-scan-candidate-settlement-attempt-writer.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
+- Owner: the accepted implementation scope is `packages/backend/src/risk-scan-settlement-attempt-admission.ts`, `packages/backend/convex/riskscan-settlement-attempts.ts`, `packages/backend/tests/risk-scan-settlement-attempt-admission.test.mjs`, and `packages/backend/tests/risk-scan-candidate-settlement-attempt-writer.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
 - Human actions: none for pure candidate admission, internal-mutation code, and handler-level tests. Runtime configuration, deployment, external-store proof, payment, settlement, finality, verification, receipt/evidence capture, accounts, wallets, and live assertions remain human-authorized.
 
 ## Scope
@@ -39,3 +39,7 @@ Ready at 2026-09-05T15:39:32Z after the root revalidated all accepted dependenci
 ## Activation
 
 Activated at 2026-09-05T15:40:37Z after a fresh queue rescan confirmed the pushed ready state, no active lane, and the same disjoint backend ownership boundary. Task 1 starts with its candidate-admission RED contract. No public function, generated API, configured runtime, external action, payment, wallet/account action, deployment, finality, verification, evidence, or live claim is authorized.
+
+## Completion
+
+Accepted at 2026-09-05T16:48:37Z after observed RED/GREEN admission and internal-writer contracts; independent task review and scoped re-reviews; two fresh final Standards/Spec review generations; root Node 22.21.1 typecheck, 92-test suite, lint, queue validation, enabled local-reference guard, whitespace check, and production webpack build. The accepted code remains an internal local writer and controlled handler contract only; it is not proof of configured runtime storage, payment, settlement, finality, verification, evidence, result completion, deployment, or live behavior.
