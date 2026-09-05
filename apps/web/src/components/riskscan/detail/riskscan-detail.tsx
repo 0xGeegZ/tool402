@@ -29,6 +29,12 @@ export function RiskScanDetail() {
       <Link href="/explore" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
         Back to Explore
       </Link>
+      <Link
+        href="/explore/riskscan/try"
+        className="block text-sm font-medium text-primary underline-offset-4 hover:underline"
+      >
+        Try RiskScan
+      </Link>
 
       <header className="space-y-3">
         <Badge variant="secondary">Read-only detail</Badge>
