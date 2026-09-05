@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M02-T060 accepted; M03-T030 accepted; M05-T010 accepted;
   M05-T020 accepted; M05-T030 accepted
 - Integration evidence: D-M02-060-002, D-M03-030-002, D-M05-010-002,
@@ -77,3 +77,16 @@ and the next CORE_P0 vertical must advance native payment compatibility rather
 than create another persistence/reconciliation task. This inbox card
 authorizes neither RED/code nor a real recipient/facilitator configuration,
 signing, wallet/account action, transaction, deployment, or live claim.
+
+## Ready transition
+
+Ready at 2026-09-05T21:44:15Z after a fresh queue rescan confirmed all five
+accepted dependencies and their listed decision evidence; the pushed
+`e54cd6a0ce9a9e75959ee1642eb837e5ebc32c52` native configuration, Directory,
+Agent, and implementation-plan contracts; root-only lockfile integration;
+disjoint proposed web/Agent ownership; no active lane; no pending human
+action; concrete validation commands; queue validation; and an independent
+design review plus scoped re-review with no remaining finding. The card is
+ready only for its local RED configuration/server tests. It does not authorize
+a real recipient/facilitator configuration, wallet/account/key action,
+signing, payment, transaction, deployment, or live claim.
