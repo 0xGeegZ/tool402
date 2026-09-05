@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M05-T010 accepted; M02-T050 accepted; M02-T060 accepted
 - Integration evidence: D-M05-010-002, D-M02-050-002, and D-M02-060-002 accepted
 - Owner: the proposed implementation scope is `apps/agent/package.json`,
@@ -84,3 +84,12 @@ review plus scoped re-review. The card remains a local discovery-only agent;
 no live endpoint assertion, request submission, payment, signing,
 wallet/account action, deployment, transaction verification, finality,
 evidence, result, or external claim is authorized.
+
+## Activation
+
+Activated at 2026-09-05T19:15:08Z after a fresh queue rescan confirmed the
+pushed ready state, no active lane, accepted dependencies, and the same
+disjoint agent/lockfile ownership boundary. The task starts with its
+ToolLoopAgent RED contract. No live endpoint assertion, request submission,
+payment, signing, wallet/account action, deployment, transaction verification,
+finality, evidence, result, or external claim is authorized.
