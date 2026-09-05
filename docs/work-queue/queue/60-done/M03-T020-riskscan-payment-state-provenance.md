@@ -3,10 +3,10 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T010 accepted; M03-T010 accepted
 - Integration evidence: D-M02-010-002 and D-M03-010-002 accepted
-- Owner: the implementation lane owns `packages/core/src/risk-scan.ts` and `packages/core/test/risk-scan.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
+- Owner: the accepted implementation scope was `packages/core/src/risk-scan.ts` and `packages/core/test/risk-scan.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
 - Human actions: none for the pure in-process core hardening. Any payment adapter, external settlement verification, receipt/evidence capture, deployment, or live journey remains human-authorized.
 
 ## Scope
@@ -40,3 +40,7 @@ Ready at 2026-09-05T10:29:35Z after the root verified both accepted dependencies
 ## Activation
 
 Activated at 2026-09-05T10:31:06Z after a fresh queue rescan confirmed no active lane, a clean pushed ready state, and the accepted two-file core ownership boundary. Task 1 starts with the public RED issued-state provenance contract; no external action is included.
+
+## Completion transition
+
+Accepted at 2026-09-05T10:40:45Z. The implementation completed the issued-state provenance contract from an observed RED through GREEN coverage. Root verification passed Node 22.21.1 workspace typecheck, 56-test suite, lint, queue validation, whitespace checks, and the enabled local-reference guard. Independent task review and two final fresh module-review generations found no Critical, Important, or Minor finding. `MODULE_BASE` was `4a1129db5de55dd1844960a2697846e49c0e06eb`; `MODULE_HEAD` was `120aa0152ebd34855cfb5e7cd0d98b851ecaf15a`. No adapter, API/UI, persistence, configuration, payment, external evidence, deployment, or live claim was added.
