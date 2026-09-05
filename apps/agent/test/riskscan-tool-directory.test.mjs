@@ -106,11 +106,16 @@ test("accepts and clones the native Hedera payment summary", async () => {
     amount: "10000",
   };
   const value = directory(payment);
-  const { result } = await select(value);
+  const result = await discoverRiskScanQuick(base, async () => ({
+    status: 200,
+    headers: new Headers({ "content-type": "application/json" }),
+    json: async () => value,
+  }));
+  const decodedPayment = value.tools[0].payment;
 
   assert.deepEqual(result.tool.payment, payment);
-  assert.notEqual(result.tool.payment, payment);
-  payment.amount = "99999";
+  assert.notEqual(result.tool.payment, decodedPayment);
+  decodedPayment.amount = "99999";
   assert.deepEqual(result.tool.payment, {
     state: "locally_configured",
     protocol: "x402",
@@ -118,6 +123,35 @@ test("accepts and clones the native Hedera payment summary", async () => {
     asset: "0.0.429274",
     amount: "10000",
   });
+});
+
+test("rejects a native Hedera payment descriptor with inherited value metadata", async (t) => {
+  const payment = {
+    state: "locally_configured",
+    protocol: "x402",
+    network: "hedera:testnet",
+    asset: "0.0.429274",
+    amount: "10000",
+  };
+  const value = directory(payment);
+  const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+  t.mock.method(Object, "getOwnPropertyDescriptor", (target, key) => {
+    if (target === payment && key === "asset") {
+      return Object.assign(Object.create({ value: payment.asset }), {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+      });
+    }
+    return getOwnPropertyDescriptor(target, key);
+  });
+
+  const result = await discoverRiskScanQuick(base, async () => ({
+    status: 200,
+    headers: new Headers({ "content-type": "application/json" }),
+    json: async () => value,
+  }));
+  assert.deepEqual(result, { kind: "directory_invalid" });
 });
 
 test("accepts the native Hedera zero account asset", async () => {

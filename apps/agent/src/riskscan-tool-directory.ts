@@ -75,7 +75,7 @@ function snapshotRecord(value: unknown, keys: readonly string[]): Record<string,
   const snapshot: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
   for (const key of keys) {
     const descriptor = Object.getOwnPropertyDescriptor(value, key);
-    if (descriptor === undefined || descriptor.enumerable !== true || !("value" in descriptor) || descriptor.get !== undefined || descriptor.set !== undefined) return null;
+    if (descriptor === undefined || descriptor.enumerable !== true || !Object.hasOwn(descriptor, "value") || descriptor.get !== undefined || descriptor.set !== undefined) return null;
     snapshot[key] = descriptor.value;
   }
   return snapshot;
