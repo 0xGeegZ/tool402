@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M02-T050 accepted; M02-T060 accepted; M03-T020 accepted
 - Integration evidence: D-M02-050-002, D-M02-060-002, and D-M03-020-002 accepted
 - Owner: implementation scope is reserved for `apps/web/src/lib/riskscan-x402.ts` and `apps/web/tests/riskscan-api.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -29,3 +29,7 @@ The local contract is [M03 RiskScan settlement observer](../../../specs/m03-risk
 - `npm run test --workspace @tool402/web`
 - `npm run build --workspace @tool402/web`
 - Root `npm run typecheck`, `npm run test`, `npm run queue:check`, the enabled local-reference guard, independent task review, and two fresh clean module-review generations.
+
+## Ready transition
+
+Ready at 2026-09-05T11:01:41Z after the root revalidated all accepted dependencies and their recorded integration evidence, committed local specification and plan, disjoint two-file web ownership, no active lane, no pending human action, concrete executable validation, and queue/reference checks. An independent readiness audit corrected the non-existent lint command and made rejected-Promise consumer isolation explicit before this transition. No external payment, durable state, evidence, deployment, or live action is included.
