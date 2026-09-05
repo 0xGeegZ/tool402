@@ -193,6 +193,39 @@ test("rejects accessor-backed and non-enumerable array entries", async () => {
   }
 });
 
+test("uses captured payment descriptor values rather than proxy property reads", async () => {
+  const value = directory({ state: "locally_configured", protocol: "x402", network: "eip155:1", price: "$1" });
+  value.tools[0].payment = new Proxy(value.tools[0].payment, {
+    get(target, key, receiver) {
+      if (key === "network") return "eip155:999";
+      if (key === "price") return "$999";
+      return Reflect.get(target, key, receiver);
+    },
+  });
+  const result = await discoverRiskScanQuick(base, async () => ({
+    status: 200,
+    headers: new Headers({ "content-type": "application/json" }),
+    json: async () => value,
+  }));
+  assert.deepEqual(result.tool.payment, { state: "locally_configured", protocol: "x402", network: "eip155:1", price: "$1" });
+});
+
+test("fails closed without throwing when a payment proxy throws on property access", async () => {
+  const value = directory({ state: "locally_configured", protocol: "x402", network: "eip155:1", price: "$1" });
+  value.tools[0].payment = new Proxy(value.tools[0].payment, {
+    get() { throw new Error("provider getter must not run"); },
+  });
+  let result;
+  await assert.doesNotReject(async () => {
+    result = await discoverRiskScanQuick(base, async () => ({
+      status: 200,
+      headers: new Headers({ "content-type": "application/json" }),
+      json: async () => value,
+    }));
+  });
+  assert.deepEqual(result.tool.payment, { state: "locally_configured", protocol: "x402", network: "eip155:1", price: "$1" });
+});
+
 test("returns a cloned selection rather than retaining decoded directory data", async () => {
   const value = directory({ state: "locally_configured", protocol: "x402", network: "eip155:1", price: "$1" });
   const { result } = await select(value);

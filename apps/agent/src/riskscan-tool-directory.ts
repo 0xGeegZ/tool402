@@ -61,77 +61,82 @@ function directoryRequest(): RequestInit {
   };
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && Object.getPrototypeOf(value) === Object.prototype;
+function snapshotRecord(value: unknown, keys: readonly string[]): Record<string, unknown> | null {
+  if (typeof value !== "object" || value === null || Object.getPrototypeOf(value) !== Object.prototype) return null;
+  const ownKeys = Reflect.ownKeys(value);
+  if (ownKeys.length !== keys.length || !ownKeys.every((key) => typeof key === "string" && keys.includes(key))) return null;
+  const snapshot: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
+  for (const key of keys) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (descriptor === undefined || descriptor.enumerable !== true || descriptor.get !== undefined || descriptor.set !== undefined) return null;
+    snapshot[key] = descriptor.value;
+  }
+  return snapshot;
 }
 
-function hasKeys(value: unknown, keys: readonly string[]): value is Record<string, unknown> {
-  if (!isRecord(value)) return false;
-  const ownKeys = Reflect.ownKeys(value);
-  return ownKeys.length === keys.length && ownKeys.every((key) =>
-    typeof key === "string" && keys.includes(key) && Object.prototype.propertyIsEnumerable.call(value, key) &&
-      Object.getOwnPropertyDescriptor(value, key)?.get === undefined && Object.getOwnPropertyDescriptor(value, key)?.set === undefined,
-  );
+function snapshotArray(value: unknown, length: number): unknown[] | null {
+  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || Reflect.ownKeys(value).length !== length + 1) return null;
+  const lengthDescriptor = Object.getOwnPropertyDescriptor(value, "length");
+  if (lengthDescriptor === undefined || lengthDescriptor.enumerable !== false || lengthDescriptor.get !== undefined ||
+    lengthDescriptor.set !== undefined || lengthDescriptor.value !== length) return null;
+  const snapshot: unknown[] = [];
+  for (let index = 0; index < length; index += 1) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+    if (descriptor === undefined || descriptor.enumerable !== true || descriptor.get !== undefined || descriptor.set !== undefined) return null;
+    snapshot.push(descriptor.value);
+  }
+  return snapshot;
 }
 
 function hasArray(value: unknown, values: readonly string[]): boolean {
-  return Array.isArray(value) && Object.getPrototypeOf(value) === Array.prototype &&
-    Reflect.ownKeys(value).length === values.length + 1 && value.length === values.length &&
-    values.every((expected, index) => {
-      const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
-      return descriptor !== undefined && descriptor.enumerable === true && descriptor.get === undefined &&
-        descriptor.set === undefined && descriptor.value === expected;
-    });
-}
-
-function hasSingleArrayEntry(value: unknown): value is [unknown] {
-  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype ||
-    Reflect.ownKeys(value).length !== 2 || value.length !== 1) return false;
-  const descriptor = Object.getOwnPropertyDescriptor(value, "0");
-  return descriptor !== undefined && descriptor.enumerable === true && descriptor.get === undefined && descriptor.set === undefined;
+  const snapshot = snapshotArray(value, values.length);
+  return snapshot !== null && values.every((expected, index) => snapshot[index] === expected);
 }
 
 function hasStringBounds(value: unknown, maxLength: number): boolean {
-  return hasKeys(value, ["type", "minLength", "maxLength"]) && value.type === "string" &&
-    value.minLength === 1 && value.maxLength === maxLength;
+  const snapshot = snapshotRecord(value, ["type", "minLength", "maxLength"]);
+  return snapshot !== null && snapshot.type === "string" && snapshot.minLength === 1 && snapshot.maxLength === maxLength;
 }
 
 function hasBoolean(value: unknown): boolean {
-  return hasKeys(value, ["type"]) && value.type === "boolean";
+  const snapshot = snapshotRecord(value, ["type"]);
+  return snapshot !== null && snapshot.type === "boolean";
 }
 
 function validPayment(value: unknown): RiskScanPayment | null {
-  if (hasKeys(value, ["state"]) && value.state === "configuration_required") {
+  const configurationRequired = snapshotRecord(value, ["state"]);
+  if (configurationRequired !== null && configurationRequired.state === "configuration_required") {
     return { state: "configuration_required" };
   }
-  if (!hasKeys(value, ["state", "protocol", "network", "price"]) ||
-    value.state !== "locally_configured" || value.protocol !== "x402" ||
-    typeof value.network !== "string" || typeof value.price !== "string" ||
-    !/^eip155:[1-9]\d*$/u.test(value.network) ||
-    !/^\$(?:0\.\d*[1-9]\d*|[1-9]\d*(?:\.\d+)?)$/u.test(value.price)) {
+  const snapshot = snapshotRecord(value, ["state", "protocol", "network", "price"]);
+  if (snapshot === null || snapshot.state !== "locally_configured" || snapshot.protocol !== "x402" ||
+    typeof snapshot.network !== "string" || typeof snapshot.price !== "string" ||
+    !/^eip155:[1-9]\d*$/u.test(snapshot.network) ||
+    !/^\$(?:0\.\d*[1-9]\d*|[1-9]\d*(?:\.\d+)?)$/u.test(snapshot.price)) {
     return null;
   }
-  return { state: "locally_configured", protocol: "x402", network: value.network as `eip155:${number}`, price: value.price as `$${string}` };
+  return { state: "locally_configured", protocol: "x402", network: snapshot.network as `eip155:${number}`, price: snapshot.price as `$${string}` };
 }
 
 function validDirectory(value: unknown): RiskScanPayment | null {
-  if (!hasKeys(value, ["version", "tools"]) || value.version !== "v1" ||
-    !hasSingleArrayEntry(value.tools)) return null;
-  const tool = value.tools[0];
-  if (!hasKeys(tool, ["id", "name", "request", "input", "limitations", "payment"]) ||
-    tool.id !== "riskscan.quick" || tool.name !== "RiskScan Quick" ||
-    !hasKeys(tool.request, ["method", "path", "contentType"]) || tool.request.method !== "POST" ||
-    tool.request.path !== "/api/riskscan" || tool.request.contentType !== "application/json" ||
-    !hasKeys(tool.input, ["type", "required", "properties"]) || tool.input.type !== "object" ||
-    !hasArray(tool.input.required, ["requestRef", "subjectRef", "context", "declarations"]) ||
-    !hasKeys(tool.input.properties, ["requestRef", "subjectRef", "context", "declarations"]) ||
-    !hasStringBounds(tool.input.properties.requestRef, 96) || !hasStringBounds(tool.input.properties.subjectRef, 160) ||
-    !hasStringBounds(tool.input.properties.context, 280) || !hasKeys(tool.input.properties.declarations, ["type", "additionalProperties", "required", "properties"]) ||
-    tool.input.properties.declarations.type !== "object" || tool.input.properties.declarations.additionalProperties !== false ||
-    !hasArray(tool.input.properties.declarations.required, ["identity", "pricing", "limitations", "evidence"]) ||
-    !hasKeys(tool.input.properties.declarations.properties, ["identity", "pricing", "limitations", "evidence"]) ||
-    !hasBoolean(tool.input.properties.declarations.properties.identity) || !hasBoolean(tool.input.properties.declarations.properties.pricing) ||
-    !hasBoolean(tool.input.properties.declarations.properties.limitations) || !hasBoolean(tool.input.properties.declarations.properties.evidence) ||
+  const directory = snapshotRecord(value, ["version", "tools"]);
+  if (directory === null || directory.version !== "v1") return null;
+  const tools = snapshotArray(directory.tools, 1);
+  if (tools === null) return null;
+  const tool = snapshotRecord(tools[0], ["id", "name", "request", "input", "limitations", "payment"]);
+  if (tool === null || tool.id !== "riskscan.quick" || tool.name !== "RiskScan Quick") return null;
+  const request = snapshotRecord(tool.request, ["method", "path", "contentType"]);
+  if (request === null || request.method !== "POST" || request.path !== "/api/riskscan" || request.contentType !== "application/json") return null;
+  const input = snapshotRecord(tool.input, ["type", "required", "properties"]);
+  if (input === null || input.type !== "object" || !hasArray(input.required, ["requestRef", "subjectRef", "context", "declarations"])) return null;
+  const properties = snapshotRecord(input.properties, ["requestRef", "subjectRef", "context", "declarations"]);
+  if (properties === null || !hasStringBounds(properties.requestRef, 96) || !hasStringBounds(properties.subjectRef, 160) || !hasStringBounds(properties.context, 280)) return null;
+  const declarations = snapshotRecord(properties.declarations, ["type", "additionalProperties", "required", "properties"]);
+  if (declarations === null || declarations.type !== "object" || declarations.additionalProperties !== false ||
+    !hasArray(declarations.required, ["identity", "pricing", "limitations", "evidence"])) return null;
+  const declarationProperties = snapshotRecord(declarations.properties, ["identity", "pricing", "limitations", "evidence"]);
+  if (declarationProperties === null || !hasBoolean(declarationProperties.identity) || !hasBoolean(declarationProperties.pricing) ||
+    !hasBoolean(declarationProperties.limitations) || !hasBoolean(declarationProperties.evidence) ||
     !hasArray(tool.limitations, ["quick_assessment_only", "caller_declarations_are_not_external_verification"])) return null;
   return validPayment(tool.payment);
 }
@@ -180,6 +185,11 @@ export async function discoverRiskScanQuick(
   } catch {
     return { kind: "directory_invalid" };
   }
-  const payment = validDirectory(value);
+  let payment: RiskScanPayment | null;
+  try {
+    payment = validDirectory(value);
+  } catch {
+    return { kind: "directory_invalid" };
+  }
   return payment === null ? { kind: "directory_invalid" } : selection(payment);
 }
