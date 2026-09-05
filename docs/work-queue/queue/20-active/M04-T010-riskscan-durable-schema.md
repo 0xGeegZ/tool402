@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T030 accepted; M02-T010 accepted; M03-T020 accepted; M03-T030 accepted
 - Integration evidence: D-M01-FOUND-001, D-M02-010-002, D-M03-020-002, and D-M03-030-002 accepted
 - Owner: the proposed implementation scope is `packages/backend/convex/schema.ts` and `packages/backend/tests/risk-scan-schema.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -33,3 +33,7 @@ The local contract is [M04 RiskScan durable schema](../../../specs/m04-riskscan-
 ## Ready transition
 
 Ready at 2026-09-05T13:27:57Z after the root revalidated all accepted dependencies and their recorded integration evidence, the committed local specification and plan, no active lane, disjoint two-file backend ownership, no pending human action, concrete executable validation, and queue validation. No writer, reader, generated API, external connection, payment action, deployment, or live claim is included.
+
+## Activation
+
+Activated at 2026-09-05T13:28:56Z after a fresh queue rescan confirmed the pushed ready state, no active lane, and the same disjoint backend ownership boundary. Task 1 starts with its schema-export RED contract. No writer, reader, generated API, external action, payment, wallet/account action, deployment, or live claim is authorized.
