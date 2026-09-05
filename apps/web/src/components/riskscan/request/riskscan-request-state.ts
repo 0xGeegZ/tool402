@@ -17,13 +17,15 @@ function isNonblankString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
 
-function isRiskScanQuickResult(value: unknown): value is RiskScanQuickResult {
+function readRiskScanQuickResult(
+  value: unknown,
+): RiskScanQuickResult | undefined {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return false;
+    return undefined;
   }
 
   const result = value as Record<string, unknown>;
-  return (
+  const isValid =
     isNonblankString(result.requestRef) &&
     isNonblankString(result.subjectRef) &&
     isNonblankString(result.context) &&
@@ -34,8 +36,20 @@ function isRiskScanQuickResult(value: unknown): value is RiskScanQuickResult {
     result.reasons.every(isNonblankString) &&
     Array.isArray(result.limitations) &&
     result.limitations.length > 0 &&
-    result.limitations.every(isNonblankString)
-  );
+    result.limitations.every(isNonblankString);
+
+  if (!isValid) {
+    return undefined;
+  }
+
+  return {
+    requestRef: result.requestRef,
+    subjectRef: result.subjectRef,
+    context: result.context,
+    disposition: result.disposition,
+    reasons: [...result.reasons],
+    limitations: [...result.limitations],
+  };
 }
 
 export async function submitRiskScanRequest(
@@ -64,8 +78,9 @@ export async function submitRiskScanRequest(
 
   try {
     const result: unknown = await response.json();
-    return isRiskScanQuickResult(result)
-      ? { kind: "quick_response", result }
+    const quickResult = readRiskScanQuickResult(result);
+    return quickResult
+      ? { kind: "quick_response", result: quickResult }
       : { kind: "unexpected_response" };
   } catch {
     return { kind: "unexpected_response" };

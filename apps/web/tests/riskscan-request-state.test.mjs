@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
+import { createRequire } from "node:module";
 import test from "node:test";
 
-import { submitRiskScanRequest } from "../src/components/riskscan/request/riskscan-request-state.ts";
+const require = createRequire(import.meta.url);
+const {
+  submitRiskScanRequest,
+} = require("../src/components/riskscan/request/riskscan-request-state.ts");
 
 function validInput() {
   return {
@@ -97,4 +101,19 @@ test("returns a full schema-valid Quick payload", async () => {
   );
 
   assert.deepEqual(outcome, { kind: "quick_response", result });
+});
+
+test("projects a valid Quick payload without extra response properties", async () => {
+  const result = {
+    ...validQuickResult(),
+    opaqueProtocolData: "must not reach the client state",
+  };
+  const outcome = await submitRiskScanRequest(validInput(), async () =>
+    Response.json(result),
+  );
+
+  assert.deepEqual(outcome, {
+    kind: "quick_response",
+    result: validQuickResult(),
+  });
 });
