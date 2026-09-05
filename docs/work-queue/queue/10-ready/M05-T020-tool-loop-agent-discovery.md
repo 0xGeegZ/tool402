@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M05-T010 accepted; M02-T050 accepted; M02-T060 accepted
 - Integration evidence: D-M05-010-002, D-M02-050-002, and D-M02-060-002 accepted
 - Owner: the proposed implementation scope is `apps/agent/package.json`,
@@ -72,3 +72,15 @@ lockfile reservation; and no human action blocks local discovery code or
 controlled tests. This inbox card authorizes neither RED/code nor a live
 endpoint, payment, signing, wallet/account action, deployment, transaction
 verification, finality, evidence, result, or any live claim.
+
+## Ready transition
+
+Ready at 2026-09-05T19:12:43Z after the root revalidated accepted M05-T010,
+M02-T050, and M02-T060 dependencies and integration evidence; the pushed
+corrected local specification and plan; disjoint five-path agent ownership and
+root-only lockfile reservation; no active lane; no pending human action;
+concrete validation commands; queue validation; and the independent design
+review plus scoped re-review. The card remains a local discovery-only agent;
+no live endpoint assertion, request submission, payment, signing,
+wallet/account action, deployment, transaction verification, finality,
+evidence, result, or external claim is authorized.
