@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 
@@ -14,7 +16,12 @@ export function RiskScanDiscoveryCard() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-sm leading-6 text-muted-foreground">This surface is descriptive only.</p>
+        <div className="space-y-3">
+          <p className="text-sm leading-6 text-muted-foreground">This surface is descriptive only.</p>
+          <Link href="/explore/riskscan" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+            View RiskScan details
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );
