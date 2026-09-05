@@ -840,12 +840,13 @@ test("isolates core capability failures and validates the local timeout seam", a
   assert.match(recoveredResponse.headers.get("payment-response") ?? "", /\S/u);
 });
 
-test("does not observe a real before-handler x402 after-settle hook", async () => {
+test("pins protected settlement observation to after-handler authorization", async () => {
   const configuration = readRiskScanX402Configuration(configuredEnvironment());
   assert.notEqual(configuration, null);
 
   const phases = [];
   const settlements = [];
+  let forceAuthorization = false;
   const originalLoad = Module._load;
 
   Module._load = function loadUpfrontExactScheme(request, parent, isMain) {
@@ -855,6 +856,11 @@ test("does not observe a real before-handler x402 after-settle hook", async () =
       return {
         ...loaded,
         x402ResourceServer: class extends loaded.x402ResourceServer {
+          getPaymentFlow(payload, requirements) {
+            return forceAuthorization
+              ? "authorization"
+              : super.getPaymentFlow(payload, requirements);
+          }
           onAfterSettle(hook) {
             return super.onAfterSettle(async (context) => {
               phases.push(context.phase);
@@ -885,18 +891,30 @@ test("does not observe a real before-handler x402 after-settle hook", async () =
     const handler = await createRiskScanProtectedHandler(configuration, {
       facilitatorClient: settlingFacilitator.client,
       onVerifiedSettlement: (settlement) => settlements.push(settlement),
-      settlementObserverTimeoutMs: 10,
     });
-    const response = await handler(await createSignedRequest(handler));
+    const firstRequest = await createSignedRequest(handler);
+    const firstResponse = await handler(firstRequest);
+    forceAuthorization = true;
+    const secondResponse = await handler(
+      createRequest(
+        { ...validQuickInput(), requestRef: "request-api-43" },
+        { "payment-signature": firstRequest.headers.get("payment-signature") },
+      ),
+    );
 
-    assert.equal(response.status, 200);
-    assert.match(response.headers.get("payment-response") ?? "", /\S/u);
+    for (const response of [firstResponse, secondResponse]) {
+      assert.equal(response.status, 200);
+      assert.match(response.headers.get("payment-response") ?? "", /\S/u);
+    }
   } finally {
     Module._load = originalLoad;
   }
 
-  assert.deepEqual(phases, ["before-handler"]);
-  assert.equal(settlements.length, 0);
+  assert.deepEqual(phases, ["after-handler", "after-handler"]);
+  assert.deepEqual(
+    settlements.map((settlement) => settlement.requestRef),
+    ["request-api-42", "request-api-43"],
+  );
 });
 
 test("cancels an active observation when a later protected handler throws", async () => {

@@ -444,6 +444,7 @@ export async function createRiskScanProtectedHandler(
         payTo: configuration.payTo,
         price: configuration.price,
         network: configuration.network,
+        extra: { paymentFlow: "authorization" },
       },
       description: "RiskScan Quick assessment",
       mimeType: "application/json",
