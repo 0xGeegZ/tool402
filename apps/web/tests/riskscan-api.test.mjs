@@ -669,7 +669,7 @@ test("observes only a successful protected settlement as a genuine core capabili
   });
 });
 
-test("fails closed for invalid settlement results and preserves x402 responses", async () => {
+test("rejects malformed settlement successes before releasing protected output", async () => {
   const configuration = readRiskScanX402Configuration(configuredEnvironment());
   assert.notEqual(configuration, null);
 
@@ -689,7 +689,7 @@ test("fails closed for invalid settlement results and preserves x402 responses",
 
     assert.equal(settlements.length, 0, description);
     assert.match(response.headers.get("payment-response") ?? "", /\S/u, description);
-    assert.equal(response.status, description === "failed settlement" ? 402 : 200, description);
+    assert.equal(response.status, 402, description);
   }
 });
 

@@ -147,6 +147,45 @@ export async function isRiskScanX402ConfigurationUsable(
   }
 }
 
+function createSettlementValidatingFacilitatorClient(
+  facilitatorClient: FacilitatorClient,
+  configuration: RiskScanX402Configuration,
+): FacilitatorClient {
+  return {
+    getSupported() {
+      return facilitatorClient.getSupported();
+    },
+    verify(paymentPayload, paymentRequirements) {
+      return facilitatorClient.verify(paymentPayload, paymentRequirements);
+    },
+    async settle(paymentPayload, paymentRequirements) {
+      const result = await facilitatorClient.settle(
+        paymentPayload,
+        paymentRequirements,
+      );
+
+      if (
+        result.success !== true ||
+        (result.network === configuration.network &&
+          result.network === paymentRequirements.network &&
+          typeof result.transaction === "string" &&
+          result.transaction.trim().length > 0)
+      ) {
+        return result;
+      }
+
+      return {
+        success: false,
+        errorReason: "invalid_settlement_result",
+        errorMessage:
+          "Settlement result does not match the configured payment requirements",
+        network: paymentRequirements.network,
+        transaction: "",
+      };
+    },
+  };
+}
+
 interface RiskScanQuickEvaluation {
   response: NextResponseType;
   request?: RiskScanRequestInput;
@@ -414,9 +453,13 @@ export async function createRiskScanProtectedHandler(
     x402ResourceServer,
   } = loadX402ServerDependencies();
   const { ExactEvmScheme } = loadExactEvmScheme();
-  const facilitatorClient =
+  const rawFacilitatorClient =
     options.facilitatorClient ??
     new HTTPFacilitatorClient({ url: configuration.facilitatorUrl });
+  const facilitatorClient = createSettlementValidatingFacilitatorClient(
+    rawFacilitatorClient,
+    configuration,
+  );
   const server = new x402ResourceServer(facilitatorClient).register(
     configuration.network,
     new ExactEvmScheme(),
