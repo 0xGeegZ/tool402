@@ -291,12 +291,13 @@ test("rejects duplicate candidate attempts before inserting", async () => {
   assert.deepEqual(calls.inserts, []);
 });
 
-test("rejects null, missing-ID, and malformed durable attempts before inserting", async () => {
+test("rejects null, missing-ID, non-string-ID, and malformed durable attempts before inserting", async () => {
   const { recordInitialRiskScanSettlementAttempt } = await loadWriter();
 
   for (const row of [
     null,
     { _creationTime: 0, ...canonicalAttempt },
+    { _id: 0, _creationTime: 0, ...canonicalAttempt },
     { _id: "riskScanSettlementAttempts:malformed", _creationTime: 0 },
   ]) {
     const { calls, handlerContext } = createControlledDatabase({
