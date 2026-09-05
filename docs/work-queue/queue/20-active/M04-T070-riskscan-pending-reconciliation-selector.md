@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M04-T010 accepted; M04-T040 accepted; M04-T060 accepted
 - Integration evidence: D-M04-010-002, D-M04-040-002, and D-M04-060-002 accepted
 - Owner: the proposed implementation scope is `packages/backend/convex/riskscan-pending-reconciliation-selector.ts` and `packages/backend/tests/risk-scan-pending-reconciliation-selector.test.mjs`. The root owns this card, its local specification and plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -75,3 +75,12 @@ validation; and the independent design review plus scoped re-review. The card
 remains a local internal read-only query only; no configured runtime, external
 store, payment, settlement, transaction verification, finality, evidence,
 result, API/UI, deployment, or live claim is authorized.
+
+## Activation
+
+Activated at 2026-09-05T18:12:23Z after a fresh queue rescan confirmed the
+pushed ready state, no active lane, accepted dependencies, and the same
+disjoint backend ownership boundary. The task starts with its internal-selector
+RED contract. No public function, generated API, configured runtime, external
+action, payment, wallet/account action, deployment, transaction verification,
+finality, evidence, or live claim is authorized.
