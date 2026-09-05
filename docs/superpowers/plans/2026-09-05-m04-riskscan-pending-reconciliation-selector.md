@@ -81,10 +81,14 @@ The RED contract must cover:
 ### Step 2: Implement the smallest internal query
 
 Create `packages/backend/convex/riskscan-pending-reconciliation-selector.ts`.
-Use `internalQueryGeneric`, `v`, and `GenericId` only. Define a signed int64
-maximum of `9_223_372_036_854_775_807n` and a helper that obtains a field only
-through `Object.getOwnPropertyDescriptor`; it accepts solely own enumerable
-data descriptors whose descriptor itself owns `value`.
+Use `internalQueryGeneric` and the type-only `IndexRange` from `convex/server`,
+plus `v` and `GenericId` from `convex/values`. Define one local intersection
+type that restores only `lte("nextReconciliationAt", bigint): IndexRange` after
+the generic builder's state equality; do not add a shared abstraction or widen
+the cast to other operations. Define a signed int64 maximum of
+`9_223_372_036_854_775_807n` and a helper that obtains a field only through
+`Object.getOwnPropertyDescriptor`; it accepts solely own enumerable data
+descriptors whose descriptor itself owns `value`.
 
 The handler must:
 
