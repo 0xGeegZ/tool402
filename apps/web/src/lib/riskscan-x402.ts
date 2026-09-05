@@ -1,6 +1,17 @@
+import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
-import type { FacilitatorClient, RoutesConfig } from "@x402/core/server";
-import type { RiskScanQuickInput } from "@tool402/core";
+import type {
+  AfterSettleHook,
+  FacilitatorClient,
+  OnSettleFailureHook,
+  OnVerifiedPaymentCanceledHook,
+  RoutesConfig,
+} from "@x402/core/server";
+import type {
+  RiskScanQuickInput,
+  RiskScanRequestInput,
+  RiskScanVerifiedSettlement,
+} from "@tool402/core";
 import type { NextRequest, NextResponse as NextResponseType } from "next/server";
 
 const require = createRequire(import.meta.url);
@@ -21,6 +32,9 @@ const configurationKeys = [
   "RISKSCAN_X402_NETWORK",
   "RISKSCAN_X402_PRICE",
 ] as const;
+
+const defaultSettlementObserverTimeoutMs = 30_000;
+const maximumSettlementObserverTimeoutMs = 60_000;
 
 export interface RiskScanX402Configuration {
   payTo: `0x${string}`;
@@ -95,6 +109,10 @@ function loadRiskScanQuick() {
   return require("@tool402/core") as typeof import("@tool402/core");
 }
 
+function digest(value: string | Uint8Array): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
 function loadExactEvmScheme() {
   return require("@x402/evm/exact/server") as typeof import("@x402/evm/exact/server");
 }
@@ -129,15 +147,20 @@ export async function isRiskScanX402ConfigurationUsable(
   }
 }
 
-export async function runRiskScanQuick(
+interface RiskScanQuickEvaluation {
+  response: NextResponseType;
+  request?: RiskScanRequestInput;
+}
+
+async function evaluateRiskScanQuick(
   request: NextRequest,
-): Promise<NextResponseType> {
+): Promise<RiskScanQuickEvaluation> {
   let input: unknown;
 
   try {
     input = await request.json();
   } catch {
-    return invalidRiskScanRequestResponse();
+    return { response: invalidRiskScanRequestResponse() };
   }
 
   const { assessRiskScanQuick } = loadRiskScanQuick();
@@ -150,14 +173,230 @@ export async function runRiskScanQuick(
       throw error;
     }
 
-    return invalidRiskScanRequestResponse();
+    return { response: invalidRiskScanRequestResponse() };
   }
 
-  return NextResponse.json(assessment);
+  return {
+    response: NextResponse.json(assessment),
+    request: {
+      requestRef: assessment.requestRef,
+      subjectRef: assessment.subjectRef,
+      context: assessment.context,
+    },
+  };
+}
+
+export async function runRiskScanQuick(
+  request: NextRequest,
+): Promise<NextResponseType> {
+  return (await evaluateRiskScanQuick(request)).response;
 }
 
 export interface RiskScanProtectedHandlerOptions {
   facilitatorClient?: FacilitatorClient;
+  onVerifiedSettlement?: (
+    settlement: RiskScanVerifiedSettlement,
+  ) => void | Promise<void>;
+  /** @internal Test-only handler-construction seam for bounded observer cleanup. */
+  settlementObserverTimeoutMs?: number;
+}
+
+interface SettlementObserverEntry {
+  pending: ReturnType<typeof import("@tool402/core")["markRiskScanPaymentPending"]>;
+  responseDigest: string;
+  timeout: ReturnType<typeof setTimeout>;
+}
+
+interface SettlementObserver {
+  observeProtectedResponse(
+    paymentSignature: string,
+    response: NextResponseType,
+    request: RiskScanRequestInput,
+  ): Promise<void>;
+  onAfterSettle: AfterSettleHook;
+  onSettleFailure: OnSettleFailureHook;
+  onVerifiedPaymentCanceled: OnVerifiedPaymentCanceledHook;
+}
+
+function resolveSettlementObserverTimeout(
+  configuredTimeout: number | undefined,
+): number {
+  if (configuredTimeout === undefined) {
+    return defaultSettlementObserverTimeoutMs;
+  }
+
+  if (
+    !Number.isSafeInteger(configuredTimeout) ||
+    configuredTimeout < 1 ||
+    configuredTimeout > maximumSettlementObserverTimeoutMs
+  ) {
+    throw new RangeError("settlement observer timeout must be a bounded positive integer");
+  }
+
+  return configuredTimeout;
+}
+
+function createSettlementObserver(
+  configuration: RiskScanX402Configuration,
+  consumer: NonNullable<RiskScanProtectedHandlerOptions["onVerifiedSettlement"]>,
+  timeoutMs: number,
+): SettlementObserver {
+  const entries = new Map<string, SettlementObserverEntry>();
+
+  function discard(headerDigest: string): void {
+    const entry = entries.get(headerDigest);
+
+    if (entry !== undefined) {
+      clearTimeout(entry.timeout);
+      entries.delete(headerDigest);
+    }
+  }
+
+  function discardForHeader(value: unknown): void {
+    if (typeof value !== "string" || value.trim().length === 0) {
+      return;
+    }
+
+    discard(digest(value));
+  }
+
+  function record(value: unknown): Record<string, unknown> | undefined {
+    return typeof value === "object" && value !== null
+      ? (value as Record<string, unknown>)
+      : undefined;
+  }
+
+  function paymentHeaderFromContext(value: unknown): string | undefined {
+    const transportContext = record(value);
+    const request = record(transportContext?.request);
+    const paymentHeader = request?.paymentHeader;
+
+    return typeof paymentHeader === "string" ? paymentHeader : undefined;
+  }
+
+  function responseBodyFromContext(value: unknown): Uint8Array | undefined {
+    const responseBody = record(value)?.responseBody;
+
+    return responseBody instanceof Uint8Array ? responseBody : undefined;
+  }
+
+  return {
+    async observeProtectedResponse(paymentSignature, response, request) {
+      let headerDigest: string | undefined;
+
+      try {
+        const registrationDigest = digest(paymentSignature);
+        headerDigest = registrationDigest;
+        const responseBytes = new Uint8Array(await response.clone().arrayBuffer());
+
+        if (entries.has(registrationDigest)) {
+          return;
+        }
+
+        const { markRiskScanPaymentPending, startRiskScanRequest } =
+          loadRiskScanQuick();
+        const pending = markRiskScanPaymentPending(startRiskScanRequest(request));
+        const timeout = setTimeout(() => {
+          discard(registrationDigest);
+        }, timeoutMs);
+        timeout.unref?.();
+        entries.set(registrationDigest, {
+          pending,
+          responseDigest: digest(responseBytes),
+          timeout,
+        });
+      } catch {
+        if (headerDigest !== undefined) {
+          discard(headerDigest);
+        }
+      }
+    },
+    async onAfterSettle(context) {
+      let headerDigest: string | undefined;
+
+      try {
+        const paymentHeader = paymentHeaderFromContext(context.transportContext);
+
+        if (typeof paymentHeader !== "string" || paymentHeader.trim().length === 0) {
+          return;
+        }
+
+        headerDigest = digest(paymentHeader);
+        const entry = entries.get(headerDigest);
+
+        if (entry === undefined) {
+          return;
+        }
+
+        const transaction = context.result.transaction;
+        const responseBytes = responseBodyFromContext(context.transportContext);
+
+        if (
+          context.paymentPayload.x402Version !== 2 ||
+          context.phase !== "after-handler" ||
+          context.result.success !== true ||
+          context.requirements.network !== configuration.network ||
+          context.result.network !== configuration.network ||
+          typeof transaction !== "string" ||
+          transaction.trim().length === 0 ||
+          responseBytes === undefined ||
+          digest(responseBytes) !== entry.responseDigest
+        ) {
+          discard(headerDigest);
+          return;
+        }
+
+        discard(headerDigest);
+        const { createRiskScanVerifiedSettlement } = loadRiskScanQuick();
+        const settlement = createRiskScanVerifiedSettlement(entry.pending, {
+          requestRef: entry.pending.requestRef,
+          settlementRef: transaction.trim(),
+        });
+
+        await consumer(settlement);
+      } catch {
+        if (headerDigest !== undefined) {
+          discard(headerDigest);
+        }
+      }
+    },
+    async onSettleFailure(context) {
+      try {
+        discardForHeader(paymentHeaderFromContext(context.transportContext));
+      } catch {
+        // The observer must not affect the native x402 failure path.
+      }
+    },
+    async onVerifiedPaymentCanceled(context) {
+      try {
+        discardForHeader(paymentHeaderFromContext(context.transportContext));
+      } catch {
+        // The observer must not affect the native x402 failure path.
+      }
+    },
+  };
+}
+
+async function runObservedRiskScanQuick(
+  request: NextRequest,
+  observer: SettlementObserver,
+): Promise<NextResponseType> {
+  const evaluation = await evaluateRiskScanQuick(request);
+  const paymentSignature = request.headers.get("payment-signature");
+
+  if (
+    evaluation.request !== undefined &&
+    typeof paymentSignature === "string" &&
+    paymentSignature.trim().length > 0
+  ) {
+    await observer.observeProtectedResponse(
+      paymentSignature,
+      evaluation.response,
+      evaluation.request,
+    );
+  }
+
+  return evaluation.response;
 }
 
 export async function createRiskScanProtectedHandler(
@@ -182,6 +421,21 @@ export async function createRiskScanProtectedHandler(
     configuration.network,
     new ExactEvmScheme(),
   );
+  const observer =
+    options.onVerifiedSettlement === undefined
+      ? undefined
+      : createSettlementObserver(
+          configuration,
+          options.onVerifiedSettlement,
+          resolveSettlementObserverTimeout(options.settlementObserverTimeoutMs),
+        );
+
+  if (observer !== undefined) {
+    server
+      .onAfterSettle(observer.onAfterSettle)
+      .onSettleFailure(observer.onSettleFailure)
+      .onVerifiedPaymentCanceled(observer.onVerifiedPaymentCanceled);
+  }
 
   const routes = {
     "/api/riskscan": {
@@ -200,7 +454,9 @@ export async function createRiskScanProtectedHandler(
   await httpServer.initialize();
 
   return withX402FromHTTPServer(
-    runRiskScanQuick,
+    observer === undefined
+      ? runRiskScanQuick
+      : (request) => runObservedRiskScanQuick(request, observer),
     httpServer,
     undefined,
     undefined,

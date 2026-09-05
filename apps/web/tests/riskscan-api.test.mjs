@@ -537,3 +537,300 @@ test("does not classify a Quick module fault as invalid client input", async () 
     Module._load = originalLoad;
   }
 });
+
+function createSettlingLocalFacilitator(settle) {
+  const calls = {
+    getSupported: 0,
+    verify: 0,
+    settle: 0,
+  };
+
+  return {
+    calls,
+    client: {
+      async getSupported() {
+        calls.getSupported += 1;
+
+        return {
+          kinds: [
+            {
+              x402Version: 2,
+              scheme: "exact",
+              network: "eip155:84532",
+            },
+          ],
+          extensions: [],
+          signers: {},
+        };
+      },
+      async verify() {
+        calls.verify += 1;
+        return { isValid: true };
+      },
+      async settle(payload, requirements) {
+        calls.settle += 1;
+        return settle({ calls, payload, requirements });
+      },
+    },
+  };
+}
+
+async function createSignedRequest(handler, body = validQuickInput()) {
+  const challenge = await handler(createRequest(body));
+  const requiredHeader = challenge.headers.get("payment-required");
+
+  assert.equal(challenge.status, 402);
+  assert.notEqual(requiredHeader, null);
+
+  const paymentRequired = decodePaymentRequiredHeader(requiredHeader);
+  const paymentSignature = encodePaymentSignatureHeader({
+    x402Version: 2,
+    accepted: paymentRequired.accepts[0],
+    payload: {},
+  });
+
+  return createRequest(body, { "payment-signature": paymentSignature });
+}
+
+function successfulSettlement({ requirements }) {
+  return {
+    success: true,
+    transaction: "settlement-api-42",
+    network: requirements.network,
+  };
+}
+
+function createDeferredSettlement() {
+  const pending = [];
+  const listeners = [];
+
+  return {
+    settle({ requirements }) {
+      return new Promise((resolve) => {
+        pending.push({ resolve, requirements });
+
+        for (const listener of listeners.splice(0)) {
+          listener();
+        }
+      });
+    },
+    async waitFor(count) {
+      while (pending.length < count) {
+        await new Promise((resolve) => listeners.push(resolve));
+      }
+    },
+    release(index) {
+      const entry = pending[index];
+      assert.notEqual(entry, undefined);
+      entry.resolve(successfulSettlement(entry));
+    },
+  };
+}
+
+test("observes only a successful protected settlement as a genuine core capability", async () => {
+  const configuration = readRiskScanX402Configuration(configuredEnvironment());
+  assert.notEqual(configuration, null);
+
+  const settlements = [];
+  const settlingFacilitator = createSettlingLocalFacilitator(successfulSettlement);
+  const handler = await createRiskScanProtectedHandler(configuration, {
+    facilitatorClient: settlingFacilitator.client,
+    onVerifiedSettlement: (settlement) => settlements.push(settlement),
+  });
+
+  const directResponse = await runRiskScanQuick(createRequest(validQuickInput()));
+  const unsignedResponse = await handler(createRequest(validQuickInput()));
+  const invalidRequest = await createSignedRequest(handler, {
+    ...validQuickInput(),
+    declarations: { identity: true },
+  });
+  const invalidResponse = await handler(invalidRequest);
+  const signedRequest = await createSignedRequest(handler);
+  const response = await handler(signedRequest);
+
+  assert.equal(directResponse.status, 200);
+  assert.equal(unsignedResponse.status, 402);
+  assert.equal(invalidResponse.status, 400);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("payment-response") ?? "", /\S/u);
+  assert.equal(settlements.length, 1);
+
+  const core = require("@tool402/core");
+  const bound = core.bindRiskScanReceiptEvidence(settlements[0], {
+    receiptRef: "receipt-api-42",
+    evidenceRef: "evidence-api-42",
+  });
+
+  assert.deepEqual(bound, {
+    requestRef: "request-api-42",
+    settlementRef: "settlement-api-42",
+    receiptRef: "receipt-api-42",
+    evidenceRef: "evidence-api-42",
+  });
+});
+
+test("fails closed for invalid settlement results and preserves x402 responses", async () => {
+  const configuration = readRiskScanX402Configuration(configuredEnvironment());
+  assert.notEqual(configuration, null);
+
+  for (const [description, settlement] of [
+    ["failed settlement", ({ requirements }) => ({ success: false, network: requirements.network, transaction: "failed" })],
+    ["wrong network", () => ({ success: true, network: "eip155:1", transaction: "wrong-network" })],
+    ["blank transaction", ({ requirements }) => ({ success: true, network: requirements.network, transaction: "  " })],
+    ["non-string transaction", ({ requirements }) => ({ success: true, network: requirements.network, transaction: 42 })],
+  ]) {
+    const settlements = [];
+    const settlingFacilitator = createSettlingLocalFacilitator(settlement);
+    const handler = await createRiskScanProtectedHandler(configuration, {
+      facilitatorClient: settlingFacilitator.client,
+      onVerifiedSettlement: (value) => settlements.push(value),
+    });
+    const response = await handler(await createSignedRequest(handler));
+
+    assert.equal(settlements.length, 0, description);
+    assert.match(response.headers.get("payment-response") ?? "", /\S/u, description);
+    assert.equal(response.status, description === "failed settlement" ? 402 : 200, description);
+  }
+});
+
+test("isolates synchronous and rejected settlement consumers from protected responses", async () => {
+  const configuration = readRiskScanX402Configuration(configuredEnvironment());
+  assert.notEqual(configuration, null);
+
+  for (const consumer of [
+    () => {
+      throw new Error("consumer failure");
+    },
+    async () => Promise.reject(new Error("consumer rejection")),
+  ]) {
+    const settlingFacilitator = createSettlingLocalFacilitator(successfulSettlement);
+    const handler = await createRiskScanProtectedHandler(configuration, {
+      facilitatorClient: settlingFacilitator.client,
+      onVerifiedSettlement: consumer,
+    });
+    const response = await handler(await createSignedRequest(handler));
+
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("payment-response") ?? "", /\S/u);
+  }
+});
+
+test("discards duplicate active payment signatures when their Quick response bytes differ", async () => {
+  const configuration = readRiskScanX402Configuration(configuredEnvironment());
+  assert.notEqual(configuration, null);
+
+  const settlements = [];
+  const deferred = createDeferredSettlement();
+  const settlingFacilitator = createSettlingLocalFacilitator((context) =>
+    deferred.settle(context),
+  );
+  const handler = await createRiskScanProtectedHandler(configuration, {
+    facilitatorClient: settlingFacilitator.client,
+    onVerifiedSettlement: (settlement) => settlements.push(settlement),
+  });
+  const firstRequest = await createSignedRequest(handler);
+  const secondRequest = createRequest(
+    { ...validQuickInput(), requestRef: "request-api-43" },
+    { "payment-signature": firstRequest.headers.get("payment-signature") },
+  );
+
+  const firstResponse = handler(firstRequest);
+  await deferred.waitFor(1);
+  const secondResponse = handler(secondRequest);
+  await deferred.waitFor(2);
+  deferred.release(1);
+  const resolvedSecondResponse = await secondResponse;
+  deferred.release(0);
+  const resolvedFirstResponse = await firstResponse;
+
+  assert.equal(settlements.length, 0);
+  for (const response of [resolvedFirstResponse, resolvedSecondResponse]) {
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("payment-response") ?? "", /\S/u);
+  }
+});
+
+test("expires a protected settlement observation before a delayed facilitator result", async () => {
+  const configuration = readRiskScanX402Configuration(configuredEnvironment());
+  assert.notEqual(configuration, null);
+
+  const settlements = [];
+  const deferred = createDeferredSettlement();
+  const settlingFacilitator = createSettlingLocalFacilitator((context) =>
+    deferred.settle(context),
+  );
+  const handler = await createRiskScanProtectedHandler(configuration, {
+    facilitatorClient: settlingFacilitator.client,
+    onVerifiedSettlement: (settlement) => settlements.push(settlement),
+    settlementObserverTimeoutMs: 10,
+  });
+  const response = handler(await createSignedRequest(handler));
+
+  await deferred.waitFor(1);
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  deferred.release(0);
+  const resolvedResponse = await response;
+
+  assert.equal(settlements.length, 0);
+  assert.equal(resolvedResponse.status, 200);
+  assert.match(resolvedResponse.headers.get("payment-response") ?? "", /\S/u);
+});
+
+test("isolates core capability failures and validates the local timeout seam", async () => {
+  const configuration = readRiskScanX402Configuration(configuredEnvironment());
+  assert.notEqual(configuration, null);
+
+  const settlingFacilitator = createSettlingLocalFacilitator(successfulSettlement);
+  await assert.rejects(
+    () =>
+      createRiskScanProtectedHandler(configuration, {
+        facilitatorClient: settlingFacilitator.client,
+        onVerifiedSettlement: () => {},
+        settlementObserverTimeoutMs: 0,
+      }),
+    RangeError,
+  );
+
+  const settlements = [];
+  const handler = await createRiskScanProtectedHandler(configuration, {
+    facilitatorClient: settlingFacilitator.client,
+    onVerifiedSettlement: (settlement) => settlements.push(settlement),
+  });
+  const signedRequest = await createSignedRequest(handler);
+  const originalLoad = Module._load;
+
+  Module._load = function loadRiskScanCoreWithCapabilityFault(
+    request,
+    parent,
+    isMain,
+  ) {
+    const loaded = originalLoad.call(this, request, parent, isMain);
+
+    return request === "@tool402/core"
+      ? {
+          ...loaded,
+          createRiskScanVerifiedSettlement() {
+            throw new Error("core capability failure");
+          },
+        }
+      : loaded;
+  };
+
+  try {
+    const failedResponse = await handler(signedRequest);
+    assert.equal(failedResponse.status, 200);
+    assert.match(failedResponse.headers.get("payment-response") ?? "", /\S/u);
+  } finally {
+    Module._load = originalLoad;
+  }
+
+  const recoveredResponse = await handler(
+    createRequest(validQuickInput(), {
+      "payment-signature": signedRequest.headers.get("payment-signature"),
+    }),
+  );
+
+  assert.equal(settlements.length, 1);
+  assert.equal(recoveredResponse.status, 200);
+  assert.match(recoveredResponse.headers.get("payment-response") ?? "", /\S/u);
+});
