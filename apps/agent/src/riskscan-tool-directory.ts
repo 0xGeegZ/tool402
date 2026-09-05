@@ -52,12 +52,14 @@ export type RiskScanConsumerDiscovery =
   | { kind: "directory_invalid" }
   | { kind: "tool_selected"; tool: RiskScanTool };
 
-const directoryRequest: RequestInit = {
-  method: "GET",
-  headers: { accept: "application/json" },
-  credentials: "omit",
-  redirect: "error",
-};
+function directoryRequest(): RequestInit {
+  return {
+    method: "GET",
+    headers: { accept: "application/json" },
+    credentials: "omit",
+    redirect: "error",
+  };
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && Object.getPrototypeOf(value) === Object.prototype;
@@ -75,7 +77,18 @@ function hasKeys(value: unknown, keys: readonly string[]): value is Record<strin
 function hasArray(value: unknown, values: readonly string[]): boolean {
   return Array.isArray(value) && Object.getPrototypeOf(value) === Array.prototype &&
     Reflect.ownKeys(value).length === values.length + 1 && value.length === values.length &&
-    values.every((expected, index) => value[index] === expected);
+    values.every((expected, index) => {
+      const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+      return descriptor !== undefined && descriptor.enumerable === true && descriptor.get === undefined &&
+        descriptor.set === undefined && descriptor.value === expected;
+    });
+}
+
+function hasSingleArrayEntry(value: unknown): value is [unknown] {
+  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype ||
+    Reflect.ownKeys(value).length !== 2 || value.length !== 1) return false;
+  const descriptor = Object.getOwnPropertyDescriptor(value, "0");
+  return descriptor !== undefined && descriptor.enumerable === true && descriptor.get === undefined && descriptor.set === undefined;
 }
 
 function hasStringBounds(value: unknown, maxLength: number): boolean {
@@ -103,8 +116,7 @@ function validPayment(value: unknown): RiskScanPayment | null {
 
 function validDirectory(value: unknown): RiskScanPayment | null {
   if (!hasKeys(value, ["version", "tools"]) || value.version !== "v1" ||
-    !Array.isArray(value.tools) || Object.getPrototypeOf(value.tools) !== Array.prototype ||
-    value.tools.length !== 1 || Reflect.ownKeys(value.tools).length !== 2) return null;
+    !hasSingleArrayEntry(value.tools)) return null;
   const tool = value.tools[0];
   if (!hasKeys(tool, ["id", "name", "request", "input", "limitations", "payment"]) ||
     tool.id !== "riskscan.quick" || tool.name !== "RiskScan Quick" ||
@@ -156,7 +168,7 @@ export async function discoverRiskScanQuick(
   }
   let response: Response;
   try {
-    response = await fetcher(new URL("/api/tools", serviceBase), directoryRequest);
+    response = await fetcher(new URL("/api/tools", serviceBase), directoryRequest());
   } catch {
     return { kind: "directory_unavailable" };
   }

@@ -68,6 +68,25 @@ test("makes exactly one credential-free GET request to the directory", async () 
   ]);
 });
 
+test("uses a fresh exact request shape after a fetcher mutates its init", async () => {
+  const calls = [];
+  await discoverRiskScanQuick(base, async (input, init) => {
+    calls.push([input, structuredClone(init)]);
+    init.method = "POST";
+    init.headers = { authorization: "not-allowed", "payment-required": "not-allowed" };
+    init.body = "not-allowed";
+    return Response.json(directory());
+  });
+  await discoverRiskScanQuick(base, async (input, init) => {
+    calls.push([input, init]);
+    return Response.json(directory());
+  });
+  assert.deepEqual(calls, [
+    [new URL("http://service.test/api/tools"), { method: "GET", headers: { accept: "application/json" }, credentials: "omit", redirect: "error" }],
+    [new URL("http://service.test/api/tools"), { method: "GET", headers: { accept: "application/json" }, credentials: "omit", redirect: "error" }],
+  ]);
+});
+
 test("accepts both approved payment states", async () => {
   for (const payment of [
     { state: "configuration_required" },
@@ -144,6 +163,34 @@ test("rejects a directory whose tools array has a custom prototype", async () =>
     json: async () => value,
   }));
   assert.deepEqual(result, { kind: "directory_invalid" });
+});
+
+test("rejects accessor-backed and non-enumerable array entries", async () => {
+  const cases = [
+    () => {
+      const value = directory();
+      Object.defineProperty(value.tools, "0", { enumerable: true, get: () => directory().tools[0] });
+      return value;
+    },
+    () => {
+      const value = directory();
+      Object.defineProperty(value.tools[0].input.required, "0", { enumerable: false, value: "requestRef" });
+      return value;
+    },
+    () => {
+      const value = directory();
+      Object.defineProperty(value.tools[0].limitations, "0", { enumerable: true, get: () => "quick_assessment_only" });
+      return value;
+    },
+  ];
+  for (const createValue of cases) {
+    const result = await discoverRiskScanQuick(base, async () => ({
+      status: 200,
+      headers: new Headers({ "content-type": "application/json" }),
+      json: async () => createValue(),
+    }));
+    assert.deepEqual(result, { kind: "directory_invalid" });
+  }
 });
 
 test("returns a cloned selection rather than retaining decoded directory data", async () => {
