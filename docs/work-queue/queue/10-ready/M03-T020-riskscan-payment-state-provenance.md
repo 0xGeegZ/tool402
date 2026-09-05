@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M02-T010 accepted; M03-T010 accepted
 - Integration evidence: D-M02-010-002 and D-M03-010-002 accepted
 - Owner: the proposed implementation scope is `packages/core/src/risk-scan.ts` and `packages/core/test/risk-scan.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -32,3 +32,7 @@ The local contract is [M03 RiskScan payment-state provenance](../../../specs/m03
 - `npm run test --workspace @tool402/backend`
 - `npm run lint --workspace @tool402/backend`
 - `npm run queue:check`, the enabled local-reference guard, independent task review, and two fresh clean module-review generations.
+
+## Ready transition
+
+Ready at 2026-09-05T10:29:35Z after the root verified both accepted dependencies and their integration evidence, the committed local specification and plan, no active lane, disjoint two-file core ownership, explicit human-action boundary, concrete validation commands, and queue validation. No external settlement, evidence, or deployment action is included.
