@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M04-T010 accepted; M04-T040 accepted; M04-T060 accepted
 - Integration evidence: D-M04-010-002, D-M04-040-002, and D-M04-060-002 accepted
 - Owner: the proposed implementation scope is `packages/backend/convex/riskscan-pending-reconciliation-selector.ts` and `packages/backend/tests/risk-scan-pending-reconciliation-selector.test.mjs`. The root owns this card, its local specification and plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -64,3 +64,14 @@ a local read-only selector specification or controlled handler work. This inbox
 card authorizes neither RED/code nor an external runtime, store, payment,
 settlement, transaction verification, finality, evidence, result, API/UI,
 deployment, or live claim.
+
+## Ready transition
+
+Ready at 2026-09-05T18:11:12Z after the root revalidated accepted M04-T010,
+M04-T040, and M04-T060 dependencies and their integration evidence; the pushed
+local specification and corrected plan; disjoint two-path backend ownership; no
+active lane; no pending human action; concrete validation commands; queue
+validation; and the independent design review plus scoped re-review. The card
+remains a local internal read-only query only; no configured runtime, external
+store, payment, settlement, transaction verification, finality, evidence,
+result, API/UI, deployment, or live claim is authorized.
