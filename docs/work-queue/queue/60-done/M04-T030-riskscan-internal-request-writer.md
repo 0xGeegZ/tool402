@@ -3,10 +3,10 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T010 accepted; M04-T010 accepted; M04-T020 accepted
 - Integration evidence: D-M02-010-002, D-M04-010-002, and D-M04-020-002 accepted
-- Owner: the proposed implementation scope is `packages/backend/convex/riskscan-requests.ts`, `packages/backend/convex/tsconfig.json`, and `packages/backend/tests/risk-scan-internal-request-writer.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
+- Owner: the accepted implementation scope was `packages/backend/convex/riskscan-requests.ts`, `packages/backend/convex/tsconfig.json`, and `packages/backend/tests/risk-scan-internal-request-writer.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
 - Human actions: none for local internal-mutation code and handler-level tests. External-store configuration/runtime, deployment, payment, settlement, verification/finality, evidence capture, accounts, wallets, and live assertions remain human-authorized.
 
 ## Scope
@@ -39,3 +39,7 @@ Ready at 2026-09-05T14:58:37Z after the root revalidated all accepted dependenci
 ## Activation
 
 Activated at 2026-09-05T14:59:49Z after a fresh queue rescan confirmed the pushed ready state, no active lane, and the same disjoint backend ownership boundary. Task 1 starts with its internal-writer RED contract. No public function, generated API, configured runtime, external action, payment, wallet/account action, deployment, verification, evidence, or live claim is authorized.
+
+## Completion transition
+
+Accepted at 2026-09-05T15:26:41Z. The writer began from an observed missing-module RED and reached Green for canonical insertion, exact replay, conflict, and admission ordering. An independent Standards review found that a non-unique index could bypass the generic conflict boundary on duplicate rows; the scoped fix changed the lookup to a two-row bound, added a duplicate-row RED/GREEN contract, and covers mismatches across all seven protected fields. Root verification passed Node 22.21.1 typecheck, the 75-test suite, lint, queue validation, whitespace, the enabled local-reference guard, and a production Webpack build. Independent task review, scoped post-fix re-review, and two fresh clean Standards/Spec review generations found no Critical, Important, or Minor finding. `MODULE_BASE` was `77aa62d0dcc273c87bf5fe42e6bc335b8ea98928`; `MODULE_HEAD` was `d4f70c206a680a28994d66d8c7cad16235c6aeb9`. No public function, configured runtime, external-store proof, payment/settlement action, account/wallet action, deployment, verification/evidence capture, or live claim was added.
