@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T010 accepted
 - Integration evidence: D-M02-010-002 accepted
 - Owner: implementation lane will own `packages/core/src/risk-scan.ts`, `packages/core/src/index.ts`, and `packages/core/test/risk-scan.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, decisions, and integration evidence.
@@ -35,4 +35,8 @@ The local contract is [M03 RiskScan verified receipt/evidence binding](../../../
 
 ## Ready transition
 
-Ready at 2026-09-05T09:49:31Z after the root verified the committed local specification and plan, accepted M02-T010 dependency and integration evidence, disjoint core ownership, explicit human-action boundary, concrete validation commands, and queue validation. The root may activate Task 1 for RED tests.
+Ready at 2026-09-05T09:49:31Z after the root verified the committed local specification and plan, accepted M02-T010 dependency and integration evidence, disjoint core ownership, explicit human-action boundary, concrete validation commands, and queue validation.
+
+## Activation
+
+Activated at 2026-09-05T09:51:28Z after a fresh queue rescan confirmed no active lane, clean pushed queue state, and the accepted core-only ownership boundary. Task 1 starts with the public RED artifact-binding contract; no external action is included.
