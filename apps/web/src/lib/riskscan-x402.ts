@@ -164,12 +164,16 @@ function createSettlementValidatingFacilitatorClient(
         paymentRequirements,
       );
 
+      if (result.success === false) {
+        return result;
+      }
+
       if (
-        result.success !== true ||
-        (result.network === configuration.network &&
-          result.network === paymentRequirements.network &&
-          typeof result.transaction === "string" &&
-          result.transaction.trim().length > 0)
+        result.success === true &&
+        result.network === configuration.network &&
+        result.network === paymentRequirements.network &&
+        typeof result.transaction === "string" &&
+        result.transaction.trim().length > 0
       ) {
         return result;
       }

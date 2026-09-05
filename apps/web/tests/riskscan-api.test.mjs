@@ -678,6 +678,8 @@ test("rejects malformed settlement successes before releasing protected output",
     ["wrong network", () => ({ success: true, network: "eip155:1", transaction: "wrong-network" })],
     ["blank transaction", ({ requirements }) => ({ success: true, network: requirements.network, transaction: "  " })],
     ["non-string transaction", ({ requirements }) => ({ success: true, network: requirements.network, transaction: 42 })],
+    ["truthy non-boolean success", ({ requirements }) => ({ success: "true", network: requirements.network, transaction: "truthy-success" })],
+    ["missing success", ({ requirements }) => ({ network: requirements.network, transaction: "missing-success" })],
   ]) {
     const settlements = [];
     const settlingFacilitator = createSettlingLocalFacilitator(settlement);
@@ -690,6 +692,7 @@ test("rejects malformed settlement successes before releasing protected output",
     assert.equal(settlements.length, 0, description);
     assert.match(response.headers.get("payment-response") ?? "", /\S/u, description);
     assert.equal(response.status, 402, description);
+    assert.doesNotMatch(await response.clone().text(), /"disposition"/u, description);
   }
 });
 
