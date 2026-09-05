@@ -40,9 +40,11 @@ The local contract is [M05 RiskScan machine-readable Tool Directory](../../../sp
 
 ## Validation
 
-- RED/GREEN web tests cover exact route/directory shape, bounded input schema,
-  configuration-required and locally-configured states, response no-leakage,
-  no extra tool, no side effect, and process-state restoration.
+- RED/GREEN web tests cover exact route/directory shape, required top-level and
+  closed declaration input schema, configuration-required and locally-configured
+  states, response no-leakage, no extra tool, no side effect, and source-level
+  Cache Components runtime-boundary coverage; root validation exercises the
+  actual route through a running Next request.
 - `npm run typecheck --workspace @tool402/web`
 - `npm run test --workspace @tool402/web`
 - Root `npm run typecheck`, `npm run test`, `npm run lint`, production Webpack

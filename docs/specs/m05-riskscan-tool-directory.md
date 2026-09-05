@@ -17,10 +17,13 @@ recipient, facilitator, network support, payment path, or any external fact.
 ## Public discovery boundary
 
 `GET /api/tools` returns status `200`, content type JSON, and `cache-control:
-no-store`. It must use a dynamic route boundary so a stale discovery response is
-not treated as current configuration. The route reads `process.env` only by
-passing it to the local directory response builder; all deterministic descriptor
-construction is testable with an explicit `NodeJS.ProcessEnv` argument.
+no-store`. With Cache Components enabled, the asynchronous route must await
+`connection()` before reading `process.env`; it must not export a legacy
+`dynamic` segment configuration. The runtime boundary prevents a build-time
+environment snapshot from being presented as current discovery configuration.
+The route reads `process.env` only by passing it to the local directory response
+builder; all deterministic descriptor construction is testable with an explicit
+`NodeJS.ProcessEnv` argument.
 
 The response has exactly this top-level shape:
 
@@ -43,17 +46,22 @@ The one descriptor has all of:
     contentType: "application/json",
   },
   input: {
-    requestRef: { type: "string", minLength: 1, maxLength: 96 },
-    subjectRef: { type: "string", minLength: 1, maxLength: 160 },
-    context: { type: "string", minLength: 1, maxLength: 280 },
-    declarations: {
-      type: "object",
-      required: ["identity", "pricing", "limitations", "evidence"],
-      properties: {
-        identity: { type: "boolean" },
-        pricing: { type: "boolean" },
-        limitations: { type: "boolean" },
-        evidence: { type: "boolean" },
+    type: "object",
+    required: ["requestRef", "subjectRef", "context", "declarations"],
+    properties: {
+      requestRef: { type: "string", minLength: 1, maxLength: 96 },
+      subjectRef: { type: "string", minLength: 1, maxLength: 160 },
+      context: { type: "string", minLength: 1, maxLength: 280 },
+      declarations: {
+        type: "object",
+        additionalProperties: false,
+        required: ["identity", "pricing", "limitations", "evidence"],
+        properties: {
+          identity: { type: "boolean" },
+          pricing: { type: "boolean" },
+          limitations: { type: "boolean" },
+          evidence: { type: "boolean" },
+        },
       },
     },
   },
@@ -65,9 +73,10 @@ The one descriptor has all of:
 }
 ```
 
-The declaration keys and string limits describe the accepted local RiskScan
-Quick input boundary. The descriptor must not claim that a request is accepted,
-paid, settled, verified, or completed merely because discovery returns it.
+The required top-level keys, closed declaration object, declaration keys, and
+string limits describe the accepted local RiskScan Quick input boundary. The
+descriptor must not claim that a request is accepted, paid, settled, verified,
+or completed merely because discovery returns it.
 
 ## Configuration summary
 
@@ -112,9 +121,12 @@ deployment, verification/evidence capture, and live evidence are excluded.
 
 ## Acceptance evidence
 
-- A web test proves the pure builder and `GET` route return the exact one-tool
-  response shape, JSON/no-store headers, stable input/declaration metadata, and
-  no extra tool.
+- A web test proves the pure builder/response helper returns the exact one-tool
+  response shape, JSON/no-store headers, required/closed input-declaration
+  metadata, and no extra tool. Source-level contract coverage proves the route
+  awaits `connection()` before passing `process.env` to the helper and exports
+  no legacy `dynamic` configuration; browser runtime verification proves the
+  route itself responds under a real Next request.
 - Tests prove absent or malformed configuration fails closed to
   `configuration_required`; a controlled valid parser configuration yields only
   local protocol/network/price metadata.

@@ -51,11 +51,17 @@ the test fails for that reason.
 
 The RED contract must cover:
 
-1. exact `GET /api/tools` route registration and its dynamic/no-store JSON
-   response;
+1. source-level contract coverage that the asynchronous `GET /api/tools` route
+   imports and awaits `connection()` before passing `process.env` to the
+   response helper, declares no legacy `dynamic` configuration, and the pure
+   response helper produces the no-store JSON response. Do not invoke `GET`
+   directly in the Node-only test because `connection()` requires a real Next
+   request context;
 2. an exact `version: "v1"` directory containing exactly one
-   `riskscan.quick` descriptor with `POST /api/riskscan`, bounded request fields,
-   four boolean declaration keys, and both stated limitations;
+   `riskscan.quick` descriptor with `POST /api/riskscan`, a required
+   `requestRef`/`subjectRef`/`context`/`declarations` input object, bounded
+   request fields, a required closed four-boolean declaration object, and both
+   stated limitations;
 3. an empty or malformed explicit environment returning only
    `{ state: "configuration_required" }` in `payment`;
 4. a controlled valid explicit environment returning only
@@ -67,8 +73,9 @@ The RED contract must cover:
 6. exactly one parser call per builder invocation and no usable-configuration,
    facilitator, payment wrapper, Quick handler, network, backend, durable-store,
    clock, random, or state-changing call; and
-7. a stable route response under absent process configuration, without changing
-   global process state outside a `try`/`finally` restoration.
+7. a stable pure response helper under absent configuration, without changing
+   global process state; the root later verifies the actual route through a
+   running Next request.
 
 ### Step 2: Implement the smallest pure directory builder and route
 
@@ -79,15 +86,19 @@ explicit `NodeJS.ProcessEnv`, plus a response helper that returns JSON with
 not invoke its usability/facilitator or protected-handler functions.
 
 Build an immutable exact descriptor for `riskscan.quick` matching the contract.
-Use only the four bounded request string descriptors, four exact declaration
-booleans, two limitation strings, and the two allowed `payment` union shapes.
+Use an input object with the four exact required top-level fields; its
+`declarations` child is a required closed object with only the four exact
+boolean properties. Use only the three bounded request string descriptors, two
+limitation strings, and the two allowed `payment` union shapes.
 The parser-null path returns exactly `configuration_required`; the valid-parser
 path returns exactly `locally_configured`, `x402`, parsed network, and parsed
 price. Never include parser `payTo` or `facilitatorUrl` in a returned object.
 
-Create `apps/web/src/app/api/tools/route.ts` with a dynamic `GET` route that
-passes `process.env` directly to that response helper. It must not accept a
-request body, call RiskScan, invoke x402, or add a POST/action route.
+Create `apps/web/src/app/api/tools/route.ts` with an asynchronous `GET` route
+that imports and awaits `connection()` from `next/server` before passing
+`process.env` directly to that response helper. Do not export `dynamic`,
+`revalidate`, or `fetchCache` under Cache Components. The route must not accept
+a request body, call RiskScan, invoke x402, or add a POST/action route.
 
 ### Step 3: Turn the contract GREEN
 
@@ -119,8 +130,9 @@ result/deployment/live behavior.
    correction and fresh re-review before acceptance.
 3. Run root Node 22.21.1 `npm run typecheck`, `npm test`, and `npm run lint`.
    Run `npx --no-install next build --webpack` in `apps/web` after root
-   typecheck. Run `npm run queue:check`, the enabled local-reference guard, and
-   whitespace checks.
+   typecheck, then verify `GET /api/tools` through a running Next request in a
+   browser or equivalent real HTTP client. Run `npm run queue:check`, the
+   enabled local-reference guard, and whitespace checks.
 4. Obtain two fresh final Standards/Spec review generations against the exact
    module diff.
 5. If every required result is clean, move the card to `60-done`, record
