@@ -36,10 +36,16 @@ function snapshotRecord(value: unknown, keys: readonly string[]): Record<string,
 }
 
 function selectedDiscovery(value: RiskScanConsumerDiscovery): "directory_unavailable" | "directory_invalid" | "tool_selected" | null {
-  const failure = snapshotRecord(value, ["kind"]);
-  if (failure !== null && (failure.kind === "directory_unavailable" || failure.kind === "directory_invalid")) return failure.kind;
-  const selected = snapshotRecord(value, ["kind", "tool"]);
-  return selected !== null && selected.kind === "tool_selected" ? "tool_selected" : null;
+  if (typeof value !== "object" || value === null || Object.getPrototypeOf(value) !== Object.prototype) return null;
+  const keys = Reflect.ownKeys(value);
+  if (!keys.every((key) => typeof key === "string") || !keys.includes("kind")) return null;
+  const kind = Object.getOwnPropertyDescriptor(value, "kind");
+  if (kind === undefined || kind.enumerable !== true || kind.get !== undefined || kind.set !== undefined || !Object.hasOwn(kind, "value")) return null;
+  if (keys.length === 1) return kind.value === "directory_unavailable" || kind.value === "directory_invalid" ? kind.value : null;
+  if (keys.length !== 2 || !keys.includes("tool")) return null;
+  const tool = Object.getOwnPropertyDescriptor(value, "tool");
+  if (tool === undefined || tool.enumerable !== true || tool.get !== undefined || tool.set !== undefined || !Object.hasOwn(tool, "value")) return null;
+  return kind.value === "tool_selected" ? "tool_selected" : null;
 }
 
 function snapshotInput(value: unknown): QuickInput | null {

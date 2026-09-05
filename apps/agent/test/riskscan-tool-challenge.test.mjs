@@ -18,15 +18,15 @@ const failures = [
   { kind: "directory_invalid" },
 ];
 
-function response(status, challenge) {
+function response(status, challenge, bodyReads = []) {
   return {
     status,
     headers: { get(name) { return name === "payment-required" ? challenge : null; } },
-    json() { throw new Error("response body must not be read"); },
-    text() { throw new Error("response body must not be read"); },
-    arrayBuffer() { throw new Error("response body must not be read"); },
-    blob() { throw new Error("response body must not be read"); },
-    formData() { throw new Error("response body must not be read"); },
+    json() { bodyReads.push("json"); throw new Error("response body must not be read"); },
+    text() { bodyReads.push("text"); throw new Error("response body must not be read"); },
+    arrayBuffer() { bodyReads.push("arrayBuffer"); throw new Error("response body must not be read"); },
+    blob() { bodyReads.push("blob"); throw new Error("response body must not be read"); },
+    formData() { bodyReads.push("formData"); throw new Error("response body must not be read"); },
   };
 }
 
@@ -83,13 +83,28 @@ test("rejects malformed or hostile selection facades without I/O", async () => {
   }
 });
 
-test("never reads the selected tool contents", async () => {
+test("never reads the selected tool descriptor value", async () => {
   const opaque = new Proxy({}, { get() { throw new Error("tool must remain opaque"); } });
+  const shell = { kind: "tool_selected", tool: opaque };
+  const originalDescriptor = Object.getOwnPropertyDescriptor;
   let calls = 0;
-  const result = await requestRiskScanQuickChallenge(base, { kind: "tool_selected", tool: opaque }, input, async () => {
-    calls += 1;
-    return response(503);
-  });
+  Object.getOwnPropertyDescriptor = (value, key) => {
+    const descriptor = originalDescriptor(value, key);
+    if (value !== shell || key !== "tool" || descriptor === undefined) return descriptor;
+    return new Proxy(descriptor, { get(target, property, receiver) {
+      if (property === "value") throw new Error("tool descriptor value must remain unread");
+      return Reflect.get(target, property, receiver);
+    } });
+  };
+  let result;
+  try {
+    result = await requestRiskScanQuickChallenge(base, shell, input, async () => {
+      calls += 1;
+      return response(503);
+    });
+  } finally {
+    Object.getOwnPropertyDescriptor = originalDescriptor;
+  }
   assert.deepEqual(result, { kind: "unavailable" });
   assert.equal(calls, 1);
 });
@@ -104,8 +119,16 @@ test("rejects noncanonical or hostile input without I/O", async () => {
   const nonEnumerable = { ...input };
   Object.defineProperty(nonEnumerable, "context", { enumerable: false });
   const unsafeDeclarations = { ...input, declarations: { ...input.declarations, extra: true } };
+  const inheritedDeclaration = { ...input, declarations: Object.create(input.declarations) };
+  const accessorDeclaration = { ...input, declarations: { ...input.declarations } };
+  Object.defineProperty(accessorDeclaration.declarations, "identity", { enumerable: true, get() { return true; } });
+  const nonEnumerableDeclaration = { ...input, declarations: { ...input.declarations } };
+  Object.defineProperty(nonEnumerableDeclaration.declarations, "identity", { enumerable: false });
+  const symbolDeclaration = { ...input, declarations: { ...input.declarations, [Symbol("extra")]: true } };
+  const nonPlainDeclaration = { ...input, declarations: Object.assign(Object.create(null), input.declarations) };
   const badText = { ...input, requestRef: "   " };
   const cases = [null, [], missing, extra, inherited, accessor, nonEnumerable, { ...input, [Symbol("extra")]: true }, unsafeDeclarations, badText,
+    inheritedDeclaration, accessorDeclaration, nonEnumerableDeclaration, symbolDeclaration, nonPlainDeclaration,
     new Proxy({}, { ownKeys() { throw new Error("input facade"); } })];
   for (const value of cases) {
     let calls = 0;
@@ -157,14 +180,15 @@ test("uses a fresh request init after sender mutation", async () => {
 });
 
 test("maps sender, status, and hostile response metadata without reading a body", async () => {
+  const bodyReads = [];
   const cases = [
     [async () => { throw new Error("offline"); }, { kind: "transport_failure" }],
-    [async () => response(503), { kind: "unavailable" }],
-    [async () => response(402, "challenge"), { kind: "payment_required" }],
-    [async () => response(402, "  "), { kind: "unexpected_response" }],
-    [async () => response(402), { kind: "unexpected_response" }],
-    [async () => response(200), { kind: "unexpected_response" }],
-    [async () => response(400), { kind: "unexpected_response" }],
+    [async () => response(503, undefined, bodyReads), { kind: "unavailable" }],
+    [async () => response(402, "challenge", bodyReads), { kind: "payment_required" }],
+    [async () => response(402, "  ", bodyReads), { kind: "unexpected_response" }],
+    [async () => response(402, undefined, bodyReads), { kind: "unexpected_response" }],
+    [async () => response(200, undefined, bodyReads), { kind: "unexpected_response" }],
+    [async () => response(400, undefined, bodyReads), { kind: "unexpected_response" }],
     [async () => ({ get status() { throw new Error("hostile status"); } }), { kind: "unexpected_response" }],
     [async () => ({ status: 402, get headers() { throw new Error("hostile headers"); } }), { kind: "unexpected_response" }],
     [async () => ({ status: 402, headers: { get() { throw new Error("hostile header"); } } }), { kind: "unexpected_response" }],
@@ -173,4 +197,5 @@ test("maps sender, status, and hostile response metadata without reading a body"
     const result = await requestRiskScanQuickChallenge(base, selected, input, sender);
     assert.deepEqual(result, expected);
   }
+  assert.deepEqual(bodyReads, []);
 });
