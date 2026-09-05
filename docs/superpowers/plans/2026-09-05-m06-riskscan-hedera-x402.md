@@ -35,7 +35,7 @@
 - Consumes: `readRiskScanX402Configuration(environment)`, `createRiskScanProtectedHandler`, and `handleRiskScanPost`.
 - Produces: discriminated `RiskScanX402Configuration`, `hedera:testnet` exact registration, and capability-gated local `402` behavior.
 
-- [ ] **Step 1: Write failing native server tests**
+- [x] **Step 1: Write failing native server tests**
 
 Add a controlled `configuredHederaEnvironment()` and assert this parser output:
 
@@ -74,13 +74,13 @@ mismatched, blank-fee-payer, accessor-backed/malformed-extra, and duplicate
 native-kind cases that must fail closed, including an invalid first matching
 kind followed by an otherwise valid duplicate.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npm run test --workspace @tool402/web -- --test-name-pattern='Hedera|native'`
 
 Expected: FAIL because neither native configuration nor native server support exists.
 
-- [ ] **Step 3: Add the exact package and lock entry**
+- [x] **Step 3: Add the exact package and lock entry**
 
 Add this runtime dependency to `apps/web/package.json`:
 
@@ -92,7 +92,7 @@ Regenerate only `package-lock.json` with Node 22/npm 10 and scripts disabled.
 Confirm that the lock retains the existing x402 `2.25.0` package family and
 that the workspace manifest has no direct SDK dependency.
 
-- [ ] **Step 4: Implement the closed configuration families and scheme selection**
+- [x] **Step 4: Implement the closed configuration families and scheme selection**
 
 Implement these closed forms:
 
@@ -133,7 +133,7 @@ Keep settlement-result validation, after-handler observer, and exception-to-
 `503` mapping. Include `kind` and all native price fields in the handler-cache
 key.
 
-- [ ] **Step 5: Verify GREEN and commit the server slice**
+- [x] **Step 5: Verify GREEN and commit the server slice**
 
 Run:
 

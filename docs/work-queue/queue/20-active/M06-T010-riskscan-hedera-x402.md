@@ -101,3 +101,18 @@ its controlled native configuration/server RED contract in the current
 repository workspace under the project worktree policy. No real
 recipient/facilitator configuration, wallet/account/key action, signing,
 payment, transaction, deployment, or live claim is authorized.
+
+## Task 1 acceptance
+
+Task 1 is accepted at the local server boundary after the implementation and
+two in-scope fail-closed remediation commits through `71f8aa8`. The task
+review identified and the remediation tests covered both malformed identity
+selection cases: constant inherited/accessor records and stateful accessor
+records that could otherwise differ between the gate and the x402 consumer.
+The final independent scoped review found no Critical or Important issue.
+Fresh root verification passed web typecheck, the web test command with 57
+passing tests, and whitespace validation. This is task-level acceptance only:
+it proves a controlled unsigned native challenge path, not a live facilitator,
+account, wallet, payment, transaction, settlement, finality, receipt,
+evidence, result, deployment, or external compatibility claim. Task 2 may now
+start on its disjoint Directory and Agent paths.
