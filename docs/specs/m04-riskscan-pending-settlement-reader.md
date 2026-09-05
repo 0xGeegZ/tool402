@@ -29,7 +29,7 @@ Any present but unsafe or ineligible attempt must throw `new RangeError("RiskSca
 For an eligible attempt, the query first reads `riskScanSettlementRecords` through `by_attempt`, equality-constraining `attemptId` and taking at most two rows. It then reads the same table through `by_network_and_transaction_ref`, equality-constraining the derived network and candidate transaction reference and taking at most two rows.
 
 - If both bounded lookups return no rows, return `null`.
-- If both return exactly one safe record with the same opaque nonempty ID, and both rows exactly match the canonical candidate relationship, return the candidate projection.
+- If both return exactly one safe record with the same opaque nonempty ID, both rows exactly match the canonical candidate relationship, and their `observedAt` values are exactly equal, return the candidate projection using that agreed timestamp.
 - If either lookup returns two rows, only one lookup returns a row, the two rows have different IDs, either record is malformed or unsafe, a required field differs, a finality boundary is present, or a record is not `pending_verification`, throw `new RangeError("RiskScan pending settlement record conflicts with a different durable record")`.
 
 Each acceptable record must be a non-array object whose `_id`, `attemptId`, `network`, `transactionRef`, `verificationState`, and `observedAt` are own enumerable data properties and whose descriptors each own `value` through `Object.hasOwn(descriptor, "value")`. It must not own `finalityBoundary`, including an `undefined`, non-enumerable, or accessor-backed boundary. The record must match all of:
@@ -40,7 +40,7 @@ Each acceptable record must be a non-array object whose `_id`, `attemptId`, `net
   network: storedAttempt.network,
   transactionRef: storedAttempt.candidateSettlementRef,
   verificationState: "pending_verification",
-  observedAt: nonnegative bigint at most 9223372036854775807n,
+  observedAt: the same nonnegative bigint at most 9223372036854775807n in both indexed rows,
 }
 ```
 
