@@ -43,8 +43,9 @@ The local contract is [M06 RiskScan Hedera testnet x402 compatibility](../../../
   active lane owns any proposed web/Agent/package path or root lockfile
   integration reservation.
 - The card records CORE_P0 priority, exact EVM/Hedera configuration split,
-  facilitator capability/fee-payer gate, Tool Directory/Agent summary
-  boundary, human boundary, and concrete validation commands.
+  canonical native id/atomic-price rules, unique facilitator
+  capability/fee-payer gate, Tool Directory/Agent summary boundary, human
+  boundary, and concrete validation commands.
 - The delivery excludes client payment, signing, wallet/account/key access,
   live facilitator or network proof, transaction/finality/receipt/evidence/
   result material, deployment, and live claims.
@@ -52,8 +53,10 @@ The local contract is [M06 RiskScan Hedera testnet x402 compatibility](../../../
 ## Validation
 
 - RED/GREEN web tests cover strict EVM preservation, strict native testnet
-  configuration, atomic native requirements, supported native challenge, and
-  no-capability/mismatched-capability fail-closed behavior.
+  configuration, canonical recipient/asset identifiers, atomic native
+  requirements, supported native challenge, discriminated scheme loading, and
+  no-capability/mismatched/duplicate/accessor-backed-capability fail-closed
+  behavior.
 - RED/GREEN directory/Agent tests cover exact safe native metadata, cloning,
   malformed/hostile descriptor rejection, and no sender/client/signer path.
 - `npm run typecheck --workspace @tool402/web`

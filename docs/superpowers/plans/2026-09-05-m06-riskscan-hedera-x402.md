@@ -14,6 +14,9 @@
 
 - Preserve existing EVM configuration and unsigned EVM behavior.
 - Permit native configuration only for `hedera:testnet` with explicit atomic asset and positive amount values.
+- Treat a canonical Hedera identifier as three decimal segments, each `0` or
+  `[1-9]` followed by digits. Reject leading-zero segments and `0.0.0` as a
+  recipient; permit `0.0.0` only as the native HBAR/tinybar asset sentinel.
 - Add `@x402/hedera` exactly at `2.25.0`; do not add a direct Hiero SDK dependency.
 - Never add a private key, signer, client-side exact scheme, payment-fetch helper, wallet/account action, live facilitator call in a test, transaction submission, deployment, or live claim.
 - Directory output may expose native network/asset/amount, never recipient, facilitator URL, fee payer, header, payload, transaction, receipt, evidence, or result.
@@ -47,9 +50,11 @@ Add a controlled `configuredHederaEnvironment()` and assert this parser output:
 ```
 
 Add invalid cases for blank/missing asset or amount, zero/non-canonical amount,
-invalid recipient, unsupported network, userinfo URL, generic dollar price
-mixed with native fields, and native fields mixed with EVM. Each must parse as
-`null` or return `503` without a `payment-required` header.
+invalid recipient (including `0.0.0`), leading-zero recipient/asset segments,
+unsupported network, userinfo URL, generic dollar price mixed with native
+fields, and native fields mixed with EVM. Assert `0.0.0` remains an allowed
+native asset. Each invalid family must parse as `null` or return `503` without
+a `payment-required` header.
 
 Create a fake facilitator with one supported kind:
 
@@ -65,7 +70,9 @@ Create a fake facilitator with one supported kind:
 Assert an unsigned native request returns `402`; decode the challenge and
 assert its accepted requirement preserves network, asset, amount, and fee
 payer. Assert Quick, `verify`, and `settle` calls remain zero. Add missing,
-mismatched, and blank-fee-payer supported-kind cases that must fail closed.
+mismatched, blank-fee-payer, accessor-backed/malformed-extra, and duplicate
+native-kind cases that must fail closed, including an invalid first matching
+kind followed by an otherwise valid duplicate.
 
 - [ ] **Step 2: Verify RED**
 
@@ -107,14 +114,21 @@ type RiskScanHederaX402Configuration = {
 };
 ```
 
-Require one family only. Validate a canonical non-native Hedera recipient,
-canonical asset, and positive canonical atomic amount. Load
-`@x402/hedera/exact/server` only for Hedera; register its `ExactHederaScheme`
-for testnet; retain the EVM loader/registration unchanged.
+Require one family only. Validate the specified canonical non-native Hedera
+recipient, canonical asset (including only the allowed native `0.0.0`
+sentinel), and positive canonical atomic amount. Make
+`isRiskScanX402ConfigurationUsable` and handler construction dispatch by
+`kind`: EVM alone loads `ExactEvmScheme` and parses its dollar price; Hedera
+relies on the strict explicit atomic parser and never loads that EVM scheme.
+Load `@x402/hedera/exact/server` only for Hedera and register its
+`ExactHederaScheme` for testnet. Add controlled loader tests proving each
+family cannot invoke the other scheme loader.
 
-Make the wrapped `getSupported()` reject every native response except v2
-`exact` / `hedera:testnet` with a nonblank string `extra.feePayer`, then return
-the accepted original response so the x402 challenge receives the fee payer.
+Make the wrapped `getSupported()` reject every native response except one
+unique v2 `exact` / `hedera:testnet` kind whose own, non-accessor data
+`extra.feePayer` is a nonblank string. Reject duplicate matching kinds before
+passing the accepted original response through, so x402 cannot first-select an
+unvalidated duplicate and the challenge receives the validated fee payer.
 Keep settlement-result validation, after-handler observer, and exception-to-
 `503` mapping. Include `kind` and all native price fields in the handler-cache
 key.
@@ -165,8 +179,8 @@ Add web tests that expect exactly:
 Prove output excludes controlled recipient, facilitator, fee payer, header,
 payload, transaction, receipt, evidence, and result values. Add Agent tests
 that clone this native summary and reject missing/extra/accessor/proxy-backed
-fields, mainnet, malformed asset, zero/non-canonical amount, and a mixed EVM
-`price` field.
+fields, mainnet, malformed or leading-zero asset, zero/non-canonical amount,
+and a mixed EVM `price` field. Assert `0.0.0` asset remains valid.
 
 - [ ] **Step 2: Verify RED**
 
@@ -222,10 +236,11 @@ git commit -m "feat: advertise Hedera x402 capability"
 
 - [ ] **Step 1: Exercise the controlled local path**
 
-Use controlled configuration and an injected fake native facilitator to
-exercise the Tool Directory plus an unsigned `POST /api/riskscan`. Record only
-selected tool, native summary, and `402` status. Do not use a wallet, account,
-key, payment signature, remote facilitator, transaction, or result.
+Use controlled configuration and the existing handler's injected fake native
+facilitator seam to exercise the Tool Directory plus an unsigned
+`POST /api/riskscan`. Record only selected tool, native summary, and `402`
+status. Do not use a wallet, account, key, payment signature, remote
+facilitator, transaction, or result.
 
 - [ ] **Step 2: Run root verification**
 

@@ -126,6 +126,10 @@ summary must instead use exactly `hedera:testnet`, a canonical numeric
 `asset` id, and a canonical nonzero atomic `amount`, with no `price` field.
 Blank, zero, non-canonical, mixed-family, or otherwise malformed values are
 invalid even though the Consumer Agent does not import the provider's parser.
+For native metadata, a canonical id is exactly three decimal segments where
+each segment is `0` or starts with `[1-9]`; leading-zero segments are invalid.
+The native asset sentinel `0.0.0` is allowed and denotes tinybar pricing. The
+summary contains no recipient, so the Agent never accepts or infers one.
 
 The agent creates a new selection object from validated primitive values and
 fixed metadata. It never returns a provider-owned object reference and never

@@ -56,6 +56,15 @@ It requires these nonblank runtime values:
 - `RISKSCAN_X402_HEDERA_ASSET`: a canonical Hedera asset id; and
 - `RISKSCAN_X402_HEDERA_AMOUNT`: a canonical positive atomic integer.
 
+A canonical Hedera identifier has exactly three decimal segments, each either
+`0` or a nonzero digit followed by decimal digits:
+`/^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/`. Leading zeroes are
+not canonical. `payTo` must not be `0.0.0`, which is the native-asset
+sentinel rather than a payment recipient. `asset` may be `0.0.0` to represent
+native HBAR in tinybars; any non-native asset must use the same canonical
+identifier grammar. This is local syntax validation only: it does not assert
+that an account or asset exists, is associated, funded, or usable.
+
 `RISKSCAN_X402_PRICE` must be blank or absent for the Hedera family. The
 native family uses the exact atomic `{ asset, amount }` price form and supplies
 no default asset, decimals, recipient, facilitator, or network. This prevents
@@ -78,14 +87,27 @@ server/Next adapter and exact `{ asset, amount }` requirements. The EVM branch
 continues to load and register its existing exact scheme.
 
 Before the native branch can issue a challenge, the supplied facilitator
-capability response must contain an exact v2 `exact` kind for `hedera:testnet`
-whose `extra.feePayer` is a nonblank string. The server returns the same
-capability object to the x402 server after this check, so its native
-fee-payer value is included in the emitted requirement. Missing, malformed,
-wrong-version, wrong-scheme, wrong-network, or blank-fee-payer capability
-data prevents handler construction; `handleRiskScanPost` maps that local
-failure to the established `503` unavailable response without a payment
-header.
+capability response must contain exactly one v2 `exact` kind for
+`hedera:testnet`. The selected kind's `x402Version`, `scheme`, `network`, and
+`extra` must be own, non-accessor data properties; `extra.feePayer` must in
+turn be an own, non-accessor, nonblank string data property. A duplicate
+matching kind is rejected even if a later duplicate has a valid fee payer:
+this ensures x402's first-match selection cannot emit an earlier invalid
+record. Kinds for other protocols may remain. Only after this validation does
+the server return the original capability object unchanged, preserving normal
+extensions and signers while ensuring x402 selects the validated unique native
+kind. Missing, malformed, duplicate, wrong-version, wrong-scheme,
+wrong-network, accessor-backed, or blank-fee-payer capability data prevents
+handler construction; `handleRiskScanPost` maps that local failure to the
+established `503` unavailable response without a payment header.
+
+Configuration usability and handler construction are discriminated by
+`kind`. The EVM branch alone loads `ExactEvmScheme` and retains its dollar
+price parsing. The Hedera branch accepts only the strict parser's explicit
+atomic amount, never loads the EVM scheme, and registers `ExactHederaScheme`
+only while constructing the native server. A malformed scheme registration
+still fails closed at handler construction. This avoids applying EVM decimal
+rules to native atomic requirements.
 
 The native exact scheme supports the already-explicit `authorization` flow.
 The existing settlement observer therefore remains after-handler only and
@@ -130,13 +152,17 @@ accepted challenge-observation module.
 ## Acceptance evidence
 
 - Parser tests prove preserved EVM behavior; strict native testnet parsing;
-  absent defaults; no mixed configuration; canonical positive atomic amount;
-  and malformed configuration returning `null`.
+  absent defaults; no mixed configuration; canonical recipient/asset ids;
+  rejected `0.0.0` recipient and leading-zero ids; allowed `0.0.0` native
+  asset; canonical positive atomic amount; and malformed configuration
+  returning `null`.
 - Controlled native-facilitator tests prove the exact advertised capability
   produces an unsigned v2 `402` with `hedera:testnet`, exact asset/amount,
   and fee-payer data; Quick, verification, and settlement do not run.
-- Missing, malformed, mismatched, or fee-payer-free native capability yields
-  `503` without a payment header or Quick output.
+- Missing, malformed, mismatched, duplicate, accessor-backed, or
+  fee-payer-free native capability yields `503` without a payment header or
+  Quick output. Loader tests prove EVM usability/registration never runs for
+  Hedera and native registration never runs for EVM.
 - Tool Directory and Consumer Agent tests prove the native summary is safely
   emitted, accepted, cloned, and rejected when malformed or hostile, without
   leaking private configuration values.

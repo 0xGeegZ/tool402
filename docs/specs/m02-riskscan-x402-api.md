@@ -9,7 +9,7 @@ testnet extension is defined by [M06 RiskScan Hedera testnet x402 compatibility]
 not a replacement for EVM, and retains the same protected route and local
 fail-closed behavior.
 
-## Runtime configuration
+## EVM runtime configuration
 
 The protected boundary requires all four nonblank values at runtime:
 
