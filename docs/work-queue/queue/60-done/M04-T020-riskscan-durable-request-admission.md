@@ -3,10 +3,10 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T010 accepted; M04-T010 accepted
 - Integration evidence: D-M02-010-002 and D-M04-010-002 accepted
-- Owner: the proposed implementation scope is `packages/backend/src/risk-scan-durable-request-admission.ts` and `packages/backend/tests/risk-scan-durable-request-admission.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
+- Owner: the accepted implementation scope was `packages/backend/src/risk-scan-durable-request-admission.ts` and `packages/backend/tests/risk-scan-durable-request-admission.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
 - Human actions: none for the pure local admission contract. Any external-store runtime, deployment, payment, settlement, account, wallet, verification, finality, evidence capture, or live assertion remains human-authorized.
 
 ## Scope
@@ -37,3 +37,7 @@ Ready at 2026-09-05T13:54:27Z after the root revalidated all accepted dependenci
 ## Activation
 
 Activated at 2026-09-05T13:55:44Z after a fresh queue rescan confirmed the pushed ready state, no active lane, and the same disjoint backend ownership boundary. Task 1 starts with its durable-request-admission RED contract. No writer, reader, generated API, external action, payment, wallet/account action, deployment, verification, evidence, or live claim is authorized.
+
+## Completion transition
+
+Accepted at 2026-09-05T14:39:58Z. The admission boundary began from an observed missing-module RED and reached a Green exact-candidate contract. Independent specification review found that an accessor descriptor could inherit `value` from a polluted `Object.prototype`; the scoped fix requires an own descriptor value and passed a fresh clean task re-review. Root verification passed Node 22.21.1 typecheck, the 69-test suite, lint, queue validation, whitespace, the enabled local-reference guard, and a production Webpack build. Two fresh clean Standards/Spec review generations found no Critical, Important, or Minor finding. `MODULE_BASE` was `76e7a3928d4419079a7dd39499a69e67ff39219c`; `MODULE_HEAD` was `514331387e69783c4049d38e1c1216d7036a771a`. No database writer, reader, generated API, external connection, payment action, settlement assertion, account/wallet action, deployment, verification/evidence capture, or live claim was added.
