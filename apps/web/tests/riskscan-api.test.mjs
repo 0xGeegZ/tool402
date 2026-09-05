@@ -820,6 +820,11 @@ test("isolates core capability failures and validates the local timeout seam", a
     const failedResponse = await handler(signedRequest);
     assert.equal(failedResponse.status, 200);
     assert.match(failedResponse.headers.get("payment-response") ?? "", /\S/u);
+    const directResponse = await runRiskScanQuick(createRequest(validQuickInput()));
+    assert.deepEqual(
+      await failedResponse.clone().json(),
+      await directResponse.json(),
+    );
   } finally {
     Module._load = originalLoad;
   }
@@ -833,4 +838,125 @@ test("isolates core capability failures and validates the local timeout seam", a
   assert.equal(settlements.length, 1);
   assert.equal(recoveredResponse.status, 200);
   assert.match(recoveredResponse.headers.get("payment-response") ?? "", /\S/u);
+});
+
+test("does not observe a real before-handler x402 after-settle hook", async () => {
+  const configuration = readRiskScanX402Configuration(configuredEnvironment());
+  assert.notEqual(configuration, null);
+
+  const phases = [];
+  const settlements = [];
+  const originalLoad = Module._load;
+
+  Module._load = function loadUpfrontExactScheme(request, parent, isMain) {
+    const loaded = originalLoad.call(this, request, parent, isMain);
+
+    if (request === "@x402/core/server") {
+      return {
+        ...loaded,
+        x402ResourceServer: class extends loaded.x402ResourceServer {
+          onAfterSettle(hook) {
+            return super.onAfterSettle(async (context) => {
+              phases.push(context.phase);
+              await hook(context);
+            });
+          }
+        },
+      };
+    }
+
+    if (request === "@x402/evm/exact/server") {
+      return {
+        ...loaded,
+        ExactEvmScheme: class extends loaded.ExactEvmScheme {
+          constructor() {
+            super();
+            this.paymentFlows.eip3009.default = "upfront";
+          }
+        },
+      };
+    }
+
+    return loaded;
+  };
+
+  try {
+    const settlingFacilitator = createSettlingLocalFacilitator(successfulSettlement);
+    const handler = await createRiskScanProtectedHandler(configuration, {
+      facilitatorClient: settlingFacilitator.client,
+      onVerifiedSettlement: (settlement) => settlements.push(settlement),
+      settlementObserverTimeoutMs: 10,
+    });
+    const response = await handler(await createSignedRequest(handler));
+
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("payment-response") ?? "", /\S/u);
+  } finally {
+    Module._load = originalLoad;
+  }
+
+  assert.deepEqual(phases, ["before-handler"]);
+  assert.equal(settlements.length, 0);
+});
+
+test("cancels an active observation when a later protected handler throws", async () => {
+  const configuration = readRiskScanX402Configuration(configuredEnvironment());
+  assert.notEqual(configuration, null);
+
+  const settlements = [];
+  const deferred = createDeferredSettlement();
+  const settlingFacilitator = createSettlingLocalFacilitator((context) =>
+    deferred.settle(context),
+  );
+  const handler = await createRiskScanProtectedHandler(configuration, {
+    facilitatorClient: settlingFacilitator.client,
+    onVerifiedSettlement: (settlement) => settlements.push(settlement),
+  });
+  const firstRequest = await createSignedRequest(handler);
+  const firstResponse = handler(firstRequest);
+
+  await deferred.waitFor(1);
+  const originalLoad = Module._load;
+  Module._load = function loadRiskScanQuickWithProtectedFault(
+    request,
+    parent,
+    isMain,
+  ) {
+    const loaded = originalLoad.call(this, request, parent, isMain);
+
+    return request === "@tool402/core"
+      ? {
+          ...loaded,
+          assessRiskScanQuick(input) {
+            if (input.requestRef === "request-api-43") {
+              throw new Error("protected Quick fault");
+            }
+
+            return loaded.assessRiskScanQuick(input);
+          },
+        }
+      : loaded;
+  };
+
+  try {
+    await assert.rejects(
+      () =>
+        handler(
+          createRequest(
+            { ...validQuickInput(), requestRef: "request-api-43" },
+            { "payment-signature": firstRequest.headers.get("payment-signature") },
+          ),
+        ),
+      /protected Quick fault/u,
+    );
+  } finally {
+    Module._load = originalLoad;
+  }
+
+  deferred.release(0);
+  const resolvedFirstResponse = await firstResponse;
+
+  assert.equal(settlements.length, 0);
+  assert.equal(resolvedFirstResponse.status, 200);
+  assert.match(resolvedFirstResponse.headers.get("payment-response") ?? "", /\S/u);
 });
