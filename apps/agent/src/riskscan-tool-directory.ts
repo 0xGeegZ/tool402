@@ -181,6 +181,9 @@ export async function discoverRiskScanQuick(
   } catch {
     return { kind: "directory_invalid" };
   }
+  if (!["http:", "https:"].includes(directoryTarget.protocol) || directoryTarget.username || directoryTarget.password) {
+    return { kind: "directory_invalid" };
+  }
   let response: Response;
   try {
     response = await fetcher(directoryTarget, directoryRequest());

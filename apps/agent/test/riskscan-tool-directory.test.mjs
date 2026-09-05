@@ -136,6 +136,32 @@ test("rejects a base that throws while constructing the directory target", async
   assert.equal(calls, 0);
 });
 
+test("rejects a constructed directory target with a different protocol without fetching", async () => {
+  class DifferentProtocolUrl extends URL {
+    toString() { return "ftp://service.test/"; }
+  }
+  let calls = 0;
+  const result = await discoverRiskScanQuick(new DifferentProtocolUrl("https://service.test/"), async () => {
+    calls += 1;
+    return Response.json(directory());
+  });
+  assert.deepEqual(result, { kind: "directory_invalid" });
+  assert.equal(calls, 0);
+});
+
+test("rejects a constructed directory target with user-info without fetching", async () => {
+  class UserInfoUrl extends URL {
+    toString() { return "https://user:secret@service.test/"; }
+  }
+  let calls = 0;
+  const result = await discoverRiskScanQuick(new UserInfoUrl("https://service.test/"), async () => {
+    calls += 1;
+    return Response.json(directory());
+  });
+  assert.deepEqual(result, { kind: "directory_invalid" });
+  assert.equal(calls, 0);
+});
+
 test("maps fetch failures and non-200 responses to unavailable", async () => {
   for (const fetcher of [
     async () => { throw new Error("offline"); },
