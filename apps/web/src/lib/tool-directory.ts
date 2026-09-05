@@ -4,11 +4,19 @@ export function buildToolDirectory(environment: NodeJS.ProcessEnv) {
   const configuration = readRiskScanX402Configuration(environment);
   const payment = configuration === null
     ? { state: "configuration_required" } as const
-    : {
+    : configuration.kind === "evm"
+    ? {
         state: "locally_configured",
         protocol: "x402",
         network: configuration.network,
         price: configuration.price,
+      } as const
+    : {
+        state: "locally_configured",
+        protocol: "x402",
+        network: configuration.network,
+        asset: configuration.price.asset,
+        amount: configuration.price.amount,
       } as const;
 
   return {

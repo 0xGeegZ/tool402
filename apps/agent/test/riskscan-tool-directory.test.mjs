@@ -97,6 +97,104 @@ test("accepts both approved payment states", async () => {
   }
 });
 
+test("accepts and clones the native Hedera payment summary", async () => {
+  const payment = {
+    state: "locally_configured",
+    protocol: "x402",
+    network: "hedera:testnet",
+    asset: "0.0.429274",
+    amount: "10000",
+  };
+  const value = directory(payment);
+  const { result } = await select(value);
+
+  assert.deepEqual(result.tool.payment, payment);
+  assert.notEqual(result.tool.payment, payment);
+  payment.amount = "99999";
+  assert.deepEqual(result.tool.payment, {
+    state: "locally_configured",
+    protocol: "x402",
+    network: "hedera:testnet",
+    asset: "0.0.429274",
+    amount: "10000",
+  });
+});
+
+test("accepts the native Hedera zero account asset", async () => {
+  const { result } = await select(directory({
+    state: "locally_configured",
+    protocol: "x402",
+    network: "hedera:testnet",
+    asset: "0.0.0",
+    amount: "1",
+  }));
+
+  assert.equal(result.kind, "tool_selected");
+  assert.deepEqual(result.tool.payment, {
+    state: "locally_configured",
+    protocol: "x402",
+    network: "hedera:testnet",
+    asset: "0.0.0",
+    amount: "1",
+  });
+});
+
+test("rejects malformed native Hedera payment summaries", async () => {
+  const valid = {
+    state: "locally_configured",
+    protocol: "x402",
+    network: "hedera:testnet",
+    asset: "0.0.429274",
+    amount: "10000",
+  };
+  const invalid = [
+    { ...valid, network: "hedera:mainnet" },
+    { ...valid, asset: "0.0" },
+    { ...valid, asset: "00.0.429274" },
+    { ...valid, asset: "0.00.429274" },
+    { ...valid, asset: "0.0.0429274" },
+    { ...valid, amount: "0" },
+    { ...valid, amount: "010000" },
+    { ...valid, amount: "10000.0" },
+    { ...valid, price: "$0.01" },
+  ];
+  for (const payment of invalid) {
+    const { result, calls } = await select(directory(payment));
+    assert.deepEqual(result, { kind: "directory_invalid" });
+    assert.equal(calls, 1);
+  }
+});
+
+test("rejects native Hedera payment summaries with missing, extra, accessor, or hostile proxy fields", async () => {
+  const valid = {
+    state: "locally_configured",
+    protocol: "x402",
+    network: "hedera:testnet",
+    asset: "0.0.429274",
+    amount: "10000",
+  };
+  const accessor = { ...valid };
+  Object.defineProperty(accessor, "asset", { enumerable: true, get: () => "0.0.429274" });
+  const proxy = new Proxy({ ...valid }, {
+    getOwnPropertyDescriptor() { throw new Error("proxy descriptors are not trusted"); },
+  });
+  const invalid = [
+    (() => { const { amount, ...payment } = valid; return payment; })(),
+    { ...valid, recipient: "0.0.1111" },
+    accessor,
+    proxy,
+  ];
+  for (const payment of invalid) {
+    const value = directory(payment);
+    const result = await discoverRiskScanQuick(base, async () => ({
+      status: 200,
+      headers: new Headers({ "content-type": "application/json" }),
+      json: async () => value,
+    }));
+    assert.deepEqual(result, { kind: "directory_invalid" });
+  }
+});
+
 test("rejects invalid bases without fetching", async () => {
   for (const invalidBase of [new URL("ftp://service.test/"), new URL("http://user@service.test/")]) {
     let calls = 0;

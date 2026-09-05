@@ -10,6 +10,13 @@ type RiskScanPayment =
       protocol: "x402";
       network: `eip155:${number}`;
       price: `$${string}`;
+    }
+  | {
+      state: "locally_configured";
+      protocol: "x402";
+      network: "hedera:testnet";
+      asset: `${number}.${number}.${number}`;
+      amount: `${bigint}`;
     };
 
 type RiskScanTool = {
@@ -68,7 +75,7 @@ function snapshotRecord(value: unknown, keys: readonly string[]): Record<string,
   const snapshot: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
   for (const key of keys) {
     const descriptor = Object.getOwnPropertyDescriptor(value, key);
-    if (descriptor === undefined || descriptor.enumerable !== true || descriptor.get !== undefined || descriptor.set !== undefined) return null;
+    if (descriptor === undefined || descriptor.enumerable !== true || !("value" in descriptor) || descriptor.get !== undefined || descriptor.set !== undefined) return null;
     snapshot[key] = descriptor.value;
   }
   return snapshot;
@@ -108,14 +115,32 @@ function validPayment(value: unknown): RiskScanPayment | null {
   if (configurationRequired !== null && configurationRequired.state === "configuration_required") {
     return { state: "configuration_required" };
   }
-  const snapshot = snapshotRecord(value, ["state", "protocol", "network", "price"]);
-  if (snapshot === null || snapshot.state !== "locally_configured" || snapshot.protocol !== "x402" ||
-    typeof snapshot.network !== "string" || typeof snapshot.price !== "string" ||
-    !/^eip155:[1-9]\d*$/u.test(snapshot.network) ||
-    !/^\$(?:0\.\d*[1-9]\d*|[1-9]\d*(?:\.\d+)?)$/u.test(snapshot.price)) {
+  const evm = snapshotRecord(value, ["state", "protocol", "network", "price"]);
+  if (evm !== null && evm.state === "locally_configured" && evm.protocol === "x402" &&
+    typeof evm.network === "string" && typeof evm.price === "string" &&
+    /^eip155:[1-9]\d*$/u.test(evm.network) &&
+    /^\$(?:0\.\d*[1-9]\d*|[1-9]\d*(?:\.\d+)?)$/u.test(evm.price)) {
+    return {
+      state: "locally_configured",
+      protocol: "x402",
+      network: evm.network as `eip155:${number}`,
+      price: evm.price as `$${string}`,
+    };
+  }
+  const hedera = snapshotRecord(value, ["state", "protocol", "network", "asset", "amount"]);
+  if (hedera === null || hedera.state !== "locally_configured" || hedera.protocol !== "x402" ||
+    hedera.network !== "hedera:testnet" || typeof hedera.asset !== "string" || typeof hedera.amount !== "string" ||
+    !/^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/u.test(hedera.asset) ||
+    !/^[1-9]\d*$/u.test(hedera.amount)) {
     return null;
   }
-  return { state: "locally_configured", protocol: "x402", network: snapshot.network as `eip155:${number}`, price: snapshot.price as `$${string}` };
+  return {
+    state: "locally_configured",
+    protocol: "x402",
+    network: "hedera:testnet",
+    asset: hedera.asset as `${number}.${number}.${number}`,
+    amount: hedera.amount as `${bigint}`,
+  };
 }
 
 function validDirectory(value: unknown): RiskScanPayment | null {

@@ -13,6 +13,14 @@ const configuredEnvironment = {
   RISKSCAN_X402_PRICE: "$0.01",
 };
 
+const configuredHederaEnvironment = {
+  RISKSCAN_X402_PAY_TO: "0.0.1111",
+  RISKSCAN_X402_FACILITATOR_URL: "https://facilitator.invalid/controlled-private-path",
+  RISKSCAN_X402_NETWORK: "hedera:testnet",
+  RISKSCAN_X402_HEDERA_ASSET: "0.0.429274",
+  RISKSCAN_X402_HEDERA_AMOUNT: "10000",
+};
+
 const expectedDescriptor = {
   id: "riskscan.quick",
   name: "RiskScan Quick",
@@ -78,6 +86,47 @@ test("exposes only parsed local protocol, network and price for valid configurat
       payment: { state: "locally_configured", protocol: "x402", network: "eip155:11155111", price: "$1.25" },
     }],
   });
+});
+
+test("exposes only the native Hedera summary for valid local configuration", async () => {
+  const expectedPayment = {
+    state: "locally_configured",
+    protocol: "x402",
+    network: "hedera:testnet",
+    asset: "0.0.429274",
+    amount: "10000",
+  };
+  const environment = {
+    ...configuredHederaEnvironment,
+    RISKSCAN_X402_FEE_PAYER: "0.0.2222",
+    PAYMENT_HEADER: "controlled-payment-header",
+    PAYMENT_PAYLOAD: "controlled-payment-payload",
+    TRANSACTION: "controlled-transaction-reference",
+    RECEIPT: "controlled-receipt-reference",
+    EVIDENCE: "controlled-evidence-reference",
+    RESULT: "controlled-result-content",
+  };
+
+  assert.deepEqual(buildToolDirectory(environment), {
+    version: "v1",
+    tools: [{ ...expectedDescriptor, payment: expectedPayment }],
+  });
+
+  const body = await toolDirectoryResponse(environment).text();
+  assert.deepEqual(JSON.parse(body).tools[0].payment, expectedPayment);
+  for (const controlledValue of [
+    environment.RISKSCAN_X402_PAY_TO,
+    environment.RISKSCAN_X402_FACILITATOR_URL,
+    environment.RISKSCAN_X402_FEE_PAYER,
+    environment.PAYMENT_HEADER,
+    environment.PAYMENT_PAYLOAD,
+    environment.TRANSACTION,
+    environment.RECEIPT,
+    environment.EVIDENCE,
+    environment.RESULT,
+  ]) {
+    assert.equal(body.includes(controlledValue), false);
+  }
 });
 
 test("returns JSON with no-store and never serializes controlled private environment values", async () => {
