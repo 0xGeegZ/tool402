@@ -18,6 +18,6 @@ M02-T010, M02-T020, M02-T030, and M02-T040 are accepted delivery records. M02-T0
 
 M02-T050 is an accepted delivery record comprising its card, docs/specs/m02-riskscan-quick.md, docs/superpowers/plans/2026-09-04-m02-riskscan-quick.md, `packages/core/src/risk-scan-quick.ts`, `packages/core/src/index.ts`, and `packages/core/test/risk-scan-quick.test.mjs`.
 
-M02-T060 reserves its card, docs/specs/m02-riskscan-x402-api.md, docs/superpowers/plans/2026-09-04-m02-riskscan-x402-api.md, `apps/web/src/app/api/riskscan/route.ts`, `apps/web/src/lib/riskscan-x402.ts`, and `apps/web/tests/riskscan-api.test.mjs` to its implementation lane. The root retains package metadata, the lockfile, queue state, and integration evidence.
+M02-T060 is an accepted delivery record comprising its card, docs/specs/m02-riskscan-x402-api.md, docs/superpowers/plans/2026-09-04-m02-riskscan-x402-api.md, `apps/web/src/app/api/riskscan/route.ts`, `apps/web/src/lib/riskscan-x402.ts`, and `apps/web/tests/riskscan-api.test.mjs`. The root retains package metadata, the lockfile, queue state, and integration evidence.
 
 Future active implementation cards must have disjoint owned paths and resource boundaries. Shared-file work is an explicit root integration reservation. Wallets, credentials, funded accounts, partner configuration, and deployments remain human-controlled resources; no card or agent infers authority over them.

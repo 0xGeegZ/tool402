@@ -3,9 +3,9 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T040 accepted; M02-T050 accepted
-- Integration evidence: D-M01-FOUND-001 and D-M02-050-002 accepted
+- Integration evidence: D-M01-FOUND-001, D-M02-050-002, and D-M02-060-002 accepted
 - Owner: implementation lane owns `apps/web/src/app/api/riskscan/route.ts`, `apps/web/src/lib/riskscan-x402.ts`, and `apps/web/tests/riskscan-api.test.mjs`; the root owns package metadata, the lockfile, this card, and queue records.
 - Human actions: none for local implementation; live configuration and payment proof remain separate human-authorized work.
 
@@ -25,4 +25,4 @@ The local contract is [M02 x402-protected RiskScan API contract](../../../specs/
 
 ## Completion transition
 
-Active at 2026-09-04T22:42:18Z after the local contract, plan, accepted Quick dependency, and owned-path preflight. A testnet recipient, facilitator selection, payment signing/funding, deployment, and evidence remain separate human-authorized work.
+Active at 2026-09-04T22:42:18Z after the local contract, plan, accepted Quick dependency, and owned-path preflight. Accepted at 2026-09-05T07:02:44Z after configuration, unsigned-challenge, malformed-no-settlement, and facilitator-support RED/GREEN coverage; root typecheck/test, production webpack build, reproducible install check, queue validation, local-reference guard, and two fresh clean review generations. A testnet recipient, facilitator selection, payment signing/funding, deployment, and evidence remain separate human-authorized work.
