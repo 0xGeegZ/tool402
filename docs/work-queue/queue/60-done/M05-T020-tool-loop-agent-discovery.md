@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M05-T010 accepted; M02-T050 accepted; M02-T060 accepted
 - Integration evidence: D-M05-010-002, D-M02-050-002, and D-M02-060-002 accepted
 - Owner: the proposed implementation scope is `apps/agent/package.json`,
@@ -93,3 +93,21 @@ disjoint agent/lockfile ownership boundary. The task starts with its
 ToolLoopAgent RED contract. No live endpoint assertion, request submission,
 payment, signing, wallet/account action, deployment, transaction verification,
 finality, evidence, result, or external claim is authorized.
+
+## Acceptance
+
+Accepted at 2026-09-05T20:13:59Z. `MODULE_BASE` is
+`97b1ad8967bf227c196d36bb05d059d2bb0659e9`; `MODULE_HEAD` is
+`0fca94bc4df3325040ac8d86313af5b53da0bef4`. An observed missing-module RED
+and review-driven regressions became 19 focused Green contracts. Root Node
+22.21.1 clean-install dry-run, typecheck, 155-test suite, lint, production
+Webpack build, queue validation, whitespace check, and enabled local-reference
+guard passed. A real local Next directory request through the ToolLoopAgent
+returned only `tool_selected` with the safe `configuration_required` payment
+summary; it did not submit a RiskScan request or payment. The independent task
+review, scoped review corrections, and two fresh final Spec/Standards
+module-review generations returned PASS with no outstanding P0, P1, or P2
+finding. This acceptance covers only controlled local discovery behavior. It
+does not assert a configured or live payment route, request execution,
+settlement, transaction verification, finality, evidence, result, deployment,
+or any external fact.
