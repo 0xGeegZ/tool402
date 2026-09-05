@@ -142,6 +142,48 @@ test("rejects non-plain, inherited, symbol, and accessor input without reading a
   assert.equal(accessorRead, false);
 });
 
+test("rejects accessor fields when a polluted descriptor prototype supplies value", async () => {
+  const admitRiskScanDurableRequest = await loadAdmission();
+  const accessorInput = copyValidInput();
+  let accessorRead = 0;
+  let rejected = false;
+  const priorValueDescriptor = Object.getOwnPropertyDescriptor(
+    Object.prototype,
+    "value",
+  );
+
+  Object.defineProperty(accessorInput, "publicId", {
+    enumerable: true,
+    get() {
+      accessorRead += 1;
+      return "risk_402";
+    },
+  });
+
+  try {
+    Object.defineProperty(Object.prototype, "value", {
+      configurable: true,
+      enumerable: false,
+      value: "risk_402",
+      writable: true,
+    });
+    try {
+      admitRiskScanDurableRequest(accessorInput);
+    } catch {
+      rejected = true;
+    }
+  } finally {
+    if (priorValueDescriptor === undefined) {
+      delete Object.prototype.value;
+    } else {
+      Object.defineProperty(Object.prototype, "value", priorValueDescriptor);
+    }
+  }
+
+  assert.equal(rejected, true);
+  assert.equal(accessorRead, 0);
+});
+
 test("rejects incomplete, unsafe, and malformed request fields", async () => {
   const admitRiskScanDurableRequest = await loadAdmission();
   const tooLargeTimestamp = 9_223_372_036_854_775_808n;

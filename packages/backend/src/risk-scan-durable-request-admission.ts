@@ -43,7 +43,7 @@ function readOwnEnumerableDataProperty(
   if (
     descriptor === undefined ||
     descriptor.enumerable !== true ||
-    !("value" in descriptor)
+    !Object.hasOwn(descriptor, "value")
   ) {
     return rejectInput();
   }
