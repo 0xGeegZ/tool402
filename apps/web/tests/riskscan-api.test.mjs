@@ -22,6 +22,8 @@ const configurationKeys = [
   "RISKSCAN_X402_FACILITATOR_URL",
   "RISKSCAN_X402_NETWORK",
   "RISKSCAN_X402_PRICE",
+  "RISKSCAN_X402_HEDERA_ASSET",
+  "RISKSCAN_X402_HEDERA_AMOUNT",
 ];
 
 function createRequest(body = {}, headers = {}) {
@@ -42,6 +44,17 @@ function configuredEnvironment() {
     RISKSCAN_X402_FACILITATOR_URL: "https://facilitator.invalid",
     RISKSCAN_X402_NETWORK: "eip155:84532",
     RISKSCAN_X402_PRICE: "$0.01",
+  };
+}
+
+function configuredHederaEnvironment(overrides = {}) {
+  return {
+    RISKSCAN_X402_PAY_TO: "0.0.1111",
+    RISKSCAN_X402_FACILITATOR_URL: "https://facilitator.invalid",
+    RISKSCAN_X402_NETWORK: "hedera:testnet",
+    RISKSCAN_X402_HEDERA_ASSET: "0.0.429274",
+    RISKSCAN_X402_HEDERA_AMOUNT: "10000",
+    ...overrides,
   };
 }
 
@@ -91,6 +104,47 @@ function createLocalFacilitator() {
       async settle() {
         calls.settle += 1;
         throw new Error("an unsigned request must not be settled");
+      },
+    },
+  };
+}
+
+function hederaSupportedKind(overrides = {}) {
+  return {
+    x402Version: 2,
+    scheme: "exact",
+    network: "hedera:testnet",
+    extra: { feePayer: "0.0.2222" },
+    ...overrides,
+  };
+}
+
+function createHederaLocalFacilitator(kinds = [hederaSupportedKind()]) {
+  const calls = {
+    getSupported: 0,
+    verify: 0,
+    settle: 0,
+  };
+
+  return {
+    calls,
+    client: {
+      async getSupported() {
+        calls.getSupported += 1;
+
+        return {
+          kinds,
+          extensions: [],
+          signers: {},
+        };
+      },
+      async verify() {
+        calls.verify += 1;
+        throw new Error("an unsigned native request must not be verified");
+      },
+      async settle() {
+        calls.settle += 1;
+        throw new Error("an unsigned native request must not be settled");
       },
     },
   };
@@ -245,6 +299,7 @@ test("accepts only a complete strict EVM x402 configuration", () => {
   const configuration = configuredEnvironment();
 
   assert.deepEqual(readRiskScanX402Configuration(configuration), {
+    kind: "evm",
     payTo: configuration.RISKSCAN_X402_PAY_TO,
     facilitatorUrl: configuration.RISKSCAN_X402_FACILITATOR_URL,
     network: configuration.RISKSCAN_X402_NETWORK,
@@ -267,6 +322,184 @@ test("accepts only a complete strict EVM x402 configuration", () => {
       null,
       description,
     );
+  }
+});
+
+test("accepts only a complete strict native Hedera x402 configuration", () => {
+  const configuration = configuredHederaEnvironment();
+
+  assert.deepEqual(readRiskScanX402Configuration(configuration), {
+    kind: "hedera",
+    payTo: "0.0.1111",
+    facilitatorUrl: "https://facilitator.invalid",
+    network: "hedera:testnet",
+    price: { asset: "0.0.429274", amount: "10000" },
+  });
+  assert.deepEqual(
+    readRiskScanX402Configuration(
+      configuredHederaEnvironment({ RISKSCAN_X402_HEDERA_ASSET: "0.0.0" }),
+    ),
+    {
+      kind: "hedera",
+      payTo: "0.0.1111",
+      facilitatorUrl: "https://facilitator.invalid",
+      network: "hedera:testnet",
+      price: { asset: "0.0.0", amount: "10000" },
+    },
+    "native HBAR remains an explicit allowed asset",
+  );
+
+  for (const [description, environment] of [
+    ["blank asset", configuredHederaEnvironment({ RISKSCAN_X402_HEDERA_ASSET: " " })],
+    ["missing asset", configuredHederaEnvironment({ RISKSCAN_X402_HEDERA_ASSET: undefined })],
+    ["blank amount", configuredHederaEnvironment({ RISKSCAN_X402_HEDERA_AMOUNT: " " })],
+    ["missing amount", configuredHederaEnvironment({ RISKSCAN_X402_HEDERA_AMOUNT: undefined })],
+    ["zero amount", configuredHederaEnvironment({ RISKSCAN_X402_HEDERA_AMOUNT: "0" })],
+    ["leading-zero amount", configuredHederaEnvironment({ RISKSCAN_X402_HEDERA_AMOUNT: "010000" })],
+    ["non-atomic amount", configuredHederaEnvironment({ RISKSCAN_X402_HEDERA_AMOUNT: "1.5" })],
+    ["native recipient", configuredHederaEnvironment({ RISKSCAN_X402_PAY_TO: "0.0.0" })],
+    ["leading-zero recipient", configuredHederaEnvironment({ RISKSCAN_X402_PAY_TO: "0.00.1111" })],
+    ["leading-zero asset", configuredHederaEnvironment({ RISKSCAN_X402_HEDERA_ASSET: "00.0.429274" })],
+    ["unsupported network", configuredHederaEnvironment({ RISKSCAN_X402_NETWORK: "hedera:mainnet" })],
+    ["facilitator userinfo", configuredHederaEnvironment({ RISKSCAN_X402_FACILITATOR_URL: "https://operator@facilitator.invalid" })],
+    ["dollar price mixed with native fields", configuredHederaEnvironment({ RISKSCAN_X402_PRICE: "$0.01" })],
+    [
+      "native fields mixed with EVM configuration",
+      configuredHederaEnvironment({
+        RISKSCAN_X402_PAY_TO: `0x${"1".repeat(40)}`,
+        RISKSCAN_X402_NETWORK: "eip155:84532",
+        RISKSCAN_X402_PRICE: "$0.01",
+      }),
+    ],
+  ]) {
+    assert.equal(readRiskScanX402Configuration(environment), null, description);
+  }
+});
+
+test("issues a native Hedera challenge without loading the EVM scheme", async () => {
+  const configuration = readRiskScanX402Configuration(configuredHederaEnvironment());
+  assert.notEqual(configuration, null);
+
+  const localFacilitator = createHederaLocalFacilitator();
+  const originalLoad = Module._load;
+
+  Module._load = function rejectEvmSchemeForNativeHandler(request, parent, isMain) {
+    if (request === "@x402/evm/exact/server") {
+      throw new Error("the native Hedera path must not load the EVM scheme");
+    }
+
+    return originalLoad.call(this, request, parent, isMain);
+  };
+
+  try {
+    const handler = await createRiskScanProtectedHandler(configuration, {
+      facilitatorClient: localFacilitator.client,
+    });
+    const response = await handler(createRequest(validQuickInput()));
+
+    assert.equal(response.status, 402);
+    const requiredHeader = response.headers.get("payment-required");
+    assert.match(requiredHeader ?? "", /\S/u);
+
+    const paymentRequired = decodePaymentRequiredHeader(requiredHeader);
+    assert.equal(paymentRequired.accepts.length, 1);
+    const accepted = paymentRequired.accepts[0];
+    assert.equal(accepted.scheme, "exact");
+    assert.equal(accepted.network, "hedera:testnet");
+    assert.equal(accepted.payTo, "0.0.1111");
+    assert.equal(accepted.asset, "0.0.429274");
+    assert.equal(accepted.amount, "10000");
+    assert.equal(accepted.extra?.feePayer, "0.0.2222");
+    assert.equal(localFacilitator.calls.getSupported, 1);
+    assert.equal(localFacilitator.calls.verify, 0);
+    assert.equal(localFacilitator.calls.settle, 0);
+    assert.equal("disposition" in (await response.json()), false);
+  } finally {
+    Module._load = originalLoad;
+  }
+});
+
+test("issues an EVM challenge without loading the native Hedera scheme", async () => {
+  const configuration = readRiskScanX402Configuration(configuredEnvironment());
+  assert.notEqual(configuration, null);
+
+  const localFacilitator = createLocalFacilitator();
+  const originalLoad = Module._load;
+
+  Module._load = function rejectHederaSchemeForEvmHandler(request, parent, isMain) {
+    if (request === "@x402/hedera/exact/server") {
+      throw new Error("the EVM path must not load the native Hedera scheme");
+    }
+
+    return originalLoad.call(this, request, parent, isMain);
+  };
+
+  try {
+    const handler = await createRiskScanProtectedHandler(configuration, {
+      facilitatorClient: localFacilitator.client,
+    });
+    const response = await handler(createRequest(validQuickInput()));
+
+    assert.equal(response.status, 402);
+    assert.match(response.headers.get("payment-required") ?? "", /\S/u);
+    assert.equal(localFacilitator.calls.getSupported, 1);
+    assert.equal(localFacilitator.calls.verify, 0);
+    assert.equal(localFacilitator.calls.settle, 0);
+  } finally {
+    Module._load = originalLoad;
+  }
+});
+
+test("fails closed when the native Hedera facilitator capability is not uniquely safe", async (t) => {
+  t.mock.method(console, "warn", () => {});
+
+  const accessorBackedExtra = hederaSupportedKind();
+  Object.defineProperty(accessorBackedExtra, "extra", {
+    enumerable: true,
+    get() {
+      return { feePayer: "0.0.2222" };
+    },
+  });
+  const accessorBackedFeePayer = hederaSupportedKind({ extra: {} });
+  Object.defineProperty(accessorBackedFeePayer.extra, "feePayer", {
+    enumerable: true,
+    get() {
+      return "0.0.2222";
+    },
+  });
+
+  for (const [description, kinds] of [
+    ["missing native kind", []],
+    ["mismatched native network", [hederaSupportedKind({ network: "hedera:mainnet" })]],
+    ["wrong x402 version", [hederaSupportedKind({ x402Version: 1 })]],
+    ["wrong scheme", [hederaSupportedKind({ scheme: "upto" })]],
+    ["blank fee payer", [hederaSupportedKind({ extra: { feePayer: " " } })]],
+    ["malformed extra", [hederaSupportedKind({ extra: [] })]],
+    ["accessor-backed extra", [accessorBackedExtra]],
+    ["accessor-backed fee payer", [accessorBackedFeePayer]],
+    ["duplicate valid native kinds", [hederaSupportedKind(), hederaSupportedKind()]],
+    [
+      "invalid first native kind followed by a valid duplicate",
+      [hederaSupportedKind({ extra: { feePayer: " " } }), hederaSupportedKind()],
+    ],
+  ]) {
+    const localFacilitator = createHederaLocalFacilitator(kinds);
+    const response = await handleRiskScanPost(
+      createRequest(validQuickInput()),
+      configuredHederaEnvironment(),
+      { facilitatorClient: localFacilitator.client },
+    );
+
+    assert.equal(response.status, 503, description);
+    assert.equal(response.headers.get("payment-required"), null, description);
+    assert.deepEqual(
+      await response.json(),
+      { error: "risk_scan_unavailable" },
+      description,
+    );
+    assert.equal(localFacilitator.calls.getSupported, 1, description);
+    assert.equal(localFacilitator.calls.verify, 0, description);
+    assert.equal(localFacilitator.calls.settle, 0, description);
   }
 });
 

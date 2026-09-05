@@ -31,17 +31,35 @@ const configurationKeys = [
   "RISKSCAN_X402_FACILITATOR_URL",
   "RISKSCAN_X402_NETWORK",
   "RISKSCAN_X402_PRICE",
+  "RISKSCAN_X402_HEDERA_ASSET",
+  "RISKSCAN_X402_HEDERA_AMOUNT",
 ] as const;
 
 const defaultSettlementObserverTimeoutMs = 30_000;
 const maximumSettlementObserverTimeoutMs = 60_000;
 
-export interface RiskScanX402Configuration {
+export interface RiskScanEvmX402Configuration {
+  kind: "evm";
   payTo: `0x${string}`;
   facilitatorUrl: string;
   network: `eip155:${number}`;
   price: `$${string}`;
 }
+
+export interface RiskScanHederaX402Configuration {
+  kind: "hedera";
+  payTo: `${number}.${number}.${number}`;
+  facilitatorUrl: string;
+  network: "hedera:testnet";
+  price: {
+    asset: `${number}.${number}.${number}`;
+    amount: `${bigint}`;
+  };
+}
+
+export type RiskScanX402Configuration =
+  | RiskScanEvmX402Configuration
+  | RiskScanHederaX402Configuration;
 
 function requiredString(value: string | undefined): string | null {
   const trimmedValue = value?.trim();
@@ -49,6 +67,15 @@ function requiredString(value: string | undefined): string | null {
   return trimmedValue === undefined || trimmedValue.length === 0
     ? null
     : trimmedValue;
+}
+
+function optionalEnvironmentString(
+  environment: NodeJS.ProcessEnv,
+  key: string,
+): string | null {
+  return Object.hasOwn(environment, key)
+    ? requiredString(environment[key])
+    : null;
 }
 
 function isValidFacilitatorUrl(value: string): boolean {
@@ -69,28 +96,64 @@ function isValidFacilitatorUrl(value: string): boolean {
 export function readRiskScanX402Configuration(
   environment: NodeJS.ProcessEnv,
 ): RiskScanX402Configuration | null {
-  const [payTo, facilitatorUrl, network, price] = configurationKeys.map(
+  const [payTo, facilitatorUrl, network, price] = configurationKeys.slice(0, 4).map(
     (key) => requiredString(environment[key]),
   );
+  const hederaAsset = optionalEnvironmentString(
+    environment,
+    "RISKSCAN_X402_HEDERA_ASSET",
+  );
+  const hederaAmount = optionalEnvironmentString(
+    environment,
+    "RISKSCAN_X402_HEDERA_AMOUNT",
+  );
+
+  if (
+    payTo !== null &&
+    facilitatorUrl !== null &&
+    network !== null &&
+    price !== null &&
+    hederaAsset === null &&
+    hederaAmount === null &&
+    /^0x[\da-f]{40}$/iu.test(payTo) &&
+    isValidFacilitatorUrl(facilitatorUrl) &&
+    /^eip155:[1-9]\d*$/u.test(network) &&
+    /^\$(?:0\.\d*[1-9]\d*|[1-9]\d*(?:\.\d+)?)$/u.test(price)
+  ) {
+    return {
+      kind: "evm",
+      payTo: payTo as `0x${string}`,
+      facilitatorUrl,
+      network: network as `eip155:${number}`,
+      price: price as `$${string}`,
+    };
+  }
 
   if (
     payTo === null ||
     facilitatorUrl === null ||
-    network === null ||
-    price === null ||
-    !/^0x[\da-f]{40}$/iu.test(payTo) ||
-    !isValidFacilitatorUrl(facilitatorUrl) ||
-    !/^eip155:[1-9]\d*$/u.test(network) ||
-    !/^\$(?:0\.\d*[1-9]\d*|[1-9]\d*(?:\.\d+)?)$/u.test(price)
+    network !== "hedera:testnet" ||
+    price !== null ||
+    hederaAsset === null ||
+    hederaAmount === null ||
+    !/^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/u.test(payTo) ||
+    payTo === "0.0.0" ||
+    !/^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/u.test(hederaAsset) ||
+    !/^[1-9]\d*$/u.test(hederaAmount) ||
+    !isValidFacilitatorUrl(facilitatorUrl)
   ) {
     return null;
   }
 
   return {
-    payTo: payTo as `0x${string}`,
+    kind: "hedera",
+    payTo: payTo as `${number}.${number}.${number}`,
     facilitatorUrl,
-    network: network as `eip155:${number}`,
-    price: price as `$${string}`,
+    network,
+    price: {
+      asset: hederaAsset as `${number}.${number}.${number}`,
+      amount: hederaAmount as `${bigint}`,
+    },
   };
 }
 
@@ -117,6 +180,10 @@ function loadExactEvmScheme() {
   return require("@x402/evm/exact/server") as typeof import("@x402/evm/exact/server");
 }
 
+function loadExactHederaScheme() {
+  return require("@x402/hedera/exact/server") as typeof import("@x402/hedera/exact/server");
+}
+
 function loadX402ServerDependencies() {
   const { HTTPFacilitatorClient, x402HTTPResourceServer, x402ResourceServer } = require(
     "@x402/core/server",
@@ -134,6 +201,10 @@ function loadX402ServerDependencies() {
 export async function isRiskScanX402ConfigurationUsable(
   configuration: RiskScanX402Configuration,
 ): Promise<boolean> {
+  if (configuration.kind === "hedera") {
+    return true;
+  }
+
   try {
     const { ExactEvmScheme } = loadExactEvmScheme();
     const parsedPrice = await new ExactEvmScheme().parsePrice(
@@ -147,13 +218,69 @@ export async function isRiskScanX402ConfigurationUsable(
   }
 }
 
+function ownDataProperty(value: unknown, key: string): unknown {
+  if (typeof value !== "object" || value === null) {
+    return undefined;
+  }
+
+  const descriptor = Object.getOwnPropertyDescriptor(value, key);
+
+  return descriptor !== undefined && "value" in descriptor
+    ? descriptor.value
+    : undefined;
+}
+
+function isNativeHederaCapabilityKind(value: unknown): boolean {
+  return (
+    ownDataProperty(value, "x402Version") === 2 &&
+    ownDataProperty(value, "scheme") === "exact" &&
+    ownDataProperty(value, "network") === "hedera:testnet"
+  );
+}
+
+function hasNativeHederaFeePayer(value: unknown): boolean {
+  const extra = ownDataProperty(value, "extra");
+
+  if (typeof extra !== "object" || extra === null || Array.isArray(extra)) {
+    return false;
+  }
+
+  const feePayer = ownDataProperty(extra, "feePayer");
+
+  return typeof feePayer === "string" && feePayer.trim().length > 0;
+}
+
+function assertNativeHederaFacilitatorSupport(value: unknown): void {
+  if (typeof value !== "object" || value === null) {
+    throw new TypeError("native Hedera facilitator support is malformed");
+  }
+
+  const kinds = ownDataProperty(value, "kinds");
+
+  if (!Array.isArray(kinds)) {
+    throw new TypeError("native Hedera facilitator kinds are malformed");
+  }
+
+  const matchingKinds = kinds.filter(isNativeHederaCapabilityKind);
+
+  if (matchingKinds.length !== 1 || !hasNativeHederaFeePayer(matchingKinds[0])) {
+    throw new RangeError("native Hedera facilitator support is unavailable");
+  }
+}
+
 function createSettlementValidatingFacilitatorClient(
   facilitatorClient: FacilitatorClient,
   configuration: RiskScanX402Configuration,
 ): FacilitatorClient {
   return {
-    getSupported() {
-      return facilitatorClient.getSupported();
+    async getSupported() {
+      const supported = await facilitatorClient.getSupported();
+
+      if (configuration.kind === "hedera") {
+        assertNativeHederaFacilitatorSupport(supported);
+      }
+
+      return supported;
     },
     verify(paymentPayload, paymentRequirements) {
       return facilitatorClient.verify(paymentPayload, paymentRequirements);
@@ -447,7 +574,7 @@ export async function createRiskScanProtectedHandler(
   options: RiskScanProtectedHandlerOptions = {},
 ): Promise<RiskScanProtectedHandler> {
   if (!(await isRiskScanX402ConfigurationUsable(configuration))) {
-    throw new RangeError("x402 configuration cannot produce a positive EVM amount");
+    throw new RangeError("x402 configuration cannot produce a positive exact amount");
   }
 
   const {
@@ -456,7 +583,6 @@ export async function createRiskScanProtectedHandler(
     x402HTTPResourceServer,
     x402ResourceServer,
   } = loadX402ServerDependencies();
-  const { ExactEvmScheme } = loadExactEvmScheme();
   const rawFacilitatorClient =
     options.facilitatorClient ??
     new HTTPFacilitatorClient({ url: configuration.facilitatorUrl });
@@ -464,10 +590,15 @@ export async function createRiskScanProtectedHandler(
     rawFacilitatorClient,
     configuration,
   );
-  const server = new x402ResourceServer(facilitatorClient).register(
-    configuration.network,
-    new ExactEvmScheme(),
-  );
+  const server = new x402ResourceServer(facilitatorClient);
+
+  if (configuration.kind === "evm") {
+    const { ExactEvmScheme } = loadExactEvmScheme();
+    server.register(configuration.network, new ExactEvmScheme());
+  } else {
+    const { ExactHederaScheme } = loadExactHederaScheme();
+    server.register(configuration.network, new ExactHederaScheme());
+  }
   const observer =
     options.onVerifiedSettlement === undefined
       ? undefined
@@ -514,10 +645,14 @@ export async function createRiskScanProtectedHandler(
 
 function configurationCacheKey(configuration: RiskScanX402Configuration): string {
   return JSON.stringify([
+    configuration.kind,
     configuration.payTo,
     configuration.facilitatorUrl,
     configuration.network,
-    configuration.price,
+    configuration.kind === "evm"
+      ? configuration.price
+      : configuration.price.asset,
+    configuration.kind === "hedera" ? configuration.price.amount : undefined,
   ]);
 }
 

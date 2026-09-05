@@ -20,6 +20,7 @@ test("declares the strict Next workspace boundary", async () => {
     "@tool402/core": "file:../../packages/core",
     "@x402/core": "2.25.0",
     "@x402/evm": "2.25.0",
+    "@x402/hedera": "2.25.0",
     "@x402/next": "2.25.0",
     clsx: "2.1.1",
     next: "16.3.4",
