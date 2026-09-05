@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M04-T010 accepted; M04-T040 accepted
 - Integration evidence: D-M04-010-002 and D-M04-040-002 accepted
 - Owner: the proposed implementation scope is `packages/backend/src/risk-scan-settlement-record-admission.ts`, `packages/backend/convex/riskscan-settlement-records.ts`, `packages/backend/tests/risk-scan-settlement-record-admission.test.mjs`, and `packages/backend/tests/risk-scan-pending-verification-settlement-record-writer.test.mjs`. The root owns this card, its local specification and plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -35,3 +35,7 @@ The local contract is [M04 RiskScan pending-verification settlement-record write
 ## Inbox transition
 
 Recorded at 2026-09-05T16:55:43Z after a fresh queue rescan confirmed M04-T010 and M04-T040, including their integration evidence, are accepted; no active lane owns the four reserved backend paths; and no human action blocks local specification or controlled handler work. This inbox card defines only a future internal candidate-record boundary and does not authorize RED/code until its local specification and plan are committed. It makes no configured-runtime, store, payment, settlement, finality, verification, evidence, result, API/UI, deployment, or live claim.
+
+## Ready transition
+
+Ready at 2026-09-05T17:06:36Z after the root revalidated the accepted M04-T010 and M04-T040 dependencies and their integration evidence, the pushed local specification and plan, disjoint four-path backend ownership, no active lane, no pending human action, concrete validation commands, and queue validation. The task remains local pure admission and internal writer work only; no configured runtime, external store, payment, settlement, finality, verification, evidence, result, API/UI, deployment, or live claim is authorized.
