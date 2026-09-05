@@ -162,7 +162,7 @@ git commit -m "feat: add Hedera x402 server support"
 - Consumes: the discriminated configuration parser from Task 1.
 - Produces: a safe native `locally_configured` summary and cloned Agent selection.
 
-- [ ] **Step 1: Write failing directory and Agent tests**
+- [x] **Step 1: Write failing directory and Agent tests**
 
 Add web tests that expect exactly:
 
@@ -182,7 +182,7 @@ that clone this native summary and reject missing/extra/accessor/proxy-backed
 fields, mainnet, malformed or leading-zero asset, zero/non-canonical amount,
 and a mixed EVM `price` field. Assert `0.0.0` asset remains valid.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -193,7 +193,7 @@ npm run test --workspace @tool402/agent -- --test-name-pattern='native|Hedera'
 
 Expected: FAIL because the current summaries only accept EVM metadata.
 
-- [ ] **Step 3: Implement the exact three-way payment union**
+- [x] **Step 3: Implement the exact three-way payment union**
 
 In the directory, branch on the parser discriminant. Keep EVM output intact;
 for Hedera emit only the exact native shape above. In the Agent define only:
@@ -209,7 +209,7 @@ the one-shot credential-free GET and extend the source boundary test to reject
 client-side Hedera imports, private-key/signer construction, payment-fetch
 helpers, and live-client code.
 
-- [ ] **Step 4: Verify GREEN and commit the discovery slice**
+- [x] **Step 4: Verify GREEN and commit the discovery slice**
 
 Run:
 

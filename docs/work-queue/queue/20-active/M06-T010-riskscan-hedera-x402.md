@@ -116,3 +116,18 @@ it proves a controlled unsigned native challenge path, not a live facilitator,
 account, wallet, payment, transaction, settlement, finality, receipt,
 evidence, result, deployment, or external compatibility claim. Task 2 may now
 start on its disjoint Directory and Agent paths.
+
+## Task 2 acceptance
+
+Task 2 is accepted after the Directory emitted the exact local native summary
+and the Consumer Agent validated and freshly cloned its bounded three-way
+payment union through `8a415ca`. The review correction closes an inherited
+descriptor-metadata seam and makes the clone regression exercise the decoded
+directory-response seam directly. The final independent scoped review found
+no Critical, Important, or Minor issue. Fresh root verification passed web
+typecheck/test (58 passing tests), Agent typecheck/test (37 passing tests),
+Agent boundary lint, and whitespace validation. This is task-level acceptance
+only: it does not configure a recipient or facilitator and does not prove a
+wallet, signer, payment, transaction, settlement, finality, receipt, evidence,
+result, deployment, or external compatibility. Task 3 may now run only the
+controlled local integration proof and module-review sequence.
