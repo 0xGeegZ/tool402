@@ -150,6 +150,76 @@ test("transitions valid requests through non-completed lifecycle states", () => 
   }
 });
 
+test("requires issued payment-state provenance for capability transitions", () => {
+  const validInput = {
+    requestRef: "request-provenance",
+    subjectRef: "wallet:provenance",
+    context: "bounded assessment",
+  };
+  const validCorrelation = {
+    requestRef: "request-provenance",
+    settlementRef: "settlement-provenance",
+  };
+  const required = core.startRiskScanRequest(validInput);
+
+  assert.equal(Object.isFrozen(required), true);
+  assert.throws(
+    () => core.markRiskScanPaymentPending({ ...required }),
+    /issued payment requirement/u,
+  );
+  assert.throws(
+    () =>
+      core.markRiskScanPaymentPending(
+        Object.defineProperties({}, Object.getOwnPropertyDescriptors(required)),
+      ),
+    /issued payment requirement/u,
+  );
+  assert.throws(
+    () => core.markRiskScanUnavailable({ ...required }, "unavailable"),
+    /issued payment requirement/u,
+  );
+  assert.throws(
+    () => core.markRiskScanPaymentFailed({ ...required }, "declined"),
+    /issued payment state/u,
+  );
+
+  const pending = core.markRiskScanPaymentPending(required);
+  assert.equal(Object.isFrozen(pending), true);
+  assert.throws(
+    () => core.createRiskScanVerifiedSettlement({ ...pending }, validCorrelation),
+    /issued payment pending state/u,
+  );
+  assert.throws(
+    () =>
+      core.createRiskScanVerifiedSettlement(
+        Object.defineProperties({}, Object.getOwnPropertyDescriptors(pending)),
+        validCorrelation,
+      ),
+    /issued payment pending state/u,
+  );
+  assert.throws(
+    () => core.markRiskScanPaymentFailed({ ...pending }, "declined"),
+    /issued payment state/u,
+  );
+
+  const settlement = core.createRiskScanVerifiedSettlement(
+    pending,
+    validCorrelation,
+  );
+  const artifacts = core.bindRiskScanReceiptEvidence(settlement, {
+    receiptRef: "receipt-provenance",
+    evidenceRef: "evidence-provenance",
+  });
+  assert.deepEqual(
+    core.completeRiskScanRequest(settlement, artifacts, {
+      resultRef: "result-provenance",
+      salientReasons: ["bounded input"],
+      limitations: ["limited source coverage"],
+    }).state,
+    "completed",
+  );
+});
+
 test("requires a verified settlement correlation for execution failure", () => {
   assert.equal(
     typeof core.createRiskScanVerifiedSettlement,

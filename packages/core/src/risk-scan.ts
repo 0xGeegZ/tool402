@@ -11,10 +11,10 @@ export interface RiskScanRequest {
 }
 
 export interface RiskScanPaymentRequired {
-  state: "payment_required";
-  requestRef: string;
-  subjectRef: string;
-  context: string;
+  readonly state: "payment_required";
+  readonly requestRef: string;
+  readonly subjectRef: string;
+  readonly context: string;
 }
 
 export interface RiskScanUnavailable {
@@ -26,10 +26,10 @@ export interface RiskScanUnavailable {
 }
 
 export interface RiskScanPaymentPending {
-  state: "payment_pending";
-  requestRef: string;
-  subjectRef: string;
-  context: string;
+  readonly state: "payment_pending";
+  readonly requestRef: string;
+  readonly subjectRef: string;
+  readonly context: string;
 }
 
 export interface RiskScanPaymentFailed {
@@ -46,6 +46,8 @@ export interface RiskScanSettlementCorrelationInput {
 }
 
 const verifiedRiskScanSettlements = new WeakSet<object>();
+const issuedRiskScanPaymentRequired = new WeakSet<object>();
+const issuedRiskScanPaymentPending = new WeakSet<object>();
 const boundRiskScanReceiptEvidence = new WeakSet<object>();
 const verifiedSettlementByReceiptEvidence = new WeakMap<
   object,
@@ -158,18 +160,66 @@ export function startRiskScanRequest(
 ): RiskScanPaymentRequired {
   const request = validateRiskScanRequest(input);
 
-  return {
+  const required = Object.freeze({
     state: "payment_required",
     ...request,
-  };
+  }) as RiskScanPaymentRequired;
+
+  issuedRiskScanPaymentRequired.add(required);
+  return required;
+}
+
+function requireIssuedRiskScanPaymentRequired(
+  state: unknown,
+): RiskScanPaymentRequired {
+  if (
+    typeof state !== "object" ||
+    state === null ||
+    !issuedRiskScanPaymentRequired.has(state)
+  ) {
+    throw new TypeError("an issued payment requirement is required");
+  }
+
+  return state as RiskScanPaymentRequired;
+}
+
+function requireIssuedRiskScanPaymentPending(
+  state: unknown,
+): RiskScanPaymentPending {
+  if (
+    typeof state !== "object" ||
+    state === null ||
+    !issuedRiskScanPaymentPending.has(state)
+  ) {
+    throw new TypeError("an issued payment pending state is required");
+  }
+
+  return state as RiskScanPaymentPending;
+}
+
+function requireIssuedRiskScanPaymentState(
+  state: unknown,
+): RiskScanPaymentRequired | RiskScanPaymentPending {
+  if (
+    typeof state !== "object" ||
+    state === null ||
+    (!issuedRiskScanPaymentRequired.has(state) &&
+      !issuedRiskScanPaymentPending.has(state))
+  ) {
+    throw new TypeError("an issued payment state is required");
+  }
+
+  return state as RiskScanPaymentRequired | RiskScanPaymentPending;
 }
 
 export function markRiskScanUnavailable(
   state: RiskScanPaymentRequired,
   reason: string,
 ): RiskScanUnavailable {
+  const required = requireIssuedRiskScanPaymentRequired(state);
+
   return {
-    ...state,
+    ...required,
     state: "unavailable",
     reason: requiredTrimmedString(reason, "reason"),
   };
@@ -178,18 +228,24 @@ export function markRiskScanUnavailable(
 export function markRiskScanPaymentPending(
   state: RiskScanPaymentRequired,
 ): RiskScanPaymentPending {
-  return {
-    ...state,
+  const required = requireIssuedRiskScanPaymentRequired(state);
+  const pending = Object.freeze({
+    ...required,
     state: "payment_pending",
-  };
+  }) as RiskScanPaymentPending;
+
+  issuedRiskScanPaymentPending.add(pending);
+  return pending;
 }
 
 export function markRiskScanPaymentFailed(
   state: RiskScanPaymentRequired | RiskScanPaymentPending,
   reason: string,
 ): RiskScanPaymentFailed {
+  const issuedState = requireIssuedRiskScanPaymentState(state);
+
   return {
-    ...state,
+    ...issuedState,
     state: "payment_failed",
     reason: requiredTrimmedString(reason, "reason"),
   };
@@ -199,19 +255,20 @@ export function createRiskScanVerifiedSettlement(
   state: RiskScanPaymentPending,
   correlation: RiskScanSettlementCorrelationInput,
 ): RiskScanVerifiedSettlement {
+  const pending = requireIssuedRiskScanPaymentPending(state);
   const requestRef = requiredTrimmedString(
     correlation.requestRef,
     "requestRef",
   );
 
-  if (requestRef !== state.requestRef) {
+  if (requestRef !== pending.requestRef) {
     throw new RangeError("requestRef must match the payment state");
   }
 
   const settlement = Object.freeze({
-    requestRef: state.requestRef,
-    subjectRef: state.subjectRef,
-    context: state.context,
+    requestRef: pending.requestRef,
+    subjectRef: pending.subjectRef,
+    context: pending.context,
     settlementRef: requiredTrimmedString(
       correlation.settlementRef,
       "settlementRef",
