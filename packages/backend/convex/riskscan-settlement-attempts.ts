@@ -29,6 +29,10 @@ interface StoredSettlementAttempt {
   readonly updatedAt: unknown;
 }
 
+interface EligibleRiskScanRequest {
+  readonly publicId: string;
+}
+
 function matchesInitialSettlementAttempt<RequestId>(
   existing: StoredSettlementAttempt,
   document: InitialSettlementAttemptDocument<RequestId>,
@@ -60,6 +64,26 @@ function readOwnEnumerableDataProperty(
   }
 
   return descriptor.value;
+}
+
+function readEligibleRiskScanRequest(
+  request: unknown,
+): EligibleRiskScanRequest | null {
+  if (
+    request === null
+    || typeof request !== "object"
+    || Array.isArray(request)
+  ) {
+    return null;
+  }
+
+  const state = readOwnEnumerableDataProperty(request, "state");
+  const publicId = readOwnEnumerableDataProperty(request, "publicId");
+  if (state !== "payment_required" || typeof publicId !== "string") {
+    return null;
+  }
+
+  return { publicId };
 }
 
 function isOpaqueAttemptId(
@@ -163,14 +187,15 @@ export const recordInitialRiskScanSettlementAttempt = internalMutationGeneric({
       createdAt: args.createdAt,
       updatedAt: args.updatedAt,
     });
-    const request = await ctx.db.get("riskScanRequests", args.requestId);
+    const loadedRequest = await ctx.db.get("riskScanRequests", args.requestId);
+    const eligibleRequest = readEligibleRiskScanRequest(loadedRequest);
 
-    if (request === null || request.state !== "payment_required") {
+    if (eligibleRequest === null) {
       return rejectIneligibleRequest();
     }
 
     const document = {
-      publicId: request.publicId,
+      publicId: eligibleRequest.publicId,
       requestId: args.requestId,
       ...candidate.document,
     };

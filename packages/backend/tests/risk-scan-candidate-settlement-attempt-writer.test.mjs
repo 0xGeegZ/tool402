@@ -276,6 +276,62 @@ test("rejects missing and ineligible requests before querying or inserting", asy
   }
 });
 
+test("rejects loaded request state accessors without invoking their getters", async () => {
+  const { recordInitialRiskScanSettlementAttempt } = await loadWriter();
+  const unsafeRequest = { ...storedRequest };
+  let stateRead = false;
+  Object.defineProperty(unsafeRequest, "state", {
+    enumerable: true,
+    get() {
+      stateRead = true;
+      throw new Error("stored state accessor must not run");
+    },
+  });
+  const { calls, handlerContext } = createControlledDatabase({
+    request: unsafeRequest,
+  });
+
+  await assert.rejects(
+    () => recordInitialRiskScanSettlementAttempt._handler(
+      handlerContext,
+      copyValidArgs(),
+    ),
+    (error) => error instanceof RangeError && error.message === ineligibleRequestMessage,
+  );
+  assert.equal(stateRead, false);
+  assertRequestLookup(calls);
+  assert.deepEqual(calls.queries, []);
+  assert.deepEqual(calls.inserts, []);
+});
+
+test("rejects loaded request public-ID accessors without invoking their getters", async () => {
+  const { recordInitialRiskScanSettlementAttempt } = await loadWriter();
+  const unsafeRequest = { ...storedRequest };
+  let publicIdRead = false;
+  Object.defineProperty(unsafeRequest, "publicId", {
+    enumerable: true,
+    get() {
+      publicIdRead = true;
+      throw new Error("stored public identifier accessor must not run");
+    },
+  });
+  const { calls, handlerContext } = createControlledDatabase({
+    request: unsafeRequest,
+  });
+
+  await assert.rejects(
+    () => recordInitialRiskScanSettlementAttempt._handler(
+      handlerContext,
+      copyValidArgs(),
+    ),
+    (error) => error instanceof RangeError && error.message === ineligibleRequestMessage,
+  );
+  assert.equal(publicIdRead, false);
+  assertRequestLookup(calls);
+  assert.deepEqual(calls.queries, []);
+  assert.deepEqual(calls.inserts, []);
+});
+
 test("rejects duplicate candidate attempts before inserting", async () => {
   const { recordInitialRiskScanSettlementAttempt } = await loadWriter();
   const { calls, handlerContext } = createControlledDatabase({
