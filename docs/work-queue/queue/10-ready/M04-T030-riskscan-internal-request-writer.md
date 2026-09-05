@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M02-T010 accepted; M04-T010 accepted; M04-T020 accepted
 - Integration evidence: D-M02-010-002, D-M04-010-002, and D-M04-020-002 accepted
 - Owner: the proposed implementation scope is `packages/backend/convex/riskscan-requests.ts`, `packages/backend/convex/tsconfig.json`, and `packages/backend/tests/risk-scan-internal-request-writer.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -31,3 +31,7 @@ The registered function is internal-only and becomes a real transactional writer
 - `npm run test --workspace @tool402/backend`
 - `npm run lint --workspace @tool402/backend`
 - Root `npm run typecheck`, `npm run test`, `npm run queue:check`, the enabled local-reference guard, independent task review, and two fresh clean module-review generations.
+
+## Ready transition
+
+Ready at 2026-09-05T14:58:37Z after the root revalidated all accepted dependencies and their recorded integration evidence, the committed local specification and plan, no active lane, disjoint three-path backend ownership, no pending human action, concrete executable validation, and queue validation. This is internal writer code only; no configured runtime, deployed store, payment/settlement, verification, evidence, or live claim is included.
