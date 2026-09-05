@@ -1,0 +1,60 @@
+# M05-T010 — RiskScan machine-readable Tool Directory
+
+## State
+
+- Tier: CORE_P0
+- Queue state: 00-inbox
+- Dependencies: M01-T040 accepted; M02-T050 accepted; M02-T060 accepted
+- Integration evidence: D-M01-FOUND-001, D-M02-050-002, and D-M02-060-002 accepted
+- Owner: the proposed implementation scope is `apps/web/src/lib/tool-directory.ts`, `apps/web/src/app/api/tools/route.ts`, and `apps/web/tests/tool-directory-api.test.mjs`. The root owns this card, its local specification and plan, queue state, catalog, file ownership, decisions, and integration evidence.
+- Human actions: none for local discovery endpoint/code and controlled tests. Runtime configuration, directory registration, deployment, external proof, payment, settlement, transaction verification, finality, receipt/evidence capture, accounts, wallets, and live assertions remain human-authorized.
+
+## Scope
+
+Create one machine-readable local `GET /api/tools` endpoint for exactly one
+RiskScan Quick descriptor. It publishes a bounded request/declaration schema,
+two explicit limitations, and a fail-closed x402 parser-derived local
+configuration state. The response exposes neither a recipient nor facilitator
+information, and it does not call RiskScan or any payment boundary.
+
+The endpoint is discovery-only. It does not register an external directory,
+validate a facilitator, execute a tool, issue/settle a payment, verify a
+transaction, create durable data, prove finality, create receipt/evidence or a
+result, configure/deploy a runtime, or make a live claim.
+
+The local contract is [M05 RiskScan machine-readable Tool Directory](../../../specs/m05-riskscan-tool-directory.md); its executable steps are in the [M05 Tool Directory plan](../../../superpowers/plans/2026-09-05-m05-riskscan-tool-directory.md).
+
+## Candidate ready requirements
+
+- The local specification and implementation plan are committed before RED
+  tests or implementation.
+- M01-T040, M02-T050, and M02-T060 remain accepted locally, their integration
+  evidence is recorded, and no active lane owns the three reserved web paths.
+- The card records CORE_P0 priority, exact one-tool/route/configuration-state
+  behavior, strict metadata/secret boundaries, human boundary, and concrete
+  validation commands.
+- The delivery excludes UI changes, a Consumer Agent, external registration,
+  public payment/settlement/finality action, schema/package/lockfile changes,
+  runtime configuration, external-store proof, credentials, wallets/accounts,
+  receipt/evidence/result material, deployment, and live claims.
+
+## Validation
+
+- RED/GREEN web tests cover exact route/directory shape, bounded input schema,
+  configuration-required and locally-configured states, response no-leakage,
+  no extra tool, no side effect, and process-state restoration.
+- `npm run typecheck --workspace @tool402/web`
+- `npm run test --workspace @tool402/web`
+- Root `npm run typecheck`, `npm run test`, `npm run lint`, production Webpack
+  build, `npm run queue:check`, the enabled local-reference guard, independent
+  task review, and two fresh clean module-review generations.
+
+## Inbox transition
+
+Recorded at 2026-09-05T18:26:26Z after a fresh post-M04 critical-path rescan
+confirmed M01-T040, M02-T050, and M02-T060—including their integration
+evidence—are accepted; no active lane owns the new three-path web boundary; and
+no human action blocks a local discovery endpoint specification or controlled
+web work. This inbox card authorizes neither RED/code nor external directory
+registration, runtime configuration, payment, settlement, transaction
+verification, finality, evidence, result, deployment, or live claim.
