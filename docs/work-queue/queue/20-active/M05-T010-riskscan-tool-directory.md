@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T040 accepted; M02-T050 accepted; M02-T060 accepted
 - Integration evidence: D-M01-FOUND-001, D-M02-050-002, and D-M02-060-002 accepted
 - Owner: the proposed implementation scope is `apps/web/src/lib/tool-directory.ts`, `apps/web/src/app/api/tools/route.ts`, and `apps/web/tests/tool-directory-api.test.mjs`. The root owns this card, its local specification and plan, queue state, catalog, file ownership, decisions, and integration evidence.
@@ -71,3 +71,12 @@ validation; and the independent design review plus scoped re-review. The card
 remains a local discovery endpoint only; no external directory registration,
 configured runtime, payment, settlement, transaction verification, finality,
 evidence, result, API/UI expansion, deployment, or live claim is authorized.
+
+## Activation
+
+Activated at 2026-09-05T18:40:04Z after a fresh queue rescan confirmed the
+pushed ready state, no active lane, accepted dependencies, and the same
+disjoint web ownership boundary. The task starts with its Tool Directory RED
+contract. No external directory registration, configured runtime, payment,
+wallet/account action, deployment, transaction verification, finality,
+evidence, or live claim is authorized.
