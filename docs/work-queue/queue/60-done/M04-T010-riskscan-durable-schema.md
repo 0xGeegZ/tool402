@@ -3,10 +3,10 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T030 accepted; M02-T010 accepted; M03-T020 accepted; M03-T030 accepted
 - Integration evidence: D-M01-FOUND-001, D-M02-010-002, D-M03-020-002, and D-M03-030-002 accepted
-- Owner: the proposed implementation scope is `packages/backend/convex/schema.ts` and `packages/backend/tests/risk-scan-schema.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
+- Owner: the accepted implementation scope was `packages/backend/convex/schema.ts` and `packages/backend/tests/risk-scan-schema.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
 - Human actions: none for local schema declarations and tests. Any external store configuration, account, wallet, payment, settlement, deployment, or live evidence remains human-authorized.
 
 ## Scope
@@ -37,3 +37,7 @@ Ready at 2026-09-05T13:27:57Z after the root revalidated all accepted dependenci
 ## Activation
 
 Activated at 2026-09-05T13:28:56Z after a fresh queue rescan confirmed the pushed ready state, no active lane, and the same disjoint backend ownership boundary. Task 1 starts with its schema-export RED contract. No writer, reader, generated API, external action, payment, wallet/account action, deployment, or live claim is authorized.
+
+## Completion transition
+
+Accepted at 2026-09-05T13:44:15Z. The schema began from an observed missing-module RED and reached a Green export contract. Independent task review found that the first test renamed Convex's exported `bigint` validator type; the scoped fix restores exact exported-form assertions and passed a fresh clean re-review. Root verification passed Node 22.21.1 typecheck, the 65-test suite, lint, queue validation, whitespace, the enabled local-reference guard, and a production Webpack build. The default Turbopack build remains host-blocked by an internal port-bind `EPERM`, reproduced outside the sandbox; the accepted diff contains only backend schema/test paths and no web build input. Two fresh clean Standards/Spec review generations found no Critical, Important, or Minor finding. `MODULE_BASE` was `38d5beef2309ffe7e43d3c8f97448ca6ea0e89a1`; `MODULE_HEAD` was `9c02594d4f522972db77ae0c580c25c71b8d090c`. No writer, reader, generated API, external connection, payment action, settlement assertion, account/wallet action, deployment, or live claim was added.
