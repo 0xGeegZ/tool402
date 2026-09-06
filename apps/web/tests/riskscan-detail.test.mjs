@@ -38,7 +38,7 @@ test("locks the read-only RiskScan detail boundary", async () => {
   assert.match(discoveryCard, /href=["']\/explore\/riskscan["']/);
 
   const hrefs = [...sources.matchAll(/href=["']([^"']+)["']/g)].map(([, href]) => href);
-  assert.deepEqual(hrefs, ["/explore", "/explore/riskscan/try", "/explore/riskscan"]);
+  assert.deepEqual(hrefs, ["/explore", "/explore/riskscan/try", "/explore/riskscan/tool-loop", "/explore/riskscan"]);
   assert.doesNotMatch(sources, /<(?:form|button|input|select|textarea)\b/i);
   assert.doesNotMatch(sources, /\bon[A-Z][A-Za-z]+\s*=|\baction\s*=/);
   assert.doesNotMatch(sources, /["']use client["']|fetch\(|process\.env\b/i);

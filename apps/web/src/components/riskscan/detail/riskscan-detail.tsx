@@ -35,6 +35,12 @@ export function RiskScanDetail() {
       >
         Try RiskScan
       </Link>
+      <Link
+        href="/explore/riskscan/tool-loop"
+        className="block text-sm font-medium text-primary underline-offset-4 hover:underline"
+      >
+        Explore RiskScan ToolLoop
+      </Link>
 
       <header className="space-y-3">
         <Badge variant="secondary">Read-only detail</Badge>
