@@ -62,6 +62,8 @@ const canonicalAsUnits: NoteUnits = (canonical satisfies import("../src/index.ts
 const digestAsCanonical: CanonicalRequirements = (digest satisfies import("../src/index.ts").RequirementsDigest);
 // @ts-expect-error Canonical requirements are not a requirements digest.
 const canonicalAsDigest: RequirementsDigest = (canonical satisfies import("../src/index.ts").CanonicalRequirements);
+// @ts-expect-error A quoted exact HBAR value is not a requirements digest.
+const quotedPaymentAsDigest: RequirementsDigest = ((quote.paymentTinybars satisfies import("../src/index.ts").Tinybar) satisfies import("../src/index.ts").RequirementsDigest);
 
 void canonical;
 void digest;
@@ -76,3 +78,4 @@ void digestAsTinybar;
 void canonicalAsUnits;
 void digestAsCanonical;
 void canonicalAsDigest;
+void quotedPaymentAsDigest;
