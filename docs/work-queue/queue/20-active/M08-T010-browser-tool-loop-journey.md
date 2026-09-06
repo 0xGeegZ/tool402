@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T040 accepted; M01-T090 accepted; M02-T070 accepted;
   M02-T080 accepted; M07-T010 accepted
 - Integration evidence: D-M01-FOUND-001, D-M02-070-002, D-M02-080-002, and
@@ -93,3 +93,15 @@ but it does not block this strict local unsigned browser surface. This ready
 state authorizes only the M08 RED contract and controlled local code; it does
 not authorize a configured recipient/facilitator, wallet/account action,
 payment, transaction, deployment, evidence, result, or live claim.
+
+## Activation
+
+Activated at 2026-09-06T07:41:52Z after a fresh rescan confirmed the pushed
+`4ec64d761b872d833004f8db2986a011a1476f66` ready state, accepted
+dependencies/evidence, the same disjoint Web/package ownership, no active
+lane, and no human blocker for local unsigned code. Task 1 starts with its
+public-package/route RED contract in the current repository workspace under
+the local worktree policy. HA-X402-HEDERA-001 remains PENDING and grants no
+external authority. No configured recipient/facilitator, wallet/account action,
+payment, transaction, deployment, evidence, result, or live claim is
+authorized.
