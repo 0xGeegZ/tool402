@@ -122,7 +122,7 @@ type OfferingPurchaseStateFor<Name extends OfferingPurchaseStateName> = Extract<
   { readonly state: Name }
 >;
 
-const issuedQuotes = new WeakMap<object, OfferingRequirementsQuote>();
+const quoteByIssuedState = new WeakMap<object, OfferingRequirementsQuote>();
 const consumedStates = new WeakSet<object>();
 const transitioningStates = new WeakSet<object>();
 
@@ -147,7 +147,7 @@ function issueState<Name extends OfferingPurchaseStateName>(
     expiresAt: quote.expiresAt,
   }) as OfferingPurchaseStateFor<Name>;
 
-  issuedQuotes.set(issued, quote);
+  quoteByIssuedState.set(issued, quote);
   return issued;
 }
 
@@ -163,7 +163,7 @@ function quoteForIssuedState(
     return rejectTransition();
   }
 
-  return issuedQuotes.get(state) ?? rejectTransition();
+  return quoteByIssuedState.get(state) ?? rejectTransition();
 }
 
 function requiresActiveQuote(
