@@ -3,11 +3,13 @@ import test from "node:test";
 
 import {
   createPaidTask,
+  sha256Requirements,
   transitionPaidTask,
 } from "@tool402/core";
 
 const beforeExpiry = "2026-09-06T23:59:59.999Z";
 const atExpiry = "2026-09-07T00:00:00.000Z";
+const afterExpiry = "2026-09-07T00:00:00.001Z";
 const validRequirements = {
   x402Version: 2,
   payment: { asset: "tinybar", amount: "20" },
@@ -55,12 +57,14 @@ async function follow(path) {
 
 test("creates a frozen minimal quoted snapshot", async () => {
   const task = await quoted();
+  const requirementsDigest = await sha256Requirements(validRequirements);
 
   assert.equal(task.state, "quoted");
+  assert.equal(task.requirementsDigest, requirementsDigest);
   assert.deepEqual(snapshotOf(task), {
     taskRef: "task-1",
     offeringVersion: "risk-v1",
-    requirementsDigest: task.requirementsDigest,
+    requirementsDigest,
     expiresAt: atExpiry,
   });
   assert.deepEqual(Reflect.ownKeys(task).sort(), [
@@ -100,9 +104,16 @@ test("permits every legal edge and preserves its issued snapshot", async () => {
     "response_outcome_unknown",
   ];
 
+  const requirementsDigest = await sha256Requirements(validRequirements);
+
   for (const [index, path] of legalPaths.entries()) {
     const task = await quoted();
-    const expectedSnapshot = snapshotOf(task);
+    const expectedSnapshot = {
+      taskRef: "task-1",
+      offeringVersion: "risk-v1",
+      requirementsDigest,
+      expiresAt: atExpiry,
+    };
     let state = task;
 
     for (const type of path) {
@@ -116,8 +127,16 @@ test("permits every legal edge and preserves its issued snapshot", async () => {
 });
 
 test("requires exact explicit expiry boundaries without reading a clock", async () => {
-  await assert.rejects(async () =>
-    transitionPaidTask(await quoted(), { type: "expire", observedAt: beforeExpiry }),
+  const beforeExpiryTask = await quoted();
+  await assert.rejects(() =>
+    transitionPaidTask(beforeExpiryTask, { type: "expire", observedAt: beforeExpiry }),
+  );
+  assert.equal(
+    (await transitionPaidTask(beforeExpiryTask, {
+      type: "expire",
+      observedAt: atExpiry,
+    })).state,
+    "expired",
   );
 
   const expired = await transitionPaidTask(await quoted(), {
@@ -125,6 +144,12 @@ test("requires exact explicit expiry boundaries without reading a clock", async 
     observedAt: atExpiry,
   });
   assert.equal(expired.state, "expired");
+
+  const expiredAfter = await transitionPaidTask(await quoted(), {
+    type: "expire",
+    observedAt: afterExpiry,
+  });
+  assert.equal(expiredAfter.state, "expired");
 
   const task = await quoted();
   await assert.rejects(() =>
@@ -139,11 +164,16 @@ test("requires exact explicit expiry boundaries without reading a clock", async 
     "payment_submitted",
   );
 
-  await assert.rejects(async () =>
-    transitionPaidTask(await quoted(), {
+  const malformedTimestampTask = await quoted();
+  await assert.rejects(() =>
+    transitionPaidTask(malformedTimestampTask, {
       type: "expire",
       observedAt: "2026-09-07T00:00:00Z",
     }),
+  );
+  assert.equal(
+    (await transitionPaidTask(malformedTimestampTask, eventFor("expire"))).state,
+    "expired",
   );
 });
 
@@ -240,6 +270,15 @@ test("rejects skipped and duplicate edges from the closed transition matrix", as
       await assert.rejects(() => transitionPaidTask(state, eventFor(type)));
     }
   }
+
+  const quotedTask = await quoted();
+  await assert.rejects(() =>
+    transitionPaidTask(quotedTask, eventFor("payment_settled")),
+  );
+  assert.equal(
+    (await transitionPaidTask(quotedTask, eventFor("payment_submitted"))).state,
+    "payment_submitted",
+  );
 });
 
 test("rejects non-issued states before it trusts their visible fields", async () => {
@@ -278,6 +317,21 @@ test("rejects nested and concurrent transitions while hashing, and only consumes
   await assert.rejects(nested);
   await assert.rejects(concurrent);
   await assert.rejects(() => transitionPaidTask(task, eventFor("expire")));
+
+  const rejectedReadTask = await quoted();
+  const readFailure = new Error("event read failed");
+  await assert.rejects(
+    () => transitionPaidTask(rejectedReadTask, {
+      get type() {
+        throw readFailure;
+      },
+    }),
+    readFailure,
+  );
+  assert.equal(
+    (await transitionPaidTask(rejectedReadTask, eventFor("payment_submitted"))).state,
+    "payment_submitted",
+  );
 
   const retryable = await quoted();
   await assert.rejects(() =>
