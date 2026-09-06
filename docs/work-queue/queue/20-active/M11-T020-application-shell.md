@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T040 accepted; M02-T020 accepted
 - Owner: `apps/web/src/app/dashboard/page.tsx`,
   `apps/web/src/components/workspace/**`,
@@ -77,3 +77,13 @@ workspace, navigation, and its constrained legacy navigation-test amendment.
 Those paths are disjoint from M11-T010. This ready state authorizes only the
 local guest-shell RED/GREEN contract; it does not authorize a Sign session,
 account, wallet, payment, transaction, deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-06T10:37:51Z after a fresh queue rescan confirmed the
+pushed 10-ready state, accepted Web/UI dependencies, scoped clean readiness
+re-review, exact existing route-map targets, and disjoint dashboard/workspace/
+navigation paths including the constrained legacy navigation-test amendment.
+The lane starts with its focused workspace RED contract in the current
+repository workspace under the local worktree policy. No Sign session, account,
+wallet, payment, transaction, deployment, or live behavior is authorized.

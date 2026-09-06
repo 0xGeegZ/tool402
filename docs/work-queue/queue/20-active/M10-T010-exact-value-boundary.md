@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T020 accepted
 - Owner: `packages/core/src/value.ts`, `packages/core/src/index.ts`, and
   `packages/core/test/value.test.mjs` are this card's implementation paths.
@@ -66,3 +66,12 @@ neutral import ledger, and concrete validation plan coherent. No active card
 owns the M10 paths. This ready state authorizes only the local RED/GREEN core
 contract; it does not authorize account, signer, wallet, payment, transaction,
 settlement, deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-06T10:37:51Z after a fresh queue rescan confirmed the
+pushed 10-ready state, accepted M01-T020 dependency, scoped clean readiness
+re-review, disjoint core paths, and no human blocker for pure local parsing.
+The lane starts with its public parser RED contract in the current repository
+workspace under the local worktree policy. No account, signer, wallet, payment,
+transaction, settlement, deployment, or live behavior is authorized.

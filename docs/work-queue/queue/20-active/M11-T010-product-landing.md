@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T040 accepted; M02-T020 accepted
 - Owner: `apps/web/src/app/page.tsx`, `apps/web/src/components/landing/**`,
   and `apps/web/tests/product-landing.test.mjs` are this card's implementation
@@ -73,3 +73,13 @@ disjoint root-page/landing ownership. No active card owns these paths. This
 ready state authorizes only the local static landing RED/GREEN contract; it
 does not authorize authentication, account, wallet, payment, result, evidence,
 deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-06T10:37:51Z after a fresh queue rescan confirmed the
+pushed 10-ready state, accepted Web/UI dependencies, scoped clean readiness
+re-review, exact existing CTA routes, disjoint root-page/landing paths, and no
+human blocker for a static local presentation. The lane starts with its focused
+landing RED contract in the current repository workspace under the local
+worktree policy. No authentication, account, wallet, payment, result,
+evidence, deployment, or live behavior is authorized.
