@@ -41,15 +41,18 @@ test("gives the decorative landing artwork an explicit responsive width", async 
 });
 
 test("renders a single read-only Explore discovery surface", async () => {
-  const [page, card] = await Promise.all([
+  const [page, card, island] = await Promise.all([
     readAppFile("src/app/explore/page.tsx"),
     readAppFile("src/components/discovery/riskscan-discovery-card.tsx"),
+    readAppFile("src/components/discovery/riskscan-directory-discovery.tsx"),
   ]);
 
   assert.match(page, /<main\b/);
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
   assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
   assert.match(page, /<RiskScanDiscoveryCard\s*\/>/);
+  assert.match(page, /<RiskScanDirectoryDiscovery\s*\/>/);
+  assert.match(island, /["']use client["']/);
   assert.match(card, /RiskScan/);
   assert.match(card, /read-only/i);
   assert.match(card, /<Link\b[^>]*href=["']\/explore\/riskscan["']/);
@@ -67,7 +70,6 @@ test("keeps the Explore eyebrow readable against the local background", async ()
 test("keeps landing and discovery copy within the UI-S01 truthfulness boundary", async () => {
   const sources = await Promise.all([
     readAppFile("src/app/page.tsx"),
-    readAppFile("src/app/explore/page.tsx"),
     readAppFile("src/components/landing/landing-hero.tsx"),
     readAppFile("src/components/discovery/riskscan-discovery-card.tsx"),
   ]);

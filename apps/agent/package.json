@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./riskscan-tool-directory": "./src/riskscan-tool-directory.ts",
     "./riskscan-tool-flow": "./src/riskscan-tool-flow.ts"
   },
   "scripts": {

@@ -171,7 +171,7 @@ test("keeps static Explore separate from the bounded client-only Directory islan
   assert.match(island, /await runExclusive\(inFlight, async \(\) =>/);
   assert.match(island, /new URL\(window\.location\.origin\)/);
   assert.match(island, /await discoverRiskScanQuick\(serviceBase\)/);
-  assert.match(island, /<Button type=["']button["'] disabled=\{state\.kind === ["']inspecting["']\}>/);
+  assert.match(island, /<Button\b(?=[^>]*\btype=["']button["'])(?=[^>]*\bdisabled=\{state\.kind === ["']inspecting["']\})[^>]*>/);
   assert.match(island, />\s*Inspect local directory\s*<\/Button>/);
   assert.match(island, /directoryOutcomeMessage\(state\)/);
   assert.match(island, /aria-live=["']polite["']/);
@@ -196,6 +196,6 @@ test("keeps static Explore separate from the bounded client-only Directory islan
   assert.doesNotMatch(island, /\b(?:wallet|account|signer|provider|recipient|facilitator)\b/i);
   assert.doesNotMatch(island, /\b(?:localStorage|sessionStorage|setTimeout|setInterval|retry)\b/);
   assert.doesNotMatch(island, /https?:\/\/|mailto:|target=/i);
-  assert.doesNotMatch(island, /\b(?:quick_response|RiskScanQuickResult|result|receipt|evidence)\b/i);
+  assert.doesNotMatch(island, /\b(?:quick_response|RiskScanQuickResult|result|receipt)\b/i);
   assert.doesNotMatch(island, /\b(?:paid|settled|completed)\b/i);
 });

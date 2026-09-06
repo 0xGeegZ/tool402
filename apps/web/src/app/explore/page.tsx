@@ -1,3 +1,4 @@
+import { RiskScanDirectoryDiscovery } from "../../components/discovery/riskscan-directory-discovery";
 import { RiskScanDiscoveryCard } from "../../components/discovery/riskscan-discovery-card";
 
 export default function ExplorePage() {
@@ -11,6 +12,7 @@ export default function ExplorePage() {
         </p>
       </header>
       <RiskScanDiscoveryCard />
+      <RiskScanDirectoryDiscovery />
     </main>
   );
 }
