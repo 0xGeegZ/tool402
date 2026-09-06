@@ -223,6 +223,34 @@ test("bounds object keys before descriptor reflection and sorting", () => {
   assert.equal(descriptorRead, false);
 });
 
+test("preflights every object key before descriptor reflection", () => {
+  const oversizedKey = "k".repeat(32 * 1024 + 1);
+  let descriptorRead = false;
+  const requirements = new Proxy(
+    {},
+    {
+      ownKeys() {
+        return ["safe", oversizedKey];
+      },
+      getOwnPropertyDescriptor() {
+        descriptorRead = true;
+        return {
+          configurable: true,
+          enumerable: true,
+          value: true,
+          writable: true,
+        };
+      },
+    },
+  );
+
+  assert.throws(
+    () => canonicalizeRequirements(requirements),
+    /requirements exceed canonicalization limits/u,
+  );
+  assert.equal(descriptorRead, false);
+});
+
 test("rejects oversized array index keys before numeric conversion", () => {
   const oversizedIndex = "9".repeat(128 * 1024);
   const items = new Proxy(
