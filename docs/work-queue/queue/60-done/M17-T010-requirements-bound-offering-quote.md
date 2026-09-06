@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M10-T010 accepted; M16-T010 accepted
 - Owner: `packages/core/src/requirements-offering-quote.ts`,
   `packages/core/src/index.ts`,
@@ -118,3 +118,18 @@ This activation authorizes the specified Core RED/GREEN implementation and
 verification only; it does not expand authority to payment, funding,
 allocation, ATS, account, wallet, signer, transaction, settlement, receipt,
 persistence, HCS, deployment, or live behavior.
+
+## Acceptance
+
+Accepted at 2026-09-06T21:16:53Z after the public Core RED/GREEN contract,
+focused runtime/type evidence, Core and root quality, clean-install dry run,
+queue/reference/whitespace checks, and enabled local guard all passed under
+Node 22.21.1. Independent task review found and closed expiry-snapshot,
+bounded-serialization, deep-snapshot, descriptor-order, and key-preflight
+defects through executable regressions. Two fresh Standards/Specification
+module-review generations then found no Critical, Important, or Minor issue.
+
+This accepted result is only a pure local requirements-byte and quote boundary.
+It makes no protocol-semantic payability, payment, funding, ATS, account,
+wallet, signer, transaction, settlement, receipt, persistence, HCS,
+deployment, or live claim.
