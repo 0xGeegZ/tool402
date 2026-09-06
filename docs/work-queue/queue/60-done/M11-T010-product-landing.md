@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T040 accepted; M02-T020 accepted
 - Owner: `apps/web/src/app/page.tsx`, `apps/web/src/components/landing/**`,
   and `apps/web/tests/product-landing.test.mjs` are this card's implementation
@@ -73,6 +73,34 @@ disjoint root-page/landing ownership. No active card owns these paths. This
 ready state authorizes only the local static landing RED/GREEN contract; it
 does not authorize authentication, account, wallet, payment, result, evidence,
 deployment, or live behavior.
+
+## Acceptance
+
+Accepted at 2026-09-06T11:57:55Z after a fresh queue rescan confirmed the
+accepted Web/UI dependencies and no conflicting active owner of root-page or
+landing paths.
+
+- `MODULE_BASE` is `68da461a33d0f670536644f9a703ccb95a329e64`; `MODULE_HEAD`
+  is `3b94a9b97705e41683bd13fe367438332e2555f6`. M11-T010-scoped commits are
+  `05f8212` and `3b94a9b`; concurrent M10 and M11 workspace paths remain
+  disjoint.
+- The focused landing contract, root clean-install dry run, root
+  typecheck/test/lint, production Webpack build with Cache Components,
+  queue/reference/whitespace checks, and enabled local-reference guard passed
+  under Node 22.21.1. The build retains only the pre-existing optional x402
+  package-resolution warning outside this card's paths.
+- Desktop and narrow browser checks verified the static landing, all three
+  local CTAs, visible keyboard focus, no horizontal overflow, zero axe
+  violations, and no framework or browser errors.
+- Independent task review found a muted-copy contrast gap, heading hierarchy
+  issue, and focused-test gap. The root corrected the owned landing paths and
+  its scoped re-review was clean. Two fresh clean Standards/Specification
+  module-review generations at `3b94a9b` found no Critical, Important, or
+  Minor finding.
+
+This acceptance covers only a static local landing. It grants no authority for
+authentication, session, account, wallet, provider, payment, settlement,
+result, evidence, deployment, or live behavior.
 
 ## Activation
 
