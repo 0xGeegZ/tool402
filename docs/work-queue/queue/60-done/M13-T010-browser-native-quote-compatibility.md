@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T040 accepted; M11-T020 accepted; M12-T020 accepted
 - Owner: `apps/web/src/app/dashboard/riskscan/compatibility/page.tsx`,
   `apps/web/src/components/riskscan/native-quote/**`, and
@@ -103,3 +103,32 @@ controlled guest compatibility surface. This active state authorizes the
 focused local RED/GREEN route, island, state, and constrained navigation
 contract only. It does not authorize Sign/session, payment, signing, account,
 wallet, transaction, deployment, or live behavior.
+
+## Acceptance
+
+Accepted at 2026-09-06T15:15:27Z after a fresh queue rescan confirmed the
+accepted M01-T040, M11-T020, and M12-T020 dependencies and no conflicting
+active owner of the new route/island/test paths or its constrained Workspace
+navigation amendment.
+
+- `MODULE_BASE` is `99275b56e99ff59bb1dbd291a3d9e46c2f07d89f`; `MODULE_HEAD`
+  is `7a30ace45cce1e1a87edd0d5a78add49d2a9a568`. The focused RED contract first
+  observed the missing planned route/state sources. A later no-default
+  regression observed missing form fields becoming empty strings, then GREEN
+  preserved their raw `null` values without inventing a policy default.
+- The focused M13 contracts, Web suite, root typecheck/test/lint, root queue
+  validation, whitespace/reference checks, enabled local guard, and
+  clean-install dry run passed under Node 22.21.1. The production Webpack build
+  passed with Cache Components and the new static Dashboard route; it retains
+  only the pre-existing optional upstream `@x402/paywall` resolution warning.
+- Browser and Next runtime checks registered the route, found no compilation or
+  runtime errors, and verified blank policy controls, Workspace navigation,
+  one local `GET /api/tools` with no POST, an honest unavailable-native-summary
+  outcome for current configuration, zero axe violations, visible keyboard
+  focus, and no horizontal overflow at 390px.
+- Independent task review and two fresh clean module-review generations found
+  no Critical, Important, or Minor finding.
+
+Acceptance covers only the guest local compatibility surface. It does not
+provide or authorize Sign/session, identity, account, wallet, payment,
+signing, transaction, settlement, deployment, or live behavior.
