@@ -15,15 +15,8 @@ import type {
   Tinybar,
 } from "../src/index.ts";
 
-type ExpectedCanonicalRequirements = string & {
-  readonly __brand: "CanonicalRequirements";
-};
-type ExpectedRequirementsDigest = string & {
-  readonly __brand: "RequirementsDigest";
-};
-
-const canonical: CanonicalRequirements = canonicalizeRequirements({ x402Version: 2 });
-const digest: RequirementsDigest = await sha256Requirements({ x402Version: 2 });
+const canonical = canonicalizeRequirements({ x402Version: 2 });
+const digest = await sha256Requirements({ x402Version: 2 });
 const requestedUnits = parseNoteUnits("2");
 const confirmedAllocatedUnits = parseNoteUnits("0");
 
@@ -49,29 +42,37 @@ const input: OfferingRequirementsQuoteInput = {
   requirements: { x402Version: 2 },
   expiresAt: "2026-09-06T18:00:00.000Z",
 };
-const quote: OfferingRequirementsQuote = await createOfferingRequirementsQuote(
+const quote = await createOfferingRequirementsQuote(
   terms,
   input,
 );
+const canonicalValue: CanonicalRequirements = canonical;
+const digestValue: RequirementsDigest = digest;
+const quoteValue: OfferingRequirementsQuote = quote;
 const payment: Tinybar = quote.paymentTinybars;
 const remainingUnits: NoteUnits = quote.remainingCapacityUnits;
 const allocatedUnits: NoteUnits = quote.requestedUnits;
 const quoteDigest: RequirementsDigest = quote.requirementsDigest;
-const brandedCanonical: ExpectedCanonicalRequirements = canonical;
-const brandedDigest: ExpectedRequirementsDigest = digest;
 
 // @ts-expect-error A requirements digest is not an exact HBAR value.
-const digestAsTinybar: Tinybar = brandedDigest;
+const digestAsTinybar: Tinybar = (digest satisfies import("../src/index.ts").RequirementsDigest);
 // @ts-expect-error Canonical requirements are not note units.
-const canonicalAsUnits: NoteUnits = brandedCanonical;
+const canonicalAsUnits: NoteUnits = (canonical satisfies import("../src/index.ts").CanonicalRequirements);
+// @ts-expect-error A requirements digest is not canonical requirements text.
+const digestAsCanonical: CanonicalRequirements = (digest satisfies import("../src/index.ts").RequirementsDigest);
+// @ts-expect-error Canonical requirements are not a requirements digest.
+const canonicalAsDigest: RequirementsDigest = (canonical satisfies import("../src/index.ts").CanonicalRequirements);
 
 void canonical;
 void digest;
+void canonicalValue;
+void digestValue;
+void quoteValue;
 void payment;
 void remainingUnits;
 void allocatedUnits;
 void quoteDigest;
-void brandedCanonical;
-void brandedDigest;
 void digestAsTinybar;
 void canonicalAsUnits;
+void digestAsCanonical;
+void canonicalAsDigest;
