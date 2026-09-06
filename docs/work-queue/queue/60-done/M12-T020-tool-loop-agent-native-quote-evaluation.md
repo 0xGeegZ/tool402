@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M05-T020 accepted; M06-T010 accepted; M12-T010 accepted
 - Owner: the proposed implementation scope is
   `apps/agent/src/riskscan-tool-native-quote-evaluation.ts`,
@@ -115,3 +115,37 @@ records, and no human blocker for controlled local work. This active state
 authorizes the root-owned RED public-package boundary followed by the bounded
 Agent source contract. It does not authorize a payment, signing, account,
 wallet, transaction, deployment, or live claim.
+
+## Acceptance
+
+Accepted at 2026-09-06T14:18:17Z after a fresh queue rescan confirmed the
+accepted M05-T020, M06-T010, and M12-T010 dependencies and no conflicting
+active owner of the Agent or root package paths.
+
+- `MODULE_BASE` is `fcb1f67d335c139f41498625839513ffbf24b0ed`; `MODULE_HEAD`
+  is `98c9c7af8f842b6b5e63ddef414bed277b96bc70`. The package-boundary RED
+  commit is `509a39e`; the bounded Agent implementation commit is `98c9c7a`.
+- Public-package RED first observed the missing public subpath, then the
+  absent declared source target. The Agent source RED observed the missing
+  source target before implementation. The final focused public/source/boundary
+  suite has eight passing cases, including one injected credential-free GET,
+  exact large-amount preservation, terminal directory propagation,
+  untouched opaque policy before native selection, required-fetcher rejection,
+  native policy declines, and request isolation.
+- Root clean-install dry run, dependency-tree check, root typecheck/test/lint,
+  queue/whitespace/reference checks, and the enabled local guard passed under
+  Node 22.21.1. The controlled public Agent exercise passed with one injected
+  directory GET and no POST. The production Webpack build passed with Cache
+  Components; it retains only the pre-existing optional upstream
+  `@x402/paywall` resolution warning. Default Turbopack build remains an
+  environment-local IPC-listener permission limitation outside this card's
+  paths.
+- Independent task review was clean. The first fresh Standards/Specification
+  module-review generation was clean. The second fresh Specification review
+  was clean; an initial Standards judgement call about intentionally
+  independent package/source test fixtures required no code change, and a
+  fresh Standards convergence review found no reportable finding.
+
+Acceptance covers only controlled local Agent composition and quote
+compatibility. It does not prove or authorize a payment, signing, account,
+wallet, transaction, settlement, deployment, or live behavior.
