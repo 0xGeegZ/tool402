@@ -86,17 +86,17 @@ test("delegates the exact credential-free GET then unsigned POST and hides the c
 
 test("does not call the challenge sender when discovery cannot select the tool", async () => {
   const directoryCases = [
-    async () => { throw new Error("offline"); },
-    async () => response(503),
-    async () => Response.json({ version: "v1", tools: [] }),
+    [async () => { throw new Error("offline"); }, { kind: "directory_unavailable" }],
+    [async () => response(503), { kind: "directory_unavailable" }],
+    [async () => Response.json({ version: "v1", tools: [] }), { kind: "directory_invalid" }],
   ];
-  for (const fetcher of directoryCases) {
+  for (const [fetcher, expected] of directoryCases) {
     let challengeCalls = 0;
     const result = await runRiskScanQuickFlow(base, input, fetcher, async () => {
       challengeCalls += 1;
       return response(402, "controlled-challenge-value");
     });
-    assert.ok(["directory_unavailable", "directory_invalid"].includes(result.kind));
+    assert.deepEqual(result, expected);
     assert.equal(challengeCalls, 0);
   }
 });

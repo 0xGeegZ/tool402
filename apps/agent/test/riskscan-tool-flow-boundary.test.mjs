@@ -6,18 +6,21 @@ const source = new URL("../src/riskscan-tool-flow.ts", import.meta.url);
 
 test("keeps the flow to the two accepted Agent boundaries", async () => {
   const text = await readFile(source, "utf8");
-  assert.match(text, /import\s+\{\s*discoverRiskScanQuick\s*\}\s+from\s+"\.\/riskscan-tool-directory\.ts"/u);
-  assert.match(text, /import\s+\{\s*requestRiskScanQuickChallenge\s*\}\s+from\s+"\.\/riskscan-tool-challenge\.ts"/u);
-  const imports = [...text.matchAll(/^import[\s\S]*?from\s+"([^"]+)";$/gmu)].map(([, path]) => path);
-  assert.deepEqual(imports, [
-    "./riskscan-tool-challenge.ts",
-    "./riskscan-tool-directory.ts",
-    "./riskscan-tool-challenge.ts",
-    "./riskscan-tool-directory.ts",
-  ]);
-  for (const forbidden of [
-    /x402|payment|authorization|header|wallet|account|signer|process\.env|backend/iu,
-    /setTimeout|setInterval|retry|import\s*\(|child_process|\.json\s*\(|\.text\s*\(|\.arrayBuffer\s*\(|\.blob\s*\(|\.formData\s*\(/u,
-    /result|receipt|facilitator|network|price|settlement|verification|finality|console\.|fetch\(/iu,
-  ]) assert.doesNotMatch(text, forbidden);
+  assert.equal(text, `import { requestRiskScanQuickChallenge } from "./riskscan-tool-challenge.ts";
+import { discoverRiskScanQuick } from "./riskscan-tool-directory.ts";
+import type { RiskScanChallengeSender, RiskScanConsumerChallengeOutcome } from "./riskscan-tool-challenge.ts";
+import type { RiskScanDirectoryFetcher } from "./riskscan-tool-directory.ts";
+
+export type RiskScanToolFlowOutcome = RiskScanConsumerChallengeOutcome;
+
+export async function runRiskScanQuickFlow(
+  serviceBase: URL,
+  input: unknown,
+  directoryFetcher?: RiskScanDirectoryFetcher,
+  challengeSender?: RiskScanChallengeSender,
+): Promise<RiskScanToolFlowOutcome> {
+  const discovery = await discoverRiskScanQuick(serviceBase, directoryFetcher);
+  return requestRiskScanQuickChallenge(serviceBase, discovery, input, challengeSender);
+}
+`);
 });
