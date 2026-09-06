@@ -38,8 +38,16 @@ interface DataPropertyDescriptor extends PropertyDescriptor {
 
 interface CapturedProperty {
   readonly key: string;
-  readonly value: unknown;
+  readonly value: CapturedValue;
 }
+
+type CapturedValue =
+  | { readonly kind: "null" }
+  | { readonly kind: "boolean"; readonly value: boolean }
+  | { readonly kind: "string"; readonly value: string }
+  | { readonly kind: "number"; readonly value: number }
+  | { readonly kind: "object"; readonly properties: readonly CapturedProperty[] }
+  | { readonly kind: "array"; readonly values: readonly CapturedValue[] };
 
 interface CanonicalEmitter {
   readonly chunks: string[];
@@ -122,14 +130,18 @@ function compareKeys(left: string, right: string): number {
   return left > right ? 1 : 0;
 }
 
-function captureObjectProperties(value: object): readonly CapturedProperty[] {
+function snapshotObjectProperties(
+  value: object,
+  depth: number,
+  state: CaptureState,
+): readonly CapturedProperty[] {
   const keys = safeOwnKeys(value);
   if (keys.length > MAX_OBJECT_PROPERTIES) {
     rejectRequirementsLimit();
   }
 
   const seenKeys = new Set<string>();
-  const descriptors: Array<{ key: string; descriptor: DataPropertyDescriptor }> = [];
+  const capturedInputs: Array<{ key: string; value: unknown }> = [];
 
   for (const key of keys) {
     if (typeof key !== "string" || seenKeys.has(key)) {
@@ -142,14 +154,19 @@ function captureObjectProperties(value: object): readonly CapturedProperty[] {
     }
 
     seenKeys.add(key);
-    descriptors.push({ key, descriptor });
+    capturedInputs.push({ key, value: descriptor.value });
   }
 
-  descriptors.sort((left, right) => compareKeys(left.key, right.key));
-  return descriptors.map(({ key, descriptor }) => ({
-    key,
-    value: descriptor.value,
-  }));
+  const properties: CapturedProperty[] = [];
+  for (const { key, value: propertyValue } of capturedInputs) {
+    properties.push({
+      key,
+      value: snapshotValue(propertyValue, depth + 1, state, false),
+    });
+  }
+
+  properties.sort((left, right) => compareKeys(left.key, right.key));
+  return properties;
 }
 
 function appendBounded(
@@ -274,50 +291,36 @@ function finishCanonicalEmitter(
   return emitter.chunks.join("") as CanonicalRequirements;
 }
 
-function emitPlainObject(
+function snapshotPlainObject(
   value: object,
   depth: number,
   state: CaptureState,
   requireNonEmpty: boolean,
-  emitter: CanonicalEmitter,
-): void {
+): CapturedValue {
   if (safePrototype(value) !== Object.prototype) {
     rejectMalformedRequirements();
   }
 
-  captureContainer(value, depth, state, () => {
-    const properties = captureObjectProperties(value);
+  return snapshotContainer(value, depth, state, () => {
+    const properties = snapshotObjectProperties(value, depth, state);
     if (requireNonEmpty && properties.length === 0) {
       rejectMalformedRequirements();
     }
 
-    appendAscii(emitter, "{");
-    let needsComma = false;
-    for (const property of properties) {
-      if (needsComma) {
-        appendAscii(emitter, ",");
-      }
-
-      emitJsonString(emitter, property.key);
-      appendAscii(emitter, ":");
-      emitValue(property.value, depth + 1, state, false, emitter);
-      needsComma = true;
-    }
-    appendAscii(emitter, "}");
+    return { kind: "object", properties };
   });
 }
 
-function emitArray(
+function snapshotArray(
   value: object,
   depth: number,
   state: CaptureState,
-  emitter: CanonicalEmitter,
-): void {
+): CapturedValue {
   if (safePrototype(value) !== Array.prototype) {
     rejectMalformedRequirements();
   }
 
-  captureContainer(value, depth, state, () => {
+  return snapshotContainer(value, depth, state, () => {
     const keys = safeOwnKeys(value);
     const seenKeys = new Set<string>();
     const descriptors = new Map<string, DataPropertyDescriptor>();
@@ -365,24 +368,21 @@ function emitArray(
       values.push(descriptor.value);
     }
 
-    appendAscii(emitter, "[");
-    for (let index = 0; index < values.length; index += 1) {
-      if (index > 0) {
-        appendAscii(emitter, ",");
-      }
-
-      emitValue(values[index], depth + 1, state, false, emitter);
+    const capturedValues: CapturedValue[] = [];
+    for (const item of values) {
+      capturedValues.push(snapshotValue(item, depth + 1, state, false));
     }
-    appendAscii(emitter, "]");
+
+    return { kind: "array", values: capturedValues };
   });
 }
 
-function captureContainer(
+function snapshotContainer<T>(
   value: object,
   depth: number,
   state: CaptureState,
-  capture: () => void,
-): void {
+  snapshot: () => T,
+): T {
   if (depth > MAX_CONTAINER_DEPTH) {
     rejectRequirementsLimit();
   }
@@ -392,19 +392,18 @@ function captureContainer(
 
   state.activeContainers.add(value);
   try {
-    capture();
+    return snapshot();
   } finally {
     state.activeContainers.delete(value);
   }
 }
 
-function emitValue(
+function snapshotValue(
   value: unknown,
   depth: number,
   state: CaptureState,
   requireObjectRoot: boolean,
-  emitter: CanonicalEmitter,
-): void {
+): CapturedValue {
   consumeJsonValue(state);
 
   if (value === null) {
@@ -412,8 +411,7 @@ function emitValue(
       rejectMalformedRequirements();
     }
 
-    appendAscii(emitter, "null");
-    return;
+    return { kind: "null" };
   }
 
   switch (typeof value) {
@@ -422,15 +420,13 @@ function emitValue(
         rejectMalformedRequirements();
       }
 
-      appendAscii(emitter, value ? "true" : "false");
-      return;
+      return { kind: "boolean", value };
     case "string":
       if (requireObjectRoot) {
         rejectMalformedRequirements();
       }
 
-      emitJsonString(emitter, value);
-      return;
+      return { kind: "string", value };
     case "number":
       if (!Number.isFinite(value) || Object.is(value, -0)) {
         rejectMalformedRequirements();
@@ -440,8 +436,7 @@ function emitValue(
         rejectMalformedRequirements();
       }
 
-      appendAscii(emitter, String(value));
-      return;
+      return { kind: "number", value };
     case "object": {
       let isArray: boolean;
 
@@ -456,15 +451,75 @@ function emitValue(
           rejectMalformedRequirements();
         }
 
-        emitArray(value, depth, state, emitter);
-        return;
+        return snapshotArray(value, depth, state);
       }
 
-      emitPlainObject(value, depth, state, requireObjectRoot, emitter);
-      return;
+      return snapshotPlainObject(value, depth, state, requireObjectRoot);
     }
     default:
-      rejectMalformedRequirements();
+      return rejectMalformedRequirements();
+  }
+}
+
+function emitCapturedObject(
+  properties: readonly CapturedProperty[],
+  emitter: CanonicalEmitter,
+): void {
+  appendAscii(emitter, "{");
+  let needsComma = false;
+  for (const property of properties) {
+    if (needsComma) {
+      appendAscii(emitter, ",");
+    }
+
+    emitJsonString(emitter, property.key);
+    appendAscii(emitter, ":");
+    emitCapturedValue(property.value, emitter);
+    needsComma = true;
+  }
+  appendAscii(emitter, "}");
+}
+
+function emitCapturedArray(
+  values: readonly CapturedValue[],
+  emitter: CanonicalEmitter,
+): void {
+  appendAscii(emitter, "[");
+  let needsComma = false;
+  for (const value of values) {
+    if (needsComma) {
+      appendAscii(emitter, ",");
+    }
+
+    emitCapturedValue(value, emitter);
+    needsComma = true;
+  }
+  appendAscii(emitter, "]");
+}
+
+function emitCapturedValue(
+  value: CapturedValue,
+  emitter: CanonicalEmitter,
+): void {
+  switch (value.kind) {
+    case "null":
+      appendAscii(emitter, "null");
+      return;
+    case "boolean":
+      appendAscii(emitter, value.value ? "true" : "false");
+      return;
+    case "string":
+      emitJsonString(emitter, value.value);
+      return;
+    case "number":
+      appendAscii(emitter, String(value.value));
+      return;
+    case "object":
+      emitCapturedObject(value.properties, emitter);
+      return;
+    case "array":
+      emitCapturedArray(value.values, emitter);
+      return;
   }
 }
 
@@ -503,19 +558,19 @@ async function canonicalRequirementsDigest(
 }
 
 export function canonicalizeRequirements(input: unknown): CanonicalRequirements {
+  const captured = snapshotValue(
+    input,
+    1,
+    { nodeCount: 0, activeContainers: new WeakSet<object>() },
+    true,
+  );
   const emitter: CanonicalEmitter = {
     chunks: [],
     currentChunk: "",
     byteLength: 0,
   };
 
-  emitValue(
-    input,
-    1,
-    { nodeCount: 0, activeContainers: new WeakSet<object>() },
-    true,
-    emitter,
-  );
+  emitCapturedValue(captured, emitter);
 
   return finishCanonicalEmitter(emitter);
 }
