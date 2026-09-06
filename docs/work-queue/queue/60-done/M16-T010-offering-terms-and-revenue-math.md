@@ -3,12 +3,12 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M10-T010 accepted
 - Owner: `packages/core/src/offering-economics.ts`,
   `packages/core/src/index.ts`,
   `packages/core/test/offering-economics.test.mjs`, and
-  `packages/core/test/offering-economics.types.ts` are the proposed
+  `packages/core/test/offering-economics.types.ts` are this card's
   implementation paths. The root owns this card, local specification/import
   record, plan, queue state, catalog, ownership, decisions, reviews,
   integration evidence, and pushes.
@@ -106,3 +106,28 @@ this pure local work. This activation authorizes the specified Core RED/GREEN
 implementation and verification only; it does not expand authority to ATS,
 payment, funding, allocation, clearing, HCS, account, wallet, signer,
 transaction, deployment, or live behavior.
+
+## Acceptance
+
+Accepted at 2026-09-06T17:42:45Z after a fresh queue rescan confirmed the
+accepted M10-T010 dependency, no conflicting active owner, and no human
+blocker for this deterministic local scope.
+
+- `MODULE_BASE` is `d7d7db238a21b52a2b7d98ee8d17f165dde87a06`; `MODULE_HEAD`
+  is `80d5d14c7b57bf35b9d028413476c554222e9c04`. The focused public contract
+  observed its intended missing-export RED before the bounded Core module and
+  public export made all six focused tests GREEN.
+- Under Node 22.21.1, the focused suite, Core typecheck, all 39 Core tests,
+  Core boundary lint, root typecheck/test/lint, clean-install dry run,
+  queue check, range whitespace check, enabled local guard, and local
+  reference check passed.
+- Independent task reviews found and then cleanly re-reviewed two RED-test
+  gaps: an uncapped fractional floor-rounding vector and direct brand checks
+  on constructed terms/allocation values. The implementation task review
+  found no Critical, Important, or Minor issue. Two consecutive fresh module
+  review generations were clean on both standards and specification axes.
+
+Acceptance covers pure, caller-supplied local economics only. It provides no
+ATS, offering publication, account/asset, wallet, signer, payment, funding,
+allocation, clearing, transaction, settlement, receipt, persistence, HCS,
+deployment, or live evidence or authority.
