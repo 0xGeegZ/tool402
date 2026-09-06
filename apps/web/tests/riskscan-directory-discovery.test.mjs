@@ -146,7 +146,7 @@ test("maps only Directory inspection states to their truthful fixed messages", a
     [{ kind: "inspecting" }, "Inspecting the local directory."],
     [{ kind: "directory_unavailable" }, "The local directory could not be read. No RiskScan request was sent."],
     [{ kind: "directory_invalid" }, "The local directory response could not be used. No RiskScan request was sent."],
-    [{ kind: "tool_selected", tool: {} }, null],
+    [{ kind: "tool_selected", tool: {} }, "The local directory descriptor was selected. No RiskScan request was sent."],
   ]) {
     assert.equal(directoryOutcomeMessage(state), expected);
   }

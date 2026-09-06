@@ -23,8 +23,9 @@ export async function runExclusive<T>(
 export function directoryOutcomeMessage(state: RiskScanDirectoryViewState): string | null {
   switch (state.kind) {
     case "idle":
-    case "tool_selected":
       return null;
+    case "tool_selected":
+      return "The local directory descriptor was selected. No RiskScan request was sent.";
     case "inspecting":
       return "Inspecting the local directory.";
     case "directory_unavailable":
