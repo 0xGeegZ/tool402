@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M10-T010 accepted; M16-T010 accepted
 - Owner: `packages/core/src/requirements-offering-quote.ts`,
   `packages/core/src/index.ts`,
@@ -96,3 +96,14 @@ only noted condition is that this card, contract, and plan must be committed
 atomically so their links resolve at one repository revision. After that
 authority commit, a fresh ready-transition rescan remains required; this result
 does not authorize RED/code by itself.
+
+## Ready transition
+
+Ready at 2026-09-06T18:13:38Z after a fresh post-commit rescan confirmed the
+accepted M10/M16 dependencies, committed and resolvable local authority,
+disjoint proposed Core ownership, clean corrected design re-review, enabled
+local boundary, and no human blocker for this deterministic local scope. This
+ready state authorizes only the bounded RED/GREEN contract after root
+activation; it does not authorize payment, funding, allocation, ATS, account,
+wallet, signer, transaction, settlement, receipt, persistence, HCS,
+deployment, or live behavior.
