@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M16-T010 accepted; M17-T010 accepted
 - Owner: `packages/core/src/offering-purchase-lifecycle.ts`,
   `packages/core/src/index.ts`,
@@ -69,3 +69,25 @@ attempt, ATS boundary/configuration, payment client, and live work remain
 separate non-eligible capabilities. This card authorizes only its local
 authority records and independent design review; it authorizes neither RED/code
 nor any external action.
+
+## Design re-review
+
+Fresh scoped re-review at 2026-09-06T21:58:53Z confirmed that the amended
+authority defines the complete public discriminated union and immutable typed
+snapshot, consumes only the exact source identity of successful transitions,
+preserves a source after a rejected transition, closes every listed transition,
+uses explicit expiry timestamps without a clock, and keeps unknown outcomes
+fail-closed. It found no remaining contract, dependency, pure-Core, authority,
+or local-reference defect. A fresh ready-transition rescan remains required;
+this result does not authorize RED/code by itself.
+
+## Ready transition
+
+Ready at 2026-09-06T21:58:53Z after a fresh post-review rescan confirmed the
+accepted M16/M17 dependencies, committed and resolvable corrected authority,
+disjoint proposed Core ownership, clean independent design re-review, enabled
+local boundary, and no human blocker for this deterministic local scope. This
+ready state authorizes only the bounded RED/GREEN contract after root
+activation; it does not authorize payment, funding, allocation, ATS, account,
+wallet, signer, transaction, settlement, receipt, persistence, clearing, HCS,
+payout, deployment, or live behavior.
