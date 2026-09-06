@@ -62,6 +62,7 @@ const MAX_ARRAY_ITEMS = 128;
 const MAX_CANONICAL_BYTES = 32 * 1024;
 const EMITTER_CHUNK_CODE_UNITS = 1024;
 const hexadecimalDigits = "0123456789abcdef";
+const issuedOfferingRequirementsQuotes = new WeakSet<object>();
 const canonicalUtcMilliseconds =
   /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z$/u;
 
@@ -732,7 +733,7 @@ export async function createOfferingRequirementsQuote(
     canonicalizeRequirements(input.requirements),
   );
 
-  return Object.freeze({
+  const quote = Object.freeze({
     termsVersion: allocation.termsVersion,
     requestedUnits: allocation.requestedUnits,
     paymentTinybars: allocation.paymentTinybars,
@@ -740,6 +741,19 @@ export async function createOfferingRequirementsQuote(
     requirementsDigest,
     expiresAt,
   });
+
+  issuedOfferingRequirementsQuotes.add(quote);
+  return quote;
+}
+
+export function isIssuedOfferingRequirementsQuote(
+  quote: unknown,
+): quote is OfferingRequirementsQuote {
+  return (
+    typeof quote === "object" &&
+    quote !== null &&
+    issuedOfferingRequirementsQuotes.has(quote)
+  );
 }
 
 export async function matchesQuotedRequirements(

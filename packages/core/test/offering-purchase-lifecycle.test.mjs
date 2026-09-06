@@ -91,6 +91,36 @@ test("creates a frozen issued draft with only the permitted quote snapshot", asy
   });
 });
 
+test("accepts only an exact issued quote before it reads quote fields", async () => {
+  const quote = await validQuote();
+  const copiedQuote = { ...quote };
+  const frozenLookalike = Object.freeze({ ...quote });
+  const proxiedQuote = new Proxy(quote, {});
+  const mutableLookalike = { ...quote };
+
+  for (const lookalike of [
+    copiedQuote,
+    frozenLookalike,
+    proxiedQuote,
+    mutableLookalike,
+  ]) {
+    assert.throws(() => createOfferingPurchase(lookalike));
+  }
+
+  const accessFailure = new Error("quote field must not be read");
+  const accessorLookalike = {};
+  Object.defineProperty(accessorLookalike, "termsVersion", {
+    enumerable: true,
+    get() {
+      throw accessFailure;
+    },
+  });
+  assert.throws(
+    () => createOfferingPurchase(accessorLookalike),
+    /invalid offering purchase quote/u,
+  );
+});
+
 test("permits every closed legal edge and preserves the frozen quote snapshot", async () => {
   const quote = await validQuote();
   const expectedSnapshot = {

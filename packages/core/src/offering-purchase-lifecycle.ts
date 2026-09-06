@@ -1,4 +1,7 @@
-import { isOfferingRequirementsQuoteActive } from "./requirements-offering-quote.ts";
+import {
+  isIssuedOfferingRequirementsQuote,
+  isOfferingRequirementsQuoteActive,
+} from "./requirements-offering-quote.ts";
 import type {
   OfferingRequirementsQuote,
   RequirementsDigest,
@@ -125,6 +128,10 @@ const transitioningStates = new WeakSet<object>();
 
 function rejectTransition(): never {
   throw new TypeError("invalid offering purchase transition");
+}
+
+function rejectQuote(): never {
+  throw new TypeError("invalid offering purchase quote");
 }
 
 function issueState<Name extends OfferingPurchaseStateName>(
@@ -267,6 +274,10 @@ function nextStateName(
 export function createOfferingPurchase(
   quote: OfferingRequirementsQuote,
 ): OfferingPurchaseDraft {
+  if (!isIssuedOfferingRequirementsQuote(quote)) {
+    return rejectQuote();
+  }
+
   return issueState("draft", quote);
 }
 
