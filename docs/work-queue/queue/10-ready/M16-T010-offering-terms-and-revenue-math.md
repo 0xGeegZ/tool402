@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M10-T010 accepted
 - Owner: `packages/core/src/offering-economics.ts`,
   `packages/core/src/index.ts`,
@@ -85,3 +85,14 @@ card use the direct focused Node test command. A scoped re-review completed at
 2026-09-06T17:09:07Z and found no remaining Critical, Important, or Minor
 issue. Once these local authority records are committed, the root may move the
 card to 10-ready; that move still does not authorize RED/code until activation.
+
+## Ready transition
+
+Ready at 2026-09-06T17:10:48Z after a fresh post-commit rescan confirmed the
+accepted M10-T010 dependency, resolvable local authority records, disjoint
+proposed Core paths, no active-card conflict, and no human blocker for the
+pure local scope. The independent re-review is clean and the public terms/math
+contract has concrete direct RED/GREEN validation. This ready state authorizes
+only the bounded local RED/GREEN economics contract after root activation; it
+does not authorize ATS, payment, funding, allocation, clearing, HCS, account,
+wallet, signer, transaction, deployment, or live behavior.
