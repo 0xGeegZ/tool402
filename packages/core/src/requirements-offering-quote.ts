@@ -358,10 +358,10 @@ export async function createOfferingRequirementsQuote(
   input: OfferingRequirementsQuoteInput,
 ): Promise<OfferingRequirementsQuote> {
   const allocation = calculateAllocation(terms, input);
+  const expiresAt = canonicalExpiry(input.expiresAt);
   const requirementsDigest = await canonicalRequirementsDigest(
     canonicalizeRequirements(input.requirements),
   );
-  const expiresAt = canonicalExpiry(input.expiresAt);
 
   return Object.freeze({
     termsVersion: allocation.termsVersion,
