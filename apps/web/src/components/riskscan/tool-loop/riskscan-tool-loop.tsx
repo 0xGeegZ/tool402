@@ -2,7 +2,7 @@
 
 import { runRiskScanQuickFlow, type RiskScanToolFlowOutcome } from "@tool402/agent/riskscan-tool-flow";
 import type { RiskScanQuickInput } from "@tool402/core";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
@@ -60,13 +60,19 @@ function ToolLoopOutcome({ state }: { state: RiskScanToolLoopState }) {
 
 export function RiskScanToolLoop() {
   const [state, setState] = useState<RiskScanToolLoopState>({ kind: "idle" });
+  const inFlight = useRef(false);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (state.kind === "submitting") return;
-    setState({ kind: "submitting" });
-    const serviceBase = new URL(window.location.origin);
-    setState(await runRiskScanQuickFlow(serviceBase, readQuickInput(new FormData(event.currentTarget))));
+    if (inFlight.current) return;
+    inFlight.current = true;
+    try {
+      setState({ kind: "submitting" });
+      const serviceBase = new URL(window.location.origin);
+      setState(await runRiskScanQuickFlow(serviceBase, readQuickInput(new FormData(event.currentTarget))));
+    } finally {
+      inFlight.current = false;
+    }
   }
 
   return (

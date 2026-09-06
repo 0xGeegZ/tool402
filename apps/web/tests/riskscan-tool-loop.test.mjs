@@ -140,6 +140,10 @@ test("locks the static ToolLoop page, bounded client form, and non-payment prese
   }
   assert.match(flow, /new URL\(window\.location\.origin\)/);
   assert.match(flow, /disabled=\{state\.kind === ["']submitting["']\}/);
+  assert.match(flow, /const inFlight = useRef\(false\);/);
+  assert.match(flow, /if \(inFlight\.current\) return;/);
+  assert.match(flow, /inFlight\.current = true;/);
+  assert.match(flow, /finally\s*\{\s*inFlight\.current = false;\s*\}/);
   assert.equal((flow.match(/\brunRiskScanQuickFlow\b/g) ?? []).length, 2);
 
   for (const [kind, copy] of [
