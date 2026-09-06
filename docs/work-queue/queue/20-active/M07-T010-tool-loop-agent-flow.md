@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M05-T010 accepted; M05-T020 accepted; M05-T030 accepted;
   M06-T010 accepted
 - Integration evidence: D-M05-010-002, D-M05-020-002, D-M05-030-002, and
@@ -103,3 +103,14 @@ block this local unsigned composition. The card is ready only for its Agent
 RED contract; it does not authorize a configured live route, payment, signing,
 wallet/account action, transaction, deployment, evidence, result, or live
 claim.
+
+## Activation
+
+Activated at 2026-09-06T07:04:52Z after a fresh rescan confirmed the pushed
+`1681ebef0c35dcad977bf045bf87db29e7dda6fa` ready state, all accepted
+dependencies/evidence, the same disjoint Agent ownership, no active lane, and
+no human blocker for local unsigned code. The task starts with its controlled
+flow RED contract in the current repository workspace under the project
+worktree policy. HA-X402-HEDERA-001 remains PENDING and grants no external
+authority. No configured live route, payment, signing, wallet/account action,
+transaction, deployment, evidence, result, or live claim is authorized.
