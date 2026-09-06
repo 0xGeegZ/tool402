@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M10-T010 accepted
 - Owner: `packages/core/src/offering-economics.ts`,
   `packages/core/src/index.ts`,
@@ -96,3 +96,13 @@ contract has concrete direct RED/GREEN validation. This ready state authorizes
 only the bounded local RED/GREEN economics contract after root activation; it
 does not authorize ATS, payment, funding, allocation, clearing, HCS, account,
 wallet, signer, transaction, deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-06T17:12:56Z after a post-ready rescan confirmed that
+M16-T010 is the sole ready card, no active card owns its bounded Core paths,
+and the pending human action grants no external authority but does not block
+this pure local work. This activation authorizes the specified Core RED/GREEN
+implementation and verification only; it does not expand authority to ATS,
+payment, funding, allocation, clearing, HCS, account, wallet, signer,
+transaction, deployment, or live behavior.
