@@ -3,12 +3,12 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T040 accepted; M01-T090 accepted; M02-T070 accepted;
   M02-T080 accepted; M07-T010 accepted
 - Integration evidence: D-M01-FOUND-001, D-M02-070-002, D-M02-080-002, and
   D-M07-010-002 accepted
-- Owner: the proposed implementation scope is the root-owned Agent package
+- Owner: the accepted implementation scope is the root-owned Agent package
   exposure, Web package/configuration/lockfile integration, and
   `apps/web/src/app/explore/riskscan/tool-loop/page.tsx`,
   `apps/web/src/components/riskscan/tool-loop/**`,
@@ -105,3 +105,28 @@ the local worktree policy. HA-X402-HEDERA-001 remains PENDING and grants no
 external authority. No configured recipient/facilitator, wallet/account action,
 payment, transaction, deployment, evidence, result, or live claim is
 authorized.
+
+## Acceptance
+
+Accepted at 2026-09-06T08:46:58Z after a fresh queue rescan confirmed the
+dependency/evidence records remained accepted and no conflicting active path
+existed.
+
+- `MODULE_BASE` is `3f71c5a3a44f7a3fa01c91777be7e07c1faa8658`; `MODULE_HEAD`
+  is `6aa58c8c28ef9cf87c12a71a1080d2ab018417ad`.
+- The RED-to-GREEN contract, focused browser journey tests, root Node 22.21.1
+  clean-install dry run, typecheck, full test suite, lint, queue validation,
+  whitespace/reference checks, and enabled local-reference guard passed.
+- The Webpack production build passed with Cache Components enabled and the
+  route present. Its only warning is the already-observed optional upstream
+  module-resolution warning; compilation and static generation completed.
+- In the isolated local browser, a double-click made exactly one local
+  `GET /api/tools` returning `200` and one local `POST /api/riskscan` returning
+  `503`, then rendered the explicit unavailable state. No payment, external
+  request, result, or live assertion was made.
+- Independent task review, scoped correction re-reviews, and two fresh clean
+  Standards/Specification module-review generations found no outstanding
+  Critical, Important, or Minor finding.
+
+HA-X402-HEDERA-001 remains PENDING and grants no authority for a payment
+client, account action, signing, transaction, deployment, or live proof.

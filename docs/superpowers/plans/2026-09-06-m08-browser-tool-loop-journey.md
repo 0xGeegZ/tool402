@@ -61,7 +61,7 @@ Components enabled, React 19.2.8, and the built-in Node test runner.
   component, and a truthful `idle | submitting | RiskScanToolFlowOutcome`
   presentation state.
 
-- [ ] **Step 1: Write failing package, route, and boundary contracts**
+- [x] **Step 1: Write failing package, route, and boundary contracts**
 
   Create `apps/web/tests/riskscan-tool-loop.test.mjs` first. It must dynamically
   import `@tool402/agent/riskscan-tool-flow` and use its real
@@ -80,7 +80,7 @@ Components enabled, React 19.2.8, and the built-in Node test runner.
   price/network/recipient/facilitator, result/receipt/evidence, storage,
   retry/timer, external URL, and paid/settled/completed claims.
 
-- [ ] **Step 2: Observe RED**
+- [x] **Step 2: Observe RED**
 
   Run:
 
@@ -92,7 +92,7 @@ Components enabled, React 19.2.8, and the built-in Node test runner.
   exist. Record the exact missing export/module or file failure before writing
   production code.
 
-- [ ] **Step 3: Implement the minimal package and browser composition**
+- [x] **Step 3: Implement the minimal package and browser composition**
 
   Add the Agent export map exactly as:
 
@@ -113,7 +113,7 @@ Components enabled, React 19.2.8, and the built-in Node test runner.
   returned outcome. Use fixed local text for the seven outcomes and add one
   local detail link; do not alter the accepted Try route or Agent source.
 
-- [ ] **Step 4: Turn contracts GREEN and verify the Next route**
+- [x] **Step 4: Turn contracts GREEN and verify the Next route**
 
   Run:
 
