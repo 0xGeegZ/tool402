@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T040 accepted; M02-T020 accepted
 - Owner: `apps/web/src/app/dashboard/page.tsx`,
   `apps/web/src/components/workspace/**`,
@@ -87,3 +87,32 @@ navigation paths including the constrained legacy navigation-test amendment.
 The lane starts with its focused workspace RED contract in the current
 repository workspace under the local worktree policy. No Sign session, account,
 wallet, payment, transaction, deployment, or live behavior is authorized.
+
+## Acceptance
+
+Accepted at 2026-09-06T11:48:07Z after a fresh queue rescan confirmed the
+accepted Web/UI dependencies and no conflicting active owner of dashboard,
+workspace, or local-navigation paths.
+
+- `MODULE_BASE` is `05f821252556c90ccd264b0bab9cff93c4d8f4bc`; `MODULE_HEAD`
+  is `c3ea8a4d5d81a0de442450ecb6070de1029bba88`. M11-T020-scoped commits are
+  `7830503`, `3aba05f`, and `c3ea8a4`; concurrent M10 and M11 landing paths
+  remain disjoint.
+- The focused guest-shell contract, root clean-install dry run, root
+  typecheck/test/lint, production Webpack build with Cache Components,
+  queue/reference/whitespace checks, and enabled local-reference guard passed
+  under Node 22.21.1. The build retains only the pre-existing optional x402
+  package-resolution warning outside this card's paths.
+- Desktop and narrow browser checks verified the static route, the three
+  local route-map links, visible keyboard focus, no horizontal overflow, and
+  no framework or browser errors. The test-only correction did not alter
+  runtime behavior.
+- Independent task review found missing fabricated signer and affirmative
+  session coverage; the root added that focused test coverage, pushed it, and
+  the scoped re-review was clean. Two fresh clean Standards/Specification
+  module-review generations at `c3ea8a4` found no Critical, Important, or
+  Minor finding.
+
+This acceptance covers only a static local guest workspace shell. It grants no
+authority for Sign/session behavior, identity, account, signer, wallet,
+payment, transaction, settlement, deployment, or live behavior.
