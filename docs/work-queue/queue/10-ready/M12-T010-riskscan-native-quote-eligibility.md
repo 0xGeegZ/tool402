@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M06-T010 accepted; M10-T010 accepted
 - Owner: `packages/core/src/riskscan-native-quote-eligibility.ts`,
   `packages/core/src/index.ts`,
@@ -90,3 +90,14 @@ from a recipient account identifier. The contract now uses the accepted
 identifier parser only for syntax, then returns a task-local
 `RiskScanNativeAssetId` brand distinct from `HederaAccountId`. This card
 remains inbox-only pending the fresh review of that amendment.
+
+## Ready transition
+
+Ready at 2026-09-06T12:33:25Z after an independent fresh review of pushed
+`2430acf822ca1cfb4819b0a067a9a3af3be86831` found the generic asset-atomic
+brands, strict ordinary-record/proxy contract, explicit hostile-input RED
+cases, accepted M06/M10 dependencies, disjoint core ownership, resolvable
+local references, and no human blocker coherent. This ready state authorizes
+only the local pure-core RED/GREEN contract. It does not authorize a
+recipient/facilitator configuration, account, wallet, signer, payment client,
+header, transaction, settlement, deployment, or live behavior.
