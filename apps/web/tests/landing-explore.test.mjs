@@ -17,7 +17,7 @@ test("renders labeled navigation between the committed local routes", async () =
   assert.match(navigation, /\{ href: "\/", label: "Home" \}/);
   assert.match(navigation, /\{ href: "\/explore", label: "Explore" \}/);
   assert.match(navigation, /<Link href=\{link\.href\}/);
-  assert.doesNotMatch(navigation, /\{ href: "(?!\/"|\/explore")[^"]+/);
+  assert.doesNotMatch(navigation, /\{ href: "(?!\/"|\/explore"|\/dashboard")[^"]+/);
 });
 
 test("renders a single landing main landmark and page heading", async () => {

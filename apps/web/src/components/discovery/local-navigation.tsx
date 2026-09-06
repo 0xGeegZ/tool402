@@ -3,6 +3,7 @@ import Link from "next/link";
 const links = [
   { href: "/", label: "Home" },
   { href: "/explore", label: "Explore" },
+  { href: "/dashboard", label: "Workspace" },
 ] as const;
 
 export function LocalNavigation() {
