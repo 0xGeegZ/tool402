@@ -22,9 +22,11 @@ the existing landing/Explore test only to preserve the static UI-S01 card
 alongside the new island. The root may expose the one already-accepted Agent
 directory module through its package map.
 
-This manifest narrowly supersedes UI-S01's original no-client-request
-constraint only for this new isolated directory-inspection subtree. UI-S01's
-static route/card and every other original boundary remain unchanged.
+This manifest narrowly supersedes UI-S01's original no-client-request, price,
+and payment-state prohibitions only for this new isolated directory-inspection
+subtree: one public Agent directory `GET` and the strictly parser-derived
+configuration-summary fields named above. UI-S01's static route/card and every
+other original boundary remain unchanged.
 
 ## Truthfulness and authority boundary
 

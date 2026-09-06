@@ -50,6 +50,12 @@ and the exact atomic amount—without conversion, recipient, facilitator, or
 payment control. Every configuration display is parser-derived local metadata,
 not a live network or facilitator assurance.
 
+UI-S05 is the local intended-behavior amendment for this new island. It
+supersedes UI-S01's original no-client-request, price, and payment-state
+prohibitions only for the island's one public Agent directory `GET` and the
+strictly parser-derived configuration-summary fields above. UI-S01's static
+Explore card and every other original prohibition remain unchanged.
+
 All loading and terminal feedback uses a polite live region. The component
 performs no automatic fetch, retry, timer, polling, storage, analytics,
 environment/configuration read, external navigation, or navigation to an

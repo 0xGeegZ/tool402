@@ -38,6 +38,10 @@ Components enabled, React 19.2.8, and the built-in Node test runner.
   live behavior.
 - Native metadata is display-only: canonical network, asset, and atomic amount
   exactly as the Agent returned them. Do not convert, total, or infer value.
+- UI-S01 remains the authority for its static card. UI-S05 narrowly amends only
+  the new island's one public directory `GET` and parser-derived configuration
+  summary; focused tests must keep UI-S01's truthfulness assertions scoped to
+  the unchanged static sources and test the island independently.
 
 ---
 
@@ -69,7 +73,8 @@ Components enabled, React 19.2.8, and the built-in Node test runner.
   selected descriptor.
 
   Read the static Explore page, new island/state source, and existing static
-  UI-S01 card. Assert server/client separation, preserved static card,
+  UI-S01 card. Assert server/client separation, preserved static card and its
+  original truthfulness boundary,
   current-origin construction, one public Agent call, synchronous lock and
   disabled control, exact truthful messages, selected projection, polite live
   feedback, and no direct fetch/endpoint/header/body/configuration/payment

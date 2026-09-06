@@ -46,7 +46,8 @@ The local contract is [M09 Browser RiskScan Directory inspection](../../../specs
   lane owns the proposed package or Explore paths.
 - The card records one public Agent subpath, static/client separation,
   current-origin single-GET behavior, bounded projection, native atomic
-  metadata, human boundary, tier, and concrete validation commands.
+  metadata, the narrow UI-S05 authority amendment, human boundary, tier, and
+  concrete validation commands.
 - The delivery preserves Cache Components and excludes every request,
   payment/action, persistence, result, external, and live capability.
 
@@ -74,3 +75,14 @@ Directory inspection rather than another persistence/reconciliation slice.
 This inbox card authorizes neither RED/code nor a configured recipient or
 facilitator, wallet/account action, signing, payment, transaction, deployment,
 evidence, result, or live claim.
+
+## Design review
+
+The independent design review found one Important UI-authority contradiction:
+UI-S05 permitted parser-derived configuration metadata while leaving UI-S01's
+price/payment-state prohibition apparently intact. The local M09 contract,
+UI-S05 manifest, and plan now narrowly amend only the new island's one public
+directory `GET` and strictly parser-derived configuration-summary fields;
+UI-S01's static card and every other boundary remain unchanged. A scoped
+independent re-review is required before the normal ready transition. No code,
+payment, configuration, or external action was created during review.
