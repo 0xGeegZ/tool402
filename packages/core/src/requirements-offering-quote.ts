@@ -130,6 +130,20 @@ function compareKeys(left: string, right: string): number {
   return left > right ? 1 : 0;
 }
 
+function arrayIndexForKey(key: string): number | undefined {
+  const index = Number(key);
+
+  if (
+    !Number.isSafeInteger(index) ||
+    index < 0 ||
+    String(index) !== key
+  ) {
+    return undefined;
+  }
+
+  return index;
+}
+
 function snapshotObjectProperties(
   value: object,
   depth: number,
@@ -141,7 +155,7 @@ function snapshotObjectProperties(
   }
 
   const seenKeys = new Set<string>();
-  const capturedInputs: Array<{ key: string; value: unknown }> = [];
+  const properties: CapturedProperty[] = [];
 
   for (const key of keys) {
     if (typeof key !== "string" || seenKeys.has(key)) {
@@ -154,14 +168,9 @@ function snapshotObjectProperties(
     }
 
     seenKeys.add(key);
-    capturedInputs.push({ key, value: descriptor.value });
-  }
-
-  const properties: CapturedProperty[] = [];
-  for (const { key, value: propertyValue } of capturedInputs) {
     properties.push({
       key,
-      value: snapshotValue(propertyValue, depth + 1, state, false),
+      value: snapshotValue(descriptor.value, depth + 1, state, false),
     });
   }
 
@@ -322,26 +331,40 @@ function snapshotArray(
 
   return snapshotContainer(value, depth, state, () => {
     const keys = safeOwnKeys(value);
+    if (keys.length > MAX_ARRAY_ITEMS + 1) {
+      rejectRequirementsLimit();
+    }
+
     const seenKeys = new Set<string>();
-    const descriptors = new Map<string, DataPropertyDescriptor>();
+    const items: Array<{ key: string; index: number }> = [];
+    let hasLength = false;
 
     for (const key of keys) {
       if (typeof key !== "string" || seenKeys.has(key)) {
         rejectMalformedRequirements();
       }
 
-      const descriptor = safeOwnPropertyDescriptor(value, key);
-      if (!isDataPropertyDescriptor(descriptor)) {
+      seenKeys.add(key);
+      if (key === "length") {
+        hasLength = true;
+        continue;
+      }
+
+      const index = arrayIndexForKey(key);
+      if (index === undefined) {
         rejectMalformedRequirements();
       }
 
-      seenKeys.add(key);
-      descriptors.set(key, descriptor);
+      items.push({ key, index });
     }
 
-    const lengthDescriptor = descriptors.get("length");
+    if (!hasLength) {
+      rejectMalformedRequirements();
+    }
+
+    const lengthDescriptor = safeOwnPropertyDescriptor(value, "length");
     if (
-      lengthDescriptor === undefined ||
+      !isDataPropertyDescriptor(lengthDescriptor) ||
       lengthDescriptor.enumerable ||
       typeof lengthDescriptor.value !== "number" ||
       !Number.isSafeInteger(lengthDescriptor.value) ||
@@ -354,23 +377,37 @@ function snapshotArray(
     if (length > MAX_ARRAY_ITEMS) {
       rejectRequirementsLimit();
     }
-    if (descriptors.size !== length + 1) {
+    if (items.length !== length) {
       rejectMalformedRequirements();
     }
 
-    const values: unknown[] = [];
     for (let index = 0; index < length; index += 1) {
-      const descriptor = descriptors.get(String(index));
-      if (descriptor === undefined || !descriptor.enumerable) {
+      if (!seenKeys.has(String(index))) {
+        rejectMalformedRequirements();
+      }
+    }
+
+    const capturedByIndex = new Map<number, CapturedValue>();
+    for (const item of items) {
+      const descriptor = safeOwnPropertyDescriptor(value, item.key);
+      if (!descriptor.enumerable || !isDataPropertyDescriptor(descriptor)) {
         rejectMalformedRequirements();
       }
 
-      values.push(descriptor.value);
+      capturedByIndex.set(
+        item.index,
+        snapshotValue(descriptor.value, depth + 1, state, false),
+      );
     }
 
     const capturedValues: CapturedValue[] = [];
-    for (const item of values) {
-      capturedValues.push(snapshotValue(item, depth + 1, state, false));
+    for (let index = 0; index < length; index += 1) {
+      const capturedValue = capturedByIndex.get(index);
+      if (capturedValue === undefined) {
+        rejectMalformedRequirements();
+      }
+
+      capturedValues.push(capturedValue);
     }
 
     return { kind: "array", values: capturedValues };
