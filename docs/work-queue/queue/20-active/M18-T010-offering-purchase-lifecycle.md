@@ -54,7 +54,9 @@ payout, deployment, or live claim.
   skipped/duplicate edges, explicit expiry behavior, terminal unknown behavior,
   structural-copy rejection, and frozen outputs. The focused command is
   `node --test packages/core/test/offering-purchase-lifecycle.test.mjs` from
-  the repository root.
+  the repository root. The transparent [M18 TDD execution trace](../../evidence/M18-T010-tdd.md)
+  preserves observed RED/GREEN outcomes but does not claim earlier commit
+  chronology that was not durably recorded.
 - A public compile-time fixture proves the state surface preserves the accepted
   Core brands.
 - Core/root typecheck, test, lint, clean-install dry run, queue/reference/
@@ -115,3 +117,13 @@ every non-issued quote before fields are read; it adds no barrel API, external
 integration, persistence, or live behavior. The regression suite must prove
 that forged, copied, proxied, and mutable lookalikes reject, then a fresh task
 review and two fresh clean module-review generations remain required.
+
+## TDD evidence preservation
+
+The root observed the initial missing-export RED, the reentrant-source RED,
+and the quote-issuance RED during active execution, but no durable run record
+was committed before the first implementation commit. The local
+[TDD execution trace](../../evidence/M18-T010-tdd.md) preserves those actual
+outcomes after the fact and explicitly does not claim independent proof of
+earlier commit chronology. Fresh task and module review must assess the final
+code and this limitation directly.
