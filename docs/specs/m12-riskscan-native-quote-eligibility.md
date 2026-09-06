@@ -24,12 +24,16 @@ export type RiskScanNativeQuoteDeclineReason =
   | "asset_mismatch"
   | "amount_exceeds_maximum";
 
+export type RiskScanNativeAtomicAmount = bigint & {
+  readonly __brand: "RiskScanNativeAtomicAmount";
+};
+
 export type RiskScanNativeQuoteEligibility =
   | {
       readonly kind: "eligible";
       readonly network: "hedera:testnet";
       readonly asset: HederaAccountId;
-      readonly amount: Tinybar;
+      readonly amount: RiskScanNativeAtomicAmount;
     }
   | {
       readonly kind: "declined";
@@ -60,10 +64,13 @@ three fields and no others:
 ```
 
 `asset` must parse as a canonical `HederaAccountId`. `maximumAmount` must
-parse as canonical `Tinybar`; zero is allowed as an explicit no-spend policy.
-There is no default network, asset, or maximum amount. An invalid policy
-returns `{ kind: "declined", reason: "invalid_policy" }` before quote values
-are read.
+parse through the accepted generic canonical-integer boundary, then become a
+local `RiskScanNativeAtomicAmount`; zero is allowed as an explicit no-spend
+policy. This is deliberately not `Tinybar`: `0.0.0` represents HBAR in
+tinybars, while another canonical asset has its own atomic unit. There is no
+default network, asset, or maximum amount. An invalid policy returns
+`{ kind: "declined", reason: "invalid_policy" }` before quote values are
+read.
 
 The quote must be an exact own-enumerable data record with these three fields
 and no others:
@@ -76,24 +83,29 @@ and no others:
 }
 ```
 
-`asset` must parse as canonical `HederaAccountId`; `amount` must parse as
-canonical `Tinybar` and be greater than zero. A malformed record, non-string
-field, noncanonical value, zero amount, inherited value, accessor, symbol key,
-or extra field returns `{ kind: "declined", reason: "invalid_quote" }`.
+`asset` must parse as canonical `HederaAccountId`; `amount` must parse
+through the accepted generic canonical-integer boundary, become a local
+`RiskScanNativeAtomicAmount`, and be greater than zero. A malformed record,
+non-string field, noncanonical value, zero amount, inherited value, accessor,
+symbol key, non-enumerable key, or extra field returns
+`{ kind: "declined", reason: "invalid_quote" }`.
 
 If a structurally valid quote's `network` differs from the policy network, the
 result is `network_mismatch`. If its canonical asset differs, the result is
 `asset_mismatch`. If its exact amount is greater than the policy maximum, the
 result is `amount_exceeds_maximum`. Exact equality is eligible. An eligible
-result preserves the parsed `Tinybar` exactly, including amounts larger than
-`Number.MAX_SAFE_INTEGER`.
+result preserves the parsed `RiskScanNativeAtomicAmount` exactly, including
+amounts larger than `Number.MAX_SAFE_INTEGER`.
 
 ## Safety and authority boundary
 
 Both records are untrusted. The evaluator must inspect only own enumerable
-data descriptors and must not invoke a getter. It must fail closed if record
-inspection itself throws. It returns a fresh bounded result and does not retain
-references to either input.
+data descriptors and must not invoke a getter or directly read a property
+after snapshotting. It must use the captured descriptor values exclusively,
+reject any own key outside the exact enumerable field set, and fail closed if
+record inspection itself throws. It returns a fresh bounded result and does
+not retain references to either input. Invalid policy must return before any
+quote reflection or descriptor inspection.
 
 An `eligible` result is only local quote compatibility. It must not be treated
 as user consent, a payment authorization, a quote guarantee, a balance check,
@@ -120,10 +132,12 @@ are excluded.
 
 - RED/GREEN public-core tests cover valid exact selection, zero-cap decline,
   equality, excess, network/asset mismatch, and canonical/noncanonical input.
-- Adversarial tests prove strict record shape, no accessor invocation, and
-  fail-closed inspection of hostile records.
+- Adversarial tests prove strict record shape including non-enumerable extras,
+  no accessor invocation, descriptor-only evaluation without direct proxy
+  reads, invalid-policy precedence over a hostile quote, and fail-closed
+  inspection of hostile records.
 - A public TypeScript fixture proves the exported union narrows its eligible
-  result to public `Tinybar` and `HederaAccountId` values.
+  result to public `RiskScanNativeAtomicAmount` and `HederaAccountId` values.
 - Core/root typecheck, test, lint, queue/reference/whitespace checks, enabled
   local guard, independent task review, and two fresh clean module-review
   generations pass before acceptance.

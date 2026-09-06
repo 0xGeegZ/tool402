@@ -40,16 +40,19 @@ and execution is in the [M12 native quote eligibility plan](../../../superpowers
   committed before a RED test or code change.
 - M06-T010 and M10-T010 remain accepted locally, and no active card owns the
   listed core paths.
-- The card records the exact unknown-input, canonical-amount, no-default-cap,
-  bounded-output, tier, human boundary, and concrete validation rules.
+- The card records the exact unknown-input, generic asset-atomic canonical
+  amount, no-default-cap, bounded-output, tier, human boundary, and concrete
+  validation rules.
 
 ## Validation
 
 - RED/GREEN tests prove canonical quote selection, exact amounts above
   JavaScript's safe integer range, and decline behavior for invalid policy,
   invalid quote, network mismatch, asset mismatch, and cap excess.
-- Tests prove that malformed, inherited, accessor-backed, symbol-keyed, or
-  extra-field policy/quote records fail closed without invoking accessors.
+- Tests prove that malformed, inherited, accessor-backed, symbol-keyed,
+  non-enumerable-extra, or extra-field policy/quote records fail closed without
+  invoking accessors or direct proxy reads; invalid policy must not inspect a
+  hostile quote.
 - Core/root quality, queue/reference/whitespace checks, enabled local guard,
   independent task review, and two fresh clean module-review generations pass
   before acceptance.
@@ -62,3 +65,13 @@ and a remaining pure local consumer-decision prerequisite before any later
 human-authorized payment client. This inbox card authorizes only its local
 contract, record, and plan; it authorizes neither RED/code nor a payment,
 signing, account, wallet, transaction, deployment, or live claim.
+
+## Readiness amendment
+
+At 2026-09-06T12:18:25Z, independent readiness review found that the original
+`Tinybar` output would mislabel non-HBAR assets accepted by the local native
+summary. The contract now uses the accepted generic exact-integer parser and a
+local `RiskScanNativeAtomicAmount` output brand, retaining `Tinybar` only for
+an explicitly HBAR-only path. It also makes hostile-proxy precedence,
+descriptor-only reads, and non-enumerable-extra rejection executable. A fresh
+independent readiness review is required before this card may leave inbox.

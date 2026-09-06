@@ -21,8 +21,10 @@ runner.
 
 - Work in the current repository workspace; the local policy prohibits a
   worktree without explicit human direction.
-- Reuse the accepted public `Tinybar` and `HederaAccountId` parsers; never
-  convert a monetary amount through JavaScript `number`.
+- Reuse the accepted generic `parseNoteUnits` and `HederaAccountId` parsers;
+  rebrand a successful generic integer parse only inside this module as a
+  `RiskScanNativeAtomicAmount`. Never convert an amount through JavaScript
+  `number`. `Tinybar` remains reserved for an explicitly HBAR-only path.
 - Add no dependency, configuration read, I/O, payment protocol, client,
   signer, wallet/account action, transaction, settlement, or live behavior.
 - Do not choose an economic cap or retain untrusted input references.
@@ -40,9 +42,10 @@ runner.
 
 **Interfaces:**
 
-- Consumes: accepted `parseTinybar` and `parseHederaAccountId` public values.
+- Consumes: accepted `parseNoteUnits` and `parseHederaAccountId` public
+  values.
 - Produces: `evaluateRiskScanNativeQuote`, bounded decline reasons, and a
-  narrowed eligible result with exact public branded values.
+  narrowed eligible result with exact public asset-atomic branded values.
 
 - [ ] **Step 1: Write the failing public-contract tests**
 
@@ -52,7 +55,12 @@ runner.
   `Number.MAX_SAFE_INTEGER`. Assert that invalid policy, invalid quote,
   network mismatch, asset mismatch, and cap excess each return their exact
   decline reason. Add malformed/hostile record cases, including accessors
-  whose getters must not run.
+  whose getters must not run, non-enumerable extra own keys, and a
+  descriptor-valid Proxy whose `get` trap must never run. Add precedence
+  cases: invalid policy paired with a quote Proxy whose reflection traps throw
+  returns `invalid_policy` without inspecting the quote; a throwing policy
+  reflection returns `invalid_policy`; and a valid policy paired with a
+  throwing quote reflection returns `invalid_quote`.
 
 - [ ] **Step 2: Observe RED**
 
@@ -66,10 +74,12 @@ runner.
 
 - [ ] **Step 3: Implement the smallest pure evaluator**
 
-  Add strict safe-record snapshotting, exact parser reuse, and only the five
-  declared decline reasons. Validate policy before inspecting the quote. Return
-  a fresh union with canonical exact branded values only for `eligible`; never
-  default a cap or construct a payment-shaped object.
+  Add strict safe-record snapshotting through `Reflect.ownKeys` and own data
+  descriptors, exact parser reuse, and only the five declared decline reasons.
+  Validate policy before inspecting the quote. Use only captured descriptor
+  values after snapshotting. Return a fresh union with canonical exact
+  asset-atomic branded values only for `eligible`; never default a cap or
+  construct a payment-shaped object.
 
 - [ ] **Step 4: Turn the contract GREEN**
 
