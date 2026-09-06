@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M06-T010 accepted; M10-T010 accepted
 - Owner: `packages/core/src/riskscan-native-quote-eligibility.ts`,
   `packages/core/src/index.ts`,
@@ -101,3 +101,14 @@ local references, and no human blocker coherent. This ready state authorizes
 only the local pure-core RED/GREEN contract. It does not authorize a
 recipient/facilitator configuration, account, wallet, signer, payment client,
 header, transaction, settlement, deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-06T12:34:43Z after a fresh rescan confirmed pushed
+`d527519b3018d74973af07b9ee270e44d0977438` ready state, accepted M06/M10
+dependencies, no other active implementation owner, disjoint core paths, and
+no human blocker for pure local code. The lane starts with its public
+eligibility RED contract in the current repository workspace under the local
+worktree policy. No recipient/facilitator configuration, account, wallet,
+signer, payment client, header, transaction, settlement, deployment, or live
+behavior is authorized.
