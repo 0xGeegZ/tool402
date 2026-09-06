@@ -53,9 +53,9 @@ The local contract is [M08 Browser ToolLoop RiskScan journey](../../../specs/m08
 - RED/GREEN tests prove public Agent access, controlled GET-then-POST
   composition, zero POST after directory failure, outcome mapping, route/form
   shape, duplicate-submit locking, local link, and source exclusion boundary.
-- Web/Agent typecheck/test/lint, root clean-install/typecheck/test/lint,
-  production Webpack build, queue/reference/whitespace checks, and enabled
-  local-reference guard pass.
+- Web/Agent typecheck/test, focused Web boundary tests, root lint, and root
+  clean-install/typecheck/test pass alongside the production Webpack build,
+  queue/reference/whitespace checks, and enabled local-reference guard.
 - The Next development loop verifies desktop and narrow browser behavior:
   actual local directory discovery followed by the configuration-absent
   unavailable state, with clear framework/browser errors.
