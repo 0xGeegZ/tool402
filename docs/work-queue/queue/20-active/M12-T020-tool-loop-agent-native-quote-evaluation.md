@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M05-T020 accepted; M06-T010 accepted; M12-T010 accepted
 - Owner: the proposed implementation scope is
   `apps/agent/src/riskscan-tool-native-quote-evaluation.ts`,
@@ -105,3 +105,13 @@ noninspection coverage; and no local human blocker coherent. This ready state
 authorizes only the bounded local RED package boundary and later Agent source
 contract. It does not authorize a payment, signing, account, wallet,
 transaction, deployment, or live claim.
+
+## Activation
+
+Activated at 2026-09-06T13:40:14Z after a fresh local rescan confirmed pushed
+ready state, accepted M05-T020, M06-T010, and M12-T010 dependencies, no active
+owner of the reserved Agent or root package/lockfile paths, resolvable local
+records, and no human blocker for controlled local work. This active state
+authorizes the root-owned RED public-package boundary followed by the bounded
+Agent source contract. It does not authorize a payment, signing, account,
+wallet, transaction, deployment, or live claim.
