@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T040 accepted; M11-T020 accepted; M12-T020 accepted
 - Owner: `apps/web/src/app/dashboard/riskscan/compatibility/page.tsx`,
   `apps/web/src/components/riskscan/native-quote/**`, and
@@ -82,3 +82,14 @@ card intentionally does not invent its unresolved session/provider contract.
 This inbox card authorizes only its local contract, UI manifest/ledger row,
 and plan. It authorizes neither RED/code nor Sign/session, payment, signing,
 account, wallet, transaction, deployment, or live behavior.
+
+## Ready transition
+
+Ready at 2026-09-06T14:46:45Z after two fresh independent readiness reviews
+found accepted M01-T040, M11-T020, and M12-T020 dependencies; resolvable local
+records; a disjoint new Dashboard route/island/test boundary; the explicitly
+constrained Workspace navigation/test amendment; public-Agent browser
+feasibility; no-default policy semantics; and no human blocker for controlled
+local compatibility evaluation. This ready state authorizes only the local
+RED/GREEN compatibility contract. It does not authorize Sign/session, payment,
+signing, account, wallet, transaction, deployment, or live behavior.
