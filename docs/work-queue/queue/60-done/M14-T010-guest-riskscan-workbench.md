@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T040 accepted; M08-T010 accepted; M09-T010 accepted;
   M11-T020 accepted; M13-T010 accepted
 - Owner: `apps/web/src/app/dashboard/riskscan/page.tsx`,
@@ -105,3 +105,36 @@ and no human blocker for the controlled guest composition. The lane starts
 with its focused local RED route/workbench contract in the current repository
 workspace under the local worktree policy. No Sign session, account, wallet,
 payment, transaction, deployment, or live behavior is authorized.
+
+## Acceptance
+
+Accepted at 2026-09-06T15:55:16Z after a fresh queue rescan confirmed the
+accepted M01-T040, M08-T010, M09-T010, M11-T020, and M13-T010 dependencies
+and no conflicting active owner of the new route/workbench/test paths or its
+constrained Workspace navigation amendment.
+
+- `MODULE_BASE` is `c5f65b73145f482619231d7262462c39287cc6dc`; `MODULE_HEAD`
+  is `2231baa402b16a2f279088a29ec5f6eb2af63dc6`. The focused RED contract
+  first observed the missing planned route/workbench sources. A review-driven
+  contract amendment then observed the absence of explicit section-to-island
+  ownership before GREEN added labelled section relationships and truthful
+  non-gating copy.
+- Focused workbench/navigation contracts, root typecheck/test/lint, root queue
+  validation, whitespace/reference checks, enabled local guard, and
+  clean-install dry run passed under Node 22.21.1. The production Webpack build
+  passed with Cache Components and the new static Dashboard route; it retains
+  only the pre-existing optional upstream `@x402/paywall` resolution warning.
+- Browser checks verified the static guest route, all three labelled sections,
+  local Workspace navigation, Directory inspection, an honest unavailable
+  native-summary outcome for the current local configuration, and reachability
+  of the existing unsigned ToolLoop controls. Desktop visual inspection passed.
+  At a narrow rendered width of 325 px, the route had no horizontal overflow;
+  its sections and controls remained accessible, and browser diagnostics had
+  no error entries.
+- Independent task review and two fresh clean module-review generations found
+  no Critical, Important, or Minor finding.
+
+Acceptance covers only the guest local workbench composition. It does not
+provide or authorize Sign/session, identity, account, wallet, payment, signing,
+transaction, settlement, result, receipt, evidence, deployment, or live
+behavior.
