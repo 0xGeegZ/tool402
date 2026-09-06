@@ -53,6 +53,9 @@ and execution is in the [M12 native quote eligibility plan](../../../superpowers
   accessor-backed, symbol-keyed, non-enumerable-extra, or extra-field
   policy/quote records fail closed without invoking accessors or direct proxy
   reads; invalid policy must not inspect a hostile quote.
+- A public compile-time fixture proves that eligible asset and amount values
+  have the local native-asset and asset-atomic brands, not recipient-account
+  or HBAR-specific brands.
 - Core/root quality, queue/reference/whitespace checks, enabled local guard,
   independent task review, and two fresh clean module-review generations pass
   before acceptance.
@@ -81,3 +84,9 @@ explicit: only ordinary `Object.prototype` records qualify. The RED contract
 now covers null/custom prototypes, inherited required fields, symbol extras,
 and throwing prototype reflection. This card remains inbox-only pending the
 fresh review of that amendment.
+
+At 2026-09-06T12:27:32Z, the fresh review also separated an asset identifier
+from a recipient account identifier. The contract now uses the accepted
+identifier parser only for syntax, then returns a task-local
+`RiskScanNativeAssetId` brand distinct from `HederaAccountId`. This card
+remains inbox-only pending the fresh review of that amendment.

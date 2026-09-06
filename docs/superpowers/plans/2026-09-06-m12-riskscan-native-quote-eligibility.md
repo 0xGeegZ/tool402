@@ -21,10 +21,12 @@ runner.
 
 - Work in the current repository workspace; the local policy prohibits a
   worktree without explicit human direction.
-- Reuse the accepted generic `parseNoteUnits` and `HederaAccountId` parsers;
-  rebrand a successful generic integer parse only inside this module as a
-  `RiskScanNativeAtomicAmount`. Never convert an amount through JavaScript
-  `number`. `Tinybar` remains reserved for an explicitly HBAR-only path.
+- Reuse the accepted generic `parseNoteUnits` and Hedera-identifier syntax
+  parsers; rebrand successful parses only inside this module as a
+  `RiskScanNativeAtomicAmount` and `RiskScanNativeAssetId`. Never convert an
+  amount through JavaScript `number`. `Tinybar` remains reserved for an
+  explicitly HBAR-only path, and `HederaAccountId` remains a recipient-account
+  brand rather than an asset brand.
 - Add no dependency, configuration read, I/O, payment protocol, client,
   signer, wallet/account action, transaction, settlement, or live behavior.
 - Do not choose an economic cap or retain untrusted input references.
@@ -45,7 +47,7 @@ runner.
 - Consumes: accepted `parseNoteUnits` and `parseHederaAccountId` public
   values.
 - Produces: `evaluateRiskScanNativeQuote`, bounded decline reasons, and a
-  narrowed eligible result with exact public asset-atomic branded values.
+  narrowed eligible result with exact public asset and atomic-amount brands.
 
 - [ ] **Step 1: Write the failing public-contract tests**
 
@@ -62,7 +64,9 @@ runner.
   reflection traps throw returns `invalid_policy` without inspecting the
   quote; a throwing policy prototype/reflection returns `invalid_policy`; and
   a valid policy paired with a throwing quote prototype/reflection returns
-  `invalid_quote`.
+  `invalid_quote`. In the public TypeScript fixture, assert that an eligible
+  result exposes the local asset and atomic-amount brands and that each is
+  distinct from the accepted identifier and generic-integer parser brands.
 
 - [ ] **Step 2: Observe RED**
 
@@ -80,8 +84,8 @@ runner.
   `Reflect.ownKeys`, and own data descriptors, exact parser reuse, and only
   the five declared decline reasons. Validate policy before inspecting the
   quote. Use only captured descriptor values after snapshotting. Return a
-  fresh union with canonical exact asset-atomic branded values only for
-  `eligible`; never default a cap or construct a payment-shaped object.
+  fresh union with canonical exact asset and atomic-amount branded values only
+  for `eligible`; never default a cap or construct a payment-shaped object.
 
 - [ ] **Step 4: Turn the contract GREEN**
 

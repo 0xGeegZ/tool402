@@ -28,11 +28,15 @@ export type RiskScanNativeAtomicAmount = bigint & {
   readonly __brand: "RiskScanNativeAtomicAmount";
 };
 
+export type RiskScanNativeAssetId = string & {
+  readonly __brand: "RiskScanNativeAssetId";
+};
+
 export type RiskScanNativeQuoteEligibility =
   | {
       readonly kind: "eligible";
       readonly network: "hedera:testnet";
-      readonly asset: HederaAccountId;
+      readonly asset: RiskScanNativeAssetId;
       readonly amount: RiskScanNativeAtomicAmount;
     }
   | {
@@ -64,12 +68,13 @@ no others:
 }
 ```
 
-`asset` must parse as a canonical `HederaAccountId`. `maximumAmount` must
-parse through the accepted generic canonical-integer boundary, then become a
-local `RiskScanNativeAtomicAmount`; zero is allowed as an explicit no-spend
-policy. This is deliberately not `Tinybar`: `0.0.0` represents HBAR in
-tinybars, while another canonical asset has its own atomic unit. There is no
-default network, asset, or maximum amount. An invalid policy returns
+`asset` must pass the accepted canonical Hedera identifier syntax parser, then
+become a local `RiskScanNativeAssetId`; an asset is not a recipient account.
+`maximumAmount` must parse through the accepted generic canonical-integer
+boundary, then become a local `RiskScanNativeAtomicAmount`; zero is allowed as
+an explicit no-spend policy. This is deliberately not `Tinybar`: `0.0.0`
+represents HBAR in tinybars, while another canonical asset has its own atomic
+unit. There is no default network, asset, or maximum amount. An invalid policy returns
 `{ kind: "declined", reason: "invalid_policy" }` before quote values are
 read.
 
@@ -85,8 +90,9 @@ no others:
 }
 ```
 
-`asset` must parse as canonical `HederaAccountId`; `amount` must parse
-through the accepted generic canonical-integer boundary, become a local
+`asset` must pass the accepted canonical Hedera identifier syntax parser, then
+become a local `RiskScanNativeAssetId`; `amount` must parse through the
+accepted generic canonical-integer boundary, become a local
 `RiskScanNativeAtomicAmount`, and be greater than zero. A malformed record,
 non-string field, noncanonical value, zero amount, inherited value, accessor,
 symbol key, non-enumerable key, or extra field returns
@@ -141,7 +147,8 @@ are excluded.
   precedence over a hostile quote, and fail-closed prototype/reflection
   inspection of hostile records.
 - A public TypeScript fixture proves the exported union narrows its eligible
-  result to public `RiskScanNativeAtomicAmount` and `HederaAccountId` values.
+  result to public `RiskScanNativeAtomicAmount` and `RiskScanNativeAssetId`
+  values, each distinct from the accepted generic parser brands.
 - Core/root typecheck, test, lint, queue/reference/whitespace checks, enabled
   local guard, independent task review, and two fresh clean module-review
   generations pass before acceptance.
