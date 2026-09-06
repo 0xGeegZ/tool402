@@ -336,7 +336,7 @@ function snapshotArray(
     }
 
     const seenKeys = new Set<string>();
-    const items: Array<{ key: string; index: number }> = [];
+    let itemCount = 0;
     let hasLength = false;
 
     for (const key of keys) {
@@ -355,29 +355,58 @@ function snapshotArray(
         rejectMalformedRequirements();
       }
 
-      items.push({ key, index });
+      itemCount += 1;
     }
 
     if (!hasLength) {
       rejectMalformedRequirements();
     }
 
-    const lengthDescriptor = safeOwnPropertyDescriptor(value, "length");
-    if (
-      !isDataPropertyDescriptor(lengthDescriptor) ||
-      lengthDescriptor.enumerable ||
-      typeof lengthDescriptor.value !== "number" ||
-      !Number.isSafeInteger(lengthDescriptor.value) ||
-      lengthDescriptor.value < 0
-    ) {
-      rejectMalformedRequirements();
+    const capturedByIndex = new Map<number, CapturedValue>();
+    let length: number | undefined;
+
+    for (const key of keys) {
+      if (typeof key !== "string") {
+        rejectMalformedRequirements();
+      }
+
+      const descriptor = safeOwnPropertyDescriptor(value, key);
+      if (key === "length") {
+        if (
+          !isDataPropertyDescriptor(descriptor) ||
+          descriptor.enumerable ||
+          typeof descriptor.value !== "number" ||
+          !Number.isSafeInteger(descriptor.value) ||
+          descriptor.value < 0
+        ) {
+          rejectMalformedRequirements();
+        }
+
+        length = descriptor.value;
+        continue;
+      }
+
+      const index = arrayIndexForKey(key);
+      if (index === undefined) {
+        rejectMalformedRequirements();
+      }
+      if (!descriptor.enumerable || !isDataPropertyDescriptor(descriptor)) {
+        rejectMalformedRequirements();
+      }
+
+      capturedByIndex.set(
+        index,
+        snapshotValue(descriptor.value, depth + 1, state, false),
+      );
     }
 
-    const length = lengthDescriptor.value;
+    if (length === undefined) {
+      rejectMalformedRequirements();
+    }
     if (length > MAX_ARRAY_ITEMS) {
       rejectRequirementsLimit();
     }
-    if (items.length !== length) {
+    if (itemCount !== length) {
       rejectMalformedRequirements();
     }
 
@@ -385,19 +414,6 @@ function snapshotArray(
       if (!seenKeys.has(String(index))) {
         rejectMalformedRequirements();
       }
-    }
-
-    const capturedByIndex = new Map<number, CapturedValue>();
-    for (const item of items) {
-      const descriptor = safeOwnPropertyDescriptor(value, item.key);
-      if (!descriptor.enumerable || !isDataPropertyDescriptor(descriptor)) {
-        rejectMalformedRequirements();
-      }
-
-      capturedByIndex.set(
-        item.index,
-        snapshotValue(descriptor.value, depth + 1, state, false),
-      );
     }
 
     const capturedValues: CapturedValue[] = [];
