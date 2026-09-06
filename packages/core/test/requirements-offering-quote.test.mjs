@@ -195,6 +195,25 @@ test("bounds key and string serialization before oversized canonical output is b
   });
 });
 
+test("snapshots requirements in reflected order before sorted canonical emission", () => {
+  const later = { state: "before" };
+  const earlier = new Proxy(
+    { kind: true },
+    {
+      ownKeys(target) {
+        later.state = "after";
+        return Reflect.ownKeys(target);
+      },
+    },
+  );
+
+  assert.equal(
+    canonicalizeRequirements({ later, earlier }),
+    '{"earlier":{"kind":true},"later":{"state":"before"}}',
+  );
+  assert.equal(later.state, "after");
+});
+
 test("binds M16 allocation facts to complete requirements, strict expiry, and an immutable quote", async () => {
   const requirements = {
     x402Version: 2,
