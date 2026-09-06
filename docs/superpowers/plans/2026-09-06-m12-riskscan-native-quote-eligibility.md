@@ -55,12 +55,14 @@ runner.
   `Number.MAX_SAFE_INTEGER`. Assert that invalid policy, invalid quote,
   network mismatch, asset mismatch, and cap excess each return their exact
   decline reason. Add malformed/hostile record cases, including accessors
-  whose getters must not run, non-enumerable extra own keys, and a
-  descriptor-valid Proxy whose `get` trap must never run. Add precedence
-  cases: invalid policy paired with a quote Proxy whose reflection traps throw
-  returns `invalid_policy` without inspecting the quote; a throwing policy
-  reflection returns `invalid_policy`; and a valid policy paired with a
-  throwing quote reflection returns `invalid_quote`.
+  whose getters must not run, an inherited required field, symbol and
+  non-enumerable extra own keys, and valid own fields on null/custom
+  prototypes. Add a descriptor-valid Proxy whose `get` trap must never run.
+  Add precedence cases: invalid policy paired with a quote Proxy whose
+  reflection traps throw returns `invalid_policy` without inspecting the
+  quote; a throwing policy prototype/reflection returns `invalid_policy`; and
+  a valid policy paired with a throwing quote prototype/reflection returns
+  `invalid_quote`.
 
 - [ ] **Step 2: Observe RED**
 
@@ -74,12 +76,12 @@ runner.
 
 - [ ] **Step 3: Implement the smallest pure evaluator**
 
-  Add strict safe-record snapshotting through `Reflect.ownKeys` and own data
-  descriptors, exact parser reuse, and only the five declared decline reasons.
-  Validate policy before inspecting the quote. Use only captured descriptor
-  values after snapshotting. Return a fresh union with canonical exact
-  asset-atomic branded values only for `eligible`; never default a cap or
-  construct a payment-shaped object.
+  Add strict safe-record snapshotting through a plain-object prototype check,
+  `Reflect.ownKeys`, and own data descriptors, exact parser reuse, and only
+  the five declared decline reasons. Validate policy before inspecting the
+  quote. Use only captured descriptor values after snapshotting. Return a
+  fresh union with canonical exact asset-atomic branded values only for
+  `eligible`; never default a cap or construct a payment-shaped object.
 
 - [ ] **Step 4: Turn the contract GREEN**
 

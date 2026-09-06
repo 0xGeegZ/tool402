@@ -49,10 +49,10 @@ and execution is in the [M12 native quote eligibility plan](../../../superpowers
 - RED/GREEN tests prove canonical quote selection, exact amounts above
   JavaScript's safe integer range, and decline behavior for invalid policy,
   invalid quote, network mismatch, asset mismatch, and cap excess.
-- Tests prove that malformed, inherited, accessor-backed, symbol-keyed,
-  non-enumerable-extra, or extra-field policy/quote records fail closed without
-  invoking accessors or direct proxy reads; invalid policy must not inspect a
-  hostile quote.
+- Tests prove that malformed, null/custom-prototype, inherited,
+  accessor-backed, symbol-keyed, non-enumerable-extra, or extra-field
+  policy/quote records fail closed without invoking accessors or direct proxy
+  reads; invalid policy must not inspect a hostile quote.
 - Core/root quality, queue/reference/whitespace checks, enabled local guard,
   independent task review, and two fresh clean module-review generations pass
   before acceptance.
@@ -75,3 +75,9 @@ local `RiskScanNativeAtomicAmount` output brand, retaining `Tinybar` only for
 an explicitly HBAR-only path. It also makes hostile-proxy precedence,
 descriptor-only reads, and non-enumerable-extra rejection executable. A fresh
 independent readiness review is required before this card may leave inbox.
+
+At 2026-09-06T12:25:14Z, the fresh review also made the exact-record boundary
+explicit: only ordinary `Object.prototype` records qualify. The RED contract
+now covers null/custom prototypes, inherited required fields, symbol extras,
+and throwing prototype reflection. This card remains inbox-only pending the
+fresh review of that amendment.
