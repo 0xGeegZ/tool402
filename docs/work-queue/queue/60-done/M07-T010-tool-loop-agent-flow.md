@@ -3,12 +3,12 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M05-T010 accepted; M05-T020 accepted; M05-T030 accepted;
   M06-T010 accepted
 - Integration evidence: D-M05-010-002, D-M05-020-002, D-M05-030-002, and
   D-M06-010-002 accepted
-- Owner: the proposed implementation scope is
+- Owner: the accepted implementation scope is
   `apps/agent/src/riskscan-tool-flow.ts`,
   `apps/agent/test/riskscan-tool-flow.test.mjs`, and
   `apps/agent/test/riskscan-tool-flow-boundary.test.mjs`. The root owns this
@@ -114,3 +114,28 @@ flow RED contract in the current repository workspace under the project
 worktree policy. HA-X402-HEDERA-001 remains PENDING and grants no external
 authority. No configured live route, payment, signing, wallet/account action,
 transaction, deployment, evidence, result, or live claim is authorized.
+
+## Acceptance
+
+Accepted at 2026-09-06T07:24:44Z. The exact module range is
+`10441bee37442cb26d697a99436ad753976da7da..c4fbb30c60b771acd972475baf372a7bc8ebc2ad`.
+The initial independent task review found two Important test-boundary gaps;
+`c4fbb30c60b771acd972475baf372a7bc8ebc2ad` fixed only the owned tests and
+the scoped re-review passed. Two fresh Standards/Spec module-review
+generations then found no Critical, Important, or Minor finding with production
+source unchanged between their clean generations.
+
+Root Node 22.21.1 clean-install dry-run, typecheck, 186-test root suite,
+lint, production Webpack build, queue validation, whitespace check, and the
+enabled local-reference guard passed. The completed Webpack build retained an
+existing non-fatal optional upstream `@x402/paywall` resolution warning. A
+controlled all-injected local exercise returned only `payment_required` after
+exactly `GET /api/tools` then `POST /api/riskscan`; it made no external request
+and exposed no payment material. The direct Node exercise also emitted a
+module-type warning while loading Web source.
+
+This acceptance proves only the local unsigned composition. It does not prove
+or authorize a configured recipient/facilitator, wallet/account/key action,
+payment, transaction, settlement, finality, receipt, evidence, result,
+deployment, or live behavior. HA-X402-HEDERA-001 remains PENDING and unblocks
+nothing while pending.

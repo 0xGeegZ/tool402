@@ -58,7 +58,7 @@ the built-in Node test runner with controlled `Response` fixtures.
   challengeSender?)` and the exact `RiskScanToolFlowOutcome` alias specified
   in the local contract.
 
-- [ ] **Step 1: Write failing flow and boundary contracts**
+- [x] **Step 1: Write failing flow and boundary contracts**
 
   Create both test files before the source module exists. Build a controlled
   native directory `Response` containing only the accepted RiskScan descriptor
@@ -77,7 +77,7 @@ the built-in Node test runner with controlled `Response` fixtures.
   header handling, wallet/account/signer/environment/backend access, timer,
   retry, CLI, body read, result handling, and hidden side effects.
 
-- [ ] **Step 2: Observe RED**
+- [x] **Step 2: Observe RED**
 
   Run:
 
@@ -88,7 +88,7 @@ the built-in Node test runner with controlled `Response` fixtures.
   Expected: FAIL because `apps/agent/src/riskscan-tool-flow.ts` does not
   exist. Record the exact missing-module failure before creating source.
 
-- [ ] **Step 3: Implement the thin, stateless composition**
+- [x] **Step 3: Implement the thin, stateless composition**
 
   Define only the outcome alias and public flow function. Call the discovery
   function once with its assigned sender, then pass its returned union and the
@@ -96,7 +96,7 @@ the built-in Node test runner with controlled `Response` fixtures.
   Return the challenge outcome without reading its internals. Do not add an
   intermediate cache, validation copy, output conversion, error text, or I/O.
 
-- [ ] **Step 4: Turn the contracts GREEN and commit**
+- [x] **Step 4: Turn the contracts GREEN and commit**
 
   Run:
 
