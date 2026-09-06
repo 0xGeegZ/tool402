@@ -258,6 +258,28 @@ test("snapshots array descriptor side effects before later item descriptors", ()
   assert.equal(earlier.state, "after");
 });
 
+test("snapshots array items before later length descriptor side effects", () => {
+  const earlier = { state: "before" };
+  const items = new Proxy(
+    [earlier, { state: "later" }],
+    {
+      getOwnPropertyDescriptor(target, key) {
+        if (key === "length") {
+          earlier.state = "after";
+        }
+
+        return Reflect.getOwnPropertyDescriptor(target, key);
+      },
+    },
+  );
+
+  assert.equal(
+    canonicalizeRequirements({ items }),
+    '{"items":[{"state":"before"},{"state":"later"}]}',
+  );
+  assert.equal(earlier.state, "after");
+});
+
 test("binds M16 allocation facts to complete requirements, strict expiry, and an immutable quote", async () => {
   const requirements = {
     x402Version: 2,
