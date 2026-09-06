@@ -30,7 +30,12 @@ test("renders the guest workspace route without a fabricated session", async () 
   assert.match(overview, /<Card\b/);
 
   const hrefs = [...navigation.matchAll(/\{ href: "([^"]+)", label: "[^"]+" \}/g)].map(([, href]) => href);
-  assert.deepEqual(hrefs, ["/explore", "/explore/riskscan", "/explore/riskscan/tool-loop"]);
+  assert.deepEqual(hrefs, [
+    "/explore",
+    "/explore/riskscan",
+    "/explore/riskscan/tool-loop",
+    "/dashboard/riskscan/compatibility",
+  ]);
   assert.match(navigation, /<Link\b[^>]*href=\{link\.href\}/);
   assert.doesNotMatch(navigation, /<(?:a|button)\b/i);
 });
