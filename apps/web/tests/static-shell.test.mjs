@@ -17,6 +17,7 @@ test("declares the strict Next workspace boundary", async () => {
   assert.equal(manifest.private, true);
   assert.equal(manifest.scripts.typecheck, "next typegen && tsc --noEmit");
   assert.deepEqual(manifest.dependencies, {
+    "@tool402/agent": "file:../agent",
     "@tool402/core": "file:../../packages/core",
     "@x402/core": "2.25.0",
     "@x402/evm": "2.25.0",
