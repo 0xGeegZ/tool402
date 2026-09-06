@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T040 accepted; M01-T090 accepted; M02-T040 accepted;
   M05-T010 accepted; M05-T020 accepted; M06-T010 accepted; M08-T010 accepted
 - Integration evidence: D-M01-FOUND-001, D-M01-090-003, D-M02-040-002,
@@ -85,6 +85,20 @@ UI-S05 manifest, and plan now narrowly amend only the new island's one public
 directory `GET` and explicitly enumerated EVM/native parser-derived
 configuration-summary fields; UI-S01's static card and every other boundary
 remain unchanged. A scoped re-review found the EVM fields had to be enumerated
-in the manifest as well, and this correction makes that set exact. A final
-scoped independent re-review is required before the normal ready transition.
-No code, payment, configuration, or external action was created during review.
+in the manifest as well, and this correction makes that set exact. The final
+scoped independent re-review is clean and approves the normal ready
+transition. No code, payment, configuration, or external action was created
+during review.
+
+## Ready transition
+
+Ready at 2026-09-06T09:15:28Z after a fresh rescan confirmed the pushed
+`a2363507ec7f78408831a51c4fd35c6321adf40a` M09 card, local specification,
+UI-S05 manifest/ledger, and plan; every listed dependency and integration
+record accepted; the proposed Agent package/Explore paths disjoint; no active
+lane; concrete validation; queue validation; and the independent design review
+plus two scoped re-reviews. The card is ready only for its local RED public
+Agent/browser contract. HA-X402-HEDERA-001 remains PENDING and grants no
+authority for configuration, recipient/facilitator setup, wallet/account/key
+action, signing, payment, transaction, deployment, evidence, result, or live
+claim.
