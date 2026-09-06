@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T040 accepted; M11-T020 accepted; M12-T020 accepted
 - Owner: `apps/web/src/app/dashboard/riskscan/compatibility/page.tsx`,
   `apps/web/src/components/riskscan/native-quote/**`, and
@@ -93,3 +93,13 @@ feasibility; no-default policy semantics; and no human blocker for controlled
 local compatibility evaluation. This ready state authorizes only the local
 RED/GREEN compatibility contract. It does not authorize Sign/session, payment,
 signing, account, wallet, transaction, deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-06T14:48:00Z after a fresh local rescan confirmed pushed
+ready state, accepted M01-T040, M11-T020, and M12-T020 dependencies, no active
+conflicting owner, resolvable local records, and no human blocker for the
+controlled guest compatibility surface. This active state authorizes the
+focused local RED/GREEN route, island, state, and constrained navigation
+contract only. It does not authorize Sign/session, payment, signing, account,
+wallet, transaction, deployment, or live behavior.
