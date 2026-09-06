@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M06-T010 accepted; M10-T010 accepted
 - Owner: `packages/core/src/riskscan-native-quote-eligibility.ts`,
   `packages/core/src/index.ts`,
@@ -112,3 +112,28 @@ eligibility RED contract in the current repository workspace under the local
 worktree policy. No recipient/facilitator configuration, account, wallet,
 signer, payment client, header, transaction, settlement, deployment, or live
 behavior is authorized.
+
+## Acceptance
+
+Accepted at 2026-09-06T13:01:11Z after a fresh queue rescan confirmed accepted
+M06/M10 dependencies and no conflicting active owner of the M12 core paths.
+
+- `MODULE_BASE` is `d1de74d53bfb5e507e7d98752fc27e51a7ed3b06`; `MODULE_HEAD`
+  is `fa3002e703f1aaa7ae645dfc0597e91b2d04c926`. The scoped implementation
+  and review-correction commits are `595e645`, `6f58698`, and `fa3002e`.
+- Public RED observed before implementation because the evaluator export was
+  absent. The final focused suite has 10 passing cases, including HBAR sentinel
+  support, equality and below/above-cap boundaries, ordinary exact records,
+  proxy/accessor reflection failures, and policy-before-quote precedence.
+- Core and root clean-install dry run, typecheck, test, lint, queue,
+  whitespace, and enabled local-reference guard passed under Node 22.21.1.
+  The production Webpack build passed with Cache Components; it retains only
+  the pre-existing optional upstream `@x402/paywall` resolution warning outside
+  this card's paths.
+- Independent task review and two fresh independent module-review generations
+  were clean through `fa3002e`.
+
+Acceptance covers only a pure local quote-compatibility evaluator. It does not
+prove or authorize a recipient/facilitator configuration, account, wallet,
+signer, payment client, header, transaction, settlement, deployment, evidence,
+or live behavior.
