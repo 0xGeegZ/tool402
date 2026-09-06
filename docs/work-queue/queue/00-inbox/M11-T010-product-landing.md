@@ -6,11 +6,10 @@
 - Queue state: 00-inbox
 - Dependencies: M01-T040 accepted; M02-T020 accepted
 - Owner: `apps/web/src/app/page.tsx`, `apps/web/src/components/landing/**`,
-  `apps/web/tests/product-landing.test.mjs`, and the constrained
-  `apps/web/tests/landing-explore.test.mjs` amendment are this card's
-  implementation paths. The root owns this card, local specification/UI
-  manifest/ledger, plan, queue state, catalog, ownership, decisions, reviews,
-  integration evidence, and pushes.
+  and `apps/web/tests/product-landing.test.mjs` are this card's implementation
+  paths. The root owns this card, local specification/UI manifest/ledger, plan,
+  queue state, catalog, ownership, decisions, reviews, integration evidence,
+  and pushes.
 - Human actions: none for the static public landing.
 
 ## Scope
@@ -55,3 +54,12 @@ no active owner of the root landing paths, and no human action needed for a
 static local presentation. This inbox card authorizes only its local
 contract/manifest/plan record; it authorizes neither RED/code nor external or
 live behavior.
+
+## Design review correction
+
+The independent readiness review found that this card unnecessarily reserved
+the accepted landing/Explore test and named a button primitive that cannot
+represent a navigation link. The card now owns only its focused landing test
+and styles semantic local links directly. UI-S01's accepted test stays
+unchanged for this lane; M11-T020 owns the distinct navigation assertion
+amendment. The corrected card requires scoped clean re-review before ready.

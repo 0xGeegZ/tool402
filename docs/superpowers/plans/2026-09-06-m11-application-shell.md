@@ -22,8 +22,9 @@ TypeScript 5.9.3, Tailwind CSS 4.3.3, and the built-in Node test runner.
   worktree without explicit human direction.
 - Preserve `cacheComponents: true`; add no dependency, client component,
   fetch, runtime configuration, storage, timer, analytics, or remote resource.
-- Own only dashboard/workspace paths, focused workspace tests, and the
-  constrained local-navigation amendment; do not modify landing, Explore,
+- Own only dashboard/workspace paths, focused workspace tests, the constrained
+  local-navigation amendment, and its corresponding navigation assertion in
+  `apps/web/tests/landing-explore.test.mjs`; do not modify landing, Explore,
   RiskScan, API, Agent, core, backend, layout, or package metadata.
 - Render a guest/unconfigured state only. Do not add an identity or
   authenticated-session state, account, wallet, provider, balance, position,
@@ -42,10 +43,11 @@ TypeScript 5.9.3, Tailwind CSS 4.3.3, and the built-in Node test runner.
 - Create: `apps/web/src/components/workspace/workspace-overview.tsx`
 - Modify: `apps/web/src/components/discovery/local-navigation.tsx`
 - Create: `apps/web/tests/workspace-shell.test.mjs`
+- Modify: `apps/web/tests/landing-explore.test.mjs`
 
 **Interfaces:**
 
-- Consumes: existing `Badge`, `Button`, `Card`, `Link`, and local navigation.
+- Consumes: existing `Badge`, `Card`, `Link`, and local navigation.
 - Produces: a static `/dashboard` route plus one `Workspace` global-navigation
   link, with exact local route-map links.
 
@@ -60,7 +62,8 @@ TypeScript 5.9.3, Tailwind CSS 4.3.3, and the built-in Node test runner.
   storage, `currentUser`, `connectWallet`, `signOut`, balance, position,
   payment, result, receipt, evidence, transaction, external URL, or live
   claim. The explanatory statement that no session is connected is required,
-  not a fabricated session state.
+  not a fabricated session state. Amend the accepted navigation assertion only
+  to allow the exact new `/dashboard` Workspace link.
 
 - [ ] **Step 2: Observe RED**
 
@@ -77,8 +80,10 @@ TypeScript 5.9.3, Tailwind CSS 4.3.3, and the built-in Node test runner.
 
   Create the server page and focused workspace components. Use existing
   primitives to state the preview boundary and offer only the three local
-  route-map links. Add the one `Workspace` global-navigation item. Do not add
-  a Sign control or any dynamic data.
+  route-map links. Style semantic `Link` elements directly instead of nesting
+  the button primitive. Add the one `Workspace` global-navigation item and its
+  constrained accepted-test amendment. Do not add a Sign control or dynamic
+  data.
 
 - [ ] **Step 4: Turn the contract GREEN and verify the browser**
 

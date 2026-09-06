@@ -47,7 +47,8 @@ runner.
   `../src/index.ts`. Assert that `"9007199254740993"` becomes exactly
   `9007199254740993n`, `"10000"` parses as basis points, canonical identifiers
   parse, and `"01"`, `"-1"`, `"1.5"`, `"1e3"`, whitespace-padded values,
-  `"10001"` basis points, and malformed identifiers return `undefined`.
+  `"10001"` basis points, malformed identifiers, `0`, `null`, and `{}`
+  return `undefined`.
 
 - [ ] **Step 2: Observe RED**
 
@@ -62,8 +63,9 @@ runner.
 - [ ] **Step 3: Implement the minimal pure boundary**
 
   Create the branded types and parsers described in the contract. Parse only
-  canonical strings, use `BigInt` only after canonical validation, and export
-  the exact public API from `packages/core/src/index.ts`.
+  canonical strings, accept `unknown` at every parser boundary, use `BigInt`
+  only after canonical validation, and export the exact public API from
+  `packages/core/src/index.ts`.
 
 - [ ] **Step 4: Turn the contract GREEN**
 

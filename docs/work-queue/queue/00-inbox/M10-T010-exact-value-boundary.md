@@ -49,3 +49,10 @@ accepted core foundation, no active core owner, and an unfilled exact-value
 contract needed before later economic work. This inbox card authorizes only
 the local contract/plan record; it authorizes neither RED/code nor any
 external action.
+
+## Design review correction
+
+The independent readiness review found that string-only parser signatures
+contradicted the stated untrusted-input boundary. The contract and plan now
+accept `unknown` and require representative non-string rejection coverage.
+The corrected card requires scoped clean re-review before ready.

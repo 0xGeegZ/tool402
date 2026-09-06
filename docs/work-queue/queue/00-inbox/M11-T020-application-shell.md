@@ -8,10 +8,11 @@
 - Owner: `apps/web/src/app/dashboard/page.tsx`,
   `apps/web/src/components/workspace/**`,
   `apps/web/src/components/discovery/local-navigation.tsx`, and
-  `apps/web/tests/workspace-shell.test.mjs` are this card's implementation
-  paths. The root owns this card, local specification/UI manifest/ledger,
-  plan, queue state, catalog, ownership, decisions, reviews, integration
-  evidence, and pushes.
+  `apps/web/tests/workspace-shell.test.mjs`, plus the constrained navigation
+  assertion amendment in `apps/web/tests/landing-explore.test.mjs`, are this
+  card's implementation paths. The root owns this card, local
+  specification/UI manifest/ledger, plan, queue state, catalog, ownership,
+  decisions, reviews, integration evidence, and pushes.
 - Human actions: none for the static guest workspace shell.
 
 ## Scope
@@ -57,3 +58,12 @@ foundations, no active owner of these paths, and no human action needed for a
 static guest shell. This inbox card authorizes only its local
 contract/manifest/plan record; it authorizes neither RED/code nor session,
 wallet, account, payment, or live behavior.
+
+## Design review correction
+
+The independent readiness review found that the new Workspace navigation link
+requires a corresponding amendment to the accepted navigation assertion, and
+that the current button primitive cannot represent a route-map link. This card
+now owns the narrow legacy-test amendment and styles semantic local links
+directly. Its paths remain disjoint from M11-T010. The corrected card requires
+scoped clean re-review before ready.

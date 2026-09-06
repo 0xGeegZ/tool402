@@ -33,9 +33,10 @@ balance, metric, testimonial, partner, deployment, external link, or
 guarantee. Decorative imagery is empty-alt and comes only from a local asset
 already committed in this repository.
 
-The slice does not modify the global layout or navigation. UI-S01 remains the
-authority for its static Explore card. This slice supersedes only the root
-landing portion of UI-S01 through UI-S06.
+The slice does not modify the global layout, navigation, or the accepted
+landing/Explore test. UI-S01 remains the authority for its static Explore
+card. This slice supersedes only the root landing portion of UI-S01 through
+UI-S06.
 
 ## Acceptance evidence
 

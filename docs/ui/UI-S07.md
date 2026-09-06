@@ -10,8 +10,10 @@ signed-in state.
 ## Local targets
 
 The slice may add `apps/web/src/app/dashboard/page.tsx`, components under
-`apps/web/src/components/workspace/`, a focused workspace test, and the one
-constrained amendment to `apps/web/src/components/discovery/local-navigation.tsx`.
+`apps/web/src/components/workspace/`, a focused workspace test, the one
+constrained amendment to `apps/web/src/components/discovery/local-navigation.tsx`,
+and the corresponding navigation assertion amendment in
+`apps/web/tests/landing-explore.test.mjs`.
 
 ## Truthfulness and authority boundary
 

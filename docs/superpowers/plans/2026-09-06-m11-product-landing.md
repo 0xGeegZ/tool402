@@ -39,12 +39,11 @@ TypeScript 5.9.3, Tailwind CSS 4.3.3, and the built-in Node test runner.
 - Create: `apps/web/src/components/landing/landing-sections.tsx`
 - Create: `apps/web/src/components/landing/landing-footer.tsx`
 - Create: `apps/web/tests/product-landing.test.mjs`
-- Modify: `apps/web/tests/landing-explore.test.mjs`
 
 **Interfaces:**
 
-- Consumes: existing `Badge`, `Button`, `Card`, `Logo`, local mascot image,
-  and Next `Link`.
+- Consumes: existing `Badge`, `Card`, `Logo`, local mascot image, and Next
+  `Link`.
 - Produces: one static root landing with a single heading, `how-it-works`
   section, and exact local CTA targets.
 
@@ -56,8 +55,7 @@ TypeScript 5.9.3, Tailwind CSS 4.3.3, and the built-in Node test runner.
   `/explore/riskscan/try` CTA hrefs. Assert that the landing subtree is not a
   client component and excludes fetch, API route strings, wallet, account,
   provider, price, payment, result, metric, testimonial, external URL, and
-  live-claim copy. Narrow the old UI-S01 test so it continues to protect only
-  its static Explore sources.
+  live-claim copy. Leave the accepted UI-S01 landing/Explore test unchanged.
 
 - [ ] **Step 2: Observe RED**
 
@@ -74,9 +72,9 @@ TypeScript 5.9.3, Tailwind CSS 4.3.3, and the built-in Node test runner.
 
   Keep the root route server-rendered. Compose a warm hero, three explanatory
   steps, bounded RiskScan introduction, local CTA group, and small footer from
-  existing primitives and the committed mascot. Use semantic headings and
-  ordinary `Link` elements; do not change global navigation or any non-owned
-  route.
+  existing primitives and the committed mascot. Style semantic `Link` elements
+  directly instead of nesting the button primitive; do not change global
+  navigation or any non-owned route.
 
 - [ ] **Step 4: Turn the contract GREEN and verify the browser**
 

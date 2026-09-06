@@ -11,9 +11,8 @@ introduction, and local-navigation CTAs to existing pages.
 
 The slice may amend `apps/web/src/app/page.tsx` and
 `apps/web/src/components/landing/landing-hero.tsx`, add components under
-`apps/web/src/components/landing/`, and add focused landing tests. It may
-amend the existing landing/Explore test only to keep its UI-S01 static-card
-assertions scoped to the unchanged Explore sources.
+`apps/web/src/components/landing/`, and add focused landing tests. It does
+not amend the accepted landing/Explore test.
 
 ## Truthfulness and authority boundary
 

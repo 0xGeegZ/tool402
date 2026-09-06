@@ -39,7 +39,8 @@ The three slices have disjoint implementation paths. The root retains queue,
 ledger, decision, catalog, ownership, and integration records. M10 can run
 beside both M11 slices. The two M11 slices do not modify the same files:
 landing owns the root-page and landing component subtree; workspace owns the
-dashboard route, workspace subtree, and navigation amendment.
+dashboard route, workspace subtree, navigation amendment, and its corresponding
+legacy navigation-test amendment.
 
 Each slice first commits its local contract and plan. Its implementer then
 writes a focused failing test, observes the expected failure, and implements

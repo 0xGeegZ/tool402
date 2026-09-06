@@ -20,11 +20,11 @@ export type NoteUnits = bigint & { readonly __brand: "NoteUnits" };
 export type HederaAccountId = string & { readonly __brand: "HederaAccountId" };
 export type HederaTransactionId = string & { readonly __brand: "HederaTransactionId" };
 
-export function parseTinybar(input: string): Tinybar | undefined;
-export function parseBasisPoints(input: string): BasisPoints | undefined;
-export function parseNoteUnits(input: string): NoteUnits | undefined;
-export function parseHederaAccountId(input: string): HederaAccountId | undefined;
-export function parseHederaTransactionId(input: string): HederaTransactionId | undefined;
+export function parseTinybar(input: unknown): Tinybar | undefined;
+export function parseBasisPoints(input: unknown): BasisPoints | undefined;
+export function parseNoteUnits(input: unknown): NoteUnits | undefined;
+export function parseHederaAccountId(input: unknown): HederaAccountId | undefined;
+export function parseHederaTransactionId(input: unknown): HederaTransactionId | undefined;
 ```
 
 `packages/core/src/index.ts` re-exports this exact public surface. No parser
@@ -33,10 +33,11 @@ throws for an untrusted input; it returns `undefined` instead.
 ## Canonical forms and invariants
 
 `Tinybar` and `NoteUnits` accept only non-negative canonical base-10 integer
-strings: `0` or a nonzero digit followed by decimal digits. They reject
-whitespace, signs, leading zeroes, fractions, exponents, non-ASCII digits,
-and non-string input. Their parsed value is exactly `BigInt(input)`, including
-values larger than `Number.MAX_SAFE_INTEGER`.
+strings: `0` or a nonzero digit followed by decimal digits. Their public
+boundary accepts `unknown` and rejects non-string input, whitespace, signs,
+leading zeroes, fractions, exponents, and non-ASCII digits. Their parsed value
+is exactly `BigInt(input)`, including values larger than
+`Number.MAX_SAFE_INTEGER`.
 
 `BasisPoints` follows the same text rule and additionally lies from `0` through
 `10000`, inclusive. This range describes a percentage denominator only; it

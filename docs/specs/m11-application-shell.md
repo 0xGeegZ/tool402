@@ -15,9 +15,10 @@ is connected, and offers route-map links to the already committed local
 `/explore`, `/explore/riskscan`, and `/explore/riskscan/tool-loop` surfaces.
 The global local navigation adds one `Workspace` link to `/dashboard`.
 
-The shell uses existing local Card, Badge, Button, and token primitives. It
-contains no client component, fetch, environment read, storage, timer,
-analytics, external link, or new dependency.
+The shell uses existing local Card, Badge, and token primitives, then styles
+semantic local `Link` elements directly. It contains no client component,
+fetch, environment read, storage, timer, analytics, external link, or new
+dependency.
 
 ## Truthfulness and authority boundary
 
