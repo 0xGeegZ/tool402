@@ -43,6 +43,31 @@ export type {
   OfferingRequirementsQuoteInput,
   RequirementsDigest,
 } from "./requirements-offering-quote.ts";
+export {
+  createOfferingPurchase,
+  transitionOfferingPurchase,
+} from "./offering-purchase-lifecycle.ts";
+export type {
+  OfferingPurchaseAllocationPending,
+  OfferingPurchaseAllocationSubmitted,
+  OfferingPurchaseAllocationOutcomeUnknown,
+  OfferingPurchaseAwaitingPayment,
+  OfferingPurchaseComplete,
+  OfferingPurchaseDraft,
+  OfferingPurchaseEvent,
+  OfferingPurchaseExpired,
+  OfferingPurchaseManualReconciliation,
+  OfferingPurchasePaymentConfirmed,
+  OfferingPurchasePaymentOutcomeUnknown,
+  OfferingPurchasePaymentRejected,
+  OfferingPurchasePaymentSubmitted,
+  OfferingPurchaseRefunded,
+  OfferingPurchaseRefundOutcomeUnknown,
+  OfferingPurchaseRefundRequired,
+  OfferingPurchaseRefundSubmitted,
+  OfferingPurchaseSnapshot,
+  OfferingPurchaseState,
+} from "./offering-purchase-lifecycle.ts";
 export { evaluateRiskScanNativeQuote } from "./riskscan-native-quote-eligibility.ts";
 export type {
   RiskScanNativeAssetId,
