@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T040 accepted; M02-T020 accepted
 - Owner: `apps/web/src/app/dashboard/page.tsx`,
   `apps/web/src/components/workspace/**`,
@@ -67,3 +67,13 @@ that the current button primitive cannot represent a route-map link. This card
 now owns the narrow legacy-test amendment and styles semantic local links
 directly. Its paths remain disjoint from M11-T010. The corrected card requires
 scoped clean re-review before ready.
+
+## Ready transition
+
+Ready at 2026-09-06T10:35:41Z after the independent readiness review and its
+scoped clean re-review found accepted Web/UI dependencies, exact existing
+route-map targets, semantic local links, and ownership of the dashboard,
+workspace, navigation, and its constrained legacy navigation-test amendment.
+Those paths are disjoint from M11-T010. This ready state authorizes only the
+local guest-shell RED/GREEN contract; it does not authorize a Sign session,
+account, wallet, payment, transaction, deployment, or live behavior.

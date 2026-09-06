@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T040 accepted; M02-T020 accepted
 - Owner: `apps/web/src/app/page.tsx`, `apps/web/src/components/landing/**`,
   and `apps/web/tests/product-landing.test.mjs` are this card's implementation
@@ -63,3 +63,13 @@ represent a navigation link. The card now owns only its focused landing test
 and styles semantic local links directly. UI-S01's accepted test stays
 unchanged for this lane; M11-T020 owns the distinct navigation assertion
 amendment. The corrected card requires scoped clean re-review before ready.
+
+## Ready transition
+
+Ready at 2026-09-06T10:35:41Z after the independent readiness review and its
+scoped clean re-review found accepted Web/UI dependencies, exact existing CTA
+routes, a focused landing-only test boundary, semantic local links, and
+disjoint root-page/landing ownership. No active card owns these paths. This
+ready state authorizes only the local static landing RED/GREEN contract; it
+does not authorize authentication, account, wallet, payment, result, evidence,
+deployment, or live behavior.

@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T020 accepted
 - Owner: `packages/core/src/value.ts`, `packages/core/src/index.ts`, and
   `packages/core/test/value.test.mjs` are this card's implementation paths.
@@ -56,3 +56,13 @@ The independent readiness review found that string-only parser signatures
 contradicted the stated untrusted-input boundary. The contract and plan now
 accept `unknown` and require representative non-string rejection coverage.
 The corrected card requires scoped clean re-review before ready.
+
+## Ready transition
+
+Ready at 2026-09-06T10:35:41Z after the independent readiness review and its
+scoped clean re-review found the `unknown` public parser boundary, concrete
+non-string RED coverage, accepted M01-T020 dependency, owned core paths,
+neutral import ledger, and concrete validation plan coherent. No active card
+owns the M10 paths. This ready state authorizes only the local RED/GREEN core
+contract; it does not authorize account, signer, wallet, payment, transaction,
+settlement, deployment, or live behavior.
