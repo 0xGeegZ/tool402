@@ -9,6 +9,6 @@
 - LOCAL_UI_RECORDS: docs/ui/UI-S00.md, docs/ui/UI-S01.md, docs/ui/UI-S02.md, docs/ui/UI-S03.md, docs/ui/UI-S04.md, docs/ui/UI-S05.md, docs/ui/UI-S06.md, docs/ui/UI-S07.md, docs/ui/IMPORT-LEDGER.md
 - PENDING_HUMAN_ACTIONS: HA-X402-HEDERA-001 is pending for a future payment-client or live-proof path and currently unblocks nothing.
 - NEXT_ELIGIBLE_TASKS: M12-T020 is recorded in 00-inbox. Rescan its accepted M05-T020, M06-T010, and M12-T010 dependencies, root-owned Agent package/lockfile reservation, local links, and absence of active owners before any ready transition. Do not reopen M04 persistence or reconciliation. A later payment client or live path remains blocked while HA-X402-HEDERA-001 is PENDING.
-- LAST_QUEUE_VALIDATION: M12-T010 remains accepted. M12-T020 has only its committed local intake authorities and has no RED, implementation, review, acceptance, payment, transaction, deployment, or live evidence yet.
+- LAST_QUEUE_VALIDATION: M12-T010 remains accepted. M12-T020 has amended local intake authorities after a readiness finding; it has no RED, implementation, acceptance, payment, transaction, deployment, or live evidence yet and requires a fresh readiness review.
 
 No secrets, account keys, or private evidence belong in this file.

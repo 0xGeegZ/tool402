@@ -35,19 +35,22 @@ export type RiskScanNativeQuoteAgentOutcome =
 export async function evaluateDiscoveredRiskScanNativeQuote(
   serviceBase: URL,
   policy: unknown,
-  directoryFetcher?: RiskScanDirectoryFetcher,
+  directoryFetcher: RiskScanDirectoryFetcher,
 ): Promise<RiskScanNativeQuoteAgentOutcome>;
 ```
 
 The Agent workspace declares its existing local `@tool402/core` dependency
-explicitly and exports this one new subpath. No caller needs to rely on a
-hoisted package dependency.
+explicitly and exports this one new subpath before the module can reach GREEN.
+An executable package-level test imports and exercises the public subpath. No
+caller or Agent module may rely on a hoisted package dependency.
 
 ## Required composition behavior
 
-The function calls
-`discoverRiskScanQuick(serviceBase, directoryFetcher)` exactly once and uses
-only its fresh, safe discovery outcome.
+The function requires a caller-supplied `directoryFetcher`, calls
+`discoverRiskScanQuick(serviceBase, directoryFetcher)` exactly once, and uses
+only its fresh, safe discovery outcome. It never falls back to the runtime
+global `fetch`. A missing or non-function fetcher returns the bounded
+`directory_invalid` outcome before any directory call or policy inspection.
 
 - `directory_unavailable` and `directory_invalid` are returned unchanged.
   The caller policy is not reflected on, read, cloned, logged, stored, or
@@ -84,6 +87,7 @@ apps/agent/package.json
 apps/agent/src/riskscan-tool-native-quote-evaluation.ts
 apps/agent/test/riskscan-tool-native-quote-evaluation.test.mjs
 apps/agent/test/riskscan-tool-native-quote-evaluation-boundary.test.mjs
+apps/agent/test/riskscan-tool-native-quote-evaluation-package.test.mjs
 package-lock.json
 ```
 
@@ -98,10 +102,15 @@ evidence are excluded.
 
 - RED/GREEN Agent tests prove one exact injected credential-free directory GET
   and no second call; discovery-failure propagation without policy inspection;
+  a missing/non-function fetcher returning `directory_invalid` without global
+  fetch or policy inspection;
   configuration-required and EVM summaries becoming
   `native_summary_unavailable`; native equality, cap, and asset boundaries;
   malformed native-policy decline; and independent repeated invocations after
   fetcher mutation.
+- A package-level RED/GREEN test imports and exercises only
+  `@tool402/agent/riskscan-tool-native-quote-evaluation`, proving the explicit
+  local core dependency and public Agent subpath resolve after a clean install.
 - A source boundary test permits only the accepted Agent directory and local
   core evaluator imports, and rejects direct fetch, POST, body/header,
   payment-client, wallet/account/signer/key, environment, backend/store,
