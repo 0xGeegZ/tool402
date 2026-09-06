@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T020 accepted
 - Owner: `packages/core/src/value.ts`, `packages/core/src/index.ts`,
   `packages/core/test/value.test.mjs`, `packages/core/test/value.types.ts`,
@@ -85,3 +85,27 @@ been recorded as card-owned paths. The root now explicitly reserves those two
 paths in this card, the plan, catalog, and ownership register. This is a
 governance correction only: it does not widen M10 behavior or authorize any
 external action. Fresh module review generations restart after the correction.
+
+## Acceptance
+
+Accepted at 2026-09-06T11:32:14Z after a fresh queue rescan confirmed the
+accepted M01-T020 dependency and no conflicting active core owner.
+
+- `MODULE_BASE` is `9f85843b80139efb899e5d500a89ca21859e16f3`; `MODULE_HEAD`
+  is `df35ece105b8c01f0c630ef26679ba6a385a6da3`. M10-scoped implementation,
+  coverage, and ownership commits are `68da461`, `5cecdc5`, `1b58276`,
+  `614d925`, and `df35ece`; concurrent M11 paths remain disjoint.
+- The public RED/GREEN parser contract, focused six-case exact-value suite,
+  complete core suite, core typecheck, purity lint, root clean-install dry
+  run, root typecheck/test/lint, queue validation, whitespace/reference
+  checks, and enabled local-reference guard passed under Node 22.21.1.
+- Independent task review found the missing public compile-time consumer
+  proof; the root added its owned fixture and typecheck inclusion, then
+  scoped re-review was clean. An ownership-record correction and explicit
+  canonical edge coverage followed the first module passes. Two fresh clean
+  Standards/Specification module-review generations at `df35ece` found no
+  Critical, Important, or Minor finding.
+
+This acceptance is only a pure local parsing boundary. It grants no authority
+for an account, signer, wallet, payment, transaction, settlement, deployment,
+or live behavior.
