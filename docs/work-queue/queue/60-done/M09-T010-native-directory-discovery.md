@@ -3,12 +3,12 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T040 accepted; M01-T090 accepted; M02-T040 accepted;
   M05-T010 accepted; M05-T020 accepted; M06-T010 accepted; M08-T010 accepted
 - Integration evidence: D-M01-FOUND-001, D-M01-090-003, D-M02-040-002,
   D-M05-010-002, D-M05-020-002, D-M06-010-002, and D-M08-010-002 accepted
-- Owner: the proposed implementation scope is root-owned
+- Owner: the accepted implementation scope is root-owned
   `apps/agent/package.json`, `apps/web/src/app/explore/page.tsx`,
   `apps/web/src/components/discovery/riskscan-directory-discovery.tsx`,
   `apps/web/src/components/discovery/riskscan-directory-state.ts`,
@@ -114,3 +114,30 @@ repository workspace under the local worktree policy. HA-X402-HEDERA-001
 remains PENDING and grants no external authority. No configuration,
 recipient/facilitator setup, wallet/account/key action, signing, payment,
 transaction, deployment, evidence, result, or live claim is authorized.
+
+## Acceptance
+
+Accepted at 2026-09-06T09:56:19Z after a fresh queue rescan confirmed that
+every dependency and integration-evidence record remained accepted and that no
+conflicting active path existed.
+
+- `MODULE_BASE` is `b422bef85e1e1efd8b419cc3f3e5c1c052a55a56`; `MODULE_HEAD`
+  is `1c6fb6cc66c5ceb5055628f4a499022c49dfb530`.
+- The RED-to-GREEN contract, focused Directory/Explore tests, Agent and Web
+  typechecks, Web tests, root Node 22.21.1 clean-install dry run, typecheck,
+  full test suite, lint, production Webpack build, queue validation,
+  whitespace/reference checks, and enabled local-reference guard passed.
+- In the local Next browser, the explicit inspection action made one local
+  `GET /api/tools` returning `200` and no RiskScan `POST`, then rendered the
+  truthful configuration-required selected state and its polite selected
+  announcement. No payment, external request, result, or live assertion was
+  made. Framework/browser errors were clear, axe found zero violations, and a
+  390px-wide check had no horizontal overflow.
+- Independent task review found no finding. The first Specification module
+  review found one valid selected-state live-announcement gap; it was corrected
+  through a RED-to-GREEN contract, then two fresh clean Standards/Specification
+  module-review generations found no remaining Critical, Important, or Minor
+  finding.
+
+HA-X402-HEDERA-001 remains PENDING and grants no authority for a payment
+client, account action, signing, transaction, deployment, or live proof.
