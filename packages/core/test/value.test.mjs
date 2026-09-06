@@ -31,7 +31,11 @@ test("parses canonical Hedera account identifiers", () => {
   assert.equal(parseHederaAccountId("0.0.123"), "0.0.123");
 });
 
-test("parses one-digit and nine-digit canonical transaction nanoseconds", () => {
+test("parses zero-, one-, and nine-digit canonical transaction nanoseconds", () => {
+  assert.equal(
+    parseHederaTransactionId("0.0.123@1700000000.0"),
+    "0.0.123@1700000000.0",
+  );
   assert.equal(
     parseHederaTransactionId("0.0.123@1700000000.1"),
     "0.0.123@1700000000.1",
