@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Badge } from "../ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Card, CardContent, CardHeader } from "../ui/card";
 
 const steps = [
   {
@@ -39,7 +39,7 @@ export function LandingSections() {
                   <span className="flex size-9 items-center justify-center rounded-full bg-secondary text-sm font-semibold">
                     {index + 1}
                   </span>
-                  <CardTitle>{step.title}</CardTitle>
+                  <h3 className="text-lg font-semibold">{step.title}</h3>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm leading-6 text-muted-foreground">{step.description}</p>
@@ -59,7 +59,7 @@ export function LandingSections() {
           <h2 id="riskscan-introduction-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
             A bounded journey for thoughtful review
           </h2>
-          <p className="leading-7 text-muted-foreground">
+          <p className="leading-7 text-secondary-foreground">
             Read what RiskScan considers, then continue into its guided local flow when you are ready.
           </p>
         </div>
