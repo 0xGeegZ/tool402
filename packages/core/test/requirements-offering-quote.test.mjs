@@ -195,6 +195,72 @@ test("bounds key and string serialization before oversized canonical output is b
   });
 });
 
+test("bounds object keys before descriptor reflection and sorting", () => {
+  const commonPrefix = "k".repeat(32 * 1024 + 1);
+  let descriptorRead = false;
+  const requirements = new Proxy(
+    {},
+    {
+      ownKeys() {
+        return [`${commonPrefix}a`, `${commonPrefix}b`];
+      },
+      getOwnPropertyDescriptor() {
+        descriptorRead = true;
+        return {
+          configurable: true,
+          enumerable: true,
+          value: true,
+          writable: true,
+        };
+      },
+    },
+  );
+
+  assert.throws(
+    () => canonicalizeRequirements(requirements),
+    /requirements exceed canonicalization limits/u,
+  );
+  assert.equal(descriptorRead, false);
+});
+
+test("rejects oversized array index keys before numeric conversion", () => {
+  const oversizedIndex = "9".repeat(128 * 1024);
+  const items = new Proxy(
+    [],
+    {
+      ownKeys() {
+        return [oversizedIndex, "length"];
+      },
+    },
+  );
+  const originalNumber = globalThis.Number;
+  const sentinel = new Error("unbounded numeric conversion");
+  const guardedNumber = (value) => {
+    if (typeof value === "string" && value.length > 1024) {
+      throw sentinel;
+    }
+
+    return originalNumber(value);
+  };
+
+  guardedNumber.isSafeInteger = originalNumber.isSafeInteger;
+  globalThis.Number = guardedNumber;
+  try {
+    assert.throws(
+      () => canonicalizeRequirements({ items }),
+      (error) => {
+        assert.notEqual(error, sentinel);
+        return (
+          error instanceof TypeError &&
+          error.message === "requirements must be a safe JSON object"
+        );
+      },
+    );
+  } finally {
+    globalThis.Number = originalNumber;
+  }
+});
+
 test("snapshots requirements in reflected order before sorted canonical emission", () => {
   const later = { state: "before" };
   const earlier = new Proxy(
