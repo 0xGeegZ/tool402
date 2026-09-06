@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M16-T010 accepted; M17-T010 accepted
 - Owner: `packages/core/src/offering-purchase-lifecycle.ts`,
   `packages/core/src/index.ts`,
@@ -91,3 +91,14 @@ ready state authorizes only the bounded RED/GREEN contract after root
 activation; it does not authorize payment, funding, allocation, ATS, account,
 wallet, signer, transaction, settlement, receipt, persistence, clearing, HCS,
 payout, deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-06T22:01:19Z after a fresh post-ready rescan confirmed
+that M18-T010 is the sole ready card, no active-card conflict owns its bounded
+Core paths, accepted M16/M17 dependencies remain present, and the accepted
+human evidence grants no external authority but does not block this pure local
+work. This activation authorizes the specified Core RED/GREEN implementation
+and verification only; it does not expand authority to payment, funding,
+allocation, ATS, account, wallet, signer, transaction, settlement, receipt,
+persistence, clearing, HCS, payout, deployment, or live behavior.
