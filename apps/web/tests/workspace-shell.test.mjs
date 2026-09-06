@@ -10,6 +10,8 @@ function readAppFile(path) {
   return readFile(join(appRoot, path), "utf8");
 }
 
+const fabricatedWorkspaceState = /\bsigner\b|\b(?:authenticated|active)\s+session\b|\bsession\s+is\s+(?:active|authenticated)\b/i;
+
 test("renders the guest workspace route without a fabricated session", async () => {
   const [page, shell, navigation, overview] = await Promise.all([
     readAppFile("src/app/dashboard/page.tsx"),
@@ -53,8 +55,13 @@ test("keeps the workspace shell static and local", async () => {
     readAppFile("src/components/workspace/workspace-overview.tsx"),
   ]);
 
+  const workspaceSource = sources.join("\n");
+
   assert.doesNotMatch(
-    sources.join("\n"),
+    workspaceSource,
     /["']use client["']|\bfetch\b|process\.env|localStorage|sessionStorage|setTimeout|setInterval|analytics|currentUser|connectWallet|signOut|\b(?:identity|account|wallet|provider|balance|position|notification|activity|payment|result|receipt|evidence|transaction|deployment|live)\b|https?:\/\//i,
   );
+  assert.doesNotMatch(workspaceSource, fabricatedWorkspaceState);
+  assert.match("Signer: 0x123", fabricatedWorkspaceState);
+  assert.match("An authenticated session is active", fabricatedWorkspaceState);
 });
