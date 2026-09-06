@@ -1,16 +1,12 @@
 "use client";
 
-import { runRiskScanQuickFlow, type RiskScanToolFlowOutcome } from "@tool402/agent/riskscan-tool-flow";
+import { runRiskScanQuickFlow } from "@tool402/agent/riskscan-tool-flow";
 import type { RiskScanQuickInput } from "@tool402/core";
 import { useRef, useState, type FormEvent } from "react";
 
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
-
-type RiskScanToolLoopState =
-  | { kind: "idle" }
-  | { kind: "submitting" }
-  | RiskScanToolFlowOutcome;
+import { runExclusive, toolLoopOutcomeMessage, type ToolLoopViewState } from "./riskscan-tool-loop-state";
 
 function readQuickInput(data: FormData): RiskScanQuickInput {
   const field = (name: "requestRef" | "subjectRef" | "context") =>
@@ -29,50 +25,22 @@ function readQuickInput(data: FormData): RiskScanQuickInput {
   };
 }
 
-function ToolLoopOutcome({ state }: { state: RiskScanToolLoopState }) {
-  if (state.kind === "idle") return null;
-  if (state.kind === "submitting") {
-    return <p aria-live="polite">Sending the ToolLoop request boundary.</p>;
-  }
-  if (state.kind === "directory_unavailable") {
-    return <p aria-live="polite">RiskScan directory is unavailable. No RiskScan request was sent.</p>;
-  }
-  if (state.kind === "directory_invalid") {
-    return <p aria-live="polite">RiskScan directory is invalid. No RiskScan request was sent.</p>;
-  }
-  if (state.kind === "input_invalid") {
-    return <p aria-live="polite">The input was rejected. No RiskScan request was sent.</p>;
-  }
-  if (state.kind === "transport_failure") {
-    return <p aria-live="polite">The request could not reach the service. No payment or result is confirmed or shown.</p>;
-  }
-  if (state.kind === "unavailable") {
-    return <p aria-live="polite">RiskScan is unavailable. No payment or result is confirmed or shown.</p>;
-  }
-  if (state.kind === "payment_required") {
-    return <p aria-live="polite">A payment challenge was returned. No payment was made in this browser.</p>;
-  }
-  if (state.kind === "unexpected_response") {
-    return <p aria-live="polite">The service returned an unexpected response. No payment or result is confirmed or shown.</p>;
-  }
-  return null;
+function ToolLoopOutcome({ state }: { state: ToolLoopViewState }) {
+  const message = toolLoopOutcomeMessage(state);
+  return message === null ? null : <p aria-live="polite">{message}</p>;
 }
 
 export function RiskScanToolLoop() {
-  const [state, setState] = useState<RiskScanToolLoopState>({ kind: "idle" });
+  const [state, setState] = useState<ToolLoopViewState>({ kind: "idle" });
   const inFlight = useRef(false);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (inFlight.current) return;
-    inFlight.current = true;
-    try {
+    await runExclusive(inFlight, async () => {
       setState({ kind: "submitting" });
       const serviceBase = new URL(window.location.origin);
       setState(await runRiskScanQuickFlow(serviceBase, readQuickInput(new FormData(event.currentTarget))));
-    } finally {
-      inFlight.current = false;
-    }
+    });
   }
 
   return (

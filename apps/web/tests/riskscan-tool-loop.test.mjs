@@ -17,6 +17,10 @@ function readAppFile(path) {
   return readFile(join(appRoot, path), "utf8");
 }
 
+function loadToolLoopState() {
+  return import("../src/components/riskscan/tool-loop/riskscan-tool-loop-state.ts");
+}
+
 function directory() {
   return {
     version: "v1",
@@ -117,6 +121,54 @@ test("does not submit a RiskScan request when the public Agent directory call fa
   assert.equal(challengeCalls, 0);
 });
 
+test("runs only one ToolLoop submission until the pending runner releases its synchronous lock", async () => {
+  const { runExclusive } = await loadToolLoopState();
+  const inFlight = { current: false };
+  let calls = 0;
+  let releaseFirst;
+
+  const first = runExclusive(inFlight, async () => {
+    calls += 1;
+    await new Promise((resolve) => { releaseFirst = resolve; });
+    return "first";
+  });
+  const second = await runExclusive(inFlight, async () => {
+    calls += 1;
+    return "second";
+  });
+
+  assert.equal(calls, 1);
+  assert.equal(second, undefined);
+  assert.equal(inFlight.current, true);
+
+  releaseFirst();
+  assert.equal(await first, "first");
+  assert.equal(inFlight.current, false);
+  assert.equal(await runExclusive(inFlight, async () => {
+    calls += 1;
+    return "third";
+  }), "third");
+  assert.equal(calls, 2);
+});
+
+test("maps only the bounded ToolLoop view states to their truthful fixed messages", async () => {
+  const { toolLoopOutcomeMessage } = await loadToolLoopState();
+
+  for (const [state, expected] of [
+    [{ kind: "idle" }, null],
+    [{ kind: "submitting" }, "Sending the ToolLoop request boundary."],
+    [{ kind: "directory_unavailable" }, "RiskScan directory is unavailable. No RiskScan request was sent."],
+    [{ kind: "directory_invalid" }, "RiskScan directory is invalid. No RiskScan request was sent."],
+    [{ kind: "input_invalid" }, "The input was rejected. No RiskScan request was sent."],
+    [{ kind: "transport_failure" }, "The request could not reach the service. No payment or result is confirmed or shown."],
+    [{ kind: "unavailable" }, "RiskScan is unavailable. No payment or result is confirmed or shown."],
+    [{ kind: "payment_required" }, "A payment challenge was returned. No payment was made in this browser."],
+    [{ kind: "unexpected_response" }, "The service returned an unexpected response. No payment or result is confirmed or shown."],
+  ]) {
+    assert.equal(toolLoopOutcomeMessage(state), expected);
+  }
+});
+
 test("locks the static ToolLoop page, bounded client form, and non-payment presentation boundary", async () => {
   const [page, flow, detail] = await Promise.all([
     readAppFile("src/app/explore/riskscan/tool-loop/page.tsx"),
@@ -141,23 +193,11 @@ test("locks the static ToolLoop page, bounded client form, and non-payment prese
   assert.match(flow, /new URL\(window\.location\.origin\)/);
   assert.match(flow, /disabled=\{state\.kind === ["']submitting["']\}/);
   assert.match(flow, /const inFlight = useRef\(false\);/);
-  assert.match(flow, /if \(inFlight\.current\) return;/);
-  assert.match(flow, /inFlight\.current = true;/);
-  assert.match(flow, /finally\s*\{\s*inFlight\.current = false;\s*\}/);
+  assert.match(flow, /await runExclusive\(inFlight, async \(\) =>/);
+  assert.match(flow, /toolLoopOutcomeMessage\(state\)/);
+  assert.match(flow, /aria-live=["']polite["']/);
   assert.equal((flow.match(/\brunRiskScanQuickFlow\b/g) ?? []).length, 2);
 
-  for (const [kind, copy] of [
-    ["directory_unavailable", "RiskScan directory is unavailable. No RiskScan request was sent."],
-    ["directory_invalid", "RiskScan directory is invalid. No RiskScan request was sent."],
-    ["input_invalid", "The input was rejected. No RiskScan request was sent."],
-    ["transport_failure", "The request could not reach the service. No payment or result is confirmed or shown."],
-    ["unavailable", "RiskScan is unavailable. No payment or result is confirmed or shown."],
-    ["payment_required", "A payment challenge was returned. No payment was made in this browser."],
-    ["unexpected_response", "The service returned an unexpected response. No payment or result is confirmed or shown."],
-  ]) {
-    assert.match(flow, new RegExp(`\\b${kind}\\b`));
-    assert.match(flow, new RegExp(copy.replace(/[.]/g, "\\.")));
-  }
   assert.match(detail, /href=["']\/explore\/riskscan\/tool-loop["']/);
 
   assert.doesNotMatch(flow, /\bfetch\b|\/api\//);
