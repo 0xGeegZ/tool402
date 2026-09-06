@@ -228,3 +228,22 @@ test("binds M16 allocation facts to complete requirements, strict expiry, and an
   assert.deepEqual(quote, quoteSnapshot);
   assert.equal(await matchesQuotedRequirements(quote, requirements), false);
 });
+
+test("snapshots the canonical expiry before requirements hashing awaits", async () => {
+  const quoteInput = {
+    expectedTermsVersion: "offering-v1",
+    requestedUnits: noteUnits("2"),
+    confirmedAllocatedUnits: noteUnits("3"),
+    requirements: {
+      x402Version: 2,
+      payment: { amount: "20", asset: "tinybar" },
+    },
+    expiresAt: "2026-09-06T18:00:00.000Z",
+  };
+
+  const quotePromise = createOfferingRequirementsQuote(validTerms(), quoteInput);
+  quoteInput.expiresAt = "2026-09-06T19:00:00.000Z";
+
+  const quote = await quotePromise;
+  assert.equal(quote.expiresAt, "2026-09-06T18:00:00.000Z");
+});
