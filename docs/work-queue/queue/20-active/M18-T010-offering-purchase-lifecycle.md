@@ -127,3 +127,16 @@ was committed before the first implementation commit. The local
 outcomes after the fact and explicitly does not claim independent proof of
 earlier commit chronology. Fresh task and module review must assess the final
 code and this limitation directly.
+
+## Historical-evidence disposition
+
+`TDD_COMMIT_ORDER_EVIDENCE` is `UNAVAILABLE_AT_INTAKE`: the repository cannot
+prove a test-only M18 commit preceded the first implementation commit, and no
+history rewrite or retroactive proof is permitted. This is not a passing
+strict-historical TDD gate and must remain visible in any acceptance record.
+
+The root may accept the independently verified deterministic Core behavior
+only with this retained process limitation; it must never present M18 as proof
+of a fully auditable historical RED-before-implementation sequence. Every
+subsequent behavioral card must commit its RED executable contract before its
+implementation commit.
