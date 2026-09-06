@@ -5,11 +5,12 @@
 - Tier: CORE_P0
 - Queue state: 20-active
 - Dependencies: M01-T020 accepted
-- Owner: `packages/core/src/value.ts`, `packages/core/src/index.ts`, and
-  `packages/core/test/value.test.mjs` are this card's implementation paths.
-  The root owns this card, local specification/import ledger, plan, queue
-  state, catalog, ownership, decisions, reviews, integration evidence, and
-  pushes.
+- Owner: `packages/core/src/value.ts`, `packages/core/src/index.ts`,
+  `packages/core/test/value.test.mjs`, `packages/core/test/value.types.ts`,
+  and `packages/core/tsconfig.json` are this card's implementation and
+  compile-time-contract paths. The root owns this card, local
+  specification/import ledger, plan, queue state, catalog, ownership,
+  decisions, reviews, integration evidence, and pushes.
 - Human actions: none for the pure local boundary.
 
 ## Scope
@@ -75,3 +76,12 @@ re-review, disjoint core paths, and no human blocker for pure local parsing.
 The lane starts with its public parser RED contract in the current repository
 workspace under the local worktree policy. No account, signer, wallet, payment,
 transaction, settlement, deployment, or live behavior is authorized.
+
+## Module review correction
+
+The first module Standards review found that the review-required public
+compile-time consumer fixture and its minimal `tsconfig` inclusion had not
+been recorded as card-owned paths. The root now explicitly reserves those two
+paths in this card, the plan, catalog, and ownership register. This is a
+governance correction only: it does not widen M10 behavior or authorize any
+external action. Fresh module review generations restart after the correction.

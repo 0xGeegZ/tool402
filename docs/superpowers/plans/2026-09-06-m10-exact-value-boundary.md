@@ -34,6 +34,8 @@ runner.
 - Create: `packages/core/src/value.ts`
 - Modify: `packages/core/src/index.ts`
 - Create: `packages/core/test/value.test.mjs`
+- Create: `packages/core/test/value.types.ts`
+- Modify: `packages/core/tsconfig.json`
 
 **Interfaces:**
 
@@ -77,6 +79,11 @@ runner.
   env PATH=/Users/guillaumedieudonne/.nvm/versions/node/v22.21.1/bin:$PATH npm run test --workspace @tool402/core
   env PATH=/Users/guillaumedieudonne/.nvm/versions/node/v22.21.1/bin:$PATH npm run lint --workspace @tool402/core
   ```
+
+  The core workspace typecheck includes the public TypeScript consumer fixture:
+  it imports all five parser/type pairs through `../src/index.ts`, proves each
+  parser return assigns to its matching opaque type, and uses expected errors
+  to prove the monetary and identifier brands are not interchangeable.
 
 - [ ] **Step 5: Commit the implementation**
 
