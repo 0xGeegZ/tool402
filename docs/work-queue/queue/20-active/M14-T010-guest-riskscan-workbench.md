@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T040 accepted; M08-T010 accepted; M09-T010 accepted;
   M11-T020 accepted; M13-T010 accepted
 - Owner: `apps/web/src/app/dashboard/riskscan/page.tsx`,
@@ -95,3 +95,13 @@ the focused M14 test must inspect only new route/workbench sources rather than
 reject existing ToolLoop behavior. This ready state authorizes only the local
 RED/GREEN workbench contract. It does not authorize Sign/session, payment,
 signing, account, wallet, transaction, deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-06T15:31:56Z after a fresh local rescan confirmed the
+pushed ready state, accepted M01-T040, M08-T010, M09-T010, M11-T020, and
+M13-T010 dependencies, no active conflicting owner, resolvable local records,
+and no human blocker for the controlled guest composition. The lane starts
+with its focused local RED route/workbench contract in the current repository
+workspace under the local worktree policy. No Sign session, account, wallet,
+payment, transaction, deployment, or live behavior is authorized.
