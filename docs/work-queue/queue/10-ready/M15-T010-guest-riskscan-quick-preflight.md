@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T020 accepted; M01-T040 accepted; M02-T050 accepted;
   M11-T020 accepted
 - Owner: `apps/web/src/app/dashboard/riskscan/preflight/page.tsx`,
@@ -52,8 +52,9 @@ its UI boundary is [UI-S10](../../../ui/UI-S10.md), the local UI ledger is
 - The card records blank text inputs, four explicit boolean declarations, one
   local core invocation per deliberate valid submission, bounded outcomes,
   truthful presentation, tier, human boundary, and concrete validation rules.
-- The delivery excludes Sign/session/provider behavior, identity, account,
-  wallet, signer, configuration/environment reads, direct fetch/API/request
+- The delivery excludes Sign/session/provider behavior, fabricated user or
+  session identity, account, wallet, signer, configuration/environment reads,
+  direct fetch/API/request
   construction, POST, payment-client behavior, storage, persistence,
   receipt/evidence, deployment, and live claims.
 
@@ -83,3 +84,17 @@ or reopening payment/persistence. This inbox card authorizes only its local
 contract, UI manifest/ledger row, and plan. It authorizes neither RED/code nor
 Sign/session, payment, signing, account, wallet, transaction, deployment, or
 live behavior.
+
+## Ready transition
+
+Ready at 2026-09-06T16:11:21Z after two fresh independent readiness reviews
+found accepted M01-T020, M01-T040, M02-T050, and M11-T020 dependencies;
+resolvable local records; a disjoint new Dashboard route/island/test boundary;
+the explicitly constrained Workspace navigation/test amendment; public Core
+client feasibility without package/configuration changes; and no human blocker
+for pure local assessment. The reviews require typed form-data construction,
+one local `assessRiskScanQuick` call inside a bounded invalid-input `try/catch`,
+and tests that allow the required declaration `identity` field while banning
+fabricated user/session identity state. This ready state authorizes only the
+local RED/GREEN preflight contract. It does not authorize Sign/session,
+payment, signing, account, wallet, transaction, deployment, or live behavior.
