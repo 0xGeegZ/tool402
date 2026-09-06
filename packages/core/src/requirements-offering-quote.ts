@@ -41,11 +41,19 @@ interface CapturedProperty {
   readonly value: unknown;
 }
 
+interface CanonicalEmitter {
+  readonly chunks: string[];
+  currentChunk: string;
+  byteLength: number;
+}
+
 const MAX_CONTAINER_DEPTH = 16;
 const MAX_JSON_VALUES = 256;
 const MAX_OBJECT_PROPERTIES = 128;
 const MAX_ARRAY_ITEMS = 128;
 const MAX_CANONICAL_BYTES = 32 * 1024;
+const EMITTER_CHUNK_CODE_UNITS = 1024;
+const hexadecimalDigits = "0123456789abcdef";
 const canonicalUtcMilliseconds =
   /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z$/u;
 
@@ -144,53 +152,183 @@ function captureObjectProperties(value: object): readonly CapturedProperty[] {
   }));
 }
 
-function capturePlainObject(
+function appendBounded(
+  emitter: CanonicalEmitter,
+  value: string,
+  byteLength: number,
+): void {
+  if (byteLength > MAX_CANONICAL_BYTES - emitter.byteLength) {
+    rejectRequirementsLimit();
+  }
+
+  emitter.byteLength += byteLength;
+  emitter.currentChunk += value;
+  if (emitter.currentChunk.length >= EMITTER_CHUNK_CODE_UNITS) {
+    emitter.chunks.push(emitter.currentChunk);
+    emitter.currentChunk = "";
+  }
+}
+
+function appendAscii(emitter: CanonicalEmitter, value: string): void {
+  for (let index = 0; index < value.length; index += 1) {
+    if (value.charCodeAt(index) > 0x7f) {
+      rejectMalformedRequirements();
+    }
+  }
+
+  appendBounded(emitter, value, value.length);
+}
+
+function appendUtf8(
+  emitter: CanonicalEmitter,
+  value: string,
+  byteLength: number,
+): void {
+  appendBounded(emitter, value, byteLength);
+}
+
+function emitUnicodeEscape(emitter: CanonicalEmitter, codeUnit: number): void {
+  appendAscii(
+    emitter,
+    `\\u${hexadecimalDigits[(codeUnit >>> 12) & 0xf]}${
+      hexadecimalDigits[(codeUnit >>> 8) & 0xf]
+    }${hexadecimalDigits[(codeUnit >>> 4) & 0xf]}${
+      hexadecimalDigits[codeUnit & 0xf]
+    }`,
+  );
+}
+
+function emitJsonString(emitter: CanonicalEmitter, value: string): void {
+  appendAscii(emitter, '"');
+
+  for (let index = 0; index < value.length; index += 1) {
+    const codeUnit = value.charCodeAt(index);
+
+    switch (codeUnit) {
+      case 0x22:
+        appendAscii(emitter, '\\"');
+        continue;
+      case 0x5c:
+        appendAscii(emitter, "\\\\");
+        continue;
+      case 0x08:
+        appendAscii(emitter, "\\b");
+        continue;
+      case 0x0c:
+        appendAscii(emitter, "\\f");
+        continue;
+      case 0x0a:
+        appendAscii(emitter, "\\n");
+        continue;
+      case 0x0d:
+        appendAscii(emitter, "\\r");
+        continue;
+      case 0x09:
+        appendAscii(emitter, "\\t");
+        continue;
+      default:
+        break;
+    }
+
+    if (codeUnit < 0x20) {
+      emitUnicodeEscape(emitter, codeUnit);
+      continue;
+    }
+    if (codeUnit >= 0xd800 && codeUnit <= 0xdbff) {
+      const nextCodeUnit = value.charCodeAt(index + 1);
+      if (nextCodeUnit >= 0xdc00 && nextCodeUnit <= 0xdfff) {
+        appendUtf8(emitter, value.slice(index, index + 2), 4);
+        index += 1;
+      } else {
+        emitUnicodeEscape(emitter, codeUnit);
+      }
+      continue;
+    }
+    if (codeUnit >= 0xdc00 && codeUnit <= 0xdfff) {
+      emitUnicodeEscape(emitter, codeUnit);
+      continue;
+    }
+    if (codeUnit <= 0x7f) {
+      appendAscii(emitter, value.charAt(index));
+      continue;
+    }
+
+    appendUtf8(
+      emitter,
+      value.charAt(index),
+      codeUnit <= 0x7ff ? 2 : 3,
+    );
+  }
+
+  appendAscii(emitter, '"');
+}
+
+function finishCanonicalEmitter(
+  emitter: CanonicalEmitter,
+): CanonicalRequirements {
+  if (emitter.currentChunk.length > 0) {
+    emitter.chunks.push(emitter.currentChunk);
+    emitter.currentChunk = "";
+  }
+
+  return emitter.chunks.join("") as CanonicalRequirements;
+}
+
+function emitPlainObject(
   value: object,
   depth: number,
   state: CaptureState,
   requireNonEmpty: boolean,
-): string {
+  emitter: CanonicalEmitter,
+): void {
   if (safePrototype(value) !== Object.prototype) {
-    return rejectMalformedRequirements();
+    rejectMalformedRequirements();
   }
 
-  return captureContainer(value, depth, state, () => {
+  captureContainer(value, depth, state, () => {
     const properties = captureObjectProperties(value);
     if (requireNonEmpty && properties.length === 0) {
-      return rejectMalformedRequirements();
+      rejectMalformedRequirements();
     }
 
-    return `{${properties
-      .map(
-        ({ key, value: propertyValue }) =>
-          `${JSON.stringify(key)}:${captureValue(propertyValue, depth + 1, state, false)}`,
-      )
-      .join(",")}}`;
+    appendAscii(emitter, "{");
+    for (let index = 0; index < properties.length; index += 1) {
+      const property = properties[index];
+      if (index > 0) {
+        appendAscii(emitter, ",");
+      }
+
+      emitJsonString(emitter, property.key);
+      appendAscii(emitter, ":");
+      emitValue(property.value, depth + 1, state, false, emitter);
+    }
+    appendAscii(emitter, "}");
   });
 }
 
-function captureArray(
+function emitArray(
   value: object,
   depth: number,
   state: CaptureState,
-): string {
+  emitter: CanonicalEmitter,
+): void {
   if (safePrototype(value) !== Array.prototype) {
-    return rejectMalformedRequirements();
+    rejectMalformedRequirements();
   }
 
-  return captureContainer(value, depth, state, () => {
+  captureContainer(value, depth, state, () => {
     const keys = safeOwnKeys(value);
     const seenKeys = new Set<string>();
     const descriptors = new Map<string, DataPropertyDescriptor>();
 
     for (const key of keys) {
       if (typeof key !== "string" || seenKeys.has(key)) {
-        return rejectMalformedRequirements();
+        rejectMalformedRequirements();
       }
 
       const descriptor = safeOwnPropertyDescriptor(value, key);
       if (!isDataPropertyDescriptor(descriptor)) {
-        return rejectMalformedRequirements();
+        rejectMalformedRequirements();
       }
 
       seenKeys.add(key);
@@ -205,30 +343,36 @@ function captureArray(
       !Number.isSafeInteger(lengthDescriptor.value) ||
       lengthDescriptor.value < 0
     ) {
-      return rejectMalformedRequirements();
+      rejectMalformedRequirements();
     }
 
     const length = lengthDescriptor.value;
     if (length > MAX_ARRAY_ITEMS) {
-      return rejectRequirementsLimit();
+      rejectRequirementsLimit();
     }
     if (descriptors.size !== length + 1) {
-      return rejectMalformedRequirements();
+      rejectMalformedRequirements();
     }
 
     const values: unknown[] = [];
     for (let index = 0; index < length; index += 1) {
       const descriptor = descriptors.get(String(index));
       if (descriptor === undefined || !descriptor.enumerable) {
-        return rejectMalformedRequirements();
+        rejectMalformedRequirements();
       }
 
       values.push(descriptor.value);
     }
 
-    return `[${values
-      .map((item) => captureValue(item, depth + 1, state, false))
-      .join(",")}]`;
+    appendAscii(emitter, "[");
+    for (let index = 0; index < values.length; index += 1) {
+      if (index > 0) {
+        appendAscii(emitter, ",");
+      }
+
+      emitValue(values[index], depth + 1, state, false, emitter);
+    }
+    appendAscii(emitter, "]");
   });
 }
 
@@ -236,65 +380,90 @@ function captureContainer(
   value: object,
   depth: number,
   state: CaptureState,
-  capture: () => string,
-): string {
+  capture: () => void,
+): void {
   if (depth > MAX_CONTAINER_DEPTH) {
-    return rejectRequirementsLimit();
+    rejectRequirementsLimit();
   }
   if (state.activeContainers.has(value)) {
-    return rejectMalformedRequirements();
+    rejectMalformedRequirements();
   }
 
   state.activeContainers.add(value);
   try {
-    return capture();
+    capture();
   } finally {
     state.activeContainers.delete(value);
   }
 }
 
-function captureValue(
+function emitValue(
   value: unknown,
   depth: number,
   state: CaptureState,
   requireObjectRoot: boolean,
-): string {
+  emitter: CanonicalEmitter,
+): void {
   consumeJsonValue(state);
 
   if (value === null) {
-    return requireObjectRoot ? rejectMalformedRequirements() : "null";
+    if (requireObjectRoot) {
+      rejectMalformedRequirements();
+    }
+
+    appendAscii(emitter, "null");
+    return;
   }
 
   switch (typeof value) {
     case "boolean":
-      return requireObjectRoot ? rejectMalformedRequirements() : String(value);
-    case "string":
-      return requireObjectRoot ? rejectMalformedRequirements() : JSON.stringify(value);
-    case "number":
-      if (!Number.isFinite(value) || Object.is(value, -0)) {
-        return rejectMalformedRequirements();
+      if (requireObjectRoot) {
+        rejectMalformedRequirements();
       }
 
-      return requireObjectRoot ? rejectMalformedRequirements() : JSON.stringify(value);
+      appendAscii(emitter, value ? "true" : "false");
+      return;
+    case "string":
+      if (requireObjectRoot) {
+        rejectMalformedRequirements();
+      }
+
+      emitJsonString(emitter, value);
+      return;
+    case "number":
+      if (!Number.isFinite(value) || Object.is(value, -0)) {
+        rejectMalformedRequirements();
+      }
+
+      if (requireObjectRoot) {
+        rejectMalformedRequirements();
+      }
+
+      appendAscii(emitter, String(value));
+      return;
     case "object": {
       let isArray: boolean;
 
       try {
         isArray = Array.isArray(value);
       } catch {
-        return rejectMalformedRequirements();
+        rejectMalformedRequirements();
       }
 
       if (isArray) {
-        return requireObjectRoot
-          ? rejectMalformedRequirements()
-          : captureArray(value, depth, state);
+        if (requireObjectRoot) {
+          rejectMalformedRequirements();
+        }
+
+        emitArray(value, depth, state, emitter);
+        return;
       }
 
-      return capturePlainObject(value, depth, state, requireObjectRoot);
+      emitPlainObject(value, depth, state, requireObjectRoot, emitter);
+      return;
     }
     default:
-      return rejectMalformedRequirements();
+      rejectMalformedRequirements();
   }
 }
 
@@ -333,18 +502,21 @@ async function canonicalRequirementsDigest(
 }
 
 export function canonicalizeRequirements(input: unknown): CanonicalRequirements {
-  const canonical = captureValue(
+  const emitter: CanonicalEmitter = {
+    chunks: [],
+    currentChunk: "",
+    byteLength: 0,
+  };
+
+  emitValue(
     input,
     1,
     { nodeCount: 0, activeContainers: new WeakSet<object>() },
     true,
+    emitter,
   );
 
-  if (new TextEncoder().encode(canonical).byteLength > MAX_CANONICAL_BYTES) {
-    rejectRequirementsLimit();
-  }
-
-  return canonical as CanonicalRequirements;
+  return finishCanonicalEmitter(emitter);
 }
 
 export async function sha256Requirements(
