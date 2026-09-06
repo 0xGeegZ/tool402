@@ -63,6 +63,21 @@ test("accepts the native HBAR asset sentinel with an exact atomic amount", () =>
   );
 });
 
+test("selects a positive quote below its explicit maximum", () => {
+  assert.deepEqual(
+    evaluateRiskScanNativeQuote(
+      { ...genericAssetPolicy, maximumAmount: "10" },
+      { ...genericAssetQuote, amount: "9" },
+    ),
+    {
+      kind: "eligible",
+      network: "hedera:testnet",
+      asset: "0.0.777",
+      amount: 9n,
+    },
+  );
+});
+
 test("declines a positive quote that exceeds an explicit zero maximum", () => {
   assert.deepEqual(
     evaluateRiskScanNativeQuote(
@@ -212,6 +227,16 @@ test("requires ordinary own enumerable data records with exactly the declared fi
     declined("invalid_policy"),
   );
 
+  const wrongPolicyField = {
+    network: "hedera:testnet",
+    asset: "0.0.777",
+    amount: "1",
+  };
+  assert.deepEqual(
+    evaluateRiskScanNativeQuote(wrongPolicyField, genericAssetQuote),
+    declined("invalid_policy"),
+  );
+
   const nonEnumerableQuote = Object.defineProperty(
     { ...genericAssetQuote },
     "internal",
@@ -220,6 +245,16 @@ test("requires ordinary own enumerable data records with exactly the declared fi
   assert.deepEqual(
     evaluateRiskScanNativeQuote(genericAssetPolicy, nonEnumerableQuote),
     declined("invalid_quote"),
+  );
+
+  const nonEnumerableRequiredPolicy = Object.defineProperty(
+    { ...genericAssetPolicy },
+    "maximumAmount",
+    { enumerable: false },
+  );
+  assert.deepEqual(
+    evaluateRiskScanNativeQuote(nonEnumerableRequiredPolicy, genericAssetQuote),
+    declined("invalid_policy"),
   );
 });
 
@@ -265,6 +300,19 @@ test("fails closed when record reflection throws", () => {
   );
   assert.deepEqual(
     evaluateRiskScanNativeQuote(genericAssetPolicy, throwingQuote),
+    declined("invalid_quote"),
+  );
+
+  const descriptorThrowingQuote = new Proxy(
+    { ...genericAssetQuote },
+    {
+      getOwnPropertyDescriptor() {
+        throw new Error("quote descriptor reflection failed");
+      },
+    },
+  );
+  assert.deepEqual(
+    evaluateRiskScanNativeQuote(genericAssetPolicy, descriptorThrowingQuote),
     declined("invalid_quote"),
   );
 });
