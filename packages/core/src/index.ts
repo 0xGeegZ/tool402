@@ -16,6 +16,13 @@ export type {
   NoteUnits,
   Tinybar,
 } from "./value.ts";
+export { evaluateRiskScanNativeQuote } from "./riskscan-native-quote-eligibility.ts";
+export type {
+  RiskScanNativeAssetId,
+  RiskScanNativeAtomicAmount,
+  RiskScanNativeQuoteDeclineReason,
+  RiskScanNativeQuoteEligibility,
+} from "./riskscan-native-quote-eligibility.ts";
 export {
   bindRiskScanReceiptEvidence,
   completeRiskScanRequest,
