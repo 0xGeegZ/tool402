@@ -214,6 +214,50 @@ test("snapshots requirements in reflected order before sorted canonical emission
   assert.equal(later.state, "after");
 });
 
+test("snapshots object descriptor side effects before later descriptors", () => {
+  const earlier = { state: "before" };
+  const root = new Proxy(
+    { earlier, later: { state: "later" } },
+    {
+      getOwnPropertyDescriptor(target, key) {
+        if (key === "later") {
+          earlier.state = "after";
+        }
+
+        return Reflect.getOwnPropertyDescriptor(target, key);
+      },
+    },
+  );
+
+  assert.equal(
+    canonicalizeRequirements(root),
+    '{"earlier":{"state":"before"},"later":{"state":"later"}}',
+  );
+  assert.equal(earlier.state, "after");
+});
+
+test("snapshots array descriptor side effects before later item descriptors", () => {
+  const earlier = { state: "before" };
+  const items = new Proxy(
+    [earlier, { state: "later" }],
+    {
+      getOwnPropertyDescriptor(target, key) {
+        if (key === "1") {
+          earlier.state = "after";
+        }
+
+        return Reflect.getOwnPropertyDescriptor(target, key);
+      },
+    },
+  );
+
+  assert.equal(
+    canonicalizeRequirements({ items }),
+    '{"items":[{"state":"before"},{"state":"later"}]}',
+  );
+  assert.equal(earlier.state, "after");
+});
+
 test("binds M16 allocation facts to complete requirements, strict expiry, and an immutable quote", async () => {
   const requirements = {
     x402Version: 2,
