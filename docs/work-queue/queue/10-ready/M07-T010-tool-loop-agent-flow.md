@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M05-T010 accepted; M05-T020 accepted; M05-T030 accepted;
   M06-T010 accepted
 - Integration evidence: D-M05-010-002, D-M05-020-002, D-M05-030-002, and
@@ -90,3 +90,16 @@ it explicitly authorizes no external action and unblocks no later payment or
 live-proof card. The scoped re-review found no remaining Critical, Important,
 or Minor issue and approved the card for its normal ready transition. No code
 or runtime claim was reviewed or created at this stage.
+
+## Ready transition
+
+Ready at 2026-09-06T07:04:04Z after a fresh rescan confirmed the pushed
+`83a22088d9ff0899d527a5c9c837a473a3c2a822` inbox card, local specification,
+and implementation plan; all four accepted dependencies and their listed
+integration evidence; disjoint three-path Agent ownership; no active lane;
+concrete validation; and the independent design-review/re-review sequence.
+HA-X402-HEDERA-001 remains PENDING and grants no authority, but it does not
+block this local unsigned composition. The card is ready only for its Agent
+RED contract; it does not authorize a configured live route, payment, signing,
+wallet/account action, transaction, deployment, evidence, result, or live
+claim.
