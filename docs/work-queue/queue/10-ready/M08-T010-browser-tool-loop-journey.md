@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T040 accepted; M01-T090 accepted; M02-T070 accepted;
   M02-T080 accepted; M07-T010 accepted
 - Integration evidence: D-M01-FOUND-001, D-M02-070-002, D-M02-080-002, and
@@ -71,3 +71,25 @@ posts while the accepted ToolLoop composition is otherwise headless. This
 inbox card authorizes neither RED/code nor a configured recipient/facilitator,
 wallet/account action, payment, transaction, deployment, evidence, result, or
 live claim.
+
+## Design review
+
+The independent read-only design review found no Critical or Important issue.
+It identified two Minor control corrections: the Web workspace has no lint
+script, so the plan now uses root lint plus focused Web boundary tests; and the
+runtime state now lists the committed UI-S04 record. The scoped re-review at
+`92951db4aec67bda2370df4946c6a75c25dd01ca` found no remaining Critical,
+Important, or Minor issue. No code, package, runtime, or external action was
+created during design review.
+
+## Ready transition
+
+Ready at 2026-09-06T07:40:52Z after a fresh rescan confirmed the pushed M08
+inbox/specification/UI manifest/ledger/plan, all listed accepted dependencies
+and evidence, disjoint new Web paths and root package integration, no active
+lane, concrete validation, and the completed independent design-review/review
+sequence. HA-X402-HEDERA-001 remains PENDING and grants no external authority,
+but it does not block this strict local unsigned browser surface. This ready
+state authorizes only the M08 RED contract and controlled local code; it does
+not authorize a configured recipient/facilitator, wallet/account action,
+payment, transaction, deployment, evidence, result, or live claim.
