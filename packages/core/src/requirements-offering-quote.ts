@@ -292,15 +292,16 @@ function emitPlainObject(
     }
 
     appendAscii(emitter, "{");
-    for (let index = 0; index < properties.length; index += 1) {
-      const property = properties[index];
-      if (index > 0) {
+    let needsComma = false;
+    for (const property of properties) {
+      if (needsComma) {
         appendAscii(emitter, ",");
       }
 
       emitJsonString(emitter, property.key);
       appendAscii(emitter, ":");
       emitValue(property.value, depth + 1, state, false, emitter);
+      needsComma = true;
     }
     appendAscii(emitter, "}");
   });
