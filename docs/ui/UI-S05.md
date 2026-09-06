@@ -11,8 +11,10 @@ accepted local Agent directory projection.
 The action can render idle, inspecting, unavailable, invalid, and selected
 descriptor states. A selected descriptor shows RiskScan Quick's bounded input
 contract, its two limitations, and only its safe local configuration summary.
-The native summary keeps the exact `hedera:testnet` network, canonical asset,
-and atomic amount; it never converts value or presents a payment control.
+An EVM summary keeps only its fixed `x402` protocol, canonical network, and
+exact price. The native summary keeps the exact `hedera:testnet` network,
+canonical asset, and atomic amount; neither summary converts value or presents
+a payment control.
 
 ## Local targets
 
@@ -24,9 +26,10 @@ directory module through its package map.
 
 This manifest narrowly supersedes UI-S01's original no-client-request, price,
 and payment-state prohibitions only for this new isolated directory-inspection
-subtree: one public Agent directory `GET` and the strictly parser-derived
-configuration-summary fields named above. UI-S01's static route/card and every
-other original boundary remain unchanged.
+subtree: one public Agent directory `GET`; EVM `x402` protocol, canonical
+network, and exact price; and native `x402`, `hedera:testnet`, canonical asset,
+and atomic amount fields. UI-S01's static route/card and every other original
+boundary remain unchanged.
 
 ## Truthfulness and authority boundary
 

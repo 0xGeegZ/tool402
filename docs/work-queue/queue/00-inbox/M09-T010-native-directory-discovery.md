@@ -82,7 +82,9 @@ The independent design review found one Important UI-authority contradiction:
 UI-S05 permitted parser-derived configuration metadata while leaving UI-S01's
 price/payment-state prohibition apparently intact. The local M09 contract,
 UI-S05 manifest, and plan now narrowly amend only the new island's one public
-directory `GET` and strictly parser-derived configuration-summary fields;
-UI-S01's static card and every other boundary remain unchanged. A scoped
-independent re-review is required before the normal ready transition. No code,
-payment, configuration, or external action was created during review.
+directory `GET` and explicitly enumerated EVM/native parser-derived
+configuration-summary fields; UI-S01's static card and every other boundary
+remain unchanged. A scoped re-review found the EVM fields had to be enumerated
+in the manifest as well, and this correction makes that set exact. A final
+scoped independent re-review is required before the normal ready transition.
+No code, payment, configuration, or external action was created during review.
