@@ -231,10 +231,10 @@ git commit -m "feat: advertise Hedera x402 capability"
 ### Task 3: Integration proof and module acceptance
 
 **Files:**
-- Modify: `docs/work-queue/queue/20-active/M06-T010-riskscan-hedera-x402.md`
+- Move: `docs/work-queue/queue/60-done/M06-T010-riskscan-hedera-x402.md`
 - Modify: root-owned queue state, catalog, ownership, decision, and evidence records
 
-- [ ] **Step 1: Exercise the controlled local path**
+- [x] **Step 1: Exercise the controlled local path**
 
 Use controlled configuration and the existing handler's injected fake native
 facilitator seam to exercise the Tool Directory plus an unsigned
@@ -242,7 +242,7 @@ facilitator seam to exercise the Tool Directory plus an unsigned
 status. Do not use a wallet, account, key, payment signature, remote
 facilitator, transaction, or result.
 
-- [ ] **Step 2: Run root verification**
+- [x] **Step 2: Run root verification**
 
 ```bash
 npm ci --dry-run --ignore-scripts --loglevel=error
@@ -254,7 +254,7 @@ npm run queue:check
 git diff --check
 ```
 
-- [ ] **Step 3: Obtain independent review, fix only confirmed in-scope findings, and accept**
+- [x] **Step 3: Obtain independent review, fix only confirmed in-scope findings, and accept**
 
 Run the independent task review, focused RED regression/re-review cycle for
 confirmed findings, then two fresh module-review generations. Both final

@@ -3,12 +3,12 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T060 accepted; M03-T030 accepted; M05-T010 accepted;
   M05-T020 accepted; M05-T030 accepted
 - Integration evidence: D-M02-060-002, D-M03-030-002, D-M05-010-002,
   D-M05-020-002, and D-M05-030-002 accepted
-- Owner: the proposed implementation scope is `apps/web/package.json`,
+- Owner: the accepted implementation scope is `apps/web/package.json`,
   `package-lock.json`, `apps/web/src/lib/riskscan-x402.ts`,
   `apps/web/src/lib/tool-directory.ts`, focused web tests,
   `apps/agent/src/riskscan-tool-directory.ts`, and focused Agent tests. The
@@ -131,3 +131,28 @@ only: it does not configure a recipient or facilitator and does not prove a
 wallet, signer, payment, transaction, settlement, finality, receipt, evidence,
 result, deployment, or external compatibility. Task 3 may now run only the
 controlled local integration proof and module-review sequence.
+
+## Module acceptance
+
+Accepted at 2026-09-06T06:49:03Z for module range
+`819657a8a230eb08962a5039eb59d8f799320319..71e657b8a3d4efb6623a42b626245bcb03256354`.
+The controlled local exercise selected `riskscan.quick`, returned only the
+approved native summary (`locally_configured`, `x402`, `hedera:testnet`,
+`0.0.429274`, `10000`), and observed an unsigned `402`; its injected
+facilitator received one capability lookup and zero verify or settle calls.
+
+Fresh root verification passed clean-install dry-run, root typecheck, 180
+individual tests, root lint, queue validation, whitespace validation, and the
+enabled staged local-reference guard. The production Webpack build completed
+successfully with Cache Components enabled. It emitted a non-fatal optional
+upstream `@x402/paywall` resolution warning, which is distinct from a build
+failure and was not expanded into a dependency change.
+
+Independent Task 3 review found no Critical, Important, or Minor issue and
+approved acceptance. Two fresh clean Standards/Spec module-review generations
+also found no Critical, Important, or Minor issue. Acceptance covers only the
+controlled, unsigned native seller compatibility, safe Directory/Agent
+metadata, and local test evidence. It makes no assertion about a live
+facilitator, recipient configuration, wallet, account, signer, payment,
+transaction, settlement, finality, receipt, evidence, result, deployment, or
+external compatibility.
