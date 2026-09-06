@@ -5,12 +5,16 @@
   "type": "module",
   "exports": {
     "./riskscan-tool-directory": "./src/riskscan-tool-directory.ts",
-    "./riskscan-tool-flow": "./src/riskscan-tool-flow.ts"
+    "./riskscan-tool-flow": "./src/riskscan-tool-flow.ts",
+    "./riskscan-tool-native-quote-evaluation": "./src/riskscan-tool-native-quote-evaluation.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "node --test test/*.test.mjs",
     "lint": "node --test test/boundary.test.mjs"
+  },
+  "dependencies": {
+    "@tool402/core": "file:../../packages/core"
   },
   "devDependencies": {
     "@types/node": "22.15.0",
