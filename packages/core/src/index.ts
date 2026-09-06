@@ -3,6 +3,20 @@ export const coreFoundation = {
 } as const;
 
 export {
+  parseBasisPoints,
+  parseHederaAccountId,
+  parseHederaTransactionId,
+  parseNoteUnits,
+  parseTinybar,
+} from "./value.ts";
+export type {
+  BasisPoints,
+  HederaAccountId,
+  HederaTransactionId,
+  NoteUnits,
+  Tinybar,
+} from "./value.ts";
+export {
   bindRiskScanReceiptEvidence,
   completeRiskScanRequest,
   createRiskScanVerifiedSettlement,
