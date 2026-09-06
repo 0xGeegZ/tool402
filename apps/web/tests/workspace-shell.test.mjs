@@ -36,6 +36,7 @@ test("renders the guest workspace route without a fabricated session", async () 
     "/explore/riskscan/tool-loop",
     "/dashboard/riskscan/compatibility",
     "/dashboard/riskscan",
+    "/dashboard/riskscan/preflight",
   ]);
   assert.match(navigation, /<Link\b[^>]*href=\{link\.href\}/);
   assert.doesNotMatch(navigation, /<(?:a|button)\b/i);
