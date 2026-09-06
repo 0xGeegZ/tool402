@@ -6,6 +6,8 @@
 - Queue state: 20-active
 - Dependencies: M16-T010 accepted; M17-T010 accepted
 - Owner: `packages/core/src/offering-purchase-lifecycle.ts`,
+  `packages/core/src/requirements-offering-quote.ts` for a narrow internal
+  issuance verifier only,
   `packages/core/src/index.ts`,
   `packages/core/test/offering-purchase-lifecycle.test.mjs`, and
   `packages/core/test/offering-purchase-lifecycle.types.ts` are proposed
@@ -102,3 +104,14 @@ work. This activation authorizes the specified Core RED/GREEN implementation
 and verification only; it does not expand authority to payment, funding,
 allocation, ATS, account, wallet, signer, transaction, settlement, receipt,
 persistence, clearing, HCS, payout, deployment, or live behavior.
+
+## Module-review correction
+
+The first fresh module review at 2026-09-06T22:24:16Z found that a structural
+or mutable JavaScript quote lookalike could create a purchase and influence a
+later expiry read. The root accepted this as an implementation-boundary defect.
+M18 now owns only the narrow internal quote-issuance verifier needed to reject
+every non-issued quote before fields are read; it adds no barrel API, external
+integration, persistence, or live behavior. The regression suite must prove
+that forged, copied, proxied, and mutable lookalikes reject, then a fresh task
+review and two fresh clean module-review generations remain required.

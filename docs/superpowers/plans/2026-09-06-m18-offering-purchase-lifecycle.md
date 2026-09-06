@@ -15,7 +15,11 @@ network, persistence, or live claim.
 - Modify only `packages/core/src/offering-purchase-lifecycle.ts`,
   `packages/core/src/index.ts`,
   `packages/core/test/offering-purchase-lifecycle.test.mjs`, and
-  `packages/core/test/offering-purchase-lifecycle.types.ts`.
+  `packages/core/test/offering-purchase-lifecycle.types.ts`, plus the narrow
+  internal quote-issuance verifier in
+  `packages/core/src/requirements-offering-quote.ts` when M18 rejects forged
+  or mutable JavaScript quote lookalikes. That verifier remains outside the
+  public barrel surface.
 - Reuse the accepted M16 terms/allocation and M17 requirements-quote exports.
 - Keep quote expiry entirely caller-supplied and deterministic; do not read a
   clock or add a time dependency.
@@ -46,8 +50,9 @@ network, persistence, or live claim.
 - Create `packages/core/src/offering-purchase-lifecycle.ts`
 - Amend `packages/core/src/index.ts`
 
-1. Create one frozen issued `draft` state that snapshots only the permitted
-   quote facts and retains internal provenance for its descendants.
+1. Require an unforgeable accepted quote identity before reading quote fields,
+   then create one frozen issued `draft` state that snapshots only the
+   permitted quote facts and retains internal provenance for its descendants.
 2. Implement the exact closed table from the local contract. Consume each
    issued predecessor only after a successful transition; reject every omitted
    edge and every non-issued structural copy without consuming the failed input.

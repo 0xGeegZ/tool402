@@ -133,6 +133,12 @@ or canonical requirements text. Issued states are frozen local values. A
 structural copy or a caller-made lookalike is not an issued state and cannot be
 transitioned.
 
+Before it reads any quote field, the constructor requires the exact issuance
+identity of a quote emitted by the accepted quote module. A structural copy,
+proxy, forged record, or mutable JavaScript lookalike rejects; none can create
+an issued purchase state or alter the expiry retained for transitions. This
+narrow verifier is internal to Core and is not a new public barrel surface.
+
 This typed local constructor consumes an accepted local quote, not untrusted
 protocol input. A later dependency-correct schema boundary owns closed parsing,
 unknown-field rejection, and external account/asset/recipient semantics.
