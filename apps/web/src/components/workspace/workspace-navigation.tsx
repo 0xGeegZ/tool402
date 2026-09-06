@@ -5,6 +5,7 @@ const links = [
   { href: "/explore/riskscan", label: "RiskScan" },
   { href: "/explore/riskscan/tool-loop", label: "Tool loop" },
   { href: "/dashboard/riskscan/compatibility", label: "Native compatibility" },
+  { href: "/dashboard/riskscan", label: "RiskScan workbench" },
 ] as const;
 
 export function WorkspaceNavigation() {
