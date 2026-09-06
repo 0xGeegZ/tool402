@@ -19,7 +19,80 @@ their correspondingly named external event occurred.
 through `@tool402/core`:
 
 ```ts
-export type OfferingPurchaseState = /* closed issued lifecycle union */;
+export interface OfferingPurchaseSnapshot {
+  readonly termsVersion: string;
+  readonly requestedUnits: NoteUnits;
+  readonly paymentTinybars: Tinybar;
+  readonly requirementsDigest: RequirementsDigest;
+  readonly expiresAt: string;
+}
+
+export type OfferingPurchaseDraft = OfferingPurchaseSnapshot & {
+  readonly state: "draft";
+};
+export type OfferingPurchaseAwaitingPayment = OfferingPurchaseSnapshot & {
+  readonly state: "awaiting_payment";
+};
+export type OfferingPurchaseExpired = OfferingPurchaseSnapshot & {
+  readonly state: "expired";
+};
+export type OfferingPurchasePaymentSubmitted = OfferingPurchaseSnapshot & {
+  readonly state: "payment_submitted";
+};
+export type OfferingPurchasePaymentRejected = OfferingPurchaseSnapshot & {
+  readonly state: "payment_rejected";
+};
+export type OfferingPurchasePaymentOutcomeUnknown = OfferingPurchaseSnapshot & {
+  readonly state: "payment_outcome_unknown";
+};
+export type OfferingPurchasePaymentConfirmed = OfferingPurchaseSnapshot & {
+  readonly state: "payment_confirmed";
+};
+export type OfferingPurchaseAllocationPending = OfferingPurchaseSnapshot & {
+  readonly state: "allocation_pending";
+};
+export type OfferingPurchaseAllocationSubmitted = OfferingPurchaseSnapshot & {
+  readonly state: "allocation_submitted";
+};
+export type OfferingPurchaseAllocationOutcomeUnknown = OfferingPurchaseSnapshot & {
+  readonly state: "allocation_outcome_unknown";
+};
+export type OfferingPurchaseRefundRequired = OfferingPurchaseSnapshot & {
+  readonly state: "refund_required";
+};
+export type OfferingPurchaseRefundSubmitted = OfferingPurchaseSnapshot & {
+  readonly state: "refund_submitted";
+};
+export type OfferingPurchaseRefundOutcomeUnknown = OfferingPurchaseSnapshot & {
+  readonly state: "refund_outcome_unknown";
+};
+export type OfferingPurchaseComplete = OfferingPurchaseSnapshot & {
+  readonly state: "complete";
+};
+export type OfferingPurchaseRefunded = OfferingPurchaseSnapshot & {
+  readonly state: "refunded";
+};
+export type OfferingPurchaseManualReconciliation = OfferingPurchaseSnapshot & {
+  readonly state: "manual_reconciliation";
+};
+
+export type OfferingPurchaseState =
+  | OfferingPurchaseDraft
+  | OfferingPurchaseAwaitingPayment
+  | OfferingPurchaseExpired
+  | OfferingPurchasePaymentSubmitted
+  | OfferingPurchasePaymentRejected
+  | OfferingPurchasePaymentOutcomeUnknown
+  | OfferingPurchasePaymentConfirmed
+  | OfferingPurchaseAllocationPending
+  | OfferingPurchaseAllocationSubmitted
+  | OfferingPurchaseAllocationOutcomeUnknown
+  | OfferingPurchaseRefundRequired
+  | OfferingPurchaseRefundSubmitted
+  | OfferingPurchaseRefundOutcomeUnknown
+  | OfferingPurchaseComplete
+  | OfferingPurchaseRefunded
+  | OfferingPurchaseManualReconciliation;
 
 export type OfferingPurchaseEvent =
   | { readonly type: "open"; readonly observedAt: string }
@@ -40,7 +113,7 @@ export type OfferingPurchaseEvent =
 
 export function createOfferingPurchase(
   quote: OfferingRequirementsQuote,
-): OfferingPurchaseState;
+): OfferingPurchaseDraft;
 export function transitionOfferingPurchase(
   state: OfferingPurchaseState,
   event: OfferingPurchaseEvent,
@@ -53,11 +126,12 @@ No additional dependency, runtime configuration, or adapter is introduced.
 
 ## Immutable purchase snapshot
 
-`createOfferingPurchase` produces only the `draft` state. It snapshots the
-quote's terms version, requested units, payment amount, requirements digest,
-and expiry; it retains no raw requirements object or canonical requirements
-text. Issued states are frozen local values. A structural copy or a caller-made
-lookalike is not an issued state and cannot be transitioned.
+`createOfferingPurchase` produces only the `draft` state. Every issued state
+exposes the same immutable snapshot: terms version, requested units, payment
+amount, requirements digest, and expiry. It retains no raw requirements object
+or canonical requirements text. Issued states are frozen local values. A
+structural copy or a caller-made lookalike is not an issued state and cannot be
+transitioned.
 
 This typed local constructor consumes an accepted local quote, not untrusted
 protocol input. A later dependency-correct schema boundary owns closed parsing,
@@ -102,8 +176,13 @@ turned into a payment-capable state.
 `refund_outcome_unknown` are terminal, fail-closed states in this local
 contract. A future reconciliation workflow must establish any later safe
 outcome; this module never retries or replaces an ambiguous external action.
-All unspecified transitions, duplicate events, events from terminal states,
-and transitions of a structural copy reject.
+
+Every successful transition consumes its exact issued source state. A consumed
+state cannot be used to create any other successor, including a successor with
+a different legal event. A rejected transition does not consume its source, so
+a caller may still present a valid later event. All unspecified transitions,
+duplicate events, events from terminal states, and transitions of a structural
+copy reject.
 
 The local `payment_confirmed`, `complete`, and `refunded` labels carry no
 receipt, transaction reference, account, allocation, or result. A later
@@ -122,8 +201,9 @@ receipt, deployment, or live evidence.
 ## Acceptance evidence
 
 - Focused RED/GREEN tests prove snapshotting, public exports, every legal edge,
-  expired/open timing, all illegal skipped or duplicate edges, terminal unknown
-  behavior, structural-copy rejection, and frozen outputs.
+  expired/open timing, source consumption after a successful transition,
+  rejected-transition non-consumption, all illegal skipped or duplicate edges,
+  terminal unknown behavior, structural-copy rejection, and frozen outputs.
 - A compile-time fixture proves the public state surface accepts the existing
   quote and retains the distinct monetary/unit/digest types.
 - Core/root typecheck, test, lint, clean-install dry run, queue/reference/

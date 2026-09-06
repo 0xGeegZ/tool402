@@ -32,8 +32,9 @@ network, persistence, or live claim.
 1. Add a representative M16/M17 quote fixture through public Core exports.
 2. Assert that the missing M18 module/export causes the intended initial RED.
 3. Express the full transition table, explicit expiry edge cases, terminal
-   unknown behavior, structural-copy rejection, snapshot behavior, and frozen
-   outputs.
+   unknown behavior, exact-source consumption after a successful transition,
+   non-consumption after a rejected transition, structural-copy rejection,
+   snapshot behavior, and frozen outputs.
 4. Add a compile-time consumer fixture for the public types.
 5. Run `node --test packages/core/test/offering-purchase-lifecycle.test.mjs`
    and record the expected RED before any implementation exists.
@@ -47,8 +48,9 @@ network, persistence, or live claim.
 
 1. Create one frozen issued `draft` state that snapshots only the permitted
    quote facts and retains internal provenance for its descendants.
-2. Implement the exact closed table from the local contract. Reject every
-   omitted edge and every non-issued structural copy.
+2. Implement the exact closed table from the local contract. Consume each
+   issued predecessor only after a successful transition; reject every omitted
+   edge and every non-issued structural copy without consuming the failed input.
 3. Use the accepted requirements-quote expiry rule with explicit timestamps;
    no clock, I/O, or external adapter may be introduced.
 4. Re-run the focused test until it is GREEN, then run Core typecheck, test,

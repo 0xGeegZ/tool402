@@ -39,17 +39,19 @@ payout, deployment, or live claim.
   requirements/expiry boundaries materially supply this card's pure inputs.
 - No active card owns the proposed Core paths. The proposal is disjoint from
   accepted RiskScan, backend, Agent, and Web paths.
-- The contract records one closed transition matrix, terminal unknown behavior,
-  explicit expiry comparison, no-clock behavior, provenance/immutability, tier,
-  human boundary, and concrete validation commands.
+- The contract records one closed discriminated state union, transition matrix,
+  successful-source consumption, terminal unknown behavior, explicit expiry
+  comparison, no-clock behavior, provenance/immutability, tier, human boundary,
+  and concrete validation commands.
 - A scoped independent design review is clean before the card enters 10-ready.
 
 ## Validation
 
 - RED/GREEN tests prove public exports, quote snapshotting, each legal edge,
-  illegal skipped/duplicate edges, explicit expiry behavior, terminal unknown
-  behavior, structural-copy rejection, and frozen outputs. The focused command
-  is `node --test packages/core/test/offering-purchase-lifecycle.test.mjs` from
+  successful-source consumption, rejected-transition non-consumption, illegal
+  skipped/duplicate edges, explicit expiry behavior, terminal unknown behavior,
+  structural-copy rejection, and frozen outputs. The focused command is
+  `node --test packages/core/test/offering-purchase-lifecycle.test.mjs` from
   the repository root.
 - A public compile-time fixture proves the state surface preserves the accepted
   Core brands.
