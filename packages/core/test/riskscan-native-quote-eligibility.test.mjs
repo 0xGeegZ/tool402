@@ -40,6 +40,29 @@ test("selects an equal generic-asset quote without losing an exact atomic amount
   );
 });
 
+test("accepts the native HBAR asset sentinel with an exact atomic amount", () => {
+  assert.deepEqual(
+    evaluateRiskScanNativeQuote(
+      {
+        network: "hedera:testnet",
+        asset: "0.0.0",
+        maximumAmount: "9007199254740993",
+      },
+      {
+        network: "hedera:testnet",
+        asset: "0.0.0",
+        amount: "9007199254740993",
+      },
+    ),
+    {
+      kind: "eligible",
+      network: "hedera:testnet",
+      asset: "0.0.0",
+      amount: 9007199254740993n,
+    },
+  );
+});
+
 test("declines a positive quote that exceeds an explicit zero maximum", () => {
   assert.deepEqual(
     evaluateRiskScanNativeQuote(

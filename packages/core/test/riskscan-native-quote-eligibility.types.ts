@@ -4,12 +4,14 @@ import type {
   NoteUnits,
   RiskScanNativeAssetId,
   RiskScanNativeAtomicAmount,
+  Tinybar,
 } from "../src/index.ts";
 
 declare const nativeAsset: RiskScanNativeAssetId;
 declare const nativeAtomicAmount: RiskScanNativeAtomicAmount;
 declare const accountId: HederaAccountId;
 declare const noteUnits: NoteUnits;
+declare const tinybar: Tinybar;
 
 const eligibility = evaluateRiskScanNativeQuote(
   {
@@ -48,8 +50,14 @@ const accountAsAsset: RiskScanNativeAssetId = accountId;
 const atomicAsNoteUnits: NoteUnits = nativeAtomicAmount;
 // @ts-expect-error Generic parser and native atomic brands remain distinct.
 const noteUnitsAsAtomic: RiskScanNativeAtomicAmount = noteUnits;
+// @ts-expect-error Atomic units remain distinct from HBAR-specific tinybars.
+const atomicAsTinybar: Tinybar = nativeAtomicAmount;
+// @ts-expect-error HBAR-specific tinybars remain distinct from generic asset atomic units.
+const tinybarAsAtomic: RiskScanNativeAtomicAmount = tinybar;
 
 void assetAsAccount;
 void accountAsAsset;
 void atomicAsNoteUnits;
 void noteUnitsAsAtomic;
+void atomicAsTinybar;
+void tinybarAsAtomic;
