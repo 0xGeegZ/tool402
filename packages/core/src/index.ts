@@ -30,6 +30,19 @@ export type {
   OfferingTerms,
   OfferingTermsInput,
 } from "./offering-economics.ts";
+export {
+  canonicalizeRequirements,
+  createOfferingRequirementsQuote,
+  isOfferingRequirementsQuoteActive,
+  matchesQuotedRequirements,
+  sha256Requirements,
+} from "./requirements-offering-quote.ts";
+export type {
+  CanonicalRequirements,
+  OfferingRequirementsQuote,
+  OfferingRequirementsQuoteInput,
+  RequirementsDigest,
+} from "./requirements-offering-quote.ts";
 export { evaluateRiskScanNativeQuote } from "./riskscan-native-quote-eligibility.ts";
 export type {
   RiskScanNativeAssetId,
