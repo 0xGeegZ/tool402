@@ -35,6 +35,14 @@ const terms: OfferingTerms = createOfferingTerms({
   platformFeeBps: "0",
   payoutCapTinybars: "150",
 });
+const fundingTarget: Tinybar = terms.fundingTargetTinybars;
+const noteUnitPrice: Tinybar = terms.noteUnitPriceTinybars;
+const payoutCap: Tinybar = terms.payoutCapTinybars;
+const maximumNoteUnits: NoteUnits = terms.maximumNoteUnits;
+const minimumPurchaseUnits: NoteUnits = terms.minimumPurchaseUnits;
+const reserveShare: BasisPoints = terms.reserveShareBps;
+const issuerShare: BasisPoints = terms.issuerShareBps;
+const platformFee: BasisPoints = terms.platformFeeBps;
 
 const allocation: OfferingAllocation = calculateAllocation(terms, {
   expectedTermsVersion: "offering-v1",
@@ -54,6 +62,7 @@ const clearingSplit: ClearingSplit = calculateClearingSplit(terms, {
 });
 
 const allocationPayment: Tinybar = allocation.paymentTinybars;
+const allocationRequestedUnits: NoteUnits = allocation.requestedUnits;
 const allocationUnits: NoteUnits = allocation.remainingCapacityUnits;
 const splitGross: Tinybar = clearingSplit.grossTinybars;
 const splitReserve: Tinybar = clearingSplit.reserveTinybars;
@@ -67,7 +76,16 @@ const noteUnitsAsBasisPoints: BasisPoints = noteUnits;
 const basisPointsAsTinybar: Tinybar = basisPoints;
 
 void remainingCapacity;
+void fundingTarget;
+void noteUnitPrice;
+void payoutCap;
+void maximumNoteUnits;
+void minimumPurchaseUnits;
+void reserveShare;
+void issuerShare;
+void platformFee;
 void allocationPayment;
+void allocationRequestedUnits;
 void allocationUnits;
 void splitGross;
 void splitReserve;

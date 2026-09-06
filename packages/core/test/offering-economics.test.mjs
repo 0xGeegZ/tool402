@@ -85,6 +85,23 @@ test("keeps a pre-split verified-credit capacity separate from a proposed reserv
   );
 });
 
+test("floor-rounds an uncapped fractional reserve share", () => {
+  assert.deepEqual(
+    calculateClearingSplit(validTerms(), {
+      expectedTermsVersion: "offering-v1",
+      verifiedGrossTinybars: tinybars("103"),
+      verifiedCumulativeReserveCreditsTinybars: tinybars("100"),
+      maturityReached: false,
+    }),
+    {
+      termsVersion: "offering-v1",
+      grossTinybars: 103n,
+      reserveTinybars: 20n,
+      issuerTinybars: 83n,
+    },
+  );
+});
+
 test("limits the floor-rounded reserve split to the remaining payout-cap remainder", () => {
   assert.deepEqual(
     calculateClearingSplit(validTerms(), {
