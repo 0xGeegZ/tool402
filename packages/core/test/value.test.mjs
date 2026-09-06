@@ -27,12 +27,32 @@ test("rejects noncanonical and non-string integer inputs", () => {
   assert.equal(parseBasisPoints("10001"), undefined);
 });
 
-test("parses canonical Hedera account and transaction identifiers", () => {
+test("parses canonical Hedera account identifiers", () => {
   assert.equal(parseHederaAccountId("0.0.123"), "0.0.123");
+});
+
+test("parses one-digit and nine-digit canonical transaction nanoseconds", () => {
+  assert.equal(
+    parseHederaTransactionId("0.0.123@1700000000.1"),
+    "0.0.123@1700000000.1",
+  );
   assert.equal(
     parseHederaTransactionId("0.0.123@1700000000.123456789"),
     "0.0.123@1700000000.123456789",
   );
+});
+
+test("rejects non-ASCII digits in exact values and identifiers", () => {
+  for (const parser of integerParsers) {
+    for (const input of ["١", "１"]) {
+      assert.equal(parser(input), undefined);
+    }
+  }
+
+  for (const input of ["٠.٠.١٢٣", "０.０.１２３"]) {
+    assert.equal(parseHederaAccountId(input), undefined);
+    assert.equal(parseHederaTransactionId(`${input}@1.1`), undefined);
+  }
 });
 
 test("rejects malformed Hedera identifiers", () => {
