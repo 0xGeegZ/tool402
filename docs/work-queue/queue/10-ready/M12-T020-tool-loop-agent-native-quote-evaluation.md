@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M05-T020 accepted; M06-T010 accepted; M12-T010 accepted
 - Owner: the proposed implementation scope is
   `apps/agent/src/riskscan-tool-native-quote-evaluation.ts`,
@@ -93,3 +93,15 @@ dependency and public export through an exercising package-level test, and
 uses a policy proxy that rejects property, reflection, enumeration, and
 descriptor access before native selection. A fresh independent readiness
 review is required before this card may leave inbox.
+
+## Ready transition
+
+Ready at 2026-09-06T13:36:26Z after a fresh independent review of pushed
+`2a05c69aab09a8bb0024744311a8c470cfac52c2` found accepted M05-T020,
+M06-T010, and M12-T010 dependencies; disjoint Agent and root package/lockfile
+ownership; resolvable local links; required injected-fetcher enforcement;
+executable public package-subpath RED/GREEN coverage; opaque-policy
+noninspection coverage; and no local human blocker coherent. This ready state
+authorizes only the bounded local RED package boundary and later Agent source
+contract. It does not authorize a payment, signing, account, wallet,
+transaction, deployment, or live claim.
