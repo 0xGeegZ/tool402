@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M17-T010 accepted
 - Owner: `packages/core/src/paid-task-lifecycle.ts`,
   `packages/core/src/index.ts`,
@@ -80,3 +80,14 @@ offering schema, generic external attempts, ATS configuration, and live work
 to separate dependency-correct cards. This intake authorizes only local
 authority records and independent design review; it authorizes neither RED/code
 nor any external action.
+
+## Ready transition
+
+Ready at 2026-09-06T23:44:27Z after a fresh post-commit rescan confirmed the
+accepted M17 canonical requirements/digest dependency, committed and resolvable
+local authority, disjoint proposed Core ownership, corrected clean independent
+design review, enabled local boundary, and no human blocker for this pure local
+scope. This ready state authorizes only the bounded RED/GREEN contract after
+root activation; it does not authorize payment, funding, allocation, ATS,
+account, wallet, signer, transaction, settlement, receipt, persistence,
+clearing, HCS, payout, deployment, or live behavior.
