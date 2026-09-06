@@ -4,7 +4,7 @@
 
 - Tier: CORE_P0
 - Queue state: 00-inbox
-- Dependencies: M10-T010 accepted; M17-T010 accepted
+- Dependencies: M17-T010 accepted
 - Owner: `packages/core/src/paid-task-lifecycle.ts`,
   `packages/core/src/index.ts`,
   `packages/core/test/paid-task-lifecycle.test.mjs`, and
@@ -39,8 +39,8 @@ deployment, or live claim.
 
 - The local contract, neutral import-ledger row, and implementation plan are
   committed before any RED test or code change.
-- M10-T010 and M17-T010 remain accepted locally. Their exact values and
-  canonical requirements digest materially supply this card's only pure inputs.
+- M17-T010 remains accepted locally. Its canonical requirements digest
+  materially supplies this card's only pure input.
 - M18-T010 is accepted and no active card owns the proposed Core paths. The
   card remains disjoint from the funding-purchase lifecycle, RiskScan, backend,
   Agent, and Web paths.
@@ -72,10 +72,10 @@ deployment, or live claim.
 ## Inbox transition
 
 Recorded at 2026-09-06T23:24:26Z after a fresh source-to-runtime critical-path
-rescan following M18 acceptance. The accepted exact-value and canonical
-requirements boundaries materially satisfy the smallest missing pure paid-task
-predecessor. The rescan deliberately keeps the task snapshot independent from
-the funding-purchase quote and leaves durable outcomes, clearing split,
+rescan following M18 acceptance. The accepted canonical requirements boundary
+materially satisfies the smallest missing pure paid-task predecessor. The
+rescan deliberately keeps the task snapshot independent from the
+funding-purchase quote and leaves durable outcomes, clearing split,
 offering schema, generic external attempts, ATS configuration, and live work
 to separate dependency-correct cards. This intake authorizes only local
 authority records and independent design review; it authorizes neither RED/code
