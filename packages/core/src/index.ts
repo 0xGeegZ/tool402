@@ -16,6 +16,20 @@ export type {
   NoteUnits,
   Tinybar,
 } from "./value.ts";
+export {
+  calculateAllocation,
+  calculateClearingSplit,
+  createOfferingTerms,
+  remainingPayoutCapacity,
+} from "./offering-economics.ts";
+export type {
+  ClearingSplit,
+  ClearingSplitInput,
+  OfferingAllocation,
+  OfferingAllocationInput,
+  OfferingTerms,
+  OfferingTermsInput,
+} from "./offering-economics.ts";
 export { evaluateRiskScanNativeQuote } from "./riskscan-native-quote-eligibility.ts";
 export type {
   RiskScanNativeAssetId,
