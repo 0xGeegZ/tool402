@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T020 accepted; M01-T040 accepted; M02-T050 accepted;
   M11-T020 accepted
 - Owner: `apps/web/src/app/dashboard/riskscan/preflight/page.tsx`,
@@ -98,3 +98,12 @@ and tests that allow the required declaration `identity` field while banning
 fabricated user/session identity state. This ready state authorizes only the
 local RED/GREEN preflight contract. It does not authorize Sign/session,
 payment, signing, account, wallet, transaction, deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-06T16:15:52Z after a post-ready queue rescan confirmed
+that M15-T010 is the sole ready card, no active card owns its bounded paths,
+and no human action blocks its pure local scope. This activation authorizes the
+specified RED/GREEN implementation and verification only; it does not expand
+authority to Sign/session, payment, signing, account, wallet, transaction,
+deployment, or live behavior.
