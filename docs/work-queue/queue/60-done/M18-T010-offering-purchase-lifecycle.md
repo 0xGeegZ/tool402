@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M16-T010 accepted; M17-T010 accepted
 - Owner: `packages/core/src/offering-purchase-lifecycle.ts`,
   `packages/core/src/requirements-offering-quote.ts` for a narrow internal
@@ -140,3 +140,24 @@ only with this retained process limitation; it must never present M18 as proof
 of a fully auditable historical RED-before-implementation sequence. Every
 subsequent behavioral card must commit its RED executable contract before its
 implementation commit.
+
+## Acceptance
+
+Accepted at 2026-09-06T23:12:41Z with `MODULE_BASE`
+`a361c3f0579820ecd267ad341762fb9ac29c3ee1` and `MODULE_HEAD`
+`bafc6b614be816757cd4b19b55baba670438d99c`. The focused M18 suite passed
+8/8; the Core suite passed 61/61; Core and root typecheck, test, and lint,
+clean-install dry run, queue check, enabled reference guard, and whitespace
+checks passed under Node 22.21.1. The independent final task review and two
+fresh consecutive final module-review generations found no Critical or
+Important defect at the production head. The quote-issuance and reentrancy
+findings were closed with executable regressions before those final reviews.
+
+`TDD_COMMIT_ORDER_EVIDENCE` remains `UNAVAILABLE_AT_INTAKE`. This acceptance
+recognizes only the independently verified deterministic Core behavior; it
+does not claim a fully auditable historical RED-before-implementation commit
+sequence, rewrite history, or fabricate chronology proof. Every later
+behavioral card must commit its RED executable contract before implementation.
+No payment, funding, allocation, ATS, account, wallet, signer, transaction,
+settlement, receipt, persistence, clearing, HCS, payout, deployment, or live
+behavior is accepted or implied.
