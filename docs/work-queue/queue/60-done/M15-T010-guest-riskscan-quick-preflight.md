@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T020 accepted; M01-T040 accepted; M02-T050 accepted;
   M11-T020 accepted
 - Owner: `apps/web/src/app/dashboard/riskscan/preflight/page.tsx`,
@@ -107,3 +107,32 @@ and no human action blocks its pure local scope. This activation authorizes the
 specified RED/GREEN implementation and verification only; it does not expand
 authority to Sign/session, payment, signing, account, wallet, transaction,
 deployment, or live behavior.
+
+## Acceptance
+
+Accepted at 2026-09-06T16:39:35Z after a fresh queue rescan confirmed accepted
+M01-T020, M01-T040, M02-T050, and M11-T020 dependencies and no conflicting
+active owner of the new route/island/test paths or the constrained Workspace
+navigation amendment.
+
+- `MODULE_BASE` is `8c4684ea31e67bb09a985d2900088aeedbdc0af6`; `MODULE_HEAD`
+  is `45b04f7125c4b96bf389370bb1236544a7b995bb`. The focused RED contract
+  first observed the intentionally missing M15 state and route sources before
+  the local Core-only implementation made all three focused checks GREEN.
+- Focused M15 checks, Web typecheck/test, root typecheck/test/lint, clean-install
+  dry run, root queue validation, whitespace/reference checks, and the enabled
+  local guard passed under Node 22.21.1. The production Webpack build passed
+  with Cache Components and emitted `/dashboard/riskscan/preflight` as a static
+  route; it retains only the pre-existing optional upstream `@x402/paywall`
+  resolution warning.
+- Browser checks verified local Workspace navigation; the incomplete,
+  all-disclosures-reported, and whitespace-invalid outcomes; truthful local
+  feedback; and no browser error entries. At 390 px, the route had no horizontal
+  overflow and its controls and feedback remained usable.
+- Independent task review and two fresh clean module-review generations found
+  no Critical, Important, or Minor finding.
+
+Acceptance covers only caller-reported local preparation. It does not provide
+or authorize Sign/session, user identity, account, wallet, payment, signing,
+transaction, settlement, service, receipt, evidence, deployment, or live
+behavior.
