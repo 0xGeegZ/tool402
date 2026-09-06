@@ -130,15 +130,84 @@ function compareKeys(left: string, right: string): number {
   return left > right ? 1 : 0;
 }
 
+function preflightCanonicalKey(key: string): number {
+  if (key.length > MAX_CANONICAL_BYTES) {
+    rejectRequirementsLimit();
+  }
+
+  let byteLength = 2;
+  for (let index = 0; index < key.length; index += 1) {
+    const codeUnit = key.charCodeAt(index);
+    let emittedByteLength: number;
+
+    switch (codeUnit) {
+      case 0x22:
+      case 0x5c:
+      case 0x08:
+      case 0x0c:
+      case 0x0a:
+      case 0x0d:
+      case 0x09:
+        emittedByteLength = 2;
+        break;
+      default:
+        if (codeUnit < 0x20) {
+          emittedByteLength = 6;
+          break;
+        }
+        if (codeUnit >= 0xd800 && codeUnit <= 0xdbff) {
+          const nextCodeUnit = key.charCodeAt(index + 1);
+          if (nextCodeUnit >= 0xdc00 && nextCodeUnit <= 0xdfff) {
+            emittedByteLength = 4;
+            index += 1;
+            break;
+          }
+
+          emittedByteLength = 6;
+          break;
+        }
+        if (codeUnit >= 0xdc00 && codeUnit <= 0xdfff) {
+          emittedByteLength = 6;
+          break;
+        }
+
+        emittedByteLength = codeUnit <= 0x7f ? 1 : codeUnit <= 0x7ff ? 2 : 3;
+    }
+
+    if (emittedByteLength > MAX_CANONICAL_BYTES - byteLength) {
+      rejectRequirementsLimit();
+    }
+
+    byteLength += emittedByteLength;
+  }
+
+  return byteLength;
+}
+
 function arrayIndexForKey(key: string): number | undefined {
-  const index = Number(key);
+  if (key === "0") {
+    return 0;
+  }
 
   if (
-    !Number.isSafeInteger(index) ||
-    index < 0 ||
-    String(index) !== key
+    key.length === 0 ||
+    key.length > 3 ||
+    key.charCodeAt(0) === 0x30
   ) {
     return undefined;
+  }
+
+  let index = 0;
+  for (let offset = 0; offset < key.length; offset += 1) {
+    const digit = key.charCodeAt(offset) - 0x30;
+    if (digit < 0 || digit > 9) {
+      return undefined;
+    }
+
+    index = index * 10 + digit;
+    if (index >= MAX_ARRAY_ITEMS) {
+      return undefined;
+    }
   }
 
   return index;
@@ -154,11 +223,29 @@ function snapshotObjectProperties(
     rejectRequirementsLimit();
   }
 
+  const stringKeys: string[] = [];
+  let totalKeyByteLength = 0;
+
+  for (const key of keys) {
+    if (typeof key !== "string") {
+      rejectMalformedRequirements();
+    }
+
+    const keyByteLength = preflightCanonicalKey(key);
+    if (keyByteLength > MAX_CANONICAL_BYTES - totalKeyByteLength) {
+      rejectRequirementsLimit();
+    }
+
+    totalKeyByteLength += keyByteLength;
+
+    stringKeys.push(key);
+  }
+
   const seenKeys = new Set<string>();
   const properties: CapturedProperty[] = [];
 
-  for (const key of keys) {
-    if (typeof key !== "string" || seenKeys.has(key)) {
+  for (const key of stringKeys) {
+    if (seenKeys.has(key)) {
       rejectMalformedRequirements();
     }
 
@@ -340,22 +427,23 @@ function snapshotArray(
     let hasLength = false;
 
     for (const key of keys) {
-      if (typeof key !== "string" || seenKeys.has(key)) {
+      if (typeof key !== "string") {
+        rejectMalformedRequirements();
+      }
+
+      if (key !== "length" && arrayIndexForKey(key) === undefined) {
+        rejectMalformedRequirements();
+      }
+      if (seenKeys.has(key)) {
         rejectMalformedRequirements();
       }
 
       seenKeys.add(key);
       if (key === "length") {
         hasLength = true;
-        continue;
+      } else {
+        itemCount += 1;
       }
-
-      const index = arrayIndexForKey(key);
-      if (index === undefined) {
-        rejectMalformedRequirements();
-      }
-
-      itemCount += 1;
     }
 
     if (!hasLength) {
