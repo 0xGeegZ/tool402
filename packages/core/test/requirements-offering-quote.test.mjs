@@ -251,6 +251,35 @@ test("preflights every object key before descriptor reflection", () => {
   assert.equal(descriptorRead, false);
 });
 
+test("bounds aggregate object key cost before descriptor reflection", () => {
+  const firstKey = "a".repeat(20 * 1024);
+  const secondKey = "b".repeat(20 * 1024);
+  let descriptorRead = false;
+  const requirements = new Proxy(
+    {},
+    {
+      ownKeys() {
+        return [firstKey, secondKey];
+      },
+      getOwnPropertyDescriptor() {
+        descriptorRead = true;
+        return {
+          configurable: true,
+          enumerable: true,
+          value: true,
+          writable: true,
+        };
+      },
+    },
+  );
+
+  assert.throws(
+    () => canonicalizeRequirements(requirements),
+    /requirements exceed canonicalization limits/u,
+  );
+  assert.equal(descriptorRead, false);
+});
+
 test("rejects oversized array index keys before numeric conversion", () => {
   const oversizedIndex = "9".repeat(128 * 1024);
   const items = new Proxy(
