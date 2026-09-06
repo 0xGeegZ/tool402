@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M17-T010 accepted
 - Owner: `packages/core/src/paid-task-lifecycle.ts`,
   `packages/core/src/index.ts`,
@@ -91,3 +91,15 @@ scope. This ready state authorizes only the bounded RED/GREEN contract after
 root activation; it does not authorize payment, funding, allocation, ATS,
 account, wallet, signer, transaction, settlement, receipt, persistence,
 clearing, HCS, payout, deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-06T23:45:43Z after a fresh post-ready rescan confirmed
+that M19-T010 is the sole ready card, no active card owns its bounded Core
+paths, its accepted M17 dependency remains present, and the pending human
+action grants no external authority but does not block this pure local work.
+This activation authorizes the specified test-only RED commit, subsequent
+minimal Core implementation, and verification only; it does not expand
+authority to payment, funding, allocation, ATS, account, wallet, signer,
+transaction, settlement, receipt, persistence, clearing, HCS, payout,
+deployment, or live behavior.
