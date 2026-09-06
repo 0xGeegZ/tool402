@@ -6,6 +6,13 @@ This is the runtime-local product brief for the first hackathon delivery slice. 
 
 The immediate product target is deliberately narrow: one agent-facing tool, one paid request journey, and one evidence trail. The point is to prove a coherent machine-payment loop rather than imitate a finished marketplace.
 
+The product scope also includes a real public landing and a future signed-in
+application experience. The landing may explain and navigate the local
+product surface now. The first application shell is deliberately a guest,
+unconfigured route: it creates no identity, session, wallet, account, or
+personal data claim. A genuine Sign flow needs its own local session,
+recovery, privacy, and provider contract before implementation.
+
 ## Problem
 
 Software agents need to decide whether a paid tool is useful before they can safely spend on it. Traditional APIs assume a human developer already has credentials, a subscription, and private context. That model is awkward for an autonomous or semi-autonomous consumer: it hides price and capability, makes a real payment difficult to distinguish from a simulated success state, and leaves little evidence that a result was actually produced after settlement.
@@ -51,7 +58,12 @@ Stages three through six are planned delivery targets, not current capabilities.
 
 This first slice does not build a general-purpose tool marketplace, an agent wallet, a custody service, a production mainnet product, a subscription system, or a multi-network payment router. It does not promise live external integrations beyond the single planned payment and evidence path. It does not import a full prepared UI, reproduce prior implementation material, or make a partner or prize claim that lacks local evidence.
 
-Rich profiles, social discovery, provider assurance, optional data sources, additional tools, recurring payments, and polished analytics are deferred. They may receive their own local cards only when the foundation is accepted and the claimed capability has a concrete validation path.
+Rich profiles, social discovery, provider assurance, optional data sources,
+additional tools, recurring payments, and polished analytics are deferred.
+They may receive their own local cards only when the foundation is accepted
+and the claimed capability has a concrete validation path. The public landing
+and guest workspace shell are separate, already-approved product
+presentation work; neither substitutes for a real signed-in experience.
 
 ## High-level system shape
 
