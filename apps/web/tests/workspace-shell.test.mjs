@@ -55,6 +55,6 @@ test("keeps the workspace shell static and local", async () => {
 
   assert.doesNotMatch(
     sources.join("\n"),
-    /["']use client["']|\bfetch\b|process\.env|localStorage|sessionStorage|setTimeout|setInterval|analytics|currentUser|connectWallet|signOut|\b(?:identity|wallet|provider|balance|position|payment|result|receipt|evidence|transaction|live)\b|https?:\/\//i,
+    /["']use client["']|\bfetch\b|process\.env|localStorage|sessionStorage|setTimeout|setInterval|analytics|currentUser|connectWallet|signOut|\b(?:identity|account|wallet|provider|balance|position|notification|activity|payment|result|receipt|evidence|transaction|deployment|live)\b|https?:\/\//i,
   );
 });
