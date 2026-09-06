@@ -49,6 +49,27 @@ function objectWithProperties(count) {
   );
 }
 
+function withOversizedStringifyGuard(callback) {
+  const stringify = JSON.stringify;
+
+  JSON.stringify = (...arguments_) => {
+    if (
+      typeof arguments_[0] === "string" &&
+      arguments_[0].length > 1024
+    ) {
+      throw new Error("unbounded JSON.stringify input");
+    }
+
+    return stringify(...arguments_);
+  };
+
+  try {
+    callback();
+  } finally {
+    JSON.stringify = stringify;
+  }
+}
+
 test("canonicalizes nested key order and hashes the published UTF-8 vector", async () => {
   const requirements = {
     x402Version: 2,
@@ -150,6 +171,28 @@ test("accepts each canonicalization limit exactly and rejects one past it", () =
     32_768,
   );
   assert.throws(() => canonicalizeRequirements({ a: "a".repeat(32_761) }));
+});
+
+test("bounds key and string serialization before oversized canonical output is built", () => {
+  const oversizedLeaf = "a".repeat(128 * 1024);
+  const oversizedKey = "k".repeat(128 * 1024);
+  const escapeHeavy = '"'.repeat(16_385);
+
+  assert.ok(new TextEncoder().encode(escapeHeavy).byteLength < 32 * 1024);
+  withOversizedStringifyGuard(() => {
+    assert.throws(
+      () => canonicalizeRequirements({ value: oversizedLeaf }),
+      /requirements exceed canonicalization limits/u,
+    );
+    assert.throws(
+      () => canonicalizeRequirements(Object.fromEntries([[oversizedKey, true]])),
+      /requirements exceed canonicalization limits/u,
+    );
+    assert.throws(
+      () => canonicalizeRequirements({ value: escapeHeavy }),
+      /requirements exceed canonicalization limits/u,
+    );
+  });
 });
 
 test("binds M16 allocation facts to complete requirements, strict expiry, and an immutable quote", async () => {
