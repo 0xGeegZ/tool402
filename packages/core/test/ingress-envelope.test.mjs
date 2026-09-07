@@ -134,11 +134,15 @@ test("rejects malformed field values as TypeErrors", () => {
     "not-a-number",
   ];
 
-  assert.doesNotThrow(() =>
-    parseIngressEnvelope({
-      ...validInput(),
-      timestampUnixSeconds: "9223372036854775807",
-    }),
+  const maximumTimestamp = parseIngressEnvelope({
+    ...validInput(),
+    timestampUnixSeconds: "9223372036854775807",
+  });
+  assert.equal(maximumTimestamp.timestampUnixSeconds, 9223372036854775807n);
+  assert.equal(
+    maximumTimestamp.signingInput,
+    "POST\n/internal/commands\n9223372036854775807\nAbCdEfGhIjKlMnOpQrStUv\n" +
+      "a".repeat(64),
   );
 
   for (const keyId of invalidKeyIds) {
