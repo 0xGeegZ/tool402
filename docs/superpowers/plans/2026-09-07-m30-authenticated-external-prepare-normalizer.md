@@ -107,6 +107,11 @@ added.
   Confirm HEDERA_FUNDING accepts only BACKER identity authorization and does
   not authorize a target or external action.
 
+  Use the test-only pure time predicate to prove reversed/equal expiry and
+  exact 300,000- and 300,001-millisecond lifetime behavior without creating,
+  storing, or deriving a signing key. Keep signed integration coverage for
+  the server-clock boundaries.
+
 - [ ] **Step 3: Add static boundary checks.**
 
   Once source exists, read it and assert no JSON.parse, process.env, Date.now,
@@ -143,6 +148,11 @@ added.
 - Produces only the internal CommandAuthorityRecord,
   ResolveCommandAuthorities, NormalizedExternalPrepareCommand, and
   normalizeClaimedExternalPrepareCommand surface defined by the M30 spec.
+
+  The source may additionally expose the specification's exact
+  `isExternalPrepareTimeWindowValidForTest` test-only helper. It must reuse
+  the production predicate, remain absent from the backend barrel, and accept
+  no capability, signature, authority, provider, or external input.
 
 - [ ] **Step 1: Pin the exact verifier and preserve the dependency boundary.**
 

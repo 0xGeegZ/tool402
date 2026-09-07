@@ -112,3 +112,16 @@ This activation authorizes only the specified test-only RED and then the
 minimal internal normalizer. It does not authorize a durable claim or attempt,
 prepared state, ATS target/configuration, provider/wallet action, funding,
 payment, transaction, deployment, or other external behavior.
+
+## Test-coverage amendment
+
+At 2026-09-07T20:02:45Z, an independent task review found that the exact
+reversed/equal-expiry and 300,000-millisecond lifetime boundaries cannot be
+exercised through the sole public-only signed fixtures without creating or
+deriving a new signing key. M30 may therefore add only the local
+`isExternalPrepareTimeWindowValidForTest` helper defined in the committed M30
+specification. It must reuse the normalizer's production predicate, remain
+absent from the backend barrel, accept no capability/signature/authority or
+external input, and make no side effect. This is a test-observability
+amendment, not command, replay, ATS, provider, wallet, funding, transaction,
+or live authority.

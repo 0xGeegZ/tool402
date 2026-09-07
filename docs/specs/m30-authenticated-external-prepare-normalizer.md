@@ -65,6 +65,27 @@ export async function normalizeClaimedExternalPrepareCommand(
 ): Promise<NormalizedExternalPrepareCommand | null>;
 ```
 
+### Test-only time predicate access
+
+To prove the exact time-window edges without creating, storing, or deriving a
+new signing key, this internal source may additionally expose exactly one
+test-only helper:
+
+```ts
+export function isExternalPrepareTimeWindowValidForTest(
+  issuedAt: string,
+  expiresAt: string,
+  serverNow: string,
+): boolean;
+```
+
+It is not exported from `@tool402/backend`, accepts no claimed body, payload,
+signature, authority record, provider, or external capability, and has no
+side effect. It must delegate to the same canonical timestamp/window predicate
+used by the normalizer rather than duplicate its implementation. It exists only
+to prove reversed/equal expiry and the inclusive 300,000-millisecond boundary;
+the normalizer integration tests continue to prove the signed command path.
+
 The `serverNow` input must itself match exactly
 `YYYY-MM-DDTHH:mm:ss.sssZ` and round-trip unchanged through
 `new Date(value).toISOString()`. The same grammar and round-trip rule applies
@@ -223,8 +244,10 @@ RiskScan persistence or reconciliation.
   duplicate-key rejection, invalid UTF-8 and escapes, M26 reuse, exact JCS
   digest, fixed typed-data fields/domain, low-s and recovery normalization,
   signer mismatch, resolver ordering, authority role/ownership predicates,
-  expiry equality/window, deterministic replay identity, frozen DTO shape,
-  and every prohibited side effect.
+  expiry equality/window, including reversed/equal expiry and the inclusive
+  300,000-millisecond boundary through the test-only pure predicate,
+  deterministic replay identity, frozen DTO shape, and every prohibited side
+  effect.
 - Backend/root typecheck, test, lint, clean-install dry run,
   queue/reference/whitespace checks, enabled local guard, independent task
   review, and two fresh clean module-review generations pass before
