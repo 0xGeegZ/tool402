@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M16-T010 accepted
 - Owner: `packages/core/src/offering-definition.ts`,
   `packages/core/src/index.ts`,
@@ -100,5 +100,17 @@ disjoint proposed Core paths, no active-card conflict, enabled local boundary,
 concrete direct validation, and no human blocker for this deterministic local
 scope. This ready state authorizes only the bounded RED/GREEN parser contract
 after root activation; it does not authorize ATS, payment, funding,
+allocation, clearing, HCS, account, wallet, signer, transaction, deployment,
+or live behavior.
+
+## Activation
+
+Activated at 2026-09-07T00:46:27Z after a fresh post-ready rescan confirmed
+M20-T010 is the sole ready card, M16-T010 remains accepted, no active-card
+conflict owns the bounded Core paths, committed authority remains resolvable,
+the local guard is enabled, and the current human-action record neither grants
+external authority nor blocks deterministic local work. This activation
+authorizes the specified test-only RED then minimal Core GREEN parser and
+verification only; it does not expand authority to ATS, payment, funding,
 allocation, clearing, HCS, account, wallet, signer, transaction, deployment,
 or live behavior.
