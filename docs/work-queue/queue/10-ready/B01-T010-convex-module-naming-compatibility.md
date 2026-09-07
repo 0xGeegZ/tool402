@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T030 accepted; M04-T010 accepted; M04-T030 accepted;
   M04-T040 accepted; M04-T050 accepted; M04-T060 accepted; M04-T070 accepted
 - Owner: the root owns this card, its local specification and plan, catalog,
@@ -71,3 +71,19 @@ local authority and independent design review. It authorizes neither RED/code,
 configuration access, deployment, external-store proof, payment, settlement,
 ATS, funding, wallet, account, signer, transaction, clearing, HCS, payout, or
 live behavior.
+
+## Ready transition
+
+Ready at 2026-09-07T08:35:00Z after a fresh root rescan confirmed the accepted
+M01/M04 dependencies, no active ownership conflict, resolvable committed
+authority, a concrete local RED/GREEN contract, and no human blocker for the
+deterministic file-location scope. Earlier independent authority reviews found
+only the atomic sixteen-record staging omission, the five-declared-test
+qualification, and the test-root ambiguity; the committed authority at
+`552af8c6e2b4ff1c7a53def14d65b10a1c6cbeff` contains the bounded corrections.
+
+This ready state authorizes only root activation followed by the specified
+test-only RED, exact source/test/document location amendment, and local
+verification. It does not authorize configuration access, a Convex publish or
+deployment, an external evidence claim, payment, settlement, ATS, funding,
+wallet, account, signer, transaction, clearing, HCS, payout, or live behavior.
