@@ -3,12 +3,12 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T020 accepted; M10-T010 accepted
 - Owner: packages/core/src/external-prepare-payload.ts,
   packages/core/src/index.ts,
   packages/core/test/external-prepare-payload.test.mjs, and
-  packages/core/test/external-prepare-payload.types.ts are proposed
+  packages/core/test/external-prepare-payload.types.ts are accepted
   implementation paths. The root owns this card, local specification, import
   record, plan, queue state, catalog, ownership, decisions, reviews,
   integration evidence, commits, and pushes.
@@ -110,3 +110,25 @@ pure Core payload parser. It does not authorize a signed command,
 authentication, storage, generic attempts, configuration, Convex, HTTP,
 ATS/provider, wallet, payment, funding, transaction, deployment, or live
 behavior.
+
+## Acceptance
+
+Accepted at 2026-09-07T12:03:59Z after final verification against
+`MODULE_BASE` `0e86c0f424cbcb70cd28ec744a360616329e4c15` and `MODULE_HEAD`
+`5a4567fe367f749a94128230edeefad64bba4c3d`, both pushed to `main`. The
+durable test-only RED `9515f16` precedes the initial parser and public API
+`7f579c6`; `60e9e7b` strengthens repeated parsing of the same input, and
+`5a4567f` removes a review-identified redundant capture representation.
+
+Focused M26 tests passed 11/11. Root typecheck, tests, lint, clean-install dry
+run, queue/reference/whitespace checks, and the enabled local guard passed
+under Node 22.21.1. Independent Task 1 and Task 2 reviews were clean after
+their scoped corrections. The first module-review generation found one Minor
+capture-maintenance concern, which was fixed and re-reviewed clean; the second
+fresh Standards and specification module-review generation found no Critical,
+Important, or Minor finding.
+
+This acceptance covers only the pure closed payload parser and its public Core
+types. It does not accept a signed command, authentication, storage, replay or
+idempotency claim, generic attempt, configuration, Convex, HTTP, ATS/provider,
+wallet, payment, funding, transaction, deployment, or live behavior.
