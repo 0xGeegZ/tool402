@@ -53,6 +53,20 @@ test("parses, detaches, and freezes the fixed ingress envelope", () => {
   });
   assert.equal(maximumKeyEnvelope.keyId, maximumKeyId);
 
+  const lowerBoundEnvelope = parseIngressEnvelope({
+    ...validInput(),
+    keyId: "a",
+    timestampUnixSeconds: "0",
+  });
+  assert.equal(lowerBoundEnvelope.keyId, "a");
+  assert.equal(lowerBoundEnvelope.timestampUnixSeconds, 0n);
+  assert.equal(
+    lowerBoundEnvelope.signingInput,
+    "POST\n/internal/commands\n0\nAbCdEfGhIjKlMnOpQrStUw\n" +
+      "a".repeat(64),
+  );
+  assert.equal(lowerBoundEnvelope.replayIdentity, "a:AbCdEfGhIjKlMnOpQrStUw");
+
   input.keyId = "changed";
   input.timestampUnixSeconds = "0";
   input.requestNonce = "Z".repeat(21) + "w";
