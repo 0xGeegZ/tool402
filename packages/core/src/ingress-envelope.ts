@@ -18,9 +18,9 @@ const ingressFields: readonly string[] = [
   "signature",
 ] as const;
 const keyIdPattern = /^[A-Za-z0-9_-]{1,64}$/u;
-const noncePattern = /^[A-Za-z0-9_-]{22}$/u;
+const noncePattern = /^[A-Za-z0-9_-]{21}[AQgw]$/u;
 const digestPattern = /^[0-9a-f]{64}$/u;
-const signaturePattern = /^[A-Za-z0-9_-]{43}$/u;
+const signaturePattern = /^[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$/u;
 const timestampPattern = /^(?:0|[1-9][0-9]*)$/u;
 const maximumTimestamp = "9223372036854775807";
 
