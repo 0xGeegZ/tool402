@@ -14,6 +14,8 @@ import type {
 } from "@tool402/core";
 import type { NextRequest, NextResponse as NextResponseType } from "next/server";
 
+import { recordRiskScanVerifiedSettlement } from "./riskscan-settlement-evidence.ts";
+
 const require = createRequire(import.meta.url);
 const { NextResponse } = require("next/server") as typeof import("next/server");
 
@@ -694,7 +696,9 @@ function getCachedRiskScanProtectedHandler(
     return cachedHandler;
   }
 
-  const pendingHandler = createRiskScanProtectedHandler(configuration);
+  const pendingHandler = createRiskScanProtectedHandler(configuration, {
+    onVerifiedSettlement: recordRiskScanVerifiedSettlement,
+  });
   protectedHandlerCache.set(key, pendingHandler);
   void pendingHandler.catch(() => {
     if (protectedHandlerCache.get(key) === pendingHandler) {
@@ -707,6 +711,7 @@ function getCachedRiskScanProtectedHandler(
 
 export interface RiskScanPostOptions {
   facilitatorClient?: FacilitatorClient;
+  onVerifiedSettlement?: RiskScanProtectedHandlerOptions["onVerifiedSettlement"];
 }
 
 export async function handleRiskScanPost(
@@ -722,11 +727,18 @@ export async function handleRiskScanPost(
 
   let handler: RiskScanProtectedHandler;
 
+  const onVerifiedSettlement =
+    options?.onVerifiedSettlement ?? recordRiskScanVerifiedSettlement;
+
   try {
     handler =
-      options?.facilitatorClient === undefined
+      options?.facilitatorClient === undefined &&
+      options?.onVerifiedSettlement === undefined
         ? await getCachedRiskScanProtectedHandler(configuration)
-        : await createRiskScanProtectedHandler(configuration, options);
+        : await createRiskScanProtectedHandler(configuration, {
+            facilitatorClient: options?.facilitatorClient,
+            onVerifiedSettlement,
+          });
   } catch {
     return riskScanUnavailableResponse();
   }
