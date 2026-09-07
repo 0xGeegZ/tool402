@@ -96,6 +96,22 @@ M25-T010 is an accepted implementation record comprising its card, `docs/specs/m
 
 M26-T010 is an accepted implementation record comprising its card, `docs/specs/m26-external-prepare-payload.md`, `docs/imports/SPEC-IMPORT-LEDGER.md`, `docs/superpowers/plans/2026-09-07-m26-external-prepare-payload.md`, and accepted `packages/core/src/external-prepare-payload.ts`, `packages/core/src/index.ts`, `packages/core/test/external-prepare-payload.test.mjs`, and `packages/core/test/external-prepare-payload.types.ts` paths. The root owns queue state, catalog, decisions, integration evidence, reviews, commits, and pushes. Accepted M01-T020 and M10-T010 are dependencies, not owned behavior changes; accepted economics, ingress, and byte-binding records are sequencing context only. Existing Core behavior outside the accepted parser/barrel paths, backend, Convex schema/functions, RiskScan persistence, Agent, Web/UI, package metadata, lockfile, raw JSON/bytes, signed command/authentication, principal/role/signer handling, replay/idempotency storage, generic attempts, configuration, ATS/provider behavior, accounts, assets, wallets, funding/payment/transfer behavior, transactions, settlement/receipt handling, clearing, HCS, payout, deployment, and live evidence are excluded.
 
+M27-T010 is an inbox authority-intake record comprising only its card,
+`docs/work-queue/HUMAN-ACTIONS.md`, `docs/work-queue/STATE.md`,
+`docs/work-queue/TASK-CATALOG.md`, this ownership record, and
+`docs/work-queue/DECISIONS.md`. The root owns every listed control record,
+reviews, commits, and pushes. Accepted M22 through M25 are protected-byte
+provenance context and M26 is detached payload context; none grants canonical
+wallet-command, principal, signer, role, command nonce/expiry, or durable-claim
+authority.
+No implementation paths are reserved. Core, backend, Convex, Agent, Web/UI,
+packages, lockfiles, raw-body decoding, JSON, command parsing, wallet/provider
+handling, wallet-command signature verification, principal/role lookup, replay or idempotency
+storage, generic attempts, ATS/configuration, accounts, assets, funding,
+payment, transactions, settlement, clearing, HCS, payout, deployment, and live
+evidence are excluded until a future separately accepted local authority says
+otherwise.
+
 B01-T010 is an accepted record comprising its card, `docs/specs/b01-convex-module-naming-compatibility.md`, `docs/imports/SPEC-IMPORT-LEDGER.md`, `docs/superpowers/plans/2026-09-07-b01-convex-module-naming-compatibility.md`, the five canonical underscore-named `packages/backend/convex/` source files, their five direct existing backend tests, `packages/backend/tests/convex-module-naming-compatibility.test.mjs`, and code-styled current module-path literals in the five M04 specifications, five M04 plans, five accepted M04 cards, and this file. The root owns queue state, catalog, human-action records, decisions, integration evidence, reviews, commits, and pushes. Accepted M01-T030 and M04-T010 through M04-T070 provide stable backend-function context, not reopened behavior. Existing function exports/bodies/validators/schema/indexes, all other Convex files, Core, Agent, Web/UI, package metadata, lockfile, runtime configuration, ignored configuration, generated output, public endpoints, deployment, external-store proof, payment, settlement, ATS, funding, accounts, wallets, signers, transactions, clearing, HCS, payout, and live evidence are excluded.
 
 Future active implementation cards must have disjoint owned paths and resource boundaries. Shared-file work is an explicit root integration reservation. Wallets, credentials, funded accounts, partner configuration, and deployments remain human-controlled resources; no card or agent infers authority over them.
