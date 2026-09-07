@@ -2,6 +2,8 @@ import { isVerifiedProtectedIngress } from "./protected-ingress-verifier.ts";
 
 const claimedProtectedReplays = new WeakSet<object>();
 const claimedOutcome = "claimed";
+const NativePromise = Promise;
+const nativePromiseThen = NativePromise.prototype.then;
 
 export interface ClaimedProtectedReplay {
   readonly replayIdentity: string;
@@ -40,7 +42,11 @@ export async function claimProtectedReplay(
     const outcome =
       typeof claimAttempt === "string"
         ? claimAttempt
-        : await Promise.prototype.then.call(claimAttempt, (value) => value);
+        : await new NativePromise<ProtectedReplayClaimOutcome>(
+            (resolve, reject) => {
+              nativePromiseThen.call(claimAttempt, resolve, reject);
+            },
+          );
     if (outcome !== claimedOutcome) {
       return null;
     }

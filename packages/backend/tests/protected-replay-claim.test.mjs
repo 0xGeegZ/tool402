@@ -136,6 +136,20 @@ test("fails closed for replayed, malformed, throwing, and rejected claim outcome
       },
     }),
     () => {
+      class PoisonedPromise {
+        constructor(executor) {
+          executor(() => undefined, () => undefined);
+          return Promise.resolve("claimed");
+        }
+      }
+
+      const poisonedPromise = Promise.resolve("already_claimed");
+      Object.defineProperty(poisonedPromise, "constructor", {
+        value: { [Symbol.species]: PoisonedPromise },
+      });
+      return poisonedPromise;
+    },
+    () => {
       throw new Error("claim failed");
     },
     async () => Promise.reject(new Error("claim rejected")),
