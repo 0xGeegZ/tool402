@@ -3,9 +3,9 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M25-T010 accepted; M26-T010 accepted; M30-T010 accepted
-- Owner: This is a root-owned ready authority card. It owns this card, the
+- Owner: This is a root-owned active execution card. It owns this card, the
   M31 specification and plan, the proposed focused backend test and internal
   ingress source, and root-integrator queue records. The root owns state,
   catalog, ownership, decisions, reviews, commits, and pushes.
@@ -189,3 +189,15 @@ This ready state authorizes only a new root activation followed by the
 specified test-only RED and minimal internal adapter. It does not authorize
 storage, configuration, Convex, generic attempts, ATS, provider/wallet action,
 funding, payment, transaction, deployment, or live behavior.
+
+## Re-activation
+
+Activated again at 2026-09-07T21:51:43Z after a fresh post-ready root rescan at
+pushed `9bbdc5922cac9657bfbdc11596a08ae270d66445` confirmed M31-T010 is the
+sole ready card; M25-T010/M26-T010/M30-T010 remain accepted; no active owner
+conflicts with the bounded backend paths; committed authority and local
+references resolve; the local guard is enabled; and no human blocker applies.
+This activation authorizes only the specified test-only RED followed by the
+minimal internal adapter. It does not authorize storage, configuration, Convex,
+generic attempts, ATS, provider/wallet action, funding, payment, transaction,
+deployment, or live behavior.
