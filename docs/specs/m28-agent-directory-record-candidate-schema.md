@@ -101,7 +101,7 @@ All accepted records use these exact lexical rules:
 | `paymentNetwork` | Exact primitive string `"hedera-testnet"`. |
 | `asset` | Exact primitive string `"HBAR"`. |
 | `advertisedTiers` | Exact ordinary array of one or two unique tiers: `["quick"]`, `["standard"]`, or `["quick", "standard"]` only. |
-| `issuerRevenueAccount`, `clearingAccount` | Canonical M10 Hedera account identifiers. They may be equal; the parser makes no account-existence, ownership, or recipient assertion. |
+| `issuerRevenueAccount`, `clearingAccount` | Primitive strings at most 96 UTF-16 code units that pass the canonical M10 Hedera account parser. They may be equal; the parser makes no account-existence, ownership, or recipient assertion. |
 | `status` | Exact primitive string `"active"`, retained as advertised metadata only. |
 | `publishedAt` | A real canonical UTC-millisecond instant in `YYYY-MM-DDTHH:mm:ss.sssZ` form. It is not proof of publication time. |
 
@@ -111,6 +111,11 @@ only their expected indexed enumerable data properties plus the standard
 are captured before validation. The parser freezes newly allocated output
 arrays; it never retains either caller array.
 
+The 96-code-unit account admission limit is a local parser resource bound. It
+matches the existing local public-identifier admission limit, rejects before
+the M10 regex can inspect an arbitrarily large value, and does not claim an
+external ledger maximum.
+
 ## URL admission and canonical output
 
 `x402Endpoint` is required and `webUrl` is optional. Each supplied URL must be
@@ -118,6 +123,7 @@ a primitive string one through 2,048 UTF-16 code units with no leading or
 trailing whitespace. The parser constructs a URL only after descriptor
 capture and requires all of the following:
 
+- the raw input contains no `#` fragment delimiter;
 - `protocol` is exactly `https:`;
 - hostname is nonblank;
 - username and password are blank;
@@ -151,9 +157,10 @@ storage, or network.
   fixture commit.
 - Focused runtime tests must cover exact record and array shape, optional
   `webUrl`, all literal unions, ID bounds/grammar, safe offering-version
-  boundaries, canonical accounts, canonical dates, URL canonicalization and
-  rejection policy, detached frozen output, mutation isolation, no-invoked
-  accessor behavior, and reflection failures.
+  boundaries, exact and one-past account limits, canonical accounts, canonical
+  dates, URL canonicalization and rejection policy including empty and
+  nonempty raw fragments, detached frozen output, mutation isolation,
+  no-invoked accessor behavior, and reflection failures.
 - A compile-time fixture must prove the literal unions, branded accounts,
   readonly root/arrays, and separation between a candidate record and a
   payment/account string.

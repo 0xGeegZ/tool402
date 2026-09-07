@@ -43,9 +43,9 @@ are neither modified nor consumed.
   runtime/type tests, and the explicit Core public-barrel amendment. No
   existing Core module, Agent directory, backend, Convex, Web/UI, package, or
   lockfile path is owned.
-- The contract fixes every field grammar, array cardinality/order, URL policy,
-  date rule, and safe integer rule before code. No validation default is
-  implicit.
+- The contract fixes every field grammar, array cardinality/order, account
+  input bound, raw-fragment URL policy, date rule, and safe integer rule before
+  code. No validation default is implicit.
 - An independent review of the committed authority is clean: no Critical,
   Important, or Minor finding remains.
 
@@ -72,3 +72,14 @@ integration, command parsing, signature verification, signer/principal/role
 authority, publication, storage, replay/idempotency, generic attempts,
 configuration, Convex, HTTP, provider/ATS behavior, wallet, payment, funding,
 transaction, settlement, clearing, HCS, payout, deployment, or live behavior.
+
+## Design review
+
+The first independent authority review at `84290327d45d0273299eafec2478a76b44030a66`
+found two Important contract gaps before any RED: M10 accepts arbitrarily long
+canonical account text, and a raw empty URL fragment delimiter survives with
+an empty `URL.hash`. The amended local authority therefore fixes a 96-code-unit
+pre-M10 account bound and rejects every raw `#` delimiter before URL
+canonicalization. Both account fields and both URL fields require exact
+boundary regressions. A fresh independent re-review remains required before
+M28 may enter 10-ready.

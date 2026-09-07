@@ -30,9 +30,11 @@ configuration, runtime service, or external SDK is added.
   availability.
 - Require the exact root fields, descriptor-safe arrays, `riskscan`, x402,
   Hedera testnet, HBAR, the one capability, canonical M10 account syntax, and
-  the three allowed tier tuples.
+  the three allowed tier tuples. Bound each account input to 96 UTF-16 code
+  units before invoking M10.
 - Admit only bounded credential-free HTTPS URLs and return their `URL.href`
-  canonical form without fetching them.
+  canonical form without fetching them; reject every raw `#` delimiter before
+  URL canonicalization.
 - Do not add command, JSON/raw body, wallet, signer, signature, principal,
   role, replay/idempotency, storage, HTTP, Convex, provider, ATS, payment,
   attempt, transaction, settlement, HCS, deployment, or live behavior.
@@ -92,9 +94,11 @@ configuration, runtime service, or external SDK is added.
   Reject root missing/unknown/symbol/nonenumerable/inherited/custom-prototype
   records; accessors without invoking their getters; proxy reflection errors;
   wrong literals; IDs outside the 1–96 grammar; unsafe, fractional, zero,
-  negative, or string versions; malformed/noncanonical accounts; malformed or
-  impossible timestamps; credentials, fragments, non-HTTPS, whitespace, and
-  over-2,048-character URLs; array holes, custom prototypes, extra fields,
+  negative, or string versions; malformed/noncanonical accounts; both account
+  fields at exactly 96 and 97 code units using `0.0.${"1".repeat(92)}` and
+  `0.0.${"1".repeat(93)}`; malformed or impossible timestamps; credentials,
+  raw `#` and `/#fragment` URLs for both URL fields, non-HTTPS, whitespace,
+  and over-2,048-character URLs; array holes, custom prototypes, extra fields,
   accessors, duplicate/out-of-order/unknown tiers, and wrong capabilities.
 
 - [ ] **Step 3: Add static boundary checks.**
@@ -168,11 +172,12 @@ configuration, runtime service, or external SDK is added.
 - [ ] **Step 2: Implement the exact candidate validations.**
 
   Validate the fixed literals, public-ID pattern, safe positive version,
-  exact capability tuple, three tier tuples, canonical M10 account syntax,
-  canonical real UTC-millisecond date, and bounded HTTPS URL policy. Use
-  `new URL(value).href` only after checking primitive type and whitespace;
-  reject credentials and fragments. Do not compare accounts, fetch URLs, or
-  interpret `status`/`publishedAt` as authority.
+  exact capability tuple, three tier tuples, a 96-code-unit pre-M10 account
+  bound, canonical M10 account syntax, canonical real UTC-millisecond date,
+  and bounded HTTPS URL policy. Use `new URL(value).href` only after checking
+  primitive type, whitespace, and absence of the raw `#` delimiter; reject
+  credentials and fragments. Do not compare accounts, fetch URLs, or interpret
+  `status`/`publishedAt` as authority.
 
 - [ ] **Step 3: Return and export detached frozen types.**
 
