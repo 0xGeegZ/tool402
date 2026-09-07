@@ -3,10 +3,10 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T030 accepted; M22-T010 accepted; M23-T010 accepted
 - Owner: `packages/backend/src/ingress/protected-replay-claim.ts` and
-  `packages/backend/tests/protected-replay-claim.test.mjs` are proposed
+  `packages/backend/tests/protected-replay-claim.test.mjs` are accepted
   implementation paths. The root owns this card, local specification, import
   record, plan, queue state, catalog, ownership, decisions, reviews,
   integration evidence, commits, and pushes.
@@ -102,3 +102,24 @@ work. This activation authorizes only the specified test-only RED and minimal
 internal adapter. It does not authorize storage, configuration, Convex,
 HTTP/commands, generic attempts, ATS, payment, funding, account/wallet action,
 deployment, or a live claim.
+
+## Acceptance
+
+Accepted at 2026-09-07T09:52:25Z after final verification against
+`MODULE_BASE` `449d629193323977cc68335b0253fe7f8645e6f5` and `MODULE_HEAD`
+`ca5da6f1739e42a89d0d79501dc98d1fa3ebdcda`. The durable test-only RED commit
+`2d30ad7` precedes the initial adapter source commit `c613578`; subsequent
+bounded corrections reject non-Promise, proxied, species-poisoned, and
+delayed-thenable outcomes without changing the adapter boundary.
+
+Focused M24 tests passed 4/4 and backend tests passed 84/84. Root typecheck,
+test, lint, clean-install dry run, queue/reference/whitespace checks, and the
+enabled local guard passed under Node 22.21.1. Independent task review and two
+fresh clean module-review generations of `ca5da6f` found no Critical,
+Important, or Minor finding.
+
+This acceptance covers only the internal injected replay-claim adapter and its
+same-process claimed capability. It does not accept durable replay storage,
+configuration, HTTP/command handling, generic attempts, ATS, payment, funding,
+account, wallet, signer, transaction, settlement, clearing, HCS, payout,
+deployment, or live behavior.
