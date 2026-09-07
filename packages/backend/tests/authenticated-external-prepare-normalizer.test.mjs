@@ -530,6 +530,46 @@ test("rejects canonical payload-hash and valid-format signer mismatches before a
   );
 });
 
+test("rejects a valid UTF-8 non-ASCII wire string before authority resolution", async () => {
+  const { normalizeClaimedExternalPrepareCommand } = await loadNormalizer();
+
+  await assertRejectedBeforeResolver(
+    normalizeClaimedExternalPrepareCommand,
+    await claimText(transportText().replace("subject_42", "subject_é")),
+  );
+});
+
+test("rejects a truncated otherwise-valid signature before authority resolution", async () => {
+  const { normalizeClaimedExternalPrepareCommand } = await loadNormalizer();
+
+  await assertRejectedBeforeResolver(
+    normalizeClaimedExternalPrepareCommand,
+    await claimText(
+      transportText(firstCommand({ signature: firstSignature.slice(0, -2) })),
+    ),
+  );
+});
+
+test("rejects an unsupported authority role after recovering the valid signer", async () => {
+  const { normalizeClaimedExternalPrepareCommand } = await loadNormalizer();
+  let resolverCalls = 0;
+  const resolverInputs = [];
+
+  const normalized = await normalizeClaimedExternalPrepareCommand(
+    await claimText(transportText()),
+    serverNow,
+    (chainId, signer) => {
+      resolverCalls += 1;
+      resolverInputs.push([chainId, signer]);
+      return [authorityFor(firstSigner, "ADMIN")];
+    },
+  );
+
+  assert.equal(normalized, null);
+  assert.equal(resolverCalls, 1);
+  assert.deepEqual(resolverInputs, [[296, firstSigner]]);
+});
+
 test("rejects duplicate, missing, unsupported, and prototype-related transport fields before authority resolution", async () => {
   const { normalizeClaimedExternalPrepareCommand } = await loadNormalizer();
   const commandJson = JSON.stringify(firstCommand());
