@@ -90,6 +90,7 @@ type PaidTaskStateFor<Name extends PaidTaskStateName> = Extract<
 >;
 
 const snapshotByIssuedState = new WeakMap<object, PaidTaskSnapshot>();
+const stateNameByIssuedState = new WeakMap<object, PaidTaskStateName>();
 const consumedStates = new WeakSet<object>();
 const transitioningStates = new WeakSet<object>();
 const canonicalUtcMilliseconds =
@@ -142,6 +143,7 @@ function issueState<Name extends PaidTaskStateName>(
   }) as PaidTaskStateFor<Name>;
 
   snapshotByIssuedState.set(issued, snapshot);
+  stateNameByIssuedState.set(issued, state);
   return issued;
 }
 
@@ -156,6 +158,30 @@ function snapshotForIssuedState(state: PaidTaskState): PaidTaskSnapshot {
   }
 
   return snapshotByIssuedState.get(state) ?? rejectTransition();
+}
+
+export function claimPaidTaskResultForClearing(
+  value: unknown,
+): PaidTaskSnapshot {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    consumedStates.has(value) ||
+    transitioningStates.has(value) ||
+    stateNameByIssuedState.get(value) !== "result_valid"
+  ) {
+    return rejectTransition();
+  }
+
+  const snapshot = snapshotByIssuedState.get(value) ?? rejectTransition();
+  consumedStates.add(value);
+
+  return Object.freeze({
+    taskRef: snapshot.taskRef,
+    offeringVersion: snapshot.offeringVersion,
+    requirementsDigest: snapshot.requirementsDigest,
+    expiresAt: snapshot.expiresAt,
+  });
 }
 
 async function nextStateName(

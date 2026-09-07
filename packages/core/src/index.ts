@@ -87,6 +87,19 @@ export type {
   PaidTaskSnapshot,
   PaidTaskState,
 } from "./paid-task-lifecycle.ts";
+export {
+  createClearingSplit,
+  transitionClearingSplit,
+} from "./clearing-split-lifecycle.ts";
+export type {
+  ClearingSplitConfirmed,
+  ClearingSplitEvent,
+  ClearingSplitOutcomeUnknown,
+  ClearingSplitRequired,
+  ClearingSplitSnapshot,
+  ClearingSplitState,
+  ClearingSplitSubmitted,
+} from "./clearing-split-lifecycle.ts";
 export { evaluateRiskScanNativeQuote } from "./riskscan-native-quote-eligibility.ts";
 export type {
   RiskScanNativeAssetId,
