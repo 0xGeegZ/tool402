@@ -121,6 +121,11 @@ test("fails closed for replayed, malformed, throwing, and rejected claim outcome
     () => undefined,
     () => true,
     () => "claimed ",
+    () => ({
+      then(resolve) {
+        resolve("claimed");
+      },
+    }),
     () => {
       throw new Error("claim failed");
     },

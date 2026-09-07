@@ -36,7 +36,9 @@ export async function claimProtectedReplay(
       return null;
     }
 
-    const outcome = await tryClaimReplay(verifiedIngress.replayIdentity);
+    const claimAttempt = tryClaimReplay(verifiedIngress.replayIdentity);
+    const outcome =
+      claimAttempt instanceof Promise ? await claimAttempt : claimAttempt;
     if (outcome !== claimedOutcome) {
       return null;
     }
