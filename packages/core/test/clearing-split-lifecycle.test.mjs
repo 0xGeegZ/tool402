@@ -178,6 +178,17 @@ test("rejects skipped, duplicate, unknown-outcome retry, and terminal events wit
       }
     }
 
+    if (allowed.length > 0) {
+      const type = allowed[0];
+      const expectedState = {
+        split_required: "split_submitted",
+        split_submitted: "split_confirmed",
+        split_outcome_unknown: "split_confirmed",
+      }[state.state];
+      const successor = transitionClearingSplit(state, { type });
+      assertIssuedSplit(successor, expectedState, snapshotOf(state));
+    }
+
     for (const type of allowed) {
       const retryable = await splitFor(pathFor(path));
       transitionClearingSplit(retryable, { type });
