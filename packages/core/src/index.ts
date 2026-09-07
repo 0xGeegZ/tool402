@@ -68,6 +68,23 @@ export type {
   OfferingPurchaseSnapshot,
   OfferingPurchaseState,
 } from "./offering-purchase-lifecycle.ts";
+export { createPaidTask, transitionPaidTask } from "./paid-task-lifecycle.ts";
+export type {
+  PaidTaskEvent,
+  PaidTaskExecutionFailed,
+  PaidTaskExecutionStarted,
+  PaidTaskExpired,
+  PaidTaskInput,
+  PaidTaskPaymentOutcomeUnknown,
+  PaidTaskPaymentRejected,
+  PaidTaskPaymentSettled,
+  PaidTaskPaymentSubmitted,
+  PaidTaskQuoted,
+  PaidTaskResultValid,
+  PaidTaskResponseOutcomeUnknown,
+  PaidTaskSnapshot,
+  PaidTaskState,
+} from "./paid-task-lifecycle.ts";
 export { evaluateRiskScanNativeQuote } from "./riskscan-native-quote-eligibility.ts";
 export type {
   RiskScanNativeAssetId,
