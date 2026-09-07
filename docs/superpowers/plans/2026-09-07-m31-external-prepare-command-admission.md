@@ -12,9 +12,9 @@ and hands a frozen command snapshot to one injected atomic-admission boundary.
 DTO. It invokes the accepted M30 normalizer from the M25 claimed body, creates
 a fresh frozen snapshot only on M30 success, and invokes exactly one injected
 atomic boundary. The adapter returns only a closed frozen status token; it
-does not implement Convex or durable storage. It accepts asynchronous outcomes
-only through a captured native-Promise intrinsic, not generic thenable
-assimilation.
+does not implement Convex or durable storage. It accepts only a direct
+synchronous injected outcome; a later durable card must separately define any
+asynchronous completion protocol and provenance.
 
 **Tech Stack:** TypeScript 5.9, Node 22.21.1 built-in test runner, accepted
 M25/M26/M30 internal modules. No new package, Convex function, browser library,
@@ -35,9 +35,9 @@ configuration, or external SDK.
 - Return only the four exact closed status tokens in a new frozen one-field
   result. Isolate thrown, rejected, malformed, accessor-backed, custom-
   prototype, extra-field, direct-thenable, proxy-wrapped-promise,
-  species-poisoned-promise, and delayed-thenable boundary results without
-  retrying. Do not use generic `await`, `Promise.resolve`, direct `.then`, or
-  `instanceof` on the injected outcome.
+  native-promise, species-poisoned-promise, and delayed-thenable boundary
+  results without retrying. Do not use `await`, `Promise.resolve`, direct
+  `.then`, `instanceof`, or native-Promise internals on the injected outcome.
 - Do not add Convex, persistent replay/idempotency/attempt state, `PREPARED`,
   ATS, provider, wallet, funding, payment, transaction, deployment, or live
   behavior. Keep M24 through M30 and M04 unchanged.
@@ -83,9 +83,9 @@ by M30; assert the atomic boundary is never called. Assert a synchronous
 throw, rejected promise, non-object, custom-prototype object, accessor-backed
 status, extra field, and unsupported status return `null`, invoke the boundary
 once at most, and never retry. Add direct-thenable, proxy-wrapped native
-promise, species-poisoned native promise, and native promise with delayed
-thenable fulfillment cases; each must return `null` after exactly one boundary
-call and no retry.
+promise, species-poisoned native promise, fulfilled native promise, async
+function result, and native promise with delayed thenable fulfillment cases;
+each must return `null` after exactly one boundary call and no retry.
 
 - [ ] **Step 3: Add static scope checks.**
 
@@ -138,15 +138,13 @@ or any injected dependency.
 Call the injected boundary exactly once. First capture a direct result through
 own data-descriptor reflection: require an ordinary object with exactly one
 enumerable `status` data field whose value is one of the four M31 literals.
-For an asynchronous candidate, capture `NativePromise` and
-`NativePromise.prototype.then` module-locally and call that intrinsic directly
-on the candidate. Validate the fulfillment value inside the intrinsic callback
-and resolve only its primitive approved status or `null` into a new native
-wrapper promise. Do not use generic `await`, `Promise.resolve`, direct `.then`,
-or `instanceof` on the candidate. Return a new frozen ordinary `{ status }`;
-return `null` for throws, rejections, hostile reflection, direct thenables,
-proxy-wrapped promises, species-poisoned promises, delayed thenable
-fulfillment, or any other result. Do not retry.
+Do not inspect or await a non-direct candidate. Return a new frozen ordinary
+`{ status }`; return `null` for throws, rejected/fulfilled promises, hostile
+reflection, direct thenables, proxy-wrapped promises, species-poisoned
+promises, delayed thenable fulfillment, async-function results, or any other
+result. Do not retry. M31 intentionally defines no asynchronous completion
+protocol; a future durable card must define its own adapter-owned/branded
+protocol plus timeout and recovery semantics before it accepts one.
 
 - [ ] **Step 4: Verify GREEN and commit only source/test work.**
 

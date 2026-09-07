@@ -53,9 +53,7 @@ export interface ExternalPrepareAtomicAdmissionResult {
 
 export type AtomicallyAdmitExternalPrepareCommand = (
   admission: ExternalPrepareAtomicAdmission,
-) =>
-  | ExternalPrepareAtomicAdmissionResult
-  | Promise<ExternalPrepareAtomicAdmissionResult>;
+) => ExternalPrepareAtomicAdmissionResult;
 
 export async function admitClaimedExternalPrepareCommand(
   claimedBody: unknown,
@@ -69,12 +67,10 @@ export async function admitClaimedExternalPrepareCommand(
 `ResolveCommandAuthorities` are imported only from the accepted internal M30
 and M26 boundaries. This file exports no public package API.
 
-The asynchronous notation in `AtomicallyAdmitExternalPrepareCommand` does not
-authorize structural thenables. At runtime, an asynchronous outcome is
-accepted only through the intrinsic slots of a native `Promise` using a
-module-local captured `NativePromise.prototype.then`. A direct thenable,
-proxy-wrapped promise, species-poisoned promise, or native promise whose
-settlement has assimilated a delayed thenable is not a valid result.
+M31 deliberately accepts only a synchronous direct result. It does not inspect
+or await any `Promise` or thenable. A later separately reviewed durable
+persistence card must define any asynchronous capability and its provenance;
+this injection-only seam makes no such claim.
 
 ## Required sequence
 
@@ -84,31 +80,24 @@ untrusted claimedBody / injected dependencies
 → M30 normalizeClaimedExternalPrepareCommand
 → fresh frozen M31 admission snapshot
 → exactly one injected atomic-admission invocation
-→ direct closed status, or native-Promise-protected closed status, or null
+→ direct closed status or null
 ```
 
 If `atomicallyAdmit` is not callable, return `null` before M30 reads the
 claimed body, resolves an authority, or performs signature work. If M30
 returns `null`, do not invoke the atomic boundary. If the injected boundary
-throws, rejects, returns a non-ordinary/accessor-backed/extra-field result, or
-returns any status outside the four exact literals, return `null` without a
-retry.
+throws, returns a promise or thenable, returns a non-ordinary/accessor-backed/
+extra-field result, or returns any status outside the four exact literals,
+return `null` without a retry.
 
-The implementation must first validate a synchronous result through
-descriptor-safe reflection. For an asynchronous candidate it must not use a
-generic `await`, `Promise.resolve`, direct `.then`, `instanceof`, or any other
-thenable-assimilating or structural-trust path. It captures `NativePromise` and
-`NativePromise.prototype.then` module-locally, calls that intrinsic directly on
-the returned candidate, validates the fulfilled result inside that intrinsic
-callback, and resolves only the primitive approved status or `null` into a new
-native wrapper promise. That wrapper must never resolve a caller-controlled
-object or thenable. Any failure of the intrinsic call, callback, reflection,
-or rejection returns `null`.
-
-Consequently, a direct thenable, proxy-wrapped promise, species-poisoned
-promise, and a native promise whose delayed thenable fulfillment could
-otherwise be assimilated all fail closed as `null`. Each such candidate still
-consumes its one permitted boundary call; the adapter does not retry it.
+The implementation validates the direct result through descriptor-safe
+reflection only. It must not use `await` on the boundary outcome,
+`Promise.resolve`, direct `.then`, `instanceof`, native-Promise internals, or
+any other asynchronous or structural-trust path. Every promise and thenable form, including a direct
+thenable, native promise, proxy-wrapped promise, species-poisoned promise, and
+delayed-thenable fulfillment, returns `null` without probing or invoking its
+`then`. Each such candidate still consumes its one permitted boundary call; the
+adapter does not retry it.
 
 The adapter invokes the boundary at most once. It must neither retry an
 outcome-unknown condition nor convert a failed boundary call into a replay,
@@ -173,10 +162,10 @@ reconciliation.
 - Focused tests prove non-callable injection rejection before M30, M30-only
   authentication (no arbitrary normalized DTO), one frozen detached snapshot,
   one injection call, all four exact status mappings, malformed/hostile
-  result rejection, native-Promise-only async result handling (including a
-  direct thenable, proxy-wrapped promise, species-poisoned promise, and
-  delayed-thenable fulfillment), thrown/rejected injection isolation without
-  retry, and absence of Convex/provider/storage/external behavior.
+  result rejection, strict synchronous-only result handling (including a
+  direct thenable, native promise, proxy-wrapped promise, species-poisoned
+  promise, and delayed-thenable fulfillment), thrown injection isolation
+  without retry, and absence of Convex/provider/storage/external behavior.
 - Backend/root typecheck, test, lint, clean-install dry run,
   queue/reference/whitespace checks, enabled local guard, independent task
   review, and two fresh clean module-review generations pass before
