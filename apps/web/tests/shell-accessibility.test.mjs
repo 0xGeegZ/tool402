@@ -79,7 +79,7 @@ function hasOverflowMask(root) {
 
   root.walkDecls((declaration) => {
     if (
-      /^overflow(?:-[xy])?$/u.test(declaration.prop) &&
+      /^overflow(?:-(?:[xy]|inline|block))?$/iu.test(declaration.prop) &&
       /(?:^|\s)(?:hidden|clip)(?:\s|$)/iu.test(declaration.value)
     ) {
       found = true;
@@ -149,4 +149,20 @@ test("detects global overflow masking", () => {
   `);
 
   assert.equal(hasOverflowMask(stylesheet), true);
+});
+
+test("detects case-insensitive and logical overflow masking", () => {
+  const uppercasePhysicalMask = parseStylesheet(`
+    html {
+      OVERFLOW-X: hidden;
+    }
+  `);
+  const logicalMask = parseStylesheet(`
+    html {
+      overflow-inline: clip;
+    }
+  `);
+
+  assert.equal(hasOverflowMask(uppercasePhysicalMask), true);
+  assert.equal(hasOverflowMask(logicalMask), true);
 });
