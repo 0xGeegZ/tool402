@@ -172,6 +172,17 @@ test("rejects every required root accessor without invoking any getter", () => {
   assert.equal(webUrlCalls, 0);
 });
 
+test("rejects each expected nonenumerable root descriptor", () => {
+  for (const field of Object.keys(candidate())) {
+    const input = candidate();
+    Object.defineProperty(input, field, { enumerable: false, value: input[field], writable: true, configurable: true });
+    assertInputError(input);
+  }
+  const optional = candidate({ webUrl: "https://example.test" });
+  Object.defineProperty(optional, "webUrl", { enumerable: false, value: optional.webUrl, writable: true, configurable: true });
+  assertInputError(optional);
+});
+
 test("rejects reflection failures and hostile or malformed nested arrays", () => {
   const ownKeysFailure = new Proxy(candidate(), {
     ownKeys() { throw new Error("ownKeys reflection failed"); },
@@ -244,9 +255,41 @@ test("rejects reflection failures and hostile or malformed nested arrays", () =>
   }
 });
 
-test("does not coerce poison primitive-like values", () => {
-  const poison = { toString() { throw new Error("toString invoked"); }, valueOf() { throw new Error("valueOf invoked"); } };
-  for (const field of ["serviceId", "offeringPublicId", "x402Endpoint", "publishedAt", "offeringVersion"]) assertInputError(candidate({ [field]: poison }));
+test("does not coerce counted primitive-like sentinels", () => {
+  const values = candidate();
+  const fields = Object.keys(values);
+  for (const field of fields) {
+    const counts = { toString: 0, valueOf: 0, primitive: 0 };
+    const sentinel = {
+      toString() { counts.toString += 1; return String(values[field]); },
+      valueOf() { counts.valueOf += 1; return values[field]; },
+      [Symbol.toPrimitive]() { counts.primitive += 1; return values[field]; },
+    };
+    assertInputError(candidate({ [field]: sentinel }));
+    assert.deepEqual(counts, { toString: 0, valueOf: 0, primitive: 0 }, `${field} must not be coerced`);
+  }
+  const webCounts = { toString: 0, valueOf: 0, primitive: 0 };
+  const webSentinel = {
+    toString() { webCounts.toString += 1; return "https://example.test"; },
+    valueOf() { webCounts.valueOf += 1; return "https://example.test"; },
+    [Symbol.toPrimitive]() { webCounts.primitive += 1; return "https://example.test"; },
+  };
+  assertInputError(candidate({ webUrl: webSentinel }));
+  assert.deepEqual(webCounts, { toString: 0, valueOf: 0, primitive: 0 }, "webUrl must not be coerced");
+  for (const [field, indexes] of [["capabilities", [0]], ["advertisedTiers", [0, 1]]]) {
+    for (const index of indexes) {
+      const array = values[field].slice();
+      const counts = { toString: 0, valueOf: 0, primitive: 0 };
+      const lexical = array[index];
+      array[index] = {
+        toString() { counts.toString += 1; return lexical; },
+        valueOf() { counts.valueOf += 1; return lexical; },
+        [Symbol.toPrimitive]() { counts.primitive += 1; return lexical; },
+      };
+      assertInputError(candidate({ [field]: array }));
+      assert.deepEqual(counts, { toString: 0, valueOf: 0, primitive: 0 }, `${field}[${index}] must not be coerced`);
+    }
+  }
 });
 
 test("rejects wrong literals, IDs, versions, accounts, dates, and URLs", () => {
@@ -263,8 +306,8 @@ test("rejects wrong literals, IDs, versions, accounts, dates, and URLs", () => {
     ["issuerRevenueAccount", ["0.0.01", "0.0.1.2", `0.0.${"1".repeat(93)}`]],
     ["clearingAccount", ["0.0.", "0.0.1.0", `0.0.${"1".repeat(93)}`]],
     ["publishedAt", ["2026-02-29T00:00:00.000Z", "2026-09-07T00:00:00Z", "2026-09-07T25:00:00.000Z", "not-a-date"]],
-    ["x402Endpoint", ["", " http://example.test", "https://example.test#", "https://example.test#fragment", "https://example.test/#", "https://example.test/#fragment", "https://user:pass@example.test", "https://example.test/ ", urlOfLength(2049)]],
-    ["webUrl", ["", " http://example.test", "http://example.test", "https://example.test#", "https://example.test#fragment", "https://example.test/#", "https://example.test/#fragment", "https://user:pass@example.test", "https://example.test ", urlOfLength(2049)]],
+    ["x402Endpoint", ["", "http://example.test", "https://example.test#", "https://example.test#fragment", "https://example.test/#", "https://example.test/#fragment", "https://user:pass@example.test", " https://example.test", "https://example.test/ ", urlOfLength(2049)]],
+    ["webUrl", [undefined, "", " http://example.test", "http://example.test", "https://example.test#", "https://example.test#fragment", "https://example.test/#", "https://example.test/#fragment", "https://user:pass@example.test", "https://example.test ", urlOfLength(2049)]],
   ]) {
     for (const value of values) assertInputError(candidate({ [field]: value }));
   }
@@ -294,7 +337,7 @@ test("exposes exactly the candidate parser and types through the Core barrel", a
   const source = await readFile(barrelUrl, "utf8");
   const candidateExports = [...source.matchAll(
     /export(?:\s+type)?\s+\{([^}]+)\}\s+from\s+["']\.\/agent-directory-record-candidate\.ts["']/gu,
-  )].flatMap((match) => match[1].split(",").map((name) => name.trim().replace(/^type\s+/u, "")));
+  )].flatMap((match) => match[1].split(",").map((name) => name.trim().replace(/^type\s+/u, "")).filter(Boolean));
   assert.deepEqual(candidateExports.sort(), [
     "AdvertisedDirectoryTiers",
     "AgentDirectoryRecordCandidate",
