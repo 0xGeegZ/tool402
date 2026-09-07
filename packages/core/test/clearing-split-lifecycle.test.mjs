@@ -48,25 +48,62 @@ function snapshotOf(state) {
   };
 }
 
-test("starts only from an issued result_valid and freezes the five-field correlation snapshot", async () => {
-  const result = await resultValid();
-  const split = createClearingSplit(result);
-
-  assert.equal(split.state, "split_required");
-  assert.deepEqual(snapshotOf(split), {
-    taskRef: "task-1",
-    offeringVersion: "risk-v1",
-    requirementsDigest: result.requirementsDigest,
-    expiresAt,
-  });
-  assert.deepEqual(Reflect.ownKeys(split).sort(), [
+function assertIssuedSplit(state, expectedState, expectedSnapshot) {
+  assert.equal(state.state, expectedState);
+  assert.deepEqual(snapshotOf(state), expectedSnapshot);
+  assert.deepEqual(Reflect.ownKeys(state).sort(), [
     "expiresAt",
     "offeringVersion",
     "requirementsDigest",
     "state",
     "taskRef",
   ]);
-  assert.equal(Object.isFrozen(split), true);
+  assert.equal(Object.isFrozen(state), true);
+}
+
+async function splitFor(path = []) {
+  let state = createClearingSplit(await resultValid());
+  const expectedSnapshot = snapshotOf(state);
+  assertIssuedSplit(state, "split_required", expectedSnapshot);
+
+  for (const [type, expectedState] of path) {
+    state = transitionClearingSplit(state, { type });
+    assertIssuedSplit(state, expectedState, expectedSnapshot);
+  }
+
+  return state;
+}
+
+function pathFor(types) {
+  const transitionTable = {
+    "split_required:submit": "split_submitted",
+    "split_submitted:confirm": "split_confirmed",
+    "split_submitted:outcome_unknown": "split_outcome_unknown",
+    "split_outcome_unknown:confirm": "split_confirmed",
+    "split_outcome_unknown:non_execution_proven": "split_required",
+  };
+  let state = "split_required";
+
+  return types.map((type) => {
+    const next = transitionTable[`${state}:${type}`];
+    if (next === undefined) {
+      throw new Error("test fixture path must be legal");
+    }
+    state = next;
+    return [type, next];
+  });
+}
+
+test("starts only from an issued result_valid and freezes the five-field correlation snapshot", async () => {
+  const result = await resultValid();
+  const split = createClearingSplit(result);
+
+  assertIssuedSplit(split, "split_required", {
+    taskRef: "task-1",
+    offeringVersion: "risk-v1",
+    requirementsDigest: result.requirementsDigest,
+    expiresAt,
+  });
   assert.throws(() => {
     split.state = "split_submitted";
   });
@@ -96,29 +133,35 @@ test("consumes only a successfully started issued result and preserves rejected 
 });
 
 test("permits only the complete closed transition table", async () => {
-  const legalPaths = [
-    [["submit", "split_submitted"]],
-    [["submit", "split_submitted"], ["confirm", "split_confirmed"]],
-    [["submit", "split_submitted"], ["outcome_unknown", "split_outcome_unknown"]],
-    [["submit", "split_submitted"], ["outcome_unknown", "split_outcome_unknown"], ["confirm", "split_confirmed"]],
-    [["submit", "split_submitted"], ["outcome_unknown", "split_outcome_unknown"], ["non_execution_proven", "split_required"]],
+  const legalEdges = [
+    [[], "submit", "split_submitted"],
+    [[["submit", "split_submitted"]], "confirm", "split_confirmed"],
+    [[["submit", "split_submitted"]], "outcome_unknown", "split_outcome_unknown"],
+    [[["submit", "split_submitted"], ["outcome_unknown", "split_outcome_unknown"]], "confirm", "split_confirmed"],
+    [[["submit", "split_submitted"], ["outcome_unknown", "split_outcome_unknown"]], "non_execution_proven", "split_required"],
   ];
 
-  for (const path of legalPaths) {
-    let state = createClearingSplit(await resultValid());
+  for (const [path, type, expectedState] of legalEdges) {
+    const state = await splitFor(path);
     const expectedSnapshot = snapshotOf(state);
-
-    for (const [type, expectedState] of path) {
-      state = transitionClearingSplit(state, { type });
-      assert.equal(state.state, expectedState);
-      assert.deepEqual(snapshotOf(state), expectedSnapshot);
-      assert.equal(Object.isFrozen(state), true);
-    }
+    const successor = transitionClearingSplit(state, { type });
+    assertIssuedSplit(successor, expectedState, expectedSnapshot);
   }
+
+  const unknown = await splitFor([
+    ["submit", "split_submitted"],
+    ["outcome_unknown", "split_outcome_unknown"],
+  ]);
+  const requiredAgain = transitionClearingSplit(unknown, {
+    type: "non_execution_proven",
+  });
+  assert.notEqual(requiredAgain, unknown);
+  const submittedAgain = transitionClearingSplit(requiredAgain, { type: "submit" });
+  assertIssuedSplit(submittedAgain, "split_submitted", snapshotOf(requiredAgain));
 });
 
 test("rejects skipped, duplicate, unknown-outcome retry, and terminal events without consuming a state", async () => {
-  const events = ["submit", "confirm", "outcome_unknown", "non_execution_proven"];
+  const events = ["submit", "confirm", "outcome_unknown", "non_execution_proven", "retry"];
   const cases = [
     [[], ["submit"]],
     [["submit"], ["confirm", "outcome_unknown"]],
@@ -127,10 +170,7 @@ test("rejects skipped, duplicate, unknown-outcome retry, and terminal events wit
   ];
 
   for (const [path, allowed] of cases) {
-    let state = createClearingSplit(await resultValid());
-    for (const type of path) {
-      state = transitionClearingSplit(state, { type });
-    }
+    const state = await splitFor(pathFor(path));
 
     for (const type of events) {
       if (!allowed.includes(type)) {
@@ -139,21 +179,19 @@ test("rejects skipped, duplicate, unknown-outcome retry, and terminal events wit
     }
 
     for (const type of allowed) {
-      const retryable = state;
+      const retryable = await splitFor(pathFor(path));
       transitionClearingSplit(retryable, { type });
       assert.throws(() => transitionClearingSplit(retryable, { type }));
     }
   }
 
-  const unknown = transitionClearingSplit(
-    transitionClearingSplit(createClearingSplit(await resultValid()), { type: "submit" }),
-    { type: "outcome_unknown" },
-  );
+  const unknown = await splitFor([
+    ["submit", "split_submitted"],
+    ["outcome_unknown", "split_outcome_unknown"],
+  ]);
   assert.throws(() => transitionClearingSplit(unknown, { type: "submit" }));
-  assert.equal(
-    transitionClearingSplit(unknown, { type: "confirm" }).state,
-    "split_confirmed",
-  );
+  const confirmed = transitionClearingSplit(unknown, { type: "confirm" });
+  assertIssuedSplit(confirmed, "split_confirmed", snapshotOf(unknown));
 });
 
 test("rejects copied, forged, proxied, and accessor-backed sources and states before field access", async () => {
@@ -211,9 +249,10 @@ test("rejects every non-ordinary event descriptor without invoking an accessor a
     accessor,
     reflectionFailure,
   ]) {
-    const split = createClearingSplit(await resultValid());
+    const split = await splitFor();
     assert.throws(() => transitionClearingSplit(split, event));
-    assert.equal(transitionClearingSplit(split, { type: "submit" }).state, "split_submitted");
+    const submitted = transitionClearingSplit(split, { type: "submit" });
+    assertIssuedSplit(submitted, "split_submitted", snapshotOf(split));
   }
   assert.equal(reads, 0);
 });
