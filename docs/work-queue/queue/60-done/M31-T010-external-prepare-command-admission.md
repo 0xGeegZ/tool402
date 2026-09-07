@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M25-T010 accepted; M26-T010 accepted; M30-T010 accepted
 - Owner: This is a root-owned active execution card. It owns this card, the
   M31 specification and plan, the proposed focused backend test and internal
@@ -173,6 +173,28 @@ This activation authorizes only the specified test-only RED followed by the
 minimal internal adapter. It does not authorize storage, configuration, Convex,
 generic attempts, ATS, provider/wallet action, funding, payment, transaction,
 deployment, or live behavior.
+
+## Acceptance
+
+Accepted at 2026-09-07T22:16:48Z after final verification against
+`MODULE_BASE` `1fb9d7db49bc7a53de71b7629ad5eac39d3def13` and `MODULE_HEAD`
+`bd68f112268e1549514506dc282da59029dc45a0`, both pushed to `main`. The
+durable test-only RED `7c03f95a45cf2dbdecbf1944b7b92ccda96cc165` precedes the
+minimal handoff source `bd68f112268e1549514506dc282da59029dc45a0`; the later
+test-only `aab3edf01fdb977930251102fb2a587328e5bd72` strengthens the
+synchronous-failure contract without widening scope.
+
+Focused M31 tests passed 6/6 and the full backend suite passed 106/106. Root
+typecheck, test, lint, clean-install dry run, queue/reference/whitespace
+checks, and the enabled local guard passed under Node 22.21.1. The final
+independent task review and both fresh Standards-and-Spec module-review
+generations found no Critical, Important, or Minor finding.
+
+This acceptance covers only the internal M25-to-M30-to-one-injected-boundary
+handoff, a fresh frozen detached snapshot, and strict direct detached status
+copying. It does not accept a durable replay/idempotency claim, generic
+attempt, prepared state, ATS target/configuration, provider or wallet action,
+funding, payment, transaction, deployment, or other external behavior.
 
 ## Re-ready transition
 

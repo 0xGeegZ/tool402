@@ -137,11 +137,11 @@ evidence are excluded. This acceptance grants no durable replay/idempotency
 claim, attempt, prepared state, ATS target/parameter authority, provider or
 wallet action, funding, payment, transaction, deployment, or external action.
 
-M31-T010 is an active execution card comprising its card,
+M31-T010 is an accepted implementation record comprising its card,
 `docs/specs/m31-external-prepare-command-admission.md`,
 `docs/imports/SPEC-IMPORT-LEDGER.md`,
 `docs/superpowers/plans/2026-09-07-m31-external-prepare-command-admission.md`,
-and root queue records. Its proposed implementation paths are only
+and root queue records. Its accepted implementation paths are only
 `packages/backend/src/ingress/external-prepare-command-admission.ts` and
 `packages/backend/tests/external-prepare-command-admission.test.mjs`; its
 execution remains limited to test-only RED followed by the declared minimal
@@ -153,7 +153,9 @@ persistence/reconciliation, Core, Agent, Web/UI, configuration, environment,
 storage, replay/idempotency claims, generic attempts, prepared state, ATS
 target/parameter authority, providers, wallets, funding, payment,
 transactions, settlement, clearing, HCS, payout, deployment, and live evidence
-are excluded.
+are excluded. This acceptance grants no durable replay/idempotency claim,
+attempt, prepared state, ATS target/parameter authority, provider or wallet
+action, funding, payment, transaction, deployment, or external action.
 
 M28-T010 is an accepted authority record comprising its card,
 `docs/specs/m28-agent-directory-record-candidate-schema.md`,
