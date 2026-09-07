@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const sourceUrl = new URL("../src/agent-directory-record-candidate.ts", import.meta.url);
+const barrelUrl = new URL("../src/index.ts", import.meta.url);
 let parseAgentDirectoryRecordCandidate;
 
 test.before(async () => {
@@ -37,6 +38,11 @@ function assertInputError(input) {
 
 function withPrototype(prototype, values) {
   return Object.assign(Object.create(prototype), values);
+}
+
+function urlOfLength(length) {
+  const prefix = "https://example.test/";
+  return `${prefix}${"a".repeat(length - prefix.length)}`;
 }
 
 test("parses the exact candidate into a frozen detached snapshot", () => {
@@ -84,6 +90,27 @@ test("accepts the exact 96-code-unit account boundary", () => {
   }));
   assert.equal(parsed.issuerRevenueAccount, account);
   assert.equal(parsed.clearingAccount, account);
+});
+
+test("accepts exact ID and version upper bounds", () => {
+  const id = "a".repeat(96);
+  const parsed = parseAgentDirectoryRecordCandidate(candidate({
+    serviceId: id,
+    offeringPublicId: id,
+    offeringVersion: Number.MAX_SAFE_INTEGER,
+  }));
+  assert.equal(parsed.serviceId, id);
+  assert.equal(parsed.offeringPublicId, id);
+  assert.equal(parsed.offeringVersion, Number.MAX_SAFE_INTEGER);
+});
+
+test("accepts exact 2,048-code-unit HTTPS URLs", () => {
+  const parsed = parseAgentDirectoryRecordCandidate(candidate({
+    x402Endpoint: urlOfLength(2048),
+    webUrl: urlOfLength(2048),
+  }));
+  assert.equal(parsed.x402Endpoint.length, 2048);
+  assert.equal(parsed.webUrl.length, 2048);
 });
 
 test("isolates caller mutation and repeated parses", () => {
@@ -137,25 +164,45 @@ test("rejects reflection failures and hostile or malformed nested arrays", () =>
   });
   for (const value of [ownKeysFailure, descriptorFailure, prototypeFailure]) assertInputError(value);
 
+  const customCapabilities = ["evm-contract-risk-signals"];
+  Object.setPrototypeOf(customCapabilities, { custom: true });
+  const customTiers = ["quick"];
+  Object.setPrototypeOf(customTiers, { custom: true });
+  const capabilitiesHole = [];
+  capabilitiesHole.length = 1;
+  const tiersExtra = ["quick"];
+  tiersExtra.extra = true;
   const arrayCases = [
     ["capabilities", []],
+    ["capabilities", capabilitiesHole],
     ["capabilities", ["evm-contract-risk-signals", "extra"]],
     ["capabilities", Object.assign(["evm-contract-risk-signals"], { extra: true })],
+    ["capabilities", customCapabilities],
+    ["capabilities", ["wrong"]],
+    ["advertisedTiers", []],
+    ["advertisedTiers", tiersExtra],
     ["advertisedTiers", ["quick", "quick"]],
     ["advertisedTiers", ["standard", "quick"]],
     ["advertisedTiers", ["unknown"]],
     ["advertisedTiers", [, "quick"]],
-    ["advertisedTiers", withPrototype({ custom: true }, ["quick"])],
+    ["advertisedTiers", customTiers],
   ];
   for (const [field, value] of arrayCases) assertInputError(candidate({ [field]: value }));
-  const getterArray = ["quick"];
-  Object.defineProperty(getterArray, "0", { enumerable: true, get() { throw new Error("array getter"); } });
-  assertInputError(candidate({ advertisedTiers: getterArray }));
+  for (const field of ["capabilities", "advertisedTiers"]) {
+    const getterArray = field === "capabilities" ? ["evm-contract-risk-signals"] : ["quick"];
+    let getterCalls = 0;
+    Object.defineProperty(getterArray, "0", {
+      enumerable: true,
+      get() { getterCalls += 1; return field === "capabilities" ? "evm-contract-risk-signals" : "quick"; },
+    });
+    assertInputError(candidate({ [field]: getterArray }));
+    assert.equal(getterCalls, 0, `${field} getter must not be invoked`);
+  }
 });
 
 test("rejects wrong literals, IDs, versions, accounts, dates, and URLs", () => {
   for (const [field, values] of [
-    ["schemaVersion", [0, 1.0, "1", NaN]],
+    ["schemaVersion", [0, 2, "1", NaN]],
     ["serviceSlug", ["risk-scan", "RISkscan"]],
     ["paymentProtocol", ["x402 ", "http"]],
     ["paymentNetwork", ["hedera-mainnet"]],
@@ -167,8 +214,8 @@ test("rejects wrong literals, IDs, versions, accounts, dates, and URLs", () => {
     ["issuerRevenueAccount", ["0.0.01", "0.0.1.2", `0.0.${"1".repeat(93)}`]],
     ["clearingAccount", ["0.0.", "0.0.1.0", `0.0.${"1".repeat(93)}`]],
     ["publishedAt", ["2026-02-29T00:00:00.000Z", "2026-09-07T00:00:00Z", "2026-09-07T25:00:00.000Z", "not-a-date"]],
-    ["x402Endpoint", ["", " http://example.test", "https://example.test#fragment", "https://example.test/#fragment", "https://user:pass@example.test", "https://example.test/ ", `https://example.test/${"a".repeat(2040)}`]],
-    ["webUrl", [" http://example.test", "http://example.test", "https://example.test#fragment", "https://example.test/#fragment", "https://user:pass@example.test", "https://example.test "]],
+    ["x402Endpoint", ["", " http://example.test", "https://example.test#", "https://example.test#fragment", "https://example.test/#", "https://example.test/#fragment", "https://user:pass@example.test", "https://example.test/ ", urlOfLength(2049)]],
+    ["webUrl", ["", " http://example.test", "http://example.test", "https://example.test#", "https://example.test#fragment", "https://example.test/#", "https://example.test/#fragment", "https://user:pass@example.test", "https://example.test ", urlOfLength(2049)]],
   ]) {
     for (const value of values) assertInputError(candidate({ [field]: value }));
   }
@@ -181,4 +228,19 @@ test("has the planned pure-source boundary once the parser exists", async () => 
     assert.equal(source.includes(prohibited), false, `source must not contain ${prohibited}`);
   }
   assert.doesNotMatch(source, /(?:from|import)\s*["'][^"']*(?:ats|provider|agent)[^"']*["']/iu);
+});
+
+test("exposes exactly the candidate parser and types through the Core barrel", async () => {
+  const source = await readFile(barrelUrl, "utf8");
+  const candidateExports = [...source.matchAll(
+    /export(?:\s+type)?\s+\{([^}]+)\}\s+from\s+["']\.\/agent-directory-record-candidate["']/gu,
+  )].flatMap((match) => match[1].split(",").map((name) => name.trim().replace(/^type\s+/u, "")));
+  assert.deepEqual(candidateExports.sort(), [
+    "AdvertisedDirectoryTiers",
+    "AgentDirectoryRecordCandidate",
+    "DirectoryCapability",
+    "DirectoryTier",
+    "parseAgentDirectoryRecordCandidate",
+  ]);
+  assert.equal(candidateExports.filter((name) => name === "parseAgentDirectoryRecordCandidate").length, 1);
 });
