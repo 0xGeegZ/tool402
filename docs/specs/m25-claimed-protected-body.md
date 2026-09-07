@@ -109,10 +109,11 @@ persistence and reconciliation records remain outside this generic path.
   observes the absent internal module.
 - Focused tests use the established valid M23 envelope/key vector and prove
   exact byte preservation, one exact injected replay claim, frozen private
-  membership, caller-byte mutation isolation both after completion and while
-  M23 asynchronous digest work is deliberately suspended, fresh-reader-copy
-  isolation, forged/copy/proxy rejection, and no body exposure after failed
-  verification or claim.
+  membership, caller-byte mutation isolation both after completion and when a
+  controlled M23 digest hook mutates the caller input synchronously before
+  suspending asynchronous digest work, fresh-reader-copy isolation,
+  forged/copy/proxy rejection, and no body exposure after failed verification
+  or claim.
 - Focused tests also prove the source has no JSON parsing, storage/Convex,
   configuration, HTTP, or public backend-barrel export.
 - Backend/root typecheck, test, lint, clean-install dry run,
