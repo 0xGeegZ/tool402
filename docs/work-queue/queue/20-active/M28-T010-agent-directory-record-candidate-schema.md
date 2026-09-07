@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T020 accepted; M10-T010 accepted; M16-T010, M17-T010,
   M18-T010, M19-T010, and M21-T010 accepted as source-sequencing context
 - Owner: This is a root-owned authority record. The proposed implementation
@@ -100,3 +100,12 @@ publication, command/authentication, principal/role lookup, storage, replay
 or idempotency behavior, generic attempts, configuration, Convex, HTTP,
 provider/ATS behavior, wallet, payment, funding, transaction, settlement,
 clearing, HCS, payout, deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-07T13:11:28Z after a fresh post-ready rescan at
+`365a2acb317fd990de402efc94f4e0beeced32f7` confirmed M28-T010 as the sole
+ready card, every declared dependency accepted, no active ownership conflict,
+resolvable committed authority, an enabled local guard, and no human blocker
+for deterministic local work. This activation authorizes only the specified
+test-only RED and minimal pure Core candidate parser.
