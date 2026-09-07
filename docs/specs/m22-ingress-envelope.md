@@ -72,7 +72,7 @@ POST
 <bodySha256>
 ```
 
-The newlines are literal `\\n` separators and there is no trailing newline.
+The newlines are literal `\n` separators and there is no trailing newline.
 The replay identity is exactly `<keyId>:<requestNonce>`. The lexical rules
 exclude `:` from both components, so this representation is injective for the
 accepted values. It is correlation data only: it neither determines that a

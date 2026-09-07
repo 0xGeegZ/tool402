@@ -155,7 +155,7 @@ decimal timestamp. Convert only the accepted timestamp to `bigint`.
 - [ ] **Step 3: Issue a detached frozen canonical envelope**
 
 Construct the fixed method/path, joining the five exact signing-input lines
-with `"\\n"` and no trailing newline. Form replay identity with the safe
+with `"\n"` and no trailing newline. Form replay identity with the safe
 `keyId:requestNonce` pair. Return exactly the nine documented fields in one
 frozen plain object; retain neither input record nor a descriptor.
 
