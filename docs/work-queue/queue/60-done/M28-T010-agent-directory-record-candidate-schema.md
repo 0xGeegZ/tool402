@@ -3,10 +3,10 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T020 accepted; M10-T010 accepted; M16-T010, M17-T010,
   M18-T010, M19-T010, and M21-T010 accepted as source-sequencing context
-- Owner: This is a root-owned authority record. The proposed implementation
+- Owner: This is a root-owned accepted authority record. The implementation
   paths are one new Core parser, focused runtime/type tests, and an explicit
   Core public-barrel amendment only. The root owns this card, local
   specification, import record, plan, queue state, catalog, ownership,
@@ -60,7 +60,7 @@ are neither modified nor consumed.
   repository root under Node 22.21.1.
 - Core/root typecheck, test, lint, clean-install dry run, queue/reference/
   whitespace checks, enabled local guard, independent task review, and two
-  fresh clean module-review generations must pass before acceptance.
+  fresh clean module-review generations passed before acceptance.
 
 ## Inbox transition
 
@@ -109,3 +109,24 @@ ready card, every declared dependency accepted, no active ownership conflict,
 resolvable committed authority, an enabled local guard, and no human blocker
 for deterministic local work. This activation authorizes only the specified
 test-only RED and minimal pure Core candidate parser.
+
+## Acceptance
+
+Accepted at 2026-09-07T14:11:24Z after final verification against
+`MODULE_BASE` `807e5e12ea68f9e25fa11d9793865a4b5d831dd7` and `MODULE_HEAD`
+`1bd683caec63cedcb2c2e0db20731eb948d72481`, both pushed to `main`. The
+test-only RED commits `1d15c9f` through `e7ff85f` precede the parser, type
+fixture, and public-barrel commit `1bd683c`.
+
+Focused M28 tests passed 18/18. Root typecheck, tests, lint, clean-install dry
+run, queue/reference/whitespace checks, and the enabled local guard passed
+under Node 22.21.1. Independent Task 1 and Task 2 reviews were clean after
+their scoped contract corrections. Two fresh module-review generations found
+no Critical, Important, or Minor finding.
+
+This acceptance covers only the pure closed advertised-metadata candidate
+parser and its public Core types. It does not accept signing, publication,
+service activity, payment, command/authentication, storage, replay or
+idempotency behavior, generic attempts, configuration, Convex, HTTP,
+provider/ATS behavior, wallet, funding, transaction, settlement, clearing,
+HCS, payout, deployment, or live behavior.

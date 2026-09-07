@@ -112,11 +112,11 @@ payment, transactions, settlement, clearing, HCS, payout, deployment, and live
 evidence are excluded until a future separately accepted local authority says
 otherwise.
 
-M28-T010 is an inbox authority record comprising its card,
+M28-T010 is an accepted authority record comprising its card,
 `docs/specs/m28-agent-directory-record-candidate-schema.md`,
 `docs/imports/SPEC-IMPORT-LEDGER.md`,
 `docs/superpowers/plans/2026-09-07-m28-agent-directory-record-candidate-schema.md`,
-this ownership record, queue state, catalog, and decisions. Its proposed
+this ownership record, queue state, catalog, and decisions. Its accepted
 implementation paths are only `packages/core/src/agent-directory-record-candidate.ts`,
 `packages/core/src/index.ts`,
 `packages/core/test/agent-directory-record-candidate.test.mjs`, and
