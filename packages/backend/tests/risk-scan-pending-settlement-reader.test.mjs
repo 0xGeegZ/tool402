@@ -23,7 +23,7 @@ const ineligibleMessage = "RiskScan settlement attempt is not eligible for pendi
 const conflictMessage = "RiskScan pending settlement record conflicts with a different durable record";
 
 async function loadReader() {
-  return import(new URL("../convex/riskscan-pending-settlement-reader.ts", import.meta.url));
+  return import(new URL("../convex/riskscan_pending_settlement_reader.ts", import.meta.url));
 }
 
 function createControlledDatabase(options = {}) {

@@ -6,7 +6,7 @@
 - Queue state: 60-done
 - Dependencies: M02-T010 accepted; M04-T010 accepted; M04-T020 accepted
 - Integration evidence: D-M02-010-002, D-M04-010-002, and D-M04-020-002 accepted
-- Owner: the accepted implementation scope was `packages/backend/convex/riskscan-requests.ts`, `packages/backend/convex/tsconfig.json`, and `packages/backend/tests/risk-scan-internal-request-writer.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
+- Owner: the accepted implementation scope was `packages/backend/convex/riskscan_requests.ts`, `packages/backend/convex/tsconfig.json`, and `packages/backend/tests/risk-scan-internal-request-writer.test.mjs`. The root owns this card, the local specification, plan, queue state, catalog, file ownership, decisions, and integration evidence.
 - Human actions: none for local internal-mutation code and handler-level tests. External-store configuration/runtime, deployment, payment, settlement, verification/finality, evidence capture, accounts, wallets, and live assertions remain human-authorized.
 
 ## Scope

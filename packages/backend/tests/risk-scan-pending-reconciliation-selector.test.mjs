@@ -15,7 +15,7 @@ const cutoffMessage = "RiskScan reconciliation cutoff is invalid";
 const unsafeMessage = "RiskScan pending reconciliation selector encountered an unsafe durable attempt";
 
 async function loadSelector() {
-  return import(new URL("../convex/riskscan-pending-reconciliation-selector.ts", import.meta.url));
+  return import(new URL("../convex/riskscan_pending_reconciliation_selector.ts", import.meta.url));
 }
 
 function createControlledDatabase(rows = []) {

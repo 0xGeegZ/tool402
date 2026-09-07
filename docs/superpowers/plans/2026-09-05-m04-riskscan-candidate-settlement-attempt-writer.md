@@ -22,7 +22,7 @@
 
 - Create: `packages/backend/src/risk-scan-settlement-attempt-admission.ts` — strict pure candidate admission and local types.
 - Create: `packages/backend/tests/risk-scan-settlement-attempt-admission.test.mjs` — direct executable contract for the pure admission boundary.
-- Create: `packages/backend/convex/riskscan-settlement-attempts.ts` — internal candidate-attempt writer and private exact-match helpers.
+- Create: `packages/backend/convex/riskscan_settlement_attempts.ts` — internal candidate-attempt writer and private exact-match helpers.
 - Create: `packages/backend/tests/risk-scan-candidate-settlement-attempt-writer.test.mjs` — registered-function and controlled-handler contract.
 
 ### Task 1: Add strict candidate settlement-attempt admission
@@ -112,7 +112,7 @@
 
 **Files:**
 
-- Create: `packages/backend/convex/riskscan-settlement-attempts.ts`
+- Create: `packages/backend/convex/riskscan_settlement_attempts.ts`
 - Create: `packages/backend/tests/risk-scan-candidate-settlement-attempt-writer.test.mjs`
 
 **Interfaces:**
@@ -148,7 +148,7 @@
   env PATH=/Users/guillaumedieudonne/.nvm/versions/node/v22.21.1/bin:$PATH node --test packages/backend/tests/risk-scan-candidate-settlement-attempt-writer.test.mjs
   ```
 
-  Expected: failure because `packages/backend/convex/riskscan-settlement-attempts.ts` does not exist.
+  Expected: failure because `packages/backend/convex/riskscan_settlement_attempts.ts` does not exist.
 
 - [ ] **Step 3: Implement the minimal internal mutation.**
 

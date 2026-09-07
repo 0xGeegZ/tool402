@@ -32,7 +32,7 @@ const ineligibleMessage = "RiskScan settlement attempt is not eligible for a set
 const conflictMessage = "RiskScan settlement record conflicts with a different durable record";
 
 async function loadWriter() {
-  return import(new URL("../convex/riskscan-settlement-records.ts", import.meta.url));
+  return import(new URL("../convex/riskscan_settlement_records.ts", import.meta.url));
 }
 
 function createControlledDatabase(options = {}) {

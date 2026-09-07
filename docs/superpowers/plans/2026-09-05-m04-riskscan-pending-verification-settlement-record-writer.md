@@ -23,7 +23,7 @@
 
 - Create: `packages/backend/src/risk-scan-settlement-record-admission.ts` — strict pure candidate-record admission and local types.
 - Create: `packages/backend/tests/risk-scan-settlement-record-admission.test.mjs` — direct executable contract for pure admission.
-- Create: `packages/backend/convex/riskscan-settlement-records.ts` — internal writer and descriptor-safe durable record helpers.
+- Create: `packages/backend/convex/riskscan_settlement_records.ts` — internal writer and descriptor-safe durable record helpers.
 - Create: `packages/backend/tests/risk-scan-pending-verification-settlement-record-writer.test.mjs` — registration and controlled-handler contract.
 
 ### Task 1: Add strict candidate settlement-record admission
@@ -100,7 +100,7 @@
 
 **Files:**
 
-- Create: `packages/backend/convex/riskscan-settlement-records.ts`
+- Create: `packages/backend/convex/riskscan_settlement_records.ts`
 - Create: `packages/backend/tests/risk-scan-pending-verification-settlement-record-writer.test.mjs`
 
 **Interfaces:**

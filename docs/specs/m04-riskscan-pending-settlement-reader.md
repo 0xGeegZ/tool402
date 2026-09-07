@@ -62,7 +62,7 @@ For one coherent candidate, return exactly:
 
 Only these implementation paths belong to this card:
 
-- `packages/backend/convex/riskscan-pending-settlement-reader.ts`
+- `packages/backend/convex/riskscan_pending_settlement_reader.ts`
 - `packages/backend/tests/risk-scan-pending-settlement-reader.test.mjs`
 
 The root owns this specification, plan, card, queue state, catalog, file ownership, decisions, and integration evidence. The accepted schema and candidate settlement-attempt/record writers are dependencies, not owned changes. Public backend exports, generated output, package metadata, lockfile, runtime configuration, API/UI behavior, external-store proof, accounts, wallets, payment/settlement/finality actions, deployment, verification/evidence capture, and live evidence are excluded.

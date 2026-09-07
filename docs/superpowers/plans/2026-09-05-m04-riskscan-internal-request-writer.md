@@ -19,7 +19,7 @@
 
 ## File structure
 
-- Create: `packages/backend/convex/riskscan-requests.ts`
+- Create: `packages/backend/convex/riskscan_requests.ts`
 - Modify: `packages/backend/convex/tsconfig.json`
 - Create: `packages/backend/tests/risk-scan-internal-request-writer.test.mjs`
 
@@ -27,7 +27,7 @@
 
 **Files:**
 
-- Create: `packages/backend/convex/riskscan-requests.ts`
+- Create: `packages/backend/convex/riskscan_requests.ts`
 - Modify: `packages/backend/convex/tsconfig.json`
 - Create: `packages/backend/tests/risk-scan-internal-request-writer.test.mjs`
 
@@ -60,7 +60,7 @@
 
 - [ ] **Step 3: Implement the minimal internal mutation.**
 
-  In `packages/backend/convex/riskscan-requests.ts`, import `internalMutationGeneric` and `v`, then import `admitRiskScanDurableRequest` plus its document type from the local source module using its `.ts` extension. Register `recordInitialRiskScanRequest` with four `v.string()` and two `v.int64()` arguments plus an object return validator containing `created`/`replayed`, an ID for `riskScanRequests`, and `payment_required`.
+  In `packages/backend/convex/riskscan_requests.ts`, import `internalMutationGeneric` and `v`, then import `admitRiskScanDurableRequest` plus its document type from the local source module using its `.ts` extension. Register `recordInitialRiskScanRequest` with four `v.string()` and two `v.int64()` arguments plus an object return validator containing `created`/`replayed`, an ID for `riskScanRequests`, and `payment_required`.
 
   The handler must admit the complete args object, query `riskScanRequests` with `by_request_ref` and canonical `requestRef`, then either insert the admitted document, return an exact replay, or throw `new RangeError("RiskScan request reference conflicts with a different durable request")`. Compare `publicId`, `requestRef`, `subjectRefHash`, `inputHash`, `state`, `createdAt`, and `updatedAt` exactly. Do not mutate an existing document or touch another table.
 

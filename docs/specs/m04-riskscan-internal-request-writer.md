@@ -42,7 +42,7 @@ The writer has no clock, random-number, network, environment, payment, settlemen
 
 Only these implementation paths belong to this card:
 
-- `packages/backend/convex/riskscan-requests.ts`
+- `packages/backend/convex/riskscan_requests.ts`
 - `packages/backend/convex/tsconfig.json`
 - `packages/backend/tests/risk-scan-internal-request-writer.test.mjs`
 

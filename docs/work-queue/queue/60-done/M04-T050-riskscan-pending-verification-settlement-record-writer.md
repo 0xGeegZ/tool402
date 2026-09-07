@@ -6,7 +6,7 @@
 - Queue state: 60-done
 - Dependencies: M04-T010 accepted; M04-T040 accepted
 - Integration evidence: D-M04-010-002 and D-M04-040-002 accepted
-- Owner: the proposed implementation scope is `packages/backend/src/risk-scan-settlement-record-admission.ts`, `packages/backend/convex/riskscan-settlement-records.ts`, `packages/backend/tests/risk-scan-settlement-record-admission.test.mjs`, and `packages/backend/tests/risk-scan-pending-verification-settlement-record-writer.test.mjs`. The root owns this card, its local specification and plan, queue state, catalog, file ownership, decisions, and integration evidence.
+- Owner: the proposed implementation scope is `packages/backend/src/risk-scan-settlement-record-admission.ts`, `packages/backend/convex/riskscan_settlement_records.ts`, `packages/backend/tests/risk-scan-settlement-record-admission.test.mjs`, and `packages/backend/tests/risk-scan-pending-verification-settlement-record-writer.test.mjs`. The root owns this card, its local specification and plan, queue state, catalog, file ownership, decisions, and integration evidence.
 - Human actions: none for local candidate admission, internal mutation code, and controlled handler tests. Runtime configuration, deployment, external-store proof, payment, settlement, finality, verification, receipt/evidence capture, accounts, wallets, and live assertions remain human-authorized.
 
 ## Scope

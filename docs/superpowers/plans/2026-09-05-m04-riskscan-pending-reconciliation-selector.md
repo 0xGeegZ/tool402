@@ -28,7 +28,7 @@ settlement records, modify any state, or establish an external/live fact.
 
 ## Owned implementation paths
 
-- `packages/backend/convex/riskscan-pending-reconciliation-selector.ts`
+- `packages/backend/convex/riskscan_pending_reconciliation_selector.ts`
 - `packages/backend/tests/risk-scan-pending-reconciliation-selector.test.mjs`
 
 Do not modify schema, accepted M04 source/tests, public exports, generated
@@ -80,7 +80,7 @@ The RED contract must cover:
 
 ### Step 2: Implement the smallest internal query
 
-Create `packages/backend/convex/riskscan-pending-reconciliation-selector.ts`.
+Create `packages/backend/convex/riskscan_pending_reconciliation_selector.ts`.
 Use `internalQueryGeneric` and the type-only `IndexRange` from `convex/server`,
 plus `v` and `GenericId` from `convex/values`. Define one local intersection
 type that restores only `lte("nextReconciliationAt", bigint): IndexRange` after

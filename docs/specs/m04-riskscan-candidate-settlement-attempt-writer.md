@@ -83,7 +83,7 @@ The writer has no clock, random-number, network, environment, payment, settlemen
 Only these implementation paths belong to this card:
 
 - `packages/backend/src/risk-scan-settlement-attempt-admission.ts`
-- `packages/backend/convex/riskscan-settlement-attempts.ts`
+- `packages/backend/convex/riskscan_settlement_attempts.ts`
 - `packages/backend/tests/risk-scan-settlement-attempt-admission.test.mjs`
 - `packages/backend/tests/risk-scan-candidate-settlement-attempt-writer.test.mjs`
 

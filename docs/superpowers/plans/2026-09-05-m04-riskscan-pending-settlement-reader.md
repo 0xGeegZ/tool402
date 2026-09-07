@@ -22,14 +22,14 @@
 
 ## File structure
 
-- Create: `packages/backend/convex/riskscan-pending-settlement-reader.ts` — internal descriptor-safe candidate reader.
+- Create: `packages/backend/convex/riskscan_pending_settlement_reader.ts` — internal descriptor-safe candidate reader.
 - Create: `packages/backend/tests/risk-scan-pending-settlement-reader.test.mjs` — registration and controlled-handler contract.
 
 ### Task 1: Add the internal pending-settlement candidate reader
 
 **Files:**
 
-- Create: `packages/backend/convex/riskscan-pending-settlement-reader.ts`
+- Create: `packages/backend/convex/riskscan_pending_settlement_reader.ts`
 - Create: `packages/backend/tests/risk-scan-pending-settlement-reader.test.mjs`
 
 **Interfaces:**
@@ -73,7 +73,7 @@
   env PATH=/Users/guillaumedieudonne/.nvm/versions/node/v22.21.1/bin:$PATH node --test packages/backend/tests/risk-scan-pending-settlement-reader.test.mjs
   ```
 
-  Expected: failure because `packages/backend/convex/riskscan-pending-settlement-reader.ts` does not exist.
+  Expected: failure because `packages/backend/convex/riskscan_pending_settlement_reader.ts` does not exist.
 
 - [ ] **Step 3: Implement the minimal internal query.**
 

@@ -39,7 +39,7 @@ const ineligibleRequestMessage = "RiskScan request is not eligible for a settlem
 const conflictMessage = "RiskScan settlement attempt conflicts with a different durable attempt";
 
 async function loadWriter() {
-  return import(new URL("../convex/riskscan-settlement-attempts.ts", import.meta.url));
+  return import(new URL("../convex/riskscan_settlement_attempts.ts", import.meta.url));
 }
 
 function copyValidArgs() {

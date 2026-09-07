@@ -71,7 +71,7 @@ verification, settlement, finality, evidence, result, or live-state claim.
 
 Only these implementation paths belong to this card:
 
-- `packages/backend/convex/riskscan-pending-reconciliation-selector.ts`
+- `packages/backend/convex/riskscan_pending_reconciliation_selector.ts`
 - `packages/backend/tests/risk-scan-pending-reconciliation-selector.test.mjs`
 
 The root owns this specification, plan, card, queue state, catalog, file

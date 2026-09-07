@@ -23,7 +23,7 @@ const canonicalDocument = {
 const conflictMessage = "RiskScan request reference conflicts with a different durable request";
 
 async function loadWriter() {
-  return import(new URL("../convex/riskscan-requests.ts", import.meta.url));
+  return import(new URL("../convex/riskscan_requests.ts", import.meta.url));
 }
 
 function copyValidArgs() {

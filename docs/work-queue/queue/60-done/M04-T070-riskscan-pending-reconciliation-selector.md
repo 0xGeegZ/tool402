@@ -6,7 +6,7 @@
 - Queue state: 60-done
 - Dependencies: M04-T010 accepted; M04-T040 accepted; M04-T060 accepted
 - Integration evidence: D-M04-010-002, D-M04-040-002, and D-M04-060-002 accepted
-- Owner: the proposed implementation scope is `packages/backend/convex/riskscan-pending-reconciliation-selector.ts` and `packages/backend/tests/risk-scan-pending-reconciliation-selector.test.mjs`. The root owns this card, its local specification and plan, queue state, catalog, file ownership, decisions, and integration evidence.
+- Owner: the proposed implementation scope is `packages/backend/convex/riskscan_pending_reconciliation_selector.ts` and `packages/backend/tests/risk-scan-pending-reconciliation-selector.test.mjs`. The root owns this card, its local specification and plan, queue state, catalog, file ownership, decisions, and integration evidence.
 - Human actions: none for local internal-query code and controlled handler tests. Runtime configuration, deployment, external-store proof, payment, settlement, transaction verification, finality, receipt/evidence capture, accounts, wallets, and live assertions remain human-authorized.
 
 ## Scope

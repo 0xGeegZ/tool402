@@ -86,7 +86,7 @@ The returned ID is opaque. It must not return an attempt/request/public ID, tran
 Only these implementation paths belong to this card:
 
 - `packages/backend/src/risk-scan-settlement-record-admission.ts`
-- `packages/backend/convex/riskscan-settlement-records.ts`
+- `packages/backend/convex/riskscan_settlement_records.ts`
 - `packages/backend/tests/risk-scan-settlement-record-admission.test.mjs`
 - `packages/backend/tests/risk-scan-pending-verification-settlement-record-writer.test.mjs`
 
