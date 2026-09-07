@@ -22,3 +22,11 @@ UI-S00 must not render tool listings, price, balances, payment state, provider/b
 - Web typecheck, test, production build, local-reference guard, and browser diagnostics pass.
 
 UI-S01 may compose this shell into landing and Explore surfaces. RiskScan detail and paid-state UI remain blocked until their typed domain states exist.
+
+## M29 local accessibility amendment
+
+M29 may amend only the accepted global shell stylesheet to honor reduced-motion
+preferences while preserving the existing focus and landmark seams. Its exact
+local contract is [the shell accessibility amendment](../specs/m29-shell-accessibility-amendment.md).
+It does not reopen route behavior or authorize any identity, provider, payment,
+or external surface.
