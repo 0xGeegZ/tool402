@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M16-T010 accepted
 - Owner: `packages/core/src/offering-definition.ts`,
   `packages/core/src/index.ts`,
@@ -80,3 +80,25 @@ This card authorizes only local contract/plan records and independent design
 review; it authorizes neither RED/code nor an ATS, payment, funding,
 allocation, clearing, HCS, account, wallet, signer, transaction, deployment,
 or live action.
+
+## Design review
+
+An independent review of committed authority `8022ff310b0fd60451f6fc78d9b0e532649fcdb9`
+completed clean at 2026-09-07T00:44:08Z. It confirmed M16-T010 as the sole
+functional dependency; the exact descriptor-safe shape, bounds, date rule,
+and detached output are implementable; generic attempts/configuration and ATS
+remain non-eligible; and the plan retains durable test-only RED-before-code
+chronology. No Critical, Important, or Minor finding remains. The reviewer
+made one non-actionable test-design judgment: keep economic string-bound cases
+table-driven across every field.
+
+## Ready transition
+
+Ready at 2026-09-07T00:44:08Z after a fresh post-review queue rescan confirmed
+the accepted M16-T010 dependency, resolvable committed local authority,
+disjoint proposed Core paths, no active-card conflict, enabled local boundary,
+concrete direct validation, and no human blocker for this deterministic local
+scope. This ready state authorizes only the bounded RED/GREEN parser contract
+after root activation; it does not authorize ATS, payment, funding,
+allocation, clearing, HCS, account, wallet, signer, transaction, deployment,
+or live behavior.
