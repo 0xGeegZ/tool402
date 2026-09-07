@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T030 accepted; M04-T010 accepted; M04-T030 accepted;
   M04-T040 accepted; M04-T050 accepted; M04-T060 accepted; M04-T070 accepted
 - Owner: the root owns this card, its local specification and plan, catalog,
@@ -87,3 +87,14 @@ test-only RED, exact source/test/document location amendment, and local
 verification. It does not authorize configuration access, a Convex publish or
 deployment, an external evidence claim, payment, settlement, ATS, funding,
 wallet, account, signer, transaction, clearing, HCS, payout, or live behavior.
+
+## Activation
+
+Activated at 2026-09-07T08:38:00Z after a post-ready root rescan confirmed
+B01-T010 is the sole ready card, all declared M01/M04 dependencies remain
+accepted, no active card owns the bounded paths, the committed authority is
+resolvable, and the local guard is enabled. This activation authorizes only the
+test-only RED, exact filename/test/document-path amendment, and local
+verification. It does not authorize configuration access, a Convex publish or
+deployment, external evidence, payment, settlement, ATS, funding, wallet,
+account, signer, transaction, clearing, HCS, payout, or live behavior.
