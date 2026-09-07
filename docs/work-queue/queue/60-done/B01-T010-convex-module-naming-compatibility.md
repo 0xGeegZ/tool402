@@ -3,17 +3,17 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T030 accepted; M04-T010 accepted; M04-T030 accepted;
   M04-T040 accepted; M04-T050 accepted; M04-T060 accepted; M04-T070 accepted
 - Owner: the root owns this card, its local specification and plan, catalog,
   state, human-action record, decisions, reviews, integration evidence,
-  commits, and pushes. Proposed code paths are the five legacy and canonical
-  Convex module locations, their five direct backend tests, one new
-  compatibility test, and code-styled module-path literals in the five M04
-  specifications, five M04 plans, five accepted M04 cards, and
+  commits, and pushes. Accepted code paths are the five canonical Convex
+  module locations, their five direct backend tests, one compatibility test,
+  and code-styled module-path literals in the five M04 specifications, five
+  M04 plans, five accepted M04 cards, and
   `docs/work-queue/FILE-OWNERSHIP.md`.
-- Human actions: `HA-CONVEX-DEV-001` remains a separate Human Ops
+- Human actions: `HA-CONVEX-DEV-001` is ready for the separate Human Ops
   development-only publish verification. It does not authorize an agent to
   read ignored configuration, publish/deploy, or perform any external action.
 
@@ -98,3 +98,23 @@ test-only RED, exact filename/test/document-path amendment, and local
 verification. It does not authorize configuration access, a Convex publish or
 deployment, external evidence, payment, settlement, ATS, funding, wallet,
 account, signer, transaction, clearing, HCS, payout, or live behavior.
+
+## Acceptance
+
+Locally accepted at 2026-09-07T08:58:47Z after final verification against
+`MODULE_BASE` `d0bb85a98d0b4dbccdc406ac7197cb17aaa3db79` and `MODULE_HEAD`
+`ce3096e30572ce1faca53f2eb76ec0c05113b4ec`, which is pushed to `main`.
+The test-only RED contract at `d0bb85a` precedes the source GREEN commit.
+
+The focused compatibility contract passed 3/3 and backend tests passed 80/80.
+Root typecheck, test, lint, clean-install dry run, queue/reference/whitespace
+checks, and the enabled local guard passed under Node 22.21.1. An independent
+task review found no local blocker: the five source moves are exactly 100%,
+their exports remain unchanged, only the five direct test URLs and sixteen
+bounded Markdown path records changed, and no legacy module-address consumer
+remains in tracked code.
+
+This is local filename compatibility acceptance. `HA-CONVEX-DEV-001` records
+the separate bounded Human Ops Development compatibility outcome in
+[its redacted review](../../evidence/HA-CONVEX-DEV-001-review.md); no agent has
+read ignored configuration or performed an external action.
