@@ -34,11 +34,11 @@ configuration, or external SDK.
   resolver record, target resolution, or external capability.
 - Return only the four exact closed status tokens in a new frozen one-field
   result. Isolate thrown, malformed, accessor-backed, custom-prototype,
-  extra-field, direct-thenable, proxy-wrapped-promise,
-  native-promise, species-poisoned-promise, and delayed-thenable boundary
-  results without retrying. A pre-handled rejected Promise is an invalid
-  nonacceptance check only. Do not use `await`, `Promise.resolve`, direct
-  `.then`, `instanceof`, or native-Promise internals on the injected outcome.
+  extra-field, and normally reflected direct-thenable/Promise forms that fail
+  the exact direct shape, without retrying. A pre-handled rejected Promise is
+  an invalid nonacceptance check only. Do not use `await`, `Promise.resolve`,
+  direct `.then`, `instanceof`, or native-Promise internals on the injected
+  outcome.
   Never retain or propagate its caller object; portable reflection may not
   distinguish a transparent proxy that presents the exact detached direct
   status shape, which is still data only and never async provenance.

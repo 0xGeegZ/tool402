@@ -152,6 +152,16 @@ invalid direct value. Rejected/asynchronous returns are out of contract; M31
 does not claim to observe or suppress host-level unhandled rejection behavior.
 The card remains in `00-inbox` pending fresh review of this clarification.
 
+## Direct-data wording correction
+
+Recorded at 2026-09-07T21:47:47Z after a fresh test-plan review found that the
+clarification still described known Promise forms too categorically. The
+authority now says only normally reflected promise/thenable forms that fail the
+exact direct representation return `null`; any indistinguishable exact status
+shape is detached data only, never async-completion provenance. This narrow
+wording correction remains within the synchronous port and requires one fresh
+clean authority re-review before ready.
+
 ## Activation
 
 Activated at 2026-09-07T21:19:00Z after a fresh post-ready root rescan at

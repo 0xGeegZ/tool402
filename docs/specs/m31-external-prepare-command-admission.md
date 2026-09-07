@@ -96,10 +96,9 @@ any other asynchronous or structural-trust path. It never probes, invokes,
 retains, or propagates the caller outcome's `then`; it copies only an approved
 primitive status into a new frozen result.
 
-Under ordinary reflection, direct thenables and native, proxy-wrapped,
-species-poisoned, fulfilled, or pre-handled-rejected promises do not satisfy
-the exact direct representation and return `null`. Portable reflection cannot
-distinguish a transparent proxy or polluted-prototype object that presents the
+Normally reflected promise/thenable forms that do not present the exact direct
+representation return `null`. Portable reflection cannot distinguish a
+transparent proxy, polluted-prototype object, or other value that presents the
 same exact status representation as a direct record. Such an indistinguishable
 value is treated only as detached status data; it grants no asynchronous
 completion provenance and no caller object is retained.
