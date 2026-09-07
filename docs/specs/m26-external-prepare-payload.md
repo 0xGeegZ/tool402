@@ -77,11 +77,10 @@ primitive strings. chainId is the primitive number 296.
 operationKind is exactly one member of ExternalOperationKind. No other
 operation family is admitted.
 
-subjectPublicId is an opaque local public identifier of 1 through 96 ASCII
-characters. Its first character is an ASCII letter or digit; every remaining
-character is an ASCII letter, digit, period, underscore, colon, or hyphen.
-It is correlation vocabulary only and neither resolves a subject nor proves
-ownership.
+subjectPublicId is an opaque local public identifier using the accepted local
+public-ID grammar: exactly 1 through 96 ASCII letters, digits, underscores, or
+hyphens. It is correlation vocabulary only and neither resolves a subject nor
+proves ownership.
 
 network is exactly hedera:testnet and chainId is exactly 296. This fixed pair
 is local protocol vocabulary only; it does not read configuration, discover
@@ -102,8 +101,8 @@ configuration or authorization.
 canonicalParametersHash is exactly 64 lower-case hexadecimal characters and
 is returned as CanonicalParametersHash. This boundary neither canonicalizes
 parameters nor computes, verifies, or assigns an algorithm to the hash. A
-later canonicalization and signing authority chooses and proves that
-algorithm.
+later dedicated canonicalization and signing authority must pin and prove the
+applicable algorithm and canonical input.
 
 idempotencyKey is exactly 22 canonical unpadded base64url characters encoding
 16 bytes: its first 21 characters use A-Z, a-z, 0-9, underscore, or hyphen;

@@ -45,9 +45,9 @@ or create a durable attempt.
   existing lifecycle, backend, Convex, Agent, Web/UI, package, or lockfile
   path is owned.
 - The contract remains an exact eight-field payload with closed operation
-  kinds, fixed local network/chain vocabulary, lexical-only target forms,
-  algorithm-neutral canonical-parameters hash, non-claiming idempotency key,
-  and declared-only expiry.
+  kinds, the accepted local public-ID grammar, fixed local network/chain
+  vocabulary, lexical-only target forms, algorithm-neutral canonical-parameters
+  hash, non-claiming idempotency key, and declared-only expiry.
 - An independent review of the committed authority is clean: no Critical,
   Important, or Minor finding remains.
 
@@ -73,3 +73,13 @@ review. It authorizes neither RED/code nor a signed command, storage,
 configuration, Convex, HTTP, generic attempts, ATS, payment, funding,
 allocation, clearing, HCS, account, wallet, signer, transaction, deployment,
 or live behavior.
+
+## Design review
+
+Independent authority and security review of the committed record found that
+the initial subjectPublicId grammar drifted from the accepted local public-ID
+boundary. The amended authority requires the exact 1–96 ASCII
+letter/digit/underscore/hyphen grammar and requires RED coverage for valid
+leading underscore/hyphen forms and rejected period/colon forms. The same
+review confirmed that the payload remains distinct from a signed command, the
+hash stays algorithm-neutral, and the target union remains lexical only.

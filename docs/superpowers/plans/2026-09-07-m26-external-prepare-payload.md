@@ -31,8 +31,9 @@ configuration, runtime service, or external SDK is added.
   behavior.
 - Require exactly the eight fields and use only descriptor reads under
   reflection failure handling.
-- Accept only the six declared operation kinds, hedera:testnet with chain 296,
-  a canonical Hedera account or lower-case EVM expected target, a
+- Accept only the six declared operation kinds, the accepted local 1–96
+  ASCII letter/digit/underscore/hyphen public-ID grammar, hedera:testnet with
+  chain 296, a canonical Hedera account or lower-case EVM expected target, a
   64-lowercase-hex algorithm-neutral hash, a canonical 16-byte base64url
   idempotency key, and a real canonical UTC-millisecond expiry.
 - Keep the local reference guard enabled before every non-empty commit.
@@ -64,7 +65,8 @@ configuration, runtime service, or external SDK is added.
 
   Assert the exact frozen eight-field result and caller-mutation isolation.
   Cover every allowed operation kind, both a canonical Hedera account target
-  and a lower-case EVM target, then reject unknown/missing/extra,
+  and a lower-case EVM target, plus valid leading underscore/hyphen public IDs
+  and rejected period/colon public IDs, then reject unknown/missing/extra,
   symbol-keyed, nonenumerable, inherited, custom-prototype, accessor-backed,
   and reflection-throwing inputs without reading a getter. Reject every wrong
   literal, unsupported operation, malformed subject, malformed/mixed-case
@@ -119,8 +121,8 @@ configuration, runtime service, or external SDK is added.
 
 - [ ] **Step 2: Implement only lexical payload validation.**
 
-  Validate all six operation literals, the bounded subject grammar, fixed
-  network/chain pair, either target syntax, the 64-lowercase-hex
+  Validate all six operation literals, the accepted local public-ID grammar,
+  fixed network/chain pair, either target syntax, the 64-lowercase-hex
   CanonicalParametersHash, canonical 16-byte idempotency key, and real
   canonical UTC-millisecond expiry. Never derive, recompute, resolve, compare,
   or claim any payload value.
