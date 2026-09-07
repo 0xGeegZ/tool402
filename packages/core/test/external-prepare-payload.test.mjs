@@ -295,8 +295,9 @@ test("requires a canonical 16-byte base64url idempotency key without claiming it
     );
   }
 
-  const first = parseExternalPreparePayload(validPayload());
-  const second = parseExternalPreparePayload(validPayload());
+  const repeatedInput = validPayload();
+  const first = parseExternalPreparePayload(repeatedInput);
+  const second = parseExternalPreparePayload(repeatedInput);
   assert.notEqual(first, second);
   assert.deepEqual(first, second);
   assert.equal(Object.isFrozen(first), true);
