@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M25-T010 accepted; M26-T010 accepted; M27-T010 accepted
 - Owner: This is a root-owned backend-only implementation record. It owns this
   card, the M30 specification and plan, the focused backend test, the new
@@ -125,3 +125,27 @@ absent from the backend barrel, accept no capability/signature/authority or
 external input, and make no side effect. This is a test-observability
 amendment, not command, replay, ATS, provider, wallet, funding, transaction,
 or live authority.
+
+## Acceptance
+
+Accepted at 2026-09-07T20:33:09Z after final verification against
+`MODULE_BASE` `361fadf35adcfc578279881167a9fb20c8ed749c` and `MODULE_HEAD`
+`fbced4ee95f811b184ba975bd65493c00a2d7aaa`, both pushed to `main`. The
+durable test-only RED `81cdb187661c3d9cf8231460e4cd1513db9b4359` precedes the
+minimal normalizer and direct exact verifier dependency in
+`30f8f77f0f5292cb36acf243281a77b5add120ef`; the later test-only
+`fbced4ee95f811b184ba975bd65493c00a2d7aaa` expands negative coverage without
+widening the boundary.
+
+Focused M30 tests passed 10/10. Root typecheck, test, lint, clean-install dry
+run, queue/reference/whitespace checks, and the enabled local guard passed
+under Node 22.21.1. The final exact-head independent task review and both
+fresh module-review generations found no Critical, Important, or Minor
+finding.
+
+This acceptance covers only the internal claimed-body authenticated-command
+normalizer, M26 payload binding, fixed EIP-712 recovery, injected authority
+evaluation, time validation, replay-identity derivation, and frozen DTO. It
+does not accept a durable replay/idempotency claim, generic attempt, prepared
+state, ATS target/configuration, provider or wallet action, funding, payment,
+transaction, deployment, or other external behavior.
