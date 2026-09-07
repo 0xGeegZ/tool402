@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M25-T010 accepted; M26-T010 accepted; M27-T010 accepted
 - Owner: This is a root-owned backend-only implementation record. It owns this
   card, the M30 specification and plan, the focused backend test, the new
@@ -99,3 +99,16 @@ This ready state authorizes only root activation followed by the specified
 test-only RED and minimal internal normalizer. It does not authorize a durable
 claim or attempt, prepared state, ATS target/configuration, provider/wallet
 action, funding, payment, transaction, deployment, or other external behavior.
+
+## Activation
+
+Activated at 2026-09-07T19:33:43Z after a fresh post-ready rescan at committed
+6099228 confirmed M30-T010 as the sole ready card, all declared dependencies
+accepted, no active ownership conflict, committed authority, enabled guard,
+concrete RED/GREEN validation, and no human blocker for deterministic local
+work.
+
+This activation authorizes only the specified test-only RED and then the
+minimal internal normalizer. It does not authorize a durable claim or attempt,
+prepared state, ATS target/configuration, provider/wallet action, funding,
+payment, transaction, deployment, or other external behavior.
