@@ -7,8 +7,9 @@
 - Dependencies: M22-T010 accepted; M23-T010 accepted; M24-T010 accepted;
   M25-T010 accepted; M26-T010 accepted
 - Owner: This is a root-owned control record only. It owns no implementation
-  path. The root owns this card, the human-action record, queue state,
-  catalog, ownership, decisions, commits, and pushes.
+  path. The root owns this card, the human-action record, its non-authoritative
+  decision template, queue state, catalog, ownership, decisions, commits, and
+  pushes.
 - Human actions: HA-COMMAND-AUTHORITY-001 is required before any future
   authenticated-command or generic-attempt implementation card is created.
 
@@ -37,6 +38,10 @@ The packet must reject implicit defaults. It must not make a live action,
 select a signer, create/configure an account, store a secret, or claim that a
 wallet command has been verified.
 
+The [human decision template](../../evidence/HA-COMMAND-AUTHORITY-001-template.md)
+is a checklist only. It selects no value and cannot itself satisfy this
+authority requirement.
+
 ## Inbox intake
 
 At 2026-09-07T12:20:00Z, the rescan established that no authenticated-command
@@ -58,6 +63,9 @@ human action.
 
 - HA-COMMAND-AUTHORITY-001 is recorded as an explicit, secret-free human
   decision with every required value above.
+- A completed copy of the template is treated as input to review, not as an
+  approval by default; the root must confirm that it is concrete and rejects
+  all implicit defaults.
 - A fresh root rescan maps that decision to a minimum local contract,
   dependencies, owned paths, negative tests, and an independent review plan.
 - The root creates a new authenticated-command or generic-attempt
