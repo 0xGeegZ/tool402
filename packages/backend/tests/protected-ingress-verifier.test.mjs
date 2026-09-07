@@ -109,6 +109,16 @@ test("rejects unknown, unusable, and unavailable verification keys", async () =>
   const { verifyProtectedIngress } = await loadVerifier();
   const extractableKey = await createVerificationKey({ extractable: true });
   const signOnlyKey = await createVerificationKey({ usages: ["sign"] });
+  const wrongHmacHashKey = await globalThis.crypto.subtle.importKey(
+    "raw",
+    fixedKeyBytes,
+    {
+      name: "HMAC",
+      hash: "SHA-1",
+    },
+    false,
+    ["verify"],
+  );
   const wrongAlgorithmKey = await globalThis.crypto.subtle.importKey(
     "raw",
     new Uint8Array(16),
@@ -121,6 +131,7 @@ test("rejects unknown, unusable, and unavailable verification keys", async () =>
     { name: "unknown key", resolveKey: () => undefined },
     { name: "extractable key", resolveKey: () => extractableKey },
     { name: "sign-only key", resolveKey: () => signOnlyKey },
+    { name: "wrong HMAC hash key", resolveKey: () => wrongHmacHashKey },
     { name: "wrong algorithm key", resolveKey: () => wrongAlgorithmKey },
     {
       name: "resolver failure",
@@ -138,6 +149,20 @@ test("rejects unknown, unusable, and unavailable verification keys", async () =>
 
     assert.equal(verified, null, `expected ${name} to be rejected`);
   }
+});
+
+test("accepts a non-extractable HMAC SHA-256 key with sign and verify usages", async () => {
+  const { verifyProtectedIngress } = await loadVerifier();
+  const key = await createVerificationKey({ usages: ["sign", "verify"] });
+
+  const verified = await verifyProtectedIngress(
+    validEnvelope,
+    rawBody,
+    timestampUnixSeconds,
+    resolveOnly(key),
+  );
+
+  assert.notEqual(verified, null);
 });
 
 test("rejects malformed input, invalid raw bytes, and invalid signatures", async () => {
@@ -268,4 +293,42 @@ test("performs native MAC verification before rejecting a valid but stale envelo
   }
 
   assert.equal(verifyCalls, 1);
+});
+
+test("copies raw bytes before asynchronous digest work", async () => {
+  const { verifyProtectedIngress } = await loadVerifier();
+  const key = await createVerificationKey();
+  const mutableRawBody = new Uint8Array(rawBody);
+  const originalDescriptor = Object.getOwnPropertyDescriptor(globalThis, "crypto");
+  const originalCrypto = globalThis.crypto;
+  const originalSubtle = originalCrypto.subtle;
+
+  assert.equal(originalDescriptor?.configurable, true);
+  Object.defineProperty(globalThis, "crypto", {
+    configurable: true,
+    enumerable: originalDescriptor.enumerable,
+    writable: true,
+    value: {
+      subtle: {
+        digest: async (...arguments_) => {
+          mutableRawBody[0] = "[".charCodeAt(0);
+          return originalSubtle.digest(...arguments_);
+        },
+        verify: originalSubtle.verify.bind(originalSubtle),
+      },
+    },
+  });
+
+  try {
+    const verified = await verifyProtectedIngress(
+      validEnvelope,
+      mutableRawBody,
+      timestampUnixSeconds,
+      resolveOnly(key),
+    );
+
+    assert.notEqual(verified, null);
+  } finally {
+    Object.defineProperty(globalThis, "crypto", originalDescriptor);
+  }
 });
