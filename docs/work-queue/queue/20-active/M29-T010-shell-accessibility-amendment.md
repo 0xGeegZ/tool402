@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T020 accepted; M11-T020 accepted
 - Owner: The root owns this card, `docs/specs/m29-shell-accessibility-amendment.md`,
   `docs/superpowers/plans/2026-09-07-m29-shell-accessibility-amendment.md`,
@@ -90,3 +90,12 @@ test-only RED and minimal stylesheet GREEN. It does not authorize route
 business changes or any identity, provider, wallet, signer, payment, account,
 transaction, reserve, allocation, clearing, ATS, HCS, payout, deployment, or
 external behavior.
+
+## Activation
+
+Activated at 2026-09-07T14:43:11Z after a fresh post-ready root rescan
+confirmed this is the sole ready card, both dependencies remain accepted, no
+active ownership conflict exists, the committed authority is resolvable, the
+local guard is enabled, and no human action blocks this deterministic local
+scope. This activation authorizes only the specified test-only RED followed by
+the minimal stylesheet GREEN and verification.
