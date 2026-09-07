@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T030 accepted; M22-T010 accepted
 - Owner: `packages/backend/src/ingress/protected-ingress-verifier.ts` and
   `packages/backend/tests/protected-ingress-verifier.test.mjs` are proposed
@@ -105,3 +105,16 @@ then minimal internal GREEN verifier after root activation; it does not
 authorize replay storage, command handling, generic attempts, ATS,
 configuration, payment, funding, allocation, clearing, HCS, account, wallet,
 signer, transaction, deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-07T07:40:00Z after a fresh post-ready rescan confirmed
+M23-T010 is the sole ready card, M01-T030 and M22-T010 remain accepted, no
+active card owns the bounded internal backend paths, committed authority is
+resolvable, the local guard is enabled, and the current human-action record
+neither grants external authority nor blocks deterministic local work. This
+activation authorizes only the specified test-only RED then minimal internal
+GREEN verifier and verification; it does not expand authority to replay
+storage, command handling, generic attempts, ATS, configuration, payment,
+funding, allocation, clearing, HCS, account, wallet, signer, transaction,
+deployment, or live behavior.
