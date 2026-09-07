@@ -90,12 +90,14 @@ test("parses descriptor-backed proxies without ordinary property reads", () => {
 });
 
 test("canonicalizes URLs, including the root path, and accepts optional webUrl", () => {
-  const parsed = parseAgentDirectoryRecordCandidate(candidate({
+  const input = candidate({
     x402Endpoint: "https://api.example.test/riskscan?b=2&a=1",
     webUrl: "https://example.test",
-  }));
+  });
+  const parsed = parseAgentDirectoryRecordCandidate(input);
   assert.equal(parsed.x402Endpoint, "https://api.example.test/riskscan?b=2&a=1");
   assert.equal(parsed.webUrl, "https://example.test/");
+  assert.deepEqual(Reflect.ownKeys(parsed).sort(), Object.keys(input).sort());
 });
 
 test("canonicalizes an endpoint with no explicit path independently", () => {
