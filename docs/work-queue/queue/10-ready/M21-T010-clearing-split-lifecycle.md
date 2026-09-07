@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M19-T010 accepted
 - Owner: `packages/core/src/clearing-split-lifecycle.ts`,
   `packages/core/test/clearing-split-lifecycle.test.mjs`, and
@@ -87,3 +87,24 @@ non-eligible. This card authorizes only the committed local contract, plan,
 and independent design review. It authorizes neither RED/code nor ATS,
 payment, funding, allocation, clearing, HCS, account, wallet, signer,
 transaction, deployment, or live action.
+
+## Design review
+
+Two independent reviews of committed authority `8eb70e6` completed clean at
+2026-09-07T01:43:00Z. The Standards review found preserved root queue
+ownership, committed authority before RED/code, resolvable local links, no
+foreign-source leakage, and no actionable baseline smell. The Specification
+review confirmed the exact issued-result handoff, correlation-only frozen
+states, closed recovery transitions, M19 as the sole functional dependency,
+and preserved exclusions. No Critical, Important, or Minor finding remains.
+
+## Ready transition
+
+Ready at 2026-09-07T01:43:00Z after a fresh post-review queue rescan confirmed
+the accepted M19-T010 dependency, resolvable committed authority, disjoint
+proposed Core paths, no active-card conflict, enabled local boundary, concrete
+direct validation, and no human blocker for this deterministic local scope.
+This ready state authorizes only the bounded RED/GREEN lifecycle after root
+activation; it does not authorize ATS, payment, funding, allocation, account,
+asset, wallet, signer, transaction, settlement, receipt, persistence,
+clearing, HCS, payout, deployment, or live behavior.
