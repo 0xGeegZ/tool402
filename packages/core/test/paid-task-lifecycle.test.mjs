@@ -80,6 +80,40 @@ test("creates a frozen minimal quoted snapshot", async () => {
   });
 });
 
+test("accepts only bounded trimmed task identity and real canonical expiry input", async () => {
+  const maximumLengthTaskRef = "t".repeat(96);
+  const maximumLengthOfferingVersion = "v".repeat(96);
+  const canonicalExpiry = "2026-09-07T00:00:00.000Z";
+
+  assert.equal(new Date(canonicalExpiry).toISOString(), canonicalExpiry);
+  assert.equal(
+    (await createPaidTask({
+      taskRef: maximumLengthTaskRef,
+      offeringVersion: maximumLengthOfferingVersion,
+      requirements: validRequirements,
+      expiresAt: canonicalExpiry,
+    })).state,
+    "quoted",
+  );
+
+  for (const input of [
+    { taskRef: "", offeringVersion: "risk-v1", expiresAt: canonicalExpiry },
+    { taskRef: " task-1", offeringVersion: "risk-v1", expiresAt: canonicalExpiry },
+    { taskRef: "task-1 ", offeringVersion: "risk-v1", expiresAt: canonicalExpiry },
+    { taskRef: "t".repeat(97), offeringVersion: "risk-v1", expiresAt: canonicalExpiry },
+    { taskRef: "task-1", offeringVersion: "", expiresAt: canonicalExpiry },
+    { taskRef: "task-1", offeringVersion: " risk-v1", expiresAt: canonicalExpiry },
+    { taskRef: "task-1", offeringVersion: "risk-v1 ", expiresAt: canonicalExpiry },
+    { taskRef: "task-1", offeringVersion: "v".repeat(97), expiresAt: canonicalExpiry },
+    { taskRef: "task-1", offeringVersion: "risk-v1", expiresAt: "2026-09-07T00:00:00Z" },
+    { taskRef: "task-1", offeringVersion: "risk-v1", expiresAt: "2026-02-30T00:00:00.000Z" },
+  ]) {
+    await assert.rejects(() =>
+      createPaidTask({ ...input, requirements: validRequirements }),
+    );
+  }
+});
+
 test("permits every legal edge and preserves its issued snapshot", async () => {
   const legalPaths = [
     ["expire"],
