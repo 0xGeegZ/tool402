@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M17-T010 accepted
 - Owner: `packages/core/src/paid-task-lifecycle.ts`,
   `packages/core/src/index.ts`,
@@ -101,5 +101,28 @@ action grants no external authority but does not block this pure local work.
 This activation authorizes the specified test-only RED commit, subsequent
 minimal Core implementation, and verification only; it does not expand
 authority to payment, funding, allocation, ATS, account, wallet, signer,
+transaction, settlement, receipt, persistence, clearing, HCS, payout,
+deployment, or live behavior.
+
+## Acceptance
+
+Accepted at 2026-09-07T00:27:22Z with `MODULE_BASE`
+`6e22798fcafcc12f98636c685edba37df6ffec1b` and `MODULE_HEAD`
+`ef0fccf9dc3f85908bcc278e83baf1c1a4fd5f76`. The test-only RED contract
+began at `3a5c9f4` and precedes the sole source/barrel commit `70ce3dd`.
+Later test-only corrections strengthened the asynchronous-lock harness and
+the identity-before-field-access regression without changing the Core source.
+
+Under Node 22.21.1, focused M19 passed 8/8 and the Core suite passed 69/69;
+Core and root typecheck, test, and lint, clean-install dry run, queue check,
+enabled reference guard, and range whitespace checks passed. The independent
+task review and fresh re-review closed the test-harness timing and
+identity-before-field-access coverage gaps. Two fresh consecutive
+Standards/Specification module-review generations found no Critical,
+Important, or Minor issue; one Standards reviewer recorded only a
+non-actionable judgment about duplicated test data.
+
+Acceptance covers only the deterministic pure-Core lifecycle. It does not
+imply or authorize payment, funding, allocation, ATS, account, wallet, signer,
 transaction, settlement, receipt, persistence, clearing, HCS, payout,
 deployment, or live behavior.
