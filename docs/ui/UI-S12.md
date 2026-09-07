@@ -21,6 +21,11 @@ identifier, URL, checksum, or clone information.
 - `apps/web/public/brand/mascot-flag.png` — one decorative illustration for the
   not-found boundary, in the same family as the accepted landing illustration
 
+Each supplied file is already at its final display size, stripped of embedded
+metadata, and compressed: the touch icon at 180 square, and the illustration at
+576 square for a two-times display at its rendered width. No further image
+processing step belongs to the implementation.
+
 No other illustration, logo variant, or icon size is selected. An asset that no
 accepted route references does not belong to this slice.
 
