@@ -213,6 +213,24 @@ async function loadNormalizer() {
   return import(normalizerModuleUrl.href);
 }
 
+async function assertRejectedBeforeResolver(
+  normalizeClaimedExternalPrepareCommand,
+  claimedBody,
+) {
+  let resolverCalls = 0;
+  const normalized = await normalizeClaimedExternalPrepareCommand(
+    claimedBody,
+    serverNow,
+    () => {
+      resolverCalls += 1;
+      return [authorityFor()];
+    },
+  );
+
+  assert.equal(normalized, null);
+  assert.equal(resolverCalls, 0);
+}
+
 test("normalizes only a canonical M25-claimed external.prepare command", async () => {
   const { normalizeClaimedExternalPrepareCommand } = await loadNormalizer();
   const calls = [];
@@ -488,5 +506,198 @@ test("normalizes only a canonical M25-claimed external.prepare command", async (
     assert.doesNotMatch(source, forbidden);
   }
   assert.doesNotMatch(backendEntry, /authenticated-external-prepare-normalizer/u);
+  assert.doesNotMatch(backendEntry, /isExternalPrepareTimeWindowValidForTest/u);
   assert.equal(manifest.dependencies.viem, "2.56.1");
+});
+
+test("rejects canonical payload-hash and valid-format signer mismatches before authority resolution", async () => {
+  const { normalizeClaimedExternalPrepareCommand } = await loadNormalizer();
+
+  await assertRejectedBeforeResolver(
+    normalizeClaimedExternalPrepareCommand,
+    await claimText(
+      transportText(
+        firstCommand(),
+        firstPayload({ subjectPublicId: "subject_43" }),
+      ),
+    ),
+  );
+  await assertRejectedBeforeResolver(
+    normalizeClaimedExternalPrepareCommand,
+    await claimText(
+      transportText(firstCommand({ signer: fundingSigner })),
+    ),
+  );
+});
+
+test("rejects duplicate, missing, unsupported, and prototype-related transport fields before authority resolution", async () => {
+  const { normalizeClaimedExternalPrepareCommand } = await loadNormalizer();
+  const commandJson = JSON.stringify(firstCommand());
+  const payloadJson = JSON.stringify(firstPayload());
+  const commandWithoutSignature = firstCommand();
+  const payloadWithoutExpiry = firstPayload();
+  delete commandWithoutSignature.signature;
+  delete payloadWithoutExpiry.expiresAt;
+
+  const malformedTransports = [
+    `{"command":${commandJson},"command":${commandJson},"payload":${payloadJson}}`,
+    transportText().replace(
+      '"operationKind":"ATS_CREATE"',
+      '"operationKind":"ATS_CREATE","operationKind":"ATS_CREATE"',
+    ),
+    JSON.stringify({ command: firstCommand() }),
+    JSON.stringify({ command: commandWithoutSignature, payload: firstPayload() }),
+    JSON.stringify({ command: firstCommand(), payload: payloadWithoutExpiry }),
+    "[]",
+    JSON.stringify({ command: [], payload: firstPayload() }),
+    JSON.stringify({ command: firstCommand(), payload: [] }),
+    JSON.stringify({ command: true, payload: firstPayload() }),
+    JSON.stringify({ command: firstCommand(), payload: false }),
+    "null",
+    JSON.stringify({ command: firstCommand(), payload: null }),
+    `{"command":${commandJson},"payload":${payloadJson},"__proto__":{}}`,
+    `{"command":{${commandJson.slice(1, -1)},"constructor":"Object"},"payload":${payloadJson}}`,
+    `{"command":${commandJson},"payload":{${payloadJson.slice(1, -1)},"prototype":{}}}`,
+  ];
+
+  for (const malformedTransport of malformedTransports) {
+    await assertRejectedBeforeResolver(
+      normalizeClaimedExternalPrepareCommand,
+      await claimText(malformedTransport),
+    );
+  }
+});
+
+test("rejects malformed and accessor-backed authority records without reading accessors", async () => {
+  const { normalizeClaimedExternalPrepareCommand } = await loadNormalizer();
+  const missingPrincipal = authorityFor();
+  const customPrototype = Object.assign(Object.create(null), authorityFor());
+  let accessorReads = 0;
+  const accessorBacked = authorityFor();
+  delete missingPrincipal.principalPublicId;
+  Object.defineProperty(accessorBacked, "principalPublicId", {
+    enumerable: true,
+    configurable: true,
+    get() {
+      accessorReads += 1;
+      return "principal_42";
+    },
+  });
+
+  for (const authorityRecord of [
+    null,
+    missingPrincipal,
+    { ...authorityFor(), unexpected: true },
+    customPrototype,
+    accessorBacked,
+  ]) {
+    assert.equal(
+      await normalizeClaimedExternalPrepareCommand(
+        await claimText(transportText()),
+        serverNow,
+        () => [authorityRecord],
+      ),
+      null,
+    );
+  }
+  assert.equal(accessorReads, 0);
+});
+
+test("isolates normalization from caller-owned body and authority inputs", async () => {
+  const { normalizeClaimedExternalPrepareCommand } = await loadNormalizer();
+  const rawBody = new TextEncoder().encode(transportText());
+  const claimedBody = await claimRawBody(rawBody);
+  const authorityRecord = authorityFor();
+  rawBody.fill(0);
+
+  const normalized = await normalizeClaimedExternalPrepareCommand(
+    claimedBody,
+    serverNow,
+    () => [authorityRecord],
+  );
+  authorityRecord.principalPublicId = "mutated_principal";
+  authorityRecord.ownedSubjectPublicIds[0] = "mutated_subject";
+
+  assert.equal(normalized.principalPublicId, "principal_42");
+  assert.equal(normalized.payload.subjectPublicId, "subject_42");
+});
+
+test("applies server-clock boundaries to a validly authenticated command", async () => {
+  const { normalizeClaimedExternalPrepareCommand } = await loadNormalizer();
+  const claimedBody = await claimText(transportText());
+
+  assert.equal(
+    await normalizeClaimedExternalPrepareCommand(
+      claimedBody,
+      "2026-09-07T18:58:59.999Z",
+      () => [authorityFor()],
+    ),
+    null,
+  );
+  assert.equal(
+    await normalizeClaimedExternalPrepareCommand(
+      claimedBody,
+      "2026-09-07T19:04:00.001Z",
+      () => [authorityFor()],
+    ),
+    null,
+  );
+
+  const atFutureSkewBoundary = await normalizeClaimedExternalPrepareCommand(
+    claimedBody,
+    "2026-09-07T18:59:00.000Z",
+    () => [authorityFor()],
+  );
+  const atExpiryBoundary = await normalizeClaimedExternalPrepareCommand(
+    claimedBody,
+    "2026-09-07T19:04:00.000Z",
+    () => [authorityFor()],
+  );
+  assert.equal(atFutureSkewBoundary.canonicalSignerAddress, firstSigner);
+  assert.equal(atExpiryBoundary.canonicalSignerAddress, firstSigner);
+});
+
+test("validates exact external.prepare time-window boundaries without signing fixtures", async () => {
+  const { isExternalPrepareTimeWindowValidForTest } = await loadNormalizer();
+
+  assert.equal(
+    isExternalPrepareTimeWindowValidForTest(
+      "2026-09-07T19:05:00.000Z",
+      "2026-09-07T19:04:00.000Z",
+      "2026-09-07T19:04:00.000Z",
+    ),
+    false,
+  );
+  assert.equal(
+    isExternalPrepareTimeWindowValidForTest(
+      "2026-09-07T19:04:00.000Z",
+      "2026-09-07T19:04:00.000Z",
+      "2026-09-07T19:04:00.000Z",
+    ),
+    false,
+  );
+  assert.equal(
+    isExternalPrepareTimeWindowValidForTest(
+      "2026-09-07T19:00:00.000Z",
+      "2026-09-07T19:05:00.000Z",
+      "2026-09-07T19:00:00.000Z",
+    ),
+    true,
+  );
+  assert.equal(
+    isExternalPrepareTimeWindowValidForTest(
+      "2026-09-07T19:00:00.000Z",
+      "2026-09-07T19:05:00.001Z",
+      "2026-09-07T19:00:00.000Z",
+    ),
+    false,
+  );
+
+  for (const timestamps of [
+    ["invalid", "2026-09-07T19:05:00.000Z", "2026-09-07T19:00:00.000Z"],
+    ["2026-09-07T19:00:00.000Z", "invalid", "2026-09-07T19:00:00.000Z"],
+    ["2026-09-07T19:00:00.000Z", "2026-09-07T19:05:00.000Z", "invalid"],
+  ]) {
+    assert.equal(isExternalPrepareTimeWindowValidForTest(...timestamps), false);
+  }
 });
