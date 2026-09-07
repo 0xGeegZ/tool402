@@ -84,7 +84,12 @@ it. Assert a clone, structural lookalike, and wrong object fail membership.
 Assert `null` for an altered raw body, unknown key, key with unsuitable
 algorithm/usage/extractability, wrong canonical-length MAC, invalid envelope,
 non-`Uint8Array` body, a non-`bigint` or negative clock, and resolver failure.
-Count resolver calls to prove body mismatch stops before resolution. Test
+For the negative-clock case, use a separately valid public envelope at
+timestamp `0` with signature
+`-Yc5ch3l9n869owryo_-EwSj77xEyj_L4Gub9dFjfU0` and `nowUnixSeconds` `-1n`:
+its mathematical skew is only one second, so `null` proves the nonnegative
+clock rule rather than ordinary expiry. Count resolver calls to prove body
+mismatch stops before resolution. Test
 valid-MAC skew boundaries: `timestamp - 60n`, `timestamp + 60n` succeed;
 `timestamp - 61n` and `timestamp + 61n` fail. Pin the specified order by using
 a correctly authenticated stale envelope and a delegating temporary

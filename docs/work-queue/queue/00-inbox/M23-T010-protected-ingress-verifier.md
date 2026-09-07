@@ -59,7 +59,8 @@ compliance, and all financial or external behavior remain separately scoped.
   non-`bigint` or negative clocks, invalid MACs, and timestamps outside the
   inclusive sixty-second boundary. It also proves frozen minimal capability
   membership, exact accepted clock retention, and structural-lookalike
-  rejection.
+  rejection. The negative-clock vector has timestamp zero and `-1n` current
+  time, so its one-second mathematical skew cannot mask a missing clock guard.
 - The direct focused command is
   `node --test packages/backend/tests/protected-ingress-verifier.test.mjs` from
   the repository root under Node 22.21.1.
