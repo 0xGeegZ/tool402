@@ -52,8 +52,10 @@ underscore-separated function filenames from the local B01 contract are
 present, their legacy hyphenated names are absent, and every filename matches
 `/^[A-Za-z0-9_.]+\\.ts$/u`; do not assert an exact directory set. Dynamically
 import each canonical function module and assert it has only its documented
-export. Scan tracked Markdown records for each legacy module pathname and
-require no result after GREEN.
+export. Derive the repository root from `import.meta.url`, not `process.cwd()`,
+then scan exactly the five M04 specifications, five M04 plans, five accepted
+M04 cards, and `docs/work-queue/FILE-OWNERSHIP.md` for each legacy module
+pathname; require no result after GREEN.
 
 - [ ] **Step 2: Observe RED.**
 

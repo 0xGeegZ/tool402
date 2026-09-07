@@ -44,10 +44,12 @@ existing `convex.config.ts` and `schema.ts` names already satisfy this rule.
   their legacy hyphenated names, and rejects any unsafe TypeScript module
   filename in the Convex function directory without freezing future safe
   modules.
-- The five M04 specifications, five M04 plans, five accepted M04 cards, and
-  `docs/work-queue/FILE-OWNERSHIP.md` update only their code-styled current
-  module-path literals so every tracked local source-path reference resolves
-  at the resulting commit. No historical acceptance outcome changes.
+- A test derives the repository root from its own `import.meta.url`, then
+  inspects exactly the five M04 specifications, five M04 plans, five accepted
+  M04 cards, and `docs/work-queue/FILE-OWNERSHIP.md`. Those records update only
+  their code-styled current module-path literals so every tracked local
+  source-path reference resolves at the resulting commit. No historical
+  acceptance outcome changes.
 - The precondition for this address change is that, outside the five declared
   direct tests whose file URLs B01 updates, no tracked production or internal
   module-address consumer uses an old module address. The Human Ops diagnostic

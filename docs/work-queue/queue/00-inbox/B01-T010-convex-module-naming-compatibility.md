@@ -51,7 +51,8 @@ and does not begin M24 protected replay work.
 
 - A test-only RED contract observes the absent canonical module paths before
   any rename; GREEN proves required Convex-safe filenames, absence of the
-  legacy names, unchanged exports, and no stale bounded Markdown pathname
+  legacy names, unchanged exports, and no stale pathname across exactly the
+  sixteen bounded Markdown records derived from the test's `import.meta.url`,
   without freezing future safe modules.
 - A 100%-rename diff audit proves the five source moves have no source hunks;
   the direct test URLs and exactly sixteen bounded M04 path literals are the
