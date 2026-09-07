@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M25-T010 accepted; M26-T010 accepted; M30-T010 accepted
 - Owner: This is a root-owned inbox authority record. It owns this card, the
   M31 specification and plan, the proposed focused backend test and internal
@@ -86,6 +86,30 @@ that generic promise awaiting can assimilate an injected hostile thenable. The
 authority now requires M24's accepted native-Promise intrinsic pattern: direct
 descriptor-safe validation first; otherwise captured
 `NativePromise.prototype.then`, primitive-status-or-null resolution inside its
-callback, and no retry. This keeps M31 in `00-inbox` pending a fresh clean
-authority re-review and rejects direct thenables, proxy-wrapped promises,
+callback, and no retry. This held M31 in `00-inbox` pending a fresh clean
+authority re-review; it rejects direct thenables, proxy-wrapped promises,
 species-poisoned promises, and delayed-thenable fulfillment.
+
+## Design review
+
+Two fresh independent authority reviews of committed
+`b9e379234916357af39e6c2a1b55adbebc91f4ad` completed clean. They confirmed
+the amendment accepts direct outcomes only after descriptor-safe exact-shape
+validation and asynchronous outcomes only via the captured native-Promise
+intrinsic, with primitive-status-or-null resolution inside the callback. The
+four hostile async forms fail closed after exactly one boundary call and no
+retry. The M30-authenticated injection-only scope, consumed dependencies,
+ownership, and local references remain bounded. No Critical, Important, or
+Minor finding remains.
+
+## Ready transition
+
+Ready at 2026-09-07T21:16:02Z after a fresh post-review root rescan confirmed
+M25-T010, M26-T010, and M30-T010 remain accepted; this is the sole eligible
+ready card; committed authority and local references resolve; no active owner
+conflicts with the two proposed backend paths; the local guard is enabled; and
+no human blocker applies to deterministic local work. This ready state
+authorizes only root activation followed by the specified test-only RED and
+minimal internal adapter. It does not authorize storage, configuration, Convex,
+generic attempts, ATS, provider/wallet action, funding, payment, transaction,
+deployment, or live behavior.
