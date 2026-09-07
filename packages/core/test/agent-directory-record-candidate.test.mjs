@@ -152,6 +152,23 @@ test("rejects non-ordinary, closed, or accessor-backed records without invoking 
   assert.deepEqual(getterCalls, []);
 });
 
+test("rejects every required root accessor without invoking any getter", () => {
+  const fields = Object.keys(candidate());
+  const input = candidate();
+  const calls = new Map(fields.map((field) => [field, 0]));
+  for (const field of fields) Object.defineProperty(input, field, {
+    enumerable: true,
+    get() { calls.set(field, calls.get(field) + 1); return candidate()[field]; },
+  });
+  assertInputError(input);
+  assert.deepEqual([...calls.values()], fields.map(() => 0));
+  const optional = candidate({ webUrl: "https://example.test" });
+  let webUrlCalls = 0;
+  Object.defineProperty(optional, "webUrl", { enumerable: true, get() { webUrlCalls += 1; return "https://example.test"; } });
+  assertInputError(optional);
+  assert.equal(webUrlCalls, 0);
+});
+
 test("rejects reflection failures and hostile or malformed nested arrays", () => {
   const ownKeysFailure = new Proxy(candidate(), {
     ownKeys() { throw new Error("ownKeys reflection failed"); },
@@ -198,6 +215,26 @@ test("rejects reflection failures and hostile or malformed nested arrays", () =>
     assertInputError(candidate({ [field]: getterArray }));
     assert.equal(getterCalls, 0, `${field} getter must not be invoked`);
   }
+  for (const field of ["capabilities", "advertisedTiers"]) {
+    const legal = field === "capabilities" ? ["evm-contract-risk-signals"] : ["quick", "standard"];
+    for (const extra of [Symbol("extra"), "extra"]) {
+      const value = legal.slice();
+      Object.defineProperty(value, extra, { enumerable: typeof extra === "string", value: true });
+      assertInputError(candidate({ [field]: value }));
+    }
+    const hiddenIndex = legal.slice();
+    Object.defineProperty(hiddenIndex, "0", { enumerable: false, value: legal[0] });
+    assertInputError(candidate({ [field]: hiddenIndex }));
+    for (const trap of ["getPrototypeOf", "ownKeys", "getOwnPropertyDescriptor"]) {
+      const proxied = new Proxy(legal.slice(), { [trap]() { throw new Error(`${field} ${trap} trap`); } });
+      assertInputError(candidate({ [field]: proxied }));
+    }
+  }
+});
+
+test("does not coerce poison primitive-like values", () => {
+  const poison = { toString() { throw new Error("toString invoked"); }, valueOf() { throw new Error("valueOf invoked"); } };
+  for (const field of ["serviceId", "offeringPublicId", "x402Endpoint", "publishedAt", "offeringVersion"]) assertInputError(candidate({ [field]: poison }));
 });
 
 test("rejects wrong literals, IDs, versions, accounts, dates, and URLs", () => {
@@ -209,7 +246,7 @@ test("rejects wrong literals, IDs, versions, accounts, dates, and URLs", () => {
     ["asset", ["hbar"]],
     ["status", ["inactive"]],
     ["serviceId", ["", "a".repeat(97), "bad id", "é"]],
-    ["offeringPublicId", ["a".repeat(97), "bad.id"]],
+    ["offeringPublicId", ["", "a".repeat(97), "bad.id"]],
     ["offeringVersion", [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1, "1"]],
     ["issuerRevenueAccount", ["0.0.01", "0.0.1.2", `0.0.${"1".repeat(93)}`]],
     ["clearingAccount", ["0.0.", "0.0.1.0", `0.0.${"1".repeat(93)}`]],
@@ -228,12 +265,23 @@ test("has the planned pure-source boundary once the parser exists", async () => 
     assert.equal(source.includes(prohibited), false, `source must not contain ${prohibited}`);
   }
   assert.doesNotMatch(source, /(?:from|import)\s*["'][^"']*(?:ats|provider|agent)[^"']*["']/iu);
+  assert.doesNotMatch(source, /\bimport\s*\(/u);
+  const specifiers = [...source.matchAll(/(?:import|export)\s+(?:type\s+)?[\s\S]*?from\s+["']([^"']+)["']/gu)].map((match) => match[1]);
+  assert.deepEqual(specifiers, ["./value.ts"]);
+});
+
+test("accepts one-character and mixed-case identifier grammar representatives", () => {
+  for (const field of ["serviceId", "offeringPublicId"]) {
+    assert.equal(parseAgentDirectoryRecordCandidate(candidate({ [field]: "A" }))[field], "A");
+    const mixed = "Aa09_-";
+    assert.equal(parseAgentDirectoryRecordCandidate(candidate({ [field]: mixed }))[field], mixed);
+  }
 });
 
 test("exposes exactly the candidate parser and types through the Core barrel", async () => {
   const source = await readFile(barrelUrl, "utf8");
   const candidateExports = [...source.matchAll(
-    /export(?:\s+type)?\s+\{([^}]+)\}\s+from\s+["']\.\/agent-directory-record-candidate["']/gu,
+    /export(?:\s+type)?\s+\{([^}]+)\}\s+from\s+["']\.\/agent-directory-record-candidate\.ts["']/gu,
   )].flatMap((match) => match[1].split(",").map((name) => name.trim().replace(/^type\s+/u, "")));
   assert.deepEqual(candidateExports.sort(), [
     "AdvertisedDirectoryTiers",
