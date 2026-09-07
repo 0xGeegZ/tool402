@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M19-T010 accepted
 - Owner: `packages/core/src/clearing-split-lifecycle.ts`,
   `packages/core/test/clearing-split-lifecycle.test.mjs`, and
@@ -120,3 +120,21 @@ authorizes the specified test-only RED then minimal Core GREEN lifecycle and
 verification only; it does not expand authority to ATS, payment, funding,
 allocation, clearing, HCS, account, wallet, signer, transaction, deployment,
 or live behavior.
+
+## Acceptance
+
+Accepted at 2026-09-07T02:09:58Z after final verification against
+`MODULE_BASE` `a208c13ddacef9df9055753d4901073650a146a6` and `MODULE_HEAD`
+`bf5e71f6b6c967e77fe401b2a05369f775195b56`. The durable test-only RED
+commits `dcbadc6`, `20e6b49`, and `561e839` precede the sole source and
+public-barrel commit `bf5e71f`. Focused M21 tests passed 6/6; Core tests
+passed 81/81; Core and root typecheck, test, lint, clean-install dry run,
+queue/reference/whitespace checks, and the enabled local guard passed under
+Node 22.21.1. Independent task review and two fresh clean module-review
+generations found no Critical, Important, or Minor finding.
+
+This acceptance covers only the pure Core clearing-split lifecycle. It does
+not accept allocation, non-execution proof, a generic durable external-attempt
+model, broader configuration, ATS, payment, funding, account, asset, wallet,
+signer, transaction, settlement, receipt, persistence, clearing, HCS, payout,
+deployment, or live behavior.
