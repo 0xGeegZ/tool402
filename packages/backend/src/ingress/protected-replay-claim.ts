@@ -39,15 +39,19 @@ export async function claimProtectedReplay(
     }
 
     const claimAttempt = tryClaimReplay(verifiedIngress.replayIdentity);
-    const outcome =
+    const didClaim =
       typeof claimAttempt === "string"
-        ? claimAttempt
-        : await new NativePromise<ProtectedReplayClaimOutcome>(
+        ? claimAttempt === claimedOutcome
+        : await new NativePromise<boolean>(
             (resolve, reject) => {
-              nativePromiseThen.call(claimAttempt, resolve, reject);
+              nativePromiseThen.call(
+                claimAttempt,
+                (outcome) => resolve(outcome === claimedOutcome),
+                reject,
+              );
             },
           );
-    if (outcome !== claimedOutcome) {
+    if (!didClaim) {
       return null;
     }
 

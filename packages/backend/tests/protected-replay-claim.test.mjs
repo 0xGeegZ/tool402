@@ -150,6 +150,12 @@ test("fails closed for replayed, malformed, throwing, and rejected claim outcome
       return poisonedPromise;
     },
     () => {
+      const delayedThenable = {};
+      const fulfilled = Promise.resolve(delayedThenable);
+      delayedThenable.then = (resolve) => resolve("claimed");
+      return fulfilled;
+    },
+    () => {
       throw new Error("claim failed");
     },
     async () => Promise.reject(new Error("claim rejected")),
