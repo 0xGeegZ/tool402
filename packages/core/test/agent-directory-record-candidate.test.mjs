@@ -101,6 +101,15 @@ test("canonicalizes URLs, including the root path, and accepts optional webUrl",
   const parsed = parseAgentDirectoryRecordCandidate(input);
   assert.equal(parsed.x402Endpoint, "https://api.example.test/riskscan?b=2&a=1");
   assert.equal(parsed.webUrl, "https://example.test/");
+  assert.notEqual(parsed, input);
+  assert.equal(Object.getPrototypeOf(parsed), Object.prototype);
+  assert.deepEqual(parsed, {
+    ...input,
+    x402Endpoint: "https://api.example.test/riskscan?b=2&a=1",
+    webUrl: "https://example.test/",
+    capabilities: ["evm-contract-risk-signals"],
+    advertisedTiers: ["quick", "standard"],
+  });
   assert.deepEqual(Reflect.ownKeys(parsed).sort(), Object.keys(input).sort());
   assert.equal(Object.isFrozen(parsed), true);
   assert.equal(Object.isFrozen(parsed.capabilities), true);
