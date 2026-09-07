@@ -69,6 +69,13 @@ export async function admitClaimedExternalPrepareCommand(
 `ResolveCommandAuthorities` are imported only from the accepted internal M30
 and M26 boundaries. This file exports no public package API.
 
+The asynchronous notation in `AtomicallyAdmitExternalPrepareCommand` does not
+authorize structural thenables. At runtime, an asynchronous outcome is
+accepted only through the intrinsic slots of a native `Promise` using a
+module-local captured `NativePromise.prototype.then`. A direct thenable,
+proxy-wrapped promise, species-poisoned promise, or native promise whose
+settlement has assimilated a delayed thenable is not a valid result.
+
 ## Required sequence
 
 ```text
@@ -77,7 +84,7 @@ untrusted claimedBody / injected dependencies
 → M30 normalizeClaimedExternalPrepareCommand
 → fresh frozen M31 admission snapshot
 → exactly one injected atomic-admission invocation
-→ closed frozen status or null
+→ direct closed status, or native-Promise-protected closed status, or null
 ```
 
 If `atomicallyAdmit` is not callable, return `null` before M30 reads the
@@ -86,6 +93,22 @@ returns `null`, do not invoke the atomic boundary. If the injected boundary
 throws, rejects, returns a non-ordinary/accessor-backed/extra-field result, or
 returns any status outside the four exact literals, return `null` without a
 retry.
+
+The implementation must first validate a synchronous result through
+descriptor-safe reflection. For an asynchronous candidate it must not use a
+generic `await`, `Promise.resolve`, direct `.then`, `instanceof`, or any other
+thenable-assimilating or structural-trust path. It captures `NativePromise` and
+`NativePromise.prototype.then` module-locally, calls that intrinsic directly on
+the returned candidate, validates the fulfilled result inside that intrinsic
+callback, and resolves only the primitive approved status or `null` into a new
+native wrapper promise. That wrapper must never resolve a caller-controlled
+object or thenable. Any failure of the intrinsic call, callback, reflection,
+or rejection returns `null`.
+
+Consequently, a direct thenable, proxy-wrapped promise, species-poisoned
+promise, and a native promise whose delayed thenable fulfillment could
+otherwise be assimilated all fail closed as `null`. Each such candidate still
+consumes its one permitted boundary call; the adapter does not retry it.
 
 The adapter invokes the boundary at most once. It must neither retry an
 outcome-unknown condition nor convert a failed boundary call into a replay,
@@ -123,9 +146,16 @@ is the accepted frozen payload from M30; it contains no raw body, raw
 signature, provider, resolver record, target resolution, parameter
 authorization, key, or external capability.
 
-The result is a new frozen ordinary object with exactly one own enumerable
-`status` field. It is not an attempt, receipt, durable proof, payment fact, or
-external authorization.
+The adapter return value is a new frozen ordinary object with exactly one own
+enumerable `status` field. It is not an attempt, receipt, durable proof,
+payment fact, or external authorization.
+
+An accepted direct injected result has the normal `Object.prototype`, exactly
+one own key named `status`, and an enumerable data descriptor whose value is
+one of the four exact status literals. Every reflective operation is
+fail-closed; accessors, extra string or symbol keys, custom/null prototypes,
+or hostile reflection return `null`. The contract does not infer trust from an
+`instanceof` check or a caller-owned method.
 
 ## Explicit exclusions
 
@@ -143,8 +173,10 @@ reconciliation.
 - Focused tests prove non-callable injection rejection before M30, M30-only
   authentication (no arbitrary normalized DTO), one frozen detached snapshot,
   one injection call, all four exact status mappings, malformed/hostile
-  result rejection, thrown/rejected injection isolation without retry, and
-  absence of Convex/provider/storage/external behavior.
+  result rejection, native-Promise-only async result handling (including a
+  direct thenable, proxy-wrapped promise, species-poisoned promise, and
+  delayed-thenable fulfillment), thrown/rejected injection isolation without
+  retry, and absence of Convex/provider/storage/external behavior.
 - Backend/root typecheck, test, lint, clean-install dry run,
   queue/reference/whitespace checks, enabled local guard, independent task
   review, and two fresh clean module-review generations pass before

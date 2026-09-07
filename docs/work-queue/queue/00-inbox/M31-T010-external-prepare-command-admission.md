@@ -44,7 +44,10 @@ separate later human-sensitive gate.
   lockfile, Convex, Web/UI, Agent, configuration, or generated output.
 - The contract invokes M30 from M25 claimed input, validates one callable
   injected atomic boundary before M30 work, creates a frozen detached snapshot,
-  calls the boundary at most once, and maps only four exact status tokens.
+  calls the boundary at most once, maps only four exact status tokens, and
+  accepts asynchronous results only through captured native-Promise intrinsics.
+  Direct thenables, proxy-wrapped promises, species-poisoned promises, and
+  delayed-thenable fulfillment must fail closed without retry.
 - An independent review of the committed M31 authority is clean: no Critical,
   Important, or Minor finding remains.
 
@@ -52,7 +55,8 @@ separate later human-sensitive gate.
 
 - A test-only RED contract precedes source and proves M30-only authentication,
   pre-normalizer non-callable rejection, exact frozen snapshot/result shapes,
-  one atomic-boundary invocation, hostile result isolation, and no retry.
+  one atomic-boundary invocation, hostile result isolation including all four
+  non-native/hostile async forms, and no retry.
 - The focused command is
   `node --test packages/backend/tests/external-prepare-command-admission.test.mjs`
   from the repository root under Node 22.21.1.
@@ -74,3 +78,14 @@ This inbox state authorizes only committed local authority and independent
 design review. It authorizes neither RED/code nor Convex, storage, replay or
 idempotency claim, generic attempt, `PREPARED` state, configuration, ATS,
 provider, wallet, funding, payment, transaction, deployment, or live behavior.
+
+## Async-outcome amendment
+
+Recorded at 2026-09-07T21:06:27Z after independent authority review identified
+that generic promise awaiting can assimilate an injected hostile thenable. The
+authority now requires M24's accepted native-Promise intrinsic pattern: direct
+descriptor-safe validation first; otherwise captured
+`NativePromise.prototype.then`, primitive-status-or-null resolution inside its
+callback, and no retry. This keeps M31 in `00-inbox` pending a fresh clean
+authority re-review and rejects direct thenables, proxy-wrapped promises,
+species-poisoned promises, and delayed-thenable fulfillment.

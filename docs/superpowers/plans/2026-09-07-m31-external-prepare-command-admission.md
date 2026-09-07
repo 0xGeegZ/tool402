@@ -12,7 +12,9 @@ and hands a frozen command snapshot to one injected atomic-admission boundary.
 DTO. It invokes the accepted M30 normalizer from the M25 claimed body, creates
 a fresh frozen snapshot only on M30 success, and invokes exactly one injected
 atomic boundary. The adapter returns only a closed frozen status token; it
-does not implement Convex or durable storage.
+does not implement Convex or durable storage. It accepts asynchronous outcomes
+only through a captured native-Promise intrinsic, not generic thenable
+assimilation.
 
 **Tech Stack:** TypeScript 5.9, Node 22.21.1 built-in test runner, accepted
 M25/M26/M30 internal modules. No new package, Convex function, browser library,
@@ -32,7 +34,10 @@ configuration, or external SDK.
   resolver record, target resolution, or external capability.
 - Return only the four exact closed status tokens in a new frozen one-field
   result. Isolate thrown, rejected, malformed, accessor-backed, custom-
-  prototype, and extra-field boundary results without retrying.
+  prototype, extra-field, direct-thenable, proxy-wrapped-promise,
+  species-poisoned-promise, and delayed-thenable boundary results without
+  retrying. Do not use generic `await`, `Promise.resolve`, direct `.then`, or
+  `instanceof` on the injected outcome.
 - Do not add Convex, persistent replay/idempotency/attempt state, `PREPARED`,
   ATS, provider, wallet, funding, payment, transaction, deployment, or live
   behavior. Keep M24 through M30 and M04 unchanged.
@@ -77,7 +82,10 @@ forged M25 candidate and every invalid command/payload case already rejected
 by M30; assert the atomic boundary is never called. Assert a synchronous
 throw, rejected promise, non-object, custom-prototype object, accessor-backed
 status, extra field, and unsupported status return `null`, invoke the boundary
-once at most, and never retry.
+once at most, and never retry. Add direct-thenable, proxy-wrapped native
+promise, species-poisoned native promise, and native promise with delayed
+thenable fulfillment cases; each must return `null` after exactly one boundary
+call and no retry.
 
 - [ ] **Step 3: Add static scope checks.**
 
@@ -127,11 +135,18 @@ or any injected dependency.
 
 - [ ] **Step 3: Handle one closed injected outcome.**
 
-Call the injected boundary exactly once. Capture its result through own
-data-descriptor reflection: require an ordinary object with exactly one
+Call the injected boundary exactly once. First capture a direct result through
+own data-descriptor reflection: require an ordinary object with exactly one
 enumerable `status` data field whose value is one of the four M31 literals.
-Return a new frozen ordinary `{ status }`; return `null` for throws,
-rejections, hostile reflection, or any other result. Do not retry.
+For an asynchronous candidate, capture `NativePromise` and
+`NativePromise.prototype.then` module-locally and call that intrinsic directly
+on the candidate. Validate the fulfillment value inside the intrinsic callback
+and resolve only its primitive approved status or `null` into a new native
+wrapper promise. Do not use generic `await`, `Promise.resolve`, direct `.then`,
+or `instanceof` on the candidate. Return a new frozen ordinary `{ status }`;
+return `null` for throws, rejections, hostile reflection, direct thenables,
+proxy-wrapped promises, species-poisoned promises, delayed thenable
+fulfillment, or any other result. Do not retry.
 
 - [ ] **Step 4: Verify GREEN and commit only source/test work.**
 
