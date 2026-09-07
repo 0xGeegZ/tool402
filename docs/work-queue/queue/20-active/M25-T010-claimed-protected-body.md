@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T030 accepted; M22-T010 accepted; M23-T010 accepted;
   M24-T010 accepted
 - Owner: `packages/backend/src/ingress/claimed-protected-body.ts` and
@@ -99,3 +99,14 @@ only root activation followed by the specified test-only RED and minimal
 byte-binding adapter. It does not authorize command parsing, storage,
 configuration, Convex, HTTP, generic attempts, ATS, payment, funding,
 account/wallet action, deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-07T10:30:17Z after a fresh post-ready rescan confirmed
+M25-T010 is the sole ready card; M01-T030, M22-T010, M23-T010, and M24-T010
+remain accepted; the committed authority resolves; no active card owns the
+bounded paths; the local guard is enabled; and no human blocker applies to
+deterministic local work. This activation authorizes only the specified
+test-only RED and minimal internal byte-binding adapter. It does not authorize
+command parsing, storage, configuration, Convex, HTTP, generic attempts, ATS,
+payment, funding, account/wallet action, deployment, or live behavior.
