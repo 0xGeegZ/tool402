@@ -56,9 +56,10 @@ compliance, and all financial or external behavior remain separately scoped.
 
 - A durable test-only RED contract exercises one public fixed vector and rejects
   altered bytes before resolver use, unknown/unusable keys, malformed values,
-  invalid clocks, invalid MACs, and timestamps outside the inclusive
-  sixty-second boundary. It also proves frozen minimal capability membership
-  and rejects structural lookalikes.
+  non-`bigint` or negative clocks, invalid MACs, and timestamps outside the
+  inclusive sixty-second boundary. It also proves frozen minimal capability
+  membership, exact accepted clock retention, and structural-lookalike
+  rejection.
 - The direct focused command is
   `node --test packages/backend/tests/protected-ingress-verifier.test.mjs` from
   the repository root under Node 22.21.1.

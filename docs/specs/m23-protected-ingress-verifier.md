@@ -54,6 +54,11 @@ registered in a module-private `WeakSet`; a structural copy or cast is not a
 verified result. The membership check is an internal same-process integrity
 guard, not a durable or cross-process authority.
 
+`nowUnixSeconds` is a runtime input even though its TypeScript parameter is a
+`bigint`: it must be a nonnegative `bigint` at runtime. On success,
+`verifiedAtUnixSeconds` is exactly that accepted `nowUnixSeconds` value; it is
+not a wall-clock read, parsed timestamp, or derived value.
+
 ## Verification sequence
 
 The function must fail closed, return no reason to an untrusted caller, and
@@ -82,7 +87,8 @@ claimed canonical base64url signature is decoded to exactly 32 bytes. Native
 Web Crypto HMAC verification performs the MAC comparison without a
 JavaScript-level early-exit comparison. `abs(nowUnixSeconds -
 timestampUnixSeconds) <= 60n` is accepted; `61n` or more in either direction
-is rejected only after a valid MAC verification.
+is rejected only after a valid MAC verification. The bounded-skew step rejects
+a non-`bigint` or negative `nowUnixSeconds` before calculating the difference.
 
 Malformed envelopes, invalid bytes, unknown or unusable keys, digest mismatch,
 signature mismatch, cryptographic failure, and invalid clock input all return
@@ -114,7 +120,8 @@ perform additional live operations.
 - Tests reject body mismatch before resolver use, unknown/unusable key,
   wrong or malformed signature, invalid envelope, invalid clock, and all
   timestamps outside the inclusive ±60-second boundary. A cloned or forged
-  value must fail internal verified-capability membership.
+  value must fail internal verified-capability membership. The valid capability
+  must retain exactly the accepted `nowUnixSeconds` value.
 - Backend/root typecheck, test, lint, clean-install dry run,
   queue/reference/whitespace checks, the enabled local guard, independent task
   review, and two fresh clean module-review generations pass before acceptance.

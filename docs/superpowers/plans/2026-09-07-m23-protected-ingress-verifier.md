@@ -76,19 +76,21 @@ precomputed canonical signature
 
 At `nowUnixSeconds` `1735689600n`, assert a non-null frozen result contains
 only `keyId`, `requestNonce`, `replayIdentity`, and `verifiedAtUnixSeconds`,
-and internal membership accepts it. Assert a clone, structural lookalike, and
-wrong object fail membership.
+with `verifiedAtUnixSeconds` exactly `1735689600n`; internal membership accepts
+it. Assert a clone, structural lookalike, and wrong object fail membership.
 
 - [ ] **Step 2: Add negative and ordering cases**
 
 Assert `null` for an altered raw body, unknown key, key with unsuitable
 algorithm/usage/extractability, wrong canonical-length MAC, invalid envelope,
-non-`Uint8Array` body, invalid clock, and resolver failure. Count resolver
-calls to prove body mismatch stops before resolution. Test valid-MAC skew
-boundaries: `timestamp - 60n`, `timestamp + 60n` succeed; `timestamp - 61n`
-and `timestamp + 61n` fail. Pin the specified order by using a correctly
-authenticated stale envelope: it resolves a usable key and still returns
-`null`, with no command/parser/storage action.
+non-`Uint8Array` body, a non-`bigint` or negative clock, and resolver failure.
+Count resolver calls to prove body mismatch stops before resolution. Test
+valid-MAC skew boundaries: `timestamp - 60n`, `timestamp + 60n` succeed;
+`timestamp - 61n` and `timestamp + 61n` fail. Pin the specified order by using
+a correctly authenticated stale envelope and a delegating temporary
+`globalThis.crypto.subtle` wrapper: assert native `verify` runs exactly once
+before the out-of-window `null`, then restore the original global descriptor.
+The test performs no command/parser/storage action.
 
 - [ ] **Step 3: Run and preserve RED**
 
