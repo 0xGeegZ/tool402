@@ -43,6 +43,13 @@ export type {
 } from "./offering-economics.ts";
 export { parseOfferingDefinition } from "./offering-definition.ts";
 export type { OfferingDefinition } from "./offering-definition.ts";
+export { parseAgentDirectoryRecordCandidate } from "./agent-directory-record-candidate.ts";
+export type {
+  AdvertisedDirectoryTiers,
+  AgentDirectoryRecordCandidate,
+  DirectoryCapability,
+  DirectoryTier,
+} from "./agent-directory-record-candidate.ts";
 export {
   canonicalizeRequirements,
   createOfferingRequirementsQuote,
