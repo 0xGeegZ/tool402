@@ -337,21 +337,25 @@ test("rejects non-issued states before it trusts their visible fields", async ()
 
 test("rejects nested and concurrent transitions while hashing, and only consumes on success", async () => {
   const task = await quoted();
-  let nested;
+  let nestedRejection;
   const outer = transitionPaidTask(task, {
     type: "payment_submitted",
     observedAt: beforeExpiry,
     get requirements() {
-      nested = transitionPaidTask(task, eventFor("expire"));
+      nestedRejection = assert.rejects(
+        transitionPaidTask(task, eventFor("expire")),
+      );
       return validRequirements;
     },
   });
 
-  const concurrent = transitionPaidTask(task, eventFor("expire"));
+  const concurrentRejection = assert.rejects(
+    transitionPaidTask(task, eventFor("expire")),
+  );
   const submitted = await outer;
   assert.equal(submitted.state, "payment_submitted");
-  await assert.rejects(nested);
-  await assert.rejects(concurrent);
+  await nestedRejection;
+  await concurrentRejection;
   await assert.rejects(() => transitionPaidTask(task, eventFor("expire")));
 
   const rejectedReadTask = await quoted();
