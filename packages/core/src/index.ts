@@ -4,6 +4,14 @@ export const coreFoundation = {
 
 export { parseIngressEnvelope } from "./ingress-envelope.ts";
 export type { IngressEnvelope } from "./ingress-envelope.ts";
+export { parseExternalPreparePayload } from "./external-prepare-payload.ts";
+export type {
+  CanonicalParametersHash,
+  EvmAddress,
+  ExternalOperationKind,
+  ExternalPreparePayload,
+  ExternalPrepareTarget,
+} from "./external-prepare-payload.ts";
 
 export {
   parseBasisPoints,
