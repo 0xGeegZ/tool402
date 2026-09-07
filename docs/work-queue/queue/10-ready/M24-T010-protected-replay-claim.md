@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T030 accepted; M22-T010 accepted; M23-T010 accepted
 - Owner: `packages/backend/src/ingress/protected-replay-claim.ts` and
   `packages/backend/tests/protected-replay-claim.test.mjs` are proposed
@@ -71,3 +71,23 @@ This inbox state authorizes only committed local authority and independent desig
 review. It authorizes neither RED/code nor storage, commands, generic attempts,
 ATS, payment, funding, allocation, clearing, HCS, account, wallet, signer,
 transaction, deployment, or live behavior.
+
+## Design review
+
+An independent authority review of committed `c5672f01c01ba180037e762750f781ee509c459f`
+completed clean. It confirmed exact M23 `WeakSet` membership precedes every
+identity read or injected call, only literal `claimed` can mint a frozen
+private-membership output, the injected seam does not pretend to prove durable
+storage or live behavior, and the scope, ownership, references, and RED/GREEN
+plan remain bounded. No Critical, Important, or Minor finding remains.
+
+## Ready transition
+
+Ready at 2026-09-07T09:20:41Z after a fresh post-review rescan confirmed
+M01-T030, M22-T010, and M23-T010 remain accepted; committed authority and local
+references resolve; no active owner conflicts with the two proposed backend
+paths; the local guard is enabled; and no human blocker applies to deterministic
+local work. This ready state authorizes only root activation followed by the
+specified test-only RED and minimal internal adapter. It does not authorize
+storage, configuration, Convex, HTTP/commands, generic attempts, ATS, payment,
+funding, account/wallet action, deployment, or a live claim.
