@@ -32,7 +32,7 @@ test("parses, detaches, and freezes the fixed ingress envelope", () => {
       "a".repeat(64),
     replayIdentity: "key-A:AbCdEfGhIjKlMnOpQrStUv",
   });
-  assert.deepEqual(Object.keys(envelope), [
+  assert.deepEqual(Reflect.ownKeys(envelope), [
     "keyId",
     "timestampUnixSeconds",
     "requestNonce",
@@ -133,6 +133,13 @@ test("rejects malformed field values as TypeErrors", () => {
     "9223372036854775808",
     "not-a-number",
   ];
+
+  assert.doesNotThrow(() =>
+    parseIngressEnvelope({
+      ...validInput(),
+      timestampUnixSeconds: "9223372036854775807",
+    }),
+  );
 
   for (const keyId of invalidKeyIds) {
     assertTypeError(() => parseIngressEnvelope({ ...validInput(), keyId }));
