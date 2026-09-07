@@ -46,6 +46,13 @@ test("parses, detaches, and freezes the fixed ingress envelope", () => {
   assert.equal(Object.isFrozen(envelope), true);
   assert.equal(Object.getPrototypeOf(envelope), Object.prototype);
 
+  const maximumKeyId = "a".repeat(64);
+  const maximumKeyEnvelope = parseIngressEnvelope({
+    ...validInput(),
+    keyId: maximumKeyId,
+  });
+  assert.equal(maximumKeyEnvelope.keyId, maximumKeyId);
+
   input.keyId = "changed";
   input.timestampUnixSeconds = "0";
   input.requestNonce = "Z".repeat(21) + "w";
@@ -101,6 +108,11 @@ test("rejects every non-closed input shape as a TypeError", () => {
   symbol[Symbol("not allowed")] = "not allowed";
   const nonenumerable = validInput();
   Object.defineProperty(nonenumerable, "hidden", { value: "not allowed" });
+  const requiredNonenumerable = validInput();
+  Object.defineProperty(requiredNonenumerable, "signature", {
+    value: "B".repeat(42) + "A",
+    enumerable: false,
+  });
   const inherited = Object.create({ inherited: "not allowed" });
   Object.assign(inherited, validInput());
   const customPrototype = Object.assign(Object.create(null), validInput());
@@ -114,6 +126,7 @@ test("rejects every non-closed input shape as a TypeError", () => {
     extra,
     symbol,
     nonenumerable,
+    requiredNonenumerable,
     inherited,
     customPrototype,
   ]) {

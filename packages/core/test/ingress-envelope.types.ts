@@ -19,4 +19,4 @@ void method;
 void path;
 
 // @ts-expect-error Parsed envelopes are readonly snapshots.
-envelope.method = "GET";
+envelope.method = "POST";
