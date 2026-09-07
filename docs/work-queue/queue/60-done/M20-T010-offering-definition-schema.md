@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M16-T010 accepted
 - Owner: `packages/core/src/offering-definition.ts`,
   `packages/core/src/index.ts`,
@@ -114,3 +114,21 @@ authorizes the specified test-only RED then minimal Core GREEN parser and
 verification only; it does not expand authority to ATS, payment, funding,
 allocation, clearing, HCS, account, wallet, signer, transaction, deployment,
 or live behavior.
+
+## Acceptance
+
+Accepted at 2026-09-07T01:25:25Z after final verification against
+`MODULE_BASE` `4e7d7d2b7825156ca24900cd360dd21ec510f961` and `MODULE_HEAD`
+`0b92b9d5984eb81ad2531c2b9dbdca83eeafc007`. The durable test-only RED
+commit `bf7a48f` precedes the source and public-barrel commit `0b92b9d`.
+Focused M20 tests passed 6/6; Core tests passed 75/75; Core and root
+typecheck, test, lint, clean-install dry run, queue/reference/whitespace
+checks, and the enabled local guard passed under Node 22.21.1. Independent
+task review and two fresh clean module-review generations found no Critical,
+Important, or Minor finding.
+
+This acceptance covers only the pure Core offering-definition parser. It does
+not accept a generic durable external-attempt model, broader configuration,
+ATS, payment, funding, allocation, account, asset, wallet, signer,
+transaction, settlement, persistence, clearing, HCS, payout, deployment, or
+live behavior.
