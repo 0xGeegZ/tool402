@@ -60,8 +60,8 @@ test("parses the exact candidate into a frozen detached snapshot", () => {
   assert.equal(Object.isFrozen(parsed.advertisedTiers), true);
   assert.equal(Object.getPrototypeOf(parsed.capabilities), Array.prototype);
   assert.equal(Object.getPrototypeOf(parsed.advertisedTiers), Array.prototype);
-  assert.deepEqual(Reflect.ownKeys(parsed.capabilities), ["0"]);
-  assert.deepEqual(Reflect.ownKeys(parsed.advertisedTiers), ["0", "1"]);
+  assert.deepEqual(Reflect.ownKeys(parsed.capabilities), ["0", "length"]);
+  assert.deepEqual(Reflect.ownKeys(parsed.advertisedTiers), ["0", "1", "length"]);
   assert.deepEqual(Object.keys(parsed).sort(), Object.keys(input).sort());
   assert.deepEqual(Reflect.ownKeys(parsed).sort(), Object.keys(input).sort());
   assert.notEqual(parsed, input);
@@ -102,12 +102,15 @@ test("canonicalizes URLs, including the root path, and accepts optional webUrl",
   assert.equal(parsed.x402Endpoint, "https://api.example.test/riskscan?b=2&a=1");
   assert.equal(parsed.webUrl, "https://example.test/");
   assert.deepEqual(Reflect.ownKeys(parsed).sort(), Object.keys(input).sort());
+  assert.equal(Object.isFrozen(parsed), true);
   assert.equal(Object.isFrozen(parsed.capabilities), true);
   assert.equal(Object.isFrozen(parsed.advertisedTiers), true);
   assert.equal(Object.getPrototypeOf(parsed.capabilities), Array.prototype);
   assert.equal(Object.getPrototypeOf(parsed.advertisedTiers), Array.prototype);
-  assert.deepEqual(Reflect.ownKeys(parsed.capabilities), ["0"]);
-  assert.deepEqual(Reflect.ownKeys(parsed.advertisedTiers), ["0", "1"]);
+  assert.deepEqual(Reflect.ownKeys(parsed.capabilities), ["0", "length"]);
+  assert.deepEqual(Reflect.ownKeys(parsed.advertisedTiers), ["0", "1", "length"]);
+  assert.notEqual(parsed.capabilities, input.capabilities);
+  assert.notEqual(parsed.advertisedTiers, input.advertisedTiers);
 });
 
 test("canonicalizes an endpoint with no explicit path independently", () => {
