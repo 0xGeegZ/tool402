@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T020 accepted; M10-T010 accepted; M16-T010, M17-T010,
   M18-T010, M19-T010, and M21-T010 accepted as source-sequencing context
 - Owner: This is a root-owned authority record. The proposed implementation
@@ -83,3 +83,20 @@ pre-M10 account bound and rejects every raw `#` delimiter before URL
 canonicalization. Both account fields and both URL fields require exact
 boundary regressions. A fresh independent re-review remains required before
 M28 may enter 10-ready.
+
+## Ready transition
+
+Ready at 2026-09-07T13:07:54Z after a fresh root rescan at
+`b0a22b3575a7ff6f1840e822b1451f89586daf8e` confirmed all declared
+dependencies accepted, no active lane or conflicting owned path, resolvable
+committed authority, an enabled local guard, and no human blocker for this
+deterministic local parser. The fresh independent re-review was clean after
+the exact account-bound and raw-fragment corrections.
+
+This ready state authorizes only root activation followed by the specified
+test-only RED and minimal pure Core candidate parser. It does not authorize
+receipt-candidate parsing, invariant generators, Agent integration, signing,
+publication, command/authentication, principal/role lookup, storage, replay
+or idempotency behavior, generic attempts, configuration, Convex, HTTP,
+provider/ATS behavior, wallet, payment, funding, transaction, settlement,
+clearing, HCS, payout, deployment, or live behavior.
