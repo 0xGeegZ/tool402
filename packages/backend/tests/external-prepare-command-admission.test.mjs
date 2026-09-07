@@ -275,6 +275,23 @@ test("never forwards an unauthenticated or M30-invalid candidate", async () => {
   }
 });
 
+test("isolates a synchronous atomic-boundary throw without retry", async () => {
+  const { admitClaimedExternalPrepareCommand } = await loadAdmission();
+  let boundaryCalls = 0;
+  const result = await admitClaimedExternalPrepareCommand(
+    await claimText(transportText()),
+    serverNow,
+    () => [authorityFor()],
+    () => {
+      boundaryCalls += 1;
+      throw new Error("expected boundary failure");
+    },
+  );
+
+  assert.equal(result, null);
+  assert.equal(boundaryCalls, 1);
+});
+
 test("fails closed for malformed direct outcomes and normally reflected async forms", async () => {
   const { admitClaimedExternalPrepareCommand } = await loadAdmission();
   let accessorReads = 0;
@@ -391,6 +408,7 @@ test("keeps the handoff internal and out of durable or external behavior", async
     /from ["']convex/u,
     /\bfetch\b/u,
     /\bDate\.now\b/u,
+    /\b(cache|storage)\b/iu,
     /\bwagmi\b/u,
     /\beth_sign/u,
     /\bwallet\b/iu,
