@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M16-T010 accepted, M17-T010 accepted, M18-T010 accepted,
   M19-T010 accepted, M20-T010 accepted, M21-T010 accepted
 - Owner: `packages/core/src/ingress-envelope.ts`,
@@ -82,3 +82,28 @@ replay-identity prerequisite. It authorizes only committed authority and
 independent design review; it authorizes neither RED/code nor HMAC, server
 configuration, persistence, ATS, payment, funding, allocation, clearing, HCS,
 account, wallet, signer, transaction, deployment, or live action.
+
+## Design review
+
+A scoped independent source-to-runtime assessment confirmed this parser is the
+smallest dependency-correct local prerequisite: it closes only the ingress
+envelope/replay-identity structure while retaining HMAC, server configuration,
+replay storage, generic attempts, ATS, and holder distribution as separate
+blocked work. An independent Standards review of the committed authority found
+preserved root queue ownership, resolvable local links, the enabled local
+reference boundary, no foreign-source leakage, no scope expansion, and no
+actionable baseline smell. Its narrow follow-up review of the canonical-newline
+clarification was also clean. No Critical, Important, or Minor finding remains.
+
+## Ready transition
+
+Ready at 2026-09-07T02:44:06Z after a fresh post-review queue rescan confirmed
+all declared M16–M21 predecessors remain accepted, the committed authority is
+resolvable, proposed Core paths are disjoint from active work, the local guard
+is enabled, direct validation is concrete, and no human blocker applies to this
+deterministic local scope. This ready state authorizes only the bounded
+test-only RED then minimal Core GREEN parser after root activation; it does not
+authorize HMAC, server configuration, replay storage, HTTP/commands, generic
+attempts, ATS, payment, funding, allocation, account, asset, wallet, signer,
+transaction, settlement, receipt, persistence, clearing, HCS, payout,
+deployment, or live behavior.
