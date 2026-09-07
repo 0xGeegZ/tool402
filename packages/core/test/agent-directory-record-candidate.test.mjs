@@ -224,9 +224,14 @@ test("rejects reflection failures and hostile or malformed nested arrays", () =>
   }
   for (const field of ["capabilities", "advertisedTiers"]) {
     const legal = field === "capabilities" ? ["evm-contract-risk-signals"] : ["quick", "standard"];
-    for (const extra of [Symbol("extra"), "extra"]) {
+    for (const [extra, enumerable] of [
+      ["extra-enumerable", true],
+      ["extra-hidden", false],
+      [Symbol("extra-enumerable"), true],
+      [Symbol("extra-hidden"), false],
+    ]) {
       const value = legal.slice();
-      Object.defineProperty(value, extra, { enumerable: typeof extra === "string", value: true });
+      Object.defineProperty(value, extra, { enumerable, value: true });
       assertInputError(candidate({ [field]: value }));
     }
     const hiddenIndex = legal.slice();
