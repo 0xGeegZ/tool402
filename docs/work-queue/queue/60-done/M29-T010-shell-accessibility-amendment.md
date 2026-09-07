@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T020 accepted; M11-T020 accepted
 - Owner: The root owns this card, `docs/specs/m29-shell-accessibility-amendment.md`,
   `docs/superpowers/plans/2026-09-07-m29-shell-accessibility-amendment.md`,
@@ -99,3 +99,28 @@ active ownership conflict exists, the committed authority is resolvable, the
 local guard is enabled, and no human action blocks this deterministic local
 scope. This activation authorizes only the specified test-only RED followed by
 the minimal stylesheet GREEN and verification.
+
+## Acceptance
+
+Accepted at 2026-09-07T15:35:03Z after final verification against
+`MODULE_BASE` `80e77cd346ccbc5120ab00b1f060148ec1a1aa67` and `MODULE_HEAD`
+`d620d1dbda2b5325951e369c3a8314f9fbcd050f`, both pushed to `main`. The
+test-only RED `9bb443a` precedes the stylesheet GREEN `f298c53`; subsequent
+focused test-only corrections `63d7217`, `11ffc42`, and `d620d1d` strengthened
+the scoped and overflow coverage through observed RED/GREEN before final
+review.
+
+Focused M29 tests passed 5/5 and the Web suite passed 92/92. Root typecheck,
+tests, lint, clean-install dry run, queue/reference/whitespace checks, and the
+enabled local guard passed under Node 22.21.1. The production Webpack build
+passed; the standard Turbopack command remains environment-blocked before
+compilation by the host port-permission restriction. Real-browser desktop and
+narrow checks confirmed normal smooth scrolling, reduced-motion automatic
+scrolling, visible keyboard focus, no horizontal overflow, and no accessibility
+violations. The independent task review and two fresh module-review generations
+found no Critical, Important, or Minor finding.
+
+This acceptance covers only shared-shell reduced-motion behavior and its
+focused source contract. It does not accept route behavior, configuration,
+identity, provider, wallet, signer, payment, account, transaction, reserve,
+allocation, clearing, ATS, HCS, payout, deployment, or any external action.

@@ -30,3 +30,8 @@ preferences while preserving the existing focus and landmark seams. Its exact
 local contract is [the shell accessibility amendment](../specs/m29-shell-accessibility-amendment.md).
 It does not reopen route behavior or authorize any identity, provider, payment,
 or external surface.
+
+Accepted at `d620d1dbda2b5325951e369c3a8314f9fbcd050f`, this amendment adds only
+the scoped shared-shell motion preference behavior and its focused source
+contract. It does not add route, client-state, configuration, or external
+behavior.
