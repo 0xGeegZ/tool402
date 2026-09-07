@@ -6,9 +6,9 @@ import {
 const envelope: IngressEnvelope = parseIngressEnvelope({
   keyId: "key-A",
   timestampUnixSeconds: "1735689600",
-  requestNonce: "AbCdEfGhIjKlMnOpQrStUv",
+  requestNonce: "AbCdEfGhIjKlMnOpQrStUw",
   bodySha256: "a".repeat(64),
-  signature: "B".repeat(43),
+  signature: "B".repeat(42) + "A",
 });
 
 const seconds: bigint = envelope.timestampUnixSeconds;
