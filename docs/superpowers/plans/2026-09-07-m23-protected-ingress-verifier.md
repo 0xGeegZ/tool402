@@ -64,7 +64,7 @@ reject structurally forged capabilities.
 - Produces: executable expectations for `verifyProtectedIngress` and
   `isVerifiedProtectedIngress` only.
 
-- [ ] **Step 1: Write the exact valid-vector test**
+- [x] **Step 1: Write the exact valid-vector test**
 
 Use UTF-8 raw bytes for `{"command":"test"}`, whose SHA-256 is
 `ed2d201bcdca6714c531e7d26b7f47e72f88d631de70f4673129e64d3de0e12a`.
@@ -79,7 +79,7 @@ only `keyId`, `requestNonce`, `replayIdentity`, and `verifiedAtUnixSeconds`,
 with `verifiedAtUnixSeconds` exactly `1735689600n`; internal membership accepts
 it. Assert a clone, structural lookalike, and wrong object fail membership.
 
-- [ ] **Step 2: Add negative and ordering cases**
+- [x] **Step 2: Add negative and ordering cases**
 
 Assert `null` for an altered raw body, unknown key, key with unsuitable
 algorithm/usage/extractability, wrong canonical-length MAC, invalid envelope,
@@ -97,7 +97,7 @@ a correctly authenticated stale envelope and a delegating temporary
 before the out-of-window `null`, then restore the original global descriptor.
 The test performs no command/parser/storage action.
 
-- [ ] **Step 3: Run and preserve RED**
+- [x] **Step 3: Run and preserve RED**
 
 Run:
 
@@ -111,7 +111,7 @@ env PATH=/Users/guillaumedieudonne/.nvm/versions/node/v22.21.1/bin:$PATH \
 Expected: the focused runtime test fails because the internal verifier module
 is absent. The backend typecheck remains green until source is added.
 
-- [ ] **Step 4: Commit observed RED**
+- [x] **Step 4: Commit observed RED**
 
 ```bash
 git add packages/backend/tests/protected-ingress-verifier.test.mjs
@@ -124,14 +124,14 @@ git commit -m "test: Add Protected Ingress Verifier RED Contract"
 
 - Create: `packages/backend/src/ingress/protected-ingress-verifier.ts`
 
-- [ ] **Step 1: Parse, copy, and bind raw bytes**
+- [x] **Step 1: Parse, copy, and bind raw bytes**
 
 Call `parseIngressEnvelope` on the untrusted five-field envelope inside a
 fail-closed boundary. Copy an accepted `Uint8Array`, hash those bytes using
 `globalThis.crypto.subtle.digest("SHA-256", ...)`, serialize its lower-case
 hex digest, and reject a mismatch before resolving any key.
 
-- [ ] **Step 2: Verify the canonical MAC and skew**
+- [x] **Step 2: Verify the canonical MAC and skew**
 
 Resolve only the parsed key ID. Require a non-extractable secret HMAC SHA-256
 key with `verify` usage. Decode the already canonical signature portably to
@@ -140,7 +140,7 @@ exactly 32 bytes, then call native `subtle.verify("HMAC", ...)` over a
 or byte equality decision for the MAC. Only after native MAC verification,
 accept the inclusive ±60-second `bigint` skew rule.
 
-- [ ] **Step 3: Return the sealed minimal capability**
+- [x] **Step 3: Return the sealed minimal capability**
 
 Return only a frozen `{ keyId, requestNonce, replayIdentity,
 verifiedAtUnixSeconds }` and register it in a module-private `WeakSet`.
@@ -148,7 +148,7 @@ Expose the internal membership predicate but no constructor, brand, key,
 signature, digest, signing input, or raw bytes. Catch parser, reflection,
 key-resolution, decoding, and cryptography failures and return `null`.
 
-- [ ] **Step 4: Run focused GREEN checks**
+- [x] **Step 4: Run focused GREEN checks**
 
 Run:
 
@@ -163,7 +163,7 @@ env PATH=/Users/guillaumedieudonne/.nvm/versions/node/v22.21.1/bin:$PATH \
   npm run lint --workspace @tool402/backend
 ```
 
-- [ ] **Step 5: Commit the isolated implementation**
+- [x] **Step 5: Commit the isolated implementation**
 
 ```bash
 git add packages/backend/src/ingress/protected-ingress-verifier.ts
@@ -172,13 +172,13 @@ git commit -m "feat: Add Protected Ingress Verifier"
 
 ### Task 3: Integration verification and review
 
-- [ ] Run root typecheck, test, lint, clean-install dry run, queue check,
+- [x] Run root typecheck, test, lint, clean-install dry run, queue check,
   reference guard, and whitespace check under Node 22.21.1.
-- [ ] Obtain an independent task review against this card, the local spec, the
+- [x] Obtain an independent task review against this card, the local spec, the
   exact two owned paths, and all negative/ordering tests.
-- [ ] Run two fresh clean Standards and Specification module-review generations
+- [x] Run two fresh clean Standards and Specification module-review generations
   after the final source head.
-- [ ] Record only the local verification/review result and module range before
+- [x] Record only the local verification/review result and module range before
   accepting the card. Do not make a durability, live, ATS, funding, or payment
   claim.
 

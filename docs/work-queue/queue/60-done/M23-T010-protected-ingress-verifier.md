@@ -3,10 +3,10 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T030 accepted; M22-T010 accepted
 - Owner: `packages/backend/src/ingress/protected-ingress-verifier.ts` and
-  `packages/backend/tests/protected-ingress-verifier.test.mjs` are proposed
+  `packages/backend/tests/protected-ingress-verifier.test.mjs` are accepted
   implementation paths. The root owns this card, the local specification,
   import record, plan, queue state, catalog, ownership, decisions, reviews,
   integration evidence, commits, and pushes.
@@ -118,3 +118,24 @@ GREEN verifier and verification; it does not expand authority to replay
 storage, command handling, generic attempts, ATS, configuration, payment,
 funding, allocation, clearing, HCS, account, wallet, signer, transaction,
 deployment, or live behavior.
+
+## Acceptance
+
+Accepted at 2026-09-07T07:57:08Z after final verification against
+`MODULE_BASE` `598973af0dbc17e0db9fc45602eba88999a30913` and `MODULE_HEAD`
+`4d6d5390c97994402c67e4e3e1b97bcbc012d828`. The durable test-only RED commit
+`5de42c6` precedes the minimal source commit `4d6d539`; the latter also adds
+test-only evidence for the exact HMAC hash, permitted `sign` plus `verify`
+usages, and defensive raw-byte copying.
+
+Focused M23 tests passed 9/9 and backend tests passed 77/77. Root typecheck,
+test, lint, clean-install dry run, queue/reference/whitespace checks, and the
+enabled local guard passed under Node 22.21.1. Independent task review and two
+fresh clean Standards/Specification module-review generations found no
+Critical, Important, or Minor finding.
+
+This acceptance covers only the pure internal protected-ingress verifier and
+its same-process capability. It does not accept HMAC key provisioning,
+configuration, replay storage, HTTP/command handling, generic attempts, ATS,
+payment, funding, account, wallet, signer, transaction, settlement, clearing,
+HCS, payout, deployment, or live behavior.
