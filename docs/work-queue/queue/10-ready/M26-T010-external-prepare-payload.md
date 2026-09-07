@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T020 accepted; M10-T010 accepted
 - Owner: packages/core/src/external-prepare-payload.ts,
   packages/core/src/index.ts,
@@ -83,3 +83,18 @@ letter/digit/underscore/hyphen grammar and requires RED coverage for valid
 leading underscore/hyphen forms and rejected period/colon forms. The same
 review confirmed that the payload remains distinct from a signed command, the
 hash stays algorithm-neutral, and the target union remains lexical only.
+
+## Ready transition
+
+Ready at 2026-09-07T11:23:29Z after a fresh post-review rescan at
+7491d667fa9349997493c7c67f8d9b51839e1847 confirmed M26-T010 as the sole
+inbox card, M01-T020 and M10-T010 accepted, no active ownership conflict,
+resolvable amended authority, enabled local guard, concrete RED/GREEN
+validation, and no human blocker for deterministic local work. Two fresh
+independent re-reviews found no Critical, Important, or Minor finding.
+
+This ready state authorizes only root activation followed by the specified
+test-only RED and minimal pure Core payload parser. It does not authorize a
+signed command, authentication, storage, generic attempts, configuration,
+Convex, HTTP, ATS/provider, wallet, payment, funding, transaction,
+deployment, or live behavior.
