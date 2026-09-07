@@ -85,27 +85,29 @@ test("accepts only bounded trimmed task identity and real canonical expiry input
   const maximumLengthOfferingVersion = "v".repeat(96);
   const canonicalExpiry = "2026-09-07T00:00:00.000Z";
 
-  assert.equal(new Date(canonicalExpiry).toISOString(), canonicalExpiry);
-  assert.equal(
-    (await createPaidTask({
-      taskRef: maximumLengthTaskRef,
-      offeringVersion: maximumLengthOfferingVersion,
-      requirements: validRequirements,
-      expiresAt: canonicalExpiry,
-    })).state,
-    "quoted",
-  );
+  const created = await createPaidTask({
+    taskRef: maximumLengthTaskRef,
+    offeringVersion: maximumLengthOfferingVersion,
+    requirements: validRequirements,
+    expiresAt: canonicalExpiry,
+  });
+  assert.equal(created.state, "quoted");
+  assert.equal(created.expiresAt, canonicalExpiry);
+  assert.equal(new Date(created.expiresAt).toISOString(), created.expiresAt);
 
   for (const input of [
     { taskRef: "", offeringVersion: "risk-v1", expiresAt: canonicalExpiry },
+    { taskRef: "   ", offeringVersion: "risk-v1", expiresAt: canonicalExpiry },
     { taskRef: " task-1", offeringVersion: "risk-v1", expiresAt: canonicalExpiry },
     { taskRef: "task-1 ", offeringVersion: "risk-v1", expiresAt: canonicalExpiry },
     { taskRef: "t".repeat(97), offeringVersion: "risk-v1", expiresAt: canonicalExpiry },
     { taskRef: "task-1", offeringVersion: "", expiresAt: canonicalExpiry },
+    { taskRef: "task-1", offeringVersion: "   ", expiresAt: canonicalExpiry },
     { taskRef: "task-1", offeringVersion: " risk-v1", expiresAt: canonicalExpiry },
     { taskRef: "task-1", offeringVersion: "risk-v1 ", expiresAt: canonicalExpiry },
     { taskRef: "task-1", offeringVersion: "v".repeat(97), expiresAt: canonicalExpiry },
     { taskRef: "task-1", offeringVersion: "risk-v1", expiresAt: "2026-09-07T00:00:00Z" },
+    { taskRef: "task-1", offeringVersion: "risk-v1", expiresAt: "2026-09-07T02:00:00.000+02:00" },
     { taskRef: "task-1", offeringVersion: "risk-v1", expiresAt: "2026-02-30T00:00:00.000Z" },
   ]) {
     await assert.rejects(() =>
