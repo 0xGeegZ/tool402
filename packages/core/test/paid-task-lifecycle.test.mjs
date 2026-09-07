@@ -354,6 +354,7 @@ test("rejects nested and concurrent transitions while hashing, and only consumes
   );
   const submitted = await outer;
   assert.equal(submitted.state, "payment_submitted");
+  assert.ok(nestedRejection);
   await nestedRejection;
   await concurrentRejection;
   await assert.rejects(() => transitionPaidTask(task, eventFor("expire")));
