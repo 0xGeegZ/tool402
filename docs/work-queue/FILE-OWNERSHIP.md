@@ -137,6 +137,23 @@ evidence are excluded. This acceptance grants no durable replay/idempotency
 claim, attempt, prepared state, ATS target/parameter authority, provider or
 wallet action, funding, payment, transaction, deployment, or external action.
 
+M31-T010 is an inbox authority record comprising its card,
+`docs/specs/m31-external-prepare-command-admission.md`,
+`docs/imports/SPEC-IMPORT-LEDGER.md`,
+`docs/superpowers/plans/2026-09-07-m31-external-prepare-command-admission.md`,
+and root queue records. Its proposed implementation paths are only
+`packages/backend/src/ingress/external-prepare-command-admission.ts` and
+`packages/backend/tests/external-prepare-command-admission.test.mjs`; no path
+is executable until its independent authority review and ready transition.
+The root owns queue state, catalog, decisions, reviews, commits, and pushes.
+M25, M26, and M30 are accepted consumed boundaries only. Existing backend
+modules, the backend public barrel, packages, lockfiles, Convex, RiskScan
+persistence/reconciliation, Core, Agent, Web/UI, configuration, environment,
+storage, replay/idempotency claims, generic attempts, prepared state, ATS
+target/parameter authority, providers, wallets, funding, payment,
+transactions, settlement, clearing, HCS, payout, deployment, and live evidence
+are excluded.
+
 M28-T010 is an accepted authority record comprising its card,
 `docs/specs/m28-agent-directory-record-candidate-schema.md`,
 `docs/imports/SPEC-IMPORT-LEDGER.md`,
