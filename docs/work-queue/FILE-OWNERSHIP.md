@@ -112,6 +112,24 @@ payment, transactions, settlement, clearing, HCS, payout, deployment, and live
 evidence are excluded until a future separately accepted local authority says
 otherwise.
 
+M28-T010 is an inbox authority record comprising its card,
+`docs/specs/m28-agent-directory-record-candidate-schema.md`,
+`docs/imports/SPEC-IMPORT-LEDGER.md`,
+`docs/superpowers/plans/2026-09-07-m28-agent-directory-record-candidate-schema.md`,
+this ownership record, queue state, catalog, and decisions. Its proposed
+implementation paths are only `packages/core/src/agent-directory-record-candidate.ts`,
+`packages/core/src/index.ts`,
+`packages/core/test/agent-directory-record-candidate.test.mjs`, and
+`packages/core/test/agent-directory-record-candidate.types.ts`; the root owns
+all listed control records, reviews, commits, and pushes. M10 is the direct
+syntax dependency; M16 through M19 and M21 are accepted source-sequencing
+context only. Existing Core modules, Agent Directory source/tests, backend,
+Convex, Web/UI, package metadata, lockfiles, command/signature/principal/role
+handling, publication, provider/ATS behavior, payment, accounts, wallets,
+transactions, settlement, receipts, persistence, replay/idempotency storage,
+generic attempts, clearing, HCS, payout, deployment, and live evidence are
+excluded.
+
 B01-T010 is an accepted record comprising its card, `docs/specs/b01-convex-module-naming-compatibility.md`, `docs/imports/SPEC-IMPORT-LEDGER.md`, `docs/superpowers/plans/2026-09-07-b01-convex-module-naming-compatibility.md`, the five canonical underscore-named `packages/backend/convex/` source files, their five direct existing backend tests, `packages/backend/tests/convex-module-naming-compatibility.test.mjs`, and code-styled current module-path literals in the five M04 specifications, five M04 plans, five accepted M04 cards, and this file. The root owns queue state, catalog, human-action records, decisions, integration evidence, reviews, commits, and pushes. Accepted M01-T030 and M04-T010 through M04-T070 provide stable backend-function context, not reopened behavior. Existing function exports/bodies/validators/schema/indexes, all other Convex files, Core, Agent, Web/UI, package metadata, lockfile, runtime configuration, ignored configuration, generated output, public endpoints, deployment, external-store proof, payment, settlement, ATS, funding, accounts, wallets, signers, transactions, clearing, HCS, payout, and live evidence are excluded.
 
 Future active implementation cards must have disjoint owned paths and resource boundaries. Shared-file work is an explicit root integration reservation. Wallets, credentials, funded accounts, partner configuration, and deployments remain human-controlled resources; no card or agent infers authority over them.
