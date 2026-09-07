@@ -30,18 +30,7 @@ export interface ExternalPreparePayload {
   readonly expiresAt: string;
 }
 
-type CapturedExternalPrepareFields = readonly [
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-];
-
-const externalPrepareFields = [
+const externalPrepareFields: readonly string[] = [
   "operationKind",
   "subjectPublicId",
   "network",
@@ -50,7 +39,7 @@ const externalPrepareFields = [
   "canonicalParametersHash",
   "idempotencyKey",
   "expiresAt",
-] as const;
+];
 const externalOperationKinds: readonly ExternalOperationKind[] = [
   "ATS_CREATE",
   "ATS_CONTROL_LIST",
@@ -72,7 +61,7 @@ function rejectExternalPreparePayload(): never {
 
 function captureExternalPrepareFields(
   input: unknown,
-): CapturedExternalPrepareFields {
+): readonly unknown[] {
   if (input === null || typeof input !== "object") {
     return rejectExternalPreparePayload();
   }
@@ -90,14 +79,13 @@ function captureExternalPrepareFields(
     for (const key of keys) {
       if (
         typeof key !== "string" ||
-        !(externalPrepareFields as readonly string[]).includes(key)
+        !externalPrepareFields.includes(key)
       ) {
         return rejectExternalPreparePayload();
       }
     }
 
-    const capturedValues: unknown[] = [];
-    for (const field of externalPrepareFields) {
+    return externalPrepareFields.map((field) => {
       const descriptor = Reflect.getOwnPropertyDescriptor(input, field);
       if (
         descriptor === undefined ||
@@ -109,19 +97,8 @@ function captureExternalPrepareFields(
         return rejectExternalPreparePayload();
       }
 
-      capturedValues.push(descriptor.value);
-    }
-
-    return [
-      capturedValues[0],
-      capturedValues[1],
-      capturedValues[2],
-      capturedValues[3],
-      capturedValues[4],
-      capturedValues[5],
-      capturedValues[6],
-      capturedValues[7],
-    ];
+      return descriptor.value;
+    });
   } catch {
     return rejectExternalPreparePayload();
   }
