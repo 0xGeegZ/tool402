@@ -120,8 +120,9 @@ also owned M27 evidence. The earlier statement that no implementation path was
 reserved was true only before the decision; M27 is now closed, and no behavior
 is granted by that control record itself.
 
-M30-T010 reserves only its inbox card, M30 specification, specification-import
-ledger row, M30 implementation plan, packages/backend/package.json,
+M30-T010 is a ready authority record comprising its card, M30 specification,
+specification-import ledger row, M30 implementation plan, M30 authority review,
+packages/backend/package.json,
 package-lock.json, packages/backend/src/ingress/authenticated-external-prepare-normalizer.ts,
 and packages/backend/tests/authenticated-external-prepare-normalizer.test.mjs
 plus root queue records. The root owns queue state, catalog, human-action

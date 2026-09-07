@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M25-T010 accepted; M26-T010 accepted; M27-T010 accepted
 - Owner: This is a root-owned backend-only implementation record. It owns this
   card, the M30 specification and plan, the focused backend test, the new
@@ -77,3 +77,25 @@ payload, signer, or browser.
 - Backend/root typecheck, test, lint, clean-install dry run, queue/reference/
   whitespace checks, enabled local guard, independent task review, and two
   fresh clean module-review generations must pass before acceptance.
+
+## Design review
+
+An independent review at committed 9bc4eb0 found no Critical, Important, or
+Minor finding. It confirmed strict expiry equality, canonical nonce tail,
+timestamp grammar and round-trip, lower-case signer/signature plus recovery
+normalization, resolver-after-recovery sequencing, M25/M26-only inputs, and
+the absence of durable, ATS, provider, browser, wallet, or external behavior.
+The review record is
+[M30-T010 authority review](../../evidence/M30-T010-authority-review.md).
+
+## Ready transition
+
+Ready at 2026-09-07T19:31:09Z after a fresh root rescan at committed 9bc4eb0
+confirmed all declared dependencies accepted, no active lane or ownership
+conflict, committed authority, an enabled guard, concrete validation, and no
+human blocker for deterministic local normalizer work.
+
+This ready state authorizes only root activation followed by the specified
+test-only RED and minimal internal normalizer. It does not authorize a durable
+claim or attempt, prepared state, ATS target/configuration, provider/wallet
+action, funding, payment, transaction, deployment, or other external behavior.
