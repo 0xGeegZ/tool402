@@ -3,11 +3,11 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T030 accepted; M22-T010 accepted; M23-T010 accepted;
   M24-T010 accepted
 - Owner: `packages/backend/src/ingress/claimed-protected-body.ts` and
-  `packages/backend/tests/claimed-protected-body.test.mjs` are proposed
+  `packages/backend/tests/claimed-protected-body.test.mjs` are accepted
   implementation paths. The root owns this card, local specification, import
   record, plan, queue state, catalog, ownership, decisions, reviews,
   integration evidence, commits, and pushes.
@@ -110,3 +110,24 @@ deterministic local work. This activation authorizes only the specified
 test-only RED and minimal internal byte-binding adapter. It does not authorize
 command parsing, storage, configuration, Convex, HTTP, generic attempts, ATS,
 payment, funding, account/wallet action, deployment, or live behavior.
+
+## Acceptance
+
+Accepted at 2026-09-07T10:53:56Z after final verification against
+`MODULE_BASE` `38dfc3f7562fb38c2681c6e056bd50cca7f5a9b0` and `MODULE_HEAD`
+`e50540e9513e68d60ffc684d896ca34bb3a95003`, both pushed to `main`. The
+durable test-only RED commit `0b5274a` precedes the minimal internal adapter
+source commit `e50540e`.
+
+Focused M25 tests passed 6/6, backend tests passed 90/90, and root tests
+passed 314/314. Root typecheck, lint, clean-install dry run, queue/reference/
+whitespace checks, and the enabled local guard passed under Node 22.21.1.
+Independent Task 1 and Task 2 reviews, then two fresh module-review
+generations across Standards and specification conformance, found no Critical,
+Important, or Minor finding.
+
+This acceptance covers only the internal byte-binding adapter and its
+same-process claimed-body capability. It does not accept durable replay
+storage, a closed command schema or parser, generic attempts, ATS,
+configuration, payment, funding, account, wallet, signer, transaction,
+settlement, clearing, HCS, payout, deployment, or live behavior.
