@@ -1,0 +1,84 @@
+# M22-T010 — Closed ingress envelope and replay identity
+
+## State
+
+- Tier: CORE_P0
+- Queue state: 00-inbox
+- Dependencies: M16-T010 accepted, M17-T010 accepted, M18-T010 accepted,
+  M19-T010 accepted, M20-T010 accepted, M21-T010 accepted
+- Owner: `packages/core/src/ingress-envelope.ts`,
+  `packages/core/test/ingress-envelope.test.mjs`, and
+  `packages/core/test/ingress-envelope.types.ts` are proposed implementation
+  paths. The root reserves the public-barrel amendment in
+  `packages/core/src/index.ts` and owns this card, local specification/import
+  record, plan, queue state, catalog, ownership, decisions, reviews,
+  integration evidence, and pushes.
+- Human actions: none for this pure local parser. Existing bounded paid-request
+  evidence neither grants nor blocks it, and grants no HMAC key, server
+  configuration, replay store, ATS, funding, allocation, account, asset,
+  wallet, signer, transaction, settlement, clearing, HCS, payout, deployment,
+  or live authority.
+
+## Scope
+
+Create the smallest closed Core ingress-envelope parser needed before a later
+server verifier may safely evaluate one claimed protected request. The parser
+will capture exact descriptor-safe transport fields, construct a fixed
+canonical signing input, and derive a correlation-only replay identity. It
+will not authenticate the envelope or decide that any nonce is fresh.
+
+The local contract is [M22 closed ingress envelope and replay identity](../../../specs/m22-ingress-envelope.md), the neutral source record is the [specification import ledger](../../../imports/SPEC-IMPORT-LEDGER.md), and execution is in the [M22 closed ingress envelope plan](../../../superpowers/plans/2026-09-07-m22-ingress-envelope.md).
+
+The accepted M16–M21 chain supplies the local semantic predecessor set for
+the minimum closed ingress slice. M20 supplies an accepted descriptor-safe
+untrusted-record pattern, but this card does not reopen it. The card is a
+strictly smaller local prerequisite than a HMAC verifier, generic durable
+attempt model, ATS boundary, or holder-distribution lifecycle.
+
+## Candidate ready requirements
+
+- The local contract, neutral import-ledger row, and implementation plan are
+  committed before a RED test or code change.
+- Every declared predecessor remains accepted locally. The authority maps only
+  the minimum ingress-envelope structural slice; it does not claim that any
+  broader schema, verification, or durable attempt contract is complete.
+- The public output is exactly one frozen envelope value containing the five
+  captured fields, fixed method/path, canonical signing input, and
+  non-authoritative replay identity.
+- The source input is a closed ordinary five-field record. Its timestamp,
+  nonce, digest, and signature fields have exact lexical rules; unknown,
+  inherited, descriptor-unsafe, or reflection-hostile input fails closed.
+- No active card owns the proposed Core paths. The public-barrel amendment is
+  a root integration reservation; accepted Core behavior remains otherwise
+  unmodified.
+- The delivery excludes HMAC/key work, raw body hashing, time/skew checks,
+  replay storage, endpoint/HTTP handling, command parsing, generic attempts,
+  ATS/configuration, payment, funding, accounts, assets, wallets, signers,
+  transactions, settlements, receipts, clearing, HCS, payouts, deployment,
+  and live claims.
+- An independent review of the committed local contract and plan is clean: no
+  Critical, Important, or Minor finding remains.
+
+## Validation
+
+- RED/GREEN tests prove exact frozen output, canonical signing input,
+  collision-safe replay identity, malformed lexical values, closed shape,
+  descriptor/proxy/reflection resistance, and zero accessor invocation. The
+  focused command is `node --test packages/core/test/ingress-envelope.test.mjs`
+  from the repository root.
+- A public compile-time fixture proves the parser returns a readonly exact
+  method/path envelope and a `bigint` timestamp.
+- Core/root typecheck, test, lint, clean-install dry run, queue/reference/
+  whitespace checks, enabled local guard, independent task review, and two
+  fresh clean module-review generations pass before acceptance.
+
+## Inbox transition
+
+Recorded at 2026-09-07T02:28:28Z after a fresh source-to-runtime critical-path
+rescan confirmed that an unverified local `split_confirmed` label cannot
+truthfully start holder distribution, and that ATS still needs a broader
+schema/attempt chain. This card is the smallest local closed ingress and
+replay-identity prerequisite. It authorizes only committed authority and
+independent design review; it authorizes neither RED/code nor HMAC, server
+configuration, persistence, ATS, payment, funding, allocation, clearing, HCS,
+account, wallet, signer, transaction, deployment, or live action.
