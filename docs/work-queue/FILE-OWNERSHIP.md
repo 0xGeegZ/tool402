@@ -137,15 +137,14 @@ evidence are excluded. This acceptance grants no durable replay/idempotency
 claim, attempt, prepared state, ATS target/parameter authority, provider or
 wallet action, funding, payment, transaction, deployment, or external action.
 
-M31-T010 is an inbox authority card comprising its card,
+M31-T010 is a ready authority card comprising its card,
 `docs/specs/m31-external-prepare-command-admission.md`,
 `docs/imports/SPEC-IMPORT-LEDGER.md`,
 `docs/superpowers/plans/2026-09-07-m31-external-prepare-command-admission.md`,
 and root queue records. Its proposed implementation paths are only
 `packages/backend/src/ingress/external-prepare-command-admission.ts` and
 `packages/backend/tests/external-prepare-command-admission.test.mjs`; no path
-is executable until its amended authority receives fresh independent review,
-ready transition, and root activation.
+is executable until root activation.
 The root owns queue state, catalog, decisions, reviews, commits, and pushes.
 M25, M26, and M30 are accepted consumed boundaries only. Existing backend
 modules, the backend public barrel, packages, lockfiles, Convex, RiskScan

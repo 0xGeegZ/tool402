@@ -3,9 +3,9 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M25-T010 accepted; M26-T010 accepted; M30-T010 accepted
-- Owner: This is a root-owned inbox authority card. It owns this card, the
+- Owner: This is a root-owned ready authority card. It owns this card, the
   M31 specification and plan, the proposed focused backend test and internal
   ingress source, and root-integrator queue records. The root owns state,
   catalog, ownership, decisions, reviews, commits, and pushes.
@@ -173,3 +173,19 @@ This activation authorizes only the specified test-only RED followed by the
 minimal internal adapter. It does not authorize storage, configuration, Convex,
 generic attempts, ATS, provider/wallet action, funding, payment, transaction,
 deployment, or live behavior.
+
+## Re-ready transition
+
+Ready again at 2026-09-07T21:49:46Z after a fresh root rescan of pushed
+`bdd2812cf49f946cd6afd19b27b96f38fdc1a9a2` confirmed M31-T010 is the sole
+eligible CORE_P0 card; M25-T010/M26-T010/M30-T010 remain accepted; no active
+owner conflicts with the two proposed backend paths; committed authority and
+local references resolve; the local guard is enabled; and no human blocker
+applies to deterministic local work. Two fresh independent reviews found no
+Critical, Important, or Minor finding in the clarified synchronous data-port
+authority. The prior ready/activation records are historical only.
+
+This ready state authorizes only a new root activation followed by the
+specified test-only RED and minimal internal adapter. It does not authorize
+storage, configuration, Convex, generic attempts, ATS, provider/wallet action,
+funding, payment, transaction, deployment, or live behavior.
