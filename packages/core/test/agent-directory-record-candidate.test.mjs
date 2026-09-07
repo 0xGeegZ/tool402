@@ -58,6 +58,10 @@ test("parses the exact candidate into a frozen detached snapshot", () => {
   assert.equal(Object.isFrozen(parsed), true);
   assert.equal(Object.isFrozen(parsed.capabilities), true);
   assert.equal(Object.isFrozen(parsed.advertisedTiers), true);
+  assert.equal(Object.getPrototypeOf(parsed.capabilities), Array.prototype);
+  assert.equal(Object.getPrototypeOf(parsed.advertisedTiers), Array.prototype);
+  assert.deepEqual(Reflect.ownKeys(parsed.capabilities), ["0"]);
+  assert.deepEqual(Reflect.ownKeys(parsed.advertisedTiers), ["0", "1"]);
   assert.deepEqual(Object.keys(parsed).sort(), Object.keys(input).sort());
   assert.deepEqual(Reflect.ownKeys(parsed).sort(), Object.keys(input).sort());
   assert.notEqual(parsed, input);
@@ -98,6 +102,12 @@ test("canonicalizes URLs, including the root path, and accepts optional webUrl",
   assert.equal(parsed.x402Endpoint, "https://api.example.test/riskscan?b=2&a=1");
   assert.equal(parsed.webUrl, "https://example.test/");
   assert.deepEqual(Reflect.ownKeys(parsed).sort(), Object.keys(input).sort());
+  assert.equal(Object.isFrozen(parsed.capabilities), true);
+  assert.equal(Object.isFrozen(parsed.advertisedTiers), true);
+  assert.equal(Object.getPrototypeOf(parsed.capabilities), Array.prototype);
+  assert.equal(Object.getPrototypeOf(parsed.advertisedTiers), Array.prototype);
+  assert.deepEqual(Reflect.ownKeys(parsed.capabilities), ["0"]);
+  assert.deepEqual(Reflect.ownKeys(parsed.advertisedTiers), ["0", "1"]);
 });
 
 test("canonicalizes an endpoint with no explicit path independently", () => {
@@ -269,6 +279,14 @@ test("rejects reflection failures and hostile or malformed nested arrays", () =>
   }
   for (const field of ["capabilities", "advertisedTiers"]) {
     const legal = field === "capabilities" ? ["evm-contract-risk-signals"] : ["quick", "standard"];
+    const fake = Object.create(Array.prototype);
+    Object.defineProperties(fake, {
+      0: { enumerable: true, configurable: true, value: legal[0] },
+      ...(legal.length > 1 ? { 1: { enumerable: true, configurable: true, value: legal[1] } } : {}),
+      length: { writable: true, configurable: true, value: legal.length },
+    });
+    assert.equal(Array.isArray(fake), false);
+    assertInputError(candidate({ [field]: fake }));
     for (const [extra, enumerable] of [
       ["extra-enumerable", true],
       ["extra-hidden", false],
@@ -360,7 +378,7 @@ test("has the planned pure-source boundary once the parser exists", async () => 
   }
   assert.doesNotMatch(source, /(?:from|import)\s*["'][^"']*(?:ats|provider|agent)[^"']*["']/iu);
   assert.doesNotMatch(source, /\bimport\s*\(/u);
-  const staticImports = [...source.matchAll(/\bimport\s+(?!\s*\()(?:(?:type\s+)?[\s\S]*?\s+from\s+)?["']([^"']+)["']/gu)].map((match) => match[1]);
+  const staticImports = [...source.matchAll(/\bimport\s+(?!\s*\()(?=[^;]*?(?:from\s+)?["'])[^;]*?(?:from\s+)?["']([^"']+)["']\s*;?/gu)].map((match) => match[1]);
   assert.ok(staticImports.length >= 1);
   assert.deepEqual(staticImports, staticImports.map(() => "./value.ts"));
 });
@@ -377,7 +395,7 @@ test("exposes exactly the candidate parser and types through the Core barrel", a
   const source = await readFile(barrelUrl, "utf8");
   const declarations = [...source.matchAll(
     /export\s+(type\s+)?\{([^}]+)\}\s+from\s+["']\.\/agent-directory-record-candidate\.ts["']/gu,
-  )].map((match) => ({ typeOnly: Boolean(match[1]), names: match[2].split(",").map((name) => name.trim().replace(/^type\s+/u, "")).filter(Boolean).sort() }));
+  )].map((match) => ({ typeOnly: Boolean(match[1]), names: match[2].split(",").map((name) => name.trim()).filter(Boolean).map((name) => match[1] ? name.replace(/^type\s+/u, "") : name).sort() }));
   assert.equal(declarations.length, 2);
   assert.deepEqual(declarations.filter((declaration) => !declaration.typeOnly).map((declaration) => declaration.names), [["parseAgentDirectoryRecordCandidate"]]);
   assert.deepEqual(declarations.filter((declaration) => declaration.typeOnly).map((declaration) => declaration.names), [["AdvertisedDirectoryTiers", "AgentDirectoryRecordCandidate", "DirectoryCapability", "DirectoryTier"]]);
