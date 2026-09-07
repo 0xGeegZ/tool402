@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M02-T020 accepted; M11-T020 accepted
 - Owner: The root owns this card, `docs/specs/m29-shell-accessibility-amendment.md`,
   `docs/superpowers/plans/2026-09-07-m29-shell-accessibility-amendment.md`,
@@ -67,3 +67,26 @@ This inbox state authorizes only committed local authority and independent
 design review. It does not authorize RED/code, route business changes, or any
 identity, provider, wallet, signer, payment, account, transaction, reserve,
 allocation, clearing, ATS, HCS, payout, deployment, or external behavior.
+
+## Design review
+
+Independent review of committed authority `c69480e` completed clean. It
+confirmed both declared dependencies are accepted, M27 remains the only blocked
+CORE_P0 intake, every local path resolves, the amendment is isolated to one
+stylesheet rule and one focused test, and the browser tooling/version floor is
+available for final runtime evidence. No Critical, Important, or Minor finding
+remains.
+
+## Ready transition
+
+Ready at 2026-09-07T14:41:35Z after a fresh root rescan confirmed that
+M02-T020 and M11-T020 remain accepted, no active card owns either declared Web
+path, the committed authority is resolvable, the local guard is enabled, no
+CORE_P0 card is runnable, and no human action is required for this deterministic
+local amendment.
+
+This ready state authorizes only root activation followed by the specified
+test-only RED and minimal stylesheet GREEN. It does not authorize route
+business changes or any identity, provider, wallet, signer, payment, account,
+transaction, reserve, allocation, clearing, ATS, HCS, payout, deployment, or
+external behavior.
