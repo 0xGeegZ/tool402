@@ -2,14 +2,13 @@
 
 - PRODUCT_OVERVIEW: accepted as P00-T010
 - CURRENT_MODULE: M32 durable external-prepare admission
-- CURRENT_TASK: M32-T010 (10-ready); root activation is required before the
-  test-only RED contract
-- ACTIVE_LANES: none
+- CURRENT_TASK: M32-T010 (20-active); test-only RED contract in progress
+- ACTIVE_LANES: M32 RED contract
 - ACTIVE_WORKTREES: none
 - LOCAL_SPECIFICATIONS: docs/specs/m01-root-workspace.md, docs/specs/m01-queue-check.md, docs/specs/m01-node-runtime-selection.md, docs/specs/m01-core-workspace.md, docs/specs/m01-backend-workspace.md, docs/specs/m01-web-workspace.md, docs/specs/m02-riskscan-contract.md, docs/specs/m02-riskscan-backend-projection.md, docs/specs/m02-riskscan-quick.md, docs/specs/m02-riskscan-x402-api.md, docs/specs/m03-riskscan-receipt-evidence.md, docs/specs/m03-riskscan-payment-state-provenance.md, docs/specs/m03-riskscan-settlement-observer.md, docs/specs/m04-riskscan-durable-schema.md, docs/specs/m04-riskscan-durable-request-admission.md, docs/specs/m04-riskscan-internal-request-writer.md, docs/specs/m04-riskscan-candidate-settlement-attempt-writer.md, docs/specs/m04-riskscan-pending-verification-settlement-record-writer.md, docs/specs/m04-riskscan-pending-settlement-reader.md, docs/specs/m04-riskscan-pending-reconciliation-selector.md, docs/specs/m05-riskscan-tool-directory.md, docs/specs/m05-tool-loop-agent-discovery.md, docs/specs/m05-tool-loop-agent-challenge-observation.md, docs/specs/m06-riskscan-hedera-x402.md, docs/specs/m07-tool-loop-agent-flow.md, docs/specs/m08-browser-tool-loop-journey.md, docs/specs/m09-native-directory-discovery.md, docs/specs/m10-exact-value-boundary.md, docs/specs/m11-product-landing.md, docs/specs/m11-application-shell.md, docs/specs/m12-riskscan-native-quote-eligibility.md, docs/specs/m12-tool-loop-agent-native-quote-evaluation.md, docs/specs/m13-browser-native-quote-compatibility.md, docs/specs/m14-guest-riskscan-workbench.md, docs/specs/m15-guest-riskscan-quick-preflight.md, docs/specs/m16-offering-terms-and-revenue-math.md, docs/specs/m17-requirements-bound-offering-quote.md, docs/specs/m18-offering-purchase-lifecycle.md, docs/specs/m19-paid-task-lifecycle.md, docs/specs/m20-offering-definition-schema.md, docs/specs/m21-clearing-split-lifecycle.md, docs/specs/m22-ingress-envelope.md, docs/specs/m23-protected-ingress-verifier.md, docs/specs/m24-protected-replay-claim.md, docs/specs/m25-claimed-protected-body.md, docs/specs/m26-external-prepare-payload.md, docs/specs/m28-agent-directory-record-candidate-schema.md, docs/specs/m29-shell-accessibility-amendment.md, docs/specs/m30-authenticated-external-prepare-normalizer.md, docs/specs/m31-external-prepare-command-admission.md, docs/specs/m32-durable-external-prepare-admission.md, docs/specs/b01-convex-module-naming-compatibility.md
 - LOCAL_UI_RECORDS: docs/ui/UI-S00.md, docs/ui/UI-S01.md, docs/ui/UI-S02.md, docs/ui/UI-S03.md, docs/ui/UI-S04.md, docs/ui/UI-S05.md, docs/ui/UI-S06.md, docs/ui/UI-S07.md, docs/ui/UI-S08.md, docs/ui/UI-S09.md, docs/ui/UI-S10.md, docs/ui/IMPORT-LEDGER.md
 - PENDING_HUMAN_ACTIONS: HA-X402-HEDERA-001 is accepted only as bounded redacted testnet paid-request evidence; its local review is at docs/work-queue/evidence/HA-X402-HEDERA-001-review.md. HA-CONVEX-DEV-001 is accepted only as bounded redacted Development compatibility evidence; its local review is at docs/work-queue/evidence/HA-CONVEX-DEV-001-review.md. HA-COMMAND-AUTHORITY-001 is accepted only as bounded secret-free architecture authority; its completed decision and independent review are at docs/work-queue/evidence/HA-COMMAND-AUTHORITY-001-decision.md and docs/work-queue/evidence/HA-COMMAND-AUTHORITY-001-review.md. M32 may consume its already accepted replay/idempotency semantics only through separate local review; it grants no authority-record provisioning, publication, ATS target/parameter authority, provider call, or external action.
-- NEXT_ELIGIBLE_TASKS: M32-T010 is the sole ready CORE_P0 card. Its internal
+- NEXT_ELIGIBLE_TASKS: M32-T010 is the sole active CORE_P0 card. Its internal
   Convex data plane must independently rebind serialized M26/JCS payload hash,
   replay identity, canonical equal expiries, and the complete durable-clock
   window before any database access; it may then re-read current
@@ -20,14 +19,15 @@
   resolve, authorize, or execute an ATS expected target, canonical parameters
   hash, or operation-to-target mapping; that distinct ATS authority remains a
   later human-sensitive gate. Do not reopen M04 RiskScan persistence or
-  reconciliation. Root may activate only the specified test-only RED contract;
-  production schema/functions remain unauthorized until that RED is committed.
+  reconciliation. The active lane may perform only the specified test-only RED
+  contract; production schema/functions remain unauthorized until that RED is
+  committed and reviewed.
 - LAST_QUEUE_VALIDATION: Fresh rescan at pushed
   `98220b968f6d1d0a0fac54618f9905070b78bf51` confirmed M32-T010 is the sole
   ready CORE_P0 card, all six declared dependencies are accepted, no active
   ownership conflict exists, both independent committed-head reviews are clean,
   local references resolve, and the guard is enabled. Root activation is
-  required before RED/code.
+  activation was completed at 2026-09-07T23:25:55Z for RED only.
 - LAST_MODULE_ACCEPTANCE: M31-T010 accepted at pushed `bd68f112268e1549514506dc282da59029dc45a0` after durable test-only RED before the minimal internal handoff, focused 6/6 and full Backend 106/106 tests, root typecheck/test/lint, clean-install dry run, queue/reference/whitespace checks, enabled guard, clean final task review, and two fresh clean Standards-and-Spec module-review generations. It remains an internal synchronous detached-data handoff only and grants no durable replay/idempotency claim or attempt, ATS target/configuration, provider/wallet action, funding, payment, transaction, deployment, or external authority.
 
 No secrets, account keys, or private evidence belong in this file.

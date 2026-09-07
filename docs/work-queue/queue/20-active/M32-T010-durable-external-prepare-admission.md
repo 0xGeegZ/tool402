@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T030 accepted; M04-T010 accepted; B01-T010 accepted;
   M26-T010 accepted; M30-T010 accepted; M31-T010 accepted
 - Owner: This root-owned card owns the M32 specification and plan, its card,
@@ -123,6 +123,18 @@ ownership conflict; exact origin/main equality; an enabled local guard; and
 two independent clean reviews of the corrected committed authority. This ready
 state authorizes only root activation followed by the specified test-only RED.
 It does not authorize authority provisioning, Convex publication, BFF/HTTP
+integration, asynchronous adapter, ATS target/parameter resolution,
+provider/wallet action, funding, payment, transaction, deployment, or live
+behavior.
+
+## Activation
+
+Activated at 2026-09-07T23:25:55Z after a fresh rescan of pushed
+`37d6ae238478cc0f94c56b6fab074fd3a292e7d5` confirmed M32-T010 as the sole
+ready card, accepted dependencies, no active lane or ownership conflict, an
+enabled guard, and no new human blocker. This activation authorizes only the
+test-only RED contract from the committed plan. It does not authorize M32
+schema/functions, Convex publication, authority provisioning, BFF/HTTP
 integration, asynchronous adapter, ATS target/parameter resolution,
 provider/wallet action, funding, payment, transaction, deployment, or live
 behavior.
