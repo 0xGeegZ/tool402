@@ -62,7 +62,7 @@ Node built-in test runner, and `@tool402/core`.
 - Produces: executable expectations for `parseIngressEnvelope` and
   `IngressEnvelope`.
 
-- [ ] **Step 1: Write the failing runtime contract**
+- [x] **Step 1: Write the failing runtime contract**
 
 Create one ordinary input with these exact fields:
 
@@ -89,7 +89,7 @@ tails), negative/leading-zero/out-of-range timestamps, and caller mutation
 after parsing. Assert all failures are
 `TypeError` and no accessor executes.
 
-- [ ] **Step 2: Write the failing compile-time fixture**
+- [x] **Step 2: Write the failing compile-time fixture**
 
 ```ts
 import {
@@ -116,14 +116,14 @@ void path;
 envelope.method = "GET";
 ```
 
-- [ ] **Step 3: Run and preserve the RED result**
+- [x] **Step 3: Run and preserve the RED result**
 
 Run `node --test packages/core/test/ingress-envelope.test.mjs` and
 `npm run typecheck --workspace @tool402/core`. Both must fail only because the
 new public parser/types are absent. Record that result before source or barrel
 work.
 
-- [ ] **Step 4: Commit the observed RED contract**
+- [x] **Step 4: Commit the observed RED contract**
 
 ```bash
 git add packages/core/test/ingress-envelope.test.mjs packages/core/test/ingress-envelope.types.ts
@@ -142,7 +142,7 @@ git commit -m "test: Add Ingress Envelope RED Contract"
 - Consumes: only JavaScript reflection and `BigInt` parsing.
 - Produces: `parseIngressEnvelope(input: unknown): IngressEnvelope`.
 
-- [ ] **Step 1: Capture a closed ordinary record**
+- [x] **Step 1: Capture a closed ordinary record**
 
 Implement a private expected-key tuple/set and a descriptor reader. Require an
 ordinary `Object.prototype` record, obtain `Reflect.ownKeys` in `try`/`catch`,
@@ -150,7 +150,7 @@ require the exact five string keys, and obtain each own enumerable data
 descriptor without reading a caller property. Any exception or mismatch throws
 one stable `TypeError`.
 
-- [ ] **Step 2: Validate canonical lexical values**
+- [x] **Step 2: Validate canonical lexical values**
 
 Validate key ID, exact 22-character canonical base64url nonce, lower-case
 64-hex digest, 43-character canonical base64url signature, and canonical
@@ -158,19 +158,19 @@ nonnegative signed-64-bit decimal timestamp. Reject noncanonical final
 base64url characters before issuing a replay identity. Convert only the
 accepted timestamp to `bigint`.
 
-- [ ] **Step 3: Issue a detached frozen canonical envelope**
+- [x] **Step 3: Issue a detached frozen canonical envelope**
 
 Construct the fixed method/path, joining the five exact signing-input lines
 with `"\n"` and no trailing newline. Form replay identity with the safe
 `keyId:requestNonce` pair. Return exactly the nine documented fields in one
 frozen plain object; retain neither input record nor a descriptor.
 
-- [ ] **Step 4: Export only the documented public API**
+- [x] **Step 4: Export only the documented public API**
 
 Add the parser and `IngressEnvelope` type to `packages/core/src/index.ts`.
 Do not expose implementation helpers or any HMAC/replay verifier.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run:
 
@@ -184,7 +184,7 @@ npm run lint --workspace @tool402/core
 Expected: the focused tests and the existing Core suite pass with no production
 HMAC, I/O, or route files added.
 
-- [ ] **Step 6: Commit the minimal GREEN implementation**
+- [x] **Step 6: Commit the minimal GREEN implementation**
 
 ```bash
 git add packages/core/src/ingress-envelope.ts packages/core/src/index.ts
@@ -202,22 +202,22 @@ git commit -m "feat: Add Closed Ingress Envelope"
 - Consumes: accepted RED/GREEN Core evidence.
 - Produces: review-ready M22 integration evidence without an external action.
 
-- [ ] **Step 1: Run root verification**
+- [x] **Step 1: Run root verification**
 
 Run root typecheck, test, lint, clean-install dry run, queue check, local
 reference guard, and `git diff --check` under Node 22.
 
-- [ ] **Step 2: Request independent task review**
+- [x] **Step 2: Request independent task review**
 
 Require review of descriptor safety, canonical tuple exactness, lexical-only
 signature handling, no hidden clock/I/O, and all documented exclusions.
 
-- [ ] **Step 3: Run two fresh module-review generations**
+- [x] **Step 3: Run two fresh module-review generations**
 
 Review the exact module range against the accepted M22 spec; resolve every
 Critical, Important, or Minor finding before acceptance.
 
-- [ ] **Step 4: Commit acceptance only after evidence is complete**
+- [x] **Step 4: Commit acceptance only after evidence is complete**
 
 ```bash
 git add docs/work-queue docs/imports/SPEC-IMPORT-LEDGER.md

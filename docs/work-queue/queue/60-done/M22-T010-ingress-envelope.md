@@ -3,13 +3,13 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M16-T010 accepted, M17-T010 accepted, M18-T010 accepted,
   M19-T010 accepted, M20-T010 accepted, M21-T010 accepted
 - Owner: `packages/core/src/ingress-envelope.ts`,
   `packages/core/test/ingress-envelope.test.mjs`, and
-  `packages/core/test/ingress-envelope.types.ts` are proposed implementation
-  paths. The root reserves the public-barrel amendment in
+  `packages/core/test/ingress-envelope.types.ts` are accepted implementation
+  paths. The root records the public-barrel amendment in
   `packages/core/src/index.ts` and owns this card, local specification/import
   record, plan, queue state, catalog, ownership, decisions, reviews,
   integration evidence, and pushes.
@@ -123,3 +123,28 @@ and verification only; it does not expand authority to HMAC, server
 configuration, replay storage, HTTP/commands, generic attempts, ATS, payment,
 funding, allocation, clearing, HCS, account, wallet, signer, transaction,
 deployment, or live behavior.
+
+## Acceptance
+
+Accepted at 2026-09-07T03:29:50Z after final verification against
+`MODULE_BASE` `49430eca23f3c301de7dd27ffa0a0a149b07c655` and `MODULE_HEAD`
+`d43cb83e3747c40d688e604c5d8bc8a0aeecfa9f`. The durable test-only RED
+commits `00819b8`, `9236430`, and `3d298e0` precede the initial source/public-
+barrel commit `d7ca798`; the canonical-base64url correction then used a
+test-only RED `6dd3430` before the narrow source correction `8658b23`.
+Final evidence-only coverage commits `b56ea15` and `d43cb83` close review
+gaps; the latter is intentionally GREEN-only because the already-accepted
+parser correctly handled both documented lower bounds.
+
+Focused M22 tests passed 5/5; root tests passed Agent 51/51, Web 87/87,
+Backend 68/68, and Core 86/86. Core and root typecheck, root lint,
+clean-install dry run, queue/reference/whitespace checks, and the enabled
+local guard passed under Node 22.21.1. Independent task review and two fresh
+clean Standards/Specification module-review generations found no Critical,
+Important, or Minor finding.
+
+This acceptance covers only the pure Core ingress-envelope parser and
+correlation-only replay identity. It does not accept HMAC/key handling, server
+configuration, replay storage, HTTP/command handling, generic attempts, ATS,
+payment, funding, account, asset, wallet, signer, transaction, settlement,
+receipt, persistence, clearing, HCS, payout, deployment, or live behavior.
