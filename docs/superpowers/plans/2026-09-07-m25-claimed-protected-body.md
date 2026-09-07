@@ -79,6 +79,30 @@ dependency, generated output, configured store, or runtime service is added.
   assert.deepEqual(readClaimedProtectedBody(claimed), originalBody);
   ```
 
+  Also prove the copy precedes M23 asynchronous cryptography. Before invoking
+  M25, retain `globalThis.crypto`'s descriptor and replace it temporarily with
+  an object whose `subtle.digest` signals `digestStarted`, awaits a test gate,
+  then delegates to the real bound digest; its `verify` delegates directly to
+  the real bound verifier. Start `claimProtectedBody`, wait for
+  `digestStarted`, mutate the caller's input bytes, release the digest gate,
+  and assert the successful reader still returns the pre-mutation bytes. In a
+  `finally` block restore the exact original `globalThis.crypto` descriptor.
+
+  ```js
+  const claimPromise = claimProtectedBody(
+    validEnvelope,
+    body,
+    timestampUnixSeconds,
+    resolveOnly(key),
+    () => "claimed",
+  );
+  await digestStarted;
+  body.fill(0x78);
+  releaseDigest();
+  const claimed = await claimPromise;
+  assert.deepEqual(readClaimedProtectedBody(claimed), originalBody);
+  ```
+
   Add failures for a digest-mismatched body, a non-byte body, an
   `already_claimed` outcome, a throwing/rejecting claim port, and forged,
   copied, accessor-backed, and proxied claimed-body lookalikes. Each failure

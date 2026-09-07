@@ -42,8 +42,9 @@ or assert command, identity, durable-storage, or financial authority.
   with no public backend-barrel, Convex, schema, M04, Agent, Web/UI, or package
   ownership overlap.
 - The sequence is private byte copy, M23 verification, M24 claim, frozen
-  private capability, then fresh reader copy. Every failure returns `null`
-  and no body is readable.
+  private capability, then fresh reader copy. The RED suite must mutate the
+  caller input while M23 digest work is gated and still observe the original
+  bytes. Every failure returns `null` and no body is readable.
 - The delivery has no JSON parsing, command fields, storage implementation,
   configuration, environment, key provisioning, HTTP, generic attempts, or
   live/external action.
@@ -54,6 +55,7 @@ or assert command, identity, durable-storage, or financial authority.
 
 - A test-only RED contract precedes source and proves exact byte binding, one
   canonical injected replay claim, caller/reader byte-mutation isolation,
+  including input mutation while M23 digest work is deliberately gated,
   forged/copy/proxy rejection, failed-claim non-exposure, and no prohibited
   boundary expansion.
 - The focused command is
