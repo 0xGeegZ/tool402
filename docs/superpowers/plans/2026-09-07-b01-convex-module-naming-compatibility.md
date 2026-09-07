@@ -29,10 +29,11 @@ and the existing backend workspace.
   `docs/work-queue/FILE-OWNERSHIP.md`.
 - Preserve function exports, handler bodies, validators, schema, indexes,
   public backend barrel, package metadata, and lockfile exactly.
-- Before GREEN, establish that tracked code contains no consumer of the legacy
-  internal module addresses. The Human Ops diagnostic records that publication
-  stopped before any function was published; the post-fix development-only
-  publication check remains separate evidence.
+- Before GREEN, establish that outside the five declared direct test imports,
+  tracked production code contains no consumer of a legacy internal module
+  address. The Human Ops diagnostic records that publication stopped before any
+  function was published; the post-fix development-only publication check
+  remains separate evidence.
 - Do not run `convex dev`, read ignored configuration, publish/deploy, or claim
   that a local rename proves a configured development runtime. Human Ops owns
   that separate action.
@@ -118,13 +119,29 @@ git diff --find-renames=100% --numstat -- packages/backend/convex
 
 Expected source audit: exactly five 100% source renames and no source hunks.
 Verify the compatibility test confirms no legacy module pathname remains in the
-bounded tracked Markdown records and no tracked code consumer uses a legacy
-internal module address.
+bounded tracked Markdown records and no unlisted production or internal-address
+consumer uses a legacy module address.
 
 - [ ] **Step 4: Commit the minimal compatibility implementation.**
 
 ```bash
-git add packages/backend/convex packages/backend/tests
+git add packages/backend/convex packages/backend/tests \\
+  docs/specs/m04-riskscan-internal-request-writer.md \\
+  docs/specs/m04-riskscan-candidate-settlement-attempt-writer.md \\
+  docs/specs/m04-riskscan-pending-verification-settlement-record-writer.md \\
+  docs/specs/m04-riskscan-pending-settlement-reader.md \\
+  docs/specs/m04-riskscan-pending-reconciliation-selector.md \\
+  docs/superpowers/plans/2026-09-05-m04-riskscan-internal-request-writer.md \\
+  docs/superpowers/plans/2026-09-05-m04-riskscan-candidate-settlement-attempt-writer.md \\
+  docs/superpowers/plans/2026-09-05-m04-riskscan-pending-verification-settlement-record-writer.md \\
+  docs/superpowers/plans/2026-09-05-m04-riskscan-pending-settlement-reader.md \\
+  docs/superpowers/plans/2026-09-05-m04-riskscan-pending-reconciliation-selector.md \\
+  docs/work-queue/queue/60-done/M04-T030-riskscan-internal-request-writer.md \\
+  docs/work-queue/queue/60-done/M04-T040-riskscan-candidate-settlement-attempt-writer.md \\
+  docs/work-queue/queue/60-done/M04-T050-riskscan-pending-verification-settlement-record-writer.md \\
+  docs/work-queue/queue/60-done/M04-T060-riskscan-pending-settlement-reader.md \\
+  docs/work-queue/queue/60-done/M04-T070-riskscan-pending-reconciliation-selector.md \\
+  docs/work-queue/FILE-OWNERSHIP.md
 git commit -m "fix: Normalize Convex Module Names"
 ```
 

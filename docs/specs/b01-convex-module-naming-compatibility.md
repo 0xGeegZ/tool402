@@ -48,10 +48,11 @@ existing `convex.config.ts` and `schema.ts` names already satisfy this rule.
   `docs/work-queue/FILE-OWNERSHIP.md` update only their code-styled current
   module-path literals so every tracked local source-path reference resolves
   at the resulting commit. No historical acceptance outcome changes.
-- The precondition for this address change is that no tracked code consumer
-  uses an old internal module address and that the Human Ops diagnostic reports
-  no prior publication. The development-only post-fix check remains pending
-  Human Ops evidence.
+- The precondition for this address change is that, outside the five declared
+  direct tests whose file URLs B01 updates, no tracked production or internal
+  module-address consumer uses an old module address. The Human Ops diagnostic
+  reports no prior publication. The development-only post-fix check remains
+  pending Human Ops evidence.
 - The correction is local code evidence only. Passing tests do not prove a
   configured store, published function, deployment, external action, payment,
   settlement, finality, ATS, funding, clearing, HCS, payout, or live result.
@@ -75,7 +76,8 @@ compatibility amendments.
   tests import their canonical paths and the bounded documentation check finds
   no legacy module pathname.
 - A 100%-rename diff summary shows exactly the five source moves with no source
-  hunk; tracked-code search finds no consumer of a legacy internal address.
+  hunk; tracked-code search finds no unlisted production or internal-address
+  consumer of a legacy module.
 - Backend/root typecheck, test, lint, queue/reference/whitespace checks, the
   enabled local guard, and independent task review pass before local code
   acceptance.

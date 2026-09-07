@@ -40,8 +40,9 @@ and does not begin M24 protected replay work.
   M04 records, and a new static compatibility test; no exported identifier,
   function body, validator, schema, index, package, lockfile, configuration,
   generated API, public function, route, or product behavior changes.
-- A pre-GREEN tracked-code scan establishes no consumer of the legacy internal
-  module address, and a 100%-rename audit establishes source bodies remain
+- A pre-GREEN scan establishes that outside the five declared direct test
+  imports, no tracked production or internal-address consumer uses a legacy
+  module address. A 100%-rename audit establishes source bodies remain
   unchanged. The Human Ops diagnostic records the lack of prior publication.
 - Human Ops, not an agent, performs the separately recorded publish check after
   local code acceptance.
