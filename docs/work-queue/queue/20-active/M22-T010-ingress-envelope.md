@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M16-T010 accepted, M17-T010 accepted, M18-T010 accepted,
   M19-T010 accepted, M20-T010 accepted, M21-T010 accepted
 - Owner: `packages/core/src/ingress-envelope.ts`,
@@ -106,4 +106,17 @@ test-only RED then minimal Core GREEN parser after root activation; it does not
 authorize HMAC, server configuration, replay storage, HTTP/commands, generic
 attempts, ATS, payment, funding, allocation, account, asset, wallet, signer,
 transaction, settlement, receipt, persistence, clearing, HCS, payout,
+deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-07T02:45:42Z after a fresh post-ready rescan confirmed
+M22-T010 is the sole ready card, all declared M16–M21 dependencies remain
+accepted, no active card owns the bounded Core paths, committed authority is
+resolvable, the local guard is enabled, and the current human-action record
+neither grants external authority nor blocks deterministic local work. This
+activation authorizes the specified test-only RED then minimal Core GREEN parser
+and verification only; it does not expand authority to HMAC, server
+configuration, replay storage, HTTP/commands, generic attempts, ATS, payment,
+funding, allocation, clearing, HCS, account, wallet, signer, transaction,
 deployment, or live behavior.
