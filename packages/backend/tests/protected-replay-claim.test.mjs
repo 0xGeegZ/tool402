@@ -126,6 +126,15 @@ test("fails closed for replayed, malformed, throwing, and rejected claim outcome
         resolve("claimed");
       },
     }),
+    () => new Proxy(Promise.resolve("already_claimed"), {
+      get(target, property, receiver) {
+        if (property === "then") {
+          return (resolve) => resolve("claimed");
+        }
+
+        return Reflect.get(target, property, receiver);
+      },
+    }),
     () => {
       throw new Error("claim failed");
     },
