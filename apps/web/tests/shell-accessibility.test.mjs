@@ -162,7 +162,13 @@ test("detects case-insensitive and logical overflow masking", () => {
       overflow-inline: clip;
     }
   `);
+  const logicalBlockMask = parseStylesheet(`
+    html {
+      overflow-block: hidden;
+    }
+  `);
 
   assert.equal(hasOverflowMask(uppercasePhysicalMask), true);
   assert.equal(hasOverflowMask(logicalMask), true);
+  assert.equal(hasOverflowMask(logicalBlockMask), true);
 });
