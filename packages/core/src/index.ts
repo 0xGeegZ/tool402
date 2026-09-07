@@ -30,6 +30,8 @@ export type {
   OfferingTerms,
   OfferingTermsInput,
 } from "./offering-economics.ts";
+export { parseOfferingDefinition } from "./offering-definition.ts";
+export type { OfferingDefinition } from "./offering-definition.ts";
 export {
   canonicalizeRequirements,
   createOfferingRequirementsQuote,
