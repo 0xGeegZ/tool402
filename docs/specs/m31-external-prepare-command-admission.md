@@ -131,12 +131,32 @@ durable implementation must apply these already accepted rules atomically:
    authorityVersion, payloadHash)`;
 5. return `IDEMPOTENCY_REPLAYED` only for equal payload hash and context, and
    return `IDEMPOTENCY_CONFLICT` for any mismatch; and
-6. only a `NEW` outcome may eventually record the new replay identity
-   and one future generic attempt.
+6. create a future generic attempt only for a `NEW` outcome. The later durable
+   replay-claim behavior is narrowed by the post-acceptance clarification
+   below.
 
 M31 does not assert that an injection actually provides atomicity or durable
 storage. A later separately reviewed persistence card must define its schema,
 transaction, records, and independently verifiable runtime evidence.
+
+## Post-acceptance durable-replay clarification
+
+Recorded at 2026-09-07T22:58:27Z for the separately scoped M32 durable data
+plane. This clarification supersedes only the future durable-claim wording in
+the preceding atomic-boundary contract; it does not modify M31 source, its
+synchronous behavior, or its accepted direct-result tests.
+
+After complete serialized-input validation and current-authority revalidation,
+a durable boundary must consume every fresh valid replay identity in its one
+transaction. `NEW` creates one `PREPARED` attempt and a linked replay claim.
+An exact idempotent repeat creates a linked `IDEMPOTENCY_REPLAYED` claim for
+the existing attempt. An idempotency conflict creates an unlinked
+`IDEMPOTENCY_CONFLICT` claim. A later reuse of any claimed identity returns
+`COMMAND_REPLAYED` before idempotency handling. Thus only `NEW` creates an
+attempt, but no accepted fresh nonce remains reusable for a different command.
+
+This remains generic non-executable persistence only: it grants no provider,
+wallet, ATS, funding, payment, transaction, deployment, or external action.
 
 ## Snapshot and result requirements
 

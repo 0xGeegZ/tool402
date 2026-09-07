@@ -24,7 +24,10 @@ The local contract is [M04 RiskScan durable schema](../../../specs/m04-riskscan-
 
 ## Validation
 
-- RED/GREEN backend tests import the default schema and assert the exact six-table structure, field validator shapes, and declared indexes.
+- RED/GREEN backend tests import the default schema and assert the exact
+  six-table RiskScan namespace, field validator shapes, and declared indexes;
+  the later M32 clarification permits only separately owned non-RiskScan
+  tables.
 - `npm run typecheck --workspace @tool402/backend`
 - `npm run test --workspace @tool402/backend`
 - `npm run lint --workspace @tool402/backend`
@@ -41,3 +44,13 @@ Activated at 2026-09-05T13:28:56Z after a fresh queue rescan confirmed the pushe
 ## Completion transition
 
 Accepted at 2026-09-05T13:44:15Z. The schema began from an observed missing-module RED and reached a Green export contract. Independent task review found that the first test renamed Convex's exported `bigint` validator type; the scoped fix restores exact exported-form assertions and passed a fresh clean re-review. Root verification passed Node 22.21.1 typecheck, the 65-test suite, lint, queue validation, whitespace, the enabled local-reference guard, and a production Webpack build. The default Turbopack build remains host-blocked by an internal port-bind `EPERM`, reproduced outside the sandbox; the accepted diff contains only backend schema/test paths and no web build input. Two fresh clean Standards/Spec review generations found no Critical, Important, or Minor finding. `MODULE_BASE` was `38d5beef2309ffe7e43d3c8f97448ca6ea0e89a1`; `MODULE_HEAD` was `9c02594d4f522972db77ae0c580c25c71b8d090c`. No writer, reader, generated API, external connection, payment action, settlement assertion, account/wallet action, deployment, or live claim was added.
+
+## M32 shared-schema compatibility clarification
+
+Recorded at 2026-09-07T22:58:27Z for the separately scoped M32 generic
+data-plane authority. The accepted six RiskScan contracts remain exact and
+unchanged, but their test boundary is the exact `riskScan*` namespace rather
+than the whole global schema. It must reject any unlisted RiskScan table while
+permitting separately owned non-RiskScan tables. This documentation-only
+clarification does not reopen M04 behavior or authorize a writer, reader,
+publication, configuration, payment, deployment, or external action.

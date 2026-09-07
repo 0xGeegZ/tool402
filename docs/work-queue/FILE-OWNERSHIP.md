@@ -183,7 +183,13 @@ M32-T010 reserves its card,
 `docs/specs/m32-durable-external-prepare-admission.md`,
 `docs/superpowers/plans/2026-09-08-m32-durable-external-prepare-admission.md`,
 `docs/imports/SPEC-IMPORT-LEDGER.md`, the narrow shared-schema compatibility
-amendment in `docs/specs/m04-riskscan-durable-schema.md`,
+amendments in `docs/specs/m04-riskscan-durable-schema.md`,
+`docs/work-queue/queue/60-done/M04-T010-riskscan-durable-schema.md`, and
+`docs/superpowers/plans/2026-09-05-m04-riskscan-durable-schema.md`, the narrow
+post-acceptance durable-replay clarifications in
+`docs/specs/m31-external-prepare-command-admission.md`,
+`docs/work-queue/queue/60-done/M31-T010-external-prepare-command-admission.md`,
+and `docs/superpowers/plans/2026-09-07-m31-external-prepare-command-admission.md`,
 `packages/backend/convex/schema.ts`,
 `packages/backend/convex/external_prepare_command_admission.ts`,
 `packages/backend/convex/external_prepare_command_recovery.ts`,
@@ -191,7 +197,8 @@ amendment in `docs/specs/m04-riskscan-durable-schema.md`,
 schema/admission/recovery tests. The root owns queue state, catalog, decisions,
 reviews, commits, and integration evidence. Existing M04 RiskScan functions,
 writers, readers, records, and reconciliation are dependencies and may not
-change. Public APIs, generated output, authority provisioning, configuration,
+change; accepted M31 source and tests are also dependencies and may not change.
+Public APIs, generated output, authority provisioning, configuration,
 publication, HTTP/BFF adapters, provider/wallet, ATS target/parameter
 resolution, funding, payment, transaction, deployment, and live evidence are
 excluded.

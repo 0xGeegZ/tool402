@@ -4,7 +4,7 @@
 
 **Goal:** Add a narrow, test-locked Convex schema for durable RiskScan correlation records and their required lookup indexes.
 
-**Architecture:** A single default schema module declares six storage-only record types: request, settlement attempt, settlement record, safe public projection, outbox, and sanitized evidence reference. It uses document IDs only for the direct request-to-attempt and attempt-to-settlement relations. A Node built-in test imports the schema's own export representation and compares its complete table, field, optionality, ID-target, and index surface to the local contract.
+**Architecture:** A single default schema module declares six storage-only RiskScan record types: request, settlement attempt, settlement record, safe public projection, outbox, and sanitized evidence reference. It uses document IDs only for the direct request-to-attempt and attempt-to-settlement relations. A Node built-in test imports the schema's own export representation and compares the complete `riskScan*` table, field, optionality, ID-target, and index surface to the local contract.
 
 **Tech Stack:** TypeScript, Convex `defineSchema`/`defineTable`, Convex validators, Node.js built-in test runner, npm workspaces.
 
@@ -37,7 +37,9 @@
 **Interfaces:**
 
 - Consumes: `defineSchema` and `defineTable` from `convex/server`; `v` from `convex/values`.
-- Produces: the default `SchemaDefinition` with exactly six named tables; no public backend export or registered function.
+- Produces: the default `SchemaDefinition` with exactly six named RiskScan
+  tables; no public backend export or registered function. The later M32
+  compatibility clarification permits separately owned non-RiskScan tables.
 
 - [ ] **Step 1: Write the failing schema-export contract**
 
@@ -257,3 +259,13 @@ Expected: one conventional commit containing only the owned backend schema and t
 - Spec coverage: Task 1 declares every required table, relation, optional field, index, timestamp validator, opaque-field boundary, and exclusion from the local contract.
 - Placeholder scan: no placeholder marker or deferred implementation instruction remains; the complete expected contract is included in Step 1.
 - Type consistency: table names, ID targets, index fields, validator types, and optionality use the same names in the specification and every plan step.
+
+## M32 shared-schema compatibility clarification
+
+Recorded at 2026-09-07T22:58:27Z for the separately scoped M32 generic
+data-plane authority. The historical M04 implementation remains accepted and
+unchanged. Its exact test boundary is now the full exported `riskScan*`
+namespace: precisely the six declared RiskScan tables, with every other
+RiskScan table rejected, while separately owned non-RiskScan tables are
+permitted. This does not authorize a writer, reader, publication,
+configuration, payment, deployment, or external action.

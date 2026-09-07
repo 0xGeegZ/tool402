@@ -223,3 +223,19 @@ This activation authorizes only the specified test-only RED followed by the
 minimal internal adapter. It does not authorize storage, configuration, Convex,
 generic attempts, ATS, provider/wallet action, funding, payment, transaction,
 deployment, or live behavior.
+
+## Post-acceptance durable-replay clarification
+
+Recorded at 2026-09-07T22:58:27Z for the separately reviewed M32 data-plane
+authority. The completed M31 source and its synchronous detached-data behavior
+are unchanged. Only M31's future durable-contract wording is clarified: after
+complete serialized-input and current-authority validation, a durable boundary
+must atomically claim every fresh valid nonce. `NEW` alone creates a
+`PREPARED` attempt; an exact idempotency replay claims the fresh nonce and
+links it to the existing attempt; an idempotency conflict claims the nonce
+without an attempt link. A later reuse of any claimed nonce is
+`COMMAND_REPLAYED` before idempotency handling.
+
+This clarification adds no M31 implementation or authorization for Convex
+publication, authority provisioning, provider/wallet behavior, ATS, funding,
+payment, transaction, deployment, or any external action.

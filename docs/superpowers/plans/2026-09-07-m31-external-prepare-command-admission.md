@@ -199,3 +199,15 @@ Review Standards and specification conformance against the final exact module
 head. Resolve every Critical, Important, and Minor finding. The root accepts
 the card only after two consecutive fresh clean module reviews and records the
 done transition in a separate root integration commit.
+
+## Post-acceptance durable-replay clarification
+
+Recorded at 2026-09-07T22:58:27Z for M32's separately reviewed durable
+data-plane authority. This historical M31 plan and the accepted synchronous
+source remain unchanged. Only the future durable contract is clarified: after
+complete serialized-input and current-authority validation, each fresh valid
+replay identity is claimed atomically. `NEW` alone creates a `PREPARED`
+attempt; exact idempotency replay claims the fresh identity linked to the
+existing attempt; conflict claims it without an attempt link; later reuse is
+`COMMAND_REPLAYED` before idempotency handling. No external behavior is
+authorized by this documentation-only clarification.

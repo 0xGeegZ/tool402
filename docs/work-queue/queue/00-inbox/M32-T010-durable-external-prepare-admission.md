@@ -4,13 +4,13 @@
 
 - Tier: CORE_P0
 - Queue state: 00-inbox
-- Dependencies: M01-T030 accepted; B01-T010 accepted; M26-T010 accepted;
-  M30-T010 accepted; M31-T010 accepted
+- Dependencies: M01-T030 accepted; M04-T010 accepted; B01-T010 accepted;
+  M26-T010 accepted; M30-T010 accepted; M31-T010 accepted
 - Owner: This root-owned card owns the M32 specification and plan, its card,
   the additive generic Convex schema and internal module paths, the narrow M04
-  shared-schema compatibility amendment, focused backend tests, and
-  root-integrator queue records. The root owns state, catalog, ownership,
-  decisions, reviews, commits, and pushes.
+  shared-schema compatibility amendment, the narrow M31 durable-replay
+  clarification, focused backend tests, and root-integrator queue records. The
+  root owns state, catalog, ownership, decisions, reviews, commits, and pushes.
 - Human actions: No new human action is required for deterministic local
   schema/function work. The accepted command-authority decision supplies
   bounded replay/idempotency rules only. It does not authorize authority-record
@@ -42,25 +42,39 @@ global-schema assertion to an exact RiskScan-subset assertion. M32 separately
 owns the exact additive generic-table assertion. This is not a reopening of
 RiskScan persistence or reconciliation.
 
+The accepted M31 source remains unchanged. M32 owns a narrow post-acceptance
+clarification in the M31 specification, card, and plan: only `NEW` creates an
+attempt, while every fully valid fresh nonce is atomically claimed so it cannot
+later be reused for another command.
+
 ## Candidate ready requirements
 
 - The local specification, neutral import-ledger row, plan, card, catalog,
   ownership, decisions, human-action clarification, and M04 shared-schema
   compatibility amendment are committed before RED or implementation work.
-- M01-T030, B01-T010, M26-T010, M30-T010, and M31-T010 remain accepted locally.
+- M01-T030, M04-T010, B01-T010, M26-T010, M30-T010, and M31-T010 remain
+  accepted locally.
 - The only candidate runtime paths are `packages/backend/convex/schema.ts`,
   `packages/backend/convex/external_prepare_command_admission.ts`,
   `packages/backend/convex/external_prepare_command_recovery.ts`, and their
   focused tests plus the narrow RiskScan-schema test amendment. All Convex
   filenames must be underscore-safe.
-- The mutation must re-read exactly one current enabled authority row inside its
-  transaction; require exact signer, principal, role, ownership, and authority
-  version equality; reject an expired command at the durable server clock; then
-  evaluate replay identity before idempotency.
-- M31's accepted future-boundary rule remains binding: only `NEW` creates one
-  replay claim and one `PREPARED` generic attempt. An exact idempotent replay
-  returns the existing attempt without a new claim or attempt; a conflict writes
-  neither. No external behavior may follow from any M32 status.
+- Before any authority/database access, the mutation must independently parse
+  M26, recompute the exact JCS/Keccak payload hash, require equal canonical
+  command/payload expiries, derive the exact replay identity, and enforce every
+  approved durable-clock rule. It cannot treat serialized M25/M31 provenance
+  as an input capability.
+- The mutation must then re-read exactly one current enabled authority row
+  inside its transaction; require exact signer, principal, role, ownership, and
+  authority-version equality; and evaluate replay identity before idempotency.
+- Every fully valid fresh replay identity must be atomically claimed: `NEW`
+  creates the one linked `PREPARED` attempt, exact idempotency replay creates a
+  claim linked to the existing attempt, and conflict creates an unlinked claim.
+  Any later reuse returns `COMMAND_REPLAYED`; no status permits external
+  behavior.
+- The M31/M32 post-acceptance durable-replay clarification, the M04 card/plan
+  compatibility clarification, and all M32 authority records are committed
+  before RED or implementation work.
 - An independent design review of the committed authority is clean: no Critical,
   Important, or Minor finding remains.
 
@@ -68,9 +82,10 @@ RiskScan persistence or reconciliation.
 
 - A test-only RED commit precedes all M32 schema or Convex-module production
   changes. It proves the absent additive data plane, preserves the exact M04
-  RiskScan subset, and specifies current-authority, expiry, replay-first,
-  idempotency/context, no-write, and recovery behavior through controlled
-  internal-function contexts.
+  RiskScan namespace, and specifies rebinding-before-database-access,
+  current-authority, full durable-clock, replay-first, fresh-nonce claim,
+  idempotency/context, and recovery behavior through controlled internal-
+  function contexts.
 - Focused commands run from the repository root under Node 22.21.1:
 
   ```bash
@@ -86,7 +101,7 @@ RiskScan persistence or reconciliation.
 
 ## Inbox transition
 
-Recorded at 2026-09-08T00:30:00Z after a fresh post-M31 source-to-runtime
+Recorded at 2026-09-07T22:30:00Z after a fresh post-M31 source-to-runtime
 rescan found no active, ready, or existing inbox CORE_P0 card. M31 explicitly
 leaves durable schema, transaction, records, and recovery to a later separately
 reviewed persistence card. The accepted local authority distinguishes this
