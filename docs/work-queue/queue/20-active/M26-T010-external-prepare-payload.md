@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T020 accepted; M10-T010 accepted
 - Owner: packages/core/src/external-prepare-payload.ts,
   packages/core/src/index.ts,
@@ -98,3 +98,15 @@ test-only RED and minimal pure Core payload parser. It does not authorize a
 signed command, authentication, storage, generic attempts, configuration,
 Convex, HTTP, ATS/provider, wallet, payment, funding, transaction,
 deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-07T11:28:50Z after a fresh post-ready rescan confirmed
+M26-T010 is the sole ready card; M01-T020 and M10-T010 remain accepted; the
+committed authority resolves; no active card owns the bounded Core paths; the
+local guard is enabled; and no human blocker applies to deterministic local
+work. This activation authorizes only the specified test-only RED and minimal
+pure Core payload parser. It does not authorize a signed command,
+authentication, storage, generic attempts, configuration, Convex, HTTP,
+ATS/provider, wallet, payment, funding, transaction, deployment, or live
+behavior.
