@@ -140,44 +140,55 @@ test("registers only an internal mutation with exact closed args and result arms
 
 test("rejects malformed serialized command and detached M26 fields before all database access", async (t) => {
   const mutation = await loadMutation(t);
-  const cases = [null, [], {}, ...Object.keys(input()).map((key) => { const value = input(); delete value[key]; return value; })];
+  const cases = [["null command", null], ["array command", []], ["empty command", {}]];
+  for (const key of Object.keys(input())) { const value = input(); delete value[key]; cases.push([`missing command.${key}`, value]); }
   for (const [key, values] of Object.entries({
     version: [2, "1"], type: ["external.execute"], chainId: [295, "296"],
     canonicalSignerAddress: [signer.toUpperCase(), "0xabc"], nonce: ["", "A".repeat(21), "A".repeat(21) + "B"],
     issuedAt: ["2026-09-07T19:00:00Z", "2026-02-30T19:00:00.000Z"], expiresAt: ["2026-09-07T19:04:00Z"],
     payloadHash: [payloadHash.toUpperCase(), "0x" + "b".repeat(64)], replayIdentity: ["wrong", input().replayIdentity + "x"],
     principalPublicId: ["", null], authorityVersion: ["", null], role: ["ADMIN", "issuer"],
-  })) for (const value of values) cases.push(input({ [key]: value }));
-  for (const key of ["now", "serverNow", "signature", "rawBody", "capability", "state"]) cases.push(input({ [key]: "unexpected" }));
+  })) for (const value of values) cases.push([`invalid command.${key}: ${JSON.stringify(value)}`, input({ [key]: value })]);
+  for (const key of ["now", "serverNow", "signature", "rawBody", "capability", "state"]) cases.push([`unexpected command.${key}`, input({ [key]: "unexpected" })]);
   for (const [key, value] of Object.entries({ operationKind: "ATS_UNKNOWN", subjectPublicId: "", network: "hedera:mainnet", chainId: 295, expectedTarget: "arbitrary-target", canonicalParametersHash: "A".repeat(64), idempotencyKey: "short", expiresAt: "2026-09-07T19:04:00Z", extra: true })) {
-    cases.push(input({ payload: { ...input().payload, [key]: value } }));
+    cases.push([`malformed payload.${key} with original hash`, input({ payload: { ...input().payload, [key]: value } })]);
   }
-  for (const key of payloadKeys) { const value = input(); delete value.payload[key]; cases.push(value); }
-  cases.push(input({ payload: null }), input({ payload: [] }));
-  cases.push(input({ nonce: "QQQQQQQQQQQQQQQQQQQQQQ" }));
-  cases.push(input({ replayIdentity: `tool402:wallet-command:v1:296:0x${"c".repeat(40)}:AAAAAAAAAAAAAAAAAAAAAA` }));
-  cases.push(input({ replayIdentity: `tool402:wallet-command:v1:296:${signer}:QQQQQQQQQQQQQQQQQQQQQQ` }));
+  for (const key of payloadKeys) { const value = input(); delete value.payload[key]; cases.push([`missing payload.${key}`, value]); }
+  cases.push(["null payload", input({ payload: null })], ["array payload", input({ payload: [] })]);
+  cases.push(["nonce differs from replay identity", input({ nonce: "QQQQQQQQQQQQQQQQQQQQQQ" })]);
+  cases.push(["replay identity signer mismatch", input({ replayIdentity: `tool402:wallet-command:v1:296:0x${"c".repeat(40)}:AAAAAAAAAAAAAAAAAAAAAA` })]);
+  cases.push(["replay identity nonce mismatch", input({ replayIdentity: `tool402:wallet-command:v1:296:${signer}:QQQQQQQQQQQQQQQQQQQQQQ` })]);
   // Each valid field still participates in the detached hash; a stale hash cannot bind it.
   for (const [key, value] of Object.entries({ operationKind: "ATS_ISSUE", subjectPublicId: "subject_43", expectedTarget: "0.0.456", canonicalParametersHash: "b".repeat(64), idempotencyKey: "QQQQQQQQQQQQQQQQQQQQQQ", expiresAt: "2026-09-07T19:03:00.000Z" })) {
-    cases.push(input({ payload: { ...input().payload, [key]: value } }));
+    cases.push([`valid changed payload.${key} with stale hash`, input({ payload: { ...input().payload, [key]: value } })]);
   }
-  cases.push({ ...withPayload({ expiresAt: "2026-09-07T19:03:00.000Z" }), expiresAt: input().expiresAt });
-  for (const args of cases) {
+  cases.push(["canonical expiry mismatch with recomputed payload hash", { ...withPayload({ expiresAt: "2026-09-07T19:03:00.000Z" }), expiresAt: input().expiresAt }]);
+  for (const [name, args] of cases) {
     const db = database();
-    await assert.rejects(() => mutation._handler(db.ctx, args));
-    assert.deepEqual(db.accesses, [], "invalid serialization must never touch db");
+    await assert.rejects(() => mutation._handler(db.ctx, args), undefined, name);
+    assert.deepEqual(db.accesses, [], `${name}: must never touch db`);
+  }
+  // Matching hashes isolate M26 semantic validation from stale-hash rejection above.
+  for (const [key, value] of Object.entries({ operationKind: "ATS_UNKNOWN", subjectPublicId: "", expectedTarget: "arbitrary-target", canonicalParametersHash: "A".repeat(64), idempotencyKey: "short" })) {
+    const name = `malformed payload.${key} with independently recomputed hash`;
+    const args = withPayload({ [key]: value });
+    const db = database();
+    await assert.rejects(() => mutation._handler(db.ctx, args), undefined, name);
+    assert.deepEqual(db.accesses, [], `${name}: must never touch db`);
   }
 });
 
 test("enforces expiry ordering, 300-second lifetime and 60-second future skew before lookup", async (t) => {
   const mutation = await loadMutation(t);
-  for (const args of [
-    input({ issuedAt: input().expiresAt }), input({ issuedAt: "2026-09-07T19:04:00.001Z" }),
-    input({ issuedAt: "2026-09-07T18:58:59.999Z" }), input({ issuedAt: "2026-09-07T19:01:30.001Z" }),
+  for (const [name, args] of [
+    ["issuedAt equals expiresAt", input({ issuedAt: input().expiresAt })],
+    ["issuedAt follows expiresAt", input({ issuedAt: "2026-09-07T19:04:00.001Z" })],
+    ["lifetime exceeds 300 seconds", input({ issuedAt: "2026-09-07T18:58:59.999Z" })],
+    ["issuedAt exceeds future-skew allowance", input({ issuedAt: "2026-09-07T19:01:30.001Z" })],
   ]) {
     const db = database();
-    await assert.rejects(() => mutation._handler(db.ctx, args));
-    assert.deepEqual(db.accesses, []);
+    await assert.rejects(() => mutation._handler(db.ctx, args), undefined, name);
+    assert.deepEqual(db.accesses, [], name);
   }
   t.mock.timers.setTime(Date.parse(input().expiresAt) + 1);
   const db = database();
@@ -200,24 +211,27 @@ test("accepts inclusive expiry and future-skew boundaries and the exact maximum 
 
 test("rechecks exactly one current enabled authority and ownership before replay or idempotency", async (t) => {
   const mutation = await loadMutation(t);
-  const invalid = [[], [authority(), authority()], [null], [[]]];
-  for (const [key, value] of Object.entries({ enabled: false, principalPublicId: "principal_other", role: "BACKER", authorityVersion: "authority_v2", ownedSubjectPublicIds: [], chainId: 295, canonicalSignerAddress: "0x" + "c".repeat(40) })) invalid.push([{ ...authority(), [key]: value }]);
-  for (const key of Object.keys(authority()).filter((key) => !key.startsWith("_"))) { const row = authority(); delete row[key]; invalid.push([row]); }
-  invalid.push([{ ...authority(), enabled: "true" }], [{ ...authority(), ownedSubjectPublicIds: ["subject_42", 4] }]);
-  for (const authorities of invalid) {
+  const invalid = [["absent authority", []], ["duplicate authority", [authority(), authority()]], ["null authority", [null]], ["array authority", [[]]]];
+  for (const [key, value] of Object.entries({ enabled: false, principalPublicId: "principal_other", role: "BACKER", authorityVersion: "authority_v2", ownedSubjectPublicIds: [], chainId: 295, canonicalSignerAddress: "0x" + "c".repeat(40) })) invalid.push([`invalid authority.${key}`, [{ ...authority(), [key]: value }]]);
+  for (const key of Object.keys(authority()).filter((key) => !key.startsWith("_"))) { const row = authority(); delete row[key]; invalid.push([`missing authority.${key}`, [row]]); }
+  invalid.push(["string authority.enabled", [{ ...authority(), enabled: "true" }]], ["non-string owned subject", [{ ...authority(), ownedSubjectPublicIds: ["subject_42", 4] }]]);
+  for (const [name, authorities] of invalid) {
     const db = database({ authorities, claims: [claim()], attempts: [attempt()] });
-    await assert.rejects(() => mutation._handler(db.ctx, input()));
-    assert.deepEqual(db.reads, lookups().slice(0, 1));
-    assert.deepEqual(db.writes, []);
+    await assert.rejects(() => mutation._handler(db.ctx, input()), undefined, name);
+    assert.deepEqual(db.reads, lookups().slice(0, 1), name);
+    assert.deepEqual(db.writes, [], name);
+    assert.deepEqual(db.accesses, ["commandAuthorities"], name);
   }
   const current = authority();
   const db = database({ authorities: [current] });
   assert.deepEqual(await mutation._handler(db.ctx, input()), { status: "NEW", attemptId, state: "PREPARED" });
   current.enabled = false;
   db.reads.length = 0;
+  db.accesses.length = 0;
   await assert.rejects(() => mutation._handler(db.ctx, input()));
   assert.deepEqual(db.reads, lookups().slice(0, 1), "revocation takes precedence over the now-persisted replay claim");
   assert.equal(db.writes.length, 2);
+  assert.deepEqual(db.accesses, ["commandAuthorities"], "revoked authority must not trigger any other boundary");
 });
 
 test("admits all closed operation kinds with M30 ownership and stores target/hash as opaque context", async (t) => {
@@ -245,18 +259,22 @@ test("admits all closed operation kinds with M30 ownership and stores target/has
       assert.deepEqual(db.reads, lookups(args).slice(0, 2));
       assert.equal(db.writes.length, 2);
       const denied = database({ authorities: [{ ...current, role: args.role === "ISSUER" ? "BACKER" : "ISSUER" }] });
-      await assert.rejects(() => mutation._handler(denied.ctx, args));
-      assert.equal(denied.writes.length, 0);
+      const name = `${operationKind} / ${expectedTarget}`;
+      await assert.rejects(() => mutation._handler(denied.ctx, args), undefined, `${name}: mismatched authority role`);
+      assert.equal(denied.writes.length, 0, name);
+      assert.deepEqual(denied.accesses, ["commandAuthorities"], name);
       const wrongRole = { ...args, role: args.role === "ISSUER" ? "BACKER" : "ISSUER" };
       const matchingWrongAuthority = database({ authorities: [authority(wrongRole)] });
-      await assert.rejects(() => mutation._handler(matchingWrongAuthority.ctx, wrongRole));
-      assert.deepEqual(matchingWrongAuthority.reads, lookups(wrongRole).slice(0, 1));
-      assert.deepEqual(matchingWrongAuthority.writes, []);
+      await assert.rejects(() => mutation._handler(matchingWrongAuthority.ctx, wrongRole), undefined, `${name}: role cannot own this operation`);
+      assert.deepEqual(matchingWrongAuthority.reads, lookups(wrongRole).slice(0, 1), name);
+      assert.deepEqual(matchingWrongAuthority.writes, [], name);
+      assert.deepEqual(matchingWrongAuthority.accesses, ["commandAuthorities"], name);
       if (args.role === "ISSUER") {
         const unowned = database({ authorities: [{ ...current, ownedSubjectPublicIds: ["subject_other"] }] });
-        await assert.rejects(() => mutation._handler(unowned.ctx, args));
-        assert.deepEqual(unowned.reads, lookups(args).slice(0, 1));
-        assert.deepEqual(unowned.writes, []);
+        await assert.rejects(() => mutation._handler(unowned.ctx, args), undefined, `${name}: subject is not owned`);
+        assert.deepEqual(unowned.reads, lookups(args).slice(0, 1), name);
+        assert.deepEqual(unowned.writes, [], name);
+        assert.deepEqual(unowned.accesses, ["commandAuthorities"], name);
       }
     }
   }
@@ -276,16 +294,17 @@ test("returns replay before idempotency for all valid stored claim outcomes", as
 
 test("fails closed on duplicate or malformed replay rows before idempotency", async (t) => {
   const mutation = await loadMutation(t);
-  const cases = [[claim(), claim()], [null], [[]]];
-  for (const [key, value] of Object.entries({ replayIdentity: "wrong", outcome: "UNKNOWN", attemptId: "", claimedAt: 1, _id: "" })) cases.push([claim({ [key]: value })]);
-  for (const key of ["replayIdentity", "outcome", "attemptId", "claimedAt"]) { const row = claim(); delete row[key]; cases.push([row]); }
-  cases.push([claim({ claimedAt: 9_223_372_036_854_775_808n })]);
-  cases.push([claim({ outcome: "IDEMPOTENCY_CONFLICT" })]);
-  for (const claims of cases) {
+  const cases = [["duplicate claims", [claim(), claim()]], ["null claim", [null]], ["array claim", [[]]]];
+  for (const [key, value] of Object.entries({ replayIdentity: "wrong", outcome: "UNKNOWN", attemptId: "", claimedAt: 1, _id: "" })) cases.push([`invalid claim.${key}`, [claim({ [key]: value })]]);
+  for (const key of ["replayIdentity", "outcome", "attemptId", "claimedAt"]) { const row = claim(); delete row[key]; cases.push([`missing claim.${key}`, [row]]); }
+  cases.push(["claim.claimedAt overflows int64", [claim({ claimedAt: 9_223_372_036_854_775_808n })]]);
+  cases.push(["conflict claim has forbidden attempt link", [claim({ outcome: "IDEMPOTENCY_CONFLICT" })]]);
+  for (const [name, claims] of cases) {
     const db = database({ claims });
-    await assert.rejects(() => mutation._handler(db.ctx, input()));
-    assert.deepEqual(db.reads, lookups().slice(0, 2));
-    assert.deepEqual(db.writes, []);
+    await assert.rejects(() => mutation._handler(db.ctx, input()), undefined, name);
+    assert.deepEqual(db.reads, lookups().slice(0, 2), name);
+    assert.deepEqual(db.writes, [], name);
+    assert.deepEqual(db.accesses, ["commandAuthorities", "externalPrepareCommandReplayClaims"], name);
   }
 });
 
@@ -306,20 +325,20 @@ test("links a fresh-nonce idempotency repeat and consumes that identity without 
 
 test("consumes every conflicting context or unsafe attempt in an unlinked claim and rejects its replay", async (t) => {
   const mutation = await loadMutation(t);
-  const cases = [[attempt(), attempt()], [null], [[]], [{ ...attempt(), acceptedAt: 9_223_372_036_854_775_808n }]];
-  for (const [key, value] of Object.entries({ version: 2, type: "external.other", chainId: 295, canonicalSignerAddress: "0x" + "c".repeat(40), principalPublicId: "principal_other", role: "BACKER", authorityVersion: "authority_v2", payloadHash: "0x" + "b".repeat(64), state: "EXECUTED", acceptedAt: 1, _id: "", expectedTarget: "0.0.987", canonicalParametersHash: "b".repeat(64), operationKind: "ATS_ISSUE", subjectPublicId: "subject_other", network: "hedera:mainnet", expiresAt: "2026-09-07T19:03:00.000Z" })) cases.push([{ ...attempt(), [key]: value }]);
-  for (const key of new Set([...contextKeys, ...payloadKeys, "state", "acceptedAt"])) { const row = attempt(); delete row[key]; cases.push([row]); }
-  for (const attempts of cases) {
+  const cases = [["duplicate attempts", [attempt(), attempt()]], ["null attempt", [null]], ["array attempt", [[]]], ["attempt.acceptedAt overflows int64", [{ ...attempt(), acceptedAt: 9_223_372_036_854_775_808n }]]];
+  for (const [key, value] of Object.entries({ version: 2, type: "external.other", chainId: 295, canonicalSignerAddress: "0x" + "c".repeat(40), principalPublicId: "principal_other", role: "BACKER", authorityVersion: "authority_v2", payloadHash: "0x" + "b".repeat(64), state: "EXECUTED", acceptedAt: 1, _id: "", expectedTarget: "0.0.987", canonicalParametersHash: "b".repeat(64), operationKind: "ATS_ISSUE", subjectPublicId: "subject_other", network: "hedera:mainnet", expiresAt: "2026-09-07T19:03:00.000Z" })) cases.push([`invalid attempt.${key}`, [{ ...attempt(), [key]: value }]]);
+  for (const key of new Set([...contextKeys, ...payloadKeys, "state", "acceptedAt"])) { const row = attempt(); delete row[key]; cases.push([`missing attempt.${key}`, [row]]); }
+  for (const [name, attempts] of cases) {
     const db = database({ attempts });
-    assert.deepEqual(await mutation._handler(db.ctx, input()), { status: "IDEMPOTENCY_CONFLICT" });
-    assert.deepEqual(db.reads, lookups());
-    assert.equal(db.writes.length, 1);
-    assert.equal(typeof db.writes[0].document.claimedAt, "bigint");
-    assert.deepEqual(db.writes[0], { table: "externalPrepareCommandReplayClaims", document: { replayIdentity: input().replayIdentity, outcome: "IDEMPOTENCY_CONFLICT", claimedAt: db.writes[0].document.claimedAt } });
+    assert.deepEqual(await mutation._handler(db.ctx, input()), { status: "IDEMPOTENCY_CONFLICT" }, name);
+    assert.deepEqual(db.reads, lookups(), name);
+    assert.equal(db.writes.length, 1, name);
+    assert.equal(typeof db.writes[0].document.claimedAt, "bigint", name);
+    assert.deepEqual(db.writes[0], { table: "externalPrepareCommandReplayClaims", document: { replayIdentity: input().replayIdentity, outcome: "IDEMPOTENCY_CONFLICT", claimedAt: db.writes[0].document.claimedAt } }, name);
     db.reads.length = 0;
-    assert.deepEqual(await mutation._handler(db.ctx, input()), { status: "COMMAND_REPLAYED" });
-    assert.deepEqual(db.reads, lookups().slice(0, 2));
-    assert.equal(db.writes.length, 1);
+    assert.deepEqual(await mutation._handler(db.ctx, input()), { status: "COMMAND_REPLAYED" }, name);
+    assert.deepEqual(db.reads, lookups().slice(0, 2), name);
+    assert.equal(db.writes.length, 1, name);
   }
 });
 

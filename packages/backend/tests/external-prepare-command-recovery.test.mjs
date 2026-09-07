@@ -129,40 +129,50 @@ test("recovers each operation and opaque target shape without inferring executab
 
 test("rejects malformed supplied context, M26 payload and hash before any recovery read", async () => {
   const query = await loadQuery();
-  const cases = [null, [], {}];
-  for (const key of Object.keys(input())) { const args = input(); delete args[key]; cases.push(args); }
-  for (const [key, value] of Object.entries({ version: 2, type: "external.execute", chainId: 295, canonicalSignerAddress: input().canonicalSignerAddress.toUpperCase(), principalPublicId: "", role: "ADMIN", authorityVersion: "", payloadHash: "0x" + "b".repeat(64), payload: null })) cases.push({ ...input(), [key]: value });
-  for (const key of ["nonce", "replayIdentity", "issuedAt", "expiresAt", "now", "serverNow", "signature", "rawBody", "capability"]) cases.push({ ...input(), [key]: "unexpected" });
-  for (const key of payloadKeys) { const args = input(); delete args.payload[key]; cases.push(args); }
-  for (const [key, value] of Object.entries({ operationKind: "ATS_UNKNOWN", subjectPublicId: "", network: "hedera:mainnet", chainId: 295, expectedTarget: "invalid", canonicalParametersHash: "A".repeat(64), idempotencyKey: "short", expiresAt: "2026-09-07T19:04:00Z", extra: true })) cases.push({ ...input(), payload: { ...input().payload, [key]: value } });
-  for (const [key, value] of Object.entries({ operationKind: "ATS_ISSUE", subjectPublicId: "subject_other", expectedTarget: "0.0.987654", canonicalParametersHash: "b".repeat(64), idempotencyKey: "QQQQQQQQQQQQQQQQQQQQQQ", expiresAt: "2026-09-07T19:03:00.000Z" })) cases.push({ ...input(), payload: { ...input().payload, [key]: value } });
-  for (const args of cases) {
+  const cases = [["null recovery context", null], ["array recovery context", []], ["empty recovery context", {}]];
+  for (const key of Object.keys(input())) { const args = input(); delete args[key]; cases.push([`missing context.${key}`, args]); }
+  for (const [key, value] of Object.entries({ version: 2, type: "external.execute", chainId: 295, canonicalSignerAddress: input().canonicalSignerAddress.toUpperCase(), principalPublicId: "", role: "ADMIN", authorityVersion: "", payloadHash: "0x" + "b".repeat(64), payload: null })) cases.push([`invalid context.${key}`, { ...input(), [key]: value }]);
+  for (const key of ["nonce", "replayIdentity", "issuedAt", "expiresAt", "now", "serverNow", "signature", "rawBody", "capability"]) cases.push([`unexpected context.${key}`, { ...input(), [key]: "unexpected" }]);
+  for (const key of payloadKeys) { const args = input(); delete args.payload[key]; cases.push([`missing payload.${key}`, args]); }
+  for (const [key, value] of Object.entries({ operationKind: "ATS_UNKNOWN", subjectPublicId: "", network: "hedera:mainnet", chainId: 295, expectedTarget: "invalid", canonicalParametersHash: "A".repeat(64), idempotencyKey: "short", expiresAt: "2026-09-07T19:04:00Z", extra: true })) cases.push([`malformed payload.${key} with original hash`, { ...input(), payload: { ...input().payload, [key]: value } }]);
+  for (const [key, value] of Object.entries({ operationKind: "ATS_ISSUE", subjectPublicId: "subject_other", expectedTarget: "0.0.987654", canonicalParametersHash: "b".repeat(64), idempotencyKey: "QQQQQQQQQQQQQQQQQQQQQQ", expiresAt: "2026-09-07T19:03:00.000Z" })) cases.push([`valid changed payload.${key} with stale hash`, { ...input(), payload: { ...input().payload, [key]: value } }]);
+  for (const [name, args] of cases) {
     const db = database([attempt()]);
-    await assert.rejects(() => query._handler(db.ctx, args));
-    assert.deepEqual(db.accesses, []);
+    await assert.rejects(() => query._handler(db.ctx, args), undefined, name);
+    assert.deepEqual(db.accesses, [], `${name}: must never touch db`);
+  }
+  // Matching hashes isolate M26 semantic validation from stale-hash rejection above.
+  for (const [key, value] of Object.entries({ operationKind: "ATS_UNKNOWN", subjectPublicId: "", expectedTarget: "invalid", canonicalParametersHash: "A".repeat(64), idempotencyKey: "short" })) {
+    const name = `malformed payload.${key} with independently recomputed hash`;
+    const args = input();
+    args.payload = { ...args.payload, [key]: value };
+    args.payloadHash = hashPayload(args.payload);
+    const db = database([attempt()]);
+    await assert.rejects(() => query._handler(db.ctx, args), undefined, name);
+    assert.deepEqual(db.accesses, [], `${name}: must never touch db`);
   }
 });
 
 test("fails closed on duplicate, malformed or mismatched persisted context and every stored payload field", async () => {
   const query = await loadQuery();
-  const cases = [[attempt(), attempt()], [null], [[]]];
+  const cases = [["duplicate attempts", [attempt(), attempt()]], ["null attempt", [null]], ["array attempt", [[]]]];
   for (const [key, value] of Object.entries({
     _id: "", version: 2, type: "external.other", chainId: 295, canonicalSignerAddress: "0x" + "c".repeat(40),
     principalPublicId: "principal_other", role: "BACKER", authorityVersion: "authority_v2", payloadHash: "0x" + "b".repeat(64),
     operationKind: "ATS_ISSUE", subjectPublicId: "subject_other", network: "hedera:mainnet", expectedTarget: "0.0.987654",
     canonicalParametersHash: "b".repeat(64), idempotencyKey: "QQQQQQQQQQQQQQQQQQQQQQ", expiresAt: "2026-09-07T19:03:00.000Z", state: "EXECUTED", acceptedAt: 123,
-  })) cases.push([{ ...attempt(), [key]: value }]);
-  for (const key of Object.keys(attempt()).filter((key) => key !== "_creationTime")) { const row = attempt(); delete row[key]; cases.push([row]); }
-  cases.push([{ ...attempt(), acceptedAt: -9_223_372_036_854_775_809n }], [{ ...attempt(), acceptedAt: 9_223_372_036_854_775_808n }]);
+  })) cases.push([`invalid attempt.${key}`, [{ ...attempt(), [key]: value }]]);
+  for (const key of Object.keys(attempt()).filter((key) => key !== "_creationTime")) { const row = attempt(); delete row[key]; cases.push([`missing attempt.${key}`, [row]]); }
+  cases.push(["attempt.acceptedAt underflows int64", [{ ...attempt(), acceptedAt: -9_223_372_036_854_775_809n }]], ["attempt.acceptedAt overflows int64", [{ ...attempt(), acceptedAt: 9_223_372_036_854_775_808n }]]);
   // A coherent alternate stored hash still cannot satisfy the requested payload/context.
   const changed = { ...attempt(), expectedTarget: "0.0.987654" };
   changed.payloadHash = hashPayload(changed);
-  cases.push([changed]);
-  for (const rows of cases) {
+  cases.push(["coherent alternate stored payload/hash", [changed]]);
+  for (const [name, rows] of cases) {
     const db = database(rows);
-    await assert.rejects(() => query._handler(db.ctx, input()));
-    assert.deepEqual(db.reads, expectedRead());
-    assert.deepEqual(db.accesses, ["externalPrepareCommandAttempts"]);
+    await assert.rejects(() => query._handler(db.ctx, input()), undefined, name);
+    assert.deepEqual(db.reads, expectedRead(), name);
+    assert.deepEqual(db.accesses, ["externalPrepareCommandAttempts"], name);
   }
 });
 
