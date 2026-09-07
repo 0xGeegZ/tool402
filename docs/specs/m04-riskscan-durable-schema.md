@@ -153,7 +153,17 @@ The root owns this specification, plan, card, queue state, catalog, file ownersh
 
 ## Acceptance evidence
 
-- A backend test imports the default schema and proves it exposes exactly the six declared tables, field validators, optional fields, document-ID targets, and indexes.
-- The test proves no unlisted table or field appears in the exported schema shape.
+- A backend test imports the default schema and proves the named RiskScan subset exposes exactly the six declared tables, field validators, optional fields, document-ID targets, and indexes.
+- The test proves no unlisted RiskScan table or field appears in that named subset.
 - Backend typecheck, test, lint, local-reference guard, and independent review pass.
 - No writer, reader, generated output, external action, durable/live assertion, payment payload, credential, wallet/account material, or raw evidence is added.
+
+## Shared-schema compatibility amendment
+
+Recorded for the separately scoped M32 generic durable-admission data plane.
+The accepted six RiskScan table contracts remain exact and unchanged. The
+global Convex schema may now contain separately owned non-RiskScan tables, so
+the M04 focused test proves its exact RiskScan subset rather than claiming sole
+ownership of every global table. A separate M32 test owns the exact additive
+table contract. This amendment neither changes nor reopens any RiskScan
+function, writer, reader, record, payment behavior, or reconciliation rule.
