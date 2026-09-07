@@ -33,11 +33,15 @@ configuration, or external SDK.
 - Pass one fresh frozen snapshot with no raw signature/body, provider,
   resolver record, target resolution, or external capability.
 - Return only the four exact closed status tokens in a new frozen one-field
-  result. Isolate thrown, rejected, malformed, accessor-backed, custom-
-  prototype, extra-field, direct-thenable, proxy-wrapped-promise,
+  result. Isolate thrown, malformed, accessor-backed, custom-prototype,
+  extra-field, direct-thenable, proxy-wrapped-promise,
   native-promise, species-poisoned-promise, and delayed-thenable boundary
-  results without retrying. Do not use `await`, `Promise.resolve`, direct
+  results without retrying. A pre-handled rejected Promise is an invalid
+  nonacceptance check only. Do not use `await`, `Promise.resolve`, direct
   `.then`, `instanceof`, or native-Promise internals on the injected outcome.
+  Never retain or propagate its caller object; portable reflection may not
+  distinguish a transparent proxy that presents the exact detached direct
+  status shape, which is still data only and never async provenance.
 - Do not add Convex, persistent replay/idempotency/attempt state, `PREPARED`,
   ATS, provider, wallet, funding, payment, transaction, deployment, or live
   behavior. Keep M24 through M30 and M04 unchanged.
@@ -80,12 +84,18 @@ status `NEW`, `COMMAND_REPLAYED`, `IDEMPOTENCY_REPLAYED`, and
 Pass a non-function boundary and assert M30's resolver is never called. Pass a
 forged M25 candidate and every invalid command/payload case already rejected
 by M30; assert the atomic boundary is never called. Assert a synchronous
-throw, rejected promise, non-object, custom-prototype object, accessor-backed
-status, extra field, and unsupported status return `null`, invoke the boundary
-once at most, and never retry. Add direct-thenable, proxy-wrapped native
+throw, pre-handled rejected promise, non-object, custom-prototype object,
+accessor-backed status, extra field, and unsupported status return `null`,
+invoke the boundary once at most, and never retry. Add direct-thenable, proxy-wrapped native
 promise, species-poisoned native promise, fulfilled native promise, async
 function result, and native promise with delayed thenable fulfillment cases;
 each must return `null` after exactly one boundary call and no retry.
+
+Use a pre-handled rejected Promise only to prove no accepted adapter output;
+do not claim this module observes or suppresses host-level unhandled rejection
+behavior. A transparent proxy that presents the exact detached status shape is
+not separately distinguishable through portable reflection and must not be
+misrepresented as an async completion test.
 
 - [ ] **Step 3: Add static scope checks.**
 
@@ -139,12 +149,16 @@ Call the injected boundary exactly once. First capture a direct result through
 own data-descriptor reflection: require an ordinary object with exactly one
 enumerable `status` data field whose value is one of the four M31 literals.
 Do not inspect or await a non-direct candidate. Return a new frozen ordinary
-`{ status }`; return `null` for throws, rejected/fulfilled promises, hostile
-reflection, direct thenables, proxy-wrapped promises, species-poisoned
-promises, delayed thenable fulfillment, async-function results, or any other
-result. Do not retry. M31 intentionally defines no asynchronous completion
-protocol; a future durable card must define its own adapter-owned/branded
-protocol plus timeout and recovery semantics before it accepts one.
+`{ status }`; return `null` for throws, results that fail the exact direct
+descriptor-safe shape, hostile reflection, and normally reflected direct
+thenables or Promise forms. Do not retry, read/invoke a `then`, retain the
+caller object, or claim portable reflection distinguishes a transparent proxy
+that presents the same exact direct data. Injection failures must throw
+synchronously or return an invalid direct value; rejected/asynchronous returns
+are out of this port's contract and are not host-level rejection handling.
+M31 intentionally defines no asynchronous completion protocol; a future
+durable card must define its own adapter-owned/branded protocol plus timeout
+and recovery semantics before it accepts one.
 
 - [ ] **Step 4: Verify GREEN and commit only source/test work.**
 

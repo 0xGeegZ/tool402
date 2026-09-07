@@ -86,18 +86,30 @@ untrusted claimedBody / injected dependencies
 If `atomicallyAdmit` is not callable, return `null` before M30 reads the
 claimed body, resolves an authority, or performs signature work. If M30
 returns `null`, do not invoke the atomic boundary. If the injected boundary
-throws, returns a promise or thenable, returns a non-ordinary/accessor-backed/
-extra-field result, or returns any status outside the four exact literals,
+throws or its result fails exact direct descriptor-safe status validation,
 return `null` without a retry.
 
 The implementation validates the direct result through descriptor-safe
 reflection only. It must not use `await` on the boundary outcome,
 `Promise.resolve`, direct `.then`, `instanceof`, native-Promise internals, or
-any other asynchronous or structural-trust path. Every promise and thenable form, including a direct
-thenable, native promise, proxy-wrapped promise, species-poisoned promise, and
-delayed-thenable fulfillment, returns `null` without probing or invoking its
-`then`. Each such candidate still consumes its one permitted boundary call; the
-adapter does not retry it.
+any other asynchronous or structural-trust path. It never probes, invokes,
+retains, or propagates the caller outcome's `then`; it copies only an approved
+primitive status into a new frozen result.
+
+Under ordinary reflection, direct thenables and native, proxy-wrapped,
+species-poisoned, fulfilled, or pre-handled-rejected promises do not satisfy
+the exact direct representation and return `null`. Portable reflection cannot
+distinguish a transparent proxy or polluted-prototype object that presents the
+same exact status representation as a direct record. Such an indistinguishable
+value is treated only as detached status data; it grants no asynchronous
+completion provenance and no caller object is retained.
+
+The synchronous port requires its injection to throw synchronously or return
+an invalid direct value for failure. A rejected or otherwise asynchronous
+return is out of contract: M31 neither observes nor suppresses host-level
+unhandled rejection behavior. A future durable card must define its own
+adapter-owned/branded async completion protocol plus timeout and recovery
+semantics before it accepts asynchronous completion.
 
 The adapter invokes the boundary at most once. It must neither retry an
 outcome-unknown condition nor convert a failed boundary call into a replay,
@@ -163,9 +175,10 @@ reconciliation.
   authentication (no arbitrary normalized DTO), one frozen detached snapshot,
   one injection call, all four exact status mappings, malformed/hostile
   result rejection, strict synchronous-only result handling (including a
-  direct thenable, native promise, proxy-wrapped promise, species-poisoned
-  promise, and delayed-thenable fulfillment), thrown injection isolation
-  without retry, and absence of Convex/provider/storage/external behavior.
+  direct thenable and normally reflected native/proxy/species/delayed promise
+  forms), thrown injection isolation without retry, and absence of
+  Convex/provider/storage/external behavior. Tests do not claim M31 suppresses
+  host-level unhandled rejection behavior.
 - Backend/root typecheck, test, lint, clean-install dry run,
   queue/reference/whitespace checks, enabled local guard, independent task
   review, and two fresh clean module-review generations pass before

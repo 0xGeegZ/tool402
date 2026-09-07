@@ -45,8 +45,10 @@ separate later human-sensitive gate.
 - The contract invokes M30 from M25 claimed input, validates one callable
   injected atomic boundary before M30 work, creates a frozen detached snapshot,
   calls the boundary at most once, maps only four exact status tokens, and
-  accepts only a strict direct synchronous result. Every Promise and thenable
-  form must fail closed without retry.
+  accepts only a strict direct synchronous result. It never awaits, probes,
+  invokes, retains, or propagates an outcome's `then`; an indistinguishable
+  transparent proxy may be accepted only as detached status data, never as
+  async-completion provenance.
 - A fresh independent review of the amended synchronous-only M31 authority is
   clean: no Critical, Important, or Minor finding remains.
 
@@ -55,8 +57,9 @@ separate later human-sensitive gate.
 - A test-only RED contract precedes source and proves M30-only authentication,
   pre-normalizer non-callable rejection, exact frozen snapshot/result shapes,
   one atomic-boundary invocation, hostile result isolation including all four
-  hostile async forms plus fulfilled native/async-function results, and no
-  retry.
+  hostile normally reflected async forms plus fulfilled native/async-function
+  results, and no retry. It does not claim host-level rejected-Promise
+  handling.
 - The focused command is
   `node --test packages/backend/tests/external-prepare-command-admission.test.mjs`
   from the repository root under Node 22.21.1.
@@ -125,14 +128,29 @@ value is a valid status. Therefore the preceding native-Promise-only wording
 cannot both accept arbitrary asynchronous outcomes and enforce its stated
 thenable-rejection guarantee.
 
-The safe local ruling is to narrow M31 to an exact synchronous direct result
-only. It never reads, awaits, or assimilates a boundary outcome's `then`; every
-Promise/thenable form returns `null` after the one boundary call. Any future
-durable asynchronous boundary requires a separately accepted adapter-owned or
-branded completion protocol with explicit timeout and recovery semantics. This
-correction returns M31 to `00-inbox` for fresh independent authority review;
-the prior ready/activation records remain historical only and authorize no
-code.
+The initial safe local ruling was to narrow M31 to an exact synchronous direct
+result only. It never reads, awaits, or assimilates a boundary outcome's
+`then`; the later clarification below states the portable limit of that
+guarantee. Any future durable asynchronous boundary requires a separately
+accepted adapter-owned or branded completion protocol with explicit timeout and
+recovery semantics. This correction returns M31 to `00-inbox` for fresh
+independent authority review; the prior ready/activation records remain
+historical only and authorize no code.
+
+## Synchronous-port clarification
+
+Recorded at 2026-09-07T21:33:00Z after the amended-authority review found that
+portable reflection cannot prove that a transparent proxy/polluted-prototype
+value presenting the exact direct status shape is not a Promise/thenable. M31
+therefore makes the narrower truthful guarantee: it never awaits, probes,
+invokes, retains, or propagates an outcome's `then`, and copies only approved
+primitive status into a fresh frozen result. An indistinguishable value is
+treated as detached data only, never as asynchronous-completion provenance.
+
+The synchronous port requires failures to throw synchronously or return an
+invalid direct value. Rejected/asynchronous returns are out of contract; M31
+does not claim to observe or suppress host-level unhandled rejection behavior.
+The card remains in `00-inbox` pending fresh review of this clarification.
 
 ## Activation
 
