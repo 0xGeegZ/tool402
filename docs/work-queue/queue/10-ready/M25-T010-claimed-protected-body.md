@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T030 accepted; M22-T010 accepted; M23-T010 accepted;
   M24-T010 accepted
 - Owner: `packages/backend/src/ingress/claimed-protected-body.ts` and
@@ -68,10 +68,34 @@ or assert command, identity, durable-storage, or financial authority.
 
 ## Inbox transition
 
-Recorded at 2026-09-07T10:18:00Z after a fresh source-to-runtime rescan found
+Recorded at 2026-09-07T10:08:00Z after a fresh source-to-runtime rescan found
 that accepted M23/M24 authenticate and claim only a replay identity but retain
 no authenticated byte binding for a later command boundary. This inbox state
 authorizes only committed local authority and independent design review. It
 authorizes neither RED/code nor JSON/command parsing, storage, generic
 attempts, ATS, payment, funding, allocation, clearing, HCS, account, wallet,
 signer, transaction, deployment, or live behavior.
+
+## Design review
+
+An independent authority review of the initial committed record found a
+concrete asynchronous-byte-copy test gap. A first amendment required a gated
+digest mutation case; a follow-up review found that mutation must occur inside
+the digest hook before it signals the test gate. The corrected authority at
+`8650ec26e1dab08862d89d19feeb0402d1e5dd1d` requires that stricter RED case.
+A final independent recheck found no Critical, Important, or Minor finding:
+the private pre-verification copy is now testable against both late-copy paths,
+M23/M24 remain the only verification/claim authorities, and the scope,
+ownership, references, and plan remain bounded.
+
+## Ready transition
+
+Ready at 2026-09-07T10:23:11Z after a fresh post-review rescan confirmed
+M01-T030, M22-T010, M23-T010, and M24-T010 remain accepted; the corrected
+authority and every local reference resolve; no active owner conflicts with
+the two proposed backend paths; the local guard is enabled; and no human
+blocker applies to deterministic internal work. This ready state authorizes
+only root activation followed by the specified test-only RED and minimal
+byte-binding adapter. It does not authorize command parsing, storage,
+configuration, Convex, HTTP, generic attempts, ATS, payment, funding,
+account/wallet action, deployment, or live behavior.
