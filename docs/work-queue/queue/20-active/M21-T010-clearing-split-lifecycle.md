@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M19-T010 accepted
 - Owner: `packages/core/src/clearing-split-lifecycle.ts`,
   `packages/core/test/clearing-split-lifecycle.test.mjs`, and
@@ -108,3 +108,15 @@ This ready state authorizes only the bounded RED/GREEN lifecycle after root
 activation; it does not authorize ATS, payment, funding, allocation, account,
 asset, wallet, signer, transaction, settlement, receipt, persistence,
 clearing, HCS, payout, deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-07T01:44:19Z after a fresh post-ready rescan confirmed
+M21-T010 is the sole ready card, M19-T010 remains accepted, no active-card
+conflict owns the bounded Core paths, committed authority remains resolvable,
+the local guard is enabled, and the current human-action record neither grants
+external authority nor blocks deterministic local work. This activation
+authorizes the specified test-only RED then minimal Core GREEN lifecycle and
+verification only; it does not expand authority to ATS, payment, funding,
+allocation, clearing, HCS, account, wallet, signer, transaction, deployment,
+or live behavior.
