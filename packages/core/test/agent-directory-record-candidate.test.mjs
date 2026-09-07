@@ -59,9 +59,34 @@ test("parses the exact candidate into a frozen detached snapshot", () => {
   assert.equal(Object.isFrozen(parsed.capabilities), true);
   assert.equal(Object.isFrozen(parsed.advertisedTiers), true);
   assert.deepEqual(Object.keys(parsed).sort(), Object.keys(input).sort());
+  assert.deepEqual(Reflect.ownKeys(parsed).sort(), Object.keys(input).sort());
   assert.notEqual(parsed, input);
   assert.notEqual(parsed.capabilities, input.capabilities);
   assert.notEqual(parsed.advertisedTiers, input.advertisedTiers);
+});
+
+test("parses descriptor-backed proxies without ordinary property reads", () => {
+  const root = candidate();
+  const counts = { root: 0, capabilities: 0, tiers: 0 };
+  for (const [field, count] of [["capabilities", "capabilities"], ["advertisedTiers", "tiers"]]) {
+    root[field] = new Proxy(root[field], {
+      get(target, property, receiver) { counts[count] += 1; return Reflect.get(target, property, receiver); },
+      ownKeys: Reflect.ownKeys,
+      getOwnPropertyDescriptor: Reflect.getOwnPropertyDescriptor,
+      getPrototypeOf: Reflect.getPrototypeOf,
+    });
+  }
+  const proxied = new Proxy(root, {
+    get(target, property, receiver) { counts.root += 1; return Reflect.get(target, property, receiver); },
+    ownKeys: Reflect.ownKeys,
+    getOwnPropertyDescriptor: Reflect.getOwnPropertyDescriptor,
+    getPrototypeOf: Reflect.getPrototypeOf,
+  });
+  const parsed = parseAgentDirectoryRecordCandidate(proxied);
+  assert.equal(parsed.x402Endpoint, "https://api.example.test/riskscan");
+  assert.deepEqual(parsed.capabilities, ["evm-contract-risk-signals"]);
+  assert.deepEqual(parsed.advertisedTiers, ["quick", "standard"]);
+  assert.deepEqual(counts, { root: 0, capabilities: 0, tiers: 0 });
 });
 
 test("canonicalizes URLs, including the root path, and accepts optional webUrl", () => {
@@ -71,6 +96,13 @@ test("canonicalizes URLs, including the root path, and accepts optional webUrl",
   }));
   assert.equal(parsed.x402Endpoint, "https://api.example.test/riskscan?b=2&a=1");
   assert.equal(parsed.webUrl, "https://example.test/");
+});
+
+test("canonicalizes an endpoint with no explicit path independently", () => {
+  assert.equal(
+    parseAgentDirectoryRecordCandidate(candidate({ x402Endpoint: "https://example.test" })).x402Endpoint,
+    "https://example.test/",
+  );
 });
 
 test("accepts each legal advertised tier tuple", () => {
@@ -248,6 +280,11 @@ test("rejects reflection failures and hostile or malformed nested arrays", () =>
     const hiddenIndex = legal.slice();
     Object.defineProperty(hiddenIndex, "0", { enumerable: false, value: legal[0] });
     assertInputError(candidate({ [field]: hiddenIndex }));
+    for (const index of legal.keys()) {
+      const hidden = legal.slice();
+      Object.defineProperty(hidden, String(index), { enumerable: false, value: legal[index] });
+      assertInputError(candidate({ [field]: hidden }));
+    }
     for (const trap of ["getPrototypeOf", "ownKeys", "getOwnPropertyDescriptor"]) {
       const proxied = new Proxy(legal.slice(), { [trap]() { throw new Error(`${field} ${trap} trap`); } });
       assertInputError(candidate({ [field]: proxied }));
@@ -321,8 +358,9 @@ test("has the planned pure-source boundary once the parser exists", async () => 
   }
   assert.doesNotMatch(source, /(?:from|import)\s*["'][^"']*(?:ats|provider|agent)[^"']*["']/iu);
   assert.doesNotMatch(source, /\bimport\s*\(/u);
-  const specifiers = [...source.matchAll(/(?:import|export)\s+(?:type\s+)?[\s\S]*?from\s+["']([^"']+)["']/gu)].map((match) => match[1]);
-  assert.deepEqual(specifiers, ["./value.ts"]);
+  const staticImports = [...source.matchAll(/\bimport\s+(?!\s*\()(?:(?:type\s+)?[\s\S]*?\s+from\s+)?["']([^"']+)["']/gu)].map((match) => match[1]);
+  assert.ok(staticImports.length >= 1);
+  assert.deepEqual(staticImports, staticImports.map(() => "./value.ts"));
 });
 
 test("accepts one-character and mixed-case identifier grammar representatives", () => {
@@ -335,15 +373,11 @@ test("accepts one-character and mixed-case identifier grammar representatives", 
 
 test("exposes exactly the candidate parser and types through the Core barrel", async () => {
   const source = await readFile(barrelUrl, "utf8");
-  const candidateExports = [...source.matchAll(
-    /export(?:\s+type)?\s+\{([^}]+)\}\s+from\s+["']\.\/agent-directory-record-candidate\.ts["']/gu,
-  )].flatMap((match) => match[1].split(",").map((name) => name.trim().replace(/^type\s+/u, "")).filter(Boolean));
-  assert.deepEqual(candidateExports.sort(), [
-    "AdvertisedDirectoryTiers",
-    "AgentDirectoryRecordCandidate",
-    "DirectoryCapability",
-    "DirectoryTier",
-    "parseAgentDirectoryRecordCandidate",
-  ]);
-  assert.equal(candidateExports.filter((name) => name === "parseAgentDirectoryRecordCandidate").length, 1);
+  const declarations = [...source.matchAll(
+    /export\s+(type\s+)?\{([^}]+)\}\s+from\s+["']\.\/agent-directory-record-candidate\.ts["']/gu,
+  )].map((match) => ({ typeOnly: Boolean(match[1]), names: match[2].split(",").map((name) => name.trim().replace(/^type\s+/u, "")).filter(Boolean).sort() }));
+  assert.equal(declarations.length, 2);
+  assert.deepEqual(declarations.filter((declaration) => !declaration.typeOnly).map((declaration) => declaration.names), [["parseAgentDirectoryRecordCandidate"]]);
+  assert.deepEqual(declarations.filter((declaration) => declaration.typeOnly).map((declaration) => declaration.names), [["AdvertisedDirectoryTiers", "AgentDirectoryRecordCandidate", "DirectoryCapability", "DirectoryTier"]]);
+  assert.doesNotMatch(source, /export\s+(?:\*|\{\s*\*|default)\s+[^;]*agent-directory-record-candidate\.ts/iu);
 });
