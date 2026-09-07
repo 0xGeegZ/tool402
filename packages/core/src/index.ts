@@ -2,6 +2,9 @@ export const coreFoundation = {
   packageName: "@tool402/core",
 } as const;
 
+export { parseIngressEnvelope } from "./ingress-envelope.ts";
+export type { IngressEnvelope } from "./ingress-envelope.ts";
+
 export {
   parseBasisPoints,
   parseHederaAccountId,
