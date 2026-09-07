@@ -154,14 +154,17 @@ test("rejects non-ordinary, closed, or accessor-backed records without invoking 
 
 test("rejects every required root accessor without invoking any getter", () => {
   const fields = Object.keys(candidate());
-  const input = candidate();
-  const calls = new Map(fields.map((field) => [field, 0]));
-  for (const field of fields) Object.defineProperty(input, field, {
-    enumerable: true,
-    get() { calls.set(field, calls.get(field) + 1); return candidate()[field]; },
-  });
-  assertInputError(input);
-  assert.deepEqual([...calls.values()], fields.map(() => 0));
+  for (const field of fields) {
+    const input = candidate();
+    let getterCalls = 0;
+    const value = input[field];
+    Object.defineProperty(input, field, {
+      enumerable: true,
+      get() { getterCalls += 1; return value; },
+    });
+    assertInputError(input);
+    assert.equal(getterCalls, 0, `${field} getter must not be invoked`);
+  }
   const optional = candidate({ webUrl: "https://example.test" });
   let webUrlCalls = 0;
   Object.defineProperty(optional, "webUrl", { enumerable: true, get() { webUrlCalls += 1; return "https://example.test"; } });
@@ -205,15 +208,19 @@ test("rejects reflection failures and hostile or malformed nested arrays", () =>
     ["advertisedTiers", customTiers],
   ];
   for (const [field, value] of arrayCases) assertInputError(candidate({ [field]: value }));
-  for (const field of ["capabilities", "advertisedTiers"]) {
-    const getterArray = field === "capabilities" ? ["evm-contract-risk-signals"] : ["quick"];
-    let getterCalls = 0;
-    Object.defineProperty(getterArray, "0", {
-      enumerable: true,
-      get() { getterCalls += 1; return field === "capabilities" ? "evm-contract-risk-signals" : "quick"; },
-    });
-    assertInputError(candidate({ [field]: getterArray }));
-    assert.equal(getterCalls, 0, `${field} getter must not be invoked`);
+  for (const [field, indexes] of [["capabilities", [0]], ["advertisedTiers", [0, 1]]]) {
+    const baseline = field === "capabilities" ? ["evm-contract-risk-signals"] : ["quick", "standard"];
+    for (const index of indexes) {
+      const getterArray = baseline.slice();
+      let getterCalls = 0;
+      const value = getterArray[index];
+      Object.defineProperty(getterArray, String(index), {
+        enumerable: true,
+        get() { getterCalls += 1; return value; },
+      });
+      assertInputError(candidate({ [field]: getterArray }));
+      assert.equal(getterCalls, 0, `${field}[${index}] getter must not be invoked`);
+    }
   }
   for (const field of ["capabilities", "advertisedTiers"]) {
     const legal = field === "capabilities" ? ["evm-contract-risk-signals"] : ["quick", "standard"];
