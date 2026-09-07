@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T030 accepted; M22-T010 accepted
 - Owner: `packages/backend/src/ingress/protected-ingress-verifier.ts` and
   `packages/backend/tests/protected-ingress-verifier.test.mjs` are proposed
@@ -78,3 +78,30 @@ inbox state authorizes only committed local authority and independent design
 review. It authorizes neither RED/code nor replay persistence, command
 handling, generic attempts, ATS, payment, funding, allocation, clearing, HCS,
 account, wallet, signer, transaction, deployment, or live behavior.
+
+## Design review
+
+Two independent reviews of the final committed authority at
+`5d1e0bfa797d99d0e1b2259e125fd2036faae1d7` are clean.
+
+- Standards review confirmed accepted dependencies, root-only queue ownership,
+  resolvable local references, enabled local boundary, disjoint paths, and no
+  secret or prohibited provenance reference.
+- Security/specification review independently verified both public native Web
+  Crypto vectors through M22, the discriminating negative-clock case, exact
+  capability clock retention, HMAC-before-skew test evidence, and all protected
+  ingress/replay/command/attempt/ATS exclusions.
+
+No Critical, Important, or Minor finding remains.
+
+## Ready transition
+
+Ready at 2026-09-07T07:37:44Z after a fresh post-review rescan confirmed the
+accepted M01-T030 and M22-T010 dependencies, resolvable committed authority,
+disjoint internal backend paths, no active ownership conflict, enabled local
+guard, concrete direct RED/GREEN validation, and no human blocker for this
+pure local scope. This ready state authorizes only the bounded test-only RED
+then minimal internal GREEN verifier after root activation; it does not
+authorize replay storage, command handling, generic attempts, ATS,
+configuration, payment, funding, allocation, clearing, HCS, account, wallet,
+signer, transaction, deployment, or live behavior.
