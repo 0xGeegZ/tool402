@@ -1,0 +1,332 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+import { keccak256, stringToHex } from "viem";
+
+const moduleUrl = new URL("../convex/external_prepare_command_admission.ts", import.meta.url);
+const signer = "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454";
+const now = Date.parse("2026-09-07T19:00:30.000Z");
+const attemptId = "externalPrepareCommandAttempts:accepted";
+const payloadHash = "0x80e6aa5c7d520c43c2ae746b2a9459ab8e298b384703618a464a30378619422a";
+const contextKeys = ["version", "type", "chainId", "canonicalSignerAddress", "principalPublicId", "role", "authorityVersion", "payloadHash"];
+const payloadKeys = ["operationKind", "subjectPublicId", "network", "chainId", "expectedTarget", "canonicalParametersHash", "idempotencyKey", "expiresAt"];
+const operations = ["ATS_CREATE", "ATS_CONTROL_LIST", "ATS_ISSUE", "ATS_TRANSFER", "ATS_COUPON", "HEDERA_FUNDING"];
+const pick = (input, keys) => Object.fromEntries(keys.map((key) => [key, input[key]]));
+const hashPayload = (payload) => keccak256(stringToHex(JSON.stringify(pick(payload, [...payloadKeys].sort()))));
+
+function input(overrides = {}) {
+  return {
+    version: 1, type: "external.prepare", chainId: 296, canonicalSignerAddress: signer,
+    nonce: "AAAAAAAAAAAAAAAAAAAAAA", issuedAt: "2026-09-07T19:00:00.000Z", expiresAt: "2026-09-07T19:04:00.000Z",
+    payloadHash, replayIdentity: `tool402:wallet-command:v1:296:${signer}:AAAAAAAAAAAAAAAAAAAAAA`,
+    principalPublicId: "principal_42", role: "ISSUER", authorityVersion: "authority_v1",
+    payload: {
+      operationKind: "ATS_CREATE", subjectPublicId: "subject_42", network: "hedera:testnet", chainId: 296,
+      expectedTarget: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", canonicalParametersHash: "a".repeat(64),
+      idempotencyKey: "AAAAAAAAAAAAAAAAAAAAAA", expiresAt: "2026-09-07T19:04:00.000Z",
+    },
+    ...overrides,
+  };
+}
+
+function withPayload(changes) {
+  const args = input();
+  args.payload = { ...args.payload, ...changes };
+  args.payloadHash = hashPayload(args.payload);
+  args.expiresAt = args.payload.expiresAt;
+  return args;
+}
+
+function authority(args = input()) {
+  return {
+    _id: "commandAuthorities:current", _creationTime: now - 1000,
+    ...pick(args, ["principalPublicId", "canonicalSignerAddress", "chainId", "role", "authorityVersion"]),
+    ownedSubjectPublicIds: ["subject_42"], enabled: true,
+  };
+}
+
+function attempt(args = input()) {
+  return { _id: attemptId, _creationTime: now - 500, ...pick(args, contextKeys), ...args.payload, state: "PREPARED", acceptedAt: 1n };
+}
+
+function claim(overrides = {}) {
+  return {
+    _id: "externalPrepareCommandReplayClaims:existing", _creationTime: now - 500,
+    replayIdentity: input().replayIdentity, outcome: "NEW", attemptId, claimedAt: 1n, ...overrides,
+  };
+}
+
+// The double preserves inserts so a second real handler invocation observes durable replay.
+function database({ authorities = [authority()], claims = [], attempts = [] } = {}) {
+  const rows = { commandAuthorities: [...authorities], externalPrepareCommandReplayClaims: [...claims], externalPrepareCommandAttempts: [...attempts] };
+  const reads = [];
+  const writes = [];
+  const accesses = [];
+  const forbidden = () => { accesses.push("forbidden"); throw new Error("unexpected database or external operation"); };
+  const db = {
+    query(table) {
+      accesses.push(table);
+      assert.ok(Object.hasOwn(rows, table));
+      return {
+        withIndex(index, select) {
+          const filters = [];
+          const range = { eq(field, value) { filters.push([field, value]); return range; } };
+          select(range);
+          return { async take(limit) {
+            assert.equal(limit, 2);
+            reads.push({ table, index, filters, limit });
+            // Return controlled index candidates, including corrupt rows the handler must reject.
+            return rows[table].slice(0, limit);
+          } };
+        },
+      };
+    },
+    async insert(table, document) {
+      accesses.push(table);
+      assert.ok(["externalPrepareCommandAttempts", "externalPrepareCommandReplayClaims"].includes(table));
+      const id = table === "externalPrepareCommandAttempts" ? attemptId : `externalPrepareCommandReplayClaims:${writes.length}`;
+      writes.push({ table, document: structuredClone(document) });
+      rows[table].push({ ...structuredClone(document), _id: id, _creationTime: now });
+      return id;
+    },
+    get: forbidden, patch: forbidden, replace: forbidden, delete: forbidden,
+  };
+  return { reads, writes, accesses, ctx: {
+    db, runAction: forbidden, runMutation: forbidden, runQuery: forbidden,
+    scheduler: { runAfter: forbidden, runAt: forbidden },
+  } };
+}
+
+function lookups(args = input()) {
+  return [
+    { table: "commandAuthorities", index: "by_chain_id_and_canonical_signer_address", filters: [["chainId", 296], ["canonicalSignerAddress", args.canonicalSignerAddress]], limit: 2 },
+    { table: "externalPrepareCommandReplayClaims", index: "by_replay_identity", filters: [["replayIdentity", args.replayIdentity]], limit: 2 },
+    { table: "externalPrepareCommandAttempts", index: "by_idempotency_key", filters: [["idempotencyKey", args.payload.idempotencyKey]], limit: 2 },
+  ];
+}
+
+async function loadMutation(t, clock = now) {
+  t.mock.timers.enable({ apis: ["Date"], now: clock });
+  const exports = await import(moduleUrl);
+  assert.equal(Object.keys(exports).length, 1, "one internal admission function only");
+  return Object.values(exports)[0];
+}
+
+const string = { type: "string" };
+const literal = (value) => ({ type: "literal", value });
+const union = (...values) => ({ type: "union", value: values.map(literal) });
+const object = (fields) => ({ type: "object", value: Object.fromEntries(Object.entries(fields).map(([key, fieldType]) => [key, { fieldType, optional: false }])) });
+const payloadValidator = object({ operationKind: union(...operations), subjectPublicId: string, network: literal("hedera:testnet"), chainId: literal(296), expectedTarget: string, canonicalParametersHash: string, idempotencyKey: string, expiresAt: string });
+
+test("registers only an internal mutation with exact closed args and result arms", async (t) => {
+  const mutation = await loadMutation(t);
+  assert.equal(mutation.isInternal, true);
+  assert.equal(mutation.isMutation, true);
+  for (const flag of ["isPublic", "isQuery", "isAction"]) assert.equal(mutation[flag], undefined);
+  assert.deepEqual(JSON.parse(mutation.exportArgs()), object({
+    version: literal(1), type: literal("external.prepare"), chainId: literal(296), canonicalSignerAddress: string,
+    nonce: string, issuedAt: string, expiresAt: string, payloadHash: string, replayIdentity: string,
+    principalPublicId: string, role: union("ISSUER", "BACKER"), authorityVersion: string, payload: payloadValidator,
+  }));
+  const returns = JSON.parse(mutation.exportReturns());
+  assert.equal(returns.type, "union");
+  assert.deepEqual(returns.value.sort((a, b) => a.value.status.fieldType.value.localeCompare(b.value.status.fieldType.value)), [
+    object({ status: literal("COMMAND_REPLAYED") }),
+    object({ status: literal("IDEMPOTENCY_CONFLICT") }),
+    object({ status: literal("IDEMPOTENCY_REPLAYED"), attemptId: { type: "id", tableName: "externalPrepareCommandAttempts" }, state: literal("PREPARED") }),
+    object({ status: literal("NEW"), attemptId: { type: "id", tableName: "externalPrepareCommandAttempts" }, state: literal("PREPARED") }),
+  ]);
+});
+
+test("rejects malformed serialized command and detached M26 fields before all database access", async (t) => {
+  const mutation = await loadMutation(t);
+  const cases = [null, [], {}, ...Object.keys(input()).map((key) => { const value = input(); delete value[key]; return value; })];
+  for (const [key, values] of Object.entries({
+    version: [2, "1"], type: ["external.execute"], chainId: [295, "296"],
+    canonicalSignerAddress: [signer.toUpperCase(), "0xabc"], nonce: ["", "A".repeat(21), "A".repeat(21) + "B"],
+    issuedAt: ["2026-09-07T19:00:00Z", "2026-02-30T19:00:00.000Z"], expiresAt: ["2026-09-07T19:04:00Z"],
+    payloadHash: [payloadHash.toUpperCase(), "0x" + "b".repeat(64)], replayIdentity: ["wrong", input().replayIdentity + "x"],
+    principalPublicId: ["", null], authorityVersion: ["", null], role: ["ADMIN", "issuer"],
+  })) for (const value of values) cases.push(input({ [key]: value }));
+  for (const key of ["now", "serverNow", "signature", "rawBody", "capability", "state"]) cases.push(input({ [key]: "unexpected" }));
+  for (const [key, value] of Object.entries({ operationKind: "ATS_UNKNOWN", subjectPublicId: "", network: "hedera:mainnet", chainId: 295, expectedTarget: "arbitrary-target", canonicalParametersHash: "A".repeat(64), idempotencyKey: "short", expiresAt: "2026-09-07T19:04:00Z", extra: true })) {
+    cases.push(input({ payload: { ...input().payload, [key]: value } }));
+  }
+  for (const key of payloadKeys) { const value = input(); delete value.payload[key]; cases.push(value); }
+  cases.push(input({ payload: null }), input({ payload: [] }));
+  cases.push(input({ nonce: "QQQQQQQQQQQQQQQQQQQQQQ" }));
+  cases.push(input({ replayIdentity: `tool402:wallet-command:v1:296:0x${"c".repeat(40)}:AAAAAAAAAAAAAAAAAAAAAA` }));
+  cases.push(input({ replayIdentity: `tool402:wallet-command:v1:296:${signer}:QQQQQQQQQQQQQQQQQQQQQQ` }));
+  // Each valid field still participates in the detached hash; a stale hash cannot bind it.
+  for (const [key, value] of Object.entries({ operationKind: "ATS_ISSUE", subjectPublicId: "subject_43", expectedTarget: "0.0.456", canonicalParametersHash: "b".repeat(64), idempotencyKey: "QQQQQQQQQQQQQQQQQQQQQQ", expiresAt: "2026-09-07T19:03:00.000Z" })) {
+    cases.push(input({ payload: { ...input().payload, [key]: value } }));
+  }
+  cases.push({ ...withPayload({ expiresAt: "2026-09-07T19:03:00.000Z" }), expiresAt: input().expiresAt });
+  for (const args of cases) {
+    const db = database();
+    await assert.rejects(() => mutation._handler(db.ctx, args));
+    assert.deepEqual(db.accesses, [], "invalid serialization must never touch db");
+  }
+});
+
+test("enforces expiry ordering, 300-second lifetime and 60-second future skew before lookup", async (t) => {
+  const mutation = await loadMutation(t);
+  for (const args of [
+    input({ issuedAt: input().expiresAt }), input({ issuedAt: "2026-09-07T19:04:00.001Z" }),
+    input({ issuedAt: "2026-09-07T18:58:59.999Z" }), input({ issuedAt: "2026-09-07T19:01:30.001Z" }),
+  ]) {
+    const db = database();
+    await assert.rejects(() => mutation._handler(db.ctx, args));
+    assert.deepEqual(db.accesses, []);
+  }
+  t.mock.timers.setTime(Date.parse(input().expiresAt) + 1);
+  const db = database();
+  await assert.rejects(() => mutation._handler(db.ctx, input()));
+  assert.deepEqual(db.accesses, []);
+});
+
+test("accepts inclusive expiry and future-skew boundaries and the exact maximum lifetime", async (t) => {
+  const mutation = await loadMutation(t);
+  for (const [clock, args] of [
+    [Date.parse(input().expiresAt), input()],
+    [now, input({ issuedAt: "2026-09-07T19:01:30.000Z" })],
+    [now, input({ issuedAt: "2026-09-07T18:59:00.000Z" })],
+    [now, input({ payload: Object.fromEntries(Object.entries(input().payload).reverse()) })],
+  ]) {
+    t.mock.timers.setTime(clock);
+    assert.deepEqual(await mutation._handler(database().ctx, args), { status: "NEW", attemptId, state: "PREPARED" });
+  }
+});
+
+test("rechecks exactly one current enabled authority and ownership before replay or idempotency", async (t) => {
+  const mutation = await loadMutation(t);
+  const invalid = [[], [authority(), authority()], [null], [[]]];
+  for (const [key, value] of Object.entries({ enabled: false, principalPublicId: "principal_other", role: "BACKER", authorityVersion: "authority_v2", ownedSubjectPublicIds: [], chainId: 295, canonicalSignerAddress: "0x" + "c".repeat(40) })) invalid.push([{ ...authority(), [key]: value }]);
+  for (const key of Object.keys(authority()).filter((key) => !key.startsWith("_"))) { const row = authority(); delete row[key]; invalid.push([row]); }
+  invalid.push([{ ...authority(), enabled: "true" }], [{ ...authority(), ownedSubjectPublicIds: ["subject_42", 4] }]);
+  for (const authorities of invalid) {
+    const db = database({ authorities, claims: [claim()], attempts: [attempt()] });
+    await assert.rejects(() => mutation._handler(db.ctx, input()));
+    assert.deepEqual(db.reads, lookups().slice(0, 1));
+    assert.deepEqual(db.writes, []);
+  }
+  const current = authority();
+  const db = database({ authorities: [current] });
+  assert.deepEqual(await mutation._handler(db.ctx, input()), { status: "NEW", attemptId, state: "PREPARED" });
+  current.enabled = false;
+  db.reads.length = 0;
+  await assert.rejects(() => mutation._handler(db.ctx, input()));
+  assert.deepEqual(db.reads, lookups().slice(0, 1), "revocation takes precedence over the now-persisted replay claim");
+  assert.equal(db.writes.length, 2);
+});
+
+test("admits all closed operation kinds with M30 ownership and stores target/hash as opaque context", async (t) => {
+  const mutation = await loadMutation(t);
+  assert.equal(hashPayload(input().payload), payloadHash, "independent fixture matches the accepted M30 vector");
+  for (const operationKind of operations) {
+    for (const expectedTarget of ["0.0.987654", "0xcccccccccccccccccccccccccccccccccccccccc"]) {
+      const args = withPayload({ operationKind, expectedTarget, canonicalParametersHash: "d".repeat(64) });
+      if (operationKind === "HEDERA_FUNDING") args.role = "BACKER";
+      const current = authority(args);
+      if (args.role === "BACKER") current.ownedSubjectPublicIds = [];
+      const db = database({ authorities: [current] });
+      assert.deepEqual(await mutation._handler(db.ctx, args), { status: "NEW", attemptId, state: "PREPARED" });
+      assert.deepEqual(db.reads, lookups(args));
+      assert.equal(db.writes.length, 2);
+      const stored = db.writes.find(({ table }) => table === "externalPrepareCommandAttempts").document;
+      assert.equal(typeof stored.acceptedAt, "bigint");
+      assert.ok(stored.acceptedAt >= 0n && stored.acceptedAt <= 9_223_372_036_854_775_807n);
+      assert.deepEqual(stored, { ...pick(args, contextKeys), ...args.payload, state: "PREPARED", acceptedAt: stored.acceptedAt });
+      const replay = db.writes.find(({ table }) => table === "externalPrepareCommandReplayClaims").document;
+      assert.equal(typeof replay.claimedAt, "bigint");
+      assert.deepEqual(replay, { replayIdentity: args.replayIdentity, outcome: "NEW", attemptId, claimedAt: replay.claimedAt });
+      db.reads.length = 0;
+      assert.deepEqual(await mutation._handler(db.ctx, args), { status: "COMMAND_REPLAYED" });
+      assert.deepEqual(db.reads, lookups(args).slice(0, 2));
+      assert.equal(db.writes.length, 2);
+      const denied = database({ authorities: [{ ...current, role: args.role === "ISSUER" ? "BACKER" : "ISSUER" }] });
+      await assert.rejects(() => mutation._handler(denied.ctx, args));
+      assert.equal(denied.writes.length, 0);
+      const wrongRole = { ...args, role: args.role === "ISSUER" ? "BACKER" : "ISSUER" };
+      const matchingWrongAuthority = database({ authorities: [authority(wrongRole)] });
+      await assert.rejects(() => mutation._handler(matchingWrongAuthority.ctx, wrongRole));
+      assert.deepEqual(matchingWrongAuthority.reads, lookups(wrongRole).slice(0, 1));
+      assert.deepEqual(matchingWrongAuthority.writes, []);
+      if (args.role === "ISSUER") {
+        const unowned = database({ authorities: [{ ...current, ownedSubjectPublicIds: ["subject_other"] }] });
+        await assert.rejects(() => mutation._handler(unowned.ctx, args));
+        assert.deepEqual(unowned.reads, lookups(args).slice(0, 1));
+        assert.deepEqual(unowned.writes, []);
+      }
+    }
+  }
+});
+
+test("returns replay before idempotency for all valid stored claim outcomes", async (t) => {
+  const mutation = await loadMutation(t);
+  for (const outcome of ["NEW", "IDEMPOTENCY_REPLAYED", "IDEMPOTENCY_CONFLICT"]) {
+    const row = claim({ outcome });
+    if (outcome === "IDEMPOTENCY_CONFLICT") delete row.attemptId;
+    const db = database({ claims: [row], attempts: [attempt(), attempt()] });
+    assert.deepEqual(await mutation._handler(db.ctx, input()), { status: "COMMAND_REPLAYED" });
+    assert.deepEqual(db.reads, lookups().slice(0, 2));
+    assert.deepEqual(db.writes, []);
+  }
+});
+
+test("fails closed on duplicate or malformed replay rows before idempotency", async (t) => {
+  const mutation = await loadMutation(t);
+  const cases = [[claim(), claim()], [null], [[]]];
+  for (const [key, value] of Object.entries({ replayIdentity: "wrong", outcome: "UNKNOWN", attemptId: "", claimedAt: 1, _id: "" })) cases.push([claim({ [key]: value })]);
+  for (const key of ["replayIdentity", "outcome", "attemptId", "claimedAt"]) { const row = claim(); delete row[key]; cases.push([row]); }
+  cases.push([claim({ claimedAt: 9_223_372_036_854_775_808n })]);
+  cases.push([claim({ outcome: "IDEMPOTENCY_CONFLICT" })]);
+  for (const claims of cases) {
+    const db = database({ claims });
+    await assert.rejects(() => mutation._handler(db.ctx, input()));
+    assert.deepEqual(db.reads, lookups().slice(0, 2));
+    assert.deepEqual(db.writes, []);
+  }
+});
+
+test("links a fresh-nonce idempotency repeat and consumes that identity without another attempt", async (t) => {
+  const mutation = await loadMutation(t);
+  const args = input({ nonce: "QQQQQQQQQQQQQQQQQQQQQQ", replayIdentity: `tool402:wallet-command:v1:296:${signer}:QQQQQQQQQQQQQQQQQQQQQQ` });
+  const db = database({ attempts: [attempt()] });
+  assert.deepEqual(await mutation._handler(db.ctx, args), { status: "IDEMPOTENCY_REPLAYED", attemptId, state: "PREPARED" });
+  assert.deepEqual(db.reads, lookups(args));
+  assert.equal(db.writes.length, 1);
+  assert.deepEqual(db.writes[0], { table: "externalPrepareCommandReplayClaims", document: { replayIdentity: args.replayIdentity, outcome: "IDEMPOTENCY_REPLAYED", attemptId, claimedAt: db.writes[0].document.claimedAt } });
+  assert.equal(typeof db.writes[0].document.claimedAt, "bigint");
+  db.reads.length = 0;
+  assert.deepEqual(await mutation._handler(db.ctx, args), { status: "COMMAND_REPLAYED" });
+  assert.deepEqual(db.reads, lookups(args).slice(0, 2));
+  assert.equal(db.writes.length, 1);
+});
+
+test("consumes every conflicting context or unsafe attempt in an unlinked claim and rejects its replay", async (t) => {
+  const mutation = await loadMutation(t);
+  const cases = [[attempt(), attempt()], [null], [[]], [{ ...attempt(), acceptedAt: 9_223_372_036_854_775_808n }]];
+  for (const [key, value] of Object.entries({ version: 2, type: "external.other", chainId: 295, canonicalSignerAddress: "0x" + "c".repeat(40), principalPublicId: "principal_other", role: "BACKER", authorityVersion: "authority_v2", payloadHash: "0x" + "b".repeat(64), state: "EXECUTED", acceptedAt: 1, _id: "", expectedTarget: "0.0.987", canonicalParametersHash: "b".repeat(64), operationKind: "ATS_ISSUE", subjectPublicId: "subject_other", network: "hedera:mainnet", expiresAt: "2026-09-07T19:03:00.000Z" })) cases.push([{ ...attempt(), [key]: value }]);
+  for (const key of new Set([...contextKeys, ...payloadKeys, "state", "acceptedAt"])) { const row = attempt(); delete row[key]; cases.push([row]); }
+  for (const attempts of cases) {
+    const db = database({ attempts });
+    assert.deepEqual(await mutation._handler(db.ctx, input()), { status: "IDEMPOTENCY_CONFLICT" });
+    assert.deepEqual(db.reads, lookups());
+    assert.equal(db.writes.length, 1);
+    assert.equal(typeof db.writes[0].document.claimedAt, "bigint");
+    assert.deepEqual(db.writes[0], { table: "externalPrepareCommandReplayClaims", document: { replayIdentity: input().replayIdentity, outcome: "IDEMPOTENCY_CONFLICT", claimedAt: db.writes[0].document.claimedAt } });
+    db.reads.length = 0;
+    assert.deepEqual(await mutation._handler(db.ctx, input()), { status: "COMMAND_REPLAYED" });
+    assert.deepEqual(db.reads, lookups().slice(0, 2));
+    assert.equal(db.writes.length, 1);
+  }
+});
+
+test("keeps admission module internal and excludes external integrations and configuration", async () => {
+  await import(moduleUrl);
+  assert.match(moduleUrl.pathname.split("/").at(-1), /^[a-z0-9_]+\.ts$/u);
+  const source = readFileSync(moduleUrl, "utf8");
+  assert.match(source, /\binternalMutationGeneric\b/u);
+  assert.doesNotMatch(source, /\b(?:queryGeneric|mutationGeneric|actionGeneric|internalActionGeneric|httpActionGeneric|fetch|runAction|runMutation|runQuery)\b|process\s*\.\s*env|import\.meta\.env|@hashgraph|wagmi|viem\/accounts|viem\/actions|createWalletClient|createPublicClient|_generated|convex\/nextjs|from\s+["'](?:node:)?https?["']/u);
+});

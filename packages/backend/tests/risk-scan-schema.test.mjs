@@ -9,7 +9,7 @@ test("declares the durable RiskScan schema boundary", async () => {
       ? ["id", optional ?? false, fieldType.tableName]
       : [fieldType.type, optional ?? false];
   const tables = Object.fromEntries(
-    exported.tables.map((table) => [
+    exported.tables.filter(({ tableName }) => tableName.startsWith("riskScan")).map((table) => [
       table.tableName,
       {
         fields: Object.fromEntries(
