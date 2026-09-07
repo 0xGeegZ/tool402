@@ -323,9 +323,11 @@ test("rejects non-issued states before it trusts their visible fields", async ()
   const frozenLookalike = Object.freeze({ ...task });
   const proxied = new Proxy(task, {});
   const accessor = {};
+  let accessorReads = 0;
   Object.defineProperty(accessor, "state", {
     enumerable: true,
     get() {
+      accessorReads += 1;
       throw new Error("unissued state field must not be read");
     },
   });
@@ -333,6 +335,7 @@ test("rejects non-issued states before it trusts their visible fields", async ()
   for (const state of [copied, frozenLookalike, proxied, accessor]) {
     await assert.rejects(() => transitionPaidTask(state, eventFor("expire")));
   }
+  assert.equal(accessorReads, 0);
 });
 
 test("rejects nested and concurrent transitions while hashing, and only consumes on success", async () => {
