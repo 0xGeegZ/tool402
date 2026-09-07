@@ -96,8 +96,10 @@ M25-T010 is an accepted implementation record comprising its card, `docs/specs/m
 
 M26-T010 is an accepted implementation record comprising its card, `docs/specs/m26-external-prepare-payload.md`, `docs/imports/SPEC-IMPORT-LEDGER.md`, `docs/superpowers/plans/2026-09-07-m26-external-prepare-payload.md`, and accepted `packages/core/src/external-prepare-payload.ts`, `packages/core/src/index.ts`, `packages/core/test/external-prepare-payload.test.mjs`, and `packages/core/test/external-prepare-payload.types.ts` paths. The root owns queue state, catalog, decisions, integration evidence, reviews, commits, and pushes. Accepted M01-T020 and M10-T010 are dependencies, not owned behavior changes; accepted economics, ingress, and byte-binding records are sequencing context only. Existing Core behavior outside the accepted parser/barrel paths, backend, Convex schema/functions, RiskScan persistence, Agent, Web/UI, package metadata, lockfile, raw JSON/bytes, signed command/authentication, principal/role/signer handling, replay/idempotency storage, generic attempts, configuration, ATS/provider behavior, accounts, assets, wallets, funding/payment/transfer behavior, transactions, settlement/receipt handling, clearing, HCS, payout, deployment, and live evidence are excluded.
 
-M27-T010 is an inbox authority-intake record comprising only its card,
+M27-T010 is an accepted control record comprising only its card,
 `docs/work-queue/evidence/HA-COMMAND-AUTHORITY-001-template.md`,
+`docs/work-queue/evidence/HA-COMMAND-AUTHORITY-001-decision.md`,
+`docs/work-queue/evidence/HA-COMMAND-AUTHORITY-001-review.md`,
 `docs/work-queue/HUMAN-ACTIONS.md`, `docs/work-queue/STATE.md`,
 `docs/work-queue/TASK-CATALOG.md`, this ownership record, and
 `docs/work-queue/DECISIONS.md`. The root owns every listed control record,
@@ -112,6 +114,25 @@ storage, generic attempts, ATS/configuration, accounts, assets, funding,
 payment, transactions, settlement, clearing, HCS, payout, deployment, and live
 evidence are excluded until a future separately accepted local authority says
 otherwise.
+
+The completed HA-COMMAND-AUTHORITY-001 decision and independent review are now
+also owned M27 evidence. The earlier statement that no implementation path was
+reserved was true only before the decision; M27 is now closed, and no behavior
+is granted by that control record itself.
+
+M30-T010 reserves only its inbox card, M30 specification, specification-import
+ledger row, M30 implementation plan, packages/backend/package.json,
+package-lock.json, packages/backend/src/ingress/authenticated-external-prepare-normalizer.ts,
+and packages/backend/tests/authenticated-external-prepare-normalizer.test.mjs
+plus root queue records. The root owns queue state, catalog, human-action
+records, decisions, review records, commits, and pushes. M25 and M26 are
+accepted consumed boundaries only; M22 through M24 remain unchanged upstream
+context. Existing backend modules, backend public barrel, Convex, Core, Agent,
+Web/UI, browser provider selection, configuration, environment, storage,
+replay/idempotency claims, durable attempts, prepared state, ATS
+target/parameter authority, ATS/provider SDKs, account/wallet action, funding,
+payment, transaction, settlement, clearing, HCS, payout, deployment, and live
+evidence are excluded.
 
 M28-T010 is an accepted authority record comprising its card,
 `docs/specs/m28-agent-directory-record-candidate-schema.md`,

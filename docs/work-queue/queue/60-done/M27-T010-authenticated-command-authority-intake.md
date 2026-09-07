@@ -3,15 +3,16 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: M22-T010 accepted; M23-T010 accepted; M24-T010 accepted;
   M25-T010 accepted; M26-T010 accepted
 - Owner: This is a root-owned control record only. It owns no implementation
-  path. The root owns this card, the human-action record, its non-authoritative
-  decision template, queue state, catalog, ownership, decisions, commits, and
-  pushes.
-- Human actions: HA-COMMAND-AUTHORITY-001 is required before any future
-  authenticated-command or generic-attempt implementation card is created.
+  path. The root owns this card, the human-action record, completed decision,
+  independent decision review, queue state, catalog, ownership, decisions,
+  commits, and pushes.
+- Human actions: HA-COMMAND-AUTHORITY-001 is accepted only as bounded
+  architecture authority. It grants no wallet, provider, durable attempt, ATS,
+  funding, payment, transaction, deployment, or live action.
 
 ## Scope
 
@@ -39,8 +40,9 @@ select a signer, create/configure an account, store a secret, or claim that a
 wallet command has been verified.
 
 The [human decision template](../../evidence/HA-COMMAND-AUTHORITY-001-template.md)
-is a checklist only. It selects no value and cannot itself satisfy this
-authority requirement.
+is historical checklist context only. The completed authority is recorded in
+the [accepted decision](../../evidence/HA-COMMAND-AUTHORITY-001-decision.md)
+and [independent review](../../evidence/HA-COMMAND-AUTHORITY-001-review.md).
 
 ## Inbox intake
 
@@ -72,3 +74,16 @@ human action.
   implementation card only after those records are committed and reviewed.
   M27-T010 is then superseded or closed; it never moves to 10-ready or
   20-active and never authorizes implementation.
+
+## Outcome
+
+At 2026-09-07T18:25:00Z, the completed HA-COMMAND-AUTHORITY-001 decision fixed
+the command vocabulary, typed-data domain and field order, signature and
+signer grammar, server-clock rules, authority mapping, replay/idempotency
+precedence, payload binding, and explicit ATS deferral. The independent review
+found no Critical or Important blocker.
+
+M27-T010 closes without entering ready or active. Its only successor is the
+separately scoped M30-T010 normalizer. That successor cannot create a durable
+attempt, a prepared state, an ATS intent, a provider invocation, funding
+intent, wallet transaction, Hedera transaction, or other external behavior.
