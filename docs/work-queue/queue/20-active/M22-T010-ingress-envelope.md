@@ -46,7 +46,9 @@ attempt model, ATS boundary, or holder-distribution lifecycle.
   captured fields, fixed method/path, canonical signing input, and
   non-authoritative replay identity.
 - The source input is a closed ordinary five-field record. Its timestamp,
-  nonce, digest, and signature fields have exact lexical rules; unknown,
+  nonce, digest, and signature fields have exact lexical rules, including
+  canonical unpadded base64url tails that prohibit alternate nonce text;
+  unknown,
   inherited, descriptor-unsafe, or reflection-hostile input fails closed.
 - No active card owns the proposed Core paths. The public-barrel amendment is
   a root integration reservation; accepted Core behavior remains otherwise
@@ -62,7 +64,8 @@ attempt model, ATS boundary, or holder-distribution lifecycle.
 ## Validation
 
 - RED/GREEN tests prove exact frozen output, canonical signing input,
-  collision-safe replay identity, malformed lexical values, closed shape,
+  collision-safe replay identity, canonical base64url-tail rejection, malformed
+  lexical values, closed shape,
   descriptor/proxy/reflection resistance, and zero accessor invocation. The
   focused command is `node --test packages/core/test/ingress-envelope.test.mjs`
   from the repository root.

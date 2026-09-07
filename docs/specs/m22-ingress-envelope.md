@@ -52,11 +52,15 @@ Each input value is a primitive string. `keyId` is an ASCII identifier of
 1–64 characters using only letters, digits, `_`, and `-`.
 `timestampUnixSeconds` is a canonical nonnegative decimal integer with no
 leading zero except `"0"`, and is no greater than signed 64-bit maximum.
-`requestNonce` is exactly 22 base64url characters, the lexical form of a
-128-bit nonce. `bodySha256` is exactly 64 lower-case hexadecimal characters.
-`signature` is exactly 43 unpadded base64url characters, the lexical form of
-a SHA-256 MAC. Lexical acceptance of either digest or signature is never
-cryptographic verification.
+`requestNonce` is exactly 22 canonical unpadded base64url characters encoding
+16 bytes: its first 21 characters use `[A-Za-z0-9_-]` and its final character
+is one of `A`, `Q`, `g`, or `w`. `bodySha256` is exactly 64 lower-case
+hexadecimal characters. `signature` is exactly 43 canonical unpadded
+base64url characters encoding 32 bytes: its first 42 characters use
+`[A-Za-z0-9_-]` and its final character is one of `A`, `E`, `I`, `M`, `Q`,
+`U`, `Y`, `c`, `g`, `k`, `o`, `s`, `w`, `0`, `4`, or `8`. It is the lexical
+form of a SHA-256 MAC. Lexical acceptance of either digest or signature is
+never cryptographic verification.
 
 ## Canonical detached output
 
@@ -74,9 +78,11 @@ POST
 
 The newlines are literal `\n` separators and there is no trailing newline.
 The replay identity is exactly `<keyId>:<requestNonce>`. The lexical rules
-exclude `:` from both components, so this representation is injective for the
-accepted values. It is correlation data only: it neither determines that a
-request is fresh nor records that a nonce has been claimed.
+exclude `:` from both components and require the nonce's canonical base64url
+tail, so this representation is injective for the accepted values and does not
+admit alternate text encodings of one 16-byte nonce. It is correlation data
+only: it neither determines that a request is fresh nor records that a nonce
+has been claimed.
 
 Accessor-backed, inherited, missing, extra, nonenumerable, symbol-keyed,
 custom-prototype, malformed, and reflection-throwing input must fail closed

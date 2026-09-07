@@ -29,6 +29,9 @@ Node built-in test runner, and `@tool402/core`.
   custom prototypes, and reflection failures.
 - Fix the output method/path to `POST` and `/internal/commands`; treat them
   as protocol vocabulary, not a real route.
+- Accept only canonical unpadded base64url text: a 22-character nonce ends in
+  `A`, `Q`, `g`, or `w`; a 43-character signature ends in `A`, `E`, `I`, `M`,
+  `Q`, `U`, `Y`, `c`, `g`, `k`, `o`, `s`, `w`, `0`, `4`, or `8`.
 - Keep timestamp parsing exact with `bigint`; do not call `Date`, read a
   clock, infer freshness, or apply a skew window.
 - Do not hash body bytes, implement HMAC, obtain/parse a key, compare a MAC,
@@ -67,9 +70,9 @@ Create one ordinary input with these exact fields:
 {
   keyId: "key-A",
   timestampUnixSeconds: "1735689600",
-  requestNonce: "AbCdEfGhIjKlMnOpQrStUv",
+  requestNonce: "AbCdEfGhIjKlMnOpQrStUw",
   bodySha256: "a".repeat(64),
-  signature: "B".repeat(43),
+  signature: "B".repeat(42) + "A",
 }
 ```
 
@@ -77,12 +80,13 @@ Assert a frozen output has exactly `keyId`, `timestampUnixSeconds`,
 `requestNonce`, `bodySha256`, `signature`, `method`, `path`,
 `signingInput`, and `replayIdentity`; it must include bigint `1735689600n`,
 `POST`, `/internal/commands`, the five-line canonical signing input, and
-`key-A:AbCdEfGhIjKlMnOpQrStUv`.
+`key-A:AbCdEfGhIjKlMnOpQrStUw`.
 
 Add independent negative cases for missing/extra/symbol/nonenumerable/
 inherited fields, accessors, custom prototypes, reflection failures, invalid
-identifier/nonce/digest/signature forms, negative/leading-zero/out-of-range
-timestamps, and caller mutation after parsing. Assert all failures are
+identifier/nonce/digest/signature forms (including noncanonical base64url
+tails), negative/leading-zero/out-of-range timestamps, and caller mutation
+after parsing. Assert all failures are
 `TypeError` and no accessor executes.
 
 - [ ] **Step 2: Write the failing compile-time fixture**
@@ -96,9 +100,9 @@ import {
 const envelope: IngressEnvelope = parseIngressEnvelope({
   keyId: "key-A",
   timestampUnixSeconds: "1735689600",
-  requestNonce: "AbCdEfGhIjKlMnOpQrStUv",
+  requestNonce: "AbCdEfGhIjKlMnOpQrStUw",
   bodySha256: "a".repeat(64),
-  signature: "B".repeat(43),
+  signature: "B".repeat(42) + "A",
 });
 
 const seconds: bigint = envelope.timestampUnixSeconds;
@@ -148,9 +152,11 @@ one stable `TypeError`.
 
 - [ ] **Step 2: Validate canonical lexical values**
 
-Validate key ID, exact 22-character base64url nonce, lower-case 64-hex digest,
-43-character base64url signature, and canonical nonnegative signed-64-bit
-decimal timestamp. Convert only the accepted timestamp to `bigint`.
+Validate key ID, exact 22-character canonical base64url nonce, lower-case
+64-hex digest, 43-character canonical base64url signature, and canonical
+nonnegative signed-64-bit decimal timestamp. Reject noncanonical final
+base64url characters before issuing a replay identity. Convert only the
+accepted timestamp to `bigint`.
 
 - [ ] **Step 3: Issue a detached frozen canonical envelope**
 
