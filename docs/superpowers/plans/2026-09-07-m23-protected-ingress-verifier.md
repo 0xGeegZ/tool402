@@ -72,7 +72,7 @@ Use the public bytes `0` through `31` as the fixed test key and import a
 non-extractable HMAC SHA-256 `CryptoKey` with only `verify` usage. The envelope
 uses `key-A`, timestamp `1735689600`, nonce `AbCdEfGhIjKlMnOpQrStUw`, and the
 precomputed canonical signature
-`h9Bq046QAinrfLC94dRSgM6FZntASCjqMODFHLtDerM`.
+`-icXyWTEvQ2ALd6x8kr5VxxW7BeQdQ-peJd5dE58rzY`.
 
 At `nowUnixSeconds` `1735689600n`, assert a non-null frozen result contains
 only `keyId`, `requestNonce`, `replayIdentity`, and `verifiedAtUnixSeconds`,
