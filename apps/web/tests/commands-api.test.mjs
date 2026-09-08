@@ -34,8 +34,9 @@ implementedTest("refuses an unconfigured relay before reading or forwarding a co
   assert.deepEqual(await response.json(), { outcome: "not_configured" });
 });
 
-implementedTest("exports only the closed server relay outcome vocabulary", () => {
-  assert.deepEqual(api.commandRelayOutcomeKinds, [
+implementedTest("keeps the closed server relay outcome vocabulary in the relay module", async () => {
+  const { RELAY_OUTCOMES } = await import("../src/lib/wallet/command-relay.ts");
+  assert.deepEqual(RELAY_OUTCOMES, [
     "ACCEPTED",
     "REPLAYED",
     "CONFLICT",
@@ -495,7 +496,7 @@ test("exposes the handler through a POST-only route that passes process.env", as
     ),
   ].map(([, name]) => name);
 
-  assert.deepEqual(exports, ["POST", "commandRelayOutcomeKinds"]);
+  assert.deepEqual(exports, ["POST"]);
   assert.match(
     routeSource,
     /from\s+["']\.\.\/\.\.\/\.\.\/lib\/wallet\/command-relay(?:\.ts)?["']/u,
@@ -572,7 +573,7 @@ test("signs and relays through one flow that re-reads the session, draws a fresh
     expiresAt: "2026-09-07T19:04:00.000Z",
   };
   const beforeExpiry = () => Date.parse("2026-09-07T19:01:00.000Z");
-  const dummySignature = `0x${"ab".repeat(65)}`;
+  const dummySignature = `0x${"01".repeat(64)}1b`;
 
   function stubProvider({ chainId = "0x128", accounts = [signerAddress], signError } = {}) {
     const calls = [];

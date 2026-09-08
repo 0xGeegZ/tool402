@@ -81,11 +81,6 @@ function announcedMetaMask(detail: unknown): Eip1193Provider | null {
 }
 
 export function selectMetaMaskProvider(input: ProviderSelectionInput): ProviderSelection {
-  if (input.announcedProviders.length === 0) {
-    return isMetaMaskProvider(input.legacyProvider)
-      ? Object.freeze({ kind: "provider", provider: input.legacyProvider })
-      : Object.freeze({ kind: "no_provider" });
-  }
   const candidates = input.announcedProviders
     .map(announcedMetaMask)
     .filter((provider): provider is Eip1193Provider => provider !== null);
@@ -93,7 +88,12 @@ export function selectMetaMaskProvider(input: ProviderSelectionInput): ProviderS
   if (candidates.length === 1 && only !== undefined) {
     return Object.freeze({ kind: "provider", provider: only });
   }
-  return Object.freeze({ kind: candidates.length === 0 ? "no_provider" : "multiple_providers" });
+  if (candidates.length === 0) {
+    return isMetaMaskProvider(input.legacyProvider)
+      ? Object.freeze({ kind: "provider", provider: input.legacyProvider })
+      : Object.freeze({ kind: "no_provider" });
+  }
+  return Object.freeze({ kind: "multiple_providers" });
 }
 
 export async function discoverMetaMaskProvider(

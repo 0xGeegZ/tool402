@@ -7,6 +7,7 @@ import {
   createUnsignedCommand,
   encodeBase64Url,
   signCommand,
+  TOOL402_COMMAND_TYPE,
   type RandomBytes,
 } from "./tool402-command.ts";
 import { readCurrentSession } from "./wallet-state.ts";
@@ -294,6 +295,9 @@ export async function signAndRelayCommand(
   request: SignatureRequest,
   dependencies: SignatureFlowDependencies = {},
 ): Promise<SignatureFlowResult> {
+  if (request.type !== TOOL402_COMMAND_TYPE) {
+    return { kind: "signing_failed" };
+  }
   const now = (dependencies.nowMilliseconds ?? Date.now)();
   if (!(now < Date.parse(request.expiresAt))) {
     return { kind: "expired" };

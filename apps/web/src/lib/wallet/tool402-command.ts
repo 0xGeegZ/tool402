@@ -9,6 +9,7 @@ export const TOOL402_TYPED_DATA_DOMAIN = Object.freeze({
 } as const);
 
 export const TOOL402_COMMAND_PRIMARY_TYPE = "Tool402Command";
+export const TOOL402_COMMAND_TYPE = "external.prepare";
 
 function field(name: string, type: string) {
   return Object.freeze({ name, type });
@@ -67,11 +68,26 @@ const canonicalTimestampPattern =
 const lowerCaseAddressPattern = /^0x[0-9a-f]{40}$/u;
 const noncePattern = /^[A-Za-z0-9_-]{21}[AQgw]$/u;
 const signaturePattern = /^0x[0-9a-f]{130}$/u;
+const acceptedRecoveryBytes = new Set(["00", "01", "1b", "1c"]);
+const secp256k1Order =
+  0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n;
+const secp256k1HalfOrder = secp256k1Order >> 1n;
 const unsignedCommands = new WeakSet<UnsignedTool402Command>();
 const signedCommands = new WeakSet<SignedTool402Command>();
 
-function isHexSignature(value: unknown): value is `0x${string}` {
-  return typeof value === "string" && signaturePattern.test(value);
+function isCanonicalSignature(value: unknown): value is `0x${string}` {
+  if (typeof value !== "string" || !signaturePattern.test(value)) {
+    return false;
+  }
+  const r = BigInt(`0x${value.slice(2, 66)}`);
+  const s = BigInt(`0x${value.slice(66, 130)}`);
+  return (
+    r > 0n &&
+    r < secp256k1Order &&
+    s > 0n &&
+    s <= secp256k1HalfOrder &&
+    acceptedRecoveryBytes.has(value.slice(130))
+  );
 }
 
 function defaultRandomBytes(length: number): Uint8Array {
@@ -181,9 +197,9 @@ function validateCommandFields(
   nonce: unknown,
   issuedAt: unknown,
   expiresAt: unknown,
-): asserts type is string {
-  if (typeof type !== "string" || type.length === 0) {
-    throw new TypeError("a command type is a nonempty string");
+): asserts type is typeof TOOL402_COMMAND_TYPE {
+  if (type !== TOOL402_COMMAND_TYPE) {
+    throw new TypeError("the command type is external.prepare");
   }
   if (typeof signer !== "string" || !lowerCaseAddressPattern.test(signer)) {
     throw new TypeError("a command signer is a lower-case EVM address");
@@ -241,15 +257,13 @@ export interface Tool402CommandRequest {
 export function buildTool402CommandRequest(input: Tool402CommandRequestInput): Tool402CommandRequest {
   const { signer, payloadBytes, issuedAt, payloadExpiresAt, nonceBytes } = input;
   const nonce = createCommandNonce(() => nonceBytes);
-  validateCommandFields("external.prepare", signer, nonce, issuedAt, payloadExpiresAt);
-  const message: UnsignedTool402Command = Object.freeze({
-    version: 1,
-    type: "external.prepare",
+  const message = createUnsignedCommand({
+    type: TOOL402_COMMAND_TYPE,
     signer,
     nonce,
     issuedAt,
     expiresAt: payloadExpiresAt,
-    payloadHash: hashCommandPayload(payloadBytes),
+    canonicalPayloadBytes: payloadBytes,
   });
   return Object.freeze({
     typedData: Object.freeze({
@@ -285,7 +299,7 @@ export async function signCommand(
     method: "eth_signTypedData_v4",
     params: [command.signer, typedDataJson],
   });
-  if (!isHexSignature(signature)) {
+  if (!isCanonicalSignature(signature)) {
     throw new TypeError(
       "the wallet returned a signature outside the accepted grammar",
     );
