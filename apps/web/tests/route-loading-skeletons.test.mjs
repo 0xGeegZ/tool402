@@ -68,7 +68,7 @@ const sourcePaths = [skeletonPath, ...loaders.map(({ path }) => path)];
 const loaderAttributes = new Map([
   ["main", new Set(["className"])],
   ["div", new Set(["className", "data-skeleton-region"])],
-  ["Skeleton", new Set(["className"])],
+  ["Skeleton", new Set()],
 ]);
 
 const skeletonAttributes = new Map([
@@ -234,6 +234,33 @@ function assertOnlyExpectedFunctionDeclarations(sourceFile, expectedNames) {
   assert.deepEqual(unsupportedDefinitions, []);
 }
 
+function assertDirectStaticFunction(sourceFile, name, expectedTag) {
+  const declaration = sourceFile.statements.find(
+    (statement) =>
+      typescript.isFunctionDeclaration(statement)
+      && statement.name?.text === name,
+  );
+
+  assert.ok(declaration);
+  assert.equal(declaration.parameters.length, 0);
+  assert.ok(declaration.body);
+  assert.equal(declaration.body.statements.length, 1);
+
+  const [statement] = declaration.body.statements;
+  assert.ok(typescript.isReturnStatement(statement));
+  assert.ok(statement.expression);
+  assert.ok(
+    typescript.isJsxElement(statement.expression)
+    || typescript.isJsxSelfClosingElement(statement.expression),
+  );
+  const openingElement = typescript.isJsxElement(statement.expression)
+    ? statement.expression.openingElement
+    : statement.expression;
+
+  assert.equal(jsxTagName(openingElement), expectedTag);
+  return openingElement;
+}
+
 function assertNoRuntimeCapability(sourceFile, allowedCalls) {
   const prohibitedReferences = [];
   const prohibitedSyntax = [];
@@ -354,7 +381,15 @@ function countSkeletonBlocks(element) {
   return count;
 }
 
-function assertStaticJsx(path, sourceFile, allowedAttributes, allowCnClassName) {
+function assertSafeClassName(path, className) {
+  assert.doesNotMatch(
+    className,
+    /(?:@import|data:|https?:|javascript:|url\s*\()/iu,
+    path + " className must not load or invoke a resource",
+  );
+}
+
+function assertStaticJsx(path, sourceFile, allowedAttributes) {
   const textNodes = [];
   const childExpressions = [];
   const invalidTags = [];
@@ -382,20 +417,9 @@ function assertStaticJsx(path, sourceFile, allowedAttributes, allowCnClassName) 
       }
 
       if (typescript.isStringLiteral(property.initializer)) {
-        continue;
-      }
-
-      if (
-        allowCnClassName
-        && tag === "div"
-        && name === "className"
-        && property.initializer
-        && typescript.isJsxExpression(property.initializer)
-        && property.initializer.expression
-        && typescript.isCallExpression(property.initializer.expression)
-        && typescript.isIdentifier(property.initializer.expression.expression)
-        && property.initializer.expression.expression.text === "cn"
-      ) {
+        if (name === "className") {
+          assertSafeClassName(path, property.initializer.text);
+        }
         continue;
       }
 
@@ -441,9 +465,9 @@ function assertStaticSource(
   sourceFile,
   expectedImports,
   expectedExports,
+  expectedRootTag,
   allowedCalls,
   allowedAttributes,
-  allowCnClassName,
 ) {
   assert.doesNotMatch(source, /["']use client["']/u);
   assertExactImports(sourceFile, expectedImports);
@@ -452,8 +476,14 @@ function assertStaticSource(
     sourceFile,
     expectedExports.map(({ name }) => name),
   );
+  const root = assertDirectStaticFunction(
+    sourceFile,
+    expectedExports[0].name,
+    expectedRootTag,
+  );
   assertNoRuntimeCapability(sourceFile, allowedCalls);
-  assertStaticJsx(path, sourceFile, allowedAttributes, allowCnClassName);
+  assertStaticJsx(path, sourceFile, allowedAttributes);
+  return root;
 }
 
 test("declares the exact S14 skeleton source paths before GREEN", async () => {
@@ -477,26 +507,23 @@ test(
 
     assert.ok(source);
     const sourceFile = parseTsx(skeletonPath, source);
-    assert.match(source, /aria-hidden=(?:\{true\}|["']true["'])/u);
-    assert.match(source, /motion-safe:animate-pulse/u);
-    assert.match(source, /motion-reduce:animate-none/u);
-    assert.doesNotMatch(source, /\b(?:children|onClick|onKeyDown)\b/u);
     assert.equal(countJsxTag(sourceFile, "div"), 1);
-    assertStaticSource(
+    const root = assertStaticSource(
       skeletonPath,
       source,
       sourceFile,
-      [
-        {
-          specifier: "./cn",
-          bindings: [{ imported: "cn", local: "cn", typeOnly: false }],
-        },
-      ],
+      [],
       [{ kind: "function", name: "Skeleton", default: false }],
-      ["cn"],
+      "div",
+      [],
       skeletonAttributes,
-      true,
     );
+    assert.equal(jsxAttributeValue(root, "aria-hidden"), "true");
+    const className = jsxAttributeValue(root, "className");
+
+    assert.ok(className);
+    assert.match(className, /motion-safe:animate-pulse/u);
+    assert.match(className, /motion-reduce:animate-none/u);
   },
 );
 
@@ -536,9 +563,9 @@ test(
           },
         ],
         [{ kind: "function", name: "Loading", default: true }],
+        "main",
         [],
         loaderAttributes,
-        false,
       );
     }
   },
