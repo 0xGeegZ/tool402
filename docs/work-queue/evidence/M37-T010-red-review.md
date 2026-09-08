@@ -5,7 +5,7 @@
 Independent review of the restored, uncommitted RED contract:
 
 - `packages/backend/tests/stage-a-real-issuer-ats-create-authority.test.mjs`
-- [M37 control card](../queue/20-active/M37-T010-stage-a-real-issuer-ats-create-authority.md)
+- [M37 control card](../queue/60-done/M37-T010-stage-a-real-issuer-ats-create-authority.md)
 - [M37 local specification](../../specs/m37-stage-a-real-issuer-ats-create-authority.md)
 - [M37 implementation plan](../../superpowers/plans/2026-09-08-m37-stage-a-real-issuer-ats-create-authority.md)
 

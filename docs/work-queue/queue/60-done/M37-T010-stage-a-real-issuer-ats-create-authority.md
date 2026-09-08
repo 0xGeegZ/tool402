@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T030 accepted; M32-T010 accepted; M33-T010 accepted;
   M35-T010 accepted; M36-T010 accepted
 - Owner: The root owns this card, local specification, local import-ledger
@@ -111,6 +111,24 @@ reviewed under Node 22.21.1 at 2026-09-08T16:00:49Z. It fails exactly for the
 absent declared private source and has no other failure. This authorizes only
 the source file declared by this card; all runtime and external exclusions
 remain in force.
+
+## Local acceptance
+
+Accepted at 2026-09-08T16:29:29Z after source commit
+`5f745aa53801aaed763b62de2430c82708ebccb2`. The focused M37 contract
+passed 5/5 under Node 22.21.1; Backend and root typecheck, test, lint, and
+clean-install dry run passed; queue, local-reference, whitespace, and enabled
+guard checks passed. The final
+[task review](../../evidence/M37-T010-task-review.md) and two independent
+module reviews
+([standards](../../evidence/M37-T010-module-review-standards.md) and
+[specification](../../evidence/M37-T010-module-review-spec.md)) found no
+Critical, Important, or Minor finding.
+
+This acceptance delivers only a local private integrity projection. It created
+no authority row, enabled mapping, SDK/provider interaction, wallet prompt,
+network call, asset, transaction, deployment, or live ATS result. A separate
+human authorization remains required before any real testnet operation.
 
 ## Historical ready transition
 
