@@ -56,11 +56,12 @@ test("selects one closed, editable ToolLoop demo fixture without a pre-submit re
   assert.equal(manifest.dependencies.nuqs, "2.10.1");
   assert.match(layout, /import\s*\{\s*NuqsAdapter\s*\}\s+from\s+["']nuqs\/adapters\/next\/app["']/);
   assert.match(layout, /<NuqsAdapter>\s*\{children\}\s*<\/NuqsAdapter>/);
+  const queryKeys = [...flow.matchAll(/\buseQueryState\s*\(\s*["']([^"']+)["']/g)].map(([, key]) => key);
+  assert.deepEqual(queryKeys, ["demo"]);
   assert.match(
     flow,
-    /useQueryState\(\s*["']demo["']\s*,\s*parseAsStringLiteral\(\s*\[\s*["']tool-loop["']\s*\]\s+as\s+const\s*\)\s*\)/,
+    /parseAsStringLiteral\(\s*\[\s*["']tool-loop["']\s*\]\s+as\s+const\s*\)/,
   );
-  assert.match(flow, /<form\s+key=\{demoMode \?\? ["']blank["']\}/);
   assert.match(flow, /name=["']requestRef["'][^>]*defaultValue=\{defaults\.requestRef\}/);
   assert.match(flow, /name=["']subjectRef["'][^>]*defaultValue=\{defaults\.subjectRef\}/);
   assert.match(flow, /name=["']context["'][^>]*defaultValue=\{defaults\.context\}/);
@@ -70,7 +71,11 @@ test("selects one closed, editable ToolLoop demo fixture without a pre-submit re
       new RegExp(`name=["']${declaration}["'][^>]*defaultChecked=\\{defaults\\.declarations\\.${declaration}\\}`),
     );
   }
-  assert.match(flow, /Demo values loaded\. Review before checking\./);
+  assert.match(
+    flow,
+    /\{demoMode\s*===\s*["']tool-loop["']\s*\?\s*<[^>]*aria-live=["']polite["'][^>]*>[\s\S]{0,240}?Demo values loaded\. Review before checking\.[\s\S]{0,240}?<\/[^>]+>\s*:\s*null\}/,
+  );
   assert.match(guidedSteps, /href:\s*["']\/explore\/riskscan\/tool-loop\?demo=tool-loop["']/);
+  assert.doesNotMatch(flow, /\b(?:useQueryStates|useSearchParams|URLSearchParams|location\.search|router\.query)\b/);
   assert.doesNotMatch(flow, /\bsetDemoMode\b|\bfetch\b/);
 });
