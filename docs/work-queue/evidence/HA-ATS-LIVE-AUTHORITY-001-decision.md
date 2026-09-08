@@ -2,10 +2,11 @@
 
 ## Status and boundary
 
-**RECEIVED — pending independent authority review.**
+**ACCEPTED — source-only Stage A integrity authority.**
 
 - Decision owner: `0xGeegZ`
 - Root receipt timestamp: `2026-09-08T12:26:05Z`
+- Independent review: [M36-T010 authority review](M36-T010-authority-review.md)
 - Authorized stage: `A` only
 
 The human explicitly authorized one secret-free, source-only authority and
