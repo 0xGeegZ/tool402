@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M02-T040 accepted, M02-T070 accepted, M02-T080 accepted, M11-T010 accepted, M11-T020 accepted, M13-T010 accepted, M14-T010 accepted, M15-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
@@ -72,3 +72,17 @@ identity, provider, evidence-read, live-status, payment, deployment, or
 submission authority. Surfaces excluded by the recorded HI-001 CUT, by the
 missing Sign/session contract, and by the missing evidence privacy contract
 remain excluded here.
+
+## Ready transition
+
+Ready at 2026-09-08T18:13:14Z after an independent review at pushed
+`745441773e9af3dbc738b7db505c5c54368a528e`. The [ready
+review](../../evidence/S11-T010-ready-review.md) found every dependency and
+narrated route accepted and present, every local reference resolved, all three
+new source/test paths absent, no active ownership conflict, and exactly one
+root-reserved navigation/assertion integration pair.
+
+This ready state authorizes only a fresh root activation followed by the
+durable RED test at `apps/web/tests/guided-demo-route.test.mjs`. It does not
+authorize the demo page/component, navigation change, client behavior, network
+behavior, human narration, recording, deployment, or submission.
