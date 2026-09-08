@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T040 accepted, M02-T070 accepted, M02-T080 accepted, M11-T010 accepted, M11-T020 accepted, M13-T010 accepted, M14-T010 accepted, M15-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
@@ -86,3 +86,17 @@ This ready state authorizes only a fresh root activation followed by the
 durable RED test at `apps/web/tests/guided-demo-route.test.mjs`. It does not
 authorize the demo page/component, navigation change, client behavior, network
 behavior, human narration, recording, deployment, or submission.
+
+## Activation
+
+Activated at 2026-09-08T18:15:20Z after a fresh root rescan and independent
+[activation audit](../../evidence/S11-T010-activation-review.md) at pushed
+`bfe2e648aec50d51b63972edd9bca0762fb23427`. S11 was the sole ready card,
+every dependency remained accepted, `HEAD` equaled `origin/main`, the worktree
+was clean, the guard and queue checks passed, and all three future source/test
+paths remained absent and disjoint.
+
+This activation authorizes only the durable RED test at
+`apps/web/tests/guided-demo-route.test.mjs`. It does not authorize the demo
+page/component, navigation change, client behavior, network behavior, human
+narration, recording, deployment, or submission.

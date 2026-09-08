@@ -352,7 +352,7 @@ review](evidence/S14-T010-module-review.md) are clear. The accepted source is
 limited to the nine declared static paths; every exclusion continues after
 acceptance.
 
-S11-T010 is a root-owned ready control record comprising its card,
+S11-T010 is a root-owned active control record comprising its card,
 `docs/ui/UI-S11.md`, `docs/ui/IMPORT-LEDGER.md`,
 `docs/superpowers/plans/2026-09-08-s11-guided-demo-narration.md`,
 `docs/work-queue/evidence/S11-T010-intake-review.md`, this ownership record,
@@ -367,6 +367,7 @@ exactly one integration amendment in the accepted M11-T020 paths
 other navigation entry, layout, stylesheet, package/lockfile, configuration,
 identity/provider/payment surface, backend, Agent, account, transaction,
 deployment, narration recording, and submission path is excluded. This record
-has a clear [ready review](evidence/S11-T010-ready-review.md). It authorizes
-no source change until a fresh root activation specifically authorizes durable
-RED.
+has clear [ready](evidence/S11-T010-ready-review.md) and [activation
+reviews](evidence/S11-T010-activation-review.md). It authorizes only the
+durable RED test; every production source path remains unavailable until that
+test is independently accepted.
