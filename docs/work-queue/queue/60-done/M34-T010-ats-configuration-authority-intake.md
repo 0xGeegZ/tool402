@@ -3,15 +3,15 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: M16-T010 accepted; M20-T010 accepted; M32-T010 accepted;
   M33-T010 accepted
 - Owner: This is a root-owned control record only. It owns its card, the
-  secret-free recommended human decision packet, human-action record, queue
-  state, catalog, ownership record, decisions, commits, and pushes. It owns no
-  implementation path.
-- Human actions: HA-ATS-CONFIGURATION-001 is required before a local ATS
-  boundary implementation card may be created. It is architecture/configuration
+  secret-free recommended and accepted decision records, independent review,
+  human-action record, queue state, catalog, ownership record, decisions,
+  commits, and pushes. It owns no implementation path.
+- Human actions: HA-ATS-CONFIGURATION-001 is accepted only for a local
+  unsigned boundary implementation card. It is architecture/configuration
   authority only and authorizes no provider, wallet, account, funding, payment,
   transaction, deployment, or live action.
 
@@ -44,7 +44,7 @@ other dependency-correct local funding, clearing, holder-distribution, HCS, or
 ATS-compliance card: each would either require this missing authority or an
 independently verified financial predicate not yet represented locally.
 
-This inbox record authorizes only preparation, review, and recording of
+This control record authorizes only preparation, review, and recording of
 HA-ATS-CONFIGURATION-001. It does not authorize RED/code, an SDK dependency,
 configuration provisioning, an enabled M33 record, Convex publication,
 HTTP/BFF behavior, provider or wallet interaction, account action, funding,
@@ -57,11 +57,28 @@ evidence.
   decision that supplies every configuration field required by its packet and
   rejects all implicit defaults.
 - The packet authorizes at most one immutable `ATS_CREATE` configuration and
-  preserves M33's zero-enabled production manifest until a separately reviewed
-  successor defines otherwise.
+  preserves M33's zero-enabled production manifest. No local unsigned
+  successor may enable it; any enabled mapping requires both a later explicit
+  human execution gate and a separately reviewed source revision.
 - A fresh root rescan maps the completed decision to the smallest local
   contract, dependencies, owned paths, negative tests, and independent-review
   plan.
 - The root creates a separate implementation card only after those records are
   committed and independently reviewed. M34-T010 never moves to ready or
   active and never authorizes implementation itself.
+
+## Acceptance
+
+Accepted at 2026-09-08T10:53:22Z after the human supplied the complete
+secret-free configuration packet and then explicitly selected the compatible
+`REG_S / NONE` amendment. The accepted decision is recorded in
+[HA-ATS-CONFIGURATION-001](../../evidence/HA-ATS-CONFIGURATION-001-decision.md)
+and an independent review is recorded in
+[M34-T010 configuration review](../../evidence/M34-T010-configuration-review.md).
+
+The review independently confirmed the exact package integrity, compatible
+request shape, amended canonical preimage hash, synthetic issuer boundary,
+explicit M20 non-binding declaration, and continued zero-enabled M33 state.
+M34-T010 closes without entering ready or active. It authorizes no source work
+by itself; only a separately recorded local unsigned successor may begin its
+own specification, RED, GREEN, and review cycle.
