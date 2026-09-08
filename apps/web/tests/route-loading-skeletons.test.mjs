@@ -17,6 +17,7 @@ const loaders = [
   {
     path: "src/app/explore/riskscan/loading.tsx",
     importSpecifier: "../../../components/ui/skeleton",
+    centered: true,
     regions: [
       "navigation",
       "heading",
@@ -28,11 +29,13 @@ const loaders = [
   {
     path: "src/app/explore/riskscan/try/loading.tsx",
     importSpecifier: "../../../../components/ui/skeleton",
+    centered: true,
     regions: ["heading", "request-boundary"],
   },
   {
     path: "src/app/explore/riskscan/tool-loop/loading.tsx",
     importSpecifier: "../../../../components/ui/skeleton",
+    centered: true,
     regions: ["heading", "tool-loop-boundary"],
   },
   {
@@ -54,11 +57,13 @@ const loaders = [
   {
     path: "src/app/dashboard/riskscan/compatibility/loading.tsx",
     importSpecifier: "../../../../components/ui/skeleton",
+    centered: true,
     regions: ["heading", "intro", "compatibility-boundary"],
   },
   {
     path: "src/app/dashboard/riskscan/preflight/loading.tsx",
     importSpecifier: "../../../../components/ui/skeleton",
+    centered: true,
     regions: ["heading", "intro", "preflight-boundary"],
   },
 ];
@@ -89,6 +94,7 @@ const allowedClassNames = new Set([
   "h-full",
   "max-w-2xl",
   "max-w-3xl",
+  "mx-auto",
   "motion-reduce:animate-none",
   "motion-safe:animate-pulse",
   "py-6",
@@ -596,7 +602,7 @@ test(
   async () => {
     const sources = new Map(await readSources());
 
-    for (const { path, importSpecifier, regions } of loaders) {
+    for (const { path, importSpecifier, centered = false, regions } of loaders) {
       const source = sources.get(path);
 
       assert.ok(source);
@@ -619,7 +625,7 @@ test(
         path + " must render one direct skeleton block per region",
       );
       assert.equal(countJsxTag(sourceFile, "Skeleton"), regions.length);
-      assertStaticSource(
+      const root = assertStaticSource(
         path,
         source,
         sourceFile,
@@ -636,6 +642,15 @@ test(
         [],
         loaderAttributes,
       );
+      if (centered) {
+        const rootClassNames = jsxAttributeValue(root, "className")
+          ?.split(/\s+/u)
+          .filter(Boolean);
+
+        assert.ok(rootClassNames);
+        assert.ok(rootClassNames.includes("mx-auto"));
+        assert.ok(rootClassNames.includes("max-w-3xl"));
+      }
     }
   },
 );

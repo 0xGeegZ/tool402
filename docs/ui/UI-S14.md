@@ -35,6 +35,12 @@ not user-facing text or claims:
 | `apps/web/src/app/dashboard/riskscan/compatibility/loading.tsx` | `/dashboard/riskscan/compatibility` | `heading`, `intro`, `compatibility-boundary` |
 | `apps/web/src/app/dashboard/riskscan/preflight/loading.tsx` | `/dashboard/riskscan/preflight` | `heading`, `intro`, `preflight-boundary` |
 
+The loaders for `/explore/riskscan`, `/explore/riskscan/try`,
+`/explore/riskscan/tool-loop`, `/dashboard/riskscan/compatibility`, and
+`/dashboard/riskscan/preflight` mirror centered `article` shells. Their `main`
+element must therefore carry both `mx-auto` and `max-w-3xl`; a left-aligned
+placeholder would create a visible horizontal jump on wide screens.
+
 The root route `/` is deliberately excluded: it is a static landing page with
 nothing to await, so a skeleton there would flash a placeholder over content
 that is already ready.
