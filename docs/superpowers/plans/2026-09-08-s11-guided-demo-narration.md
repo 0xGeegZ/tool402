@@ -93,6 +93,7 @@ assertions skip while both paths are absent.
 - Create: `apps/web/src/components/demo/guided-demo-steps.tsx`
 - Modify: `apps/web/src/components/discovery/local-navigation.tsx`
 - Modify: `apps/web/tests/landing-explore.test.mjs`
+- Modify: `apps/web/tests/workspace-shell.test.mjs`
 - Test: `apps/web/tests/guided-demo-route.test.mjs`
 - Test: `apps/web/tests/landing-explore.test.mjs`
 
@@ -125,13 +126,13 @@ directive or runtime call.
     { href: "/demo", label: "Demo" },
 
 Insert it after the existing Workspace entry. Update only the existing
-navigation assertion so its allowed href set becomes `/`, `/explore`,
+navigation assertions so their exact allowed href set becomes `/`, `/explore`,
 `/dashboard`, and `/demo`.
 
 - [ ] **Step 3: Run focused GREEN verification**
 
     PATH=/Users/guillaumedieudonne/.nvm/versions/node/v22.21.1/bin:$PATH \
-      node --test apps/web/tests/guided-demo-route.test.mjs apps/web/tests/landing-explore.test.mjs
+      node --test apps/web/tests/guided-demo-route.test.mjs apps/web/tests/landing-explore.test.mjs apps/web/tests/workspace-shell.test.mjs
 
 Expected: all focused tests pass and no unrelated source path changes.
 
@@ -141,7 +142,8 @@ Expected: all focused tests pass and no unrelated source path changes.
       apps/web/src/components/demo/guided-demo-steps.tsx \
       apps/web/src/components/discovery/local-navigation.tsx \
       apps/web/tests/guided-demo-route.test.mjs \
-      apps/web/tests/landing-explore.test.mjs
+      apps/web/tests/landing-explore.test.mjs \
+      apps/web/tests/workspace-shell.test.mjs
     git commit -m "feat: Add Guided Demo Route"
 
 ### Task 3: Complete verification and independent review

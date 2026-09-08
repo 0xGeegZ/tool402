@@ -23,8 +23,9 @@ The slice adds only these exact paths:
 It may make only one constrained integration amendment: add the exact local
 navigation entry `{ href: "/demo", label: "Demo" }` in
 `apps/web/src/components/discovery/local-navigation.tsx` and update only its
-corresponding assertion in `apps/web/tests/landing-explore.test.mjs`. It does
-not change any existing navigation entry, route copy, layout, or test scope.
+corresponding assertions in `apps/web/tests/landing-explore.test.mjs` and
+`apps/web/tests/workspace-shell.test.mjs`. It does not change any existing
+navigation entry, route copy, layout, or other test scope.
 
 It reuses the existing local Card, Badge, and semantic Link primitives and the
 accepted global tokens. It adds no dependency, no icon package, no animation
@@ -90,7 +91,7 @@ is not evidence that any narrated step has been performed.
   single local navigation amendment, the absence of any client component or
   network behavior, and the exclusion boundary above.
 - A focused assertion proves every narrated href resolves to a route accepted
-  in this repository at the same commit.
+  in this repository at the same commit through its declared local route file.
 - Desktop and narrow browser checks cover rendering, local navigation, visible
   keyboard focus, honored reduced-motion preference, no horizontal overflow,
   and clean framework and browser diagnostics.

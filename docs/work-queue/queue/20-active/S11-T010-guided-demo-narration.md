@@ -10,9 +10,10 @@
   only `apps/web/src/app/demo/page.tsx`,
   `apps/web/src/components/demo/guided-demo-steps.tsx`,
   `apps/web/tests/guided-demo-route.test.mjs`, and the explicitly reserved
-  local-link integration pair
-  `apps/web/src/components/discovery/local-navigation.tsx` and
-  `apps/web/tests/landing-explore.test.mjs`.
+  local-link integration source and assertions:
+  `apps/web/src/components/discovery/local-navigation.tsx`,
+  `apps/web/tests/landing-explore.test.mjs`, and
+  `apps/web/tests/workspace-shell.test.mjs`.
 - Human actions: none granted by this card. It relates to HA-DEMO-VIDEO-001
   only as presentation scaffolding; narration, recording, deployment, and
   submission remain human-owned.
@@ -44,9 +45,9 @@ link amendment.
 - The narration copy is fixed in the manifest boundary before code, so no step
   can promise an observation its target route does not produce.
 - The only accepted-source overlap is the explicitly root-reserved local
-  navigation link and its existing focused assertion. It may add exactly the
-  local `/demo` link with label `Demo`; it must not alter any existing link,
-  layout, navigation behavior, or route copy.
+  navigation link and its two existing focused assertions. It may add exactly
+  the local `/demo` link with label `Demo`; it must not alter any existing
+  link, layout, navigation behavior, or route copy.
 
 ## Verification
 
@@ -110,10 +111,19 @@ exactly once because the declared page and guided-step component remain absent;
 its four GREEN assertions skip without a secondary failure.
 
 Only `apps/web/src/app/demo/page.tsx`,
-`apps/web/src/components/demo/guided-demo-steps.tsx`, and the reserved local
-navigation/assertion pair in
+`apps/web/src/components/demo/guided-demo-steps.tsx`, its focused source
+contract, and the reserved local navigation source/assertion set in
 `apps/web/src/components/discovery/local-navigation.tsx` and
-`apps/web/tests/landing-explore.test.mjs` are now authorized for static GREEN.
+`apps/web/tests/landing-explore.test.mjs` plus
+`apps/web/tests/workspace-shell.test.mjs` are now authorized for static GREEN.
 Client behavior, data access, configuration, identity/provider/payment
 surfaces, human narration, recording, deployment, and submission remain
 outside this card.
+
+## Scoped test amendment
+
+The [navigation test amendment](../../evidence/S11-T010-navigation-test-amendment.md)
+records the reproduced full-suite failure and the narrow source-contract gap.
+It authorizes only the declared guided-route test to prove each target's local
+route file and the Workspace navigation test to preserve the same exact four
+shared local entries. It authorizes no other source or behavior change.

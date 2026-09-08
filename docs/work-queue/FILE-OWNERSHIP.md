@@ -360,16 +360,18 @@ queue state, catalog, decisions, reviews, commits, and pushes. Its only
 proposed implementation paths are `apps/web/src/app/demo/page.tsx`,
 `apps/web/src/components/demo/guided-demo-steps.tsx`, and
 `apps/web/tests/guided-demo-route.test.mjs`. The root separately reserves
-exactly one integration amendment in the accepted M11-T020 paths
-`apps/web/src/components/discovery/local-navigation.tsx` and
-`apps/web/tests/landing-explore.test.mjs`: add only `{ href: "/demo", label:
-"Demo" }` and its corresponding assertion. Every existing route/component,
-other navigation entry, layout, stylesheet, package/lockfile, configuration,
-identity/provider/payment surface, backend, Agent, account, transaction,
-deployment, narration recording, and submission path is excluded. This record
-has clear [ready](evidence/S11-T010-ready-review.md) and [activation
+one integration amendment in the accepted M11-T020 source
+`apps/web/src/components/discovery/local-navigation.tsx` and its two existing
+assertions, `apps/web/tests/landing-explore.test.mjs` and
+`apps/web/tests/workspace-shell.test.mjs`: add only `{ href: "/demo", label:
+"Demo" }` and preserve the exact four-entry local set. Every existing
+route/component, other navigation entry, layout, stylesheet, package/lockfile,
+configuration, identity/provider/payment surface, backend, Agent, account,
+transaction, deployment, narration recording, and submission path is excluded.
+This record has clear [ready](evidence/S11-T010-ready-review.md) and [activation
 reviews](evidence/S11-T010-activation-review.md), and an independent clear
 [RED review](evidence/S11-T010-red-review.md). The durable RED test is
-accepted; only the two declared static source paths and reserved local
-navigation/assertion pair are now available for GREEN. Every other exclusion
-continues.
+accepted; only the two declared static source paths, focused source contract,
+and reserved local navigation/assertion set are now available for GREEN. The
+[navigation test amendment](evidence/S11-T010-navigation-test-amendment.md)
+adds no other ownership. Every other exclusion continues.
