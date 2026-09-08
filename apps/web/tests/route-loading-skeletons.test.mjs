@@ -298,13 +298,17 @@ function assertDirectStaticFunction(sourceFile, name, expectedTag) {
   const [statement] = declaration.body.statements;
   assert.ok(typescript.isReturnStatement(statement));
   assert.ok(statement.expression);
-  assert.ok(
-    typescript.isJsxElement(statement.expression)
-    || typescript.isJsxSelfClosingElement(statement.expression),
-  );
-  const openingElement = typescript.isJsxElement(statement.expression)
-    ? statement.expression.openingElement
+  const expression = typescript.isParenthesizedExpression(statement.expression)
+    ? statement.expression.expression
     : statement.expression;
+
+  assert.ok(
+    typescript.isJsxElement(expression)
+    || typescript.isJsxSelfClosingElement(expression),
+  );
+  const openingElement = typescript.isJsxElement(expression)
+    ? expression.openingElement
+    : expression;
 
   assert.equal(jsxTagName(openingElement), expectedTag);
   return openingElement;
