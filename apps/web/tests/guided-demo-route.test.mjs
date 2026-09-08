@@ -83,7 +83,7 @@ test("keeps the nine guided steps in the exact local order and copy", async (t) 
   assert.equal((steps.match(/<Link\b/g) ?? []).length, 1);
   assert.doesNotMatch(steps, /<a\b/i);
   assert.match(steps, /from\s+["']next\/link["']/);
-  assert.match(steps, /steps\.map\(\s*\(step\)\s*=>/);
+  assert.match(steps, /steps\.map\(\s*\(\s*step(?:\s*,\s*index)?\s*\)\s*=>/);
   assert.match(steps, /<Link\b[^>]*href=\{step\.href\}/);
   assert.deepEqual(
     [...steps.matchAll(/href:\s*["']([^"']+)["']/g)].map(([, href]) => href),
@@ -123,12 +123,13 @@ test("preserves the four exact local navigation entries", async (t) => {
     ["/dashboard", "Workspace"],
     ["/demo", "Demo"],
   ]);
-  assert.ok(
-    landingTest.includes(
-      `assert.doesNotMatch(navigation, /\\{ href: "(?!/"|/explore"|/dashboard"|/demo")[^"]+/);`,
-    ),
+  const hrefGuardLines = landingTest
+    .split("\n")
+    .filter((line) => line.includes("doesNotMatch(navigation") && line.includes("href:"));
+  assert.equal(hrefGuardLines.length, 1);
+  assert.match(
+    hrefGuardLines[0],
+    /href: "\(\?!\\?\/"\|\\?\/explore"\|\\?\/dashboard"\|\\?\/demo"\)/,
   );
-  assert.ok(
-    !landingTest.includes(`assert.doesNotMatch(navigation, /\\{ href: "(?!/"|/explore"|/dashboard")[^"]+/);`),
-  );
+  assert.equal((hrefGuardLines[0].match(/\|/g) ?? []).length, 3);
 });
