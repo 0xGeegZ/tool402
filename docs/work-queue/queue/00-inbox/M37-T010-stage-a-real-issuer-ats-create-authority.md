@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 00-inbox
 - Dependencies: M01-T030 accepted; M32-T010 accepted; M33-T010 accepted;
   M35-T010 accepted; M36-T010 accepted
 - Owner: The root owns this card, local specification, local import-ledger
