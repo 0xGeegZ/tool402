@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T020 accepted, M02-T040 accepted, M11-T020 accepted, M29-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
@@ -77,3 +77,17 @@ This ready state authorizes only a fresh root activation followed by the
 declared durable RED contract. It does not authorize loader or skeleton source,
 existing route edits, client state, network behavior, configuration,
 identity/provider/payment surfaces, deployment, or submission.
+
+## Activation
+
+Activated at 2026-09-08T16:54:35Z after a fresh root rescan and independent
+[activation audit](../../evidence/S14-T010-activation-review.md) at pushed
+`d7949b462e27c833b823134b34cfb0128aa5206b`. S14 was the sole ready card;
+every dependency remained accepted, the working tree and origin/main baseline
+were exact, the guard and queue checks passed, and all declared loader,
+skeleton, and focused-test paths remained absent and disjoint.
+
+This activation authorizes only the durable RED contract at
+`apps/web/tests/route-loading-skeletons.test.mjs`. It does not authorize any
+loader or skeleton source, existing route edits, client state, network behavior,
+configuration, identity/provider/payment surface, deployment, or submission.

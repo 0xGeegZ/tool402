@@ -345,6 +345,6 @@ pushes. Its only proposed implementation paths are
 `apps/web/tests/route-loading-skeletons.test.mjs`. Every existing route,
 component, stylesheet, shared UI primitive, package/lockfile, configuration,
 identity/provider/payment surface, backend, Agent, deployment, and submission
-path is excluded. The fresh independent ready-state review is clear. A fresh
-root activation may authorize only its durable RED contract; loader or skeleton
-source remains absent until that RED is independently accepted.
+path is excluded. The fresh independent ready-state and activation reviews are
+clear. The active card authorizes only its durable RED contract; loader or
+skeleton source remains absent until that RED is independently accepted.
