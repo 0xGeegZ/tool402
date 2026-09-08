@@ -3,10 +3,10 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T030 accepted; M04-T010 accepted; B01-T010 accepted;
   M26-T010 accepted; M30-T010 accepted; M31-T010 accepted
-- Owner: This root-owned card owns the M32 specification and plan, its card,
+- Owner: This root-owned accepted card owns the M32 specification and plan, its card,
   the additive generic Convex schema and internal module paths, the narrow M04
   shared-schema compatibility amendment, the narrow M31 durable-replay
   clarification, focused backend tests, and root-integrator queue records. The
@@ -138,3 +138,26 @@ schema/functions, Convex publication, authority provisioning, BFF/HTTP
 integration, asynchronous adapter, ATS target/parameter resolution,
 provider/wallet action, funding, payment, transaction, deployment, or live
 behavior.
+
+## Acceptance
+
+Accepted at 2026-09-08T00:20:30Z after final verification against
+`MODULE_BASE` `b7d00dd627a9104e54aaf3597e1caaba174482fe` and `MODULE_HEAD`
+`288c678d9a16bcb40420f85b05e564286e68a8bb`, both pushed to `main`. The
+durable test-only RED commits `25cae8dd6d029dc701ce257fe6f9dd1cb8b5a403` and
+`dd90f5a08c2d1a108f7f46f29a9d1483fe47857b` precede the additive schema and
+two internal Convex modules at `288c678d9a16bcb40420f85b05e564286e68a8bb`.
+
+Focused M32 tests passed 20/20 and the full Backend suite passed 125/125. Root
+typecheck, test, lint, clean-install dry run, queue/reference/whitespace
+checks, and the enabled local guard passed under Node 22.21.1. The final
+independent task review found and corrected one minor nonnegative persisted
+timestamp guard before commit; both fresh Standards-and-Spec module-review
+generations then found no Critical, Important, or Minor finding.
+
+This acceptance covers only the internal generic durable admission/recovery
+data plane: current authority revalidation, replay/idempotency records, one
+generic `PREPARED` attempt, and exact-context recovery. It does not accept
+authority provisioning, publication, BFF/HTTP integration, ATS target or
+parameter authority, provider or wallet action, funding, payment, transaction,
+deployment, or live behavior.

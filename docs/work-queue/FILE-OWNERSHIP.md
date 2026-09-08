@@ -179,7 +179,7 @@ B01-T010 is an accepted record comprising its card, `docs/specs/b01-convex-modul
 
 M29-T010 is an accepted record comprising its card, `docs/specs/m29-shell-accessibility-amendment.md`, `docs/imports/SPEC-IMPORT-LEDGER.md`, `docs/ui/UI-S00.md`, `docs/ui/IMPORT-LEDGER.md`, `docs/superpowers/plans/2026-09-07-m29-shell-accessibility-amendment.md`, `apps/web/src/app/globals.css`, and `apps/web/tests/shell-accessibility.test.mjs`. The root owns queue state, catalog, decisions, browser evidence, reviews, commits, and pushes. UI-S00 and M11-T020 are accepted shared-shell context, not reopened route behavior. All other Web/UI paths, route business logic, package metadata, lockfile, runtime configuration, client state, identity/session/provider/wallet/signer/payment surfaces, Core, Agent, backend, persistence, accounts, transactions, reserve, allocation, clearing, ATS, HCS, payout, deployment, and live evidence are excluded.
 
-M32-T010 reserves its card,
+M32-T010 is an accepted implementation record comprising its card,
 `docs/specs/m32-durable-external-prepare-admission.md`,
 `docs/superpowers/plans/2026-09-08-m32-durable-external-prepare-admission.md`,
 `docs/imports/SPEC-IMPORT-LEDGER.md`, the narrow shared-schema compatibility
@@ -195,12 +195,16 @@ and `docs/superpowers/plans/2026-09-07-m31-external-prepare-command-admission.md
 `packages/backend/convex/external_prepare_command_recovery.ts`,
 `packages/backend/tests/risk-scan-schema.test.mjs`, and the focused M32
 schema/admission/recovery tests. The root owns queue state, catalog, decisions,
-reviews, commits, and integration evidence. Existing M04 RiskScan functions,
-writers, readers, records, and reconciliation are dependencies and may not
-change; accepted M31 source and tests are also dependencies and may not change.
-Public APIs, generated output, authority provisioning, configuration,
-publication, HTTP/BFF adapters, provider/wallet, ATS target/parameter
-resolution, funding, payment, transaction, deployment, and live evidence are
-excluded.
+reviews, commits, and integration evidence. Its accepted implementation paths
+are limited to the listed schema, two internal Convex modules, and focused
+tests. Existing M04 RiskScan functions, writers, readers, records, and
+reconciliation are dependencies and may not change; accepted M31 source and
+tests are also dependencies and may not change. Public APIs, generated output,
+authority provisioning, configuration, publication, HTTP/BFF adapters,
+provider/wallet, ATS target/parameter resolution, funding, payment,
+transaction, deployment, and live evidence are excluded. This acceptance
+grants no authority provisioning, publication, ATS target/parameter authority,
+provider or wallet action, funding, payment, transaction, deployment, or live
+behavior.
 
 Future active implementation cards must have disjoint owned paths and resource boundaries. Shared-file work is an explicit root integration reservation. Wallets, credentials, funded accounts, partner configuration, and deployments remain human-controlled resources; no card or agent infers authority over them.
