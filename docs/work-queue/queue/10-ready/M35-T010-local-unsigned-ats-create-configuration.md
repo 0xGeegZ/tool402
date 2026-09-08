@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T030 accepted; M20-T010 accepted; M33-T010 accepted;
   M34-T010 accepted
 - Owner: The root owns this card, local specification, local import-ledger
@@ -63,6 +63,22 @@ external behavior remain separately gated.
 
 This inbox state authorizes only committed local authority and independent
 review. It authorizes neither RED/code nor SDK import/init, request
+construction, provider/wallet interaction, authority provisioning, M33
+enablement, M32 mutation, storage, account action, funding, payment,
+transaction, asset creation, deployment, or live evidence.
+
+## Ready transition
+
+Ready at 2026-09-08T11:15:09Z after a fresh rescan at pushed
+`09f792607c45806ae280f90d94329499257449cb` confirmed M01-T030, M20-T010,
+M33-T010, and M34-T010 accepted; no active lane or ownership conflict; exact
+origin/main equality; resolvable local records; and an enabled local guard.
+The independently rereviewed authority record at
+[M35-T010-authority-review.md](../../evidence/M35-T010-authority-review.md)
+found no Critical, Important, or Minor finding after its plan correction.
+
+This ready state authorizes only root activation followed by the committed
+test-only RED contract. It does not authorize SDK import/init, request
 construction, provider/wallet interaction, authority provisioning, M33
 enablement, M32 mutation, storage, account action, funding, payment,
 transaction, asset creation, deployment, or live evidence.
