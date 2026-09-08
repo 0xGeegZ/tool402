@@ -118,6 +118,13 @@ implementedTest("requires the exact closed root and delegates the offering defin
   delete missing.subjectPublicId;
   const symbol = payload();
   symbol[Symbol("unexpected")] = true;
+  const nonenumerableRequired = payload();
+  Object.defineProperty(nonenumerableRequired, "schemaVersion", {
+    enumerable: false,
+  });
+  const nonenumerableExtra = Object.defineProperty(payload(), "hidden", {
+    value: true,
+  });
   const inherited = Object.assign(Object.create({ offeringVersion: 1 }), payload());
   delete inherited.offeringVersion;
   const customPrototype = Object.assign(Object.create(null), payload());
@@ -128,6 +135,8 @@ implementedTest("requires the exact closed root and delegates the offering defin
     missing,
     payload({ unexpected: true }),
     symbol,
+    nonenumerableRequired,
+    nonenumerableExtra,
     inherited,
     customPrototype,
     payload({ definition: { ...payload().definition, unexpected: true } }),
