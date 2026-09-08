@@ -136,3 +136,28 @@ This card produces a signature request and relays its result. It advances no
 offering, attempt, or directory state, and a wallet callback is never treated
 as success. Its exclusions are the manifest's truthfulness and authority
 boundary, which governs; this card does not restate them.
+
+## Human worktree lane request
+
+- Requested at `2026-09-08T21:14:15Z` by the human operator (repository
+  owner) through the operator's delegated session, under the explicit-request
+  rule of the [runtime worktree policy](../../WORKTREE-POLICY.md). The card's
+  tier, dependencies, declared paths, verification list, and boundary are
+  unchanged.
+- Worktree `.worktrees/s15`, branch `work/s15`, pushed to `origin/work/s15`.
+  Implementer: the operator's delegated session. Reviewer: the root's
+  independent task review and module review, unchanged.
+- The lane delivers, in this commit order on that branch: the local
+  implementation plan; one test-only RED commit adding exactly the four
+  declared focused tests and the amended static-shell dependency assertion,
+  failing only because the declared source paths and the `viem` pin are
+  absent; the minimal GREEN commits limited to the seven declared source
+  paths; and one separate commit carrying only the `viem` 2.56.1 pin in
+  `apps/web/package.json` and the root `package-lock.json`, so the root can
+  sequence that reservation against M44-T010 and B03-T010.
+- The branch changes no queue state, ledger, catalog, ownership, STATE,
+  decision, human-action, or evidence file. The root keeps the ready review,
+  the activation decision, the independent reviews, the integration decision,
+  and every queue record. The branch is mirrored as a pull request for human
+  visibility only; nothing from it reaches `main` outside the root's
+  integration decision.
