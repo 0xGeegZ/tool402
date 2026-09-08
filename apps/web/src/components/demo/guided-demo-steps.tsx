@@ -20,7 +20,7 @@ const steps = [
     observation: "Inspect the bounded Quick request surface."
   },
   {
-    href: "/explore/riskscan/tool-loop",
+    href: "/explore/riskscan/tool-loop?demo=tool-loop",
     title: "Follow ToolLoop",
     observation: "Inspect the local ToolLoop request boundary."
   },

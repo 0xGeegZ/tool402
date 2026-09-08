@@ -7,6 +7,50 @@ export type ToolLoopViewState =
 
 export type MutableBoolean = { current: boolean };
 
+export type ToolLoopDemoDefaults = Readonly<{
+  requestRef: string;
+  subjectRef: string;
+  context: string;
+  declarations: Readonly<{
+    identity: boolean;
+    pricing: boolean;
+    limitations: boolean;
+    evidence: boolean;
+  }>;
+}>;
+
+function freezeToolLoopDemoDefaults(
+  requestRef: string,
+  subjectRef: string,
+  context: string,
+  selected: boolean,
+): ToolLoopDemoDefaults {
+  return Object.freeze({
+    requestRef,
+    subjectRef,
+    context,
+    declarations: Object.freeze({
+      identity: selected,
+      pricing: selected,
+      limitations: selected,
+      evidence: selected,
+    }),
+  });
+}
+
+export function getToolLoopDemoDefaults(demo: string | null): ToolLoopDemoDefaults {
+  if (demo !== "tool-loop") {
+    return freezeToolLoopDemoDefaults("", "", "", false);
+  }
+
+  return freezeToolLoopDemoDefaults(
+    "demo-riskscan-quick-001",
+    "riskscan-demo-subject",
+    "Review the demo RiskScan Quick request before continuing the ToolLoop demo.",
+    true,
+  );
+}
+
 export async function runExclusive<T>(
   inFlight: MutableBoolean,
   runner: () => Promise<T>,

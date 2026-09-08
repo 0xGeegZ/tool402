@@ -25,6 +25,7 @@ test("declares the strict Next workspace boundary", async () => {
     "@x402/next": "2.25.0",
     clsx: "2.1.1",
     next: "16.3.4",
+    nuqs: "2.10.1",
     react: "19.2.8",
     "react-dom": "19.2.8",
     "tailwind-merge": "3.6.0",

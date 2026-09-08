@@ -15,7 +15,7 @@ const expectedRows = [
   ["/explore", "Explore assessments", "Find the RiskScan entry and its local discovery surface."],
   ["/explore/riskscan", "Read RiskScan", "Review the Quick input, result, and configuration boundaries."],
   ["/explore/riskscan/try", "Try the local request", "Inspect the bounded Quick request surface."],
-  ["/explore/riskscan/tool-loop", "Follow ToolLoop", "Inspect the local ToolLoop request boundary."],
+  ["/explore/riskscan/tool-loop?demo=tool-loop", "Follow ToolLoop", "Inspect the local ToolLoop request boundary."],
   ["/dashboard", "Open the workspace", "See the guest workspace shell."],
   ["/dashboard/riskscan", "Review the workbench", "Follow the guest RiskScan workbench sequence."],
   [
@@ -31,7 +31,7 @@ const expectedRouteFiles = {
   "/explore": "src/app/explore/page.tsx",
   "/explore/riskscan": "src/app/explore/riskscan/page.tsx",
   "/explore/riskscan/try": "src/app/explore/riskscan/try/page.tsx",
-  "/explore/riskscan/tool-loop": "src/app/explore/riskscan/tool-loop/page.tsx",
+  "/explore/riskscan/tool-loop?demo=tool-loop": "src/app/explore/riskscan/tool-loop/page.tsx",
   "/dashboard": "src/app/dashboard/page.tsx",
   "/dashboard/riskscan": "src/app/dashboard/riskscan/page.tsx",
   "/dashboard/riskscan/compatibility": "src/app/dashboard/riskscan/compatibility/page.tsx",

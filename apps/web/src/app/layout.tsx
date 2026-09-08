@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import "./globals.css";
 import { LocalNavigation } from "../components/discovery/local-navigation";
@@ -24,7 +25,9 @@ export default function RootLayout({
               <LocalNavigation />
             </div>
           </header>
-          <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">{children}</div>
+          <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </div>
         </div>
       </body>
     </html>
