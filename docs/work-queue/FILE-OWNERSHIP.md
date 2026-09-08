@@ -355,7 +355,9 @@ outcome-rendering lines. All other routes, source, tests, dependencies,
 lockfile work, storage, configuration, wallets, payment, provider, account,
 transaction, deployment, and live-evidence paths are excluded. No RED, source,
 or dependency change is authorized before a fresh root activation. The
-[independent ready review](evidence/S19-T010-ready-review.md) is clear.
+[independent ready review](evidence/S19-T010-ready-review.md) and
+[activation review](evidence/S19-T010-activation-review.md) are clear. Only
+the declared durable RED test is now authorized.
 
 S14-T010 is a root-owned accepted control record comprising its card,
 `docs/ui/UI-S14.md`, `docs/ui/IMPORT-LEDGER.md`,

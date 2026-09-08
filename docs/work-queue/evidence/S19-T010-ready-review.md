@@ -5,7 +5,7 @@
 Independent read-only review of the committed S19 authority at
 `9afb97a69db061898ad0bc090be5068b3a98d898`:
 
-- [S19 control card](../queue/10-ready/S19-T010-tool-loop-demo-prefill.md);
+- [S19 control card](../queue/20-active/S19-T010-tool-loop-demo-prefill.md);
 - [UI-S19 manifest](../../ui/UI-S19.md);
 - [local UI ledger](../../ui/IMPORT-LEDGER.md); and
 - the current ToolLoop form, Guided Demo link, Web dependency boundary, and
