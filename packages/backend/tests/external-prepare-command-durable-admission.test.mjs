@@ -298,6 +298,7 @@ test("fails closed on duplicate or malformed replay rows before idempotency", as
   for (const [key, value] of Object.entries({ replayIdentity: "wrong", outcome: "UNKNOWN", attemptId: "", claimedAt: 1, _id: "" })) cases.push([`invalid claim.${key}`, [claim({ [key]: value })]]);
   for (const key of ["replayIdentity", "outcome", "attemptId", "claimedAt"]) { const row = claim(); delete row[key]; cases.push([`missing claim.${key}`, [row]]); }
   cases.push(["claim.claimedAt overflows int64", [claim({ claimedAt: 9_223_372_036_854_775_808n })]]);
+  cases.push(["claim.claimedAt is negative", [claim({ claimedAt: -1n })]]);
   cases.push(["conflict claim has forbidden attempt link", [claim({ outcome: "IDEMPOTENCY_CONFLICT" })]]);
   for (const [name, claims] of cases) {
     const db = database({ claims });
@@ -326,6 +327,7 @@ test("links a fresh-nonce idempotency repeat and consumes that identity without 
 test("consumes every conflicting context or unsafe attempt in an unlinked claim and rejects its replay", async (t) => {
   const mutation = await loadMutation(t);
   const cases = [["duplicate attempts", [attempt(), attempt()]], ["null attempt", [null]], ["array attempt", [[]]], ["attempt.acceptedAt overflows int64", [{ ...attempt(), acceptedAt: 9_223_372_036_854_775_808n }]]];
+  cases.push(["attempt.acceptedAt is negative", [{ ...attempt(), acceptedAt: -1n }]]);
   for (const [key, value] of Object.entries({ version: 2, type: "external.other", chainId: 295, canonicalSignerAddress: "0x" + "c".repeat(40), principalPublicId: "principal_other", role: "BACKER", authorityVersion: "authority_v2", payloadHash: "0x" + "b".repeat(64), state: "EXECUTED", acceptedAt: 1, _id: "", expectedTarget: "0.0.987", canonicalParametersHash: "b".repeat(64), operationKind: "ATS_ISSUE", subjectPublicId: "subject_other", network: "hedera:mainnet", expiresAt: "2026-09-07T19:03:00.000Z" })) cases.push([`invalid attempt.${key}`, [{ ...attempt(), [key]: value }]]);
   for (const key of new Set([...contextKeys, ...payloadKeys, "state", "acceptedAt"])) { const row = attempt(); delete row[key]; cases.push([`missing attempt.${key}`, [row]]); }
   for (const [name, attempts] of cases) {

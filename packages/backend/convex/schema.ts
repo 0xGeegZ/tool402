@@ -4,6 +4,43 @@ import { v } from "convex/values";
 const timestamps = { createdAt: v.int64(), updatedAt: v.int64() };
 
 export default defineSchema({
+  commandAuthorities: defineTable({
+    principalPublicId: v.string(),
+    canonicalSignerAddress: v.string(),
+    chainId: v.literal(296),
+    role: v.union(v.literal("ISSUER"), v.literal("BACKER")),
+    ownedSubjectPublicIds: v.array(v.string()),
+    authorityVersion: v.string(),
+    enabled: v.boolean(),
+  }).index("by_chain_id_and_canonical_signer_address", ["chainId", "canonicalSignerAddress"]),
+  externalPrepareCommandReplayClaims: defineTable({
+    replayIdentity: v.string(),
+    outcome: v.union(v.literal("NEW"), v.literal("IDEMPOTENCY_REPLAYED"), v.literal("IDEMPOTENCY_CONFLICT")),
+    attemptId: v.optional(v.id("externalPrepareCommandAttempts")),
+    claimedAt: v.int64(),
+  }).index("by_replay_identity", ["replayIdentity"]),
+  externalPrepareCommandAttempts: defineTable({
+    version: v.literal(1),
+    type: v.literal("external.prepare"),
+    chainId: v.literal(296),
+    canonicalSignerAddress: v.string(),
+    principalPublicId: v.string(),
+    role: v.union(v.literal("ISSUER"), v.literal("BACKER")),
+    authorityVersion: v.string(),
+    payloadHash: v.string(),
+    operationKind: v.union(
+      v.literal("ATS_CREATE"), v.literal("ATS_CONTROL_LIST"), v.literal("ATS_ISSUE"),
+      v.literal("ATS_TRANSFER"), v.literal("ATS_COUPON"), v.literal("HEDERA_FUNDING"),
+    ),
+    subjectPublicId: v.string(),
+    network: v.literal("hedera:testnet"),
+    expectedTarget: v.string(),
+    canonicalParametersHash: v.string(),
+    idempotencyKey: v.string(),
+    expiresAt: v.string(),
+    state: v.literal("PREPARED"),
+    acceptedAt: v.int64(),
+  }).index("by_idempotency_key", ["idempotencyKey"]),
   riskScanRequests: defineTable({
     publicId: v.string(), requestRef: v.string(), subjectRefHash: v.string(), inputHash: v.string(), state: v.string(), ...timestamps,
   }).index("by_public_id", ["publicId"]).index("by_request_ref", ["requestRef"]).index("by_state_and_updated_at", ["state", "updatedAt"]),

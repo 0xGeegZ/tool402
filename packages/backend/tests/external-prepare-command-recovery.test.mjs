@@ -164,6 +164,7 @@ test("fails closed on duplicate, malformed or mismatched persisted context and e
   })) cases.push([`invalid attempt.${key}`, [{ ...attempt(), [key]: value }]]);
   for (const key of Object.keys(attempt()).filter((key) => key !== "_creationTime")) { const row = attempt(); delete row[key]; cases.push([`missing attempt.${key}`, [row]]); }
   cases.push(["attempt.acceptedAt underflows int64", [{ ...attempt(), acceptedAt: -9_223_372_036_854_775_809n }]], ["attempt.acceptedAt overflows int64", [{ ...attempt(), acceptedAt: 9_223_372_036_854_775_808n }]]);
+  cases.push(["attempt.acceptedAt is negative", [{ ...attempt(), acceptedAt: -1n }]]);
   // A coherent alternate stored hash still cannot satisfy the requested payload/context.
   const changed = { ...attempt(), expectedTarget: "0.0.987654" };
   changed.payloadHash = hashPayload(changed);
