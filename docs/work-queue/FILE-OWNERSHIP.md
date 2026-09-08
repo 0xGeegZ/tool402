@@ -256,3 +256,13 @@ provider/wallet, account, funding, payment, transaction, asset, settlement,
 clearing, HCS, payout, deployment, and live-evidence paths are excluded.
 Its accepted helper remains a local unsigned projection only; it grants no M33
 enablement or external behavior.
+
+M36-T010 is a root-owned inbox control record comprising its card, the
+prefilled HA-ATS-LIVE-AUTHORITY-001 decision packet, HUMAN-ACTIONS.md, this
+ownership record, queue state, catalog, and decisions. It owns no runtime
+source, package, configuration, M32/M33 change, authority row, SDK, provider,
+wallet, account, funding, payment, transaction, asset, holder/compliance
+action, clearing, HCS, payout, deployment, or evidence path. M32, M33, and
+M35 are accepted consumed boundaries only. No implementation card is
+authorized until the human supplies the real issuer and complete new
+configuration preimage/hash, and an independent authority review accepts it.
