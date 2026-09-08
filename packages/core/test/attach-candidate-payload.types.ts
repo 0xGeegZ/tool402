@@ -10,6 +10,22 @@ import type {
   MirrorTransactionId,
 } from "@tool402/core";
 
+type IsExactly<Left, Right> = (
+  <Value>() => Value extends Left ? 1 : 2
+) extends <Value>() => Value extends Right ? 1 : 2
+  ? (
+      <Value>() => Value extends Right ? 1 : 2
+    ) extends <Value>() => Value extends Left ? 1 : 2
+      ? true
+      : false
+  : false;
+
+type Assert<Condition extends true> = Condition;
+
+type CandidateTransactionIdIsExact = Assert<
+  IsExactly<CandidateTransactionId, HederaTransactionId | MirrorTransactionId>
+>;
+
 const payload: AttachCandidatePayload = parseAttachCandidatePayload({
   schemaVersion: 1,
   attemptPublicId: "CCCCCCCCCCCCCCCCCCCCCg",
@@ -37,6 +53,14 @@ const fundingPayload: AttachCandidatePayload = parseAttachCandidatePayload({
   idempotencyKey: "DDDDDDDDDDDDDDDDDDDDDw",
   expiresAt: "2026-09-15T00:00:00.000Z",
 });
+const candidateAddressOmitted: AttachCandidatePayload = {
+  schemaVersion: 1,
+  attemptPublicId: "CCCCCCCCCCCCCCCCCCCCCg",
+  operationKind: "HEDERA_FUNDING",
+  candidateTransactionId: mirrorTransactionId,
+  idempotencyKey: "DDDDDDDDDDDDDDDDDDDDDw",
+  expiresAt: "2026-09-15T00:00:00.000Z",
+};
 
 void candidateTransactionId;
 void candidateAddress;
@@ -44,6 +68,7 @@ void canonicalCandidate;
 void mirrorCandidate;
 void schemaVersion;
 void bytes;
+void candidateAddressOmitted;
 
 // @ts-expect-error Parsed payload roots are readonly.
 payload.operationKind = "ATS_ISSUE";
