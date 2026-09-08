@@ -4,7 +4,7 @@
 
 Independent review at pushed `2865fc619bec5f205438fa4e8609fc1b43be1003` of:
 
-- [S14 control card](../queue/20-active/S14-T010-route-loading-skeletons.md)
+- [S14 control card](../queue/60-done/S14-T010-route-loading-skeletons.md)
 - [UI-S14 manifest](../../ui/UI-S14.md)
 - [focused S14 contract](../../../apps/web/tests/route-loading-skeletons.test.mjs)
 

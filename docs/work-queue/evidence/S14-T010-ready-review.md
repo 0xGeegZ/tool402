@@ -5,7 +5,7 @@
 Independent review of the exact committed UI-S14 scope at
 `7d3361379b9ede5210bebc3e1628621d86b410d6`:
 
-- [S14 control card](../queue/20-active/S14-T010-route-loading-skeletons.md)
+- [S14 control card](../queue/60-done/S14-T010-route-loading-skeletons.md)
 - [UI-S14 manifest](../../ui/UI-S14.md)
 - [local UI slice ledger](../../ui/IMPORT-LEDGER.md)
 - [S14 implementation plan](../../superpowers/plans/2026-09-08-s14-route-loading-skeletons.md)

@@ -328,7 +328,7 @@ unavailable to every runtime or external path. Any successor must receive
 separate ownership and a separate human authorization before provisioning or
 an executable ATS action.
 
-S14-T010 is a root-owned active control record comprising its card,
+S14-T010 is a root-owned accepted control record comprising its card,
 `docs/ui/UI-S14.md`, `docs/ui/IMPORT-LEDGER.md`,
 `docs/superpowers/plans/2026-09-08-s14-route-loading-skeletons.md`, this
 ownership record, queue state, catalog, decisions, reviews, commits, and
@@ -345,7 +345,9 @@ pushes. Its only proposed implementation paths are
 `apps/web/tests/route-loading-skeletons.test.mjs`. Every existing route,
 component, stylesheet, shared UI primitive, package/lockfile, configuration,
 identity/provider/payment surface, backend, Agent, deployment, and submission
-path is excluded. The fresh independent ready-state and activation reviews and
-the [RED review](evidence/S14-T010-red-review.md) are clear. The accepted RED
-contract authorizes only the nine declared static source paths; every exclusion
-continues to apply through implementation and review.
+path is excluded. The fresh independent ready-state and activation reviews,
+the [RED review](evidence/S14-T010-red-review.md), [final task
+review](evidence/S14-T010-task-review.md), and [module
+review](evidence/S14-T010-module-review.md) are clear. The accepted source is
+limited to the nine declared static paths; every exclusion continues after
+acceptance.

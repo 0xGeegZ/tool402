@@ -1,7 +1,7 @@
 # S14 implementation plan — Route loading skeletons
 
 Execution plan for
-[S14-T010](../../work-queue/queue/20-active/S14-T010-route-loading-skeletons.md)
+[S14-T010](../../work-queue/queue/60-done/S14-T010-route-loading-skeletons.md)
 against the [UI-S14 route loading skeleton manifest](../../ui/UI-S14.md).
 
 ## Goal

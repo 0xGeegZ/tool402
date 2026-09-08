@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T020 accepted, M02-T040 accepted, M11-T020 accepted, M29-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
@@ -104,3 +104,24 @@ Only the eight route-specific `loading.tsx` files and the shared decorative
 edits, client state, data access, configuration, identity/provider/payment
 surfaces, deployment, submission, and browser replacement claims remain
 outside this card.
+
+## Final acceptance
+
+Accepted at 2026-09-08T17:45:53Z after independent final task and module
+reviews of source commit `3dc9a4d1b05c5f9b8a96806ca64699b6779bef8c`.
+
+- The eight declared loaders and shared decorative primitive satisfy the exact
+  static region contract, including the five centered article-shell loaders.
+- The focused S14 contract passed 3/3; the full Web suite passed 100/100;
+  Web/root typecheck, test, lint, queue/reference/whitespace checks, and the
+  enabled local guard passed under Node 22.21.1.
+- The Webpack production build with Cache Components passed. The normal local
+  Turbopack production command remains separately blocked by the host denying
+  its required port bind; this card makes no deployment or browser replacement
+  claim from that host constraint.
+- The final [task review](../../evidence/S14-T010-task-review.md) and
+  [module review](../../evidence/S14-T010-module-review.md) are clear.
+
+S14-T010 is complete. It adds static presentational loading layouts only; it
+does not create a pending trigger, client behavior, data access, identity,
+payment, transaction, deployment, or submission capability.
