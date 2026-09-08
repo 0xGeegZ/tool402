@@ -5,6 +5,41 @@
 > of an ATS operation. It authorizes no SDK call, provider/wallet interaction,
 > account action, funding, payment, transaction, deployment, or live behavior.
 
+## Root-prepared public candidates — not authority
+
+The root verified the following public facts on 2026-09-08 to remove routine
+research from the human decision. They are **candidates only**: the final
+declaration must either accept each candidate verbatim or explicitly replace
+it. They do not select an issuer, an asset, a target, an operation descriptor,
+or an enabled authority record.
+
+- Candidate package: `@hashgraph/asset-tokenization-sdk@8.0.0`, as published
+  on the [official package page](https://www.npmjs.com/package/%40hashgraph/asset-tokenization-sdk).
+  The root also captured the published tarball integrity candidate
+  `sha512-V5Tg6IrWhMwxEWzzvv7fZWu4a8zXDj8vAk5OCO9W0dtact32hljstahPIY5dLvlpyNWwNXaepzpvDj77DoccsA==`
+  for `https://registry.npmjs.org/@hashgraph/asset-tokenization-sdk/-/asset-tokenization-sdk-8.0.0.tgz`.
+  A human must still explicitly approve this release reference and the
+  permitted API surface; a package version alone is not treated as a complete
+  compatibility or execution decision.
+- Candidate public testnet initialization facts from the
+  [official SDK integration guide](https://docs.tokenization-studio.hedera.com/ats/developer-guides/sdk-integration/):
+  network `testnet`; Mirror Node
+  `https://testnet.mirrornode.hedera.com/api/v1/`; JSON-RPC
+  `https://testnet.hashio.io/api`; resolver `0.0.7707874`; factory
+  `0.0.7708432`.
+- The current [official deployed-addresses record](https://docs.tokenization-studio.hedera.com/ats/developer-guides/contracts/deployed-addresses/)
+  identifies those testnet contracts as the BLR Proxy and Factory Proxy,
+  respectively, and lists their EIP-55-checksummed EVM addresses. This packet
+  normalizes those same address bytes to lowercase as
+  `0xefef4cae9642631cfc6d997d6207ee48fa78fe42` and
+  `0x5fa65ca30d1984701f10476664327f97c864a9d3`.
+
+The current local `NoteUnits` vocabulary and 80/20 economics do **not** decide
+whether the first ATS asset is a bond, equity, or another instrument. They
+also do not select an issuer, name, symbol, supply, maturity, role set, or
+other immutable creation parameter. Those remain deliberate human choices;
+the root must not fabricate a test fixture into a product authority.
+
 ## Why a human decision is required
 
 The next ATS slice would select public but security-sensitive authority: the
