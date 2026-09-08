@@ -5,7 +5,7 @@
 Independent review of the durable RED contract at source commit
 `acb2ba340d3893957224e376b8e231ae30b46ee3`:
 
-- [S11 control card](../queue/20-active/S11-T010-guided-demo-narration.md)
+- [S11 control card](../queue/60-done/S11-T010-guided-demo-narration.md)
 - [UI-S11 manifest](../../ui/UI-S11.md)
 - [focused S11 contract](../../../apps/web/tests/guided-demo-route.test.mjs)
 

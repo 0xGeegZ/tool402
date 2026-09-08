@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T040 accepted, M02-T070 accepted, M02-T080 accepted, M11-T010 accepted, M11-T020 accepted, M13-T010 accepted, M14-T010 accepted, M15-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
@@ -127,3 +127,27 @@ records the reproduced full-suite failure and the narrow source-contract gap.
 It authorizes only the declared guided-route test to prove each target's local
 route file and the Workspace navigation test to preserve the same exact four
 shared local entries. It authorizes no other source or behavior change.
+
+## Final acceptance
+
+Accepted at 2026-09-08T18:57:01Z after independent task and module reviews of
+source commit `de000b1f73b3ea037a7e46fa8d10ea14f2a61040`.
+
+- The page has one server-rendered landmark and heading, and its fixed nine
+  local steps use existing Cards and semantic Next Links in the exact UI-S11
+  order and copy.
+- The global navigation preserves Home, Explore, Workspace, and adds only the
+  declared Demo entry. The focused route contract proves every displayed
+  target has its matching local route file.
+- Focused S11/navigation tests passed 14/14, the complete Web suite passed
+  105/105, Web/root typecheck, root test/lint, queue/reference/whitespace
+  checks, and the enabled guard passed under Node 22.21.1.
+- Browser and Next.js runtime checks are recorded in the [module
+  review](../../evidence/S11-T010-module-review.md). The normal local
+  Turbopack production command remains host-blocked on an internal port bind;
+  the equivalent Webpack production build passed and included `/demo`.
+
+The independent [task review](../../evidence/S11-T010-task-review.md) and
+[module review](../../evidence/S11-T010-module-review.md) are clear. S11-T010
+is accepted presentation scaffolding only; human narration, recording,
+deployment, and submission remain separate human-owned actions.

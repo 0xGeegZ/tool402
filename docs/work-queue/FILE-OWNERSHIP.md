@@ -352,26 +352,23 @@ review](evidence/S14-T010-module-review.md) are clear. The accepted source is
 limited to the nine declared static paths; every exclusion continues after
 acceptance.
 
-S11-T010 is a root-owned active control record comprising its card,
+S11-T010 is an accepted root-owned record comprising its card,
 `docs/ui/UI-S11.md`, `docs/ui/IMPORT-LEDGER.md`,
-`docs/superpowers/plans/2026-09-08-s11-guided-demo-narration.md`,
-`docs/work-queue/evidence/S11-T010-intake-review.md`, this ownership record,
-queue state, catalog, decisions, reviews, commits, and pushes. Its only
-proposed implementation paths are `apps/web/src/app/demo/page.tsx`,
-`apps/web/src/components/demo/guided-demo-steps.tsx`, and
-`apps/web/tests/guided-demo-route.test.mjs`. The root separately reserves
-one integration amendment in the accepted M11-T020 source
-`apps/web/src/components/discovery/local-navigation.tsx` and its two existing
-assertions, `apps/web/tests/landing-explore.test.mjs` and
-`apps/web/tests/workspace-shell.test.mjs`: add only `{ href: "/demo", label:
-"Demo" }` and preserve the exact four-entry local set. Every existing
+`docs/superpowers/plans/2026-09-08-s11-guided-demo-narration.md`, its
+intake, ready, activation, RED, navigation-amendment, task-review, and
+module-review evidence, this ownership record, queue state, catalog, decisions,
+commits, and pushes. Its accepted source/test set is
+`apps/web/src/app/demo/page.tsx`,
+`apps/web/src/components/demo/guided-demo-steps.tsx`,
+`apps/web/tests/guided-demo-route.test.mjs`,
+`apps/web/src/components/discovery/local-navigation.tsx`,
+`apps/web/tests/landing-explore.test.mjs`, and
+`apps/web/tests/workspace-shell.test.mjs`. It adds only the static `/demo`
+route and `{ href: "/demo", label: "Demo" }` while preserving the exact
+four-entry local navigation set. The independent [task
+review](evidence/S11-T010-task-review.md) and [module
+review](evidence/S11-T010-module-review.md) are clear. Every existing
 route/component, other navigation entry, layout, stylesheet, package/lockfile,
 configuration, identity/provider/payment surface, backend, Agent, account,
-transaction, deployment, narration recording, and submission path is excluded.
-This record has clear [ready](evidence/S11-T010-ready-review.md) and [activation
-reviews](evidence/S11-T010-activation-review.md), and an independent clear
-[RED review](evidence/S11-T010-red-review.md). The durable RED test is
-accepted; only the two declared static source paths, focused source contract,
-and reserved local navigation/assertion set are now available for GREEN. The
-[navigation test amendment](evidence/S11-T010-navigation-test-amendment.md)
-adds no other ownership. Every other exclusion continues.
+transaction, deployment, narration recording, and submission path remains
+excluded.

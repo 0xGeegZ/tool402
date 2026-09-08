@@ -5,7 +5,7 @@
 Independent read-only review of the committed S11 authority at
 `745441773e9af3dbc738b7db505c5c54368a528e`:
 
-- [S11 control card](../queue/20-active/S11-T010-guided-demo-narration.md)
+- [S11 control card](../queue/60-done/S11-T010-guided-demo-narration.md)
 - [UI-S11 manifest](../../ui/UI-S11.md)
 - [S11 implementation plan](../../superpowers/plans/2026-09-08-s11-guided-demo-narration.md)
 - [S11 intake review](S11-T010-intake-review.md)

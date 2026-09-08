@@ -24,7 +24,7 @@ test runner.
 - Touch only `apps/web/src/app/demo/page.tsx`,
   `apps/web/src/components/demo/guided-demo-steps.tsx`,
   `apps/web/tests/guided-demo-route.test.mjs`, and the explicitly reserved
-  `/demo` navigation/assertion pair.
+  `/demo` navigation/assertion set.
 - The route is server-rendered and contains exactly one `main` and one `h1`.
 - The nine ordered hrefs and their copy are exactly the UI-S11 table values.
 - Every link is a local Next `Link`; no external link, client directive,
@@ -96,6 +96,7 @@ assertions skip while both paths are absent.
 - Modify: `apps/web/tests/workspace-shell.test.mjs`
 - Test: `apps/web/tests/guided-demo-route.test.mjs`
 - Test: `apps/web/tests/landing-explore.test.mjs`
+- Test: `apps/web/tests/workspace-shell.test.mjs`
 
 **Interfaces:**
 
