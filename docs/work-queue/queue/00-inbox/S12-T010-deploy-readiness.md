@@ -1,10 +1,10 @@
-# UI-S12-T010 — Deploy-readiness assets and boundary routes
+# S12-T010 — Deploy-readiness assets and boundary routes
 
 ## State
 
-- Tier: DEPLOY_P1
+- Tier: POLISH
 - Queue state: 00-inbox
-- Dependencies: UI-S00 accepted; UI-S01 accepted; UI-S06 accepted
+- Dependencies: M02-T020 accepted, M02-T040 accepted, M11-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
   only `apps/web/src/app/not-found.tsx`, `apps/web/src/app/error.tsx`,
