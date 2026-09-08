@@ -321,6 +321,17 @@ test("reads the chain id verbatim and the signer once as a validated lower-case 
   );
 });
 
+test("recognizes only the EIP-1193 user-rejected code as a rejection", async () => {
+  const { isUserRejection } = await loadProviderModule();
+
+  assert.equal(isUserRejection({ code: 4001, message: "User rejected the request." }), true);
+  assert.equal(isUserRejection({ code: 4902 }), false);
+  assert.equal(isUserRejection({ code: "4001" }), false);
+  assert.equal(isUserRejection(new Error("4001")), false);
+  assert.equal(isUserRejection(null), false);
+  assert.equal(isUserRejection(undefined), false);
+});
+
 test("switches once, falls back to add-chain only on the unrecognized-chain code, and never re-reads the chain itself", async () => {
   const {
     HEDERA_TESTNET_ADD_CHAIN_PARAMETERS,

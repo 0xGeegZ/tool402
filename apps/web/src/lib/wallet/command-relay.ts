@@ -1,3 +1,5 @@
+import { bytesToHex } from "viem";
+
 import {
   createCommandNonce,
   encodeBase64Url,
@@ -18,6 +20,7 @@ export const RELAY_OUTCOMES = Object.freeze([
 export type RelayOutcome = (typeof RELAY_OUTCOMES)[number];
 
 export const RELAY_TIMEOUT_MILLISECONDS = 10_000;
+export const RELAY_MAX_REQUEST_BYTES = 65_536;
 export const RELAY_MAX_RESPONSE_BYTES = 4096;
 
 export type RelayEnvironment = Readonly<Record<string, string | undefined>>;
@@ -52,14 +55,6 @@ function hexToBytes(hex: string): Uint8Array<ArrayBuffer> {
     bytes[index] = Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16);
   }
   return bytes;
-}
-
-function bytesToHex(bytes: Uint8Array): string {
-  let output = "";
-  for (const byte of bytes) {
-    output += byte.toString(16).padStart(2, "0");
-  }
-  return output;
 }
 
 function readConfiguration(env: RelayEnvironment): RelayConfiguration | null {
@@ -127,11 +122,14 @@ async function computeMac(
   return encodeBase64Url(new Uint8Array(mac));
 }
 
-async function readBoundedBody(response: Response): Promise<Uint8Array | null> {
-  const reader = response.body?.getReader();
-  if (reader === undefined) {
+async function readBoundedBytes(
+  stream: ReadableStream<Uint8Array> | null,
+  limit: number,
+): Promise<Uint8Array<ArrayBuffer> | null> {
+  if (stream === null) {
     return new Uint8Array(0);
   }
+  const reader = stream.getReader();
   const chunks: Uint8Array[] = [];
   let total = 0;
   try {
@@ -141,7 +139,7 @@ async function readBoundedBody(response: Response): Promise<Uint8Array | null> {
         break;
       }
       total += value.byteLength;
-      if (total > RELAY_MAX_RESPONSE_BYTES) {
+      if (total > limit) {
         await reader.cancel();
         return null;
       }
@@ -150,24 +148,24 @@ async function readBoundedBody(response: Response): Promise<Uint8Array | null> {
   } catch {
     return null;
   }
-  const body = new Uint8Array(total);
+  const bytes = new Uint8Array(total);
   let offset = 0;
   for (const chunk of chunks) {
-    body.set(chunk, offset);
+    bytes.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return body;
+  return bytes;
 }
 
-function parseBackendOutcome(value: unknown): RelayOutcome | null {
+function parseOutcome(
+  candidates: readonly RelayOutcome[],
+  value: unknown,
+): RelayOutcome | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return null;
   }
   const { outcome } = value as { outcome?: unknown };
-  return typeof outcome === "string" &&
-    backendOutcomes.includes(outcome as RelayOutcome)
-    ? (outcome as RelayOutcome)
-    : null;
+  return candidates.find((candidate) => candidate === outcome) ?? null;
 }
 
 export async function handleCommandRelayPost(
@@ -182,10 +180,13 @@ export async function handleCommandRelayPost(
   const fetchImplementation = dependencies.fetch ?? globalThis.fetch;
   const nowMilliseconds = dependencies.nowMilliseconds ?? Date.now;
 
-  const bytes = new Uint8Array(await request.arrayBuffer());
+  const bytes = await readBoundedBytes(request.body, RELAY_MAX_REQUEST_BYTES);
+  if (bytes === null) {
+    return relayResponse("REJECTED", 413);
+  }
   const bodySha256 = bytesToHex(
     new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", bytes)),
-  );
+  ).slice(2);
   const timestampUnixSeconds = String(Math.floor(nowMilliseconds() / 1000));
   const requestNonce = createCommandNonce(dependencies.randomBytes);
   const signingInput = `POST\n${ingressPath}\n${timestampUnixSeconds}\n${requestNonce}\n${bodySha256}`;
@@ -215,7 +216,7 @@ export async function handleCommandRelayPost(
   if (response.status !== 200) {
     return relayResponse("unexpected_response", 502);
   }
-  const body = await readBoundedBody(response);
+  const body = await readBoundedBytes(response.body, RELAY_MAX_RESPONSE_BYTES);
   if (body === null) {
     return relayResponse("transport_failure", 502);
   }
@@ -225,21 +226,14 @@ export async function handleCommandRelayPost(
   } catch {
     return relayResponse("unexpected_response", 502);
   }
-  const outcome = parseBackendOutcome(parsed);
+  const outcome = parseOutcome(backendOutcomes, parsed);
   return outcome === null
     ? relayResponse("unexpected_response", 502)
     : relayResponse(outcome, 200);
 }
 
 export function parseRelayOutcome(value: unknown): RelayOutcome | null {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return null;
-  }
-  const { outcome } = value as { outcome?: unknown };
-  return typeof outcome === "string" &&
-    RELAY_OUTCOMES.includes(outcome as RelayOutcome)
-    ? (outcome as RelayOutcome)
-    : null;
+  return parseOutcome(RELAY_OUTCOMES, value);
 }
 
 export async function relayCommandBody(

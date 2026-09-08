@@ -48,6 +48,7 @@ const requestEventType = "eip6963:requestProvider";
 const metaMaskRdns = "io.metamask";
 const defaultSettleMilliseconds = 250;
 const unrecognizedChainErrorCode = 4902;
+const userRejectedRequestCode = 4001;
 const addressPattern = /^0x[0-9a-fA-F]{40}$/u;
 
 function defaultSettle(): Promise<void> {
@@ -145,6 +146,10 @@ function errorCode(error: unknown): number | null {
   }
   const { code } = error as { code?: unknown };
   return typeof code === "number" ? code : null;
+}
+
+export function isUserRejection(error: unknown): boolean {
+  return errorCode(error) === userRejectedRequestCode;
 }
 
 export async function switchToHederaTestnet(

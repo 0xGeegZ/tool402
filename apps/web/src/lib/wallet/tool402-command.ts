@@ -70,6 +70,10 @@ const signaturePattern = /^0x[0-9a-f]{130}$/u;
 const unsignedCommands = new WeakSet<UnsignedTool402Command>();
 const signedCommands = new WeakSet<SignedTool402Command>();
 
+function isHexSignature(value: unknown): value is `0x${string}` {
+  return typeof value === "string" && signaturePattern.test(value);
+}
+
 function defaultRandomBytes(length: number): Uint8Array {
   return globalThis.crypto.getRandomValues(new Uint8Array(length));
 }
@@ -226,15 +230,7 @@ export function createTypedDataJson(command: UnsignedTool402Command): string {
     types: TOOL402_TYPED_DATA_TYPES,
     primaryType: TOOL402_COMMAND_PRIMARY_TYPE,
     domain: TOOL402_TYPED_DATA_DOMAIN,
-    message: {
-      version: command.version,
-      type: command.type,
-      signer: command.signer,
-      nonce: command.nonce,
-      issuedAt: command.issuedAt,
-      expiresAt: command.expiresAt,
-      payloadHash: command.payloadHash,
-    },
+    message: command,
   });
 }
 
@@ -247,7 +243,7 @@ export async function signCommand(
     method: "eth_signTypedData_v4",
     params: [command.signer, typedDataJson],
   });
-  if (typeof signature !== "string" || !signaturePattern.test(signature)) {
+  if (!isHexSignature(signature)) {
     throw new TypeError(
       "the wallet returned a signature outside the accepted grammar",
     );
@@ -261,7 +257,7 @@ export async function signCommand(
     issuedAt: command.issuedAt,
     expiresAt: command.expiresAt,
     payloadHash: command.payloadHash,
-    signature: signature as `0x${string}`,
+    signature,
   });
   signedCommands.add(signed);
   return signed;

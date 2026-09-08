@@ -97,9 +97,11 @@ The browser and the relay share one nonce encoder, because both grammars are
 16 random bytes rendered as 22 unpadded base64url characters; the values are
 always distinct because each call draws fresh bytes.
 
-The relay does not parse or size-limit the request body: the backend applies
-its own 65 536-byte cap and answers `REJECTED`, and parsing would break the
-digest the manifest requires.
+The relay never parses the request body, because parsing would break the
+digest the manifest requires. It does apply the 65 536-byte cap the backend
+documents for the ingress body, before hashing, and answers `413` with the
+outcome the backend documents for that case, `REJECTED`, so an oversized body
+is refused without buffering it whole.
 
 The relay returns `{ outcome }` alone. The backend's optional `publicId` is an
 echo of a value the browser already holds, so dropping it removes surface

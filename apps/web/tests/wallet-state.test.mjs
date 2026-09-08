@@ -219,6 +219,41 @@ test("reaches not_issuer only through the approved issuer address prop", async (
   );
 });
 
+test("reads the current session passively without an account prompt or a switch", async () => {
+  const { readCurrentSession } = await loadStateModule();
+
+  const wrong = createProvider({ chainId: "0x1" });
+  assert.deepEqual(await readCurrentSession(wrong), {
+    state: { kind: "wrong_chain", chainId: "0x1" },
+    provider: wrong,
+  });
+  assert.deepEqual(wrong.calls.map((call) => call.method), ["eth_chainId"]);
+
+  const empty = createProvider({ accounts: [] });
+  assert.deepEqual(await readCurrentSession(empty), {
+    state: { kind: "disconnected" },
+    provider: null,
+  });
+  assert.deepEqual(empty.calls.map((call) => call.method), ["eth_chainId", "eth_accounts"]);
+
+  const connected = createProvider();
+  assert.deepEqual(await readCurrentSession(connected), {
+    state: { kind: "connected", address: lowerCaseAddress },
+    provider: connected,
+  });
+  assert.deepEqual((await readCurrentSession(connected, otherAddress)).state, {
+    kind: "not_issuer",
+    address: lowerCaseAddress,
+    approvedIssuerAddress: otherAddress,
+  });
+  assert.equal(
+    connected.calls.some((call) =>
+      ["eth_requestAccounts", "wallet_switchEthereumChain"].includes(call.method),
+    ),
+    false,
+  );
+});
+
 test("keeps the state library free of network, storage, timers, and logging", async () => {
   const source = await readAppFile("src/lib/wallet/wallet-state.ts");
 
@@ -310,9 +345,14 @@ test("renders the closed seven-phase signature dialog with refusal copy inside e
     source,
     /from\s+["']\.\.\/\.\.\/lib\/wallet\/metamask-provider\.ts["']/u,
   );
+  assert.match(
+    source,
+    /from\s+["']\.\.\/\.\.\/lib\/wallet\/wallet-state\.ts["']/u,
+  );
+  assert.doesNotMatch(source, /readChainId\(|readSignerAddress\(/u);
 
-  const readChain = source.indexOf("readChainId(");
-  const readSigner = source.indexOf("readSignerAddress(");
+  const readChain = source.indexOf("readCurrentSession(");
+  const readSigner = readChain;
   const freshNonce = source.indexOf("createCommandNonce(");
   const sign = source.indexOf("signCommand(");
   const relay = source.indexOf("relayCommandBody(");

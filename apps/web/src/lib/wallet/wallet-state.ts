@@ -85,15 +85,11 @@ async function readSignerOrNull(
   }
 }
 
-function decide(
+function decideSigner(
   provider: Eip1193Provider,
-  chainId: string | null,
   address: string | null,
   approvedIssuerAddress: string | undefined,
 ): WalletConnection {
-  if (chainId !== HEDERA_TESTNET_CHAIN_ID) {
-    return connection({ kind: "wrong_chain", chainId }, provider);
-  }
   if (address === null) {
     return connection({ kind: "disconnected" }, null);
   }
@@ -132,23 +128,33 @@ export async function connectWallet(
     return connection({ kind: "disconnected" }, null);
   }
   const chainId = await readChainOrNull(provider);
-  return decide(provider, chainId, address, approvedIssuerAddress);
+  if (chainId !== HEDERA_TESTNET_CHAIN_ID) {
+    return connection({ kind: "wrong_chain", chainId }, provider);
+  }
+  return decideSigner(provider, address, approvedIssuerAddress);
+}
+
+export async function readCurrentSession(
+  provider: Eip1193Provider,
+  approvedIssuerAddress?: string,
+): Promise<WalletConnection> {
+  const approved = normalizeApprovedIssuer(approvedIssuerAddress);
+  const chainId = await readChainOrNull(provider);
+  if (chainId !== HEDERA_TESTNET_CHAIN_ID) {
+    return connection({ kind: "wrong_chain", chainId }, provider);
+  }
+  const address = await readSignerOrNull(provider, false);
+  return decideSigner(provider, address, approved);
 }
 
 export async function recheckAfterSwitch(
   provider: Eip1193Provider,
   approvedIssuerAddress?: string,
 ): Promise<WalletConnection> {
-  const approved = normalizeApprovedIssuer(approvedIssuerAddress);
   try {
     await switchToHederaTestnet(provider);
   } catch {
     // A declined or failed switch is not an outcome; the chain re-read below decides.
   }
-  const chainId = await readChainOrNull(provider);
-  if (chainId !== HEDERA_TESTNET_CHAIN_ID) {
-    return connection({ kind: "wrong_chain", chainId }, provider);
-  }
-  const address = await readSignerOrNull(provider, false);
-  return decide(provider, chainId, address, approved);
+  return readCurrentSession(provider, approvedIssuerAddress);
 }

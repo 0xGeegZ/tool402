@@ -7,9 +7,7 @@ import {
   type RelayOutcome,
 } from "../../lib/wallet/command-relay.ts";
 import {
-  HEDERA_TESTNET_CHAIN_ID,
-  readChainId,
-  readSignerAddress,
+  isUserRejection,
   type Eip1193Provider,
 } from "../../lib/wallet/metamask-provider.ts";
 import {
@@ -18,6 +16,7 @@ import {
   createUnsignedCommand,
   signCommand,
 } from "../../lib/wallet/tool402-command.ts";
+import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -73,15 +72,6 @@ const idleState: DialogState = {
     "Signing asks MetaMask for one EIP-712 signature. It sends no transaction.",
   outcome: null,
 };
-const userRejectedRequestCode = 4001;
-
-function isUserRejection(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    (error as { code?: unknown }).code === userRejectedRequestCode
-  );
-}
 
 function failed(
   message: string,
@@ -158,26 +148,18 @@ export function SignatureDialog({
       outcome: null,
     });
 
-    const chainId = await readChainId(provider).catch(() => null);
-    if (chainId !== HEDERA_TESTNET_CHAIN_ID) {
+    const session = await readCurrentSession(provider);
+    if (session.state.kind !== "connected") {
       finish(
         failed(
-          "MetaMask is not on Hedera Testnet. Nothing was sent or recorded.",
+          session.state.kind === "wrong_chain"
+            ? "MetaMask is not on Hedera Testnet. Nothing was sent or recorded."
+            : "MetaMask reports no connected account. Nothing was sent or recorded.",
         ),
       );
       return;
     }
-    const signer = await readSignerAddress(provider, { request: false }).catch(
-      () => null,
-    );
-    if (signer === null) {
-      finish(
-        failed(
-          "MetaMask reports no connected account. Nothing was sent or recorded.",
-        ),
-      );
-      return;
-    }
+    const signer = session.state.address;
 
     let body: string;
     try {

@@ -363,6 +363,40 @@ test("reports a thrown fetch, a timeout, or an oversized response as transport_f
   }
 });
 
+test("refuses an oversized request body before hashing and forwards one at the cap", async () => {
+  const { RELAY_MAX_REQUEST_BYTES, handleCommandRelayPost } = await loadRelayModule();
+
+  assert.equal(RELAY_MAX_REQUEST_BYTES, 65_536);
+
+  const oversized = createFetch(() => jsonResponse({ outcome: "ACCEPTED" }));
+  const tooLarge = await handleCommandRelayPost(
+    createRequest(new Uint8Array(RELAY_MAX_REQUEST_BYTES + 1).fill(0x7b)),
+    configuredEnvironment(),
+    dependencies(oversized),
+  );
+  assert.equal(tooLarge.status, 413);
+  assert.deepEqual(await tooLarge.json(), { outcome: "REJECTED" });
+  assert.equal(oversized.calls.length, 0);
+
+  const atCap = createFetch(() => jsonResponse({ outcome: "ACCEPTED" }));
+  const exact = new Uint8Array(RELAY_MAX_REQUEST_BYTES).fill(0x7b);
+  const accepted = await handleCommandRelayPost(createRequest(exact), configuredEnvironment(), dependencies(atCap));
+  assert.equal(accepted.status, 200);
+  assert.equal(atCap.calls.length, 1);
+  assert.deepEqual(forwardedBytes(atCap.calls[0].init), exact);
+  assert.equal(forwardedHeaders(atCap.calls[0].init).bodySha256, await sha256Hex(exact));
+
+  const empty = createFetch(() => jsonResponse({ outcome: "REJECTED" }));
+  const noBody = await handleCommandRelayPost(
+    new Request("https://web.test/api/commands", { method: "POST" }),
+    configuredEnvironment(),
+    dependencies(empty),
+  );
+  assert.equal(noBody.status, 200);
+  assert.deepEqual(await noBody.json(), { outcome: "REJECTED" });
+  assert.equal(forwardedBytes(empty.calls[0].init).byteLength, 0);
+});
+
 test("discloses no body, header, key, signature, or backend text in any relay response", async () => {
   const { handleCommandRelayPost } = await loadRelayModule();
   const backendText = '{"outcome":"REJECTED","detail":"secret-backend-detail"}';
