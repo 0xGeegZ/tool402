@@ -2,7 +2,7 @@ import { RiskScanDetail } from "../../../components/riskscan/detail/riskscan-det
 
 export default function RiskScanDetailPage() {
   return (
-    <main className="py-6 sm:py-12">
+    <main className="pb-6 sm:pb-12">
       <RiskScanDetail />
     </main>
   );

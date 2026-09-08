@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
 
 export function NotFoundBoundary() {
   return (
-    <main className="mx-auto max-w-3xl py-6 sm:py-12">
+    <main className="mx-auto max-w-3xl pb-6 sm:pb-12">
       <Card className="overflow-hidden">
         <div className="grid gap-8 p-6 sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="space-y-5">
