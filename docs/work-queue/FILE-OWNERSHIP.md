@@ -327,3 +327,23 @@ helper are accepted under Node 22.21.1. M37 remains private, source-only, and
 unavailable to every runtime or external path. Any successor must receive
 separate ownership and a separate human authorization before provisioning or
 an executable ATS action.
+
+S14-T010 is a root-owned inbox control record comprising its card,
+`docs/ui/UI-S14.md`, `docs/ui/IMPORT-LEDGER.md`,
+`docs/superpowers/plans/2026-09-08-s14-route-loading-skeletons.md`, this
+ownership record, queue state, catalog, decisions, reviews, commits, and
+pushes. Its only proposed implementation paths are
+`apps/web/src/app/explore/loading.tsx`,
+`apps/web/src/app/explore/riskscan/loading.tsx`,
+`apps/web/src/app/explore/riskscan/try/loading.tsx`,
+`apps/web/src/app/explore/riskscan/tool-loop/loading.tsx`,
+`apps/web/src/app/dashboard/loading.tsx`,
+`apps/web/src/app/dashboard/riskscan/loading.tsx`,
+`apps/web/src/app/dashboard/riskscan/compatibility/loading.tsx`,
+`apps/web/src/app/dashboard/riskscan/preflight/loading.tsx`,
+`apps/web/src/components/ui/skeleton.tsx`, and
+`apps/web/tests/route-loading-skeletons.test.mjs`. Every existing route,
+component, stylesheet, shared UI primitive, package/lockfile, configuration,
+identity/provider/payment surface, backend, Agent, deployment, and submission
+path is excluded. No source path is authorized until a fresh independent
+ready-state review accepts the amended local scope.
