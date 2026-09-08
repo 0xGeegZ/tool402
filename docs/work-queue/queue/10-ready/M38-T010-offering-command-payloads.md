@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M10-T010 accepted; M20-T010 accepted; M26-T010 accepted;
   M28-T010 accepted; no in-batch predecessor
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
