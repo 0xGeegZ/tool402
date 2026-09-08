@@ -26,6 +26,18 @@ const expectedRows = [
   ["/dashboard/riskscan/preflight", "Review disclosures", "Inspect the guest Quick disclosure preflight."],
 ];
 
+const expectedRouteFiles = {
+  "/": "src/app/page.tsx",
+  "/explore": "src/app/explore/page.tsx",
+  "/explore/riskscan": "src/app/explore/riskscan/page.tsx",
+  "/explore/riskscan/try": "src/app/explore/riskscan/try/page.tsx",
+  "/explore/riskscan/tool-loop": "src/app/explore/riskscan/tool-loop/page.tsx",
+  "/dashboard": "src/app/dashboard/page.tsx",
+  "/dashboard/riskscan": "src/app/dashboard/riskscan/page.tsx",
+  "/dashboard/riskscan/compatibility": "src/app/dashboard/riskscan/compatibility/page.tsx",
+  "/dashboard/riskscan/preflight": "src/app/dashboard/riskscan/preflight/page.tsx",
+};
+
 async function fileExists(path) {
   try {
     await access(join(appRoot, path));
@@ -88,6 +100,14 @@ test("keeps the nine guided steps in the exact local order and copy", async (t) 
   assert.deepEqual(
     [...steps.matchAll(/href:\s*["']([^"']+)["']/g)].map(([, href]) => href),
     expectedRows.map(([href]) => href),
+  );
+  assert.deepEqual(
+    Object.entries(expectedRouteFiles),
+    expectedRows.map(([href]) => [href, expectedRouteFiles[href]]),
+  );
+  assert.deepEqual(
+    await Promise.all(Object.values(expectedRouteFiles).map(fileExists)),
+    Array.from({ length: expectedRows.length }, () => true),
   );
 });
 
