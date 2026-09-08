@@ -29,9 +29,14 @@ export interface DiscoveryTarget {
 }
 
 export type ProviderSelection =
-  | { readonly kind: "selected"; readonly provider: Eip1193Provider }
+  | { readonly kind: "provider"; readonly provider: Eip1193Provider }
   | { readonly kind: "no_provider" }
   | { readonly kind: "multiple_providers" };
+
+export interface ProviderSelectionInput {
+  readonly announcedProviders: readonly unknown[];
+  readonly legacyProvider: unknown;
+}
 
 export const HEDERA_TESTNET_CHAIN_ID = "0x128";
 
@@ -57,26 +62,38 @@ function defaultSettle(): Promise<void> {
   });
 }
 
-function isProvider(value: unknown): value is Eip1193Provider {
+function isMetaMaskProvider(value: unknown): value is Eip1193Provider {
   return (
     typeof value === "object" &&
     value !== null &&
-    typeof (value as { request?: unknown }).request === "function"
+    (value as { isMetaMask?: unknown }).isMetaMask === true
   );
 }
 
-function isMetaMaskCandidate(detail: unknown): detail is Eip6963ProviderDetail {
+function announcedMetaMask(detail: unknown): Eip1193Provider | null {
   if (typeof detail !== "object" || detail === null) {
-    return false;
+    return null;
   }
   const { info, provider } = detail as { info?: unknown; provider?: unknown };
-  return (
-    typeof info === "object" &&
-    info !== null &&
-    (info as { rdns?: unknown }).rdns === metaMaskRdns &&
-    isProvider(provider) &&
-    provider.isMetaMask === true
-  );
+  const rdns =
+    typeof info === "object" && info !== null ? (info as { rdns?: unknown }).rdns : undefined;
+  return rdns === metaMaskRdns && isMetaMaskProvider(provider) ? provider : null;
+}
+
+export function selectMetaMaskProvider(input: ProviderSelectionInput): ProviderSelection {
+  if (input.announcedProviders.length === 0) {
+    return isMetaMaskProvider(input.legacyProvider)
+      ? Object.freeze({ kind: "provider", provider: input.legacyProvider })
+      : Object.freeze({ kind: "no_provider" });
+  }
+  const candidates = input.announcedProviders
+    .map(announcedMetaMask)
+    .filter((provider): provider is Eip1193Provider => provider !== null);
+  const [only] = candidates;
+  if (candidates.length === 1 && only !== undefined) {
+    return Object.freeze({ kind: "provider", provider: only });
+  }
+  return Object.freeze({ kind: candidates.length === 0 ? "no_provider" : "multiple_providers" });
 }
 
 export async function discoverMetaMaskProvider(
@@ -95,26 +112,19 @@ export async function discoverMetaMaskProvider(
     target.removeEventListener(announceEventType, listener);
   }
 
-  if (announced.length === 0) {
-    const legacy = target.ethereum;
-    return isProvider(legacy) && legacy.isMetaMask === true
-      ? Object.freeze({ kind: "selected", provider: legacy })
-      : Object.freeze({ kind: "no_provider" });
-  }
-
-  const candidates = new Set<Eip1193Provider>();
-  for (const detail of announced) {
-    if (isMetaMaskCandidate(detail)) {
-      candidates.add(detail.provider);
+  const seen = new Set<unknown>();
+  const announcedProviders = announced.filter((detail) => {
+    const provider =
+      typeof detail === "object" && detail !== null
+        ? (detail as { provider?: unknown }).provider
+        : undefined;
+    if (seen.has(provider)) {
+      return false;
     }
-  }
-  const [only] = candidates;
-  if (candidates.size === 1 && only !== undefined) {
-    return Object.freeze({ kind: "selected", provider: only });
-  }
-  return Object.freeze({
-    kind: candidates.size === 0 ? "no_provider" : "multiple_providers",
+    seen.add(provider);
+    return true;
   });
+  return selectMetaMaskProvider({ announcedProviders, legacyProvider: target.ethereum });
 }
 
 export async function readChainId(

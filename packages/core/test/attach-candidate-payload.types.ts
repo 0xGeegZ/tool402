@@ -1,0 +1,87 @@
+import {
+  canonicalAttachCandidatePayloadBytes,
+  parseAttachCandidatePayload,
+} from "@tool402/core";
+import type {
+  AttachCandidatePayload,
+  CandidateTransactionId,
+  EvmAddress,
+  HederaTransactionId,
+  MirrorTransactionId,
+} from "@tool402/core";
+
+type IsExactly<Left, Right> = (
+  <Value>() => Value extends Left ? 1 : 2
+) extends <Value>() => Value extends Right ? 1 : 2
+  ? (
+      <Value>() => Value extends Right ? 1 : 2
+    ) extends <Value>() => Value extends Left ? 1 : 2
+      ? true
+      : false
+  : false;
+
+type Assert<Condition extends true> = Condition;
+
+type CandidateTransactionIdIsExact = Assert<
+  IsExactly<CandidateTransactionId, HederaTransactionId | MirrorTransactionId>
+>;
+
+const payload: AttachCandidatePayload = parseAttachCandidatePayload({
+  schemaVersion: 1,
+  attemptPublicId: "CCCCCCCCCCCCCCCCCCCCCg",
+  operationKind: "ATS_CREATE",
+  candidateTransactionId: "0.0.123@1735689600.123456789",
+  candidateEvmAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  idempotencyKey: "DDDDDDDDDDDDDDDDDDDDDw",
+  expiresAt: "2026-09-15T00:00:00.000Z",
+});
+
+declare const hederaTransactionId: HederaTransactionId;
+declare const mirrorTransactionId: MirrorTransactionId;
+
+const candidateTransactionId: CandidateTransactionId = payload.candidateTransactionId;
+const candidateAddress: EvmAddress | undefined = payload.candidateEvmAddress;
+const canonicalCandidate: CandidateTransactionId = hederaTransactionId;
+const mirrorCandidate: CandidateTransactionId = mirrorTransactionId;
+const schemaVersion: 1 = payload.schemaVersion;
+const bytes: Uint8Array = canonicalAttachCandidatePayloadBytes(payload);
+const fundingPayload: AttachCandidatePayload = parseAttachCandidatePayload({
+  schemaVersion: 1,
+  attemptPublicId: "CCCCCCCCCCCCCCCCCCCCCg",
+  operationKind: "HEDERA_FUNDING",
+  candidateTransactionId: "0.0.123-1735689600-123456789",
+  idempotencyKey: "DDDDDDDDDDDDDDDDDDDDDw",
+  expiresAt: "2026-09-15T00:00:00.000Z",
+});
+const candidateAddressOmitted: AttachCandidatePayload = {
+  schemaVersion: 1,
+  attemptPublicId: "CCCCCCCCCCCCCCCCCCCCCg",
+  operationKind: "HEDERA_FUNDING",
+  candidateTransactionId: mirrorTransactionId,
+  idempotencyKey: "DDDDDDDDDDDDDDDDDDDDDw",
+  expiresAt: "2026-09-15T00:00:00.000Z",
+};
+
+void candidateTransactionId;
+void candidateAddress;
+void canonicalCandidate;
+void mirrorCandidate;
+void schemaVersion;
+void bytes;
+void candidateAddressOmitted;
+
+// @ts-expect-error Parsed payload roots are readonly.
+payload.operationKind = "ATS_ISSUE";
+// @ts-expect-error Candidate transaction identifiers are not EVM addresses.
+const transactionAsAddress: EvmAddress = payload.candidateTransactionId;
+// @ts-expect-error EVM addresses are not candidate transaction identifiers.
+const addressAsTransaction: CandidateTransactionId = payload.candidateEvmAddress!;
+// @ts-expect-error The candidate address is optional outside ATS_CREATE.
+const requiredFundingAddress: EvmAddress = fundingPayload.candidateEvmAddress;
+// @ts-expect-error A plain string is neither accepted transaction-id brand.
+const plainStringAsCandidate: CandidateTransactionId = "0.0.123-1735689600-123456789";
+
+void transactionAsAddress;
+void addressAsTransaction;
+void requiredFundingAddress;
+void plainStringAsCandidate;

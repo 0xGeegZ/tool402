@@ -1,9 +1,59 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import test from "node:test";
-import { fileURLToPath } from "node:url";
 
+const sourceUrl = new URL("../src/lib/wallet/wallet-state.ts", import.meta.url);
+const sourcePath = fileURLToPath(sourceUrl);
+const sourceExists = existsSync(sourcePath);
+const implementedTest = sourceExists ? test : test.skip;
+let api;
+
+const connectedAddress = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+
+test("requires the declared wallet-state source module", () => {
+  assert.equal(sourceExists, true, `missing declared source module: ${sourcePath}`);
+});
+
+test.before(async () => {
+  if (sourceExists) {
+    api = await import(sourceUrl.href);
+  }
+});
+
+implementedTest("exposes exactly the closed wallet-state union", () => {
+  assert.deepEqual(api.walletStateKinds, [
+    "disconnected",
+    "connecting",
+    "no_provider",
+    "multiple_providers",
+    "wrong_chain",
+    "not_issuer",
+    "connected",
+  ]);
+
+  for (const kind of api.walletStateKinds) {
+    assert.equal(api.isWalletStateKind(kind), true);
+  }
+  for (const kind of ["idle", "failed", "authorized", "complete", ""]) {
+    assert.equal(api.isWalletStateKind(kind), false);
+  }
+});
+
+implementedTest("keeps the issuer comparison advisory and opt-in", () => {
+  assert.equal(api.isIssuerAdvisory(connectedAddress, undefined), false);
+  assert.equal(api.isIssuerAdvisory(connectedAddress, connectedAddress), false);
+  assert.equal(
+    api.isIssuerAdvisory(connectedAddress, "0x0000000000000000000000000000000000000402"),
+    true,
+  );
+  assert.equal(api.isIssuerAdvisory(connectedAddress.toUpperCase(), connectedAddress), true);
+});
+
+// Lane contracts (work/s15), block-scoped beside the root's contracts above.
+{
 const appRoot = fileURLToPath(new URL("..", import.meta.url));
 
 function readAppFile(path) {
@@ -53,13 +103,13 @@ function createProvider(options = {}) {
 }
 
 function selecting(provider) {
-  return async () => Object.freeze({ kind: "selected", provider });
+  return async () => Object.freeze({ kind: "provider", provider });
 }
 
 test("fixes the closed seven-kind wallet state union", async () => {
-  const { WALLET_STATE_KINDS } = await loadStateModule();
+  const { walletStateKinds } = await loadStateModule();
 
-  assert.deepEqual(WALLET_STATE_KINDS, [
+  assert.deepEqual(walletStateKinds, [
     "disconnected",
     "connecting",
     "no_provider",
@@ -68,7 +118,7 @@ test("fixes the closed seven-kind wallet state union", async () => {
     "not_issuer",
     "connected",
   ]);
-  assert.equal(Object.isFrozen(WALLET_STATE_KINDS), true);
+  assert.equal(Object.isFrozen(walletStateKinds), true);
 });
 
 test("maps discovery refusals to closed states without touching a provider", async () => {
@@ -304,9 +354,7 @@ test("renders every wallet state from a client island that discovers only on cli
 });
 
 test("renders the closed seven-phase signature dialog with refusal copy inside existing phases", async () => {
-  const source = await readAppFile(
-    "src/components/wallet/signature-dialog.tsx",
-  );
+  const source = await readAppFile("src/components/wallet/signature-dialog.tsx");
 
   assert.match(source, /^"use client";/u);
   assert.match(
@@ -314,59 +362,21 @@ test("renders the closed seven-phase signature dialog with refusal copy inside e
     /SIGNATURE_PHASES\s*=\s*\[\s*"idle",\s*"waiting",\s*"checking",\s*"rejected",\s*"failed",\s*"complete",\s*"unknown",?\s*\]\s+as\s+const/u,
   );
   const phaseLiterals = new Set(
-    [...source.matchAll(/phase:\s*["']([a-z_]+)["']/gu)].map(
-      ([, phase]) => phase,
-    ),
+    [...source.matchAll(/phase:\s*["']([a-z_]+)["']/gu)].map(([, phase]) => phase),
   );
   assert.deepEqual(
     [...phaseLiterals].filter(
       (phase) =>
-        ![
-          "idle",
-          "waiting",
-          "checking",
-          "rejected",
-          "failed",
-          "complete",
-          "unknown",
-        ].includes(phase),
+        !["idle", "waiting", "checking", "rejected", "failed", "complete", "unknown"].includes(phase),
     ),
     [],
   );
-  assert.match(
+  assert.match(source, /from\s+["']\.\.\/\.\.\/lib\/wallet\/command-relay\.ts["']/u);
+  assert.match(source, /signAndRelayCommand\(provider,\s*request,/u);
+  assert.doesNotMatch(
     source,
-    /from\s+["']\.\.\/\.\.\/lib\/wallet\/tool402-command\.ts["']/u,
+    /\b(?:signCommand|relayCommandBody|createCommandNonce|createUnsignedCommand|readCurrentSession|readChainId|readSignerAddress)\(/u,
   );
-  assert.match(
-    source,
-    /from\s+["']\.\.\/\.\.\/lib\/wallet\/command-relay\.ts["']/u,
-  );
-  assert.match(
-    source,
-    /from\s+["']\.\.\/\.\.\/lib\/wallet\/metamask-provider\.ts["']/u,
-  );
-  assert.match(
-    source,
-    /from\s+["']\.\.\/\.\.\/lib\/wallet\/wallet-state\.ts["']/u,
-  );
-  assert.doesNotMatch(source, /readChainId\(|readSignerAddress\(/u);
-
-  const readChain = source.indexOf("readCurrentSession(");
-  const readSigner = readChain;
-  const freshNonce = source.indexOf("createCommandNonce(");
-  const sign = source.indexOf("signCommand(");
-  const relay = source.indexOf("relayCommandBody(");
-  assert.ok(
-    readChain > -1 &&
-      readSigner > -1 &&
-      freshNonce > -1 &&
-      sign > -1 &&
-      relay > -1,
-  );
-  assert.ok(
-    readChain < sign && readSigner < sign && freshNonce < sign && sign < relay,
-  );
-
   assert.match(source, /aria-live=["']polite["']/u);
   assert.match(source, /Sign with MetaMask/u);
   assert.match(source, /Sign again/u);
@@ -374,14 +384,11 @@ test("renders the closed seven-phase signature dialog with refusal copy inside e
   assert.match(source, /expired/iu);
   assert.match(source, /idempotency key/iu);
   assert.match(source, /nothing was (?:sent or )?recorded/iu);
+  assert.match(source, /already claimed by an earlier attempt/u);
+  assert.doesNotMatch(source, /earlier command stands/u);
   assert.doesNotMatch(source, /\buseEffect\b/u);
-  assert.doesNotMatch(
-    source,
-    /\b(?:console|localStorage|sessionStorage|setTimeout|setInterval|retry\()/u,
-  );
+  assert.doesNotMatch(source, /\b(?:console|localStorage|sessionStorage|setTimeout|setInterval|retry\()/u);
   assert.doesNotMatch(source, /\bfetch\(/u);
-  assert.doesNotMatch(
-    source,
-    /0\.0\.\d+|HBAR|balance|on-chain success|created on Hedera/u,
-  );
+  assert.doesNotMatch(source, /0\.0\.\d+|HBAR|balance|on-chain success|created on Hedera/u);
 });
+}

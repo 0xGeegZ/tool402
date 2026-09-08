@@ -1,10 +1,15 @@
 import { bytesToHex } from "viem";
 
+import { isUserRejection, type Eip1193Provider } from "./metamask-provider.ts";
 import {
+  createCommandBody,
   createCommandNonce,
+  createUnsignedCommand,
   encodeBase64Url,
+  signCommand,
   type RandomBytes,
 } from "./tool402-command.ts";
+import { readCurrentSession } from "./wallet-state.ts";
 
 export const RELAY_OUTCOMES = Object.freeze([
   "ACCEPTED",
@@ -20,6 +25,7 @@ export const RELAY_OUTCOMES = Object.freeze([
 export type RelayOutcome = (typeof RELAY_OUTCOMES)[number];
 
 export const RELAY_TIMEOUT_MILLISECONDS = 10_000;
+export const RELAY_ROUTE_GRACE_MILLISECONDS = 5_000;
 export const RELAY_MAX_REQUEST_BYTES = 65_536;
 export const RELAY_MAX_RESPONSE_BYTES = 4096;
 
@@ -247,6 +253,7 @@ export async function relayCommandBody(
       headers: { "content-type": "application/json" },
       body,
       cache: "no-store",
+      signal: AbortSignal.timeout(RELAY_TIMEOUT_MILLISECONDS + RELAY_ROUTE_GRACE_MILLISECONDS),
     });
   } catch {
     return "transport_failure";
@@ -258,4 +265,62 @@ export async function relayCommandBody(
     return "unexpected_response";
   }
   return parseRelayOutcome(parsed) ?? "unexpected_response";
+}
+
+export interface SignatureRequest {
+  readonly type: string;
+  readonly canonicalPayloadBytes: Uint8Array;
+  readonly issuedAt: string;
+  readonly expiresAt: string;
+}
+
+export type SignatureFlowResult =
+  | { readonly kind: "expired" }
+  | { readonly kind: "wrong_chain" }
+  | { readonly kind: "no_account" }
+  | { readonly kind: "declined" }
+  | { readonly kind: "signing_failed" }
+  | { readonly kind: "relayed"; readonly outcome: RelayOutcome };
+
+export interface SignatureFlowDependencies {
+  readonly relay?: (body: string) => Promise<RelayOutcome>;
+  readonly onSigned?: () => void;
+  readonly nowMilliseconds?: () => number;
+  readonly randomBytes?: RandomBytes;
+}
+
+export async function signAndRelayCommand(
+  provider: Eip1193Provider,
+  request: SignatureRequest,
+  dependencies: SignatureFlowDependencies = {},
+): Promise<SignatureFlowResult> {
+  const now = (dependencies.nowMilliseconds ?? Date.now)();
+  if (!(now < Date.parse(request.expiresAt))) {
+    return { kind: "expired" };
+  }
+  const session = await readCurrentSession(provider);
+  if (session.state.kind === "wrong_chain") {
+    return { kind: "wrong_chain" };
+  }
+  if (session.state.kind !== "connected") {
+    return { kind: "no_account" };
+  }
+  let body: string;
+  try {
+    const command = createUnsignedCommand({
+      type: request.type,
+      signer: session.state.address,
+      nonce: createCommandNonce(dependencies.randomBytes),
+      issuedAt: request.issuedAt,
+      expiresAt: request.expiresAt,
+      canonicalPayloadBytes: request.canonicalPayloadBytes,
+    });
+    const signed = await signCommand(provider, command);
+    body = createCommandBody(signed, request.canonicalPayloadBytes);
+  } catch (error) {
+    return { kind: isUserRejection(error) ? "declined" : "signing_failed" };
+  }
+  dependencies.onSigned?.();
+  const outcome = await (dependencies.relay ?? relayCommandBody)(body);
+  return { kind: "relayed", outcome };
 }

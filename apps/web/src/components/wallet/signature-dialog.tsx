@@ -3,20 +3,12 @@
 import { useState } from "react";
 
 import {
-  relayCommandBody,
+  signAndRelayCommand,
   type RelayOutcome,
+  type SignatureFlowResult,
+  type SignatureRequest,
 } from "../../lib/wallet/command-relay.ts";
-import {
-  isUserRejection,
-  type Eip1193Provider,
-} from "../../lib/wallet/metamask-provider.ts";
-import {
-  createCommandBody,
-  createCommandNonce,
-  createUnsignedCommand,
-  signCommand,
-} from "../../lib/wallet/tool402-command.ts";
-import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
+import type { Eip1193Provider } from "../../lib/wallet/metamask-provider.ts";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -39,11 +31,7 @@ export const SIGNATURE_PHASES = [
 
 export type SignaturePhase = (typeof SIGNATURE_PHASES)[number];
 
-export interface SignatureRequest {
-  readonly type: string;
-  readonly canonicalPayloadBytes: Uint8Array;
-  readonly issuedAt: string;
-  readonly expiresAt: string;
+export interface SignatureDialogRequest extends SignatureRequest {
   readonly title: string;
   readonly description: string;
 }
@@ -55,7 +43,7 @@ export interface SignatureResult {
 
 export interface SignatureDialogProps {
   readonly provider: Eip1193Provider;
-  readonly request: SignatureRequest;
+  readonly request: SignatureDialogRequest;
   readonly onResult?: (result: SignatureResult) => void;
   readonly relay?: (body: string) => Promise<RelayOutcome>;
 }
@@ -93,7 +81,7 @@ function describeOutcome(outcome: RelayOutcome): DialogState {
       return {
         phase: "complete",
         message:
-          "Backend outcome: REPLAYED. This nonce was already claimed, so the earlier command stands and nothing new was recorded.",
+          "Backend outcome: REPLAYED. This nonce was already claimed by an earlier attempt, so this attempt recorded nothing. Check the status surface for the earlier command's fate.",
         outcome,
       };
     case "CONFLICT":
@@ -103,7 +91,7 @@ function describeOutcome(outcome: RelayOutcome): DialogState {
       );
     case "REJECTED":
       return failed(
-        "Backend outcome: REJECTED. The backend gives no reason; common causes are an unauthorized issuer, an expired command, or a malformed body. Nothing was recorded.",
+        "Outcome: REJECTED. The command was refused before or at the backend, which gives no reason. Common causes are an unauthorized issuer, an expired command, or a malformed or oversized body. Nothing was recorded.",
         outcome,
       );
     case "UNSUPPORTED_TYPE":
@@ -127,6 +115,35 @@ function describeOutcome(outcome: RelayOutcome): DialogState {
   }
 }
 
+function describeResult(result: SignatureFlowResult): DialogState {
+  switch (result.kind) {
+    case "expired":
+      return failed(
+        "This signature request expired before signing, so nothing was sent or recorded. Start the step again to get fresh timestamps.",
+      );
+    case "wrong_chain":
+      return failed(
+        "MetaMask is not on Hedera Testnet. Nothing was sent or recorded.",
+      );
+    case "no_account":
+      return failed(
+        "MetaMask reports no connected account. Nothing was sent or recorded.",
+      );
+    case "declined":
+      return {
+        phase: "rejected",
+        message: "You declined the signature. Nothing was sent or recorded.",
+        outcome: null,
+      };
+    case "signing_failed":
+      return failed(
+        "The signature request failed before anything was sent. Nothing was recorded.",
+      );
+    case "relayed":
+      return describeOutcome(result.outcome);
+  }
+}
+
 export function SignatureDialog({
   provider,
   request,
@@ -135,6 +152,10 @@ export function SignatureDialog({
 }: SignatureDialogProps) {
   const [state, setState] = useState<DialogState>(idleState);
   const busy = state.phase === "waiting" || state.phase === "checking";
+  const expired =
+    state.phase === "failed" &&
+    state.outcome === null &&
+    state.message.startsWith("This signature request expired");
 
   function finish(next: DialogState) {
     setState(next);
@@ -147,56 +168,16 @@ export function SignatureDialog({
       message: "Confirm the signature in MetaMask.",
       outcome: null,
     });
-
-    const session = await readCurrentSession(provider);
-    if (session.state.kind !== "connected") {
-      finish(
-        failed(
-          session.state.kind === "wrong_chain"
-            ? "MetaMask is not on Hedera Testnet. Nothing was sent or recorded."
-            : "MetaMask reports no connected account. Nothing was sent or recorded.",
-        ),
-      );
-      return;
-    }
-    const signer = session.state.address;
-
-    let body: string;
-    try {
-      const command = createUnsignedCommand({
-        type: request.type,
-        signer,
-        nonce: createCommandNonce(),
-        issuedAt: request.issuedAt,
-        expiresAt: request.expiresAt,
-        canonicalPayloadBytes: request.canonicalPayloadBytes,
-      });
-      const signed = await signCommand(provider, command);
-      body = createCommandBody(signed, request.canonicalPayloadBytes);
-    } catch (error) {
-      if (isUserRejection(error)) {
-        finish({
-          phase: "rejected",
-          message: "You declined the signature. Nothing was sent or recorded.",
+    const result = await signAndRelayCommand(provider, request, {
+      relay,
+      onSigned: () =>
+        setState({
+          phase: "checking",
+          message: "Signature received. Relaying the command.",
           outcome: null,
-        });
-        return;
-      }
-      finish(
-        failed(
-          "The signature request failed before anything was sent. Nothing was recorded.",
-        ),
-      );
-      return;
-    }
-
-    setState({
-      phase: "checking",
-      message: "Signature received. Relaying the command.",
-      outcome: null,
+        }),
     });
-    const outcome = relay ? await relay(body) : await relayCommandBody(body);
-    finish(describeOutcome(outcome));
+    finish(describeResult(result));
   }
 
   return (
@@ -228,9 +209,10 @@ export function SignatureDialog({
             {state.phase === "waiting" ? "Waiting for MetaMask…" : "Checking…"}
           </Button>
         ) : null}
-        {state.phase === "rejected" ||
-        state.phase === "failed" ||
-        state.phase === "unknown" ? (
+        {(state.phase === "rejected" ||
+          state.phase === "failed" ||
+          state.phase === "unknown") &&
+        !expired ? (
           <Button variant="outline" onClick={() => setState(idleState)}>
             Sign again
           </Button>

@@ -1,10 +1,54 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import test from "node:test";
-import { fileURLToPath } from "node:url";
 import { parseIngressEnvelope } from "@tool402/core";
 
+const sourceUrl = new URL("../src/app/api/commands/route.ts", import.meta.url);
+const sourcePath = fileURLToPath(sourceUrl);
+const sourceExists = existsSync(sourcePath);
+const relaySourcePath = fileURLToPath(new URL("../src/lib/wallet/command-relay.ts", import.meta.url));
+const implementedTest = sourceExists ? test : test.skip;
+let api;
+
+test("requires the declared command relay source modules", () => {
+  assert.equal(sourceExists, true, `missing declared source module: ${sourcePath}`);
+  assert.equal(existsSync(relaySourcePath), true, `missing declared source module: ${relaySourcePath}`);
+});
+
+test.before(async () => {
+  if (sourceExists) {
+    api = await import(sourceUrl.href);
+  }
+});
+
+implementedTest("refuses an unconfigured relay before reading or forwarding a command body", async () => {
+  const response = await api.POST(new Request("http://localhost/api/commands", {
+    method: "POST",
+    body: '{"command":{},"payload":{}}',
+  }));
+
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { outcome: "not_configured" });
+});
+
+implementedTest("exports only the closed server relay outcome vocabulary", () => {
+  assert.deepEqual(api.commandRelayOutcomeKinds, [
+    "ACCEPTED",
+    "REPLAYED",
+    "CONFLICT",
+    "REJECTED",
+    "UNSUPPORTED_TYPE",
+    "not_configured",
+    "transport_failure",
+    "unexpected_response",
+  ]);
+});
+
+// Lane contracts (work/s15), block-scoped beside the root's contracts above.
+{
 const appRoot = fileURLToPath(new URL("..", import.meta.url));
 
 function readAppFile(path) {
@@ -451,7 +495,7 @@ test("exposes the handler through a POST-only route that passes process.env", as
     ),
   ].map(([, name]) => name);
 
-  assert.deepEqual(exports, ["POST"]);
+  assert.deepEqual(exports, ["POST", "commandRelayOutcomeKinds"]);
   assert.match(
     routeSource,
     /from\s+["']\.\.\/\.\.\/\.\.\/lib\/wallet\/command-relay(?:\.ts)?["']/u,
@@ -516,3 +560,132 @@ test("relays a signed body from the browser to the route once and maps the answe
   assert.equal(await relayCommandBody(bodyText, thrown), "transport_failure");
   assert.equal(thrown.calls.length, 1);
 });
+
+test("signs and relays through one flow that re-reads the session, draws a fresh nonce, and never relays without a signature", async () => {
+  const { signAndRelayCommand } = await loadRelayModule();
+  const signerAddress = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf";
+  const payloadText = '{"expiresAt":"2026-09-07T19:04:00.000Z","operationKind":"ATS_CREATE"}';
+  const request = {
+    type: "external.prepare",
+    canonicalPayloadBytes: new TextEncoder().encode(payloadText),
+    issuedAt: "2026-09-07T19:00:00.000Z",
+    expiresAt: "2026-09-07T19:04:00.000Z",
+  };
+  const beforeExpiry = () => Date.parse("2026-09-07T19:01:00.000Z");
+  const dummySignature = `0x${"ab".repeat(65)}`;
+
+  function stubProvider({ chainId = "0x128", accounts = [signerAddress], signError } = {}) {
+    const calls = [];
+    return {
+      isMetaMask: true,
+      calls,
+      async request({ method, params }) {
+        calls.push({ method, params });
+        switch (method) {
+          case "eth_chainId":
+            return chainId;
+          case "eth_accounts":
+            return accounts;
+          case "eth_signTypedData_v4":
+            if (signError) {
+              throw signError;
+            }
+            return dummySignature;
+          default:
+            throw new Error(`unexpected method ${method}`);
+        }
+      },
+    };
+  }
+
+  function stubRelay(outcome = "ACCEPTED") {
+    const bodies = [];
+    const relay = async (body) => {
+      bodies.push(body);
+      return outcome;
+    };
+    relay.bodies = bodies;
+    return relay;
+  }
+
+  const provider = stubProvider();
+  const relay = stubRelay();
+  const events = [];
+  const result = await signAndRelayCommand(provider, request, {
+    relay,
+    onSigned: () => events.push("signed"),
+    nowMilliseconds: beforeExpiry,
+  });
+  assert.deepEqual(result, { kind: "relayed", outcome: "ACCEPTED" });
+  assert.deepEqual(
+    provider.calls.map((call) => call.method),
+    ["eth_chainId", "eth_accounts", "eth_signTypedData_v4"],
+  );
+  assert.deepEqual(events, ["signed"]);
+  assert.equal(relay.bodies.length, 1);
+  const firstBody = JSON.parse(relay.bodies[0]);
+  assert.deepEqual(Object.keys(firstBody), ["command", "payload"]);
+  assert.equal(firstBody.command.signer, signerAddress);
+  assert.equal(firstBody.command.signature, dummySignature);
+  assert.match(firstBody.command.nonce, /^[A-Za-z0-9_-]{21}[AQgw]$/u);
+  assert.deepEqual(firstBody.payload, JSON.parse(payloadText));
+
+  await signAndRelayCommand(provider, request, { relay, nowMilliseconds: beforeExpiry });
+  const secondBody = JSON.parse(relay.bodies[1]);
+  assert.notEqual(secondBody.command.nonce, firstBody.command.nonce);
+  assert.deepEqual(
+    provider.calls.slice(3).map((call) => call.method),
+    ["eth_chainId", "eth_accounts", "eth_signTypedData_v4"],
+  );
+
+  const declined = stubProvider({ signError: { code: 4001, message: "User rejected the request." } });
+  const declinedRelay = stubRelay();
+  assert.deepEqual(
+    await signAndRelayCommand(declined, request, { relay: declinedRelay, nowMilliseconds: beforeExpiry }),
+    { kind: "declined" },
+  );
+  assert.equal(declinedRelay.bodies.length, 0);
+
+  const broken = stubProvider({ signError: new Error("internal") });
+  const brokenRelay = stubRelay();
+  assert.deepEqual(
+    await signAndRelayCommand(broken, request, { relay: brokenRelay, nowMilliseconds: beforeExpiry }),
+    { kind: "signing_failed" },
+  );
+  assert.equal(brokenRelay.bodies.length, 0);
+
+  const wrongChain = stubProvider({ chainId: "0x1" });
+  const wrongChainRelay = stubRelay();
+  assert.deepEqual(
+    await signAndRelayCommand(wrongChain, request, { relay: wrongChainRelay, nowMilliseconds: beforeExpiry }),
+    { kind: "wrong_chain" },
+  );
+  assert.deepEqual(wrongChain.calls.map((call) => call.method), ["eth_chainId"]);
+  assert.equal(wrongChainRelay.bodies.length, 0);
+
+  const noAccount = stubProvider({ accounts: [] });
+  assert.deepEqual(
+    await signAndRelayCommand(noAccount, request, { relay: stubRelay(), nowMilliseconds: beforeExpiry }),
+    { kind: "no_account" },
+  );
+
+  const expiredProvider = stubProvider();
+  const expiredRelay = stubRelay();
+  assert.deepEqual(
+    await signAndRelayCommand(expiredProvider, request, {
+      relay: expiredRelay,
+      nowMilliseconds: () => Date.parse("2026-09-07T19:04:00.000Z"),
+    }),
+    { kind: "expired" },
+  );
+  assert.equal(expiredProvider.calls.length, 0);
+  assert.equal(expiredRelay.bodies.length, 0);
+
+  const unknownRelay = stubRelay("transport_failure");
+  assert.deepEqual(
+    await signAndRelayCommand(stubProvider(), request, { relay: unknownRelay, nowMilliseconds: beforeExpiry }),
+    { kind: "relayed", outcome: "transport_failure" },
+  );
+  assert.equal(unknownRelay.bodies.length, 1);
+});
+}

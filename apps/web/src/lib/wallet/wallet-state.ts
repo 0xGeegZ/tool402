@@ -7,7 +7,7 @@ import {
   type ProviderSelection,
 } from "./metamask-provider.ts";
 
-export const WALLET_STATE_KINDS = Object.freeze([
+export const walletStateKinds = Object.freeze([
   "disconnected",
   "connecting",
   "no_provider",
@@ -17,7 +17,18 @@ export const WALLET_STATE_KINDS = Object.freeze([
   "connected",
 ] as const);
 
-export type WalletStateKind = (typeof WALLET_STATE_KINDS)[number];
+export type WalletStateKind = (typeof walletStateKinds)[number];
+
+export function isWalletStateKind(value: unknown): value is WalletStateKind {
+  return walletStateKinds.some((kind) => kind === value);
+}
+
+export function isIssuerAdvisory(
+  connectedAddress: string,
+  approvedIssuerAddress?: string,
+): boolean {
+  return approvedIssuerAddress !== undefined && connectedAddress !== approvedIssuerAddress;
+}
 
 export type WalletState =
   | { readonly kind: "disconnected" }
@@ -95,7 +106,7 @@ function decideSigner(
   }
   if (
     approvedIssuerAddress !== undefined &&
-    approvedIssuerAddress !== address
+    isIssuerAdvisory(address, approvedIssuerAddress)
   ) {
     return connection(
       { kind: "not_issuer", address, approvedIssuerAddress },
@@ -116,7 +127,7 @@ export async function connectWallet(
     case "no_provider":
     case "multiple_providers":
       return connection({ kind: selection.kind }, null);
-    case "selected":
+    case "provider":
       break;
     default:
       throw new TypeError("unknown provider selection");

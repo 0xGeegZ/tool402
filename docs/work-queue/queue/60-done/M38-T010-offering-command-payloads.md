@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M10-T010 accepted; M20-T010 accepted; M26-T010 accepted;
   M28-T010 accepted; no in-batch predecessor
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -129,3 +129,13 @@ dependency, writes no record, and touches no accepted parser, schema, route, or
 configuration. It creates or funds no account, prompts no wallet, calls no ATS
 SDK, submits no transaction, and claims no receipt, publication, activation,
 deployment, or live behavior.
+
+## Acceptance
+
+Accepted at source commit `329b0a8234afb511180e898b477933ec9fae8632` after
+the durable RED contracts, a scoped Directory snapshot correction, focused M38
+21/21 and complete Core 136/136 tests, root typecheck/test/lint, a clean-install
+dry run, queue/reference/whitespace checks, the enabled local guard, and clear
+independent task plus two fresh module reviews. This remains a pure local Core
+boundary and grants no command admission, signature, wallet, provider, network,
+storage, ATS, transaction, deployment, or live authority.

@@ -109,7 +109,7 @@ export function createCommandNonce(
 
 export function formatCommandTimestamp(milliseconds: number): string {
   if (!Number.isSafeInteger(milliseconds) || milliseconds < 0) {
-    throw new RangeError(
+    throw new TypeError(
       "a command timestamp needs a nonnegative integer millisecond value",
     );
   }
@@ -136,7 +136,7 @@ export function createCommandTimestamps(
     lifetimeSeconds < 1 ||
     lifetimeSeconds > MAX_COMMAND_LIFETIME_SECONDS
   ) {
-    throw new RangeError("a command lifetime is 1 to 300 whole seconds");
+    throw new TypeError("a command lifetime is 1 to 300 whole seconds");
   }
   return Object.freeze({
     issuedAt: formatCommandTimestamp(nowMilliseconds),
@@ -175,11 +175,13 @@ function decodeCanonicalPayload(bytes: Uint8Array): {
   return { text, expiresAt };
 }
 
-export function createUnsignedCommand(
-  input: UnsignedCommandInput,
-): UnsignedTool402Command {
-  const { type, signer, nonce, issuedAt, expiresAt, canonicalPayloadBytes } =
-    input;
+function validateCommandFields(
+  type: unknown,
+  signer: unknown,
+  nonce: unknown,
+  issuedAt: unknown,
+  expiresAt: unknown,
+): asserts type is string {
   if (typeof type !== "string" || type.length === 0) {
     throw new TypeError("a command type is a nonempty string");
   }
@@ -193,19 +195,17 @@ export function createUnsignedCommand(
     throw new TypeError("command timestamps are canonical UTC milliseconds");
   }
   const lifetimeMilliseconds = Date.parse(expiresAt) - Date.parse(issuedAt);
-  if (
-    lifetimeMilliseconds <= 0 ||
-    lifetimeMilliseconds > MAX_COMMAND_LIFETIME_SECONDS * 1000
-  ) {
-    throw new RangeError(
-      "a command expires after issue and within 300 seconds",
-    );
+  if (lifetimeMilliseconds <= 0 || lifetimeMilliseconds > MAX_COMMAND_LIFETIME_SECONDS * 1000) {
+    throw new TypeError("a command expires after issue and within 300 seconds");
   }
+}
+
+export function createUnsignedCommand(input: UnsignedCommandInput): UnsignedTool402Command {
+  const { type, signer, nonce, issuedAt, expiresAt, canonicalPayloadBytes } = input;
+  validateCommandFields(type, signer, nonce, issuedAt, expiresAt);
   const payload = decodeCanonicalPayload(canonicalPayloadBytes);
   if (payload.expiresAt !== expiresAt) {
-    throw new TypeError(
-      "command and payload expiresAt must be byte-for-byte identical",
-    );
+    throw new TypeError("command and payload expiresAt must be byte-for-byte identical");
   }
   const command: UnsignedTool402Command = Object.freeze({
     version: 1,
@@ -218,6 +218,48 @@ export function createUnsignedCommand(
   });
   unsignedCommands.add(command);
   return command;
+}
+
+export interface Tool402CommandRequestInput {
+  readonly signer: string;
+  readonly payloadBytes: Uint8Array;
+  readonly issuedAt: string;
+  readonly payloadExpiresAt: string;
+  readonly nonceBytes: Uint8Array;
+}
+
+export interface Tool402CommandRequest {
+  readonly typedData: {
+    readonly domain: typeof TOOL402_TYPED_DATA_DOMAIN;
+    readonly primaryType: typeof TOOL402_COMMAND_PRIMARY_TYPE;
+    readonly types: { readonly Tool402Command: typeof TOOL402_TYPED_DATA_TYPES.Tool402Command };
+    readonly message: UnsignedTool402Command;
+  };
+  readonly command: UnsignedTool402Command & { readonly chainId: 296 };
+}
+
+export function buildTool402CommandRequest(input: Tool402CommandRequestInput): Tool402CommandRequest {
+  const { signer, payloadBytes, issuedAt, payloadExpiresAt, nonceBytes } = input;
+  const nonce = createCommandNonce(() => nonceBytes);
+  validateCommandFields("external.prepare", signer, nonce, issuedAt, payloadExpiresAt);
+  const message: UnsignedTool402Command = Object.freeze({
+    version: 1,
+    type: "external.prepare",
+    signer,
+    nonce,
+    issuedAt,
+    expiresAt: payloadExpiresAt,
+    payloadHash: hashCommandPayload(payloadBytes),
+  });
+  return Object.freeze({
+    typedData: Object.freeze({
+      domain: TOOL402_TYPED_DATA_DOMAIN,
+      primaryType: TOOL402_COMMAND_PRIMARY_TYPE,
+      types: Object.freeze({ Tool402Command: TOOL402_TYPED_DATA_TYPES.Tool402Command }),
+      message,
+    }),
+    command: Object.freeze({ ...message, chainId: 296 as const }),
+  });
 }
 
 export function createTypedDataJson(command: UnsignedTool402Command): string {

@@ -161,3 +161,25 @@ export type {
   RiskScanQuickInput,
   RiskScanQuickResult,
 } from "./risk-scan-quick.ts";
+export {
+  canonicalOfferingCreatePayloadBytes,
+  parseOfferingCreatePayload,
+} from "./offering-create-payload.ts";
+export type {
+  OfferingCreatePayload,
+  OfferingNarrative,
+} from "./offering-create-payload.ts";
+export {
+  canonicalDirectoryPublishPayloadBytes,
+  parseDirectoryPublishPayload,
+} from "./directory-publish-payload.ts";
+export type { DirectoryPublishPayload } from "./directory-publish-payload.ts";
+export {
+  canonicalAttachCandidatePayloadBytes,
+  parseAttachCandidatePayload,
+} from "./attach-candidate-payload.ts";
+export type {
+  AttachCandidatePayload,
+  CandidateTransactionId,
+  MirrorTransactionId,
+} from "./attach-candidate-payload.ts";
