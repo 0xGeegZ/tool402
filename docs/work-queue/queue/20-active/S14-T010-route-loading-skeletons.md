@@ -91,3 +91,16 @@ This activation authorizes only the durable RED contract at
 `apps/web/tests/route-loading-skeletons.test.mjs`. It does not authorize any
 loader or skeleton source, existing route edits, client state, network behavior,
 configuration, identity/provider/payment surface, deployment, or submission.
+
+## RED acceptance
+
+The independent [RED review](../../evidence/S14-T010-red-review.md) accepted
+the durable contract at pushed `2865fc619bec5f205438fa4e8609fc1b43be1003`.
+Under Node 22.21.1 it fails exactly once because all nine declared source paths
+remain absent; the GREEN assertions skip without a secondary failure.
+
+Only the eight route-specific `loading.tsx` files and the shared decorative
+`skeleton.tsx` named in this card are now authorized for GREEN. Existing route
+edits, client state, data access, configuration, identity/provider/payment
+surfaces, deployment, submission, and browser replacement claims remain
+outside this card.
