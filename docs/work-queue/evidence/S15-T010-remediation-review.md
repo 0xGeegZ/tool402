@@ -64,3 +64,23 @@ wallet interaction, network request, transaction, deployment, or live claim is
 authorized. The existing S15 source and dependency pin remain unaccepted until
 the focused suite is GREEN and receives fresh independent task and module
 review.
+
+## Route build-shape correction
+
+After the focused GREEN run, the Webpack production build exposed one separate
+route-shape defect: Next rejects a route-module export that is not an allowed
+route export. The existing `commandRelayOutcomeKinds` re-export made
+`/api/commands` fail type generation even though the relay itself was correct.
+
+The correction at pushed `506f038fffb87739cc5fd302a30033b5c56d36ee` has the
+smallest possible scope:
+
+- remove that non-route re-export from `apps/web/src/app/api/commands/route.ts`;
+- keep the closed outcome vocabulary in its owning
+  `apps/web/src/lib/wallet/command-relay.ts` module; and
+- amend the existing route test to require the POST-only route shape.
+
+This record does not rewrite the historical source chronology or accept S15 by
+itself. It authorizes no configuration, provider interaction, relay call,
+wallet request, transaction, deployment, or live claim. S15 remains active
+until its fresh task and module reviews are clear.
