@@ -322,6 +322,6 @@ existing source/tests, configuration, environment, Web/UI, Agent, SDK,
 provider/wallet, account, funding, payment, transaction, asset, settlement,
 clearing, HCS, payout, deployment, and live-evidence paths are excluded. It
 must create no authority row and grants no M33 enablement or external behavior.
-Its historical test-only RED may now be restored and narrowly strengthened
-under Node 22.21.1. It remains private, source-only, and unavailable to every
-runtime or external path.
+Its restored, evaluator-hardened test-only RED is accepted under Node 22.21.1.
+Only its declared private source helper may now be created. M37 remains
+private, source-only, and unavailable to every runtime or external path.

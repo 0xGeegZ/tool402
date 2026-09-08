@@ -103,6 +103,15 @@ does not authorize source, SDK/provider/wallet use, authority provisioning,
 M32/M33 mutation, account action, transaction, asset creation, deployment, or
 live evidence.
 
+## RED acceptance
+
+The restored and evaluator-hardened
+[RED contract](../../evidence/M37-T010-red-review.md) was independently
+reviewed under Node 22.21.1 at 2026-09-08T16:00:49Z. It fails exactly for the
+absent declared private source and has no other failure. This authorizes only
+the source file declared by this card; all runtime and external exclusions
+remain in force.
+
 ## Historical ready transition
 
 Ready at 2026-09-08T13:05:36Z after a fresh root rescan at pushed
