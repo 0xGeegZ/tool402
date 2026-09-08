@@ -171,6 +171,29 @@ implementedTest("rejects accessors and hostile reflection without invoking calle
   }
 });
 
+implementedTest("rejects a record whose URL descriptor changes after capture", () => {
+  let webUrlDescriptorReads = 0;
+  const changingRecord = new Proxy(record(), {
+    getOwnPropertyDescriptor(target, property) {
+      const descriptor = Reflect.getOwnPropertyDescriptor(target, property);
+      if (property !== "webUrl" || descriptor === undefined) {
+        return descriptor;
+      }
+
+      webUrlDescriptorReads += 1;
+      return {
+        ...descriptor,
+        value: webUrlDescriptorReads === 1
+          ? undefined
+          : "https://TOOL402.test",
+      };
+    },
+  });
+
+  assertInputError(() => api.parseDirectoryPublishPayload(payload({ record: changingRecord })));
+  assert.equal(webUrlDescriptorReads, 1);
+});
+
 implementedTest("emits fresh canonical JCS bytes and exposes no runtime adapter", async () => {
   const input = payload();
   const parsed = api.parseDirectoryPublishPayload(input);
