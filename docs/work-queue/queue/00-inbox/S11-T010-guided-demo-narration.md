@@ -7,9 +7,12 @@
 - Dependencies: M02-T040 accepted, M02-T070 accepted, M02-T080 accepted, M11-T010 accepted, M11-T020 accepted, M13-T010 accepted, M14-T010 accepted, M15-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
-  only `apps/web/src/app/demo/page.tsx`, files under
-  `apps/web/src/components/demo/`, one focused demo route test, and the one
-  constrained local navigation link amendment named in the slice manifest.
+  only `apps/web/src/app/demo/page.tsx`,
+  `apps/web/src/components/demo/guided-demo-steps.tsx`,
+  `apps/web/tests/guided-demo-route.test.mjs`, and the explicitly reserved
+  local-link integration pair
+  `apps/web/src/components/discovery/local-navigation.tsx` and
+  `apps/web/tests/landing-explore.test.mjs`.
 - Human actions: none granted by this card. It relates to HA-DEMO-VIDEO-001
   only as presentation scaffolding; narration, recording, deployment, and
   submission remain human-owned.
@@ -40,11 +43,16 @@ link amendment.
 - The declared paths are disjoint from every active card.
 - The narration copy is fixed in the manifest boundary before code, so no step
   can promise an observation its target route does not produce.
+- The only accepted-source overlap is the explicitly root-reserved local
+  navigation link and its existing focused assertion. It may add exactly the
+  local `/demo` link with label `Demo`; it must not alter any existing link,
+  layout, navigation behavior, or route copy.
 
 ## Verification
 
-- A durable RED test precedes the source change and fails because the route does
-  not exist.
+- A durable RED test at `apps/web/tests/guided-demo-route.test.mjs` precedes
+  the source change and fails only because the new page and guided-step source
+  paths do not exist.
 - Focused tests prove the static route shape, the exact narrated link set, the
   absence of client or network behavior, and the exclusion boundary.
 - `npm run typecheck --workspace @tool402/web`, `npm run test --workspace @tool402/web`,

@@ -351,3 +351,20 @@ review](evidence/S14-T010-task-review.md), and [module
 review](evidence/S14-T010-module-review.md) are clear. The accepted source is
 limited to the nine declared static paths; every exclusion continues after
 acceptance.
+
+S11-T010 is a root-owned inbox control record comprising its card,
+`docs/ui/UI-S11.md`, `docs/ui/IMPORT-LEDGER.md`,
+`docs/superpowers/plans/2026-09-08-s11-guided-demo-narration.md`,
+`docs/work-queue/evidence/S11-T010-intake-review.md`, this ownership record,
+queue state, catalog, decisions, reviews, commits, and pushes. Its only
+proposed implementation paths are `apps/web/src/app/demo/page.tsx`,
+`apps/web/src/components/demo/guided-demo-steps.tsx`, and
+`apps/web/tests/guided-demo-route.test.mjs`. The root separately reserves
+exactly one integration amendment in the accepted M11-T020 paths
+`apps/web/src/components/discovery/local-navigation.tsx` and
+`apps/web/tests/landing-explore.test.mjs`: add only `{ href: "/demo", label:
+"Demo" }` and its corresponding assertion. Every existing route/component,
+other navigation entry, layout, stylesheet, package/lockfile, configuration,
+identity/provider/payment surface, backend, Agent, account, transaction,
+deployment, narration recording, and submission path is excluded. This record
+authorizes no source change until a fresh independent ready review is clear.
