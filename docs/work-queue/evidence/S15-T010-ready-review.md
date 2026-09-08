@@ -5,7 +5,7 @@
 Independent ready review of the local wallet-island and command-relay card at
 clean pushed `af2105765d91a9207bdc2dc9c33f76a9ba452fd9`:
 
-- [S15 control card](../queue/10-ready/S15-T010-metamask-wallet-island.md)
+- [S15 control card](../queue/20-active/S15-T010-metamask-wallet-island.md)
 - [UI-S15 wallet-island and command-relay manifest](../../ui/UI-S15.md)
 - [accepted command-authority decision](HA-COMMAND-AUTHORITY-001-decision.md)
 - [HI-002 control intake](../queue/60-done/HI-002-campaign-deploy-reinstatement.md)
