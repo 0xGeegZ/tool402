@@ -111,3 +111,22 @@ This activation authorizes only the committed test-only RED contract. It does
 not authorize a production manifest entry, target enablement, Convex
 publication, BFF/HTTP behavior, provider/wallet action, funding, payment,
 transaction, deployment, or live behavior.
+
+## RED acceptance
+
+Accepted at 2026-09-08T07:16:53Z after a fresh root rescan at pushed
+`95a5d26bbd43b82cfbea5e1f97ae782ebf65719c` confirmed exact origin/main
+equality, a clean worktree, local references, an enabled guard, accepted
+M26-T010/M32-T010 dependencies, and no active ownership conflict or new human
+blocker. The test-only RED commits
+`a28ab895b768e3e37c4556bfcbfee8ee77eae85e` and
+`95a5d26bbd43b82cfbea5e1f97ae782ebf65719c` were independently reviewed
+cleanly after remediation. They establish exact manifest tuple matching,
+funding no-observation, ATS pre-durable failure, and retained funding durable
+behavior.
+
+This acceptance authorizes only the remaining serial plan steps: the declared
+private zero-enabled resolver and one ordered M32 assertion. It does not
+authorize a production manifest entry, target enablement, Convex publication,
+BFF/HTTP behavior, provider/wallet action, funding, payment, transaction,
+deployment, or live behavior.
