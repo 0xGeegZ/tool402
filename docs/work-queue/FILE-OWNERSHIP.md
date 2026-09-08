@@ -357,8 +357,10 @@ transaction, deployment, and live-evidence paths are excluded. No RED, source,
 or dependency change is authorized before a fresh root activation. The
 [independent ready review](evidence/S19-T010-ready-review.md) and
 [activation review](evidence/S19-T010-activation-review.md) and
-[RED review](evidence/S19-T010-red-review.md) are clear. Only the exact
-UI-S19 targets are now authorized for the minimal GREEN cycle.
+[RED review](evidence/S19-T010-red-review.md),
+[final task review](evidence/S19-T010-task-review.md), and
+[module review](evidence/S19-T010-module-review.md) are clear. The exact
+UI-S19 targets are accepted; all exclusions continue.
 
 S14-T010 is a root-owned accepted control record comprising its card,
 `docs/ui/UI-S14.md`, `docs/ui/IMPORT-LEDGER.md`,

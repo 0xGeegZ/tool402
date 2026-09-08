@@ -5,7 +5,7 @@
 Independent review of the durable RED contract at source commit
 `e628ab21c4bece821b128d5baea4a6b6e4338a70`:
 
-- [S19 control card](../queue/20-active/S19-T010-tool-loop-demo-prefill.md);
+- [S19 control card](../queue/60-done/S19-T010-tool-loop-demo-prefill.md);
 - [UI-S19 manifest](../../ui/UI-S19.md); and
 - [focused prefill contract](../../../apps/web/tests/tool-loop-demo-prefill.test.mjs).
 
