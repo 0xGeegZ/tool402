@@ -42,9 +42,10 @@ Discovery runs when the connect control is activated, never at module load and
 never on render: no `eip6963:announceProvider` listener exists until a click
 requests one. Exactly one announced candidate with `info.rdns` equal to
 `io.metamask` and `provider.isMetaMask` true is accepted. With no announced
-candidate, legacy `window.ethereum` is accepted only when `isMetaMask` is true.
-Zero candidates and several candidates each fail closed with a retry control
-and no alternate wallet.
+matching candidate, legacy `window.ethereum` is accepted only when
+`isMetaMask` is true. An unrelated or spoofed EIP-6963 announcement does not
+block that legacy fallback. Zero matching candidates and several matching
+candidates each fail closed with a retry control and no alternate wallet.
 
 After `eth_requestAccounts`, `eth_chainId` must report `0x128`. Any other value
 is a refusal that may offer one user-initiated `wallet_switchEthereumChain`
@@ -80,11 +81,17 @@ string is the lower-case `0x` and forty hexadecimal characters that is also
 submitted; nothing is re-cased later. The transport `command` object carries
 exactly nine own fields: the seven signed fields plus `chainId` integer `296`
 and `signature`, the `0x` and 130 lower-case hexadecimal characters MetaMask
-returns, submitted unaltered. The two-key `{ command, payload }` body admits no
+returns, submitted unaltered. The command type is exactly
+`external.prepare`; another type is refused before provider, nonce, signature,
+or relay work. The signature must be a low-s recoverable secp256k1 signature
+whose final byte is exactly `00`, `01`, `1b`, or `1c`; the browser preserves
+that accepted lower-case wire form. The two-key `{ command, payload }` body admits no
 extra, missing, or re-cased field, as HA-COMMAND-AUTHORITY-001 and the accepted
 normalizer fix it.
 
-The builder owns no payload schema and no canonicalizer. `payloadHash` is the
+The builder owns no payload schema and no canonicalizer. It independently reads
+the detached payload's canonical `expiresAt` and requires it to equal the
+command expiry byte for byte before signing. `payloadHash` is the
 lower-case `0x` Keccak-256 of canonical UTF-8 payload bytes handed in by the
 caller that owns that command type, so no second canonicalization can drift
 from the accepted one. Signing uses `eth_signTypedData_v4` only.
