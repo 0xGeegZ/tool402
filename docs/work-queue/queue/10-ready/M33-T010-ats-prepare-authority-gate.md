@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M26-T010 accepted; M32-T010 accepted;
   HA-ATS-AUTHORITY-001 accepted as bounded architecture authority
 - Owner: This root-owned candidate owns its card, the local M33 specification,
@@ -84,3 +84,18 @@ This inbox state authorizes only committed local control records and
 independent design review. It does not authorize RED/code, target enablement,
 Convex publication, BFF/HTTP behavior, provider/wallet action, funding,
 payment, transaction, deployment, or live behavior.
+
+## Ready transition
+
+Ready at 2026-09-08T06:40:00Z after a fresh rescan at pushed
+`a55a29965e123007084b3274dee5a3edf6b3482a` confirmed M26-T010 and M32-T010
+accepted, no active lane or ownership conflict, exact origin/main equality,
+local references, and an enabled guard. The independent committed-authority
+review at [M33-T010-authority-review.md](../../evidence/M33-T010-authority-review.md)
+found no Critical, Important, or Minor finding after the durable-fixture and
+ATS-fixture corrections.
+
+This ready state authorizes only root activation followed by the specified
+test-only RED. It does not authorize target enablement, Convex publication,
+BFF/HTTP behavior, provider/wallet action, funding, payment, transaction,
+deployment, or live behavior.
