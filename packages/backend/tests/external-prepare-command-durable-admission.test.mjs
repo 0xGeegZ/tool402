@@ -7,10 +7,11 @@ const moduleUrl = new URL("../convex/external_prepare_command_admission.ts", imp
 const signer = "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454";
 const now = Date.parse("2026-09-07T19:00:30.000Z");
 const attemptId = "externalPrepareCommandAttempts:accepted";
-const payloadHash = "0x80e6aa5c7d520c43c2ae746b2a9459ab8e298b384703618a464a30378619422a";
+const payloadHash = "0xfe32ed7989dfa94699ffc6529b4f5c6214721ef63d4f1a2d08f028366fe19b18";
 const contextKeys = ["version", "type", "chainId", "canonicalSignerAddress", "principalPublicId", "role", "authorityVersion", "payloadHash"];
 const payloadKeys = ["operationKind", "subjectPublicId", "network", "chainId", "expectedTarget", "canonicalParametersHash", "idempotencyKey", "expiresAt"];
 const operations = ["ATS_CREATE", "ATS_CONTROL_LIST", "ATS_ISSUE", "ATS_TRANSFER", "ATS_COUPON", "HEDERA_FUNDING"];
+const atsOperations = operations.filter((operationKind) => operationKind.startsWith("ATS_"));
 const pick = (input, keys) => Object.fromEntries(keys.map((key) => [key, input[key]]));
 const hashPayload = (payload) => keccak256(stringToHex(JSON.stringify(pick(payload, [...payloadKeys].sort()))));
 
@@ -19,9 +20,9 @@ function input(overrides = {}) {
     version: 1, type: "external.prepare", chainId: 296, canonicalSignerAddress: signer,
     nonce: "AAAAAAAAAAAAAAAAAAAAAA", issuedAt: "2026-09-07T19:00:00.000Z", expiresAt: "2026-09-07T19:04:00.000Z",
     payloadHash, replayIdentity: `tool402:wallet-command:v1:296:${signer}:AAAAAAAAAAAAAAAAAAAAAA`,
-    principalPublicId: "principal_42", role: "ISSUER", authorityVersion: "authority_v1",
+    principalPublicId: "principal_42", role: "BACKER", authorityVersion: "authority_v1",
     payload: {
-      operationKind: "ATS_CREATE", subjectPublicId: "subject_42", network: "hedera:testnet", chainId: 296,
+      operationKind: "HEDERA_FUNDING", subjectPublicId: "subject_42", network: "hedera:testnet", chainId: 296,
       expectedTarget: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", canonicalParametersHash: "a".repeat(64),
       idempotencyKey: "AAAAAAAAAAAAAAAAAAAAAA", expiresAt: "2026-09-07T19:04:00.000Z",
     },
@@ -41,7 +42,7 @@ function authority(args = input()) {
   return {
     _id: "commandAuthorities:current", _creationTime: now - 1000,
     ...pick(args, ["principalPublicId", "canonicalSignerAddress", "chainId", "role", "authorityVersion"]),
-    ownedSubjectPublicIds: ["subject_42"], enabled: true,
+    ownedSubjectPublicIds: args.role === "ISSUER" ? [args.payload.subjectPublicId] : [], enabled: true,
   };
 }
 
@@ -209,10 +210,10 @@ test("accepts inclusive expiry and future-skew boundaries and the exact maximum 
   }
 });
 
-test("rechecks exactly one current enabled authority and ownership before replay or idempotency", async (t) => {
+test("rechecks exactly one current enabled funding authority before replay or idempotency", async (t) => {
   const mutation = await loadMutation(t);
   const invalid = [["absent authority", []], ["duplicate authority", [authority(), authority()]], ["null authority", [null]], ["array authority", [[]]]];
-  for (const [key, value] of Object.entries({ enabled: false, principalPublicId: "principal_other", role: "BACKER", authorityVersion: "authority_v2", ownedSubjectPublicIds: [], chainId: 295, canonicalSignerAddress: "0x" + "c".repeat(40) })) invalid.push([`invalid authority.${key}`, [{ ...authority(), [key]: value }]]);
+  for (const [key, value] of Object.entries({ enabled: false, principalPublicId: "principal_other", role: "ISSUER", authorityVersion: "authority_v2", chainId: 295, canonicalSignerAddress: "0x" + "c".repeat(40) })) invalid.push([`invalid authority.${key}`, [{ ...authority(), [key]: value }]]);
   for (const key of Object.keys(authority()).filter((key) => !key.startsWith("_"))) { const row = authority(); delete row[key]; invalid.push([`missing authority.${key}`, [row]]); }
   invalid.push(["string authority.enabled", [{ ...authority(), enabled: "true" }]], ["non-string owned subject", [{ ...authority(), ownedSubjectPublicIds: ["subject_42", 4] }]]);
   for (const [name, authorities] of invalid) {
@@ -234,50 +235,54 @@ test("rechecks exactly one current enabled authority and ownership before replay
   assert.deepEqual(db.accesses, ["commandAuthorities"], "revoked authority must not trigger any other boundary");
 });
 
-test("admits all closed operation kinds with M30 ownership and stores target/hash as opaque context", async (t) => {
+test("retains the historical ATS_CREATE M30 JCS payload-hash binding vector", () => {
+  const atsCreatePayload = {
+    ...input().payload,
+    operationKind: "ATS_CREATE",
+  };
+
+  assert.equal(
+    hashPayload(atsCreatePayload),
+    "0x80e6aa5c7d520c43c2ae746b2a9459ab8e298b384703618a464a30378619422a",
+  );
+});
+
+test("rejects every ATS operation after current issuer authority and before durable state", async (t) => {
   const mutation = await loadMutation(t);
-  assert.equal(hashPayload(input().payload), payloadHash, "independent fixture matches the accepted M30 vector");
-  for (const operationKind of operations) {
-    for (const expectedTarget of ["0.0.987654", "0xcccccccccccccccccccccccccccccccccccccccc"]) {
-      const args = withPayload({ operationKind, expectedTarget, canonicalParametersHash: "d".repeat(64) });
-      if (operationKind === "HEDERA_FUNDING") args.role = "BACKER";
-      const current = authority(args);
-      if (args.role === "BACKER") current.ownedSubjectPublicIds = [];
-      const db = database({ authorities: [current] });
-      assert.deepEqual(await mutation._handler(db.ctx, args), { status: "NEW", attemptId, state: "PREPARED" });
-      assert.deepEqual(db.reads, lookups(args));
-      assert.equal(db.writes.length, 2);
-      const stored = db.writes.find(({ table }) => table === "externalPrepareCommandAttempts").document;
-      assert.equal(typeof stored.acceptedAt, "bigint");
-      assert.ok(stored.acceptedAt >= 0n && stored.acceptedAt <= 9_223_372_036_854_775_807n);
-      assert.deepEqual(stored, { ...pick(args, contextKeys), ...args.payload, state: "PREPARED", acceptedAt: stored.acceptedAt });
-      const replay = db.writes.find(({ table }) => table === "externalPrepareCommandReplayClaims").document;
-      assert.equal(typeof replay.claimedAt, "bigint");
-      assert.deepEqual(replay, { replayIdentity: args.replayIdentity, outcome: "NEW", attemptId, claimedAt: replay.claimedAt });
-      db.reads.length = 0;
-      assert.deepEqual(await mutation._handler(db.ctx, args), { status: "COMMAND_REPLAYED" });
-      assert.deepEqual(db.reads, lookups(args).slice(0, 2));
-      assert.equal(db.writes.length, 2);
-      const denied = database({ authorities: [{ ...current, role: args.role === "ISSUER" ? "BACKER" : "ISSUER" }] });
-      const name = `${operationKind} / ${expectedTarget}`;
-      await assert.rejects(() => mutation._handler(denied.ctx, args), undefined, `${name}: mismatched authority role`);
-      assert.equal(denied.writes.length, 0, name);
-      assert.deepEqual(denied.accesses, ["commandAuthorities"], name);
-      const wrongRole = { ...args, role: args.role === "ISSUER" ? "BACKER" : "ISSUER" };
-      const matchingWrongAuthority = database({ authorities: [authority(wrongRole)] });
-      await assert.rejects(() => mutation._handler(matchingWrongAuthority.ctx, wrongRole), undefined, `${name}: role cannot own this operation`);
-      assert.deepEqual(matchingWrongAuthority.reads, lookups(wrongRole).slice(0, 1), name);
-      assert.deepEqual(matchingWrongAuthority.writes, [], name);
-      assert.deepEqual(matchingWrongAuthority.accesses, ["commandAuthorities"], name);
-      if (args.role === "ISSUER") {
-        const unowned = database({ authorities: [{ ...current, ownedSubjectPublicIds: ["subject_other"] }] });
-        await assert.rejects(() => mutation._handler(unowned.ctx, args), undefined, `${name}: subject is not owned`);
-        assert.deepEqual(unowned.reads, lookups(args).slice(0, 1), name);
-        assert.deepEqual(unowned.writes, [], name);
-        assert.deepEqual(unowned.accesses, ["commandAuthorities"], name);
-      }
-    }
+  for (const operationKind of atsOperations) {
+    await t.test(operationKind, async () => {
+      const args = withPayload({ operationKind });
+      args.role = "ISSUER";
+      const db = database({ authorities: [authority(args)] });
+      await assert.rejects(
+        mutation._handler(db.ctx, args),
+        TypeError,
+      );
+      assert.deepEqual(db.reads, lookups(args).slice(0, 1));
+      assert.deepEqual(db.writes, []);
+    });
   }
+});
+
+test("keeps HEDERA_FUNDING on the enabled BACKER durable path", async (t) => {
+  const mutation = await loadMutation(t);
+  const args = input();
+  const current = authority(args);
+  assert.equal(current.role, "BACKER");
+  assert.deepEqual(current.ownedSubjectPublicIds, []);
+  assert.equal(hashPayload(args.payload), payloadHash, "independent fixture matches the funding M30 vector");
+
+  const db = database({ authorities: [current] });
+  assert.deepEqual(await mutation._handler(db.ctx, args), { status: "NEW", attemptId, state: "PREPARED" });
+  assert.deepEqual(db.reads, lookups(args));
+  assert.equal(db.writes.length, 2);
+  const stored = db.writes.find(({ table }) => table === "externalPrepareCommandAttempts").document;
+  assert.equal(typeof stored.acceptedAt, "bigint");
+  assert.ok(stored.acceptedAt >= 0n && stored.acceptedAt <= 9_223_372_036_854_775_807n);
+  assert.deepEqual(stored, { ...pick(args, contextKeys), ...args.payload, state: "PREPARED", acceptedAt: stored.acceptedAt });
+  const replay = db.writes.find(({ table }) => table === "externalPrepareCommandReplayClaims").document;
+  assert.equal(typeof replay.claimedAt, "bigint");
+  assert.deepEqual(replay, { replayIdentity: args.replayIdentity, outcome: "NEW", attemptId, claimedAt: replay.claimedAt });
 });
 
 test("returns replay before idempotency for all valid stored claim outcomes", async (t) => {
@@ -328,7 +333,7 @@ test("consumes every conflicting context or unsafe attempt in an unlinked claim 
   const mutation = await loadMutation(t);
   const cases = [["duplicate attempts", [attempt(), attempt()]], ["null attempt", [null]], ["array attempt", [[]]], ["attempt.acceptedAt overflows int64", [{ ...attempt(), acceptedAt: 9_223_372_036_854_775_808n }]]];
   cases.push(["attempt.acceptedAt is negative", [{ ...attempt(), acceptedAt: -1n }]]);
-  for (const [key, value] of Object.entries({ version: 2, type: "external.other", chainId: 295, canonicalSignerAddress: "0x" + "c".repeat(40), principalPublicId: "principal_other", role: "BACKER", authorityVersion: "authority_v2", payloadHash: "0x" + "b".repeat(64), state: "EXECUTED", acceptedAt: 1, _id: "", expectedTarget: "0.0.987", canonicalParametersHash: "b".repeat(64), operationKind: "ATS_ISSUE", subjectPublicId: "subject_other", network: "hedera:mainnet", expiresAt: "2026-09-07T19:03:00.000Z" })) cases.push([`invalid attempt.${key}`, [{ ...attempt(), [key]: value }]]);
+  for (const [key, value] of Object.entries({ version: 2, type: "external.other", chainId: 295, canonicalSignerAddress: "0x" + "c".repeat(40), principalPublicId: "principal_other", role: "ISSUER", authorityVersion: "authority_v2", payloadHash: "0x" + "b".repeat(64), state: "EXECUTED", acceptedAt: 1, _id: "", expectedTarget: "0.0.987", canonicalParametersHash: "b".repeat(64), operationKind: "ATS_ISSUE", subjectPublicId: "subject_other", network: "hedera:mainnet", expiresAt: "2026-09-07T19:03:00.000Z" })) cases.push([`invalid attempt.${key}`, [{ ...attempt(), [key]: value }]]);
   for (const key of new Set([...contextKeys, ...payloadKeys, "state", "acceptedAt"])) { const row = attempt(); delete row[key]; cases.push([`missing attempt.${key}`, [row]]); }
   for (const [name, attempts] of cases) {
     const db = database({ attempts });
