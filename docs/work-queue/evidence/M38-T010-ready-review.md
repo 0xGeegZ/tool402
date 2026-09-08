@@ -5,7 +5,7 @@
 Independent read-only readiness review at clean pushed
 `31dc155d15de4d2c77080de948e27d1899a0d16d` of:
 
-- the [M38 card](../queue/10-ready/M38-T010-offering-command-payloads.md) and
+- the M38 card then in `10-ready` and
   its local specification;
 - its M10, M20, M26, and M28 predecessor records;
 - the catalog, runtime state, ownership record, and HI-002 intake closure; and
