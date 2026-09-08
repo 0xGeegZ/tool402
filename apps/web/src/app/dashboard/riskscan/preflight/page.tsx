@@ -2,7 +2,7 @@ import { RiskScanQuickPreflight } from "../../../../components/riskscan/prefligh
 
 export default function RiskScanQuickPreflightPage() {
   return (
-    <main className="py-6 sm:py-12">
+    <main className="pb-6 sm:pb-12">
       <article className="mx-auto max-w-3xl space-y-8">
         <header className="space-y-3">
           <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">RiskScan Quick preflight</h1>

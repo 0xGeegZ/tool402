@@ -11,7 +11,7 @@ type ErrorBoundaryProps = {
 
 export function ErrorBoundary({ reset }: ErrorBoundaryProps) {
   return (
-    <main className="mx-auto max-w-3xl py-6 sm:py-12">
+    <main className="mx-auto max-w-3xl pb-6 sm:pb-12">
       <Card className="max-w-xl">
         <CardHeader className="space-y-3">
           <p className="text-sm font-medium text-muted-foreground">Interrupted</p>

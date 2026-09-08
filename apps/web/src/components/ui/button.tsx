@@ -23,18 +23,26 @@ const sizes: Record<ButtonSize, string> = {
   lg: "min-h-11 px-5 text-base",
 };
 
+export function buttonVariants({
+  variant = "primary",
+  size = "md",
+  className,
+}: { variant?: ButtonVariant; size?: ButtonSize; className?: string } = {}): string {
+  return cn(
+    "inline-flex items-center justify-center rounded-[var(--radius)] font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
+    variants[variant],
+    sizes[size],
+    className,
+  );
+}
+
 export function Button({ className, variant = "primary", size = "md", type = "button", ...props }: ButtonProps) {
   return (
     <button
       data-slot="button"
       data-variant={variant}
       type={type}
-      className={cn(
-        "inline-flex items-center justify-center rounded-[var(--radius)] font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
-        variants[variant],
-        sizes[size],
-        className,
-      )}
+      className={buttonVariants({ variant, size, className })}
       {...props}
     />
   );

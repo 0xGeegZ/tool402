@@ -3,7 +3,7 @@ import { RiskScanDiscoveryCard } from "../../components/discovery/riskscan-disco
 
 export default function ExplorePage() {
   return (
-    <main className="space-y-8 py-6 sm:py-12">
+    <main className="space-y-8 pb-6 sm:pb-12">
       <header className="max-w-2xl space-y-3">
         <p className="text-sm font-medium text-foreground">Discovery</p>
         <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Explore assessments</h1>

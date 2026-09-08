@@ -3,7 +3,7 @@ import { Badge } from "../../components/ui/badge";
 
 export default function DemoPage() {
   return (
-    <main className="py-6 sm:py-12">
+    <main className="pb-6 sm:pb-12">
       <article className="mx-auto max-w-4xl space-y-8">
         <header className="max-w-2xl space-y-3">
           <Badge variant="secondary">Guided demo</Badge>
