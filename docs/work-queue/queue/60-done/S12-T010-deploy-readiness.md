@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T020 accepted, M02-T040 accepted, M11-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
@@ -99,3 +99,17 @@ component, asset move, deployment, or external behavior.
 
 The root may now authorize only the declared S12 GREEN paths after recording
 this acceptance. Publication and every external action remain human-owned.
+
+## GREEN acceptance
+
+At `2026-09-08T15:02:13Z`, the exact declared paths were implemented and
+independently reviewed with no Critical, Important, or Minor finding. The two
+icons are byte-identical moves, their public source paths are absent, and the
+mascot remains at its approved public path. Node 22.21.1 focused and complete
+Web suites, Web typecheck, root typecheck/test/lint, and the production Webpack
+build with Cache Components pass. A local Turbopack session reported no
+compilation or runtime errors; an isolated browser verified the not-found
+route, its two local links, and the sitemap-free robots route.
+
+This acceptance changes no deployment, publication, configuration, payment,
+identity, or submission authority.

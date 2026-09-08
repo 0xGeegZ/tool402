@@ -229,7 +229,7 @@ Core, backend, Web and UI paths, S12-T010's boundary routes and assets, runtime
 configuration, key material, accounts, wallets, deployment, and live evidence
 are excluded.
 
-S12-T010 is an active implementation record comprising its card, `docs/ui/UI-S12.md`,
+S12-T010 is an accepted record comprising its card, `docs/ui/UI-S12.md`,
 `docs/superpowers/plans/2026-09-08-s12-deploy-readiness.md`, move-only input
 paths `apps/web/public/brand/icon.svg` and
 `apps/web/public/brand/apple-icon.png`, retained
