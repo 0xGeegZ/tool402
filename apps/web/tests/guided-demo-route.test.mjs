@@ -45,12 +45,13 @@ async function readGuidedSources(t) {
     t.skip("GREEN assertions wait for both guided-demo source files");
     return null;
   }
-  const [page, steps, navigation] = await Promise.all([
+  const [page, steps, navigation, landingTest] = await Promise.all([
     readAppFile(sourcePaths[0]),
     readAppFile(sourcePaths[1]),
     readAppFile("src/components/discovery/local-navigation.tsx"),
+    readAppFile("tests/landing-explore.test.mjs"),
   ]);
-  return { page, steps, navigation };
+  return { page, steps, navigation, landingTest };
 }
 
 test("requires the exact guided-demo source before GREEN", async () => {
@@ -79,9 +80,10 @@ test("keeps the nine guided steps in the exact local order and copy", async (t) 
   ].map(([, href, title, observation]) => [href, title, observation]);
 
   assert.deepEqual(rows, expectedRows);
-  assert.equal((steps.match(/<Link\b/g) ?? []).length, expectedRows.length);
+  assert.equal((steps.match(/<Link\b/g) ?? []).length, 1);
   assert.doesNotMatch(steps, /<a\b/i);
   assert.match(steps, /from\s+["']next\/link["']/);
+  assert.match(steps, /steps\.map\(\s*\(step\)\s*=>/);
   assert.match(steps, /<Link\b[^>]*href=\{step\.href\}/);
   assert.deepEqual(
     [...steps.matchAll(/href:\s*["']([^"']+)["']/g)].map(([, href]) => href),
@@ -102,15 +104,31 @@ test("keeps the demo route local, static, and outside excluded authority claims"
   assert.doesNotMatch(sources, /(?:https?:\/\/|mailto:|target\s*=|href\s*=\s*["']\/\/)/i);
   assert.doesNotMatch(
     sources,
-    /\b(?:provider|payment|transaction|live|human|narrat(?:e|ion|ed)|fund(?:ing)?|offering|portfolio|allocation|clearing|snapshot|payout|ats|sign[- ]?in|sign[- ]?up|evidence|receipt|deployment|submission)\b/i,
+    /\b(?:backing|position|onboarding|verification|reviewer|activity|issue|uptime|price|balance|simulated|illustrative|provider|payment|transaction|live|human|narrat(?:e|ion|ed)|fund(?:ing)?|offering|portfolio|allocation|clearing|snapshot|payout|ats|sign[- ]?in|sign[- ]?up|evidence|receipt|deployment|submission)\b|\bnetwork\s+status\b/i,
   );
   assert.ok([...sources.matchAll(/href\s*=\s*\{?(["'])(\/[^"']*)\1\}?/g)].every(([, , href]) => !href.startsWith("//")));
 });
 
-test("adds exactly the reserved local Demo navigation entry", async (t) => {
+test("preserves the four exact local navigation entries", async (t) => {
   const sources = await readGuidedSources(t);
   if (!sources) return;
-  const { navigation } = sources;
+  const { navigation, landingTest } = sources;
 
-  assert.equal((navigation.match(/\{ href: "\/demo", label: "Demo" \}/g) ?? []).length, 1);
+  const entries = [
+    ...navigation.matchAll(/\{ href: "([^"]+)", label: "([^"]+)" \}/g),
+  ].map(([, href, label]) => [href, label]);
+  assert.deepEqual(entries, [
+    ["/", "Home"],
+    ["/explore", "Explore"],
+    ["/dashboard", "Workspace"],
+    ["/demo", "Demo"],
+  ]);
+  assert.ok(
+    landingTest.includes(
+      `assert.doesNotMatch(navigation, /\\{ href: "(?!/"|/explore"|/dashboard"|/demo")[^"]+/);`,
+    ),
+  );
+  assert.ok(
+    !landingTest.includes(`assert.doesNotMatch(navigation, /\\{ href: "(?!/"|/explore"|/dashboard")[^"]+/);`),
+  );
 });
