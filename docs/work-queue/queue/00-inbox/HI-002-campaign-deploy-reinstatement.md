@@ -70,14 +70,14 @@ Each fact was checked against a primary source on 2026-09-08.
 The root is asked to add these rows to the human actions record. None is
 complete; each names its own evidence.
 
-| ID                          | Human-only action                                                                                                                                                                                                                                                                                                                                                              | Unblocks                                                  |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
-| HA-COMMAND-AUTHORITY-002 | Amend the accepted command authority to admit `offering.create`, `directory.publish`, and `external.attachCandidate` under the same EIP-712 domain and primary type, each with its own closed payload and a Keccak-256 of RFC 8785 JCS payload hash. `offering.create` requires an `ISSUER` authority owning the payload subject; `directory.publish` and `external.attachCandidate` carry no subject identifier, so they require the `ISSUER` role plus a deferred subject-ownership reference that the durable boundary resolves against the referenced offering or attempt before any write. | M39-T010 |
-| HA-ATS-RETARGET-001         | Re-supply the immutable ATS_CREATE configuration for the SDK 8.0.0 testnet deployment: factory `0.0.9213391` / `0xd1f118a40f3b02883d35909ef2517e7edd78379d`, resolver `0.0.9212226` / `0xba2d5fc2083a0b8f164c50e65d782087fba18e0a`, registry revision `ats_sdk_8_0_0_testnet_v2`, and the recomputed synthetic and real-issuer digests.                                        | M42-T010                                                  |
-| HA-ISSUER-ACCOUNT-001       | Create and fund the Hedera testnet account for `0xc89f87052c3e080b4a9b021d4930055031ef378e` through the public faucet and confirm the account id on Mirror Node. No key material enters the repository.                                                                                                                                                                        | M44-T010, HA-ATS-STAGE-B-001                              |
-| HA-CAMPAIGN-CONVEX-001      | Publish one named Convex deployment reachable from the public host, provision the HMAC ingress key pair as environment values outside the repository, and record the redacted deployment reference.                                                                                                                                                                            | M41-T010 live publication, S17-T010 live read             |
-| HA-ATS-STAGE-B-001          | Stage B GO: provision the `commandAuthorities` ISSUER row for the approved issuer, accept one enabled M33 ATS_CREATE mapping bound to the retargeted configuration, execute `Bond.create` in MetaMask, attach and verify the receipt, then one `ATS_CONTROL_LIST` and one `ATS_ISSUE`. Names the permitted SDK calls, transaction cap, stop conditions, and no-retry handling. | M43-T010 live verification, M44-T010, S18-T010 allocation |
-| HA-SUBMISSION-001 amendment | Select the tokenization track in addition to agentic payments when submitting.                                                                                                                                                                                                                                                                                                 | HA-SUBMISSION-001                                         |
+| ID                          | Human-only action                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Unblocks                                                  |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| HA-COMMAND-AUTHORITY-002    | Amend the accepted command authority to admit `offering.create`, `directory.publish`, and `external.attachCandidate` under the same EIP-712 domain and primary type, each with its own closed payload and a Keccak-256 of RFC 8785 JCS payload hash. `offering.create` requires an `ISSUER` authority owning the payload subject; `directory.publish` and `external.attachCandidate` carry no subject identifier, so they require the `ISSUER` role plus a deferred subject-ownership reference that the durable boundary resolves against the referenced offering or attempt before any write. | M39-T010                                                  |
+| HA-ATS-RETARGET-001         | Re-supply the immutable ATS_CREATE configuration for the SDK 8.0.0 testnet deployment: factory `0.0.9213391` / `0xd1f118a40f3b02883d35909ef2517e7edd78379d`, resolver `0.0.9212226` / `0xba2d5fc2083a0b8f164c50e65d782087fba18e0a`, registry revision `ats_sdk_8_0_0_testnet_v2`, and the recomputed synthetic and real-issuer digests.                                                                                                                                                                                                                                                         | M42-T010                                                  |
+| HA-ISSUER-ACCOUNT-001       | Create and fund the Hedera testnet account for `0xc89f87052c3e080b4a9b021d4930055031ef378e` through the public faucet and confirm the account id on Mirror Node. No key material enters the repository.                                                                                                                                                                                                                                                                                                                                                                                         | M44-T010, HA-ATS-STAGE-B-001                              |
+| HA-CAMPAIGN-CONVEX-001      | Publish one named Convex deployment reachable from the public host, provision the HMAC ingress key pair as environment values outside the repository, and record the redacted deployment reference.                                                                                                                                                                                                                                                                                                                                                                                             | M41-T010 live publication, S17-T010 live read             |
+| HA-ATS-STAGE-B-001          | Stage B GO: provision the `commandAuthorities` ISSUER row for the approved issuer, accept one enabled M33 ATS_CREATE mapping bound to the retargeted configuration, execute `Bond.create` in MetaMask, attach and verify the receipt, then one `ATS_CONTROL_LIST` and one `ATS_ISSUE`. Names the permitted SDK calls, transaction cap, stop conditions, and no-retry handling.                                                                                                                                                                                                                  | M43-T010 live verification, M44-T010, S18-T010 allocation |
+| HA-SUBMISSION-001 amendment | Select the tokenization track in addition to agentic payments when submitting.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | HA-SUBMISSION-001                                         |
 
 ### 4. Implementation cards committed with this intake
 
@@ -85,20 +85,20 @@ All twelve are in `00-inbox`. Their catalog rows list only accepted
 dependencies; the in-batch ordering below is a card-text dependency the root
 validates at ready time.
 
-| Card                                                    | Lane    | In-batch predecessors | Human gate                          |
-| ------------------------------------------------------- | ------- | --------------------- | ----------------------------------- |
-| M38-T010 command payloads                               | Core    | none                  | none                                |
-| M39-T010 multi-type normalizer                          | Backend | M38                   | HA-COMMAND-AUTHORITY-002            |
-| M40-T010 offering and directory admission               | Backend | M38, M39              | none                                |
-| M41-T010 HTTP command ingress and public projection     | Backend | M39, M40              | HA-CAMPAIGN-CONVEX-001 for live use |
-| M42-T010 ATS_CREATE configuration retarget              | Backend | none                  | HA-ATS-RETARGET-001                 |
-| M43-T010 receipt attachment and Mirror verification     | Backend | M38, M39, M40, M42    | HA-ATS-STAGE-B-001 for live use     |
-| M45-T010 active directory version in the Tool Directory | Web     | M40, M41              | none                                |
-| S15-T010 wallet island and command relay                | Web     | none                  | none                                |
-| S16-T010 provider deploy wizard                         | Web     | M38, S15              | none                                |
+| Card                                                    | Lane    | In-batch predecessors                                                | Human gate                          |
+| ------------------------------------------------------- | ------- | -------------------------------------------------------------------- | ----------------------------------- |
+| M38-T010 command payloads                               | Core    | none                                                                 | none                                |
+| M39-T010 multi-type normalizer                          | Backend | M38                                                                  | HA-COMMAND-AUTHORITY-002            |
+| M40-T010 offering and directory admission               | Backend | M38, M39                                                             | none                                |
+| M41-T010 HTTP command ingress and public projection     | Backend | M39, M40                                                             | HA-CAMPAIGN-CONVEX-001 for live use |
+| M42-T010 ATS_CREATE configuration retarget              | Backend | none                                                                 | HA-ATS-RETARGET-001                 |
+| M43-T010 receipt attachment and Mirror verification     | Backend | M38, M39, M40, M42                                                   | HA-ATS-STAGE-B-001 for live use     |
+| M45-T010 active directory version in the Tool Directory | Web     | M40, M41                                                             | none                                |
+| S15-T010 wallet island and command relay                | Web     | none                                                                 | none                                |
+| S16-T010 provider deploy wizard                         | Web     | M38, S15                                                             | none                                |
 | S17-T010 provider status route                          | Web     | M41, S16; navigation amendment after the active S11-T010 is accepted | HA-CAMPAIGN-CONVEX-001 for live use |
-| M44-T010 ATS SDK issuer client seam                     | Web     | M42, S15, S16         | HA-ATS-STAGE-B-001                  |
-| S18-T010 backer funding route                           | Web     | S15, M40, M43         | HA-ATS-STAGE-B-001 for allocation   |
+| M44-T010 ATS SDK issuer client seam                     | Web     | M42, S15, S16                                                        | HA-ATS-STAGE-B-001                  |
+| S18-T010 backer funding route                           | Web     | S15, M40, M43                                                        | HA-ATS-STAGE-B-001 for allocation   |
 
 ### 5. Cross-card items the root records at ready time
 
@@ -178,3 +178,24 @@ This card records a ruling request, five observations, six human-action
 requests, and twelve card intakes. It selects no scope by itself, marks no
 human action complete, and authorizes no account creation, funding, signing,
 provisioning, deployment, publication, or submission.
+
+## Human ruling
+
+The human operator ruled GO at `2026-09-08T19:14:19Z`, recorded through the
+operator's delegated session because the orchestrator session was not
+reachable: the operator selected the reversal and the tokenization track and
+merged this intake. The root records the ruling, its basis, and its cost if
+wrong from section 1 as `D-HI-002-001`, adopts the five observations as
+`D-HI-002-002`, and adds the six requested human-action rows. Two of them,
+`HA-COMMAND-AUTHORITY-002` and `HA-ATS-RETARGET-001`, carry recommended
+decision packets at
+[HA-COMMAND-AUTHORITY-002](../../evidence/HA-COMMAND-AUTHORITY-002-recommended-decision.md)
+and [HA-ATS-RETARGET-001](../../evidence/HA-ATS-RETARGET-001-recommended-decision.md)
+and remain pending until the operator accepts them explicitly; the retarget
+packet's digests were computed after reproducing the accepted M35 and M37
+digests exactly.
+
+The root closes this card by confirming the recorded rows, moving it to
+`60-done`, and evaluating the twelve cards in the recorded in-batch order.
+M38-T010 and S15-T010 have no in-batch predecessor and no human gate and may
+be readied first.
