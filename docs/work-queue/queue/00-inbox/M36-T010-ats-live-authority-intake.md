@@ -10,9 +10,9 @@
   catalog, ownership, decisions, commits, and pushes. It owns no source,
   package, configuration, provider, wallet, account, SDK, transaction, or
   deployment path.
-- Human action: HA-ATS-LIVE-AUTHORITY-001 is required. The accepted M35
-  synthetic issuer and hash are non-executable and cannot be upgraded by
-  substitution.
+- Human action: HA-ATS-LIVE-AUTHORITY-001 is recorded and pending independent
+  review. The accepted M35 synthetic issuer and hash are non-executable and
+  cannot be upgraded by substitution.
 
 ## Scope
 
@@ -21,20 +21,22 @@ one source-only, real-issuer ATS_CREATE authority binding. It deliberately
 separates that reviewable mapping from a later Human Ops-only provisioning and
 one-shot execution GO.
 
-The recommended decision packet is at
+The historical recommended decision packet is at
 [HA-ATS-LIVE-AUTHORITY-001](../../evidence/HA-ATS-LIVE-AUTHORITY-001-recommended-decision.md).
+The completed Stage A decision is at
+[HA-ATS-LIVE-AUTHORITY-001 decision](../../evidence/HA-ATS-LIVE-AUTHORITY-001-decision.md).
 
 ## Candidate requirements
 
-- The human supplies one real canonical testnet issuer, exact principal,
-  authority version, ownership array, and every immutable configuration
+- The human supplied one canonical testnet issuer, exact principal, authority
+  version, ownership array, and re-adopted every immutable configuration
   parameter. No credential or wallet material enters the repository.
-- The root independently recomputes the full new JCS/Keccak preimage and
-  canonical parameters hash after the real issuer replaces the synthetic M35
-  owner. It must not reuse M35's hash.
+- The root independently recomputed the full new JCS/Keccak preimage and
+  canonical parameters hash after the real issuer replaced the synthetic M35
+  owner. It did not reuse M35's hash.
 - An independent authority review confirms the exact source-only boundary,
-  M33 ordering, absence of dynamic operation selection, and that M32 has no
-  provisioning path before this control record can be closed.
+  signer/owner enforcement gap, absence of dynamic operation selection, and
+  that M32 has no provisioning path before this control record can be closed.
 
 ## Explicit exclusions
 
