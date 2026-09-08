@@ -114,7 +114,7 @@ implementedTest("rejects caller URLs that the delegated record parser would norm
     record({ x402Endpoint: "https://api.tool402.test" }),
     record({ webUrl: "https://tool402.test" }),
     record({ x402Endpoint: "https://API.tool402.test/riskscan" }),
-    record({ webUrl: "https://tool402.test/%7Eprovider" }),
+    record({ webUrl: "https://tool402.test/%2e%2e/provider" }),
   ]) {
     assertInputError(() => api.parseDirectoryPublishPayload(payload({ record: malformedRecord })));
   }
