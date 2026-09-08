@@ -52,6 +52,13 @@ satisfy the hardened contract:
 - `apps/web/src/lib/wallet/tool402-command.ts`; and
 - `apps/web/src/lib/wallet/command-relay.ts`.
 
+The pre-existing command-relay fixture ends in recovery byte `ab`, which the
+hardened contract correctly rejects. One matching fixture-only correction in
+`apps/web/tests/commands-api.test.mjs` is also permitted: it may replace that
+test-only dummy with a lower-case, 65-byte, low-s signature ending in an
+accepted recovery byte. It must not broaden the test's behavior or add a new
+source path.
+
 No component, route, dependency, lockfile, queue, provider configuration,
 wallet interaction, network request, transaction, deployment, or live claim is
 authorized. The existing S15 source and dependency pin remain unaccepted until
