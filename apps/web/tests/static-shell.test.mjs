@@ -46,7 +46,10 @@ test("enables Cache Components without a legacy cache opt-out", async () => {
   const config = await readAppFile("next.config.ts");
 
   assert.match(config, /cacheComponents\s*:\s*true/);
-  assert.doesNotMatch(config, /\b(?:dynamicIO|useCache|dynamic|revalidate|fetchCache)\b/);
+  assert.doesNotMatch(
+    config,
+    /\b(?:dynamicIO|useCache|dynamic|revalidate|fetchCache)\b/,
+  );
 });
 
 test("renders the static Tool402 shell and home composition", async () => {
@@ -84,15 +87,16 @@ test("defines the S00 presentational primitives and local wordmark without runti
     await readAppFile(path);
   }
 
-  const [stylesheet, postcss, cn, button, card, badge, logo] = await Promise.all([
-    readAppFile("src/app/globals.css"),
-    readAppFile("postcss.config.mjs"),
-    readAppFile("src/components/ui/cn.ts"),
-    readAppFile("src/components/ui/button.tsx"),
-    readAppFile("src/components/ui/card.tsx"),
-    readAppFile("src/components/ui/badge.tsx"),
-    readAppFile("src/components/tool402/logo.tsx"),
-  ]);
+  const [stylesheet, postcss, cn, button, card, badge, logo] =
+    await Promise.all([
+      readAppFile("src/app/globals.css"),
+      readAppFile("postcss.config.mjs"),
+      readAppFile("src/components/ui/cn.ts"),
+      readAppFile("src/components/ui/button.tsx"),
+      readAppFile("src/components/ui/card.tsx"),
+      readAppFile("src/components/ui/badge.tsx"),
+      readAppFile("src/components/tool402/logo.tsx"),
+    ]);
 
   assert.match(stylesheet, /@import\s+["']tailwindcss["'];/);
   for (const token of [
