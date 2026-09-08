@@ -4,7 +4,7 @@
 
 Independent review at pushed `fb95e731dfff85145ed50bd0be28ee087a0173d7` of:
 
-- [M38 control card](../queue/20-active/M38-T010-offering-command-payloads.md)
+- [M38 control card](../queue/60-done/M38-T010-offering-command-payloads.md)
 - [M38 specification](../../specs/m38-offering-command-payloads.md)
 - [offering-create runtime/type contracts](../../../packages/core/test/offering-create-payload.test.mjs)
 - [directory-publish runtime/type contracts](../../../packages/core/test/directory-publish-payload.test.mjs)
