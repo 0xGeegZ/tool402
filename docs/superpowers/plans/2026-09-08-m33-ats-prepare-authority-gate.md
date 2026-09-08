@@ -58,7 +58,7 @@ const rule = {
 };
 ~~~
 
-Compute the candidate payload hash from the exact preimage required by the specification, invoke the missing exported test helper, and assert it accepts only this exact record. Add explicit rejection cases for missing, duplicate, disabled, malformed, proxy/accessor-backed, wrong-target, and wrong-hash manifest candidates. Add a separate `HEDERA_FUNDING` fixture that succeeds with an empty manifest.
+Compute the candidate payload hash from the exact preimage required by the specification, invoke the missing exported test helper, and assert it accepts only this exact record. Add explicit rejection cases for missing, duplicate, disabled, malformed, reflection-hostile proxy or accessor-backed, wrong-target, and wrong-hash manifest candidates. Add a separate `HEDERA_FUNDING` fixture that succeeds with an empty manifest.
 
 - [ ] **Step 2: Write the failing M32 ordering regression**
 

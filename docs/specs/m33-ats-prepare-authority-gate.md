@@ -59,6 +59,13 @@ disabled, malformed, unsupported, or mismatched record throws before M32 reads
 replay or idempotency state. A non-ATS `HEDERA_FUNDING` payload returns without
 an M33 manifest lookup.
 
+Descriptor safety is an observable ECMAScript boundary: M33 rejects accessors
+and reflection-hostile facades and detaches safe data before comparison. It
+does not claim to identify a fully transparent proxy that presents exactly the
+same ordinary own data descriptors; no portable JavaScript mechanism can make
+that distinction. The production manifest remains a private frozen literal and
+M33 never retains manifest-owned authority data after its detached capture.
+
 An enabled record has the closed fields defined by the human decision:
 
 ```text

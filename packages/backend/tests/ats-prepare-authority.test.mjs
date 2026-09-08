@@ -100,7 +100,7 @@ test("rejects missing, duplicate, disabled, and malformed ATS manifest candidate
   }
 });
 
-test("rejects proxy and accessor-backed manifest candidates without invoking accessors", () => {
+test("rejects reflection-hostile proxy and accessor-backed manifest candidates without invoking accessors", () => {
   const proxy = new Proxy(
     { ...rule },
     {
