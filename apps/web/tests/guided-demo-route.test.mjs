@@ -1,0 +1,116 @@
+import assert from "node:assert/strict";
+import { access, readFile } from "node:fs/promises";
+import { join } from "node:path";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+const appRoot = fileURLToPath(new URL("..", import.meta.url));
+const sourcePaths = [
+  "src/app/demo/page.tsx",
+  "src/components/demo/guided-demo-steps.tsx",
+];
+
+const expectedRows = [
+  ["/", "Product overview", "Read the product overview and continue to Explore."],
+  ["/explore", "Explore assessments", "Find the RiskScan entry and its local discovery surface."],
+  ["/explore/riskscan", "Read RiskScan", "Review the Quick input, result, and configuration boundaries."],
+  ["/explore/riskscan/try", "Try the local request", "Inspect the bounded Quick request surface."],
+  ["/explore/riskscan/tool-loop", "Follow ToolLoop", "Inspect the local ToolLoop request boundary."],
+  ["/dashboard", "Open the workspace", "See the guest workspace shell."],
+  ["/dashboard/riskscan", "Review the workbench", "Follow the guest RiskScan workbench sequence."],
+  [
+    "/dashboard/riskscan/compatibility",
+    "Check compatibility",
+    "Inspect the guest native quote compatibility surface.",
+  ],
+  ["/dashboard/riskscan/preflight", "Review disclosures", "Inspect the guest Quick disclosure preflight."],
+];
+
+async function fileExists(path) {
+  try {
+    await access(join(appRoot, path));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function readAppFile(path) {
+  return readFile(join(appRoot, path), "utf8");
+}
+
+async function readGuidedSources(t) {
+  const exists = await Promise.all(sourcePaths.map(fileExists));
+  if (!exists.every(Boolean)) {
+    t.skip("GREEN assertions wait for both guided-demo source files");
+    return null;
+  }
+  const [page, steps, navigation] = await Promise.all([
+    readAppFile(sourcePaths[0]),
+    readAppFile(sourcePaths[1]),
+    readAppFile("src/components/discovery/local-navigation.tsx"),
+  ]);
+  return { page, steps, navigation };
+}
+
+test("requires the exact guided-demo source before GREEN", async () => {
+  assert.deepEqual(await Promise.all(sourcePaths.map(fileExists)), [true, true]);
+});
+
+test("composes one server page with the named guided step component", async (t) => {
+  const sources = await readGuidedSources(t);
+  if (!sources) return;
+  const { page } = sources;
+
+  assert.equal((page.match(/<main\b/g) ?? []).length, 1);
+  assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
+  assert.match(page, /import\s*\{\s*GuidedDemoSteps\s*\}\s+from\s+["'][^"']*guided-demo-steps["']/);
+  assert.match(page, /<GuidedDemoSteps\s*\/>/);
+});
+
+test("keeps the nine guided steps in the exact local order and copy", async (t) => {
+  const sources = await readGuidedSources(t);
+  if (!sources) return;
+  const { steps } = sources;
+  const rows = [
+    ...steps.matchAll(
+      /\{\s*href:\s*["']([^"']+)["']\s*,\s*title:\s*["']([^"']+)["']\s*,\s*observation:\s*["']([^"']+)["']\s*\}/g,
+    ),
+  ].map(([, href, title, observation]) => [href, title, observation]);
+
+  assert.deepEqual(rows, expectedRows);
+  assert.equal((steps.match(/<Link\b/g) ?? []).length, expectedRows.length);
+  assert.doesNotMatch(steps, /<a\b/i);
+  assert.match(steps, /from\s+["']next\/link["']/);
+  assert.match(steps, /<Link\b[^>]*href=\{step\.href\}/);
+  assert.deepEqual(
+    [...steps.matchAll(/href:\s*["']([^"']+)["']/g)].map(([, href]) => href),
+    expectedRows.map(([href]) => href),
+  );
+});
+
+test("keeps the demo route local, static, and outside excluded authority claims", async (t) => {
+  const loaded = await readGuidedSources(t);
+  if (!loaded) return;
+  const { page, steps } = loaded;
+  const sources = `${page}\n${steps}`;
+
+  assert.doesNotMatch(sources, /["']use client["']/i);
+  assert.doesNotMatch(sources, /\bfetch\s*\(|\b(?:setTimeout|setInterval|clearTimeout|clearInterval)\s*\(/);
+  assert.doesNotMatch(sources, /\b(?:localStorage|sessionStorage|indexedDB|process\.env|import\.meta\.env)\b/i);
+  assert.doesNotMatch(sources, /\b(?:analytics|gtag|posthog|segment)\b/i);
+  assert.doesNotMatch(sources, /(?:https?:\/\/|mailto:|target\s*=|href\s*=\s*["']\/\/)/i);
+  assert.doesNotMatch(
+    sources,
+    /\b(?:provider|payment|transaction|live|human|narrat(?:e|ion|ed)|fund(?:ing)?|offering|portfolio|allocation|clearing|snapshot|payout|ats|sign[- ]?in|sign[- ]?up|evidence|receipt|deployment|submission)\b/i,
+  );
+  assert.ok([...sources.matchAll(/href\s*=\s*\{?(["'])(\/[^"']*)\1\}?/g)].every(([, , href]) => !href.startsWith("//")));
+});
+
+test("adds exactly the reserved local Demo navigation entry", async (t) => {
+  const sources = await readGuidedSources(t);
+  if (!sources) return;
+  const { navigation } = sources;
+
+  assert.equal((navigation.match(/\{ href: "\/demo", label: "Demo" \}/g) ?? []).length, 1);
+});
