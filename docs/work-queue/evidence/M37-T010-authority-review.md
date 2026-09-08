@@ -8,7 +8,7 @@
 - Reviewed records:
   - [accepted Stage A decision](HA-ATS-LIVE-AUTHORITY-001-decision.md)
   - [M36 Stage A authority review](M36-T010-authority-review.md)
-  - [M37 control card](../queue/00-inbox/M37-T010-stage-a-real-issuer-ats-create-authority.md)
+  - [M37 control card](../queue/10-ready/M37-T010-stage-a-real-issuer-ats-create-authority.md)
   - [M37 local specification](../../specs/m37-stage-a-real-issuer-ats-create-authority.md)
   - [M37 implementation plan](../../superpowers/plans/2026-09-08-m37-stage-a-real-issuer-ats-create-authority.md)
   - [M35 local configuration contract](../../specs/m35-local-unsigned-ats-create-configuration.md)

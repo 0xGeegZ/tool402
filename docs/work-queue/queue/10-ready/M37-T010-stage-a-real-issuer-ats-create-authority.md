@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T030 accepted; M32-T010 accepted; M33-T010 accepted;
   M35-T010 accepted; M36-T010 accepted
 - Owner: The root owns this card, local specification, local import-ledger
@@ -83,12 +83,15 @@ projection. It does not authorize an SDK, wallet, provider, network, Convex,
 environment, authority row, M32/M33 change, asset, transaction, deployment, or
 live ATS test.
 
-M37 remains in 00-inbox until a fresh independent authority review covers this
-resumption and the clarified projection shape. Only then may the root restore
-the historical RED contract, narrowly strengthen its evaluator-indirection
-assertion, and proceed through the normal RED/GREEN cycle.
+The [fresh independent authority review](../../evidence/M37-T010-resumption-review.md)
+at pushed `7e381fe58aaab85a4ef3437774200d3d625ed6c7` found no Critical, Important,
+or Minor finding in the resumed, clarified source-only scope. M37 now enters
+`10-ready`. A fresh root ready-state rescan and activation are still required
+before the root may restore the historical RED contract, narrowly strengthen
+its evaluator-indirection assertion, and proceed through the normal RED/GREEN
+cycle.
 
-## Ready transition
+## Historical ready transition
 
 Ready at 2026-09-08T13:05:36Z after a fresh root rescan at pushed
 `742b6524e151565456732041b9e97e5650541cee` confirmed all declared
@@ -105,7 +108,7 @@ M33 enablement, M32/schema mutation, SDK/provider/wallet interaction, storage,
 account action, funding, payment, transaction, asset creation, deployment, or
 live evidence.
 
-## Activation
+## Historical activation
 
 Activated at 2026-09-08T13:08:27Z after a fresh ready-state rescan at pushed
 `63de6a128a18c2e15938fce2fc9fd4b757bf2698` confirmed M37-T010 as the sole

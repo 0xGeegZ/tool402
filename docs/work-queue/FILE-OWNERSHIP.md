@@ -309,7 +309,7 @@ boundaries only. A successor must receive separate ownership and may only be
 recorded after a fresh rescan; it must retain M33 zero-enabled and M32/schema
 unchanged until a later reviewed runtime amendment and Stage B GO.
 
-M37-T010 is a root-owned resumption-intake record comprising its card,
+M37-T010 is a root-owned resumption-ready record comprising its card,
 local specification, neutral import-ledger row, implementation plan, accepted
 Stage A decision/reviews, future RED/task/module review records,
 queue state, catalog, ownership record, decisions, commits, integration, and
@@ -322,6 +322,6 @@ existing source/tests, configuration, environment, Web/UI, Agent, SDK,
 provider/wallet, account, funding, payment, transaction, asset, settlement,
 clearing, HCS, payout, deployment, and live-evidence paths are excluded. It
 must create no authority row and grants no M33 enablement or external behavior.
-Its historical test-only RED may be restored only after the fresh independent
-authority review required by D-HI-001-005. It remains private, source-only,
-and unavailable to every runtime or external path.
+Its historical test-only RED may be restored only after the fresh
+ready-state rescan and activation required by D-HI-001-005. It remains private,
+source-only, and unavailable to every runtime or external path.
