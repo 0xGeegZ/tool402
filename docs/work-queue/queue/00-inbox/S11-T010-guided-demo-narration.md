@@ -1,10 +1,10 @@
-# UI-S11-T010 — Guided demo narration route
+# S11-T010 — Guided demo narration route
 
 ## State
 
-- Tier: DEMO_P1
+- Tier: POLISH
 - Queue state: 00-inbox
-- Dependencies: UI-S06, UI-S07, UI-S09, and UI-S10 accepted; M30-T010 accepted
+- Dependencies: M02-T040 accepted, M02-T070 accepted, M02-T080 accepted, M11-T010 accepted, M11-T020 accepted, M13-T010 accepted, M14-T010 accepted, M15-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
   only `apps/web/src/app/demo/page.tsx`, files under
