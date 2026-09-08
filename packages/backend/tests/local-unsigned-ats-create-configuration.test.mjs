@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { canonicalizeRequirements } from "@tool402/core";
+import typescript from "typescript";
 import { keccak256, stringToHex } from "viem";
 
 const expectedCanonicalParametersHash =
@@ -102,6 +103,35 @@ function preimageFor(projection) {
   };
 }
 
+function staticModuleSpecifiers(source) {
+  const sourceFile = typescript.createSourceFile(
+    "local-unsigned-ats-create-configuration.ts",
+    source,
+    typescript.ScriptTarget.ES2022,
+    true,
+    typescript.ScriptKind.TS,
+  );
+  assert.deepEqual(sourceFile.parseDiagnostics, []);
+
+  const specifiers = [];
+  for (const statement of sourceFile.statements) {
+    assert.equal(typescript.isImportEqualsDeclaration(statement), false);
+    if (
+      (typescript.isImportDeclaration(statement)
+        || typescript.isExportDeclaration(statement))
+      && statement.moduleSpecifier !== undefined
+    ) {
+      assert.equal(typescript.isStringLiteral(statement.moduleSpecifier), true);
+      specifiers.push({
+        kind: typescript.isImportDeclaration(statement) ? "import" : "export",
+        specifier: statement.moduleSpecifier.text,
+      });
+    }
+  }
+
+  return specifiers;
+}
+
 test("exports only the private local unsigned ATS configuration helper", () => {
   assert.deepEqual(Object.keys(configurationModule).sort(), [
     "createLocalUnsignedAtsCreateConfiguration",
@@ -185,15 +215,15 @@ test("keeps the configuration helper private and free of execution capabilities"
   );
 
   assert.deepEqual(
-    source.split("\n").filter((line) => /^import\b/u.test(line)),
+    staticModuleSpecifiers(source),
     [
-      'import { canonicalizeRequirements } from "@tool402/core";',
-      'import { keccak256, stringToHex } from "viem";',
+      { kind: "import", specifier: "@tool402/core" },
+      { kind: "import", specifier: "viem" },
     ],
   );
   assert.doesNotMatch(
     source,
-    /\bimport\s*\(|\brequire\s*\(|\bNetwork\s*\.\s*(?:init|connect)\s*\(|\bnew\s+CreateBondRequest\s*\(|\bBond\s*\.\s*create\s*\(|\b(?:window|ethereum|MetaMask|wagmi|WalletConnect|createWalletClient|createPublicClient|fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|Date|performance|setTimeout|setInterval|process\s*\.\s*env|import\.meta\.env|commandAuthorities|ats_prepare_authority|external_prepare_command_admission|convex)\b/u,
+    /\bimport\s*\(|\brequire\s*\(|\bNetwork\s*\.\s*(?:init|connect)\s*\(|\bnew\s+CreateBondRequest\s*\(|\bBond\s*\.\s*create\s*\(|\b(?:window|ethereum|MetaMask|wagmi|WalletConnect|createWalletClient|createPublicClient|fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|Date|performance|setTimeout|setInterval|process|commandAuthorities|ats_prepare_authority|external_prepare_command_admission|convex)\b/u,
   );
   for (const packageJson of [backendPackage, rootPackage]) {
     for (const section of [
@@ -211,6 +241,6 @@ test("keeps the configuration helper private and free of execution capabilities"
   assert.deepEqual(backendPackage.exports, { ".": "./src/index.ts" });
   assert.doesNotMatch(
     backendPublicBarrel,
-    /createLocalUnsignedAtsCreateConfiguration/u,
+    /local-unsigned-ats-create-configuration/u,
   );
 });
