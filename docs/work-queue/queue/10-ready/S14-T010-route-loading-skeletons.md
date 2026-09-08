@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M02-T020 accepted, M02-T040 accepted, M11-T020 accepted, M29-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
@@ -62,3 +62,18 @@ The accepted slice history it builds on is recorded in the
 Skeletons stand for layout, never for values. Its exclusions are the manifest's
 truthfulness and authority boundary, which governs; this card does not restate
 them.
+
+## Ready transition
+
+Ready at 2026-09-08T16:51:17Z after a fresh root rescan at pushed
+`7d3361379b9ede5210bebc3e1628621d86b410d6`. The independent
+[ready review](../../evidence/S14-T010-ready-review.md) found all dependencies
+accepted, exact new paths absent and disjoint, no active ownership conflict,
+resolved local records, and no human gate. The amended UI-S14 contract fixes
+the exact region order for eight route-specific loaders and makes no
+unreproducible browser replacement claim.
+
+This ready state authorizes only a fresh root activation followed by the
+declared durable RED contract. It does not authorize loader or skeleton source,
+existing route edits, client state, network behavior, configuration,
+identity/provider/payment surfaces, deployment, or submission.
