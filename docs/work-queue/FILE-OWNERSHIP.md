@@ -328,6 +328,14 @@ unavailable to every runtime or external path. Any successor must receive
 separate ownership and a separate human authorization before provisioning or
 an executable ATS action.
 
+HA-ATS-RUNTIME-BINDING-001 is a root-owned pending human-control record
+comprising only its recommended decision, HUMAN-ACTIONS.md, queue state, this
+ownership record, and decisions. It owns no source, test, schema, manifest,
+authority row, package, configuration, environment, provider, wallet, SDK,
+network, account, asset, transaction, deployment, or live-evidence path.
+Until the human approves it and a separately scoped card receives its own
+ownership, M32 and M33 remain unchanged and M33 remains zero-enabled.
+
 S14-T010 is a root-owned accepted control record comprising its card,
 `docs/ui/UI-S14.md`, `docs/ui/IMPORT-LEDGER.md`,
 `docs/superpowers/plans/2026-09-08-s14-route-loading-skeletons.md`, this
