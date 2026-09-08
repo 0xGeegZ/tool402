@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M26-T010 accepted; M32-T010 accepted;
   HA-ATS-AUTHORITY-001 accepted as bounded architecture authority
 - Owner: This root-owned candidate owns its card, the local M33 specification,
@@ -99,3 +99,15 @@ This ready state authorizes only root activation followed by the specified
 test-only RED. It does not authorize target enablement, Convex publication,
 BFF/HTTP behavior, provider/wallet action, funding, payment, transaction,
 deployment, or live behavior.
+
+## Activation
+
+Activated at 2026-09-08T06:45:00Z after a fresh ready-state rescan at pushed
+`72f327607b05fa8f5f72ad1609b51e2029192b01` confirmed M33-T010 as the sole
+ready card; M26-T010/M32-T010 remained accepted; no active ownership conflict,
+human blocker, reference issue, or guard issue existed.
+
+This activation authorizes only the committed test-only RED contract. It does
+not authorize a production manifest entry, target enablement, Convex
+publication, BFF/HTTP behavior, provider/wallet action, funding, payment,
+transaction, deployment, or live behavior.

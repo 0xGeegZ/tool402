@@ -8,7 +8,7 @@
   - [human decision](HA-ATS-AUTHORITY-001-decision.md)
   - [M33 specification](../../specs/m33-ats-prepare-authority-gate.md)
   - [M33 implementation plan](../../superpowers/plans/2026-09-08-m33-ats-prepare-authority-gate.md)
-  - [M33 ready card](../queue/10-ready/M33-T010-ats-prepare-authority-gate.md)
+  - [M33 card](../queue/20-active/M33-T010-ats-prepare-authority-gate.md)
   - accepted M26/M32 local contracts and M32 mutation/test boundary
 
 ## Findings
