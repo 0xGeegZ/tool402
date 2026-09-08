@@ -16,8 +16,10 @@ test("renders labeled navigation between the committed local routes", async () =
   assert.match(navigation, /<nav\b[^>]*aria-label=["']Main navigation["']/);
   assert.match(navigation, /\{ href: "\/", label: "Home" \}/);
   assert.match(navigation, /\{ href: "\/explore", label: "Explore" \}/);
+  assert.match(navigation, /\{ href: "\/dashboard", label: "Workspace" \}/);
+  assert.match(navigation, /\{ href: "\/demo", label: "Demo" \}/);
   assert.match(navigation, /<Link href=\{link\.href\}/);
-  assert.doesNotMatch(navigation, /\{ href: "(?!\/"|\/explore"|\/dashboard")[^"]+/);
+  assert.doesNotMatch(navigation, /\{ href: "(?!\/"|\/explore"|\/dashboard"|\/demo")[^"]+/);
 });
 
 test("renders a single landing main landmark and page heading", async () => {
