@@ -211,7 +211,7 @@ HI-001 is a resolved human intake record comprising its card, `docs/work-queue/D
 
 B02-T010 is an accepted record comprising its card, `docs/specs/b02-riskscan-route-settlement-evidence.md`, `docs/imports/SPEC-IMPORT-LEDGER.md`, `docs/superpowers/plans/2026-09-07-b02-riskscan-route-settlement-evidence.md`, `apps/web/src/lib/riskscan-settlement-evidence.ts`, and `apps/web/tests/riskscan-settlement-evidence.test.mjs`. `apps/web/src/lib/riskscan-x402.ts` is an accepted M03-T030 path reserved to this card as an explicit root integration reservation while B02-T010 was active; M03-T030 is accepted and has no active lane, so the reservation creates no ownership conflict. The root owns queue state, catalog, ownership, decisions, reviews, commits, and pushes. M02-T060, M03-T030, and M06-T010 are accepted context, not reopened behavior. The M03 correlation rules, `apps/web/tests/riskscan-api.test.mjs`, route files, the Tool Directory, Core, Agent, backend, persistence, package metadata, lockfile, runtime configuration, generated output, public read surfaces, receipt and evidence binding, payment clients, accounts, wallets, signers, transactions, reserve, allocation, clearing, ATS, HCS, payout, deployment, and live evidence are excluded.
 
-B03-T010 is a ready authority record comprising its card,
+B03-T010 is an active implementation record comprising its card,
 `docs/specs/b03-riskscan-agent-payment-client.md`,
 `docs/superpowers/plans/2026-09-08-b03-riskscan-agent-payment-client.md`,
 `apps/agent/src/riskscan-tool-payment.ts`,
@@ -229,7 +229,7 @@ Core, backend, Web and UI paths, S12-T010's boundary routes and assets, runtime
 configuration, key material, accounts, wallets, deployment, and live evidence
 are excluded.
 
-S12-T010 is a ready authority record comprising its card, `docs/ui/UI-S12.md`,
+S12-T010 is an active implementation record comprising its card, `docs/ui/UI-S12.md`,
 `docs/superpowers/plans/2026-09-08-s12-deploy-readiness.md`, move-only input
 paths `apps/web/public/brand/icon.svg` and
 `apps/web/public/brand/apple-icon.png`, retained

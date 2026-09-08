@@ -1,6 +1,6 @@
 # B03 implementation plan — RiskScan Agent payment client
 
-Execution plan for [B03-T010](../../work-queue/queue/10-ready/B03-T010-riskscan-agent-payment-client.md)
+Execution plan for [B03-T010](../../work-queue/queue/20-active/B03-T010-riskscan-agent-payment-client.md)
 against the [B03 Agent payment client contract](../../specs/b03-riskscan-agent-payment-client.md).
 
 ## Goal

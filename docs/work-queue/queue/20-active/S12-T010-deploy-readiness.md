@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T020 accepted, M02-T040 accepted, M11-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
@@ -80,3 +80,12 @@ deployment, or submission authority.
 A sitemap route is deliberately out of scope: it requires a deployment origin,
 and no local contract selects one. It stays a named follow-up rather than a
 silent omission.
+
+## Activation
+
+Activated at 2026-09-08T14:01:24Z after a fresh root rescan at pushed
+`e2c3b3beefb637a9c06074ab90837c4658249cb4`. Every declared dependency remains
+accepted, the shared branch is clean and current, the local guard is enabled,
+and B03-T010 owns only disjoint Agent paths. This activation authorizes only
+the declared durable RED file; no source, asset move, deployment, or external
+action is authorized until the RED review is accepted.

@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M05-T020 accepted; M05-T030 accepted; M06-T010 accepted; M12-T020 accepted; B02-T010 accepted
 - Owner: The root owns this card, `docs/specs/b03-riskscan-agent-payment-client.md`,
   queue state, catalog, ownership, decisions, reviews, commits, and pushes.
@@ -88,3 +88,12 @@ This card creates a local payment capability. It creates no account, funds
 nothing, holds no key, and claims no deployment, receipt, finality, evidence
 record, or submission. The live exercise is a separate human-authorized action
 and its result is recorded as bounded evidence, not as a product claim.
+
+## Activation
+
+Activated at 2026-09-08T14:01:24Z after a fresh root rescan at pushed
+`e2c3b3beefb637a9c06074ab90837c4658249cb4`. Every declared dependency remains
+accepted, the shared branch is clean and current, the local guard is enabled,
+and S12-T010 owns only disjoint Web paths. This activation authorizes only the
+two declared durable RED files; no source, manifest, lockfile, live exercise,
+or external action is authorized until the RED review is accepted.

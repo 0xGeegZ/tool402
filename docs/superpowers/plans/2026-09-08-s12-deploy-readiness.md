@@ -1,6 +1,6 @@
 # S12 implementation plan — Deploy-readiness assets and boundary routes
 
-Execution plan for [S12-T010](../../work-queue/queue/10-ready/S12-T010-deploy-readiness.md)
+Execution plan for [S12-T010](../../work-queue/queue/20-active/S12-T010-deploy-readiness.md)
 against the [UI-S12 deploy-readiness manifest](../../ui/UI-S12.md).
 
 ## Goal
