@@ -100,3 +100,20 @@ This activation authorizes only the durable RED test at
 `apps/web/tests/guided-demo-route.test.mjs`. It does not authorize the demo
 page/component, navigation change, client behavior, network behavior, human
 narration, recording, deployment, or submission.
+
+## RED acceptance
+
+The independent [RED review](../../evidence/S11-T010-red-review.md) accepted
+the durable contract at source commit
+`acb2ba340d3893957224e376b8e231ae30b46ee3`. Under Node 22.21.1 it fails
+exactly once because the declared page and guided-step component remain absent;
+its four GREEN assertions skip without a secondary failure.
+
+Only `apps/web/src/app/demo/page.tsx`,
+`apps/web/src/components/demo/guided-demo-steps.tsx`, and the reserved local
+navigation/assertion pair in
+`apps/web/src/components/discovery/local-navigation.tsx` and
+`apps/web/tests/landing-explore.test.mjs` are now authorized for static GREEN.
+Client behavior, data access, configuration, identity/provider/payment
+surfaces, human narration, recording, deployment, and submission remain
+outside this card.

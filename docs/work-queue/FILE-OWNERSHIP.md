@@ -368,6 +368,8 @@ other navigation entry, layout, stylesheet, package/lockfile, configuration,
 identity/provider/payment surface, backend, Agent, account, transaction,
 deployment, narration recording, and submission path is excluded. This record
 has clear [ready](evidence/S11-T010-ready-review.md) and [activation
-reviews](evidence/S11-T010-activation-review.md). It authorizes only the
-durable RED test; every production source path remains unavailable until that
-test is independently accepted.
+reviews](evidence/S11-T010-activation-review.md), and an independent clear
+[RED review](evidence/S11-T010-red-review.md). The durable RED test is
+accepted; only the two declared static source paths and reserved local
+navigation/assertion pair are now available for GREEN. Every other exclusion
+continues.
