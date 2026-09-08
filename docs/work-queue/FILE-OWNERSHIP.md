@@ -253,5 +253,5 @@ M33's manifest, M32/Convex source, all public barrels, packages, lockfiles,
 existing source/tests, configuration, environment, Web/UI, Agent, SDK,
 provider/wallet, account, funding, payment, transaction, asset, settlement,
 clearing, HCS, payout, deployment, and live-evidence paths are excluded.
-This active record authorizes only the committed test-only RED; it grants no
-production source, M33 enablement, or external behavior.
+Its accepted test-only RED authorizes only the declared private source and
+focused GREEN verification; it grants no M33 enablement or external behavior.

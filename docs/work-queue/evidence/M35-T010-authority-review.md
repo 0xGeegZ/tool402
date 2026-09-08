@@ -42,5 +42,6 @@ No Critical, Important, or Minor finding remains.
 - Local Markdown-reference resolution passed.
 - `git diff --check` passed.
 
-This review authorized the 10-ready queue transition. Root activation now
-authorizes only the committed test-only RED contract before any source file.
+This review authorized the 10-ready queue transition. The separate
+[M35 RED review](M35-T010-red-review.md) records the accepted test-only phase
+that subsequently authorized the declared private helper source.

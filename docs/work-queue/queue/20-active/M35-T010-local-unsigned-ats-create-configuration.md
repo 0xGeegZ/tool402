@@ -96,3 +96,22 @@ not authorize production source, SDK import/init, request construction,
 provider/wallet interaction, M33 enablement, M32 mutation, storage, account
 action, funding, payment, transaction, asset creation, deployment, or live
 evidence.
+
+## RED acceptance
+
+Accepted at 2026-09-08T11:38:02Z after a fresh root rescan at pushed
+`8e12374012ce3ee621b61e22f9bdf305cf833592` confirmed exact origin/main
+equality, a clean working tree, local references, an enabled guard, accepted
+M01-T030/M20-T010/M33-T010/M34-T010 dependencies, and no active ownership
+conflict or new human blocker. The test-only RED commits
+`9207e9715d73655339edc1a3b0c47de1fd3bcff1`,
+`16ad000`, `8a72e0b`, and `8e12374012ce3ee621b61e22f9bdf305cf833592`
+all fail only because the declared private helper does not exist. Their
+independent review and final rereview are recorded at
+[M35-T010-red-review.md](../../evidence/M35-T010-red-review.md).
+
+This acceptance authorizes only the declared private helper source and its
+focused GREEN verification. It does not authorize SDK import/init, request
+construction, provider/wallet interaction, M33 enablement, M32 mutation,
+storage, account action, funding, payment, transaction, asset creation,
+deployment, or live evidence.
