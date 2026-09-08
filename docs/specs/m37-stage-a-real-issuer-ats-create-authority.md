@@ -41,7 +41,7 @@ enabled                = true
 ```
 
 The returned `atsCreateConfiguration` is a direct literal closed copy of the
-accepted M35 configuration described in
+accepted M35 configuration and M33-preimage metadata described in
 [M35 local unsigned ATS_CREATE configuration](m35-local-unsigned-ats-create-configuration.md),
 with exactly one changed M33-preimage value:
 
@@ -50,9 +50,14 @@ parameters.diamondOwnerAccount =
 0xc89f87052c3e080b4a9b021d4930055031ef378e
 ```
 
-It must use direct literals rather than import M35 at runtime. M35's synthetic
-issuer and configuration remain separately non-authoritative. The projection's
-signer and `diamondOwnerAccount` must be exactly equal before it returns.
+The root does not include M35's synthetic
+`canonicalIssuerEvmAddress`, `principalPublicId`, `role`, or
+`authorityVersion` fields. They are not M33-preimage configuration metadata,
+and the separate `plannedCommandAuthority` owns the real Stage A authority
+tuple. It must use direct literals rather than import M35 at runtime. M35's
+synthetic issuer and configuration remain separately non-authoritative. The
+projection's signer and `diamondOwnerAccount` must be exactly equal before it
+returns.
 
 ## Canonical binding invariant
 
@@ -98,6 +103,7 @@ an environment variable, clock, storage, network, HTTP, key, wallet, browser
 provider, account, transaction, payment, funding, allocation, clearing, HCS,
 payout, deployment, or live evidence. Do not call `Network.init`,
 `Network.connect`, `new CreateBondRequest(...)`, or `Bond.create(...)`.
+Do not use `eval`, `Function`, or equivalent runtime source indirection.
 
 M33 remains zero-enabled, and M32 does not receive this projection. This source
 projection does not establish runtime signer-to-owner enforcement. A later
@@ -106,7 +112,9 @@ required before authority provisioning or executable ATS behavior.
 
 ## Acceptance evidence
 
-- A test-only RED commit precedes the projection source.
+- A restored and narrowly strengthened test-only RED commit precedes the
+  projection source; its static boundary checks reject evaluator indirection
+  including `eval` and `Function`.
 - Focused tests prove the exact planned authority and configuration, independent
   canonical hash, signer/owner equality, M35 one-field preimage difference,
   full immutability, independent-call detachment, private-module surface, no

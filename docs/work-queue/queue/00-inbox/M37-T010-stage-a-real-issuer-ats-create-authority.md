@@ -22,7 +22,10 @@ Create exactly the private no-argument integrity projection defined in the
 and its
 [implementation plan](../../../superpowers/plans/2026-09-08-m37-stage-a-real-issuer-ats-create-authority.md).
 It must return fresh frozen data for the accepted real-issuer Stage A tuple and
-the closed M35 configuration copy with only `diamondOwnerAccount` replaced.
+the closed M35 configuration/preimage projection with only
+`diamondOwnerAccount` replaced inside the M33 preimage. The four synthetic M35
+root authority fields are intentionally excluded because the separate planned
+authority tuple holds their real Stage A equivalents.
 It must recompute the exact M33 canonical hash and reject source drift before
 returning.
 
@@ -72,6 +75,19 @@ construction, provider/wallet interaction, authority provisioning, M33
 enablement, M32 mutation, storage, account action, funding, payment,
 transaction, asset creation, deployment, or live evidence.
 
+## Narrow resumption
+
+At 2026-09-08T15:25:39Z, the human directed the root to finish ATS before the
+later test. D-HI-001-005 therefore resumes only this local source-only M37
+projection. It does not authorize an SDK, wallet, provider, network, Convex,
+environment, authority row, M32/M33 change, asset, transaction, deployment, or
+live ATS test.
+
+M37 remains in 00-inbox until a fresh independent authority review covers this
+resumption and the clarified projection shape. Only then may the root restore
+the historical RED contract, narrowly strengthen its evaluator-indirection
+assertion, and proceed through the normal RED/GREEN cycle.
+
 ## Ready transition
 
 Ready at 2026-09-08T13:05:36Z after a fresh root rescan at pushed
@@ -114,4 +130,3 @@ implementation it imports will not land while the lane is halted and the
 failing test would otherwise leave `main` red for every later branch. The file
 remains in Git history at its commit. Resuming this lane starts by restoring it
 from history, before any further work.
-

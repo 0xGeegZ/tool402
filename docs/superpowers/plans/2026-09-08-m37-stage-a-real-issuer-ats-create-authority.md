@@ -24,14 +24,18 @@ non-authoritative.
 
 - Use the approved real issuer and exact canonical hash
   `d4eccfb1dbb76c77bf8395aa91377252e6f1a76f3926ec1632eeab909e667250`.
-- Copy the accepted M35 M33-preimage values as direct literals, changing only
-  `parameters.diamondOwnerAccount`; do not import M35 at runtime.
+- Copy the accepted M35 M33-preimage values and non-authority configuration
+  metadata as direct literals, changing only
+  `parameters.diamondOwnerAccount`. Deliberately exclude M35's four
+  synthetic root authority fields because `plannedCommandAuthority` holds the
+  real tuple; do not import M35 at runtime.
 - The helper has no input and returns only fresh frozen data; no mutable data
   may be shared between calls.
 - Do not modify M35, M32, M33, Convex, public barrels, packages, lockfiles,
   existing source/tests, configuration, environment, Web/UI, or Agent paths.
 - Do not import the ATS SDK or call SDK/provider/wallet/network/storage/HTTP/
-  external APIs. M33 must remain zero-enabled.
+  external APIs. M33 must remain zero-enabled. Do not use `eval`,
+  `Function`, dynamic import, or import-meta indirection.
 - A source-only projection does not provision `commandAuthorities` or establish
   runtime signer-to-owner enforcement.
 
@@ -51,8 +55,10 @@ non-authoritative.
   `createStageARealIssuerAtsCreateAuthority()` and its static boundary
   regression suite.
 
-- [ ] Write a direct-import test whose only expected runtime export is the
-  helper. It must be RED solely because the private source does not exist.
+- [ ] Restore the historical direct-import test and narrowly strengthen its
+  static evaluator-indirection assertion for `eval` and `Function`; its
+  only expected runtime export is the helper, and it must be RED solely
+  because the private source does not exist.
 - [ ] Define exact assertions for the full authority tuple, closed M35-copy
   configuration, real canonical hash, and signer/owner equality. Independently
   recompute the eleven-field JCS/Keccak preimage in the test.
@@ -60,7 +66,7 @@ non-authoritative.
   preimage, M35 synthetic owner/hash are absent, every returned nested value is
   frozen/detached, no public export exists, M33 remains zero-enabled, M32/M33
   do not import this module, and no SDK/Convex/environment/provider/wallet/
-  network/storage capability appears.
+  network/storage/evaluator capability appears.
 - [ ] Run the focused test under Node 22.21.1, observe the missing-module
   failure, independently review the RED, then commit and push it before source.
 
