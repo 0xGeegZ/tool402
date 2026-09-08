@@ -230,3 +230,14 @@ payment, transaction, settlement, clearing, HCS, payout, deployment, and live
 evidence are excluded. Its committed test-only RED, private resolver, and one
 ordered M32 assertion are accepted. The production manifest remains
 zero-enabled and grants no target enablement or external behavior.
+
+M34-T010 is a root-owned control record comprising its card,
+`docs/work-queue/evidence/HA-ATS-CONFIGURATION-001-recommended-decision.md`,
+`docs/work-queue/HUMAN-ACTIONS.md`, this ownership record, queue state,
+catalog, and decisions. It owns no runtime source, dependency, package,
+configuration, generated output, public API, test, provider, wallet, account,
+SDK, target enablement, funding, payment, transaction, allocation, clearing,
+HCS, payout, deployment, or live-evidence path. M16/M20/M32/M33 are accepted
+consumed boundaries only. The root owns every listed control record, review,
+commit, and push. This inbox record authorizes only a completed secret-free
+human decision and never authorizes implementation itself.
