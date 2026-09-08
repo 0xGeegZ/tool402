@@ -113,6 +113,15 @@ test("returns the exact accepted local unsigned ATS_CREATE projection", () => {
     configurationModule.createLocalUnsignedAtsCreateConfiguration();
 
   assert.deepEqual(projection, expectedProjection);
+  assert.deepEqual(Reflect.ownKeys(projection), Object.keys(expectedProjection));
+  assert.deepEqual(
+    Reflect.ownKeys(projection.operationDescriptor),
+    Object.keys(expectedOperationDescriptor),
+  );
+  assert.deepEqual(
+    Reflect.ownKeys(projection.parameters),
+    Object.keys(expectedParameters),
+  );
   assert.equal(
     keccak256(stringToHex(canonicalizeRequirements(preimageFor(projection)))).slice(2),
     expectedCanonicalParametersHash,
@@ -167,23 +176,39 @@ test("keeps the configuration helper private and free of execution capabilities"
   const backendPackage = JSON.parse(
     readFileSync(new URL("../package.json", import.meta.url), "utf8"),
   );
+  const rootPackage = JSON.parse(
+    readFileSync(new URL("../../../package.json", import.meta.url), "utf8"),
+  );
   const backendPublicBarrel = readFileSync(
     new URL("../src/index.ts", import.meta.url),
     "utf8",
   );
 
-  assert.doesNotMatch(
-    source,
-    /^\s*import(?:[\s\S]*?\sfrom\s+)?["']@hashgraph\/asset-tokenization-sdk["']|\bimport\s*\(\s*["']@hashgraph\/asset-tokenization-sdk["']\s*\)|\bNetwork\s*\.\s*(?:init|connect)\s*\(|\bnew\s+CreateBondRequest\s*\(|\bBond\s*\.\s*create\s*\(/mu,
+  assert.deepEqual(
+    source.split("\n").filter((line) => /^import\b/u.test(line)),
+    [
+      'import { canonicalizeRequirements } from "@tool402/core";',
+      'import { keccak256, stringToHex } from "viem";',
+    ],
   );
   assert.doesNotMatch(
     source,
-    /\b(?:window|ethereum|MetaMask|wagmi|WalletConnect|createWalletClient|createPublicClient|fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|process\s*\.\s*env|import\.meta\.env|commandAuthorities|ats_prepare_authority|external_prepare_command_admission|convex)\b/u,
+    /\bimport\s*\(|\brequire\s*\(|\bNetwork\s*\.\s*(?:init|connect)\s*\(|\bnew\s+CreateBondRequest\s*\(|\bBond\s*\.\s*create\s*\(|\b(?:window|ethereum|MetaMask|wagmi|WalletConnect|createWalletClient|createPublicClient|fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|Date|performance|setTimeout|setInterval|process\s*\.\s*env|import\.meta\.env|commandAuthorities|ats_prepare_authority|external_prepare_command_admission|convex)\b/u,
   );
-  assert.equal(
-    backendPackage.dependencies?.["@hashgraph/asset-tokenization-sdk"],
-    undefined,
-  );
+  for (const packageJson of [backendPackage, rootPackage]) {
+    for (const section of [
+      "dependencies",
+      "devDependencies",
+      "peerDependencies",
+      "optionalDependencies",
+    ]) {
+      assert.equal(
+        packageJson[section]?.["@hashgraph/asset-tokenization-sdk"],
+        undefined,
+      );
+    }
+  }
+  assert.deepEqual(backendPackage.exports, { ".": "./src/index.ts" });
   assert.doesNotMatch(
     backendPublicBarrel,
     /createLocalUnsignedAtsCreateConfiguration/u,
