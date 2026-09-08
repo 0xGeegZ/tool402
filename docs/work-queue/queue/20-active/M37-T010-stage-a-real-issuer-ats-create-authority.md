@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T030 accepted; M32-T010 accepted; M33-T010 accepted;
   M35-T010 accepted; M36-T010 accepted
 - Owner: The root owns this card, local specification, local import-ledger
@@ -85,11 +85,23 @@ live ATS test.
 
 The [fresh independent authority review](../../evidence/M37-T010-resumption-review.md)
 at pushed `7e381fe58aaab85a4ef3437774200d3d625ed6c7` found no Critical, Important,
-or Minor finding in the resumed, clarified source-only scope. M37 now enters
-`10-ready`. A fresh root ready-state rescan and activation are still required
-before the root may restore the historical RED contract, narrowly strengthen
-its evaluator-indirection assertion, and proceed through the normal RED/GREEN
-cycle.
+or Minor finding in the resumed, clarified source-only scope. M37 entered
+`10-ready` before a fresh root ready-state rescan.
+
+## Resumption activation
+
+Activated at 2026-09-08T15:51:21Z after a fresh root rescan at pushed
+`7a1d8e434daa8d5926b9b4e32d2e167ce3595878` confirmed M37 as the sole ready
+card, accepted dependencies, exact origin/main equality, a clean worktree,
+enabled guard, resolved local records, absent historical RED/source, zero-enabled
+M33, and no M32/public import. An independent activation audit found no
+blocking issue.
+
+This activation authorizes only restoration and narrow evaluator-indirection
+strengthening of the historical test-only RED contract under Node 22.21.1. It
+does not authorize source, SDK/provider/wallet use, authority provisioning,
+M32/M33 mutation, account action, transaction, asset creation, deployment, or
+live evidence.
 
 ## Historical ready transition
 

@@ -5,7 +5,7 @@
 Independent review of the committed M37 resumption authority at
 `7e381fe58aaab85a4ef3437774200d3d625ed6c7`:
 
-- [M37 control card](../queue/10-ready/M37-T010-stage-a-real-issuer-ats-create-authority.md)
+- [M37 control card](../queue/20-active/M37-T010-stage-a-real-issuer-ats-create-authority.md)
 - [M37 local specification](../../specs/m37-stage-a-real-issuer-ats-create-authority.md)
 - [M37 implementation plan](../../superpowers/plans/2026-09-08-m37-stage-a-real-issuer-ats-create-authority.md)
 - [M37 historical authority review](M37-T010-authority-review.md)
