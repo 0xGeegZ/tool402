@@ -687,5 +687,27 @@ test("signs and relays through one flow that re-reads the session, draws a fresh
     { kind: "relayed", outcome: "transport_failure" },
   );
   assert.equal(unknownRelay.bodies.length, 1);
+
+  const invalidTypeProvider = stubProvider();
+  const invalidTypeRelay = stubRelay();
+  let nonceDraws = 0;
+  assert.deepEqual(
+    await signAndRelayCommand(
+      invalidTypeProvider,
+      { ...request, type: "external.attachCandidate" },
+      {
+        relay: invalidTypeRelay,
+        nowMilliseconds: beforeExpiry,
+        randomBytes: () => {
+          nonceDraws += 1;
+          return new Uint8Array(16);
+        },
+      },
+    ),
+    { kind: "signing_failed" },
+  );
+  assert.equal(nonceDraws, 0);
+  assert.deepEqual(invalidTypeProvider.calls, []);
+  assert.equal(invalidTypeRelay.bodies.length, 0);
 });
 }

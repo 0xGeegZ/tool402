@@ -17,7 +17,9 @@ let api;
 const signer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
 const issuedAt = "2026-09-09T00:00:00.000Z";
 const payloadExpiresAt = "2026-09-09T00:05:00.000Z";
-const payloadBytes = new TextEncoder().encode('{"operationKind":"ATS_CREATE"}');
+const payloadBytes = new TextEncoder().encode(
+  '{"expiresAt":"2026-09-09T00:05:00.000Z","operationKind":"ATS_CREATE"}',
+);
 const nonceBytes = Uint8Array.from({ length: 16 }, (_, index) => index);
 
 test("requires the declared Tool402 command source module", () => {
@@ -94,6 +96,24 @@ implementedTest("rejects noncanonical signing inputs before any signature reques
       ...input,
     }), TypeError);
   }
+});
+
+implementedTest("binds buildTool402CommandRequest to the expiry encoded in payload bytes", () => {
+  const mismatchedPayloadBytes = new TextEncoder().encode(
+    '{"expiresAt":"2026-09-09T00:04:59.999Z","operationKind":"ATS_CREATE"}',
+  );
+
+  assert.throws(
+    () =>
+      api.buildTool402CommandRequest({
+        signer,
+        payloadBytes: mismatchedPayloadBytes,
+        issuedAt,
+        payloadExpiresAt,
+        nonceBytes,
+      }),
+    TypeError,
+  );
 });
 
 // Lane contracts (work/s15), block-scoped beside the root's contracts above.
@@ -316,6 +336,9 @@ test("builds a frozen unsigned command that binds the payload expiry byte for by
   assert.throws(() => createUnsignedCommand(unsignedInput({ type: "" })));
   assert.throws(() => createUnsignedCommand(unsignedInput({ type: 42 })));
   assert.throws(() =>
+    createUnsignedCommand(unsignedInput({ type: "external.attachCandidate" })),
+  );
+  assert.throws(() =>
     createUnsignedCommand(
       unsignedInput({ canonicalPayloadBytes: new TextEncoder().encode("[]") }),
     ),
@@ -410,6 +433,29 @@ test("signs through eth_signTypedData_v4 only and submits the nine-field command
   await assert.rejects(signCommand(shortSignature, command));
   const nonString = createSigningProvider({ signature: 42 });
   await assert.rejects(signCommand(nonString, command));
+
+  const highS =
+    "0x" +
+    "01".padStart(64, "0") +
+    "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141" +
+    "1b";
+  await assert.rejects(
+    signCommand(createSigningProvider({ signature: highS }), command),
+  );
+
+  const invalidRecovery = `${signed.signature.slice(0, -2)}02`;
+  await assert.rejects(
+    signCommand(createSigningProvider({ signature: invalidRecovery }), command),
+  );
+
+  for (const recovery of ["00", "01", "1b", "1c"]) {
+    const wireSignature = `${signed.signature.slice(0, -2)}${recovery}`;
+    const accepted = await signCommand(
+      createSigningProvider({ signature: wireSignature }),
+      command,
+    );
+    assert.equal(accepted.signature, wireSignature);
+  }
 });
 
 test("creates the two-key transport body with the canonical payload text embedded verbatim", async () => {

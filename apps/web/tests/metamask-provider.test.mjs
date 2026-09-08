@@ -49,10 +49,21 @@ implementedTest("selects exactly one announced MetaMask provider and fails close
 
   for (const input of [
     { announcedProviders: [], legacyProvider: undefined },
-    { announcedProviders: [candidate(other)], legacyProvider: metamask },
-    { announcedProviders: [candidate(metamask, "com.example.wallet")], legacyProvider: metamask },
   ]) {
     assert.deepEqual(api.selectMetaMaskProvider(input), { kind: "no_provider" });
+  }
+
+  for (const input of [
+    { announcedProviders: [candidate(other)], legacyProvider: metamask },
+    {
+      announcedProviders: [candidate(metamask, "com.example.wallet")],
+      legacyProvider: metamask,
+    },
+  ]) {
+    assert.deepEqual(api.selectMetaMaskProvider(input), {
+      kind: "provider",
+      provider: metamask,
+    });
   }
 
   assert.deepEqual(
@@ -64,7 +75,7 @@ implementedTest("selects exactly one announced MetaMask provider and fails close
   );
 });
 
-implementedTest("uses legacy injection only when no EIP-6963 candidate was announced", () => {
+implementedTest("uses legacy injection when no matching MetaMask candidate was announced", () => {
   const legacy = Object.freeze({ isMetaMask: true });
   const nonMetaMaskLegacy = Object.freeze({ isMetaMask: false });
   const announcedOther = Object.freeze({ isMetaMask: false });
@@ -82,7 +93,7 @@ implementedTest("uses legacy injection only when no EIP-6963 candidate was annou
       announcedProviders: [candidate(announcedOther, "com.example.wallet")],
       legacyProvider: legacy,
     }),
-    { kind: "no_provider" },
+    { kind: "provider", provider: legacy },
   );
 });
 
@@ -228,7 +239,7 @@ test("selects exactly one announced io.metamask candidate and removes its listen
   assert.equal(Object.isFrozen(selection), true);
 });
 
-test("fails closed with no matching candidate and no legacy fallback once anything was announced", async () => {
+test("falls back to legacy MetaMask when announcements contain no matching MetaMask candidate", async () => {
   const { discoverMetaMaskProvider } = await loadProviderModule();
   const legacy = createProvider();
   const target = createTarget({
@@ -238,7 +249,7 @@ test("fails closed with no matching candidate and no legacy fallback once anythi
 
   const selection = await discoverMetaMaskProvider(target, settleImmediately);
 
-  assert.deepEqual(selection, { kind: "no_provider" });
+  assert.deepEqual(selection, { kind: "provider", provider: legacy });
   assert.equal(target.listenerCount("eip6963:announceProvider"), 0);
 
   const spoofed = createTarget({
@@ -250,9 +261,10 @@ test("fails closed with no matching candidate and no legacy fallback once anythi
     ],
     ethereum: legacy,
   });
-  assert.deepEqual(await discoverMetaMaskProvider(spoofed, settleImmediately), {
-    kind: "no_provider",
-  });
+  assert.deepEqual(
+    await discoverMetaMaskProvider(spoofed, settleImmediately),
+    { kind: "provider", provider: legacy },
+  );
 });
 
 test("admits legacy window.ethereum only when nothing was announced and isMetaMask is true", async () => {
