@@ -1,0 +1,234 @@
+# M40 offering and directory-version durable admission
+
+## Delivery boundary
+
+This contract extends the accepted M32 internal durable data plane with two
+durable subjects and one generic wallet-command replay-claim record. It
+declares those tables, admits one exact serialized `offering.create` and one
+`directory.publish` record per transaction, declares an asset-pending seam,
+and exposes two read-only projections.
+
+It is not an HTTP or BFF integration and reads no environment value. Its input
+is untrusted, so M40 repeats the rebinding discipline of
+[M32](m32-durable-external-prepare-admission.md), whose mutation, recovery
+query, [M33 gate](m33-ats-prepare-authority-gate.md), and tests stay byte
+unchanged. `externalPrepareCommandReplayClaims` keeps `external.prepare`.
+
+No M40 function resolves, authorizes, or executes an ATS target, parameter
+set, asset, or transaction: a stored state records an admitted signed command,
+never an observed on-chain fact. Scope and human gates belong to the
+[approved design](../superpowers/specs/2026-09-08-campaign-deploy-flow-design.md).
+
+## Durable record shapes
+
+Timestamps use `v.int64()` and every canonical decimal, identifier, hash, and
+address field uses `v.string()`, per the
+[M04 convention](m04-riskscan-durable-schema.md). Validators never replace
+the handler rules below.
+
+`offerings` has exactly these validators and the
+`by_offering_public_id_and_version` index on `offeringPublicId`, `version`:
+
+```text
+offeringPublicId, subjectPublicId, canonicalSignerAddress, principalPublicId,
+authorityVersion, payloadHash, idempotencyKey, advertisedQuickPriceTinybars,
+advertisedStandardPriceTinybars: v.string()
+version: v.number(); acceptedAt, updatedAt: v.int64()
+definition: v.object(schemaVersion v.literal(1); terms v.object(version,
+  fundingTargetTinybars, noteUnitPriceTinybars, maximumNoteUnits,
+  minimumPurchaseUnits, reserveShareBps, issuerShareBps, platformFeeBps,
+  payoutCapTinybars each v.string()); maturityAt, qualifyingResource: v.string())
+narrative: v.object(title, customerProblem v.string(); customerUseCases,
+  useOfFunds, risks v.array(v.string()))
+state: v.union(v.literal("DRAFT"), v.literal("ASSET_PENDING"),
+  v.literal("READY"), v.literal("OPEN"), v.literal("CLOSED"))
+atsAttemptId: v.optional(v.id("externalPrepareCommandAttempts"))
+atsAssetEvmAddress: v.optional(v.string())
+activeDirectoryVersionId: v.optional(v.id("directoryVersions"))
+```
+
+Each nested `definition.terms` member, `terms.version` included, is a
+canonical M20 decimal string; the row's own `version` is a safe integer.
+
+`directoryVersions` has exactly these validators, `by_service_slug_and_state`
+on `serviceSlug`, `state`, and `by_offering_public_id_and_directory_version`
+on `offeringPublicId`, `directoryVersion`:
+
+```text
+offeringPublicId, payloadHash, canonicalSignerAddress, idempotencyKey: v.string()
+offeringVersion, directoryVersion: v.number()
+serviceSlug: v.literal("riskscan")
+record: v.object(the exact accepted M28 candidate fields, webUrl optional)
+state: v.union(v.literal("DRAFT"), v.literal("PUBLISH_PREPARED"),
+  v.literal("ACTIVE"), v.literal("SUPERSEDED"))
+acceptedAt: v.int64()
+```
+
+`serviceSlug` is a declared top-level column, not a projection of `record`,
+because the slug index needs it; the handler requires the two to be equal. The
+brief's `signer` column is declared `canonicalSignerAddress`, matching the
+accepted `commandAuthorities` and `externalPrepareCommandAttempts` field name,
+so the root records the deviation. M40 admits a publish directly as `ACTIVE`;
+`DRAFT` and `PUBLISH_PREPARED` hold the approved lifecycle but no M40 function
+writes either, and a later card claims them under its own reservation.
+
+`walletCommandReplayClaims` is the generic wallet-command claim record, with
+exactly these validators and `by_replay_identity` on `replayIdentity`:
+
+```text
+replayIdentity: v.string()
+commandType: v.union(v.literal("offering.create"),
+  v.literal("directory.publish"), v.literal("external.attachCandidate"))
+outcome: v.union(v.literal("NEW"), v.literal("IDEMPOTENCY_REPLAYED"),
+  v.literal("IDEMPOTENCY_CONFLICT"))
+targetId: v.optional(v.string())
+claimedAt: v.int64()
+```
+
+`targetId` is a correlation string only, never a document-ID union and never
+proof that a subject exists; it is present only for `NEW` and
+`IDEMPOTENCY_REPLAYED`. No record carries a signature, raw body, key, or
+capability. M40 keeps `walletCommandReplayClaims` for wallet-command claims
+over the three `commandType` literals above but writes only the first two, the
+third belonging to the attach-candidate boundary; the ingress-layer claim in
+the M41-T010 assignment is a different concern under the distinct name
+`ingressCommandReplayClaims` owned by M41, which the root confirms before
+either card is ready.
+
+All three tables are additive. The accepted M04 test enumerates the
+`riskScan*` subset and the accepted M32 test the `commandAuthorit*` and
+`externalPrepareCommand*` subsets, so neither needs amending; M40 owns an
+exact assertion and changes no accepted field, target, or index.
+
+## Serialized-input rebinding
+
+Each mutation receives untrusted serialized data, not a live normalizer DTO
+and not an EIP-712 signature. Before any authority lookup, other read, or
+write, `packages/backend/src/offering-command-admission.ts` must:
+
+1. require the exact fixed command version and type, chain `296`, a canonical
+   lowercase signer, canonical nonce and timestamps, canonical lowercase
+   payload hash, nonempty principal and authority version, and `ISSUER`;
+2. parse the detached payload through the accepted M38 parser for that type;
+3. rebuild the RFC 8785 JCS bytes with the accepted M38
+   `canonical*PayloadBytes` builder, Keccak-256 those UTF-8 bytes with the
+   backend's `viem`, and require exact equality with `payloadHash`;
+4. require `command.expiresAt === payload.expiresAt` after each value has
+   independently passed canonical timestamp validation;
+5. derive `tool402:wallet-command:v1:296:<canonicalSignerAddress>:<nonce>` and
+   require exact equality with the transmitted replay identity; and
+6. use the durable server wall clock to require `expiresAt > issuedAt`, a
+   300-second maximum lifetime, `issuedAt <= durableNow + 60 seconds`, and
+   `durableNow <= expiresAt`.
+
+Failure of any check fails closed with zero reads and zero writes. Core emits
+canonical bytes and the consumer holding `viem` hashes them. The module is
+pure: no context, clock, environment, storage, network, or `@tool402/backend`
+export, and it cannot re-prove the upstream signature.
+
+## Internal mutations
+
+`packages/backend/convex/offerings.ts` exposes `admitOfferingCreate` and
+`packages/backend/convex/directory_versions.ts` exposes
+`admitDirectoryPublish`. Both are internal mutations, take no caller clock or
+capability, recheck every rule, and run this order in one transaction:
+
+```text
+serialized rebinding and durable time validation
+→ current commandAuthorities read and revalidation → replay-identity lookup
+→ subject identity lookup, exact context and deferred-ownership comparison
+→ atomically claim the fresh identity, writing a record only for NEW
+```
+
+Every indexed read uses `take(2)`; a duplicate or malformed row fails closed.
+The authority read finds exactly one row for the fixed signer and chain and
+requires `enabled === true`, the exact principal and authority version, and
+`ISSUER`; for `offering.create` it also requires the payload `subjectPublicId`
+in `ownedSubjectPublicIds`. A `directory.publish` payload carries no subject,
+so its authority read requires the `ISSUER` role only and the same ownership
+predicate is re-applied in the third step, against the referenced offering's
+stored `subjectPublicId` and the `ownedSubjectPublicIds` held from the
+authority read, before any write.
+
+`admitOfferingCreate` requires `payload.offeringVersion === 1`, failing closed
+with `PRECONDITION_UNMET` for any other value, and identifies an offering by
+`(offeringPublicId, version)` from that validated version. With no existing
+row it inserts one `DRAFT` offering storing that same version, never a
+literal, with a linked `NEW` claim. An existing row whose `idempotencyKey`,
+`payloadHash`, and context tuple match exactly yields a linked
+`IDEMPOTENCY_REPLAYED` claim and the stored offering; drift or an unsafe row
+yields an unlinked `IDEMPOTENCY_CONFLICT`. A reused identity returns
+`COMMAND_REPLAYED`.
+
+`admitDirectoryPublish` additionally requires the referenced offering to be
+`READY` with its `version` equal to the payload's `offeringVersion`; any other
+state refuses before a write. For `NEW` it inserts the directory version as
+`ACTIVE`, marks the single prior `ACTIVE` row for that `serviceSlug`
+`SUPERSEDED`, sets `activeDirectoryVersionId`, and moves the offering to
+`OPEN`. Both offering fields are written from `directory_versions.ts` in that
+same transaction. Two `ACTIVE` rows fail closed; replay and conflict
+transition nothing.
+
+Each mutation returns exactly one closed union arm and no extra field:
+`{ status: "NEW", targetId, state }`,
+`{ status: "IDEMPOTENCY_REPLAYED", targetId, state }`,
+`{ status: "COMMAND_REPLAYED" }`, `{ status: "IDEMPOTENCY_CONFLICT" }`, or
+`{ status: "PRECONDITION_UNMET" }`. The returned `targetId` is the `offerings`
+document ID for `admitOfferingCreate` and the `directoryVersions` document ID
+for `admitDirectoryPublish`, while the stored claim column of the same name
+holds its string form. No status retries, calls out, or submits.
+
+`offerings.ts` also declares two internal transitions:
+`markAssetPending(offeringId, attemptId)`, moving exactly one `DRAFT` offering
+to `ASSET_PENDING` and recording `atsAttemptId`, and
+`markAssetReady(offeringId, attemptId)`, moving exactly one `ASSET_PENDING`
+offering to `READY` and recording `atsAssetEvmAddress` as supplied by the
+caller. Both write `offerings` columns only and are named seams for the
+accepted `ATS_CREATE` path. `markAssetPending` is invoked by the
+[M41](m41-http-command-ingress.md) dispatch boundary in
+`packages/backend/convex/command_dispatch.ts` immediately after a
+successful M32 `admitExternalPrepareCommand` returns status `NEW` for an
+`ATS_CREATE` `operationKind` whose `subjectPublicId` matches a `DRAFT`
+offering with the same subject; any other status or kind leaves the offering
+untouched. `markAssetReady` is invoked only by the
+[M43](m43-ats-receipt-verification.md) verification action after `CONFIRMED`.
+M40 declares the seams and writes no caller: every
+`externalPrepareCommandAttempts` change and both wirings belong to those
+cards' own reservations.
+
+## Public read-only projections
+
+`offerings:getPublicProjection(offeringPublicId)` returns the highest stored
+version's sanitized snapshot or `null`, and
+`directoryVersions:getActive(serviceSlug)` the single `ACTIVE` record or `null`,
+failing closed on duplicates. The snapshot exposes only
+`offeringPublicId`, `version`, `subjectPublicId`, `state`, `definition`,
+`narrative`, the two advertised prices, `canonicalSignerAddress` in its stored
+lowercase form, `atsAssetEvmAddress` when set, `acceptedAt`, and `updatedAt`.
+It excludes `principalPublicId`, `authorityVersion`, `payloadHash`,
+`idempotencyKey`, document IDs, replay claims, and reasons. Both are read-only
+and assert nothing about existence, funding, payment, or verification.
+
+## Explicit exclusions
+
+Do not add authority provisioning, seed data, configuration or environment
+access, Convex publication, a public mutation or action, HTTP routing, browser
+or provider code, signing, wallet or account work, ATS SDK, target or
+parameter resolution, receipt attachment, Mirror Node access, funding,
+payment, transaction, settlement, clearing, HCS, payout, deployment, live
+evidence, M24 through M33 source or tests, a barrel, or the lockfile.
+
+## Acceptance evidence
+
+- A test-only RED commit precedes every schema and function production change.
+- Focused tests prove the exact additive three-table contract; unchanged
+  accepted schema subsets; full rebinding, payload-hash and replay-identity
+  equality and durable time validation before any database access; the
+  authority recheck and both ISSUER-owns-subject predicates; replay before
+  identity lookup; conflict on drift; one atomic `NEW` write;
+  `directory.publish` refused unless the offering is `READY`; one `ACTIVE`
+  row per slug with the prior superseded and the offering `OPEN`; and no
+  external behavior.
+- Backend and root typecheck, test, lint, clean-install dry run, queue,
+  reference and whitespace checks, the enabled local guard, independent review,
+  and two fresh clean module-review generations pass before acceptance.
