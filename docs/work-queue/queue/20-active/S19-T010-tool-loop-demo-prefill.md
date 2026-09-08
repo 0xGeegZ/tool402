@@ -24,10 +24,10 @@ remains blank. The existing form remains the only way to send a request.
 
 ## Active requirement
 
-Only the durable focused RED test is authorized now. It must fail only because
-the declared demo-default source behavior and nuqs integration are absent. No
-source or dependency work is authorized until that RED contract receives its
-independent review.
+The durable focused RED contract is independently reviewed and accepted. Only
+the exact UI-S19 source, test, package, and lockfile targets may now enter the
+minimal GREEN cycle. No other source, dependency, request, payment, or
+external behavior is authorized.
 
 ## Verification
 
