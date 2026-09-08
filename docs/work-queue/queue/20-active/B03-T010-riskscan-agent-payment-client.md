@@ -97,3 +97,16 @@ accepted, the shared branch is clean and current, the local guard is enabled,
 and S12-T010 owns only disjoint Web paths. This activation authorizes only the
 two declared durable RED files; no source, manifest, lockfile, live exercise,
 or external action is authorized until the RED review is accepted.
+
+## Durable RED acceptance
+
+At `2026-09-08T14:36:34Z`, two independent reviews accepted the two declared
+RED contracts. Under Node 22.21.1 they fail only because
+`apps/agent/src/riskscan-tool-payment.ts` and
+`apps/agent/src/riskscan-pay-cli.ts` do not yet exist; dependent behavioral
+contracts skip until those exact paths exist. The tests introduce no source,
+manifest, lockfile, credential, payment, or external behavior.
+
+The root may now authorize only the declared B03 GREEN paths after recording
+this acceptance. The human-owned live exercise and every external action
+remain out of scope.

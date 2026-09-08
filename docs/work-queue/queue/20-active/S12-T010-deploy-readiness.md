@@ -89,3 +89,13 @@ accepted, the shared branch is clean and current, the local guard is enabled,
 and B03-T010 owns only disjoint Agent paths. This activation authorizes only
 the declared durable RED file; no source, asset move, deployment, or external
 action is authorized until the RED review is accepted.
+
+## Durable RED acceptance
+
+At `2026-09-08T14:36:34Z`, an independent review accepted the declared RED
+contract. Under Node 22.21.1 it fails only because the seven declared final
+metadata, route, and boundary paths do not yet exist. It introduces no route,
+component, asset move, deployment, or external behavior.
+
+The root may now authorize only the declared S12 GREEN paths after recording
+this acceptance. Publication and every external action remain human-owned.
