@@ -1,0 +1,347 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+const appRoot = fileURLToPath(new URL("..", import.meta.url));
+
+function readAppFile(path) {
+  return readFile(join(appRoot, path), "utf8");
+}
+
+function loadStateModule() {
+  return import("../src/lib/wallet/wallet-state.ts");
+}
+
+const mixedCaseAddress = "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf";
+const lowerCaseAddress = mixedCaseAddress.toLowerCase();
+const otherAddress = "0x0000000000000000000000000000000000000402";
+
+function createProvider(options = {}) {
+  const calls = [];
+  let chainId = options.chainId ?? "0x128";
+  return {
+    isMetaMask: true,
+    calls,
+    async request({ method, params }) {
+      calls.push({ method, params });
+      switch (method) {
+        case "eth_chainId":
+          return chainId;
+        case "eth_accounts":
+        case "eth_requestAccounts":
+          if (options.accountsError) {
+            throw options.accountsError;
+          }
+          return options.accounts ?? [mixedCaseAddress];
+        case "wallet_switchEthereumChain":
+          if (options.switchError) {
+            throw options.switchError;
+          }
+          if (options.chainIdAfterSwitch !== undefined) {
+            chainId = options.chainIdAfterSwitch;
+          }
+          return null;
+        case "wallet_addEthereumChain":
+          return null;
+        default:
+          throw new Error(`unexpected method ${method}`);
+      }
+    },
+  };
+}
+
+function selecting(provider) {
+  return async () => Object.freeze({ kind: "selected", provider });
+}
+
+test("fixes the closed seven-kind wallet state union", async () => {
+  const { WALLET_STATE_KINDS } = await loadStateModule();
+
+  assert.deepEqual(WALLET_STATE_KINDS, [
+    "disconnected",
+    "connecting",
+    "no_provider",
+    "multiple_providers",
+    "wrong_chain",
+    "not_issuer",
+    "connected",
+  ]);
+  assert.equal(Object.isFrozen(WALLET_STATE_KINDS), true);
+});
+
+test("maps discovery refusals to closed states without touching a provider", async () => {
+  const { connectWallet } = await loadStateModule();
+
+  assert.deepEqual(
+    await connectWallet({ discover: async () => ({ kind: "no_provider" }) }),
+    {
+      state: { kind: "no_provider" },
+      provider: null,
+    },
+  );
+  assert.deepEqual(
+    await connectWallet({
+      discover: async () => ({ kind: "multiple_providers" }),
+    }),
+    {
+      state: { kind: "multiple_providers" },
+      provider: null,
+    },
+  );
+  await assert.rejects(
+    connectWallet({ discover: async () => ({ kind: "something_else" }) }),
+  );
+});
+
+test("returns disconnected when the account request is declined and never switches on its own", async () => {
+  const { connectWallet } = await loadStateModule();
+  const declined = createProvider({
+    accountsError: { code: 4001, message: "User rejected the request." },
+  });
+
+  const result = await connectWallet({ discover: selecting(declined) });
+
+  assert.deepEqual(result, { state: { kind: "disconnected" }, provider: null });
+  assert.deepEqual(
+    declined.calls.map((call) => call.method),
+    ["eth_requestAccounts"],
+  );
+
+  const empty = createProvider({ accounts: [] });
+  assert.deepEqual(await connectWallet({ discover: selecting(empty) }), {
+    state: { kind: "disconnected" },
+    provider: null,
+  });
+});
+
+test("gates on chain 0x128 after the account request and reports the observed chain", async () => {
+  const { connectWallet } = await loadStateModule();
+  const wrong = createProvider({ chainId: "0x1" });
+
+  const result = await connectWallet({ discover: selecting(wrong) });
+
+  assert.deepEqual(result, {
+    state: { kind: "wrong_chain", chainId: "0x1" },
+    provider: wrong,
+  });
+  assert.deepEqual(
+    wrong.calls.map((call) => call.method),
+    ["eth_requestAccounts", "eth_chainId"],
+  );
+  assert.equal(Object.isFrozen(result.state), true);
+
+  const unreadable = createProvider({ chainId: 296 });
+  assert.deepEqual(
+    (await connectWallet({ discover: selecting(unreadable) })).state,
+    {
+      kind: "wrong_chain",
+      chainId: null,
+    },
+  );
+});
+
+test("treats a resolved switch request as no evidence and re-reads the chain and signer", async () => {
+  const { recheckAfterSwitch } = await loadStateModule();
+
+  const stubborn = createProvider({ chainId: "0x1" });
+  const stillWrong = await recheckAfterSwitch(stubborn);
+  assert.deepEqual(stillWrong, {
+    state: { kind: "wrong_chain", chainId: "0x1" },
+    provider: stubborn,
+  });
+  assert.deepEqual(
+    stubborn.calls.map((call) => call.method),
+    ["wallet_switchEthereumChain", "eth_chainId"],
+  );
+
+  const switched = createProvider({
+    chainId: "0x1",
+    chainIdAfterSwitch: "0x128",
+  });
+  const connected = await recheckAfterSwitch(switched);
+  assert.deepEqual(connected, {
+    state: { kind: "connected", address: lowerCaseAddress },
+    provider: switched,
+  });
+  assert.deepEqual(
+    switched.calls.map((call) => call.method),
+    ["wallet_switchEthereumChain", "eth_chainId", "eth_accounts"],
+  );
+
+  const declined = createProvider({
+    chainId: "0x1",
+    switchError: { code: 4001 },
+  });
+  assert.deepEqual(await recheckAfterSwitch(declined), {
+    state: { kind: "wrong_chain", chainId: "0x1" },
+    provider: declined,
+  });
+});
+
+test("reaches not_issuer only through the approved issuer address prop", async () => {
+  const { connectWallet } = await loadStateModule();
+
+  const withoutProp = await connectWallet({
+    discover: selecting(createProvider()),
+  });
+  assert.deepEqual(withoutProp.state, {
+    kind: "connected",
+    address: lowerCaseAddress,
+  });
+
+  const matching = await connectWallet({
+    discover: selecting(createProvider()),
+    approvedIssuerAddress: mixedCaseAddress,
+  });
+  assert.deepEqual(matching.state, {
+    kind: "connected",
+    address: lowerCaseAddress,
+  });
+
+  const mismatch = await connectWallet({
+    discover: selecting(createProvider()),
+    approvedIssuerAddress: otherAddress,
+  });
+  assert.deepEqual(mismatch.state, {
+    kind: "not_issuer",
+    address: lowerCaseAddress,
+    approvedIssuerAddress: otherAddress,
+  });
+  assert.notEqual(mismatch.provider, null);
+
+  await assert.rejects(
+    connectWallet({
+      discover: selecting(createProvider()),
+      approvedIssuerAddress: "0x12",
+    }),
+  );
+});
+
+test("keeps the state library free of network, storage, timers, and logging", async () => {
+  const source = await readAppFile("src/lib/wallet/wallet-state.ts");
+
+  assert.doesNotMatch(
+    source,
+    /\b(?:fetch|console|localStorage|sessionStorage|setTimeout|setInterval|window|document)\b/u,
+  );
+  assert.doesNotMatch(source, /\bfrom\s+["']node:/u);
+  assert.doesNotMatch(source, /wallet_addEthereumChain|eip6963/u);
+});
+
+test("renders every wallet state from a client island that discovers only on click", async () => {
+  const source = await readAppFile("src/components/wallet/wallet-connect.tsx");
+
+  assert.match(source, /^"use client";/u);
+  assert.match(
+    source,
+    /from\s+["']\.\.\/\.\.\/lib\/wallet\/wallet-state\.ts["']/u,
+  );
+  assert.match(
+    source,
+    /from\s+["']\.\.\/\.\.\/lib\/wallet\/metamask-provider\.ts["']/u,
+  );
+  assert.match(source, /from\s+["']\.\.\/ui\/button["']/u);
+  for (const kind of [
+    "disconnected",
+    "connecting",
+    "no_provider",
+    "multiple_providers",
+    "wrong_chain",
+    "not_issuer",
+    "connected",
+  ]) {
+    assert.match(source, new RegExp(`case\\s+["']${kind}["']`, "u"));
+  }
+  assert.doesNotMatch(source, /\buseEffect\b/u);
+  assert.doesNotMatch(
+    source,
+    /\b(?:fetch|console|localStorage|sessionStorage|setTimeout|setInterval)\b/u,
+  );
+  assert.doesNotMatch(source, /\bdocument\.cookie\b/u);
+  assert.match(source, /Connect MetaMask/u);
+  assert.match(source, /Switch to Hedera Testnet/u);
+  assert.match(source, /Retry/u);
+  assert.match(source, /aria-live=["']polite["']/u);
+  assert.doesNotMatch(source, /WalletConnect|Coinbase|wagmi|rainbow/iu);
+  assert.doesNotMatch(source, /0\.0\.\d+|HBAR|balance/u);
+});
+
+test("renders the closed seven-phase signature dialog with refusal copy inside existing phases", async () => {
+  const source = await readAppFile(
+    "src/components/wallet/signature-dialog.tsx",
+  );
+
+  assert.match(source, /^"use client";/u);
+  assert.match(
+    source,
+    /SIGNATURE_PHASES\s*=\s*\[\s*"idle",\s*"waiting",\s*"checking",\s*"rejected",\s*"failed",\s*"complete",\s*"unknown",?\s*\]\s+as\s+const/u,
+  );
+  const phaseLiterals = new Set(
+    [...source.matchAll(/phase:\s*["']([a-z_]+)["']/gu)].map(
+      ([, phase]) => phase,
+    ),
+  );
+  assert.deepEqual(
+    [...phaseLiterals].filter(
+      (phase) =>
+        ![
+          "idle",
+          "waiting",
+          "checking",
+          "rejected",
+          "failed",
+          "complete",
+          "unknown",
+        ].includes(phase),
+    ),
+    [],
+  );
+  assert.match(
+    source,
+    /from\s+["']\.\.\/\.\.\/lib\/wallet\/tool402-command\.ts["']/u,
+  );
+  assert.match(
+    source,
+    /from\s+["']\.\.\/\.\.\/lib\/wallet\/command-relay\.ts["']/u,
+  );
+  assert.match(
+    source,
+    /from\s+["']\.\.\/\.\.\/lib\/wallet\/metamask-provider\.ts["']/u,
+  );
+
+  const readChain = source.indexOf("readChainId(");
+  const readSigner = source.indexOf("readSignerAddress(");
+  const freshNonce = source.indexOf("createCommandNonce(");
+  const sign = source.indexOf("signCommand(");
+  const relay = source.indexOf("relayCommandBody(");
+  assert.ok(
+    readChain > -1 &&
+      readSigner > -1 &&
+      freshNonce > -1 &&
+      sign > -1 &&
+      relay > -1,
+  );
+  assert.ok(
+    readChain < sign && readSigner < sign && freshNonce < sign && sign < relay,
+  );
+
+  assert.match(source, /aria-live=["']polite["']/u);
+  assert.match(source, /Sign with MetaMask/u);
+  assert.match(source, /Sign again/u);
+  assert.match(source, /unauthorized issuer/iu);
+  assert.match(source, /expired/iu);
+  assert.match(source, /idempotency key/iu);
+  assert.match(source, /nothing was (?:sent or )?recorded/iu);
+  assert.doesNotMatch(source, /\buseEffect\b/u);
+  assert.doesNotMatch(
+    source,
+    /\b(?:console|localStorage|sessionStorage|setTimeout|setInterval|retry\()/u,
+  );
+  assert.doesNotMatch(source, /\bfetch\(/u);
+  assert.doesNotMatch(
+    source,
+    /0\.0\.\d+|HBAR|balance|on-chain success|created on Hedera/u,
+  );
+});
