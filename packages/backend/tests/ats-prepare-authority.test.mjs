@@ -71,6 +71,12 @@ test("accepts only the exact enabled ATS authority record and bypasses funding",
   );
   assert.doesNotThrow(() => assertAtsPrepareAuthorityForTest(atsPayload, manifest));
   assert.doesNotThrow(() => assertAtsPrepareAuthorityForTest(fundingPayload, Object.freeze([])));
+
+  const revokedManifest = Proxy.revocable([], {});
+  revokedManifest.revoke();
+  assert.doesNotThrow(
+    () => assertAtsPrepareAuthorityForTest(fundingPayload, revokedManifest.proxy),
+  );
 });
 
 test("rejects missing, duplicate, disabled, and malformed ATS manifest candidates", () => {
@@ -116,6 +122,30 @@ test("rejects proxy and accessor-backed manifest candidates without invoking acc
   assert.throws(() => assertAtsPrepareAuthorityForTest(atsPayload, [proxy]));
   assert.throws(() => assertAtsPrepareAuthorityForTest(atsPayload, [accessorBacked]), TypeError);
   assert.equal(accessorReads, 0);
+});
+
+test("requires every dimension of the exact ATS manifest lookup tuple", () => {
+  for (const [field, value] of [
+    ["network", "hedera:mainnet"],
+    ["chainId", 295],
+    ["subjectPublicId", "subject_other"],
+    ["operationKind", "ATS_ISSUE"],
+  ]) {
+    const mismatchedRule = { ...rule, [field]: value };
+    const mismatchedPreimage = { ...preimage, [field]: value };
+    const candidateParametersHash = keccak256(
+      stringToHex(canonicalizeRequirements(mismatchedPreimage)),
+    ).slice(2);
+
+    assert.throws(
+      () => assertAtsPrepareAuthorityForTest(
+        { ...atsPayload, canonicalParametersHash: candidateParametersHash },
+        [mismatchedRule],
+      ),
+      TypeError,
+      field,
+    );
+  }
 });
 
 test("rejects exact-lookup manifest candidates with the wrong target or derived hash", () => {
