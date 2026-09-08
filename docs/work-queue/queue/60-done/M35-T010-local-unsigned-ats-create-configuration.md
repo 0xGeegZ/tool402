@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T030 accepted; M20-T010 accepted; M33-T010 accepted;
   M34-T010 accepted
 - Owner: The root owns this card, local specification, local import-ledger
@@ -115,3 +115,30 @@ focused GREEN verification. It does not authorize SDK import/init, request
 construction, provider/wallet interaction, M33 enablement, M32 mutation,
 storage, account action, funding, payment, transaction, asset creation,
 deployment, or live evidence.
+
+## Acceptance
+
+Accepted at 2026-09-08T11:51:57Z after the fresh final root rescan at pushed
+`136e28d7724af8e26611875a2746402c0f347f80` confirmed exact origin/main
+equality, a clean working tree, local references, an enabled guard, accepted
+dependencies, and no active ownership conflict or new human blocker.
+
+- `MODULE_BASE`: `4ddbb757a9d7e454be11925a19a47785b18136a2`
+- Production `MODULE_HEAD`: `86d92dad8d58ed2c054a1da8e56da2992721f5bd`
+- Test-only RED commits: `9207e9715d73655339edc1a3b0c47de1fd3bcff1`,
+  `16ad000`, `8a72e0b`, and `8e12374012ce3ee621b61e22f9bdf305cf833592`
+- Focused M35 4/4, Backend 143/143, root typecheck/test/lint, Backend
+  typecheck/lint, clean-install dry run, queue/reference/whitespace checks,
+  and enabled guard passed under Node 22.21.1.
+- The independent task review and fresh clean Standards and Specification
+  module-review generations at
+  [M35-T010-task-review.md](../../evidence/M35-T010-task-review.md),
+  [M35-T010-module-review-standards.md](../../evidence/M35-T010-module-review-standards.md),
+  and
+  [M35-T010-module-review-spec.md](../../evidence/M35-T010-module-review-spec.md)
+  found no Critical, Important, or Minor finding.
+
+M35 is accepted only as a local unsigned configuration projection. It grants
+no SDK initialization, request construction, provider/wallet action, authority
+provisioning, M33 enablement, M32 mutation, storage, account action, funding,
+payment, transaction, asset creation, deployment, or live evidence.

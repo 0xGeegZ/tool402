@@ -31,7 +31,7 @@
 - Consumes: the absent private module at `packages/backend/src/ats/local-unsigned-ats-create-configuration.ts`, Core `canonicalizeRequirements`, and `viem` `keccak256(stringToHex(...))`.
 - Produces: the expected direct module interface `createLocalUnsignedAtsCreateConfiguration()` and the full static boundary regression suite.
 
-- [ ] **Step 1: Write the failing direct-import test.**
+- [x] **Step 1: Write the failing direct-import test.**
 
   Import this exact URL at module scope:
 
@@ -47,7 +47,7 @@
   `createLocalUnsignedAtsCreateConfiguration`. The test is RED because the
   source file does not yet exist.
 
-- [ ] **Step 2: Define the exact output contract.**
+- [x] **Step 2: Define the exact output contract.**
 
   Call `configurationModule.createLocalUnsignedAtsCreateConfiguration()` into
   `projection`, then assert every top-level literal from the specification,
@@ -77,7 +77,7 @@
   );
   ```
 
-- [ ] **Step 3: Add snapshot and no-capability regressions.**
+- [x] **Step 3: Add snapshot and no-capability regressions.**
 
   Assert the root, descriptor, parameters, and all six nested arrays are
   frozen. Call the helper twice and assert equal data but distinct root,
@@ -87,7 +87,7 @@
   and assert it has no ATS SDK dependency; read the Backend public barrel and
   assert it does not name the helper.
 
-- [ ] **Step 4: Observe and commit RED.**
+- [x] **Step 4: Observe and commit RED.**
 
   ```bash
   env PATH=/Users/guillaumedieudonne/.nvm/versions/node/v22.21.1/bin:$PATH \
@@ -111,7 +111,7 @@
 - Consumes: `canonicalizeRequirements` from `@tool402/core` and `keccak256`, `stringToHex` from the already installed exact `viem` dependency.
 - Produces: `createLocalUnsignedAtsCreateConfiguration(): LocalUnsignedAtsCreateConfiguration` from the private source only.
 
-- [ ] **Step 1: Declare the literal result types.**
+- [x] **Step 1: Declare the literal result types.**
 
   Declare `LocalUnsignedAtsCreateOperationDescriptor`,
   `LocalUnsignedAtsCreateParameters`, and
@@ -120,14 +120,14 @@
   `1` / `0` regulation pair and the returned hash. Do not add a public-barrel
   export.
 
-- [ ] **Step 2: Build fresh frozen descriptor and parameters.**
+- [x] **Step 2: Build fresh frozen descriptor and parameters.**
 
   Create the descriptor and parameters with only the exact fields in the
   specification. Freeze `omittedOptionalFields`, all five external/proceed
   arrays, then their owners. Do not copy input because the helper accepts no
   input.
 
-- [ ] **Step 3: Recompute and assert the canonical binding.**
+- [x] **Step 3: Recompute and assert the canonical binding.**
 
   Build the eleven-field preimage shown in Task 1 from the fresh values. Use:
 
@@ -143,7 +143,7 @@
   Return one frozen root containing the fixed issuer, SDK identity, resolver,
   M20 `NONE` binding, descriptor, parameters, and verified hash.
 
-- [ ] **Step 4: Verify GREEN and commit.**
+- [x] **Step 4: Verify GREEN and commit.**
 
   ```bash
   env PATH=/Users/guillaumedieudonne/.nvm/versions/node/v22.21.1/bin:$PATH \
@@ -162,7 +162,7 @@
 
 - Test: `packages/backend/tests/local-unsigned-ats-create-configuration.test.mjs`
 
-- [ ] **Step 1: Run focused and package validation.**
+- [x] **Step 1: Run focused and package validation.**
 
   ```bash
   env PATH=/Users/guillaumedieudonne/.nvm/versions/node/v22.21.1/bin:$PATH \
@@ -183,7 +183,7 @@
   .git/tool402-local-guards/reference-check --staged
   ```
 
-- [ ] **Step 2: Obtain independent task and module reviews.**
+- [x] **Step 2: Obtain independent task and module reviews.**
 
   Review the complete M35 diff against the local specification and card.
   Fix every valid Critical or Important finding through the same focused test

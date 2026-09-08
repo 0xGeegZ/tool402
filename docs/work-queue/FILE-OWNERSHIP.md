@@ -242,10 +242,11 @@ consumed boundaries only. The root owns every listed control record, review,
 commit, and push. This completed record authorizes only a separately recorded
 local unsigned successor; it never authorizes executable behavior itself.
 
-M35-T010 is root-owned while active. It owns its card, local specification,
-neutral import-ledger row, implementation plan, committed independent authority
-review, queue state, catalog, ownership record, decisions, commits,
-integration, and pushes. Its future implementation paths are only
+M35-T010 is a root-owned accepted record comprising its card, local
+specification, neutral import-ledger row, implementation plan, committed
+authority/RED/task/module review records, queue state, catalog, ownership
+record, decisions, commits, integration, and pushes. Its accepted
+implementation paths are only
 `packages/backend/src/ats/local-unsigned-ats-create-configuration.ts` and
 `packages/backend/tests/local-unsigned-ats-create-configuration.test.mjs`.
 M01-T030, M20-T010, M33-T010, and M34-T010 are accepted consumed boundaries.
@@ -253,5 +254,5 @@ M33's manifest, M32/Convex source, all public barrels, packages, lockfiles,
 existing source/tests, configuration, environment, Web/UI, Agent, SDK,
 provider/wallet, account, funding, payment, transaction, asset, settlement,
 clearing, HCS, payout, deployment, and live-evidence paths are excluded.
-Its accepted test-only RED authorizes only the declared private source and
-focused GREEN verification; it grants no M33 enablement or external behavior.
+Its accepted helper remains a local unsigned projection only; it grants no M33
+enablement or external behavior.
