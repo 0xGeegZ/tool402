@@ -40,7 +40,7 @@
     "../src/ats/local-unsigned-ats-create-configuration.ts",
     import.meta.url,
   );
-  const configuration = await import(sourceUrl.href);
+  const configurationModule = await import(sourceUrl.href);
   ```
 
   Assert that the only runtime export is
@@ -49,24 +49,27 @@
 
 - [ ] **Step 2: Define the exact output contract.**
 
-  Call the helper and assert every top-level literal from the specification,
+  Call `configurationModule.createLocalUnsignedAtsCreateConfiguration()` into
+  `projection`, then assert every top-level literal from the specification,
   the closed descriptor, every closed parameter including
   `regulationType: 1` / `regulationSubType: 0`, and the exact expected hash.
   Build this test-only preimage from returned values:
 
   ```js
+  const projection =
+    configurationModule.createLocalUnsignedAtsCreateConfiguration();
   const preimage = {
-    protocol: configuration.protocol,
-    network: configuration.network,
-    chainId: configuration.chainId,
-    subjectPublicId: configuration.subjectPublicId,
-    offeringVersion: configuration.offeringVersion,
-    registryRevision: configuration.registryRevision,
-    operationKind: configuration.operationKind,
-    targetKind: configuration.targetKind,
-    expectedTarget: configuration.expectedTarget,
-    operationDescriptor: configuration.operationDescriptor,
-    parameters: configuration.parameters,
+    protocol: projection.protocol,
+    network: projection.network,
+    chainId: projection.chainId,
+    subjectPublicId: projection.subjectPublicId,
+    offeringVersion: projection.offeringVersion,
+    registryRevision: projection.registryRevision,
+    operationKind: projection.operationKind,
+    targetKind: projection.targetKind,
+    expectedTarget: projection.expectedTarget,
+    operationDescriptor: projection.operationDescriptor,
+    parameters: projection.parameters,
   };
   assert.equal(
     keccak256(stringToHex(canonicalizeRequirements(preimage))).slice(2),
