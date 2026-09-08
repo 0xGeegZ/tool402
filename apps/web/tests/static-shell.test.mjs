@@ -29,6 +29,7 @@ test("declares the strict Next workspace boundary", async () => {
     react: "19.2.8",
     "react-dom": "19.2.8",
     "tailwind-merge": "3.6.0",
+    viem: "2.56.1",
   });
   assert.deepEqual(manifest.devDependencies, {
     "@tailwindcss/postcss": "4.3.3",
