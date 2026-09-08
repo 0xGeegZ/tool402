@@ -13,24 +13,37 @@ declaration must either accept each candidate verbatim or explicitly replace
 it. They do not select an issuer, an asset, a target, an operation descriptor,
 or an enabled authority record.
 
-- Candidate package: `@hashgraph/asset-tokenization-sdk@8.0.0`, as published
-  on the [official package page](https://www.npmjs.com/package/%40hashgraph/asset-tokenization-sdk).
-  The root also captured the published tarball integrity candidate
-  `sha512-V5Tg6IrWhMwxEWzzvv7fZWu4a8zXDj8vAk5OCO9W0dtact32hljstahPIY5dLvlpyNWwNXaepzpvDj77DoccsA==`
-  for `https://registry.npmjs.org/@hashgraph/asset-tokenization-sdk/-/asset-tokenization-sdk-8.0.0.tgz`.
+- Candidate package: `@hashgraph/asset-tokenization-sdk@8.0.0`. The root also
+  captured the published tarball integrity candidate
+  `sha512-V5Tg6IrWhMwxEWzzvv7fZWu4a8zXDj8vAk5OCO9W0dtact32hljstahPIY5dLvlpyNWwNXaepzpvDj77DoccsA==`.
   A human must still explicitly approve this release reference and the
   permitted API surface; a package version alone is not treated as a complete
   compatibility or execution decision.
-- Candidate public testnet initialization facts from the
-  [official SDK integration guide](https://docs.tokenization-studio.hedera.com/ats/developer-guides/sdk-integration/):
-  network `testnet`; Mirror Node
+- Candidate API summary: the relevant public identifiers are
+  `InitializationRequest`, `ConfigResponse`, `Network.init`,
+  `CreateEquityRequest`/`Equity.create`, and
+  `CreateBondRequest`/`Bond.create`. The versioned declarations, rather than
+  the release guide's incompatible creation example, are the API authority.
+  A human must select exactly one creation family and then approve its exact
+  module/export/method/overload, required arguments, ordering, encoding, and
+  no-default policy; listing an API name alone is insufficient.
+- Candidate local configuration projection: the verified initialization shape
+  has `network`, `mirrorNode.baseUrl`, `rpcNode.baseUrl`, and an optional
+  `configuration` object that, when present, requires both
+  `factoryAddress: string` and `resolverAddress: string`. It is not a frozen
+  SDK type or an authorization to initialize the SDK. The published `8.0.0`
+  package root invokes `dotenv.config()` when imported, so the immediate local
+  unsigned successor must model a Tool402-owned frozen projection without
+  importing the package. SDK import/execution remains a later explicit human
+  gate.
+- Candidate public testnet initialization facts: network `testnet`; Mirror Node
   `https://testnet.mirrornode.hedera.com/api/v1/`; JSON-RPC
   `https://testnet.hashio.io/api`; resolver `0.0.7707874`; factory
   `0.0.7708432`.
-- The current [official deployed-addresses record](https://docs.tokenization-studio.hedera.com/ats/developer-guides/contracts/deployed-addresses/)
-  identifies those testnet contracts as the BLR Proxy and Factory Proxy,
-  respectively, and lists their EIP-55-checksummed EVM addresses. This packet
-  normalizes those same address bytes to lowercase as
+- Public deployed-address metadata identifies those testnet contracts as the
+  BLR Proxy and Factory Proxy, respectively, and lists their
+  EIP-55-checksummed EVM addresses. This packet normalizes those same address
+  bytes to lowercase as
   `0xefef4cae9642631cfc6d997d6207ee48fa78fe42` and
   `0x5fa65ca30d1984701f10476664327f97c864a9d3`.
 
@@ -85,7 +98,13 @@ wildcard, dynamic lookup, or implicit default rejects the packet.
      `[HUMAN SUPPLIED REQUIRED]`
    - immutable source/release reference and compatibility evidence:
      `[HUMAN SUPPLIED REQUIRED]`
-   - permitted public API surface for this first `ATS_CREATE` configuration:
+   - selected exactly-one creation family (`CreateEquityRequest`/`Equity.create`
+     or `CreateBondRequest`/`Bond.create`), exact module/export/method/overload,
+     and every required argument type, field ordering, encoding, and forbidden
+     default:
+     `[HUMAN SUPPLIED REQUIRED]`
+   - confirmation that the immediate successor models only the Tool402-owned
+     frozen projection and does not import or initialize the package:
      `[HUMAN SUPPLIED REQUIRED]`
 
 2. **Issuer authority**
@@ -106,12 +125,22 @@ wildcard, dynamic lookup, or implicit default rejects the packet.
    - asset kind, name, symbol, decimals, total supply, roles, and every
      immutable creation/configuration parameter:
      `[HUMAN SUPPLIED REQUIRED]`
+   - one explicit relationship to the accepted local offering boundaries:
+     either the full immutable M20 offering-definition snapshot/digest, its
+     nested `terms.version`, and its field-to-asset mapping, or an explicit
+     declaration that this testnet-only configuration consumes and implies none
+     of those economics:
+     `[HUMAN SUPPLIED REQUIRED]`
 
 4. **Command binding**
    - complete closed `operationDescriptor` and `parameters` objects for the
      one `ATS_CREATE` operation:
      `[HUMAN SUPPLIED REQUIRED]`
    - exact RFC8785-JCS/Keccak parameter hash expected by M33:
+     `[HUMAN SUPPLIED REQUIRED]`
+   - reproducible canonical JCS preimage/hash vector for the complete selected
+     descriptor and parameters, including the exact field names and no omitted
+     SDK-default field:
      `[HUMAN SUPPLIED REQUIRED]`
    - explicit confirmation that no recipient, amount, holder, list, coupon, or
      operation-instance field remains dynamically selected:
@@ -121,6 +150,12 @@ wildcard, dynamic lookup, or implicit default rejects the packet.
    - confirmation that the immediate successor remains local/unsigned and
      leaves M33 zero-enabled:
      `APPROVED BY DEFAULT; change only by explicit replacement`
+   - explicit authority-provisioning status: the immediate successor creates no
+     `commandAuthorities` row, has no M32 durable-admission path, and adds no
+     M33 enabled mapping. Any later executable path needs separately: a current
+     authorized issuer authority record for M32, a reviewed enabled M33 mapping,
+     and a distinct execution gate:
+     `[HUMAN SUPPLIED REQUIRED]`
    - separate explicit gate required before SDK/provider execution, MetaMask
      connection, asset creation, compliance admission, transfer, funding,
      transaction, deployment, or live evidence:
