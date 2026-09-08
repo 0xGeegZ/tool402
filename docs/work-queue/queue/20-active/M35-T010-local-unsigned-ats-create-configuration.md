@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T030 accepted; M20-T010 accepted; M33-T010 accepted;
   M34-T010 accepted
 - Owner: The root owns this card, local specification, local import-ledger
@@ -82,3 +82,17 @@ test-only RED contract. It does not authorize SDK import/init, request
 construction, provider/wallet interaction, authority provisioning, M33
 enablement, M32 mutation, storage, account action, funding, payment,
 transaction, asset creation, deployment, or live evidence.
+
+## Activation
+
+Activated at 2026-09-08T11:17:27Z after a fresh ready-state rescan at pushed
+`9be5bc54216a00b3b56ebd746ab44a14d909ecba` confirmed M35-T010 as the sole
+ready card; M01-T030, M20-T010, M33-T010, and M34-T010 remained accepted; and
+no active ownership conflict, human blocker, reference issue, or guard issue
+existed.
+
+This activation authorizes only the committed test-only RED contract. It does
+not authorize production source, SDK import/init, request construction,
+provider/wallet interaction, M33 enablement, M32 mutation, storage, account
+action, funding, payment, transaction, asset creation, deployment, or live
+evidence.

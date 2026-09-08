@@ -242,7 +242,7 @@ consumed boundaries only. The root owns every listed control record, review,
 commit, and push. This completed record authorizes only a separately recorded
 local unsigned successor; it never authorizes executable behavior itself.
 
-M35-T010 is root-owned while ready. It owns its card, local specification,
+M35-T010 is root-owned while active. It owns its card, local specification,
 neutral import-ledger row, implementation plan, committed independent authority
 review, queue state, catalog, ownership record, decisions, commits,
 integration, and pushes. Its future implementation paths are only
@@ -253,6 +253,5 @@ M33's manifest, M32/Convex source, all public barrels, packages, lockfiles,
 existing source/tests, configuration, environment, Web/UI, Agent, SDK,
 provider/wallet, account, funding, payment, transaction, asset, settlement,
 clearing, HCS, payout, deployment, and live-evidence paths are excluded.
-This ready record authorizes only root activation followed by the committed
-test-only RED; it grants no production source, M33 enablement, or external
-behavior.
+This active record authorizes only the committed test-only RED; it grants no
+production source, M33 enablement, or external behavior.
