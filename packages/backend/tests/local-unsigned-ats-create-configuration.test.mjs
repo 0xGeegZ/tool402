@@ -113,6 +113,21 @@ function staticModuleSpecifiers(source) {
   );
   assert.deepEqual(sourceFile.parseDiagnostics, []);
 
+  const dynamicOrMetaImportNodes = [];
+  const inspectNode = (node) => {
+    if (
+      (typescript.isCallExpression(node)
+        && node.expression.kind === typescript.SyntaxKind.ImportKeyword)
+      || (typescript.isMetaProperty(node)
+        && node.keywordToken === typescript.SyntaxKind.ImportKeyword)
+    ) {
+      dynamicOrMetaImportNodes.push(typescript.SyntaxKind[node.kind]);
+    }
+    typescript.forEachChild(node, inspectNode);
+  };
+  typescript.forEachChild(sourceFile, inspectNode);
+  assert.deepEqual(dynamicOrMetaImportNodes, []);
+
   const specifiers = [];
   for (const statement of sourceFile.statements) {
     assert.equal(typescript.isImportEqualsDeclaration(statement), false);
@@ -223,7 +238,7 @@ test("keeps the configuration helper private and free of execution capabilities"
   );
   assert.doesNotMatch(
     source,
-    /\bimport\s*\(|\brequire\s*\(|\bNetwork\s*\.\s*(?:init|connect)\s*\(|\bnew\s+CreateBondRequest\s*\(|\bBond\s*\.\s*create\s*\(|\b(?:window|ethereum|MetaMask|wagmi|WalletConnect|createWalletClient|createPublicClient|fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|Date|performance|setTimeout|setInterval|process|commandAuthorities|ats_prepare_authority|external_prepare_command_admission|convex)\b/u,
+    /\brequire\s*\(|\bNetwork\s*\.\s*(?:init|connect)\s*\(|\bnew\s+CreateBondRequest\s*\(|\bBond\s*\.\s*create\s*\(|\b(?:window|ethereum|MetaMask|wagmi|WalletConnect|createWalletClient|createPublicClient|fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|Date|performance|setTimeout|setInterval|process|commandAuthorities|ats_prepare_authority|external_prepare_command_admission|convex)\b/u,
   );
   for (const packageJson of [backendPackage, rootPackage]) {
     for (const section of [
