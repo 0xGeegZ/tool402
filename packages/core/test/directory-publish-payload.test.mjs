@@ -92,6 +92,9 @@ implementedTest("requires exact roots and record-to-payload identity", () => {
   Object.defineProperty(nonenumerable, "offeringVersion", { enumerable: false });
   const symbol = payload();
   symbol[Symbol("unexpected")] = true;
+  const inherited = Object.assign(Object.create({ directoryVersion: 1 }), payload());
+  delete inherited.directoryVersion;
+  const customPrototype = Object.assign(Object.create(null), payload());
 
   for (const malformed of [
     null,
@@ -99,7 +102,11 @@ implementedTest("requires exact roots and record-to-payload identity", () => {
     missing,
     nonenumerable,
     symbol,
+    inherited,
+    customPrototype,
     payload({ unexpected: true }),
+    payload({ schemaVersion: 0 }),
+    payload({ schemaVersion: "1" }),
     payload({ offeringPublicId: "another_offering" }),
     payload({ offeringVersion: 2 }),
     payload({ directoryVersion: 0 }),
@@ -173,6 +180,17 @@ implementedTest("emits fresh canonical JCS bytes and exposes no runtime adapter"
   assert.deepEqual(first, new TextEncoder().encode(canonicalizeRequirements(input)));
   assert.deepEqual(second, first);
   assert.notEqual(first, second);
+
+  const withoutWebUrl = payload();
+  delete withoutWebUrl.record.webUrl;
+  const withoutWebUrlBytes = api.canonicalDirectoryPublishPayloadBytes(
+    api.parseDirectoryPublishPayload(withoutWebUrl),
+  );
+  assert.deepEqual(
+    withoutWebUrlBytes,
+    new TextEncoder().encode(canonicalizeRequirements(withoutWebUrl)),
+  );
+  assert.doesNotMatch(new TextDecoder().decode(withoutWebUrlBytes), /"webUrl"/u);
 
   const source = await readFile(sourceUrl, "utf8");
   for (const prohibited of [

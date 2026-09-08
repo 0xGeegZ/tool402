@@ -177,6 +177,8 @@ implementedTest("enforces identifier, version, expiry, and bounded canonical tin
   for (const malformed of [
     payload({ offeringPublicId: "" }),
     payload({ subjectPublicId: "contains.period" }),
+    payload({ schemaVersion: 0 }),
+    payload({ schemaVersion: "1" }),
     payload({ offeringVersion: 0 }),
     payload({ offeringVersion: Number.MAX_SAFE_INTEGER + 1 }),
     payload({ offeringVersion: "1" }),
@@ -184,6 +186,7 @@ implementedTest("enforces identifier, version, expiry, and bounded canonical tin
     payload({ expiresAt: "2026-09-15T00:00:00Z" }),
     payload({ advertisedQuickPriceTinybars: "0" }),
     payload({ advertisedQuickPriceTinybars: "10000001" }),
+    payload({ advertisedStandardPriceTinybars: "10000001" }),
     payload({ advertisedStandardPriceTinybars: "100000000" }),
     payload({ advertisedStandardPriceTinybars: "0001" }),
   ]) {
@@ -191,6 +194,10 @@ implementedTest("enforces identifier, version, expiry, and bounded canonical tin
   }
   assert.equal(
     api.parseOfferingCreatePayload(payload({ advertisedQuickPriceTinybars: "10000000" })).advertisedQuickPriceTinybars,
+    10000000n,
+  );
+  assert.equal(
+    api.parseOfferingCreatePayload(payload({ advertisedStandardPriceTinybars: "10000000" })).advertisedStandardPriceTinybars,
     10000000n,
   );
 });
@@ -206,6 +213,19 @@ implementedTest("enforces narrative arrays, UTF-8 bounds, controls, and surrogat
     },
   });
   assert.equal(api.parseOfferingCreatePayload(atMaximum).narrative.title.length, 100);
+  const unicodeAtMaximum = payload({
+    narrative: {
+      title: "é".repeat(50),
+      customerProblem: "é".repeat(500),
+      customerUseCases: ["é".repeat(200)],
+      useOfFunds: ["funds"],
+      risks: ["risk"],
+    },
+  });
+  assert.equal(
+    new TextEncoder().encode(api.parseOfferingCreatePayload(unicodeAtMaximum).narrative.title).byteLength,
+    100,
+  );
 
   for (const narrative of [
     { ...payload().narrative, customerUseCases: [] },
@@ -213,9 +233,14 @@ implementedTest("enforces narrative arrays, UTF-8 bounds, controls, and surrogat
     { ...payload().narrative, title: "a".repeat(101) },
     { ...payload().narrative, customerProblem: "a".repeat(1001) },
     { ...payload().narrative, risks: ["a".repeat(401)] },
+    { ...payload().narrative, title: "é".repeat(51) },
+    { ...payload().narrative, customerProblem: "é".repeat(501) },
+    { ...payload().narrative, useOfFunds: ["é".repeat(201)] },
     { ...payload().narrative, title: " leading" },
     { ...payload().narrative, title: "contains\u0000control" },
+    { ...payload().narrative, title: "contains\u0085control" },
     { ...payload().narrative, title: "\ud800" },
+    { ...payload().narrative, title: "\udc00" },
   ]) {
     assertInputError(() => api.parseOfferingCreatePayload(payload({ narrative })));
   }

@@ -1,10 +1,13 @@
-import { parseOfferingCreatePayload } from "../src/index.ts";
+import {
+  canonicalOfferingCreatePayloadBytes,
+  parseOfferingCreatePayload,
+} from "@tool402/core";
 import type {
   OfferingCreatePayload,
   OfferingDefinition,
   OfferingNarrative,
   Tinybar,
-} from "../src/index.ts";
+} from "@tool402/core";
 
 const payload: OfferingCreatePayload = parseOfferingCreatePayload({
   schemaVersion: 1,
@@ -43,10 +46,14 @@ const payload: OfferingCreatePayload = parseOfferingCreatePayload({
 const definition: OfferingDefinition = payload.definition;
 const narrative: OfferingNarrative = payload.narrative;
 const quickPrice: Tinybar = payload.advertisedQuickPriceTinybars;
+const schemaVersion: 1 = payload.schemaVersion;
+const bytes: Uint8Array = canonicalOfferingCreatePayloadBytes(payload);
 
 void definition;
 void narrative;
 void quickPrice;
+void schemaVersion;
+void bytes;
 
 // @ts-expect-error Parsed payload roots are readonly.
 payload.offeringPublicId = "other";

@@ -1,8 +1,11 @@
-import { parseDirectoryPublishPayload } from "../src/index.ts";
+import {
+  canonicalDirectoryPublishPayloadBytes,
+  parseDirectoryPublishPayload,
+} from "@tool402/core";
 import type {
   AgentDirectoryRecordCandidate,
   DirectoryPublishPayload,
-} from "../src/index.ts";
+} from "@tool402/core";
 
 const payload: DirectoryPublishPayload = parseDirectoryPublishPayload({
   schemaVersion: 1,
@@ -32,9 +35,13 @@ const payload: DirectoryPublishPayload = parseDirectoryPublishPayload({
 
 const record: AgentDirectoryRecordCandidate = payload.record;
 const serviceSlug: "riskscan" = payload.record.serviceSlug;
+const schemaVersion: 1 = payload.schemaVersion;
+const bytes: Uint8Array = canonicalDirectoryPublishPayloadBytes(payload);
 
 void record;
 void serviceSlug;
+void schemaVersion;
+void bytes;
 
 // @ts-expect-error Parsed payload roots are readonly.
 payload.directoryVersion = 2;

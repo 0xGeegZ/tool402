@@ -104,6 +104,13 @@ implementedTest("requires a candidate address exactly for ATS_CREATE", () => {
 implementedTest("enforces the closed root plus distinct M26-shaped attempt and idempotency keys", () => {
   const missing = payload();
   delete missing.attemptPublicId;
+  const nonenumerable = payload();
+  Object.defineProperty(nonenumerable, "operationKind", { enumerable: false });
+  const symbol = payload();
+  symbol[Symbol("unexpected")] = true;
+  const inherited = Object.assign(Object.create({ schemaVersion: 1 }), payload());
+  delete inherited.schemaVersion;
+  const customPrototype = Object.assign(Object.create(null), payload());
   const accessor = payload();
   let reads = 0;
   Object.defineProperty(accessor, "attemptPublicId", {
@@ -115,12 +122,17 @@ implementedTest("enforces the closed root plus distinct M26-shaped attempt and i
     null,
     [],
     missing,
+    nonenumerable,
+    symbol,
+    inherited,
+    customPrototype,
     payload({ unexpected: true }),
     payload({ attemptPublicId: validIdempotencyKey }),
     payload({ attemptPublicId: `${"C".repeat(21)}B` }),
     payload({ idempotencyKey: `${"D".repeat(21)}B` }),
     payload({ expiresAt: "2026-09-15T00:00:00Z" }),
     payload({ schemaVersion: 2 }),
+    payload({ schemaVersion: "1" }),
     accessor,
     new Proxy(payload(), { ownKeys() { throw new Error("ownKeys failed"); } }),
     new Proxy(payload(), { getOwnPropertyDescriptor() { throw new Error("descriptor failed"); } }),
@@ -128,6 +140,17 @@ implementedTest("enforces the closed root plus distinct M26-shaped attempt and i
     assertInputError(() => api.parseAttachCandidatePayload(malformed));
   }
   assert.equal(reads, 0);
+
+  const descriptorOnly = new Proxy(payload(), {
+    get() { throw new Error("must not directly read caller fields"); },
+  });
+  assert.equal(
+    api.parseAttachCandidatePayload(descriptorOnly).attemptPublicId,
+    validAttemptPublicId,
+  );
+  assertInputError(() => api.parseAttachCandidatePayload(
+    new Proxy(payload(), { getPrototypeOf() { throw new Error("prototype failed"); } }),
+  ));
 });
 
 implementedTest("emits fresh canonical JCS bytes and omits an absent optional address", async () => {
