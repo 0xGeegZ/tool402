@@ -62,11 +62,14 @@ Compute the candidate payload hash from the exact preimage required by the speci
 
 - [ ] **Step 2: Write the failing M32 ordering regression**
 
-Replace the current all-operation success loop with a loop over the five `ATS_*` kinds. For each, invoke the existing internal mutation fixture and assert:
+Replace the current all-operation success loop with a loop over the five `ATS_*` kinds. For each, create a separately named ATS fixture from the funding default, change the command role to `ISSUER`, recompute its detached payload hash, and provide exactly one enabled current authority with the same signer, principal, authority version, and owned subject. This makes the candidate pass M32's existing signer/subject check and reach M33. Then assert:
 
 ~~~js
+const args = withPayload({ operationKind });
+args.role = "ISSUER";
+const db = database({ authorities: [authority(args)] });
 await assert.rejects(
-  mutation._handler(db.ctx, withPayload({ operationKind })),
+  mutation._handler(db.ctx, args),
   TypeError,
 );
 assert.deepEqual(db.reads, lookups(args).slice(0, 1));
