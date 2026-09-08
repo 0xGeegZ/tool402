@@ -60,7 +60,7 @@ not_configured | absent | loaded | unavailable | unexpected_response
 `not_configured`, the outcome with `TOOL402_CONVEX_SITE_URL` absent, is the
 outcome this route has today: no reachable deployment exists until the
 `HA-CAMPAIGN-CONVEX-001` row requested by the
-[HI-002 intake card](../work-queue/queue/00-inbox/HI-002-campaign-deploy-reinstatement.md)
+[HI-002 intake card](../work-queue/queue/60-done/HI-002-campaign-deploy-reinstatement.md)
 is complete. `absent` is a projection with no record; an unparsable shape is
 `unexpected_response`, never a partly rendered record.
 

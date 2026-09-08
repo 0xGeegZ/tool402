@@ -44,7 +44,7 @@ show a stored state without exposing admission internals.
 The local authority is the
 [M40 specification](../../../specs/m40-offering-directory-durable-admission.md).
 The scope ruling, the human-action rows, and the batch order are requested by
-the [HI-002 intake card](HI-002-campaign-deploy-reinstatement.md).
+the [HI-002 intake card](../60-done/HI-002-campaign-deploy-reinstatement.md).
 
 This card is a durable data plane, not execution authority. It creates no
 HTTP route, no environment access, no ATS SDK call, no wallet or account

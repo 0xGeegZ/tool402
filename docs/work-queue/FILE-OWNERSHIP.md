@@ -406,3 +406,38 @@ route/component, other navigation entry, layout, stylesheet, package/lockfile,
 configuration, identity/provider/payment surface, backend, Agent, account,
 transaction, deployment, narration recording, and submission path remains
 excluded.
+
+HI-002 is an accepted root-owned control record comprising its completed
+intake card, the local campaign-flow design, the recorded scope and constraint
+decisions, the campaign human-action rows, queue state, catalog, this
+ownership record, reviews, commits, and pushes. It owns no product source,
+test, package, lockfile, environment, credential, provider, wallet, SDK,
+account, funding, transaction, deployment, or live-evidence path. Its only
+delivery effect is to reserve the ordered M38 through M45 and S15 through S18
+batch described by their own local cards. No member may modify source before
+its individual ready/activation/RED cycle.
+
+The HI-002 batch records the following ownership and integration reservations.
+M38-T010 exclusively owns its three new Core payload modules, their six focused
+runtime/type fixtures, and the one narrow Core public-barrel amendment.
+M39-T010, M40-T010, M41-T010, M42-T010, and M43-T010 own only their exact
+Backend files named in their cards. The root sequences the three shared
+`packages/backend/convex/schema.ts` amendments: M40 reserves
+`walletCommandReplayClaims`, M41 reserves `ingressCommandReplayClaims`, and
+M43 may widen only the declared external-attempt state after its predecessors
+are accepted. M43's `command_dispatch.ts` amendment is likewise unavailable
+until its own ready cycle. M45-T010 owns its exact Web active-directory paths
+and only the constrained accepted Tool Directory/API/test amendments listed in
+its card.
+
+S15-T010 owns its exact wallet-island and relay paths. S16-T010 owns its exact
+provider-deploy page, components, state, fixture, configuration literal, and
+tests. S17-T010 owns its exact provider-status/API/projection paths and its
+single local-navigation/test integration after S11-T010. M44-T010 owns its
+exact ATS client/request/action and test paths. S18-T010 owns its exact backing
+route, components, state, fixtures, and tests. S15 and M44 both reserve the
+Web manifest, root lockfile, and static-shell dependency contract, so S15 must
+be accepted before M44 is reviewed; S16's provider-deploy component boundary
+must be accepted before M44 touches its declared action path. No other
+cross-card source overlap is authorized. Every card retains its explicit
+human-action and external-capability exclusions.

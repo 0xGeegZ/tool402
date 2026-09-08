@@ -25,7 +25,7 @@
   require the `HA-COMMAND-AUTHORITY-002` row, the second stage additionally
   requires the `HA-ATS-RETARGET-001` row, and the third stage additionally
   requires the `HA-ATS-STAGE-B-001` row, all requested by the
-  [HI-002 intake card](HI-002-campaign-deploy-reinstatement.md).
+  [HI-002 intake card](../60-done/HI-002-campaign-deploy-reinstatement.md).
 
 ## Scope
 

@@ -13,7 +13,7 @@ behavior and authorizes no external action.
 ## State
 
 - Tier: intake
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: none
 - Raised by: human operator, 2026-09-08
 - Owner: root integrator on intake. The scope ruling, every human-action row,
@@ -159,8 +159,9 @@ validates at ready time.
    for the campaign deploy path.
 2. The five external observations are adopted as `D-HI-002-002` and reflected
    wherever a local record still asserts the v4 factory as executable.
-3. The human actions record gains the six rows above, each distinguishable as
-   pending by its recorded evidence alone.
+3. The human actions record gains the five new rows above and the one
+   HA-SUBMISSION-001 amendment, each distinguishable as pending by its
+   recorded evidence alone.
 4. Each of the twelve cards is evaluated for `10-ready` in in-batch order,
    with disjoint owned paths confirmed and every accepted dependency verified.
 
@@ -174,10 +175,10 @@ validates at ready time.
 
 ## Boundary
 
-This card records a ruling request, five observations, six human-action
-requests, and twelve card intakes. It selects no scope by itself, marks no
-human action complete, and authorizes no account creation, funding, signing,
-provisioning, deployment, publication, or submission.
+This card records a ruling request, five observations, five new human-action
+rows, one human-action amendment, and twelve card intakes. It selects no scope
+by itself, marks no human action complete, and authorizes no account creation,
+funding, signing, provisioning, deployment, publication, or submission.
 
 ## Human ruling
 
@@ -186,7 +187,8 @@ operator's delegated session because the orchestrator session was not
 reachable: the operator selected the reversal and the tokenization track and
 merged this intake. The root records the ruling, its basis, and its cost if
 wrong from section 1 as `D-HI-002-001`, adopts the five observations as
-`D-HI-002-002`, and adds the six requested human-action rows. Two of them,
+`D-HI-002-002`, adds the five requested human-action rows, and amends
+`HA-SUBMISSION-001` to select both tracks. Two of the new rows,
 `HA-COMMAND-AUTHORITY-002` and `HA-ATS-RETARGET-001`, carry recommended
 decision packets at
 [HA-COMMAND-AUTHORITY-002](../../evidence/HA-COMMAND-AUTHORITY-002-recommended-decision.md)
@@ -199,3 +201,29 @@ The root closes this card by confirming the recorded rows, moving it to
 `60-done`, and evaluating the twelve cards in the recorded in-batch order.
 M38-T010 and S15-T010 have no in-batch predecessor and no human gate and may
 be readied first.
+
+## Resolution
+
+The delegated human GO is recorded as `D-HI-002-001`; the five human-verified
+constraints are adopted as `D-HI-002-002`; and the root-only intake closure is
+recorded as `D-HI-002-003`. The requested pending action rows are present in
+the runtime human-action record, and the submission row now names both selected
+tracks. This card remains a control record: it authorizes no source or
+external behavior.
+
+The required in-batch evaluation is complete:
+
+| Card | Intake result |
+| --- | --- |
+| M38-T010 | All declared dependencies are accepted and no human gate applies; it remains in inbox pending its own ownership/ready review. |
+| M39-T010 | Retains M38-T010 and HA-COMMAND-AUTHORITY-002 as blockers. |
+| M40-T010 | Retains M38-T010 and M39-T010 as blockers. |
+| M41-T010 | Retains M39-T010 and M40-T010 as blockers; live use also retains HA-CAMPAIGN-CONVEX-001. |
+| M42-T010 | Retains HA-ATS-RETARGET-001 before its own local review cycle. |
+| M43-T010 | Retains M38-T010, M39-T010, M40-T010, M42-T010, and the separate Stage B live gate. |
+| M45-T010 | Retains M40-T010 and M41-T010. |
+| S15-T010 | All declared dependencies are accepted and no human gate applies; it remains in inbox pending its own ownership/ready review. |
+| S16-T010 | Retains M38-T010 and S15-T010. |
+| S17-T010 | Retains M41-T010 and S16-T010; live use also retains HA-CAMPAIGN-CONVEX-001. |
+| M44-T010 | Retains M42-T010, S15-T010, S16-T010, HA-ISSUER-ACCOUNT-001, and HA-ATS-STAGE-B-001. |
+| S18-T010 | Retains S15-T010, M40-T010, M43-T010, and HA-ATS-STAGE-B-001. |

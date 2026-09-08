@@ -16,7 +16,7 @@ because
 already admits it, and it admits `offering.create`, `directory.publish`, and
 `external.attachCandidate` only under the `HA-COMMAND-AUTHORITY-002` amendment
 requested by the
-[HI-002 intake card](../work-queue/queue/00-inbox/HI-002-campaign-deploy-reinstatement.md).
+[HI-002 intake card](../work-queue/queue/60-done/HI-002-campaign-deploy-reinstatement.md).
 Without that accepted amendment the three additional types are not admissible
 and this contract may not be implemented.
 

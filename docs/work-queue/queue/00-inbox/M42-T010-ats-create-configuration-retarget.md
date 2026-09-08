@@ -30,7 +30,7 @@ The local contract is the
 The approved flow it serves is the
 [campaign deploy flow design](../../../superpowers/specs/2026-09-08-campaign-deploy-flow-design.md),
 requested through the
-[HI-002 intake card](HI-002-campaign-deploy-reinstatement.md).
+[HI-002 intake card](../60-done/HI-002-campaign-deploy-reinstatement.md).
 
 Exactly five values change from the accepted records:
 

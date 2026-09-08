@@ -41,7 +41,7 @@ The local contract is the
 approved flow it serves is the
 [campaign deploy flow design](../../../superpowers/specs/2026-09-08-campaign-deploy-flow-design.md),
 requested through the
-[HI-002 intake card](HI-002-campaign-deploy-reinstatement.md).
+[HI-002 intake card](../60-done/HI-002-campaign-deploy-reinstatement.md).
 
 Nested structure is delegated, not duplicated: the offering definition is parsed
 by the accepted

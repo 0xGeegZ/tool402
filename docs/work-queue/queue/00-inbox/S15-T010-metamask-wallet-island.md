@@ -26,7 +26,7 @@
   [HA-COMMAND-AUTHORITY-001 decision](../../evidence/HA-COMMAND-AUTHORITY-001-decision.md).
   Forwarding a signed command to a reachable Convex deployment additionally
   requires the `HA-CAMPAIGN-CONVEX-001` row requested by the
-  [HI-002 intake card](HI-002-campaign-deploy-reinstatement.md); until those
+  [HI-002 intake card](../60-done/HI-002-campaign-deploy-reinstatement.md); until those
   environment values exist the relay answers with its explicit not-configured
   outcome and nothing leaves the web host.
 

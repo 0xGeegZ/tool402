@@ -41,7 +41,7 @@ The local authority is the
 approved shape it implements is the
 [campaign deploy flow design](../../../superpowers/specs/2026-09-08-campaign-deploy-flow-design.md),
 requested through the
-[HI-002 intake card](HI-002-campaign-deploy-reinstatement.md).
+[HI-002 intake card](../60-done/HI-002-campaign-deploy-reinstatement.md).
 
 This card admits, verifies, signs, publishes, and activates nothing. Serving a
 published record is not activation, availability, or payment truth; the `402`

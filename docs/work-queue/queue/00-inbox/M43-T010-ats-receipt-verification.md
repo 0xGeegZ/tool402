@@ -50,7 +50,7 @@ M43 adds the receipt half of that path in three parts:
 
 The local authority is the [M43 specification](../../../specs/m43-ats-receipt-verification.md).
 The intake that requests this card is
-[HI-002](HI-002-campaign-deploy-reinstatement.md).
+[HI-002](../60-done/HI-002-campaign-deploy-reinstatement.md).
 
 The committed control-list configuration has no enabled entry, exactly as
 the [M33 gate](../../../specs/m33-ats-prepare-authority-gate.md) ships a

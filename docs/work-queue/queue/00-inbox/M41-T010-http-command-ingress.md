@@ -27,7 +27,7 @@
   published deployment, ingress key pair, and live request, and
   `HA-COMMAND-AUTHORITY-002` gates the command vocabulary M39-T010 normalizes.
   Both rows are requested by
-  [HI-002](HI-002-campaign-deploy-reinstatement.md) and neither is complete.
+  [HI-002](../60-done/HI-002-campaign-deploy-reinstatement.md) and neither is complete.
 
 ## Scope
 
@@ -44,7 +44,7 @@ The local contract is the
 [M41 specification](../../../specs/m41-http-command-ingress.md). It sits under
 the approved
 [campaign deploy flow design](../../../superpowers/specs/2026-09-08-campaign-deploy-flow-design.md)
-and the intake in [HI-002](HI-002-campaign-deploy-reinstatement.md).
+and the intake in [HI-002](../60-done/HI-002-campaign-deploy-reinstatement.md).
 
 This card supplies no cryptography, payload grammar, authority rule, replay
 rule, or durable record shape. Those stay with the accepted

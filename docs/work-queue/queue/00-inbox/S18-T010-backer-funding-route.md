@@ -19,7 +19,7 @@
   signed command additionally needs the `HA-CAMPAIGN-CONVEX-001` row, and a
   verified unit allocation additionally needs `HA-ATS-STAGE-B-001`, both
   requested by the
-  [HI-002 intake card](HI-002-campaign-deploy-reinstatement.md). Neither is
+  [HI-002 intake card](../60-done/HI-002-campaign-deploy-reinstatement.md). Neither is
   complete, and this card marks neither complete. `HEDERA_FUNDING` is already a
   member of the accepted external prepare operation kinds, so this card needs
   no part of `HA-COMMAND-AUTHORITY-002`; it needs instead an enabled `BACKER`

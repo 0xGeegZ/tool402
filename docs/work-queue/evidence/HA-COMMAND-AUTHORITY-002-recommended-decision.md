@@ -10,7 +10,7 @@ the root records that acceptance as a decision row. Nothing is inferred from
 the packet's presence.
 
 - Prepared: `2026-09-08T19:14:19Z` by the human operator's delegated session
-  under the [HI-002 intake card](../queue/00-inbox/HI-002-campaign-deploy-reinstatement.md).
+  under the [HI-002 intake card](../queue/60-done/HI-002-campaign-deploy-reinstatement.md).
 - Decision owner on acceptance: human operator (repository owner).
 
 The decision, once accepted, authorizes only a local authenticated

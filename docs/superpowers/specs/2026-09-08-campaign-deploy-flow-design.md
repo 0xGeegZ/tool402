@@ -12,7 +12,7 @@ callback.
 
 This document is the approved design. It authorizes nothing by itself. The
 scope reversal, the human-owned gates, and every implementation card are
-requested through the [HI-002 intake card](../../work-queue/queue/00-inbox/HI-002-campaign-deploy-reinstatement.md)
+requested through the [HI-002 intake card](../../work-queue/queue/60-done/HI-002-campaign-deploy-reinstatement.md)
 and recorded by the root under its own rules.
 
 The interactive design canvas that this document describes is published at

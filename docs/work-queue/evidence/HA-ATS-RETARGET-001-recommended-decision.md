@@ -14,7 +14,7 @@ byte-unchanged. It becomes authority only when the human operator accepts it
 and the root records that acceptance as a decision row.
 
 - Prepared: `2026-09-08T19:14:19Z` by the human operator's delegated session
-  under the [HI-002 intake card](../queue/00-inbox/HI-002-campaign-deploy-reinstatement.md).
+  under the [HI-002 intake card](../queue/60-done/HI-002-campaign-deploy-reinstatement.md).
 - Decision owner on acceptance: human operator (repository owner).
 
 The decision, once accepted, creates no executable issuer,

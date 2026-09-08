@@ -13,7 +13,7 @@
   No accepted file is amended: the accepted M30 source and its focused test
   stay byte-unchanged, and no root integration reservation is requested.
 - Human actions: HA-COMMAND-AUTHORITY-002, requested by the
-  [HI-002 intake card](HI-002-campaign-deploy-reinstatement.md), must be
+  [HI-002 intake card](../60-done/HI-002-campaign-deploy-reinstatement.md), must be
   accepted before the RED commit. It amends the command authority to admit
   `offering.create`, `directory.publish`, and `external.attachCandidate` under
   the same domain and primary type. HA-COMMAND-AUTHORITY-002 must be recorded

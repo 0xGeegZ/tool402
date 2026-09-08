@@ -24,7 +24,7 @@
   `apps/web/tests/landing-explore.test.mjs`.
 - Human actions: none for local delivery. Reading a real record additionally
   requires the `HA-CAMPAIGN-CONVEX-001` row requested by the
-  [HI-002 intake card](HI-002-campaign-deploy-reinstatement.md); until those
+  [HI-002 intake card](../60-done/HI-002-campaign-deploy-reinstatement.md); until those
   environment values exist the route renders its explicit not-configured
   outcome and no request leaves the web host.
 

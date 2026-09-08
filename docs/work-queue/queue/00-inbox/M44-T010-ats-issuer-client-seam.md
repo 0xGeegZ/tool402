@@ -33,7 +33,7 @@ The local contract is the
 The approved flow it serves is the
 [campaign deploy flow design](../../../superpowers/specs/2026-09-08-campaign-deploy-flow-design.md),
 and the scope ruling and human-action rows it depends on are requested in the
-[HI-002 intake card](HI-002-campaign-deploy-reinstatement.md).
+[HI-002 intake card](../60-done/HI-002-campaign-deploy-reinstatement.md).
 
 This card adds no command payload, no signature, no relay route, no durable
 record, no receipt verification, and no key material. It never marks an
