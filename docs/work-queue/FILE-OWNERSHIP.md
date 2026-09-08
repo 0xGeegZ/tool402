@@ -336,6 +336,26 @@ network, account, asset, transaction, deployment, or live-evidence path.
 Until the human approves it and a separately scoped card receives its own
 ownership, M32 and M33 remain unchanged and M33 remains zero-enabled.
 
+S19-T010 is a root-owned direct demo-usability intake comprising its card,
+docs/ui/UI-S19.md, docs/ui/IMPORT-LEDGER.md, queue state, catalog, decisions,
+this ownership record, reviews, commits, and pushes. Its proposed source/test
+set is limited to the exact UI-S19 local targets:
+apps/web/src/app/layout.tsx,
+apps/web/src/components/demo/guided-demo-steps.tsx,
+apps/web/src/components/riskscan/tool-loop/riskscan-tool-loop.tsx,
+apps/web/src/components/riskscan/tool-loop/riskscan-tool-loop-state.ts,
+apps/web/tests/guided-demo-route.test.mjs,
+apps/web/tests/riskscan-tool-loop.test.mjs, and the new
+apps/web/tests/tool-loop-demo-prefill.test.mjs. The root alone reserves the
+narrow nuqs 2.10.1 integration in apps/web/package.json, root package-lock.json,
+and apps/web/tests/static-shell.test.mjs. The accepted S11 link and M08 form
+files are integration-only context; this card changes only the one Guided Demo
+ToolLoop href, form defaults, and demo notice. S13 retains its future
+outcome-rendering lines. All other routes, source, tests, dependencies,
+lockfile work, storage, configuration, wallets, payment, provider, account,
+transaction, deployment, and live-evidence paths are excluded. No RED, source,
+or dependency change is authorized before a fresh independent ready review.
+
 S14-T010 is a root-owned accepted control record comprising its card,
 `docs/ui/UI-S14.md`, `docs/ui/IMPORT-LEDGER.md`,
 `docs/superpowers/plans/2026-09-08-s14-route-loading-skeletons.md`, this
