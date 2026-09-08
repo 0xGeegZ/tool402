@@ -75,6 +75,21 @@ assert.deepEqual(db.writes, []);
 
 Add a dedicated `HEDERA_FUNDING` input whose authority is an enabled `BACKER` with no owned subject and assert its pre-existing three lookups and two durable inserts remain unchanged.
 
+Migrate every existing M32 test that intentionally reaches durable admission,
+replay, idempotency, or persisted-attempt validation to that funding fixture;
+do not leave it on the former default `ATS_CREATE`/ISSUER fixture. Set the
+default command payload to `HEDERA_FUNDING`, set its command authority to
+`BACKER` with an empty owned-subject list, and recompute the default detached
+payload hash from the changed eight-field payload. Keep a separately named
+static assertion for the prior ATS_CREATE M30 JCS hash vector so that moving
+the durable control fixture does not remove that binding coverage.
+
+The migrated durable-path set includes the inclusive expiry/future-skew
+successes, current-authority/revocation behavior, replay-first outcomes,
+malformed replay rows, fresh-nonce idempotency replay, and persisted attempt
+conflicts. Malformed serialized command and payload cases may retain their
+ATS-shaped input because they must fail before all database access.
+
 - [ ] **Step 3: Run the focused RED commands**
 
 Run:

@@ -54,7 +54,9 @@ and the [M33 implementation plan](../../../superpowers/plans/2026-09-08-m33-ats-
   Web, Agent, public API, configuration, or external path is eligible.
 - The test-only RED must precede every M33 production source change. It must
   prove exact source matching and that ATS rejection does not reach M32 replay,
-  idempotency, or writes, while funding retains its accepted M32 path.
+  idempotency, or writes, while every existing M32 durable-path regression is
+  migrated to a HEDERA_FUNDING/BACKER control fixture and retains its accepted
+  replay/idempotency behavior.
 
 ## Validation
 
