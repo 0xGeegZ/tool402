@@ -65,6 +65,16 @@ const loaders = [
 
 const sourcePaths = [skeletonPath, ...loaders.map(({ path }) => path)];
 
+const loaderAttributes = new Map([
+  ["main", new Set(["className"])],
+  ["div", new Set(["className", "data-skeleton-region"])],
+  ["Skeleton", new Set(["className"])],
+]);
+
+const skeletonAttributes = new Map([
+  ["div", new Set(["aria-hidden", "className"])],
+]);
+
 async function fileExists(path) {
   try {
     await access(join(appRoot, path));
@@ -128,40 +138,159 @@ function jsxAttributeValue(openingElement, name) {
   return null;
 }
 
-function staticModuleSpecifiers(sourceFile) {
-  const imports = [];
-  const prohibitedNodes = [];
+function isExported(statement) {
+  return statement.modifiers?.some(
+    (modifier) => modifier.kind === typescript.SyntaxKind.ExportKeyword,
+  );
+}
+
+function isDefaultExport(statement) {
+  return statement.modifiers?.some(
+    (modifier) => modifier.kind === typescript.SyntaxKind.DefaultKeyword,
+  );
+}
+
+function importBindings(statement) {
+  const clause = statement.importClause;
+
+  assert.ok(clause);
+  assert.equal(clause.isTypeOnly, false);
+  assert.equal(clause.name, undefined);
+  assert.ok(
+    clause.namedBindings && typescript.isNamedImports(clause.namedBindings),
+  );
+
+  return clause.namedBindings.elements.map((element) => ({
+    imported: element.propertyName?.text ?? element.name.text,
+    local: element.name.text,
+    typeOnly: element.isTypeOnly,
+  }));
+}
+
+function assertExactImports(sourceFile, expectedImports) {
+  const actualImports = [];
+
+  for (const statement of sourceFile.statements) {
+    assert.equal(typescript.isImportEqualsDeclaration(statement), false);
+    if (!typescript.isImportDeclaration(statement)) {
+      continue;
+    }
+
+    assert.ok(typescript.isStringLiteral(statement.moduleSpecifier));
+    actualImports.push({
+      specifier: statement.moduleSpecifier.text,
+      bindings: importBindings(statement),
+    });
+  }
+
+  assert.deepEqual(actualImports, expectedImports);
+}
+
+function assertOnlyExpectedExports(sourceFile, expected) {
+  const actualExports = [];
+
+  for (const statement of sourceFile.statements) {
+    if (!isExported(statement)) {
+      continue;
+    }
+
+    if (typescript.isFunctionDeclaration(statement) && statement.name) {
+      actualExports.push({
+        kind: "function",
+        name: statement.name.text,
+        default: isDefaultExport(statement),
+      });
+      continue;
+    }
+
+    actualExports.push({ kind: typescript.SyntaxKind[statement.kind] });
+  }
+
+  assert.deepEqual(actualExports, expected);
+}
+
+function assertOnlyExpectedFunctionDeclarations(sourceFile, expectedNames) {
+  const declarations = [];
+  const unsupportedDefinitions = [];
 
   function inspect(node) {
-    if (
-      (typescript.isCallExpression(node)
-        && node.expression.kind === typescript.SyntaxKind.ImportKeyword)
-      || (typescript.isMetaProperty(node)
-        && node.keywordToken === typescript.SyntaxKind.ImportKeyword)
-    ) {
-      prohibitedNodes.push(typescript.SyntaxKind[node.kind]);
+    if (typescript.isFunctionDeclaration(node)) {
+      declarations.push(node.name?.text ?? null);
     }
     if (
-      (typescript.isIdentifier(node) || typescript.isStringLiteral(node))
-      && (node.text === "eval" || node.text === "Function")
+      typescript.isArrowFunction(node)
+      || typescript.isClassDeclaration(node)
+      || typescript.isClassExpression(node)
+      || typescript.isFunctionExpression(node)
+      || typescript.isVariableDeclaration(node)
     ) {
-      prohibitedNodes.push(node.text);
+      unsupportedDefinitions.push(typescript.SyntaxKind[node.kind]);
     }
     typescript.forEachChild(node, inspect);
   }
 
-  for (const statement of sourceFile.statements) {
-    assert.equal(typescript.isImportEqualsDeclaration(statement), false);
-    if (
-      typescript.isImportDeclaration(statement)
-      && typescript.isStringLiteral(statement.moduleSpecifier)
-    ) {
-      imports.push(statement.moduleSpecifier.text);
-    }
-  }
   inspect(sourceFile);
-  assert.deepEqual(prohibitedNodes, []);
-  return imports;
+  assert.deepEqual(declarations, expectedNames);
+  assert.deepEqual(unsupportedDefinitions, []);
+}
+
+function assertNoRuntimeCapability(sourceFile, allowedCalls) {
+  const prohibitedReferences = [];
+  const prohibitedSyntax = [];
+  const calls = [];
+  const prohibitedNames = new Set([
+    "caches",
+    "document",
+    "ethereum",
+    "EventSource",
+    "eval",
+    "fetch",
+    "Function",
+    "globalThis",
+    "indexedDB",
+    "localStorage",
+    "navigator",
+    "process",
+    "provider",
+    "requestAnimationFrame",
+    "sessionStorage",
+    "setInterval",
+    "setTimeout",
+    "WebSocket",
+    "window",
+    "XMLHttpRequest",
+  ]);
+
+  function inspect(node) {
+    if (typescript.isIdentifier(node) && prohibitedNames.has(node.text)) {
+      prohibitedReferences.push(node.text);
+    }
+    if (typescript.isCallExpression(node)) {
+      calls.push(node.expression.getText(sourceFile));
+      if (node.expression.kind === typescript.SyntaxKind.ImportKeyword) {
+        prohibitedSyntax.push("dynamic import");
+      }
+    }
+    if (
+      typescript.isMetaProperty(node)
+      && node.keywordToken === typescript.SyntaxKind.ImportKeyword
+    ) {
+      prohibitedSyntax.push("import.meta");
+    }
+    if (
+      typescript.isAwaitExpression(node)
+      || typescript.isNewExpression(node)
+      || typescript.isYieldExpression(node)
+    ) {
+      prohibitedSyntax.push(typescript.SyntaxKind[node.kind]);
+    }
+    typescript.forEachChild(node, inspect);
+  }
+
+  inspect(sourceFile);
+  assert.deepEqual(prohibitedReferences, []);
+  assert.deepEqual(prohibitedSyntax, []);
+  assert.deepEqual(calls, allowedCalls);
 }
 
 function findRegionElements(sourceFile) {
@@ -225,11 +354,62 @@ function countSkeletonBlocks(element) {
   return count;
 }
 
-function assertTextFree(path, sourceFile) {
+function assertStaticJsx(path, sourceFile, allowedAttributes, allowCnClassName) {
   const textNodes = [];
   const childExpressions = [];
+  const invalidTags = [];
+  const invalidAttributes = [];
+
+  function inspectOpeningElement(openingElement) {
+    const tag = jsxTagName(openingElement);
+    const permittedAttributes = allowedAttributes.get(tag);
+
+    if (!permittedAttributes) {
+      invalidTags.push(tag);
+      return;
+    }
+
+    for (const property of openingElement.attributes.properties) {
+      if (typescript.isJsxSpreadAttribute(property)) {
+        invalidAttributes.push(tag + ":spread");
+        continue;
+      }
+
+      const name = property.name.getText();
+      if (!permittedAttributes.has(name)) {
+        invalidAttributes.push(tag + ":" + name);
+        continue;
+      }
+
+      if (typescript.isStringLiteral(property.initializer)) {
+        continue;
+      }
+
+      if (
+        allowCnClassName
+        && tag === "div"
+        && name === "className"
+        && property.initializer
+        && typescript.isJsxExpression(property.initializer)
+        && property.initializer.expression
+        && typescript.isCallExpression(property.initializer.expression)
+        && typescript.isIdentifier(property.initializer.expression.expression)
+        && property.initializer.expression.expression.text === "cn"
+      ) {
+        continue;
+      }
+
+      invalidAttributes.push(tag + ":" + name);
+    }
+  }
 
   function inspect(node) {
+    if (typescript.isJsxElement(node)) {
+      inspectOpeningElement(node.openingElement);
+    }
+    if (typescript.isJsxSelfClosingElement(node)) {
+      inspectOpeningElement(node);
+    }
     if (typescript.isJsxText(node) && node.text.trim() !== "") {
       textNodes.push(node.text.trim());
     }
@@ -247,27 +427,33 @@ function assertTextFree(path, sourceFile) {
   inspect(sourceFile);
   assert.deepEqual(textNodes, [], path + " must not render text");
   assert.deepEqual(childExpressions, [], path + " must not render values");
+  assert.deepEqual(invalidTags, [], path + " must use only static layout tags");
+  assert.deepEqual(
+    invalidAttributes,
+    [],
+    path + " must use only static safe layout attributes",
+  );
 }
 
-function assertStaticSource(path, source, sourceFile, expectedImports) {
-  assert.deepEqual(
-    staticModuleSpecifiers(sourceFile),
-    expectedImports,
-    path + " must use only its allowlisted static imports",
+function assertStaticSource(
+  path,
+  source,
+  sourceFile,
+  expectedImports,
+  expectedExports,
+  allowedCalls,
+  allowedAttributes,
+  allowCnClassName,
+) {
+  assert.doesNotMatch(source, /["']use client["']/u);
+  assertExactImports(sourceFile, expectedImports);
+  assertOnlyExpectedExports(sourceFile, expectedExports);
+  assertOnlyExpectedFunctionDeclarations(
+    sourceFile,
+    expectedExports.map(({ name }) => name),
   );
-  assertTextFree(path, sourceFile);
-
-  for (const pattern of [
-    /["']use client["']/u,
-    /\b(?:useEffect|useRef|useState)\b/u,
-    /\bfetch\s*\(/u,
-    /\bprocess\.env\b/u,
-    /\b(?:window|document|navigator|location|localStorage|sessionStorage|indexedDB|caches)\b/u,
-    /\b(?:setInterval|setTimeout|requestAnimationFrame|WebSocket|XMLHttpRequest|EventSource)\b/u,
-    /<(?:a|button|form|input|label|p|span|textarea|select)\b/iu,
-  ]) {
-    assert.doesNotMatch(source, pattern, path + " must remain static layout");
-  }
+  assertNoRuntimeCapability(sourceFile, allowedCalls);
+  assertStaticJsx(path, sourceFile, allowedAttributes, allowCnClassName);
 }
 
 test("declares the exact S14 skeleton source paths before GREEN", async () => {
@@ -296,7 +482,21 @@ test(
     assert.match(source, /motion-reduce:animate-none/u);
     assert.doesNotMatch(source, /\b(?:children|onClick|onKeyDown)\b/u);
     assert.equal(countJsxTag(sourceFile, "div"), 1);
-    assertStaticSource(skeletonPath, source, sourceFile, ["./cn"]);
+    assertStaticSource(
+      skeletonPath,
+      source,
+      sourceFile,
+      [
+        {
+          specifier: "./cn",
+          bindings: [{ imported: "cn", local: "cn", typeOnly: false }],
+        },
+      ],
+      [{ kind: "function", name: "Skeleton", default: false }],
+      ["cn"],
+      skeletonAttributes,
+      true,
+    );
   },
 );
 
@@ -323,7 +523,23 @@ test(
         regions.map(() => 1),
         path + " must render exactly one skeleton block per region",
       );
-      assertStaticSource(path, source, sourceFile, [importSpecifier]);
+      assertStaticSource(
+        path,
+        source,
+        sourceFile,
+        [
+          {
+            specifier: importSpecifier,
+            bindings: [
+              { imported: "Skeleton", local: "Skeleton", typeOnly: false },
+            ],
+          },
+        ],
+        [{ kind: "function", name: "Loading", default: true }],
+        [],
+        loaderAttributes,
+        false,
+      );
     }
   },
 );
