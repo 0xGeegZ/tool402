@@ -186,6 +186,23 @@ function assertExactImports(sourceFile, expectedImports) {
   assert.deepEqual(actualImports, expectedImports);
 }
 
+function assertProgramStatementShape(sourceFile, importCount, functionName) {
+  const actual = sourceFile.statements.map((statement) => {
+    if (typescript.isImportDeclaration(statement)) {
+      return "import";
+    }
+    if (typescript.isFunctionDeclaration(statement)) {
+      return "function:" + (statement.name?.text ?? "");
+    }
+    return typescript.SyntaxKind[statement.kind];
+  });
+
+  assert.deepEqual(actual, [
+    ...Array.from({ length: importCount }, () => "import"),
+    "function:" + functionName,
+  ]);
+}
+
 function assertOnlyExpectedExports(sourceFile, expected) {
   const actualExports = [];
 
@@ -243,6 +260,13 @@ function assertDirectStaticFunction(sourceFile, name, expectedTag) {
 
   assert.ok(declaration);
   assert.equal(declaration.parameters.length, 0);
+  assert.equal(declaration.asteriskToken, undefined);
+  assert.equal(
+    declaration.modifiers?.some(
+      (modifier) => modifier.kind === typescript.SyntaxKind.AsyncKeyword,
+    ) ?? false,
+    false,
+  );
   assert.ok(declaration.body);
   assert.equal(declaration.body.statements.length, 1);
 
@@ -359,26 +383,22 @@ function countJsxTag(sourceFile, expectedTag) {
   return count;
 }
 
-function countSkeletonBlocks(element) {
-  let count = 0;
+function isSkeletonElement(node) {
+  return (
+    (typescript.isJsxElement(node) && jsxTagName(node.openingElement) === "Skeleton")
+    || (typescript.isJsxSelfClosingElement(node) && jsxTagName(node) === "Skeleton")
+  );
+}
 
-  function inspect(node) {
-    if (
-      (typescript.isJsxElement(node)
-        && jsxTagName(node.openingElement) === "Skeleton")
-      || (typescript.isJsxSelfClosingElement(node)
-        && jsxTagName(node) === "Skeleton")
-    ) {
-      count += 1;
-      return;
-    }
-    typescript.forEachChild(node, inspect);
-  }
+function countDirectSkeletonBlocks(element) {
+  return element.children.filter(isSkeletonElement).length;
+}
 
-  for (const child of element.children) {
-    inspect(child);
-  }
-  return count;
+function hasMainParent(element) {
+  return (
+    typescript.isJsxElement(element.parent)
+    && jsxTagName(element.parent.openingElement) === "main"
+  );
 }
 
 function assertSafeClassName(path, className) {
@@ -404,6 +424,7 @@ function assertStaticJsx(path, sourceFile, allowedAttributes) {
       return;
     }
 
+    const seenAttributes = new Set();
     for (const property of openingElement.attributes.properties) {
       if (typescript.isJsxSpreadAttribute(property)) {
         invalidAttributes.push(tag + ":spread");
@@ -411,6 +432,11 @@ function assertStaticJsx(path, sourceFile, allowedAttributes) {
       }
 
       const name = property.name.getText();
+      if (seenAttributes.has(name)) {
+        invalidAttributes.push(tag + ":" + name + ":duplicate");
+        continue;
+      }
+      seenAttributes.add(name);
       if (!permittedAttributes.has(name)) {
         invalidAttributes.push(tag + ":" + name);
         continue;
@@ -471,6 +497,11 @@ function assertStaticSource(
 ) {
   assert.doesNotMatch(source, /["']use client["']/u);
   assertExactImports(sourceFile, expectedImports);
+  assertProgramStatementShape(
+    sourceFile,
+    expectedImports.length,
+    expectedExports[0].name,
+  );
   assertOnlyExpectedExports(sourceFile, expectedExports);
   assertOnlyExpectedFunctionDeclarations(
     sourceFile,
@@ -546,10 +577,16 @@ test(
         path + " must preserve the exact UI-S14 region order",
       );
       assert.deepEqual(
-        regionElements.map(({ element }) => countSkeletonBlocks(element)),
-        regions.map(() => 1),
-        path + " must render exactly one skeleton block per region",
+        regionElements.map(({ element }) => hasMainParent(element)),
+        regions.map(() => true),
+        path + " must keep its region wrappers as direct main children",
       );
+      assert.deepEqual(
+        regionElements.map(({ element }) => countDirectSkeletonBlocks(element)),
+        regions.map(() => 1),
+        path + " must render one direct skeleton block per region",
+      );
+      assert.equal(countJsxTag(sourceFile, "Skeleton"), regions.length);
       assertStaticSource(
         path,
         source,
