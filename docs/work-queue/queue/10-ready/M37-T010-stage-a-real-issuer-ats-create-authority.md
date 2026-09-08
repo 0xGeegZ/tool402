@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T030 accepted; M32-T010 accepted; M33-T010 accepted;
   M35-T010 accepted; M36-T010 accepted
 - Owner: The root owns this card, local specification, local import-ledger
@@ -66,8 +66,25 @@ enabled local guard. The only dependency-correct successor is this private
 source-only integrity projection; execution, durable admission, M33 enablement,
 and external behavior remain separately gated.
 
-This inbox state authorizes only committed local authority and independent
-review. It authorizes neither RED/code nor SDK import/init, request
+This inbox state authorized only committed local authority and independent
+review. It authorized neither RED/code nor SDK import/init, request
 construction, provider/wallet interaction, authority provisioning, M33
 enablement, M32 mutation, storage, account action, funding, payment,
 transaction, asset creation, deployment, or live evidence.
+
+## Ready transition
+
+Ready at 2026-09-08T13:05:36Z after a fresh root rescan at pushed
+`742b6524e151565456732041b9e97e5650541cee` confirmed all declared
+dependencies accepted, no active lane or ownership conflict, exact origin/main
+equality, resolvable local records, and an enabled local guard. The final
+independent review at
+[M37-T010 authority review](../../evidence/M37-T010-authority-review.md)
+found no Critical, Important, or Minor finding after the accepted decision
+status correction.
+
+This ready state authorizes only root activation followed by the committed
+test-only RED contract. It does not authorize source, authority provisioning,
+M33 enablement, M32/schema mutation, SDK/provider/wallet interaction, storage,
+account action, funding, payment, transaction, asset creation, deployment, or
+live evidence.

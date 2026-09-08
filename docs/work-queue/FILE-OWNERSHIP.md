@@ -272,9 +272,9 @@ boundaries only. A successor must receive separate ownership and may only be
 recorded after a fresh rescan; it must retain M33 zero-enabled and M32/schema
 unchanged until a later reviewed runtime amendment and Stage B GO.
 
-M37-T010 is a root-owned inbox implementation record comprising its card,
+M37-T010 is a root-owned ready implementation record comprising its card,
 local specification, neutral import-ledger row, implementation plan, accepted
-Stage A decision/review, future authority/RED/task/module review records,
+Stage A decision/reviews, future RED/task/module review records,
 queue state, catalog, ownership record, decisions, commits, integration, and
 pushes. Its planned implementation paths are only
 `packages/backend/src/ats/stage-a-real-issuer-ats-create-authority.ts` and
