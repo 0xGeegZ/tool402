@@ -101,3 +101,17 @@ This activation authorizes only the committed test-only RED contract. It does
 not authorize production source, authority provisioning, M33 enablement,
 M32/schema mutation, SDK/provider/wallet interaction, storage, account action,
 funding, payment, transaction, asset creation, deployment, or live evidence.
+
+## Halt note
+
+This lane was activated for its test-only RED contract and then halted under
+`D-HI-001-003`, which parks ATS work before submission. The card, its contract,
+its plan, and its authority review remain committed and unreverted.
+
+Its RED contract at `packages/backend/tests/stage-a-real-issuer-ats-create-authority.test.mjs`
+was removed from the default branch under `D-HI-001-004`, because the
+implementation it imports will not land while the lane is halted and the
+failing test would otherwise leave `main` red for every later branch. The file
+remains in Git history at its commit. Resuming this lane starts by restoring it
+from history, before any further work.
+
