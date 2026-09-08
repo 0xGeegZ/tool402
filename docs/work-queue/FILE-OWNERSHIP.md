@@ -207,6 +207,10 @@ grants no authority provisioning, publication, ATS target/parameter authority,
 provider or wallet action, funding, payment, transaction, deployment, or live
 behavior.
 
+HI-001 is a resolved human intake record comprising its card, `docs/work-queue/DECISIONS.md`, `docs/work-queue/HUMAN-ACTIONS.md`, `docs/work-queue/STATE.md`, and `docs/work-queue/TASK-CATALOG.md`. The root owns all of them. It records a human scope ruling and four external observations; it owns no source, test, configuration, or external resource, and it authorizes no action.
+
+B02-T010 is an accepted record comprising its card, `docs/specs/b02-riskscan-route-settlement-evidence.md`, `docs/imports/SPEC-IMPORT-LEDGER.md`, `docs/superpowers/plans/2026-09-07-b02-riskscan-route-settlement-evidence.md`, `apps/web/src/lib/riskscan-settlement-evidence.ts`, and `apps/web/tests/riskscan-settlement-evidence.test.mjs`. `apps/web/src/lib/riskscan-x402.ts` is an accepted M03-T030 path reserved to this card as an explicit root integration reservation while B02-T010 was active; M03-T030 is accepted and has no active lane, so the reservation creates no ownership conflict. The root owns queue state, catalog, ownership, decisions, reviews, commits, and pushes. M02-T060, M03-T030, and M06-T010 are accepted context, not reopened behavior. The M03 correlation rules, `apps/web/tests/riskscan-api.test.mjs`, route files, the Tool Directory, Core, Agent, backend, persistence, package metadata, lockfile, runtime configuration, generated output, public read surfaces, receipt and evidence binding, payment clients, accounts, wallets, signers, transactions, reserve, allocation, clearing, ATS, HCS, payout, deployment, and live evidence are excluded.
+
 Future active implementation cards must have disjoint owned paths and resource boundaries. Shared-file work is an explicit root integration reservation. Wallets, credentials, funded accounts, partner configuration, and deployments remain human-controlled resources; no card or agent infers authority over them.
 
 M33-T010 is a root-owned accepted authority record comprising its card,
