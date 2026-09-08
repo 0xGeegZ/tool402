@@ -209,7 +209,7 @@ behavior.
 
 Future active implementation cards must have disjoint owned paths and resource boundaries. Shared-file work is an explicit root integration reservation. Wallets, credentials, funded accounts, partner configuration, and deployments remain human-controlled resources; no card or agent infers authority over them.
 
-M33-T010 is a root-owned active authority record comprising its card,
+M33-T010 is a root-owned accepted authority record comprising its card,
 `docs/specs/m33-ats-prepare-authority-gate.md`,
 `docs/superpowers/plans/2026-09-08-m33-ats-prepare-authority-gate.md`,
 `docs/imports/SPEC-IMPORT-LEDGER.md`,
@@ -227,6 +227,6 @@ recovery query remain excluded. Existing M04 RiskScan source, Core, packages,
 lockfile, generated output, backend public barrel, configuration, environment,
 provider/wallet, ATS SDK/configuration, target enablement, accounts, funding,
 payment, transaction, settlement, clearing, HCS, payout, deployment, and live
-evidence are excluded. Its committed test-only RED is accepted; this active
-record authorizes only the declared private resolver and one ordered M32
-assertion. It grants no target enablement or external behavior.
+evidence are excluded. Its committed test-only RED, private resolver, and one
+ordered M32 assertion are accepted. The production manifest remains
+zero-enabled and grants no target enablement or external behavior.

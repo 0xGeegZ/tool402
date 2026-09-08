@@ -3,10 +3,10 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M26-T010 accepted; M32-T010 accepted;
   HA-ATS-AUTHORITY-001 accepted as bounded architecture authority
-- Owner: This root-owned candidate owns its card, the local M33 specification,
+- Owner: This root-owned accepted card owns its card, the local M33 specification,
   the M33 plan, its neutral specification-ledger row, the accepted human
   decision, queue/control records, one private underscore-safe Convex helper,
   its focused direct test, one narrow M32 mutation assertion, and its focused
@@ -130,3 +130,28 @@ private zero-enabled resolver and one ordered M32 assertion. It does not
 authorize a production manifest entry, target enablement, Convex publication,
 BFF/HTTP behavior, provider/wallet action, funding, payment, transaction,
 deployment, or live behavior.
+
+## Acceptance
+
+Accepted at 2026-09-08T08:20:06Z after final verification against
+`MODULE_BASE` `343be840f18d2f923facf02958db9c327fb761e4` and `MODULE_HEAD`
+`a42e6ef856fefbd018d48179dbe74e284a26acee`, both pushed to `main`. The
+test-only RED commits `a28ab895b768e3e37c4556bfcbfee8ee77eae85e` and
+`95a5d26bbd43b82cfbea5e1f97ae782ebf65719c` precede the private resolver at
+`9ddfe56a895317c404678437b80a25bb18f9c858` and its ordered M32 assertion at
+`11d75b04d6a6a8c6b654474cdee492711d780c95`. The later committed
+clarifications preserve the same zero-enabled authority boundary.
+
+Focused M33 tests passed 7/7 and focused M32 durable-admission tests passed
+18/18. Root typecheck, test, lint, clean-install dry run,
+queue/reference/whitespace checks, and the enabled local guard passed under
+Node 22.21.1. The independent task review and two fresh clean
+Standards-and-Spec module-review generations found no Critical, Important, or
+Minor finding.
+
+This acceptance covers only an internal zero-enabled server-owned ATS
+prepare-authority predicate. All current ATS candidates fail closed before
+M32 replay/idempotency access; `HEDERA_FUNDING` retains its accepted BACKER
+path. It does not enable a target or authorize configuration, publication,
+BFF/HTTP behavior, a provider, wallet/account action, ATS SDK call, funding,
+payment, transaction, deployment, or live behavior.
