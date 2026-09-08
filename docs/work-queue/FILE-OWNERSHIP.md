@@ -261,12 +261,13 @@ clearing, HCS, payout, deployment, and live-evidence paths are excluded.
 Its accepted helper remains a local unsigned projection only; it grants no M33
 enablement or external behavior.
 
-M36-T010 is a root-owned inbox control record comprising its card, the
-prefilled and recorded HA-ATS-LIVE-AUTHORITY-001 decision packets,
-HUMAN-ACTIONS.md, this ownership record, queue state, catalog, and decisions.
-It owns no runtime source, package, configuration, M32/M33 change, authority
-row, SDK, provider, wallet, account, funding, payment, transaction, asset,
-holder/compliance action, clearing, HCS, payout, deployment, or evidence path.
-M32, M33, and M35 are accepted consumed boundaries only. No implementation
-card is authorized until the completed real-issuer preimage/hash and the
-signer/owner enforcement gap are independently reviewed.
+M36-T010 is a root-owned completed control record comprising its card, the
+prefilled and recorded HA-ATS-LIVE-AUTHORITY-001 decision packets, its
+independent authority review, HUMAN-ACTIONS.md, this ownership record, queue
+state, catalog, and decisions. It owns no runtime source, package,
+configuration, M32/M33 change, authority row, SDK, provider, wallet, account,
+funding, payment, transaction, asset, holder/compliance action, clearing, HCS,
+payout, deployment, or evidence path. M32, M33, and M35 are accepted consumed
+boundaries only. A successor must receive separate ownership and may only be
+recorded after a fresh rescan; it must retain M33 zero-enabled and M32/schema
+unchanged until a later reviewed runtime amendment and Stage B GO.
