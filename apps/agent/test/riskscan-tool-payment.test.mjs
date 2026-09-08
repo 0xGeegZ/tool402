@@ -431,19 +431,25 @@ paymentTest("maps client construction and payload creation failures to a closed 
   assert.equal(factoryFailure.calls.request.length, 1);
   assert.equal(factoryFailure.calls.signer, 0);
 
-  for (const paymentClient of [
-    {
-      async createPaymentPayload() { throw new Error("payload failure"); },
-    },
-    {
-      encodePaymentSignatureHeader() { throw new Error("header failure"); },
-    },
+  for (const [paymentClient, expectedSignerCalls] of [
+    [
+      {
+        async createPaymentPayload() { throw new Error("payload failure"); },
+      },
+      0,
+    ],
+    [
+      {
+        encodePaymentSignatureHeader() { throw new Error("header failure"); },
+      },
+      1,
+    ],
   ]) {
     const harness = createHarness({ paymentClient });
     const result = await harness.agent.pay(base, input, policy);
     assert.deepEqual(result, { kind: "payment_failed", reason: "payment_payload_rejected" });
     assert.equal(harness.calls.request.length, 1);
-    assert.equal(harness.calls.signer, 0);
+    assert.equal(harness.calls.signer, expectedSignerCalls);
   }
 });
 
@@ -478,6 +484,7 @@ paymentTest("requires a successful matching settlement and an exact deterministi
     [{ success: false, network: "hedera:testnet", transaction: "settlement-payment-42" }, expectedAssessment],
     [{ success: true, network: "hedera:mainnet", transaction: "settlement-payment-42" }, expectedAssessment],
     [{ success: true, network: "hedera:testnet", transaction: "   " }, expectedAssessment],
+    [{ success: true, network: "hedera:testnet", transaction: "settlement-payment-42\nFORGED_TRACE" }, expectedAssessment],
     [{ success: true, network: "hedera:testnet", transaction: 42 }, expectedAssessment],
   ];
 

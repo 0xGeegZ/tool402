@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 50-blocked
 - Dependencies: M05-T020 accepted; M05-T030 accepted; M06-T010 accepted; M12-T020 accepted; B02-T010 accepted
 - Owner: The root owns this card, `docs/specs/b03-riskscan-agent-payment-client.md`,
   queue state, catalog, ownership, decisions, reviews, commits, and pushes.
@@ -110,3 +110,21 @@ manifest, lockfile, credential, payment, or external behavior.
 The root may now authorize only the declared B03 GREEN paths after recording
 this acceptance. The human-owned live exercise and every external action
 remain out of scope.
+
+## Local GREEN completion
+
+At 2026-09-08T15:11:40Z, the exact Agent module, CLI, manifest, lockfile, and
+two declared tests reached local GREEN. The Agent's 70 tests, Agent typecheck
+and lint, and root typecheck, test, and lint pass under Node 22.21.1. An
+independent review found and the root corrected a terminal-trace boundary:
+control characters and Unicode line separators in a remote settlement reference
+now fail closed before any CLI output. The independent re-review is clear.
+
+No payment, signer, wallet, provider, account, transaction, deployment, or
+other external action occurred during this work.
+
+## Blocker
+
+The card stays in 50-blocked until HA-B03-AGENT-PAYMENT-001 is explicitly
+authorized and supplies redacted testnet evidence for one real Agent payment
+exercise. Local GREEN does not substitute for that human-owned exercise.

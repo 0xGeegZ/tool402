@@ -1,6 +1,6 @@
 # B03 implementation plan — RiskScan Agent payment client
 
-Execution plan for [B03-T010](../../work-queue/queue/20-active/B03-T010-riskscan-agent-payment-client.md)
+Execution plan for [B03-T010](../../work-queue/queue/50-blocked/B03-T010-riskscan-agent-payment-client.md)
 against the [B03 Agent payment client contract](../../specs/b03-riskscan-agent-payment-client.md).
 
 ## Goal
@@ -68,7 +68,7 @@ challenge.
   their fixed closed outcome without a settlement reference except on success.
 - A signer/SDK `SECRET_SENTINEL` thrown error cannot enter an outcome, stdout,
   stderr, or a source file.
-- Only a `200`, successful nonblank settlement reference, and validated
+- Only a `200`, successful terminal-safe settlement reference, and validated
   RiskScan assessment yield `paid`.
 
 ## Explicit exclusions

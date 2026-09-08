@@ -152,8 +152,9 @@ The module returns exactly one of:
 ```
 
 Only `paid` carries a settlement reference, defined exactly as the accepted
-settlement header's nonblank transaction value, and only when the protected
-response is `200`, the settlement header reports success on
+settlement header's nonblank terminal-safe transaction value. It must contain
+no C0/C1 control character, DEL, or Unicode line separator, and only when the
+protected response is `200`, the settlement header reports success on
 `hedera:testnet` (the accepted quote network), and the returned assessment
 exactly matches `assessRiskScanQuick(frozenInput)` field-for-field:
 `requestRef`, `subjectRef`, `context`, `disposition`, ordered `reasons`, and

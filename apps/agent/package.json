@@ -6,14 +6,18 @@
   "exports": {
     "./riskscan-tool-directory": "./src/riskscan-tool-directory.ts",
     "./riskscan-tool-flow": "./src/riskscan-tool-flow.ts",
-    "./riskscan-tool-native-quote-evaluation": "./src/riskscan-tool-native-quote-evaluation.ts"
+    "./riskscan-tool-native-quote-evaluation": "./src/riskscan-tool-native-quote-evaluation.ts",
+    "./riskscan-tool-payment": "./src/riskscan-tool-payment.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "node --test test/*.test.mjs",
-    "lint": "node --test test/boundary.test.mjs"
+    "lint": "node --test test/boundary.test.mjs",
+    "riskscan:pay": "node --experimental-strip-types src/riskscan-pay-cli.ts"
   },
   "dependencies": {
+    "@x402/core": "2.25.0",
+    "@x402/hedera": "2.25.0",
     "@tool402/core": "file:../../packages/core"
   },
   "devDependencies": {
