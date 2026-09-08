@@ -75,6 +75,31 @@ const skeletonAttributes = new Map([
   ["div", new Set(["aria-hidden", "className"])],
 ]);
 
+const allowedClassNames = new Set([
+  "bg-muted",
+  "h-12",
+  "h-16",
+  "h-24",
+  "h-32",
+  "h-40",
+  "h-48",
+  "h-64",
+  "h-72",
+  "h-96",
+  "h-full",
+  "max-w-2xl",
+  "max-w-3xl",
+  "motion-reduce:animate-none",
+  "motion-safe:animate-pulse",
+  "py-6",
+  "rounded-md",
+  "sm:py-12",
+  "space-y-8",
+  "w-2/3",
+  "w-48",
+  "w-full",
+]);
+
 async function fileExists(path) {
   try {
     await access(join(appRoot, path));
@@ -402,10 +427,13 @@ function hasMainParent(element) {
 }
 
 function assertSafeClassName(path, className) {
-  assert.doesNotMatch(
-    className,
-    /(?:@import|data:|https?:|javascript:|url\s*\()/iu,
-    path + " className must not load or invoke a resource",
+  const classNames = className.split(/\s+/u).filter(Boolean);
+
+  assert.ok(classNames.length > 0, path + " className must reserve space");
+  assert.deepEqual(
+    classNames.filter((className) => !allowedClassNames.has(className)),
+    [],
+    path + " className must use only the S14 static layout tokens",
   );
 }
 
