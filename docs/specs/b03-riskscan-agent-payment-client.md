@@ -16,39 +16,117 @@ contract adds the fourth: sign the challenge and retry.
 ## Delivery boundary
 
 This contract adds one Agent payment module and one CLI entry point. It does
-not amend the accepted M05 challenge-observation contract, which keeps its
-observe-only behavior unchanged. It adds no browser payment client, no wallet
-or provider integration, no durable storage, no read surface, no receipt or
-evidence binding, and no key material in the repository.
+not amend the accepted M05 challenge-observation contract, whose source and
+tests remain byte-for-byte unchanged. It adds no browser payment client, no
+wallet or provider integration, no durable storage, no read surface, no receipt
+or evidence binding, and no key material in the repository.
 
 The payer account, its key, the recipient, and the facilitator are runtime
 values supplied by a human outside this repository. This contract creates no
 account, funds nothing, and authorizes no deployment or submission.
 
-## Injected signer
+## Construction and injected dependencies
 
-The module never reads an environment variable, file, or credential store. It
-takes a signing capability as a required parameter, in the same required-
-injection style as the accepted M23 and M24 boundaries. A caller that has no
-signer cannot construct the module, so no default or ambient credential path
-exists.
+The only public construction boundary is:
 
-The CLI entry point is the only place that reads runtime configuration, and it
-reads it from the process environment at the edge, passes the constructed
-signer inward, and never logs, echoes, serializes, or persists a key.
+```ts
+createRiskScanQuickPaymentAgent({
+  signer,
+  directoryFetcher,
+  requestSender,
+  paymentClientFactory,
+}).pay(serviceBase, input, policy)
+```
+
+`signer` is a required `ClientHederaSigner`. `directoryFetcher` and
+`requestSender` each have the exact `(target: URL, init: RequestInit) =>
+Promise<Response>` shape. The implementation exports these exact narrow types:
+
+```ts
+type RiskScanPaymentSender = (
+  target: URL,
+  init: RequestInit,
+) => Promise<Response>;
+
+type RiskScanPaymentClient = {
+  getPaymentRequiredResponse(
+    getHeader: (name: string) => string | null | undefined,
+  ): PaymentRequired;
+  createPaymentPayload(paymentRequired: PaymentRequired): Promise<PaymentPayload>;
+  encodePaymentSignatureHeader(paymentPayload: PaymentPayload): Record<string, string>;
+  getPaymentSettleResponse(
+    getHeader: (name: string) => string | null | undefined,
+  ): SettleResponse;
+};
+
+type RiskScanPaymentClientFactory = (
+  signer: ClientHederaSigner,
+  policy: Readonly<{
+    network: "hedera:testnet";
+    asset: string;
+    maximumAmount: string;
+  }>,
+) => RiskScanPaymentClient;
+```
+
+`paymentClientFactory` receives only the injected signer and the frozen
+B03 policy snapshot, and returns only these x402 operations:
+
+```ts
+getPaymentRequiredResponse
+createPaymentPayload
+encodePaymentSignatureHeader
+getPaymentSettleResponse
+```
+
+Construction validates every dependency synchronously and rejects an absent or
+malformed signer, sender, fetcher, or factory before any I/O. There is no
+default signer, global `fetch`, ambient credential path, or fallback.
+
+The B03 policy snapshot has exactly `network`, `asset`, and `maximumAmount`.
+It accepts only canonical `hedera:testnet`, a canonical Hedera asset identifier,
+and a canonical atomic integer maximum. The module creates a fresh
+frozen snapshot after its one Directory GET, passes that exact snapshot to
+`evaluateRiskScanNativeQuote`, and passes the same snapshot to the factory only
+after the quote is eligible. The eligibility result's `amount` is the quoted
+price, not the cap, and never substitutes for `maximumAmount`.
+
+The library never reads an environment variable, file, or credential store;
+never logs; never dynamically imports; and never starts a child process or
+persists a value. It owns its strict local input snapshot rather than calling
+or changing M05's private input/challenge boundary.
+
+The CLI entry point is the only place that reads runtime configuration and
+parses a payer key. It passes the constructed signer inward and never logs,
+echoes, serializes, or persists a key. A missing or malformed runtime value
+returns only a fixed safe diagnostic code; caught error text is never written
+to stdout or stderr.
 
 ## Its own request cycle
 
 The module performs its own request rather than consuming the M05 outcome,
 because that accepted contract returns a bare `payment_required` and must not
-decode the challenge. The cycle is: discover, evaluate the quote against the
-policy, request, decode the challenge, create the payment payload, retry with
-the payment header, and return.
+decode the challenge. It calls `discoverRiskScanQuick` once with the injected
+Directory fetcher, then calls the pure Core `evaluateRiskScanNativeQuote` on
+that same selection's payment quote and the frozen B03 policy snapshot. It
+does not call `evaluateDiscoveredRiskScanNativeQuote`, the M05 challenge helper,
+or the ToolLoop flow. Its cycle is exactly one Directory GET, one unsigned POST,
+challenge decoding, payload creation, and one signed retry. It never makes a
+second unsigned request or a second signed retry.
 
-The budget policy gates the payment. When
-`evaluateDiscoveredRiskScanNativeQuote` returns `declined`, the module returns
-that decision and never signs. Declining is a first-class outcome, not an
-error: an agent that pays whatever it is asked is not exercising a policy.
+The budget policy gates the payment. When `evaluateRiskScanNativeQuote` returns
+`declined`, the module returns
+that decision after its one Directory GET and before it constructs a client,
+creates a payload, invokes the signer's payment-signing method, or retries.
+Declining is a first-class
+outcome, not an error: an agent that pays whatever it is asked is not exercising
+a policy.
+
+The decoded x402 requirement must be version 2, scheme `exact`, network
+`hedera:testnet`, and have an asset and atomic amount exactly equal to the
+already evaluated eligible quote. A challenge with another network, scheme,
+asset, or amount is invalid before signing, even if its amount would be within
+the caller's cap.
 
 ## Closed outcome union
 
@@ -62,15 +140,26 @@ The module returns exactly one of:
 | { kind: "transport_failure" }
 | { kind: "unavailable" }
 | { kind: "challenge_invalid" }
-| { kind: "payment_failed"; reason: string }
+| {
+    kind: "payment_failed";
+    reason:
+      | "payment_payload_rejected"
+      | "settlement_rejected"
+      | "payment_response_invalid";
+  }
 | { kind: "paid"; settlementRef: string; assessment: RiskScanQuickResult }
 | { kind: "unexpected_response" }
 ```
 
-Only `paid` carries a settlement reference, and only when the protected
-response is `200` and the settlement header reports success with a nonblank
-transaction. Every other path returns without a settlement reference. No
-outcome carries a key, header, payload, or signature.
+Only `paid` carries a settlement reference, defined exactly as the accepted
+settlement header's nonblank transaction value, and only when the protected
+response is `200`, the settlement header reports success on
+`hedera:testnet` (the accepted quote network), and the returned assessment
+exactly matches `assessRiskScanQuick(frozenInput)` field-for-field:
+`requestRef`, `subjectRef`, `context`, `disposition`, ordered `reasons`, and
+ordered `limitations`.
+Every other path returns without a settlement reference. No outcome carries a
+key, header, payload, signature, caught error text, or SDK diagnostic.
 
 ## Two client requirements the contract fixes
 
@@ -79,36 +168,56 @@ implementer does not rediscover them.
 
 A default client refuses to pay in native HBAR. Client spend controls admit
 only assets that `findDefaultAsset` recognizes, and the Hedera default is
-USDC, not `0.0.0`. The module must set an explicit allowed-asset entry for the
-configured asset with a per-payment cap, and that cap must come from the same
-caller policy that gates the quote, never from a hidden default.
+USDC, not `0.0.0`. The production client factory must set an explicit
+allowed-asset entry for the configured asset with a per-payment cap, and that
+cap must be the same `maximumAmount` already accepted by the caller policy,
+never a hidden default.
 
-The scheme must be registered through the builder form. The configuration form
-`new x402Client({ schemes: [...] })` throws `No client registered for x402
-version: 2`; only `.register("hedera:*", ...)` produces a usable client.
+The production factory is exactly:
+
+```ts
+new x402Client()
+  .register("hedera:*", new ExactHederaScheme(signer))
+  .setSpendControls({
+    maxAmountPerPayment: false,
+    allowedAssets: [{ network: "hedera:testnet", asset, maxAmountPerPayment }],
+  });
+```
+
+wrapped by `new x402HTTPClient(...)`. The builder registration is required: the
+configuration form `new x402Client({ schemes: [...] })` does not produce a
+usable version-2 client.
 
 ## CLI entry point
 
-One script exposed as an npm script in the Agent workspace. It reads the
-service base URL, the payer account, the payer key, and the budget policy from
-the environment, constructs the signer, runs the module once, prints a
-human-readable trace of the four steps, and exits nonzero on any outcome other
-than `paid`.
+One script exposed as `riskscan:pay` in the Agent workspace runs
+`src/riskscan-pay-cli.ts`. It reads the service base URL, input, budget policy,
+payer account, and payer key from the environment; constructs the signer; and
+runs the module once. It prints only a fixed human-readable phase/outcome trace
+and exits nonzero on any outcome other than `paid`.
 
-It prints the settlement reference on success. It never prints the key, the
-payment header, the signed transaction, or any environment value.
+It prints the settlement reference on success. It never prints the key, a
+payment header, payload, signed transaction, any environment value, or caught
+error text.
 
 ## Acceptance evidence
 
-- A discovery failure, an invalid input, a declined quote, a transport failure,
-  a `503`, a malformed challenge, and a failed settlement each return their
-  own outcome, and none returns `paid` or a settlement reference.
-- A declined quote never constructs a payment payload and never signs.
-- The module cannot be constructed without a signer.
+- A discovery failure, invalid dependency construction, invalid input, declined
+  quote, initial or retry transport failure, `503`, malformed/mismatched
+  challenge, factory failure, malformed payment response, and failed settlement
+  each return their fixed outcome, and none returns `paid` or a settlement
+  reference.
+- A declined quote makes exactly one Directory GET and never constructs a
+  client, creates a payment payload, invokes the signer's payment-signing
+  method, or retries.
+- The module cannot be constructed without a valid signer, two request seams,
+  and payment-client factory.
 - The accepted M05 challenge-observation module is unchanged, and its
   observe-only outcome union is unchanged.
-- Source-boundary checks prove no environment read, credential read, logging of
-  key or header material, or persistence inside the module.
+- Source-boundary checks prove no environment/credential/filesystem/process
+  access, logger/console access, default fetch, dynamic import, or persistence
+  inside the library. A sentinel thrown by a signer or SDK cannot enter an
+  outcome, stdout, or stderr.
 - `npm run typecheck`, `npm run test`, `npm run lint`, `npm run queue:check`,
   the enabled local-reference guard, independent task review, and a fresh
   module-review generation.

@@ -3,16 +3,16 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 00-inbox
 - Dependencies: M05-T020 accepted; M05-T030 accepted; M06-T010 accepted; M12-T020 accepted; B02-T010 accepted
 - Owner: The root owns this card, `docs/specs/b03-riskscan-agent-payment-client.md`,
   queue state, catalog, ownership, decisions, reviews, commits, and pushes.
   Proposed implementation paths are only
   `apps/agent/src/riskscan-tool-payment.ts`,
-  `apps/agent/src/riskscan-pay-cli.mts`,
-  `apps/agent/tests/riskscan-tool-payment.test.mjs`,
-  and the Agent workspace manifest for its script and the two x402 client
-  dependencies.
+  `apps/agent/src/riskscan-pay-cli.ts`,
+  `apps/agent/test/riskscan-tool-payment.test.mjs`,
+  `apps/agent/test/riskscan-tool-payment-boundary.test.mjs`,
+  `apps/agent/package.json`, and the root `package-lock.json`.
 - Human actions: HA-X402-HEDERA-001 is accepted bounded evidence for one prior
   paid request and does not by itself authorize the live exercise. The live
   exercise, the payer account and its key, the recipient and facilitator
@@ -47,18 +47,34 @@ work. Only signing and retry are missing.
 - M05-T020, M05-T030, M06-T010, M12-T020, and B02-T010 remain accepted.
 - The declared Agent paths are disjoint from every active card. S12-T010 owns
   only Web boundary routes and assets, so the two may run in parallel.
-- The contract fixes the injected signer, the closed outcome union, the
-  policy gate before signing, and the two client requirements before any code.
+- The contract fixes the construction boundary, injected signer, two injected
+  request seams, frozen three-field B03 policy snapshot, closed outcome union,
+  policy gate before client construction or signing, exact challenge-to-quote
+  equality, and two client requirements before any code.
+- The Agent manifest owns the `./riskscan-tool-payment` public export, the
+  `riskscan:pay` script, and direct `@x402/core@2.25.0` and
+  `@x402/hedera@2.25.0` dependencies. The lockfile records exactly that local
+  dependency change.
 
 ## Verification
 
-- A durable RED test file precedes the source change and fails for the stated
-  reason: the payment module does not exist.
-- Focused tests prove every outcome in the closed union, that a declined quote
-  never signs, that the module cannot be constructed without a signer, and that
-  the accepted M05 observe-only module is unchanged.
-- Source-boundary checks prove no environment read, credential read, key or
-  header logging, or persistence inside the module.
+- Durable RED files at
+  `apps/agent/test/riskscan-tool-payment.test.mjs` and
+  `apps/agent/test/riskscan-tool-payment-boundary.test.mjs` precede every
+  source, manifest, lockfile, and public-export change. They fail only because
+  the declared payment module and CLI do not yet exist.
+- Focused tests prove every outcome in the closed union; malformed dependency
+  construction and malformed input cause no request/client/signer access; a
+  declined quote performs one Directory GET and no client construction,
+  payload creation, signer-method invocation, or retry; and a mismatched
+  challenge cannot sign. They also prove B03 calls one Directory selection plus
+  the pure Core quote evaluator rather than the M12 wrapper or M05 flow.
+  They also prove the accepted M05 observe-only source and tests remain byte
+  unchanged.
+- Boundary tests prove the library has no environment, credential, filesystem,
+  console, child-process, dynamic-import, persistence, default-fetch, or
+  fallback-signer access. The CLI is the only environment/key edge. A thrown
+  signer or SDK sentinel cannot enter an outcome, stdout, or stderr.
 - `npm run typecheck`, `npm run test`, `npm run lint`, `npm run queue:check`,
   and the enabled local-reference guard pass.
 - Independent task review and a fresh module-review generation report no

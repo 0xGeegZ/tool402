@@ -211,7 +211,42 @@ HI-001 is a resolved human intake record comprising its card, `docs/work-queue/D
 
 B02-T010 is an accepted record comprising its card, `docs/specs/b02-riskscan-route-settlement-evidence.md`, `docs/imports/SPEC-IMPORT-LEDGER.md`, `docs/superpowers/plans/2026-09-07-b02-riskscan-route-settlement-evidence.md`, `apps/web/src/lib/riskscan-settlement-evidence.ts`, and `apps/web/tests/riskscan-settlement-evidence.test.mjs`. `apps/web/src/lib/riskscan-x402.ts` is an accepted M03-T030 path reserved to this card as an explicit root integration reservation while B02-T010 was active; M03-T030 is accepted and has no active lane, so the reservation creates no ownership conflict. The root owns queue state, catalog, ownership, decisions, reviews, commits, and pushes. M02-T060, M03-T030, and M06-T010 are accepted context, not reopened behavior. The M03 correlation rules, `apps/web/tests/riskscan-api.test.mjs`, route files, the Tool Directory, Core, Agent, backend, persistence, package metadata, lockfile, runtime configuration, generated output, public read surfaces, receipt and evidence binding, payment clients, accounts, wallets, signers, transactions, reserve, allocation, clearing, ATS, HCS, payout, deployment, and live evidence are excluded.
 
-B03-T010 is a ready record comprising its card, `docs/specs/b03-riskscan-agent-payment-client.md`, `apps/agent/src/riskscan-tool-payment.ts`, `apps/agent/src/riskscan-pay-cli.mts`, `apps/agent/tests/riskscan-tool-payment.test.mjs`, and the Agent workspace manifest entries for its script and the two x402 client dependencies. The root owns queue state, catalog, ownership, decisions, reviews, commits, and pushes. M05-T020, M05-T030, M06-T010, M12-T020, and B02-T010 are accepted context, not reopened behavior. The accepted M05 challenge-observation module and its tests, the Tool Directory, Core, backend, Web and UI paths, S12-T010's boundary routes and assets, runtime configuration, key material, accounts, wallets, deployment, and live evidence are excluded.
+B03-T010 is an inbox authority record comprising its card,
+`docs/specs/b03-riskscan-agent-payment-client.md`,
+`docs/superpowers/plans/2026-09-08-b03-riskscan-agent-payment-client.md`,
+`apps/agent/src/riskscan-tool-payment.ts`,
+`apps/agent/src/riskscan-pay-cli.ts`,
+`apps/agent/test/riskscan-tool-payment.test.mjs`,
+`apps/agent/test/riskscan-tool-payment-boundary.test.mjs`,
+`apps/agent/package.json`, and the root `package-lock.json`. The Agent manifest
+change is limited to the `./riskscan-tool-payment` public export, the
+`riskscan:pay` script, and direct `@x402/core@2.25.0` and
+`@x402/hedera@2.25.0` dependencies. The root owns queue state, catalog,
+ownership, decisions, reviews, commits, and pushes. M05-T020, M05-T030,
+M06-T010, M12-T020, and B02-T010 are accepted context, not reopened behavior.
+The accepted M05 challenge-observation module and its tests, the Tool Directory,
+Core, backend, Web and UI paths, S12-T010's boundary routes and assets, runtime
+configuration, key material, accounts, wallets, deployment, and live evidence
+are excluded.
+
+S12-T010 is an inbox authority record comprising its card, `docs/ui/UI-S12.md`,
+`docs/superpowers/plans/2026-09-08-s12-deploy-readiness.md`, move-only input
+paths `apps/web/public/brand/icon.svg` and
+`apps/web/public/brand/apple-icon.png`, retained
+`apps/web/public/brand/mascot-flag.png`, final metadata paths
+`apps/web/src/app/icon.svg` and `apps/web/src/app/apple-icon.png`,
+`apps/web/src/app/not-found.tsx`, `apps/web/src/app/error.tsx`,
+`apps/web/src/app/robots.ts`,
+`apps/web/src/components/boundary/not-found-boundary.tsx`,
+`apps/web/src/components/boundary/error-boundary.tsx`, and
+`apps/web/tests/deploy-readiness.test.mjs`. The two icon inputs must be absent
+after their move; the mascot is referenced only by the accepted not-found
+boundary. The root owns queue state, catalog, ownership, the UI slice ledger,
+decisions, reviews, commits, and pushes. M02-T020, M02-T040, and M11-T010 are
+accepted context, not reopened behavior. Layout, navigation, shared UI,
+package metadata, lockfile, runtime configuration, public APIs, all other Web
+paths, identity/provider/payment surfaces, domain state, deployment, and live
+evidence are excluded.
 
 Future active implementation cards must have disjoint owned paths and resource boundaries. Shared-file work is an explicit root integration reservation. Wallets, credentials, funded accounts, partner configuration, and deployments remain human-controlled resources; no card or agent infers authority over them.
 
@@ -274,7 +309,7 @@ boundaries only. A successor must receive separate ownership and may only be
 recorded after a fresh rescan; it must retain M33 zero-enabled and M32/schema
 unchanged until a later reviewed runtime amendment and Stage B GO.
 
-M37-T010 is a root-owned active implementation record comprising its card,
+M37-T010 is a root-owned halted implementation record comprising its card,
 local specification, neutral import-ledger row, implementation plan, accepted
 Stage A decision/reviews, future RED/task/module review records,
 queue state, catalog, ownership record, decisions, commits, integration, and
@@ -287,3 +322,5 @@ existing source/tests, configuration, environment, Web/UI, Agent, SDK,
 provider/wallet, account, funding, payment, transaction, asset, settlement,
 clearing, HCS, payout, deployment, and live-evidence paths are excluded. It
 must create no authority row and grants no M33 enablement or external behavior.
+It is parked under D-HI-001-003; its test-only RED is historical and must not
+be restored without an explicit scoped reversal of that CUT.

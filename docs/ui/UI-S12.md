@@ -31,13 +31,18 @@ accepted route references does not belong to this slice.
 
 ## Local targets
 
-The slice may relocate `icon.svg` and `apple-icon.png` to the framework app-icon
-convention paths under `apps/web/src/app/`, so the browser tab and touch icon
-resolve without a layout change.
+The slice must move, not copy,
+`apps/web/public/brand/icon.svg` to `apps/web/src/app/icon.svg` and
+`apps/web/public/brand/apple-icon.png` to
+`apps/web/src/app/apple-icon.png`, so the browser tab and touch icon resolve
+without a layout change. It keeps `apps/web/public/brand/mascot-flag.png` at
+its public path and renders it only through the not-found boundary.
 
-It may add `apps/web/src/app/not-found.tsx`, `apps/web/src/app/error.tsx`,
-`apps/web/src/app/robots.ts`, presentational components under
-`apps/web/src/components/boundary/`, and their focused tests.
+It may add only `apps/web/src/app/not-found.tsx`,
+`apps/web/src/app/error.tsx`, `apps/web/src/app/robots.ts`,
+`apps/web/src/components/boundary/not-found-boundary.tsx`,
+`apps/web/src/components/boundary/error-boundary.tsx`, and
+`apps/web/tests/deploy-readiness.test.mjs`.
 
 It reuses the existing local Card, Button, and semantic Link primitives and the
 accepted global tokens. It adds no dependency, icon package, animation package,
@@ -45,16 +50,21 @@ or font.
 
 ## Required boundary behavior
 
-The not-found route is server-rendered, has one `h1`, states plainly that the
-page does not exist, shows the decorative illustration with an empty `alt`, and
-offers local links to `/` and `/explore` only.
+The not-found route is server-rendered, has exactly one `h1`, states plainly
+that the page does not exist, shows the decorative illustration from
+`/brand/mascot-flag.png` with an empty `alt`, and offers local links to `/` and
+`/explore` only.
 
-The error route is the framework error boundary and is therefore the one client
-component in this slice. It states that an unexpected error interrupted the
-page and offers the framework reset action and one local link to `/`. It must
-not render an error message, stack, or digest to the viewer, and any diagnostic
-call it makes must carry no caller-supplied content and no tool or generator
-marker string.
+`apps/web/src/app/error.tsx` handles errors from child segments rendered
+beneath `apps/web/src/app/layout.tsx`; it does not handle an error thrown by
+the root layout. It begins with `"use client"`; its default export receives the
+framework `error` and `reset` props; and it never renders or passes `error` to a
+diagnostic. It states that an unexpected error interrupted the page, exposes
+and invokes the framework `reset` action through its retry control, and offers
+one local link to `/`. It must not render an error message, stack, or digest to
+the viewer, and it makes no diagnostic call.
+`apps/web/src/app/global-error.tsx`, nested error boundaries, and test-only
+crash routes are out of scope.
 
 The robots route allows crawling and declares no sitemap. A sitemap needs a
 deployment origin, and no local contract selects one.
@@ -76,11 +86,16 @@ authority. Publishing the site remains a human action.
 
 ## Acceptance evidence
 
-- Focused source contracts cover the not-found and error shapes, the local link
-  targets, the empty decorative `alt`, the absence of any environment read,
-  origin string, fetch, storage, or timer, and the exclusion boundary above.
-- A focused assertion proves the icon files resolve at their final paths and
-  that every supplied asset is referenced by an accepted route.
+- `apps/web/tests/deploy-readiness.test.mjs` is the durable RED contract and
+  precedes all of the new/moved runtime paths. It asserts all final metadata
+  paths exist, the two public icon sources are absent, and the mascot remains
+  only at `/brand/mascot-flag.png` through the not-found boundary.
+- Focused contracts cover exactly one server-only not-found `h1` and link set
+  `['/', '/explore']`; a `"use client"` child-route error entrypoint receiving
+  `error` and `reset`, whose retry control invokes `reset`, with link set
+  `['/']` and no rendered/passed error message, stack, or digest; robots
+  allowing `*` with no sitemap; and no environment read, origin string, fetch,
+  storage, timer, or excluded copy in every owned source.
 - Desktop and narrow browser checks cover rendering of both boundaries, local
   navigation, visible keyboard focus, honored reduced-motion preference, no
   horizontal overflow, and clean framework and browser diagnostics.

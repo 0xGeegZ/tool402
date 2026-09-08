@@ -3,14 +3,18 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 10-ready
+- Queue state: 00-inbox
 - Dependencies: M02-T020 accepted, M02-T040 accepted, M11-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
-  only `apps/web/src/app/not-found.tsx`, `apps/web/src/app/error.tsx`,
-  `apps/web/src/app/robots.ts`, files under
-  `apps/web/src/components/boundary/`, their focused tests, and the relocation
-  of the two supplied icon files to the framework app-icon convention paths.
+  only `apps/web/src/app/icon.svg`, `apps/web/src/app/apple-icon.png`,
+  `apps/web/src/app/not-found.tsx`, `apps/web/src/app/error.tsx`,
+  `apps/web/src/app/robots.ts`,
+  `apps/web/src/components/boundary/not-found-boundary.tsx`,
+  `apps/web/src/components/boundary/error-boundary.tsx`, and
+  `apps/web/tests/deploy-readiness.test.mjs`. The two source icon paths under
+  `apps/web/public/brand/` are move-only inputs and must be absent afterwards;
+  `apps/web/public/brand/mascot-flag.png` remains the exact public asset.
 - Human actions: none granted by this card. It reduces the gap named by
   HA-PUBLIC-DEPLOY-001; publication itself remains human-owned.
 
@@ -20,9 +24,9 @@ The repository currently ships no browser icon and no not-found or error
 boundary. A visitor who mistypes a path, or hits a runtime error, sees the
 framework default.
 
-This card adds an honest not-found page, an honest error boundary, and a robots
-route, using three image files that arrive with the slice because they cannot
-be authored from inside the repository.
+This card adds an honest not-found page, a child-route error boundary, and a
+robots route, using three image files that arrive with the slice because they
+cannot be authored from inside the repository.
 
 The local contract is the [UI-S12 deploy-readiness manifest](../../../ui/UI-S12.md).
 The accepted slice history it builds on is recorded in the
@@ -32,9 +36,9 @@ The accepted slice history it builds on is recorded in the
 
 Three inert static files are already present under
 `apps/web/public/brand/`: `icon.svg`, `apple-icon.png`, and `mascot-flag.png`.
-They are referenced by no route yet. The root decides whether to accept them
-with this card; if the card is rejected, they should be removed rather than
-left unreferenced.
+Acceptance moves (not copies) the first two to their exact App Router metadata
+paths and retains the mascot only through the accepted not-found boundary. If
+the card is rejected, no implementation consumes them.
 
 ## Candidate ready requirements
 
@@ -46,11 +50,17 @@ left unreferenced.
 
 ## Verification
 
-- A durable RED test precedes the source change and fails because the boundary
-  routes do not exist.
-- Focused tests prove the not-found and error shapes, the exact local link set,
-  the empty decorative `alt`, and the absence of any environment read, embedded
-  origin, fetch, storage, or timer.
+- `apps/web/tests/deploy-readiness.test.mjs` is the durable RED contract and
+  precedes every new route, component, or asset move. It fails because the
+  declared boundary routes, components, and final icon paths do not exist.
+- Focused tests prove server-only not-found semantics with exactly one `h1` and
+  hrefs `/` and `/explore`; a `"use client"` child-route error entrypoint
+  receiving `error` and `reset`, whose retry control invokes `reset`, with href
+  `/` and no rendered/passed message, stack, or digest; the empty mascot `alt`;
+  final icon paths with removed public originals; and a crawl-allowing robots
+  route with no sitemap.
+- The same focused test proves every owned source has no environment read,
+  embedded origin, fetch, storage, timer, or excluded-domain copy.
 - `npm run typecheck --workspace @tool402/web`, `npm run test --workspace @tool402/web`,
   `npm run build --workspace @tool402/web`, root `npm run typecheck`,
   `npm run test`, `npm run lint`, `npm run queue:check`, and the enabled
