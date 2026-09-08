@@ -227,6 +227,6 @@ recovery query remain excluded. Existing M04 RiskScan source, Core, packages,
 lockfile, generated output, backend public barrel, configuration, environment,
 provider/wallet, ATS SDK/configuration, target enablement, accounts, funding,
 payment, transaction, settlement, clearing, HCS, payout, deployment, and live
-evidence are excluded. This active record authorizes only the committed
-test-only RED; it grants no production source, target enablement, or external
-behavior.
+evidence are excluded. Its committed test-only RED is accepted; this active
+record authorizes only the declared private resolver and one ordered M32
+assertion. It grants no target enablement or external behavior.
