@@ -3,9 +3,9 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
-- Dependencies: M01-T040 accepted, M02-T020 accepted, M42-T010 (this batch),
-  S15-T010 (this batch), S16-T010 (this batch)
+- Queue state: 10-ready
+- Dependencies: M01-T040 accepted, M02-T020 accepted, M42-T010 accepted,
+  S15-T010 accepted, S16-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
   commits, and pushes. Proposed implementation paths are exactly
   `apps/web/src/lib/ats/create-bond-request.ts`,
@@ -15,10 +15,11 @@
   `apps/web/tests/ats-client.test.mjs`, plus one dependency pin recorded as an
   amendment under a root integration reservation in `apps/web/package.json`,
   the root `package-lock.json`, and `apps/web/tests/static-shell.test.mjs`.
-- Human actions: HA-ISSUER-ACCOUNT-001 and HA-ATS-STAGE-B-001 gate every live
-  behavior of this seam and neither is complete. Local delivery is source,
-  focused tests, and the recorded bundle-gate result only. HA-ATS-RETARGET-001
-  gates M42-T010, whose configuration this card consumes.
+- Human actions: HA-ISSUER-ACCOUNT-001 is accepted only as bounded public
+  testnet issuer-account evidence; HA-ATS-STAGE-B-001 remains pending and
+  gates every live behavior of this seam. Local delivery is source, focused
+  tests, and the recorded bundle-gate result only. HA-ATS-RETARGET-001 gates
+  M42-T010, whose accepted configuration this card consumes.
 
 ## Scope
 
@@ -121,11 +122,22 @@ evidence that a revenue note exists or that the transaction succeeded; the
 M43-T010 mirror verification decides that, and only that verification may move
 an offering to `READY`.
 
-Until HA-ISSUER-ACCOUNT-001 and HA-ATS-STAGE-B-001 are accepted, the accepted
-M33 authority manifest stays zero-enabled, no `PREPARED` `ATS_CREATE` attempt
-can exist, and the live path is unreachable: the client fails closed before
+HA-ISSUER-ACCOUNT-001 is accepted only as bounded public evidence and grants
+no account access. Until HA-ATS-STAGE-B-001 is accepted, the accepted M33
+authority manifest stays zero-enabled, no `PREPARED` `ATS_CREATE` attempt can
+exist, and the live path is unreachable: the client fails closed before
 `Network.init`, connecting a provider, or prompting a wallet, and returns
-`attempt_not_prepared` once the wallet and signer gates pass. Creating and
-funding the issuer account, provisioning the authority row, granting the
-Stage B GO, and running any live SDK call remain human-only actions tracked in
-the runtime human-actions record.
+`attempt_not_prepared` once the wallet and signer gates pass. Provisioning the
+authority row, granting the Stage B GO, and running any live SDK call remain
+human-only actions tracked in the runtime human-actions record.
+
+## Ready review
+
+At clean pushed `c1d25a4bfe9fcd414580441bdd63de8f3524e85e`, an independent
+readiness review found M01-T040, M02-T020, M42-T010, S15-T010, and S16-T010
+accepted; M41-T010's Backend-only RED phase disjoint; the M44 source/test
+paths and dependency pin absent; and the root package reservation intact.
+HA-ISSUER-ACCOUNT-001 is accepted bounded evidence only, while
+HA-ATS-STAGE-B-001 remains the separate live gate. A fresh activation may
+authorize only the two durable test-only RED files; it cannot install the SDK,
+read configuration, connect a wallet, or submit an operation.

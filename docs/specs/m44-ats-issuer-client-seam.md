@@ -203,11 +203,12 @@ durable record; do not use `eval`, `Function`, or equivalent source indirection.
 
 ## Human boundary
 
-HA-ISSUER-ACCOUNT-001 and HA-ATS-STAGE-B-001 remain human-only and neither is
-complete. Until both are accepted, no SDK call reaches a wallet, no transaction
-is submitted, and the card delivers only local source, tests, and the
-bundle-gate result. HA-ATS-RETARGET-001 gates M42-T010, whose output this seam
-consumes. The browser wallet rule it relies on is accepted in
+HA-ISSUER-ACCOUNT-001 is accepted only as bounded public testnet issuer-account
+evidence and grants no account access. HA-ATS-STAGE-B-001 remains pending and
+is the sole live-execution gate. Until it is accepted, no SDK call reaches a
+wallet, no transaction is submitted, and the card delivers only local source,
+tests, and the bundle-gate result. HA-ATS-RETARGET-001 gates M42-T010, whose
+output this seam consumes. The browser wallet rule it relies on is accepted in
 [HA-COMMAND-AUTHORITY-001](../work-queue/evidence/HA-COMMAND-AUTHORITY-001-decision.md),
 and [HA-ATS-LIVE-AUTHORITY-001](../work-queue/evidence/HA-ATS-LIVE-AUTHORITY-001-decision.md)
 authorizes no SDK call.
