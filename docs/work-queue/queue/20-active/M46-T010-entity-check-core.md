@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T050 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
   commits, and pushes. Proposed implementation paths are exactly
@@ -110,3 +110,11 @@ new paths absent and disjoint, and the no-reorder Core barrel reservation
 recorded. A separate activation may authorize only the durable test-only RED
 fixtures; the source module and barrel remain prohibited until a fresh RED
 review.
+
+## Activation record
+
+Activated at 2026-09-09T22:33:30Z after an independent current-head review
+found a clean pushed head, no Core-path conflict, accepted M02-T050, and the
+exact targets absent. This activation authorizes only the two declared Core
+test fixtures; EntityCheck source, the Core barrel, and every I/O or external
+boundary remain prohibited pending a fresh RED review.
