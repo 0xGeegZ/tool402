@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
+import { Status, statusToneForOutcome } from "../../ui/status";
 import {
   submitRiskScanRequest,
   type RiskScanRequestOutcome,
@@ -35,52 +36,56 @@ function readQuickInput(data: FormData): RiskScanQuickInput {
 function RequestOutcome({ state }: { state: RiskScanRequestViewState }) {
   if (state.kind === "idle") return null;
   if (state.kind === "submitting") {
-    return <p aria-live="polite">Sending the request boundary.</p>;
+    return (
+      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
+        Sending the request boundary.
+      </Status>
+    );
   }
   if (state.kind === "unavailable") {
     return (
-      <p aria-live="polite">
+      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
         RiskScan is unavailable. No payment challenge or result was returned.
-      </p>
+      </Status>
     );
   }
   if (state.kind === "payment_required") {
     return (
-      <p aria-live="polite">
+      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
         A payment challenge was returned. No payment was made in this browser.
-      </p>
+      </Status>
     );
   }
   if (state.kind === "invalid_request") {
     return (
-      <p aria-live="polite">
+      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
         The request was rejected before a result. Check the fields and try again.
-      </p>
+      </Status>
     );
   }
   if (state.kind === "transport_failure") {
     return (
-      <p aria-live="polite">
+      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
         The request could not reach the service. No payment or result was confirmed.
-      </p>
+      </Status>
     );
   }
   if (state.kind === "unexpected_response") {
     return (
-      <p aria-live="polite">
+      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
         The service returned an unexpected response. No payment or result is shown.
-      </p>
+      </Status>
     );
   }
 
   return (
-    <section aria-live="polite" className="space-y-4">
-      <div className="space-y-1">
-        <h2 className="text-xl font-semibold">Quick endpoint response</h2>
-        <p className="text-sm text-muted-foreground">
+    <section className="space-y-4">
+      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
+        <span className="font-medium">Quick endpoint response</span>{" "}
+        <span>
           This is only an endpoint response. It is not payment or lifecycle evidence.
-        </p>
-      </div>
+        </span>
+      </Status>
       <p className="font-medium">{state.result.disposition}</p>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>

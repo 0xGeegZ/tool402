@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
+import { Status, statusToneForOutcome } from "../../ui/status";
 import {
   evaluateRiskScanQuickPreflight,
   readRiskScanQuickPreflightInput,
@@ -16,8 +17,15 @@ function RiskScanQuickPreflightOutcome({ state }: { state: RiskScanQuickPrefligh
   if (message === null) return null;
 
   return (
-    <section aria-live="polite" className="space-y-4 text-sm text-muted-foreground">
-      <p>{message}</p>
+    <section className="space-y-4 text-sm text-muted-foreground">
+      <Status
+        tone={statusToneForOutcome(
+          state.kind === "assessment" ? state.assessment.disposition : state.kind,
+        )}
+        aria-live="polite"
+      >
+        {message}
+      </Status>
       {state.kind === "assessment" ? (
         <>
           <p className="font-medium text-foreground">{state.assessment.disposition}</p>

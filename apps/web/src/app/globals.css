@@ -15,6 +15,12 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
   --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-brand-purple: var(--brand-purple);
   --color-brand-green: var(--brand-green);
   --color-brand-coral: var(--brand-coral);
@@ -37,6 +43,12 @@
   --muted-foreground: #6d6a7c;
   --border: #e7e0cd;
   --ring: #5b4fe0;
+  --destructive: #fdeae4;
+  --destructive-foreground: #b03a1d;
+  --success: #e6f4ec;
+  --success-foreground: #1c7a4d;
+  --warning: #fdf1d8;
+  --warning-foreground: #a05a12;
   --brand-purple: #6a5cf0;
   --brand-green: #2fa876;
   --brand-coral: #f0724a;

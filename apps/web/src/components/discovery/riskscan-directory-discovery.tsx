@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Status, statusToneForOutcome } from "../ui/status";
 import { directoryOutcomeMessage, runExclusive, type RiskScanDirectoryViewState } from "./riskscan-directory-state";
 
 function DirectorySelection({ state }: { state: Extract<RiskScanDirectoryViewState, { kind: "tool_selected" }> }) {
@@ -53,7 +54,11 @@ function DirectorySelection({ state }: { state: Extract<RiskScanDirectoryViewSta
 
 function DirectoryOutcome({ state }: { state: RiskScanDirectoryViewState }) {
   const message = directoryOutcomeMessage(state);
-  return message === null ? null : <p aria-live="polite" className="text-sm text-muted-foreground">{message}</p>;
+  return message === null ? null : (
+    <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
+      {message}
+    </Status>
+  );
 }
 
 export function RiskScanDirectoryDiscovery() {

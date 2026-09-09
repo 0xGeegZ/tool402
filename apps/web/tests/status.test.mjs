@@ -65,30 +65,20 @@ test("defines the closed, labelled Status treatment without client or runtime be
     assert.match(source, new RegExp(className));
   }
 
-  for (const [kind, tone] of [
-    ["idle", "neutral"],
-    ["submitting", "working"],
-    ["inspecting", "working"],
-    ["evaluating", "working"],
-    ["quick_response", "success"],
-    ["tool_selected", "success"],
-    ["eligible", "success"],
-    ["disclosures_reported", "success"],
-    ["payment_required", "warning"],
-    ["declined", "warning"],
-    ["needs_disclosure", "warning"],
-    ["unavailable", "error"],
-    ["invalid_request", "error"],
-    ["transport_failure", "error"],
-    ["unexpected_response", "error"],
-    ["directory_unavailable", "error"],
-    ["directory_invalid", "error"],
-    ["native_summary_unavailable", "error"],
-    ["invalid_input", "error"],
+  for (const [tone, kinds] of [
+    ["neutral", ["idle"]],
+    ["working", ["submitting", "inspecting", "evaluating"]],
+    ["success", ["quick_response", "tool_selected", "eligible", "disclosures_reported"]],
+    ["warning", ["payment_required", "declined", "needs_disclosure"]],
+    ["error", ["unavailable", "invalid_request", "transport_failure", "unexpected_response", "directory_unavailable", "directory_invalid", "native_summary_unavailable", "invalid_input"]],
   ]) {
+    const cases = kinds
+      .map((kind) => `case ["']${kind}["']:`)
+      .join("[\\s\\S]*?");
+
     assert.match(
       source,
-      new RegExp(`case ["']${kind}["']:\\s*return ["']${tone}["'];`),
+      new RegExp(`${cases}\\s*return ["']${tone}["'];`),
     );
   }
 

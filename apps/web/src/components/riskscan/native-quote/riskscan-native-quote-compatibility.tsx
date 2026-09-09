@@ -6,6 +6,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
+import { Status, statusToneForOutcome } from "../../ui/status";
 import {
   nativeQuoteCompatibilityOutcomeMessage,
   readNativeQuotePolicy,
@@ -18,8 +19,10 @@ function NativeQuoteCompatibilityOutcome({ state }: { state: NativeQuoteCompatib
   if (message === null) return null;
 
   return (
-    <section aria-live="polite" className="space-y-3 text-sm text-muted-foreground">
-      <p>{message}</p>
+    <section className="space-y-3 text-sm text-muted-foreground">
+      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
+        {message}
+      </Status>
       {state.kind === "eligible" ? (
         <dl className="grid gap-2 sm:grid-cols-3">
           <div>
