@@ -457,9 +457,15 @@ Backend files named in their cards. The root sequences the three shared
 `walletCommandReplayClaims`, M41 reserves `ingressCommandReplayClaims`, and
 M43 may widen only the declared external-attempt state after its predecessors
 are accepted. M43's `command_dispatch.ts` amendment is likewise unavailable
-until its own ready cycle. M45-T010 owns its exact Web active-directory paths
-and only the constrained accepted Tool Directory/API/test amendments listed in
-its card.
+until its own ready cycle. M45-T010 owns only its exact new Web
+active-directory module and focused test. The root integration reservation
+permits only the declared amendments to
+`apps/web/src/lib/tool-directory.ts`, `apps/web/src/app/api/tools/route.ts`,
+and `apps/web/tests/tool-directory-api.test.mjs`. The default `GET /api/tools`
+response remains the accepted static body; only the exact
+`?view=active-directory-version` query may return the active-version metadata
+view. No Agent reader or Agent test is reserved, and no served metadata becomes
+payment, availability, or execution authority.
 
 M41-T010's scoped atomic-handoff correction is root-integrated only. It may
 amend `packages/backend/convex/external_prepare_command_admission.ts`,

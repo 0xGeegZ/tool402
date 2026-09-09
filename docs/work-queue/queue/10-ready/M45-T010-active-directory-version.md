@@ -3,9 +3,9 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M05-T010 accepted, M28-T010 accepted, M09-T010 accepted,
-  M40-T010 (this batch), M41-T010 (this batch)
+  M40-T010 accepted, M41-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
   commits, and pushes. Proposed implementation paths are exactly:
   `apps/web/src/lib/active-directory-version.ts`,
@@ -133,3 +133,11 @@ resolves no authority. It calls no provider or ATS SDK, touches no wallet,
 account, or key, submits no transaction, and creates no payment, settlement,
 allocation, evidence, or deployment. Its exclusions and truthfulness rules are
 the specification's, which governs; this card does not restate them.
+
+## Ready record
+
+Ready at 2026-09-09T22:33:30Z after an independent current-head review found
+all five accepted predecessors, the recorded opt-in decision, exact root
+reservations for the three accepted M05 paths, absent/disjoint new paths, and
+no human action blocking controlled local delivery. A future activation may
+authorize only the durable test-only RED scope in the ready-review evidence.
