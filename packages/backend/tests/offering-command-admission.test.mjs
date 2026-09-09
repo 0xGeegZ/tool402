@@ -861,6 +861,39 @@ implementedTest("claims a fresh nonce for an exact idempotent offering and consu
     },
   }]);
 
+  const storedPayloadDrifts = [
+    offeringDocument(original, {
+      narrative: {
+        ...original.payload.narrative,
+        title: "Drifted but canonical title",
+      },
+    }),
+    offeringDocument(original, {
+      advertisedQuickPriceTinybars: "11",
+    }),
+    offeringDocument(original, {
+      definition: {
+        ...original.payload.definition,
+        terms: {
+          ...original.payload.definition.terms,
+          fundingTargetTinybars: "1001",
+        },
+      },
+    }),
+  ];
+  for (const driftedOffering of storedPayloadDrifts) {
+    const driftDb = database({
+      authorities: [authority(replayed)],
+      offerings: [driftedOffering],
+    });
+    assert.deepEqual(
+      await offerings.admitOfferingCreate._handler(driftDb.ctx, replayed),
+      { status: "IDEMPOTENCY_CONFLICT" },
+    );
+    assert.deepEqual(driftDb.reads, expectedOfferingReads(replayed));
+    assertUnlinkedConflictClaim(driftDb, replayed);
+  }
+
   const conflicts = [
     [
       admissionInput({

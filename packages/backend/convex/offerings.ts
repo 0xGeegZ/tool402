@@ -9,7 +9,10 @@ import type {
 } from "convex/server";
 import { v } from "convex/values";
 import type { GenericId } from "convex/values";
-import { parseOfferingCreatePayload } from "@tool402/core";
+import {
+  canonicalOfferingCreatePayloadBytes,
+  parseOfferingCreatePayload,
+} from "@tool402/core";
 import type { OfferingCreatePayload } from "@tool402/core";
 import {
   bindOfferingCommand,
@@ -338,6 +341,45 @@ function readSafePreparedAtsCreateAttempt(input: unknown) {
   });
 }
 
+function matchingBytes(left: Uint8Array, right: Uint8Array): boolean {
+  if (left.byteLength !== right.byteLength) {
+    return false;
+  }
+  for (let index = 0; index < left.byteLength; index += 1) {
+    if (left[index] !== right[index]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function matchesStoredOfferingPayload(
+  stored: SafeOffering,
+  payload: OfferingCreatePayload,
+): boolean {
+  let reconstructed: OfferingCreatePayload;
+  try {
+    reconstructed = parseOfferingCreatePayload({
+      schemaVersion: 1,
+      offeringPublicId: stored.offeringPublicId,
+      offeringVersion: stored.version,
+      subjectPublicId: stored.subjectPublicId,
+      definition: stored.definition,
+      narrative: stored.narrative,
+      advertisedQuickPriceTinybars: stored.advertisedQuickPriceTinybars,
+      advertisedStandardPriceTinybars: stored.advertisedStandardPriceTinybars,
+      idempotencyKey: stored.idempotencyKey,
+      expiresAt: payload.expiresAt,
+    });
+  } catch {
+    return false;
+  }
+  return matchingBytes(
+    canonicalOfferingCreatePayloadBytes(reconstructed),
+    canonicalOfferingCreatePayloadBytes(payload),
+  );
+}
+
 function matchesStoredOffering(
   stored: SafeOffering,
   command: OfferingCommandBinding,
@@ -353,6 +395,7 @@ function matchesStoredOffering(
     && stored.authorityVersion === command.authorityVersion
     && stored.payloadHash === command.payloadHash
     && stored.idempotencyKey === payload.idempotencyKey
+    && matchesStoredOfferingPayload(stored, payload)
   );
 }
 
