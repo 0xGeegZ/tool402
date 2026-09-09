@@ -471,6 +471,14 @@ two new M41 test files. No other M32/M40 behavior, schema field/table/index,
 M40 projection, Web, Agent, package, configuration, provider, wallet, SDK,
 transaction, deployment, or live-evidence path is eligible.
 
+M41-T010's independently reviewed RED contract is accepted at `66f4ca5`. Its
+root-integrated GREEN scope is limited to the three declared Convex modules,
+the reserved `ingressCommandReplayClaims` table/index, the atomic M32
+admission, the M40 DRAFT-offering linker/index, and their already-declared
+focused test amendments. No other M32/M40 behavior, schema field/table/index,
+configuration, key, publication, Web, Agent, package, wallet, provider, SDK,
+transaction, deployment, or live-evidence path is eligible.
+
 S15-T010 owns its exact wallet-island and relay paths. S16-T010 owns its exact
 provider-deploy page, components, state, fixture, display configuration literal,
 and tests. S17-T010 owns its exact provider-status/API/projection paths and its

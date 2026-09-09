@@ -221,3 +221,16 @@ the four named test files are authorized, while every production source,
 schema, configuration, wallet, provider, SDK, transaction, deployment, and
 live path remains prohibited until a separate RED review accepts their exact
 failure contract.
+
+## RED acceptance
+
+Independent review at `66f4ca5` is clear. The focused Node 22.21.1 RED run has
+35 passing checks, 28 deferred checks, and only the five declared M41
+absences. The contract covers production ingress configuration, router wiring,
+the two frozen M40 command dispatches, atomic ATS_CREATE admission/linkage,
+transport replay, and public projection grammar. The declared M41 production
+scope is now authorized for minimal GREEN: `http.ts`, `command_dispatch.ts`,
+`wallet_command_replay.ts`, the reserved replay table/index, and the scoped
+M32/M40 atomic-handoff amendments. No configuration, key, publication,
+wallet/provider/SDK access, transaction, deployment, or live behavior is
+authorized.
