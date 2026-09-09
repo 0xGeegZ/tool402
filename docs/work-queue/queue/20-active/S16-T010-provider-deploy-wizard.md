@@ -130,6 +130,25 @@ terms; the payload bounds it enforces before signing are the sibling
 - Independent task review and a fresh module-review generation report no
   Critical finding.
 
+## RED acceptance
+
+At pushed `8bac790`, the independent [RED review](../../evidence/S16-T010-red-review.md)
+confirmed that the focused Node 22.21.1 command fails exactly twice only for
+the six declared absent source paths and skips its nine GREEN assertions. The
+review closes the local candidate handoff, absent-projection, and direct
+wallet/provider/SDK/relay capability boundaries.
+
+Only these source paths are now authorized for the minimal GREEN cycle:
+
+```text
+apps/web/src/app/provider/deploy/page.tsx
+apps/web/src/components/provider/deploy/provider-deploy-wizard.tsx
+apps/web/src/components/provider/deploy/provider-deploy-stages.tsx
+apps/web/src/components/provider/deploy/provider-deploy-state.ts
+apps/web/src/components/provider/deploy/campaign-fixture.ts
+apps/web/src/components/provider/deploy/ats-create-configuration.ts
+```
+
 ## Boundary
 
 This card renders a draft and offers a signature. It advances no offering,
