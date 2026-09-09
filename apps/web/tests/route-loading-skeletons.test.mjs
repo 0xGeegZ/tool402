@@ -27,6 +27,20 @@ const loaders = [
     ],
   },
   {
+    path: "src/app/explore/entitycheck/loading.tsx",
+    importSpecifier: "../../../components/ui/skeleton",
+    centered: true,
+    regions: [
+      "navigation",
+      "heading",
+      "capability",
+      "inputs",
+      "result-boundary",
+      "sources",
+      "configuration-boundary",
+    ],
+  },
+  {
     path: "src/app/explore/riskscan/try/loading.tsx",
     importSpecifier: "../../../../components/ui/skeleton",
     centered: true,

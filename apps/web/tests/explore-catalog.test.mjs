@@ -68,6 +68,7 @@ function jsxViolations(sourceFile) {
     "CardContent",
     "CardFooter",
     "RiskScanDiscoveryCard",
+    "EntityCheckDiscoveryCard",
   ]);
   const forbiddenElements = new Set(["a", "button", "form", "input", "select", "textarea", "Link"]);
   const forbiddenAttributes = new Set(["href", "role", "tabIndex"]);
@@ -104,37 +105,48 @@ function jsxViolations(sourceFile) {
   return violations;
 }
 
-test("defines the one-entry static Explore catalog without interactive controls", async () => {
+test("defines the two-entry static Explore catalog without interactive controls", async () => {
   const source = await readAppFile("src/components/discovery/explore-catalog.tsx");
   const sourceFile = sourceFileFor(source);
   const entries = catalogEntries(sourceFile);
 
   assert.equal(sourceFile.parseDiagnostics.length, 0);
-  assert.ok(entries, "CATALOG must be Object.freeze([one entry])");
-  assert.equal(entries.length, 1, "CATALOG must contain exactly one tool");
-  const [entry] = entries;
-  assert.ok(typescript.isObjectLiteralExpression(entry), "catalog entry must be a data record");
-
-  const values = Object.fromEntries(entry.properties.map((property) => {
-    assert.ok(typescript.isPropertyAssignment(property), "catalog entry must contain only data properties");
-    const name = propertyName(property.name);
-    const value = stringValue(property.initializer);
-    assert.ok(name && value !== null, "catalog fields must be literal strings");
-    return [name, value];
-  }));
-
-  assert.deepEqual(values, {
-    id: "riskscan",
-    name: "RiskScan",
-    category: "Risk assessment",
-    status: "In discovery",
-    access: "Read-only preview",
-    href: "/explore/riskscan",
-    description: "A read-only introduction to a bounded assessment for considering a tool's risk signals with care.",
+  assert.ok(entries, "CATALOG must be Object.freeze([two entries])");
+  assert.equal(entries.length, 2, "CATALOG must contain exactly two tools");
+  const values = entries.map((entry) => {
+    assert.ok(typescript.isObjectLiteralExpression(entry), "catalog entry must be a data record");
+    assert.equal(entry.properties.length, 7);
+    return Object.fromEntries(entry.properties.map((property) => {
+      assert.ok(typescript.isPropertyAssignment(property), "catalog entry must contain only data properties");
+      const name = propertyName(property.name);
+      const value = stringValue(property.initializer);
+      assert.ok(name && value !== null, "catalog fields must be literal strings");
+      return [name, value];
+    }));
   });
-  assert.equal(entry.properties.length, 7);
 
-  assert.match(source, /\{\s*CATALOG\.length\s*\}\s*tool/);
+  assert.deepEqual(values, [
+    {
+      id: "riskscan",
+      name: "RiskScan",
+      category: "Risk assessment",
+      status: "In discovery",
+      access: "Read-only preview",
+      href: "/explore/riskscan",
+      description: "A read-only introduction to a bounded assessment for considering a tool's risk signals with care.",
+    },
+    {
+      id: "entitycheck",
+      name: "EntityCheck",
+      category: "Counterparty verification",
+      status: "In discovery",
+      access: "Read-only preview",
+      href: "/explore/entitycheck",
+      description: "A bounded lookup of a French company's public registry record with a sanctions screen, cited to its sources.",
+    },
+  ]);
+
+  assert.match(source, /\{\s*CATALOG\.length\s*\}\s*tools/);
   assert.match(source, /\bCategory\b/);
   assert.match(source, /\bStatus\b/);
   assert.match(source, /\bAccess\b/);
@@ -145,6 +157,8 @@ test("defines the one-entry static Explore catalog without interactive controls"
   assert.match(source, /More tools to come/);
   assert.match(source, /New tools appear here once their journey is accepted\./);
   assert.match(source, /<RiskScanDiscoveryCard\s*\/>/);
+  assert.match(source, /<RiskScanDiscoveryCard\s*\/>\s*<EntityCheckDiscoveryCard\s*\/>/);
+  assert.match(source, /import\s*\{\s*EntityCheckDiscoveryCard\s*\}\s+from\s+["']\.\/entitycheck-discovery-card["']/);
   assert.match(source, /lg:grid-cols-\[14rem_minmax\(0,1fr\)\]/);
   assert.match(source, /\bmin-w-0\b/);
   assert.match(source, /\bsm:grid-cols-2\b/);
