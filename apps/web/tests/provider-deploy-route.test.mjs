@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import typescript from "typescript";
 
 const appRoot = fileURLToPath(new URL("..", import.meta.url));
 const sourcePaths = [
@@ -20,6 +21,80 @@ const implementedTest = sourceExists ? test : test.skip;
 async function readS16Sources() {
   const entries = await Promise.all(sourcePaths.map(async (path) => [path, await readFile(join(appRoot, path), "utf8")]));
   return Object.fromEntries(entries);
+}
+
+function capabilityViolations(sources) {
+  const violations = [];
+  const forbiddenModule = /(?:^|\/)(?:viem(?:\/|$)|wagmi(?:\/|$)|metamask(?:\/|$)|walletconnect(?:\/|$)|command-relay(?:\/|$)|commands?(?:\/|$)|asset-tokenization-sdk(?:\/|$)|@hashgraph\/asset-tokenization-sdk(?:\/|$)|axios(?:\/|$)|node:(?:http|https)(?:\/|$)|(?:http|https)(?:\/|$))/i;
+  const forbiddenCalls = new Set([
+    "fetch", "sendCommand", "relayCommand", "submitCommand", "dispatchCommand",
+  ]);
+  const forbiddenConstructors = new Set(["XMLHttpRequest", "WebSocket", "Function"]);
+
+  function report(path, sourceFile, node, message) {
+    const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+    violations.push(`${path}:${line + 1}:${character + 1} ${message}`);
+  }
+
+  for (const [path, source] of Object.entries(sources)) {
+    const sourceFile = typescript.createSourceFile(
+      path,
+      source,
+      typescript.ScriptTarget.ES2022,
+      true,
+      path.endsWith(".tsx") ? typescript.ScriptKind.TSX : typescript.ScriptKind.TS,
+    );
+
+    function visit(node) {
+      if (typescript.isImportDeclaration(node) && typescript.isStringLiteral(node.moduleSpecifier) && forbiddenModule.test(node.moduleSpecifier.text)) {
+        report(path, sourceFile, node, `forbidden module import: ${node.moduleSpecifier.text}`);
+      }
+      if (typescript.isImportEqualsDeclaration(node) && typescript.isExternalModuleReference(node.moduleReference) && typescript.isStringLiteral(node.moduleReference.expression) && forbiddenModule.test(node.moduleReference.expression.text)) {
+        report(path, sourceFile, node, `forbidden module import: ${node.moduleReference.expression.text}`);
+      }
+      if (typescript.isMetaProperty(node) && node.keywordToken === typescript.SyntaxKind.ImportKeyword) {
+        report(path, sourceFile, node, "import.meta is not permitted");
+      }
+      if (typescript.isCallExpression(node)) {
+        if (node.expression.kind === typescript.SyntaxKind.ImportKeyword) {
+          report(path, sourceFile, node, "dynamic import is not permitted");
+        }
+        if (typescript.isIdentifier(node.expression)) {
+          if (node.expression.text === "require") report(path, sourceFile, node, "require is not permitted");
+          if (node.expression.text === "eval") report(path, sourceFile, node, "eval is not permitted");
+          if (node.expression.text === "Function") report(path, sourceFile, node, "Function is not permitted");
+          if (forbiddenCalls.has(node.expression.text)) report(path, sourceFile, node, `forbidden invocation: ${node.expression.text}`);
+        }
+        if (typescript.isPropertyAccessExpression(node.expression)) {
+          const receiver = node.expression.expression;
+          const member = node.expression.name.text;
+          if (member === "request" && isWalletGlobal(receiver)) report(path, sourceFile, node, "provider request is not permitted");
+          if ((member === "fetch" || member === "eval" || member === "Function") && isRuntimeGlobal(receiver)) report(path, sourceFile, node, `forbidden global invocation: ${member}`);
+          if (forbiddenCalls.has(member)) report(path, sourceFile, node, `forbidden invocation: ${member}`);
+        }
+      }
+      if (typescript.isNewExpression(node) && typescript.isIdentifier(node.expression) && forbiddenConstructors.has(node.expression.text)) {
+        report(path, sourceFile, node, `forbidden constructor: ${node.expression.text}`);
+      }
+      if (typescript.isIdentifier(node) && (node.text === "ethereum" || node.text === "web3")) {
+        report(path, sourceFile, node, `runtime wallet/provider global is not permitted: ${node.text}`);
+      }
+      typescript.forEachChild(node, visit);
+    }
+
+    function isRuntimeGlobal(node) {
+      return typescript.isIdentifier(node) && ["window", "globalThis", "global"].includes(node.text);
+    }
+
+    function isWalletGlobal(node) {
+      return (typescript.isIdentifier(node) && ["ethereum", "web3"].includes(node.text)) ||
+        (typescript.isPropertyAccessExpression(node) && isRuntimeGlobal(node.expression) && ["ethereum", "web3"].includes(node.name.text));
+    }
+
+    visit(sourceFile);
+  }
+
+  return violations;
 }
 
 test("requires all six declared S16 source paths before route GREEN", () => {
@@ -50,16 +125,7 @@ implementedTest("keeps the route and every step transition local with no externa
 });
 
 implementedTest("keeps the presentation boundary clear of direct wallet, provider, SDK, relay, and command calls", async () => {
-  const sources = Object.values(await readS16Sources()).join("\n");
-
-  assert.doesNotMatch(
-    sources,
-    /(?:from\s*["'][^"']*(?:metamask|walletconnect|wagmi|command-relay|\/api\/commands|asset-tokenization-sdk)[^"']*["']|require\s*\(\s*["'][^"']*(?:metamask|walletconnect|wagmi|command-relay|\/api\/commands|asset-tokenization-sdk)[^"']*["']\s*\))/i,
-  );
-  assert.doesNotMatch(
-    sources,
-    /\b(?:window\.)?ethereum\b|\beth_requestAccounts\b|\bpersonal_sign\b|\beth_sign(?:TypedData)?\b|\b(?:Bond|CreateBondRequest)\b|\b(?:fetch|relayCommand|sendCommand)\s*\(/,
-  );
+  assert.deepEqual(capabilityViolations(await readS16Sources()), []);
 });
 
 implementedTest("keeps unavailable configuration rows blank and stage outcomes accessible without claiming a cause", async () => {
