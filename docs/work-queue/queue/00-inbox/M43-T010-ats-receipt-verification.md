@@ -6,7 +6,7 @@
 - Queue state: 00-inbox
 - Dependencies: M04-T010 accepted, M26-T010 accepted, M32-T010 accepted,
   M33-T010 accepted, M38-T010 (this batch), M39-T010 (this batch),
-  M40-T010 (this batch), M42-T010 (this batch)
+  M40-T010 (this batch), M41-T010 (this batch), M42-T010 (this batch)
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
   commits, and pushes. Proposed implementation paths are exactly
   `packages/backend/convex/ats_candidate_receipts.ts`,
@@ -64,7 +64,7 @@ not coupled to it. Nothing retries and nothing resubmits.
 - The specification, card, catalog, ownership, and state records are
   committed before any RED test or source change.
 - M04-T010, M26-T010, M32-T010, and M33-T010 remain accepted, and M38-T010,
-  M39-T010, M40-T010, and M42-T010 are accepted before activation.
+  M39-T010, M40-T010, M41-T010, and M42-T010 are accepted before activation.
 - `packages/backend/convex/schema.ts` is shared with M40-T010 and M41-T010 in
   this batch. The three amendments are disjoint: M40 adds new tables only, M41
   adds only the `ingressCommandReplayClaims` table and its index, and M43

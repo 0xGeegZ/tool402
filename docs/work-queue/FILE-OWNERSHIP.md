@@ -485,6 +485,18 @@ ownership is complete. M43-T010 may not amend the shared schema, its schema
 assertion, or `command_dispatch.ts` until its own root control record reserves
 only the already-declared state/field, assertion, and disabled-entry changes.
 
+M43-T010's root control reservation is now recorded after M41 acceptance. On
+an eventual authorized GREEN cycle, it may amend only
+`packages/backend/convex/schema.ts` to widen
+`externalPrepareCommandAttempts.state` and add exactly its three declared
+optional candidate/reconciliation fields; amend only
+`packages/backend/tests/external-prepare-command-durable-schema.test.mjs` to
+match that exact shape; and amend only
+`packages/backend/convex/command_dispatch.ts` to enable the already-declared
+`external.attachCandidate` entry. This reservation grants no source, test,
+configuration, SDK, wallet, provider, transaction, deployment, or live-action
+work; its readiness, activation, and RED reviews remain separate gates.
+
 The root additionally reserves one M41 regression-baseline correction in
 `packages/backend/tests/offering-durable-schema.test.mjs`: only the exact
 `by_ats_create_draft_binding` expected M40 index vector may be appended to
