@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T020 accepted, M11-T020 accepted, M20-T010 accepted,
   M29-T010 accepted, M38-T010 (this batch), S15-T010 (this batch)
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
@@ -186,3 +186,16 @@ offering, attempt, asset, or directory state of its own, accesses no wallet or
 relay, and does not claim a browser outcome. Its exclusions are the manifest's
 truthfulness and authority boundary, which governs; this card does not restate
 them.
+
+## Acceptance
+
+At source `ed46ae18a08c859d5f2c94722ab84453ef674835`, the final independent
+task review and two fresh module reviews found no Critical, Important, or Minor
+finding. The focused S16 contract passed 21/21; the complete Web suite passed
+183/183; root typecheck, test, lint, queue validation, whitespace, the
+local-reference guard, and the enabled Git guard passed under Node 22.21.1.
+The equivalent Webpack production build with Cache Components passed. A local
+browser check proved the visible field-level error, correction, and step
+advance path without a wallet or network action. This remains a local preview
+only: it grants no wallet, provider, signature, relay, SDK, durable, account,
+transaction, deployment, or live authority.
