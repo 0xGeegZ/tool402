@@ -138,12 +138,22 @@ test("declares the exact feedback tokens and routes only existing outcomes throu
     [directory, "../ui/status"],
   ]) {
     assert.match(source, new RegExp(`from ["']${importSpecifier}["']`));
+    assert.match(source, /<Status\b(?=[^>]*\btone=\{[^}]*statusToneForOutcome\()[^>]*>/);
+    assert.match(source, /<Status\b[\s\S]*?<\/Status>/);
+  }
+
+  for (const source of [request, nativeQuote, preflight]) {
+    assert.match(source, /<section\b(?=[^>]*\baria-live=["']polite["'])[^>]*>/);
+  }
+
+  for (const source of [toolLoop, directory]) {
     assert.match(
       source,
       /<Status\b(?=[^>]*\btone=\{[^}]*statusToneForOutcome\()(?=[^>]*\baria-live=["']polite["'])[^>]*>/,
     );
-    assert.match(source, /<Status\b[\s\S]*?<\/Status>/);
   }
+
+  assert.match(request, /<h2 className=["']text-xl font-semibold["']>Quick endpoint response<\/h2>/);
 
   for (const [source, message] of [
     [request, "Sending the request boundary."],

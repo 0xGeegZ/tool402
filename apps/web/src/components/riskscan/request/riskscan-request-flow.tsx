@@ -79,13 +79,13 @@ function RequestOutcome({ state }: { state: RiskScanRequestViewState }) {
   }
 
   return (
-    <section className="space-y-4">
-      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
-        <span className="font-medium">Quick endpoint response</span>{" "}
-        <span>
+    <section aria-live="polite" className="space-y-4">
+      <div className="space-y-1">
+        <h2 className="text-xl font-semibold">Quick endpoint response</h2>
+        <Status tone={statusToneForOutcome(state.kind)}>
           This is only an endpoint response. It is not payment or lifecycle evidence.
-        </span>
-      </Status>
+        </Status>
+      </div>
       <p className="font-medium">{state.result.disposition}</p>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>

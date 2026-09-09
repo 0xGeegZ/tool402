@@ -17,12 +17,11 @@ function RiskScanQuickPreflightOutcome({ state }: { state: RiskScanQuickPrefligh
   if (message === null) return null;
 
   return (
-    <section className="space-y-4 text-sm text-muted-foreground">
+    <section aria-live="polite" className="space-y-4 text-sm text-muted-foreground">
       <Status
         tone={statusToneForOutcome(
           state.kind === "assessment" ? state.assessment.disposition : state.kind,
         )}
-        aria-live="polite"
       >
         {message}
       </Status>

@@ -19,8 +19,8 @@ function NativeQuoteCompatibilityOutcome({ state }: { state: NativeQuoteCompatib
   if (message === null) return null;
 
   return (
-    <section className="space-y-3 text-sm text-muted-foreground">
-      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
+    <section aria-live="polite" className="space-y-3 text-sm text-muted-foreground">
+      <Status tone={statusToneForOutcome(state.kind)}>
         {message}
       </Status>
       {state.kind === "eligible" ? (
