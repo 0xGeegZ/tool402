@@ -153,7 +153,7 @@ export function ProviderDeployStages({
                   <p id={controlDescriptionId} className="text-sm leading-6 text-muted-foreground">
                     {control.description}
                   </p>
-                  <Button type="button" aria-describedby={controlDescriptionId} disabled={control.disabled} onClick={() => onActivate?.(index)} variant={control.disabled ? "outline" : "default"} className="w-full sm:w-auto">
+                  <Button type="button" aria-describedby={controlDescriptionId} disabled={control.disabled} onClick={() => onActivate?.(index)} variant={control.disabled ? "outline" : "primary"} className="w-full sm:w-auto">
                     {control.label}
                   </Button>
                 </CardContent>

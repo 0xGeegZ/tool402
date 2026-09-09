@@ -7,14 +7,13 @@ import { Button } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../ui/card";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { campaignFixture } from "./campaign-fixture";
-import { ProviderDeployStages } from "./provider-deploy-stages";
+import { DeployStageSigning } from "./deploy-stage-signing";
 import {
   acknowledgementCopy,
   canAdvance,
   canGoBack,
   providerDeployCategories,
   providerDeployFieldErrors,
-  providerDeployStageStates,
   providerDeploySteps,
   revenueNoteConfigurationRows,
   stepCaption,
@@ -283,7 +282,7 @@ function ReviewStep({ values }: { values: WizardValues }) {
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Review</p>
           <h2 id="provider-deploy-review" className="text-2xl font-semibold tracking-tight">Check the prepared details</h2>
-          <p className="text-sm leading-6 text-muted-foreground">Nothing is sent from this page. The values below remain a local, editable preview.</p>
+          <p className="text-sm leading-6 text-muted-foreground">Nothing is sent until you request and confirm a signature below. The values above remain a local, editable preview.</p>
         </div>
         <dl className="grid gap-3 rounded-[calc(var(--radius)*0.75)] border bg-muted/30 p-4 text-sm sm:grid-cols-2">
           {reviewRows.map(([label, value]) => (
@@ -294,7 +293,7 @@ function ReviewStep({ values }: { values: WizardValues }) {
           ))}
         </dl>
       </section>
-      <ProviderDeployStages states={providerDeployStageStates(atsCreateConfiguration)} projection={atsCreateConfiguration} />
+      <DeployStageSigning values={values} />
     </div>
   );
 }
@@ -375,7 +374,7 @@ export function ProviderDeployWizard() {
           </p>
         </div>
         <p className="border-l-2 border-border pl-4 text-sm leading-6 text-muted-foreground">
-          Demo values are editable and local to this browser view. They do not create, publish, sign, or verify anything.
+          Demo values are editable and local to this browser view. They do not create, publish, or verify anything; a signature is requested only from the wallet section on the review step.
         </p>
       </header>
 
