@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M33-T010 accepted; M35-T010 accepted; M37-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
   commits, and pushes. Proposed implementation paths are exactly:
@@ -57,7 +57,7 @@ web workspace reads the web-facing subset of these values (`network`,
 `chainId`, `subjectPublicId`, `offeringVersion`, `registryRevision`,
 `operationKind`, `targetKind`, `expectedTarget`, `canonicalParametersHash`,
 `factoryHederaId`, and `resolverHederaId`) as a frozen literal committed by
-[S16-T010](S16-T010-provider-deploy-wizard.md) at
+[S16-T010](../00-inbox/S16-T010-provider-deploy-wizard.md) at
 `apps/web/src/components/provider/deploy/ats-create-configuration.ts` and
 asserted field-for-field against the M42 specification by S16's focused test;
 this card adds no web import and no public Backend export.
