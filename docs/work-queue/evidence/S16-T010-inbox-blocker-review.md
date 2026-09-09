@@ -4,7 +4,7 @@
 
 Independent read-only readiness audit at local source commit
 `480f125e2bdcf0d7d5d4827b91a1dd5818e2f2ef` for
-[S16-T010](../queue/10-ready/S16-T010-provider-deploy-wizard.md).
+[S16-T010](../queue/20-active/S16-T010-provider-deploy-wizard.md).
 
 No source, configuration, provider or wallet interaction, network request,
 ATS action, transaction, deployment, or live action was performed.
