@@ -7,7 +7,7 @@ deployment. UI-S16 adds one route, `/provider/deploy`, holding the provider half
 of the approved
 [campaign deploy flow](../superpowers/specs/2026-09-08-campaign-deploy-flow-design.md):
 a five-step wizard over one labelled `PREPARED / DEMO DATA` fixture and a review
-step naming the four deployment stages and the signature each one needs.
+step naming the four deployment stages and the signature each one will require.
 
 The slice owns presentation, step state, and one frozen ATS_CREATE
 configuration literal only: no wallet, provider selection, chain gate, command
@@ -18,6 +18,25 @@ shapes belong to the
 [M38 command payload contract](../specs/m38-offering-command-payloads.md) and
 the accepted
 [M20 offering definition schema](../specs/m20-offering-definition-schema.md).
+
+### Corrective local scope amendment — 2026-09-09
+
+The accepted wallet island currently admits only `external.prepare`; it has no
+trusted multi-type command bridge for `offering.create`,
+`external.attachCandidate`, or `directory.publish`. UI-S16 owns neither that
+bridge nor the wallet, command builder, signature dialog, relay, canonicalizer,
+or durable state needed to create one. Until a separately scoped successor is
+accepted after the applicable local command, durable-admission, and ingress
+boundaries, every deployment-stage control is a clear local unavailable or
+blocked control. It names the future command or human prerequisite, but never
+opens a wallet, requests a signature, builds a payload, relays a command, or
+implies that signing is available.
+
+This is a truthfulness correction, not a removal of the intended stage order.
+The future bridge must compose the accepted wallet boundary rather than
+reimplement provider selection, signing, or relaying. The third stage remains
+unavailable until its separately scoped human-owned action can return a
+candidate; it is not simulated here.
 
 ## Local targets
 
@@ -85,30 +104,35 @@ The revenue-note parameter card on step 4 and the target and
 injected ATS_CREATE configuration projection: note name, symbol, ISIN, unit
 count, nominal value and currency, decimals, whitelist and controllable flags,
 and factory and resolver identifiers. That projection is the frozen literal
-`ats-create-configuration.ts`, transcribed from the sibling retarget values —
-`network`, `chainId`, `subjectPublicId`, `offeringVersion`, `registryRevision`,
-`operationKind`, `targetKind`, `expectedTarget`, `canonicalParametersHash`,
-`factoryHederaId`, and `resolverHederaId` — and asserted field for field
-against the
-[M42 ATS_CREATE configuration retarget](../specs/m42-ats-create-configuration-retarget.md)
-by a focused test. No other file in the slice carries an address, registry
-revision, configuration identifier, or digest, and the wizard reads those
-values only through the injected projection; with none supplied those rows and
-that stage read as not configured and nothing is displayed in them. The literal
-is a static module import, not a runtime configuration read.
+`ats-create-configuration.ts`, transcribed from the sibling retarget values.
+Its routing fields are `network`, `chainId`, `subjectPublicId`,
+`offeringVersion`, `registryRevision`, `operationKind`, `targetKind`,
+`expectedTarget`, `canonicalParametersHash`, `factoryHederaId`, and
+`resolverHederaId`. Its display-only revenue-note fields are exactly `name`,
+`symbol`, `isin`, `numberOfUnits`, `nominalValue`, `currency`, `decimals`,
+`isWhiteList`, and `isControllable`. A focused test asserts all twenty fields
+field-for-field against the
+[M42 ATS_CREATE configuration retarget](../specs/m42-ats-create-configuration-retarget.md).
+The display projection excludes every issuer, authority, SDK, RPC, Mirror Node,
+or other executable field. No other file in the slice carries an address,
+registry revision, configuration identifier, or digest, and the wizard reads
+those values only through the injected projection; with none supplied those rows
+and that stage read as not configured and nothing is displayed in them. The
+literal is a static module import, not a runtime configuration read.
 
 ## Required stage behavior
 
 The review step lists exactly four stages in this order, each with its own
-control: 1 "Record the draft offering", signing `offering.create`; 2 "Prepare
-asset creation", signing `external.prepare` with kind `ATS_CREATE`; 3 "Create
-the revenue note", which has two sub-steps — the separately carded ATS SDK
-action creates the note in MetaMask and returns a candidate, then this slice
-signs `external.attachCandidate` with that candidate's `transactionId` and
-`evmAddress`; the SDK action signs nothing, and the verification of the
-attached candidate is separately carded and this slice asserts nothing about
-it; 4 "Publish to the Tool Directory", signing `directory.publish`. No stage is
-actionable before its predecessor has closed.
+local control: 1 "Record the draft offering", whose later command is
+`offering.create`; 2 "Prepare asset creation", whose later command is
+`external.prepare` with kind `ATS_CREATE`; 3 "Create the revenue note", which
+has two sub-steps — the separately scoped human-owned action creates the note
+and returns a candidate, then a later command bridge signs
+`external.attachCandidate` with that candidate's `transactionId` and
+`evmAddress`; 4 "Publish to the Tool Directory", whose later command is
+`directory.publish`. Until the required bridge and stage-specific prerequisites
+are accepted, the control is disabled and says why. No stage becomes actionable
+or performs a signature merely by navigating this local wizard.
 
 Each stage state is a closed union of exactly ten kinds:
 
@@ -168,7 +192,7 @@ claims nothing live, deployed, funded, paid, issued, or verified.
   or narrative field outside its M38 bound.
 - Focused contracts cover the closed ten-kind stage union, the relay outcome
   mapping, the predecessor ordering, the two sub-steps of stage 3 whose second
-  one signs `external.attachCandidate` with the returned candidate, the
+  one will require `external.attachCandidate` with the returned candidate, the
   rejected-stage copy that asserts no cause, the declined-signature return to
   `actionable`, the absence of automatic retry, and the not-configured readings
   with no projection.
@@ -176,11 +200,12 @@ claims nothing live, deployed, funded, paid, issued, or verified.
   for field against the M42 retarget values, `canonicalParametersHash`
   included.
 - A focused route contract proves the route renders the labelled fixture with no
-  fetch, storage, configuration, or environment read, and no sample identifier,
-  digest, account, or balance.
-- Browser checks cover step navigation, the disabled forward control, visible
-  keyboard focus, the polite live region on stage outcomes, and no horizontal
-  overflow at narrow widths; no connected-wallet, signed-command, or backend
-  claim is made.
+  fetch, storage, configuration, environment, Convex, durable-write, wallet,
+  provider, dialog, relay, or command-builder capability, including through a
+  global alias, and no sample identifier, digest, account, or balance.
+- Browser checks cover step navigation, completed-step keyboard return without
+  bypassing validation, the disabled forward control, visible keyboard focus,
+  the polite live region on stage outcomes, and no horizontal overflow at narrow
+  widths; no connected-wallet, signed-command, or backend claim is made.
 - Web typecheck/test, production build with Cache Components, root quality,
   queue/reference checks, the local guard, and independent review pass first.

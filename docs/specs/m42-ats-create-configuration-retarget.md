@@ -153,16 +153,21 @@ eleven-field object described above, in the same order, freshly allocated on
 each call. It exists so that a later M33 enablement and a later web request
 builder read one source rather than restating the tuple. M42 adds no import
 to M33, M32, Convex, the Backend barrel, or the web workspace. The web
-workspace obtains the web-facing subset of these values (`network`,
+workspace obtains the web-facing routing subset of these values (`network`,
 `chainId`, `subjectPublicId`, `offeringVersion`, `registryRevision`,
 `operationKind`, `targetKind`, `expectedTarget`, `canonicalParametersHash`,
-`factoryHederaId`, and `resolverHederaId`) as a frozen literal committed by
+`factoryHederaId`, and `resolverHederaId`) plus the display-only revenue-note
+subset of `parameters` (`name`, `symbol`, `isin`, `numberOfUnits`,
+`nominalValue`, `currency`, `decimals`, `isWhiteList`, and `isControllable`) as
+a frozen literal committed by
 [S16-T010](../work-queue/queue/20-active/S16-T010-provider-deploy-wizard.md) at
-`apps/web/src/components/provider/deploy/ats-create-configuration.ts`,
-transcribed from this specification and asserted field-for-field against it by
-S16's focused test; that transcription creates no code dependency in either
-direction, and how any other consumer outside the Backend workspace obtains
-this data is a separate, separately reviewed seam.
+`apps/web/src/components/provider/deploy/ats-create-configuration.ts`. S16's
+focused test asserts that twenty-field display projection field-for-field
+against this specification. The literal excludes `diamondOwnerAccount`, every
+authority field, the SDK identity and integrity, RPC and Mirror Node URLs, and
+the rest of the parameter object. That transcription creates no code dependency
+in either direction, and how any other consumer outside the Backend workspace
+obtains this data is a separate, separately reviewed seam.
 
 ## Explicit exclusions
 

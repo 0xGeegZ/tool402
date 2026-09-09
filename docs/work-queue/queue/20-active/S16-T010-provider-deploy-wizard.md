@@ -17,9 +17,11 @@
   `apps/web/tests/provider-deploy-state.test.mjs`, and
   `apps/web/tests/provider-deploy-route.test.mjs`. All eight are new files;
   this card amends no accepted file and needs no integration reservation.
-- Human actions: none for local delivery. The wizard assembles a payload and
-  offers a signature; with no reachable backend the relay it calls answers with
-  its explicit not-configured outcome and every stage reads as unavailable.
+- Human actions: none for local delivery. The wizard is an editable local
+  preview and never assembles, signs, or relays a command. Its four visible
+  stage controls explain the next unavailable or blocked prerequisite; they do
+  not access a wallet or backend. A separately scoped command bridge remains
+  required before a human can sign any campaign command from this route.
   Recording a signed command additionally requires the
   `HA-CAMPAIGN-CONVEX-001` row, the first and fourth stages additionally
   require the `HA-COMMAND-AUTHORITY-002` row, the second stage additionally
@@ -36,10 +38,10 @@ a signature but owns no payload and no screen to place one on.
 
 Add one route at `/provider/deploy`: a five-step wizard over one labelled
 `PREPARED / DEMO DATA` fixture, and a review step naming the four deployment
-stages with a per-stage signature control. The wizard holds step and field
+stages with a per-stage unavailable or blocked control. The wizard holds step and field
 state and renders outcomes. It owns no wallet, provider selection, chain gate,
 command builder, signature dialog, relay, or canonicalizer, holds no
-configuration value outside one frozen ATS_CREATE configuration literal, and it
+configuration value outside one frozen ATS_CREATE display projection, and it
 writes nothing durable.
 
 The approved shape is the now half of the
@@ -149,10 +151,38 @@ apps/web/src/components/provider/deploy/campaign-fixture.ts
 apps/web/src/components/provider/deploy/ats-create-configuration.ts
 ```
 
+## Corrective local scope amendment
+
+At pushed `07dc71b`, independent task review found that the accepted wallet
+surface can sign only `external.prepare`, while this local wizard owns no
+wallet, command builder, signature dialog, relay, canonicalizer, or durable
+admission. It cannot truthfully wire the other three command types or make the
+third-stage human action available. The review also found an incomplete
+display-only revenue-note projection, an incomplete static no-capability guard,
+and a clipped, keyboard-inaccessible progress rail.
+
+This amendment keeps the six already-authorized source paths and two owned
+focused tests. It requires a frozen, display-only twenty-field projection: the
+eleven routing fields already named by the card plus `name`, `symbol`, `isin`,
+`numberOfUnits`, `nominalValue`, `currency`, `decimals`, `isWhiteList`, and
+`isControllable`. Those fields are transcribed from the local M42 specification;
+no issuer, authority, SDK, RPC, Mirror Node, or other executable value enters
+the Web literal.
+
+Until a separately scoped command bridge is accepted after the applicable local
+command, durable-admission, and ingress boundaries, each stage control must be
+explicitly unavailable or blocked and say which command or human prerequisite
+is pending. S16 must not import or invoke a wallet, provider, signature dialog,
+command builder, relay, SDK, Convex, fetch, storage, environment, or durable
+write surface. The corrected progress rail must expose full accessible step
+names, allow local return only to completed steps, keep future steps disabled,
+and never require horizontal scrolling. This amendment authorizes no live or
+external behavior.
+
 ## Boundary
 
-This card renders a draft and offers a signature. It advances no offering,
-attempt, asset, or directory state of its own, treats no wallet callback as
-success, and shows only outcomes a relay reported in the current browser
-session. Its exclusions are the manifest's truthfulness and authority
-boundary, which governs; this card does not restate them.
+This card renders a draft and maps the later signing sequence. It advances no
+offering, attempt, asset, or directory state of its own, accesses no wallet or
+relay, and does not claim a browser outcome. Its exclusions are the manifest's
+truthfulness and authority boundary, which governs; this card does not restate
+them.
