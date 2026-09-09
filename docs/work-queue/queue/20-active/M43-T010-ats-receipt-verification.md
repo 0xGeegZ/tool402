@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M04-T010 accepted, M26-T010 accepted, M32-T010 accepted,
   M33-T010 accepted, M38-T010 (this batch), M39-T010 (this batch),
   M40-T010 (this batch), M41-T010 (this batch), M42-T010 (this batch)
@@ -170,3 +170,12 @@ activation may authorize only its three durable test-only RED files and the
 declared durable-schema assertion amendment. No source, schema, dispatch,
 configuration, SDK, wallet, provider, transaction, deployment, or live action
 is authorized by this readiness review.
+
+## Activation review
+
+At clean pushed `84c80f2`, an independent activation review reconfirmed the
+accepted dependency chain, absent/disjoint M43 paths, and a clear local Backend
+baseline. M43 is `20-active` only to create its three durable test-only RED
+contracts and the exact durable-schema assertion amendment. Its source,
+schema, and dispatch amendments remain prohibited until a fresh independent RED
+review accepts the exact absence-only failure contract.
