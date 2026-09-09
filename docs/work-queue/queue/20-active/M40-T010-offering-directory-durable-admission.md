@@ -122,9 +122,11 @@ exists on chain.
   and re-applied to the referenced offering's stored subject for
   `directory.publish`; replay before idempotency; exact context
   matching with conflict on drift; one atomic `NEW` insert; a
-  `directory.publish` refusal unless the offering is `READY`; exactly one
-  `ACTIVE` row per service slug with the prior row superseded and the
-  offering moved to `OPEN` in the same transaction; and sanitized
+  `directory.publish` refusal unless the offering is `READY` for `NEW`, an
+  exact fresh-nonce `IDEMPOTENCY_REPLAYED` result only for its persisted
+  `ACTIVE` directory and linked `OPEN` offering, exactly one `ACTIVE` row per
+  service slug with the prior row superseded and the offering moved to `OPEN`
+  in the same transaction; and sanitized
   projections that expose no admission internals and no `payloadHash`.
 - Focused Node commands from the repository root under Node 22.21.1:
 
@@ -181,3 +183,8 @@ adds only the additive offering index, exact local seam contract, and missing
 RED vectors. It remains test/spec-only: `schema.ts`, Convex source, and the
 admission helper are still prohibited until a fresh independent RED review is
 clear.
+
+The follow-up review also fixes the exact publish replay after a successful
+`NEW` result has moved its offering to `OPEN`, and requires closed validator
+assertions for the Directory admission and projection. These remain RED-test
+requirements only.

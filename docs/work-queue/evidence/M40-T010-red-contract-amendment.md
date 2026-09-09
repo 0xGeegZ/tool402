@@ -32,6 +32,13 @@ the implementation could reject them.
   parser-first hash rebinding, durable-time and replay boundaries, and unsafe or
   duplicate stored rows with no write on rejection.
 
+The follow-up read-only review found one further local replay invariant: a
+successful `directory.publish` moves the offering to `OPEN`, so an exact fresh
+nonce retry must return the persisted `ACTIVE` directory only when that `OPEN`
+offering points back to it and it remains the sole active row. `READY` is a
+`NEW`-only condition. The Directory RED contract also asserts closed Convex
+args and returns for both its admission mutation and public projection.
+
 ## Authorization effect
 
 Only the three already-authorized M40 RED test files may be corrected. A fresh

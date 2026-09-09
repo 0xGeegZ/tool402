@@ -163,14 +163,26 @@ literal, with a linked `NEW` claim. An existing row whose `idempotencyKey`,
 yields an unlinked `IDEMPOTENCY_CONFLICT`. A reused identity returns
 `COMMAND_REPLAYED`.
 
-`admitDirectoryPublish` additionally requires the referenced offering to be
-`READY` with its `version` equal to the payload's `offeringVersion`; any other
-state refuses before a write. For `NEW` it inserts the directory version as
+`admitDirectoryPublish` resolves the stored directory version before deciding
+whether it is a `NEW` admission or an idempotent replay. A `NEW` admission
+requires the referenced offering to be `READY`, to carry its canonical asset
+link, and to have its `version` equal to the payload's `offeringVersion`; any
+other state refuses before a write. It then inserts the directory version as
 `ACTIVE`, marks the single prior `ACTIVE` row for that `serviceSlug`
 `SUPERSEDED`, sets `activeDirectoryVersionId`, and moves the offering to
 `OPEN`. Both offering fields are written from `directory_versions.ts` in that
-same transaction. Two `ACTIVE` rows fail closed; replay and conflict
-transition nothing.
+same transaction.
+
+For a fresh nonce paired with the exact existing directory command context,
+the idempotent replay is valid only when that stored directory row is the sole
+`ACTIVE` row for its service slug and the referenced offering is `OPEN` with
+`activeDirectoryVersionId` exactly equal to the stored directory row's ID. It
+returns `IDEMPOTENCY_REPLAYED` and writes only its linked replay claim. A
+`READY` offering is not required for that replay; requiring it would make a
+successful publish non-recoverable after its own `OPEN` transition. Any drift,
+duplicate active row, malformed row, mismatched active pointer, or other
+unsafe state yields `IDEMPOTENCY_CONFLICT` with no directory or offering patch.
+Two `ACTIVE` rows fail closed; replay and conflict transition nothing.
 
 Each mutation returns exactly one closed union arm and no extra field:
 `{ status: "NEW", targetId, state }`,
@@ -263,8 +275,10 @@ evidence, M24 through M33 source or tests, a barrel, or the lockfile.
   binding, canonical asset-address provenance, and zero-write rejection paths.
   The authority recheck and both ISSUER-owns-subject predicates; replay before
   identity lookup; conflict on drift; one atomic `NEW` write;
-  `directory.publish` refused unless the offering is `READY`; one `ACTIVE`
-  row per slug with the prior superseded and the offering `OPEN`; and no
+  `directory.publish` refused unless the offering is `READY` for `NEW`, while
+  an exact fresh-nonce replay of the persisted `ACTIVE` directory returns its
+  prior result only with the linked `OPEN` offering; one `ACTIVE` row per slug
+  with the prior superseded and the offering `OPEN`; and no
   external behavior.
 - Backend and root typecheck, test, lint, clean-install dry run, queue,
   reference and whitespace checks, the enabled local guard, independent review,
