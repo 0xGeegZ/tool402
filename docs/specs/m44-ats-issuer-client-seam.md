@@ -17,13 +17,17 @@ island in `@tool402/web`, plus exactly one web dependency,
 `sha512-V5Tg6IrWhMwxEWzzvv7fZWu4a8zXDj8vAk5OCO9W0dtact32hljstahPIY5dLvlpyNWwNXaepzpvDj77DoccsA==`.
 It imports no Backend module and the web workspace does not depend on
 `@tool402/backend`. The ATS_CREATE configuration enters as a caller-supplied
-value that M44 parses closed and descriptor-safe on every call: S16-T010
-commits it as the frozen literal
-`apps/web/src/components/provider/deploy/ats-create-configuration.ts`
-transcribed from the M42-T010 projections, and M44 parses that literal. M44
-signs nothing, never verifies a receipt, never advances an attempt past the
-candidate it hands back, and never marks an offering `READY`; only the
-M43-T010 mirror verification may do that.
+value that M44 parses closed and descriptor-safe on every call. It must be the
+complete real-issuer Stage B configuration shape described below. The accepted
+S16-T010 configuration literal is deliberately a display-only projection: it
+does not contain the full parameter set or `diamondOwnerAccount`, so it is
+invalid M44 input. M44 must neither import nor use that S16 literal. Focused
+tests carry their own complete fixed fixture; a later separately scoped Stage
+B bridge may supply a trusted runtime configuration only after its own
+authority and durable-attempt boundary are accepted. M44 signs nothing, never
+verifies a receipt, never advances an attempt past the candidate it hands back,
+and never marks an offering `READY`; only the M43-T010 mirror verification may
+do that.
 
 The accepted M33 authority manifest is zero-enabled, so no `PREPARED`
 `ATS_CREATE` attempt can exist before Stage B: until then the live path is
@@ -120,8 +124,10 @@ only places reaching `Network.init`, `Network.connect`, and `Bond.create`.
 Construction validates every seam synchronously and rejects an absent or
 malformed one before any other work: there is no default provider, no ambient
 `window.ethereum` read, and no fallback wallet. `wallet` is the handle the
-S15-T010 island already selected and gated and `preparedAttempt` is the record
-S16-T010 already holds; the client re-checks both, in this order:
+S15-T010 island already selected and gated. `preparedAttempt` is a caller
+input that only a later separately scoped Stage B bridge may obtain from the
+durable command boundary; S16-T010 owns no such record. The client re-checks
+both, in this order:
 
 ```text
 parse configuration
@@ -155,9 +161,9 @@ Hedera transaction id grammar `0.0.N@seconds.nanos` or `0.0.N-seconds-nanos` and
 `evmAddress` is lowercase `0x` and forty hexadecimal characters; a response not
 yielding both in those exact forms is `submission_unknown`. A candidate records
 only that one transaction was submitted from the provider's wallet: M44 signs
-nothing, the S16-T010 wizard signs `external.attachCandidate` with
-`{ transactionId, evmAddress }` as the second sub-step of its stage 3, and
-M43-T010 decides what it was.
+nothing, and a later separately scoped command bridge may submit
+`external.attachCandidate` with `{ transactionId, evmAddress }`. M43-T010
+decides what it was.
 
 At most one `Bond.create` runs per prepared attempt id. The client never
 retries, never resubmits, never polls, and never reads the mirror node. No
@@ -167,7 +173,9 @@ outcome carries a caught error, SDK diagnostic, payload, or signature.
 island around that call. It performs no work on mount, imports the SDK only
 inside its own client module graph, exposes one user-initiated action, and
 renders one state per outcome using the accepted UI-S00 tokens and primitives.
-Before Stage B the action is disabled and reads as not yet authorized; a
+Before a separately scoped Stage B bridge supplies both a trusted complete
+configuration and a durable `PREPARED` attempt, the action is disabled and
+reads as not yet authorized. It must not derive either input from S16-T010. A
 candidate reads as submitted and unverified; no state claims a note exists or
 was verified, issued, paid, deployed, or live.
 
@@ -181,7 +189,10 @@ variable, cookie, header, or storage entry; do not fetch; do not create, hold,
 log, or persist key material; do not sign a command or payload; do not write a
 durable record; do not use `eval`, `Function`, or equivalent source indirection.
 `ATS_CONTROL_LIST`, `ATS_ISSUE`, `ATS_TRANSFER`, `ATS_COUPON`, and
-`HEDERA_FUNDING` remain outside M44.
+`HEDERA_FUNDING` remain outside M44. Do not import, parse, adapt, or otherwise
+reuse the S16-T010 display configuration literal, and do not add a second Web
+configuration source in this card. A trusted runtime configuration or durable
+attempt bridge needs its own local card and authority review.
 
 ## Acceptance evidence
 
@@ -192,7 +203,8 @@ durable record; do not use `eval`, `Function`, or equivalent source indirection.
   prove every builder field by name and value, exact key-set equality, drift
   rejection per fixed value, issuer-to-owner equality, equality of the
   configuration's root `canonicalParametersHash` and the supplied context
-  value, and result immutability and detachment.
+  value, and result immutability and detachment. The fixture is test-local and
+  complete; the S16-T010 display literal is never an M44 fixture or input.
 - Client tests use fake seams and prove every outcome in the closed union, that
   a failed wallet, signer, or attempt check reaches no seam, that `Bond.create`
   runs at most once, and that no SDK, provider, or network module loads.
@@ -208,7 +220,8 @@ evidence and grants no account access. HA-ATS-STAGE-B-001 remains pending and
 is the sole live-execution gate. Until it is accepted, no SDK call reaches a
 wallet, no transaction is submitted, and the card delivers only local source,
 tests, and the bundle-gate result. HA-ATS-RETARGET-001 gates M42-T010, whose
-output this seam consumes. The browser wallet rule it relies on is accepted in
+private complete configuration is represented only by test-local inputs until a
+later dedicated bridge is accepted. The browser wallet rule it relies on is accepted in
 [HA-COMMAND-AUTHORITY-001](../work-queue/evidence/HA-COMMAND-AUTHORITY-001-decision.md),
 and [HA-ATS-LIVE-AUTHORITY-001](../work-queue/evidence/HA-ATS-LIVE-AUTHORITY-001-decision.md)
 authorizes no SDK call.

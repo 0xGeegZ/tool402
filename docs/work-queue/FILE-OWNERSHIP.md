@@ -472,16 +472,19 @@ M40 projection, Web, Agent, package, configuration, provider, wallet, SDK,
 transaction, deployment, or live-evidence path is eligible.
 
 S15-T010 owns its exact wallet-island and relay paths. S16-T010 owns its exact
-provider-deploy page, components, state, fixture, configuration literal, and
-tests. S17-T010 owns its exact provider-status/API/projection paths and its
+provider-deploy page, components, state, fixture, display configuration literal,
+and tests. S17-T010 owns its exact provider-status/API/projection paths and its
 single local-navigation/test integration after S11-T010. M44-T010 owns its
-exact ATS client/request/action and test paths. S18-T010 owns its exact backing
-route, components, state, fixtures, and tests. S15 and M44 both reserve the
-Web manifest, root lockfile, and static-shell dependency contract, so S15 must
-be accepted before M44 is reviewed; S16's provider-deploy component boundary
-must be accepted before M44 touches its declared action path. No other
-cross-card source overlap is authorized. Every card retains its explicit
-human-action and external-capability exclusions.
+exact ATS client/request/action and test paths. M44 must not import, adapt, or
+reuse S16's display configuration literal: its complete real-issuer fixture is
+test-local, and a future separately scoped bridge owns every trusted runtime
+configuration or durable-attempt handoff. S18-T010 owns its exact backing route,
+components, state, fixtures, and tests. S15 and M44 both reserve the Web
+manifest, root lockfile, and static-shell dependency contract, so S15 must be
+accepted before M44 is reviewed; S16's provider-deploy component boundary must
+be accepted before M44 touches its declared action path. No other cross-card
+source overlap is authorized. Every card retains its explicit human-action and
+external-capability exclusions.
 
 S20-T010 owns the new `apps/web/src/components/discovery/explore-catalog.tsx`
 and `apps/web/tests/explore-catalog.test.mjs`. The root integration reservation

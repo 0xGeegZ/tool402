@@ -38,9 +38,9 @@ and the scope ruling and human-action rows it depends on are requested in the
 
 This card adds no command payload, no signature, no relay route, no durable
 record, no receipt verification, and no key material. It never marks an
-offering `READY`; it returns a submitted transaction candidate and hands it
-back for the S16-T010 wizard to sign as `external.attachCandidate` at the
-second sub-step of its stage 3.
+offering `READY`; if a separately authorized runtime bridge later invokes it,
+it returns only a submitted transaction candidate. It does not give S16-T010 a
+signature, a durable attempt, or an `external.attachCandidate` submission.
 
 ## Why this card exists now
 
@@ -59,11 +59,12 @@ parameter set, the fail-closed authority gate, and the browser wallet rule.
 - The local contract, card, catalog, ownership, and state records are
   committed before a RED test or source change.
 - M01-T040 and M02-T020 remain accepted. M42-T010 must be accepted first,
-  because it owns the retargeted configuration this seam consumes, and
-  S15-T010 and S16-T010 must be accepted first, because they own the wallet
-  handle, the prepared attempt, and the frozen configuration literal at
-  `apps/web/src/components/provider/deploy/ats-create-configuration.ts` this
-  seam requires as inputs.
+  because it defines the complete private retargeted configuration shape that
+  the test-local fixture freezes. S15-T010 and S16-T010 must be accepted first
+  because they own the wallet boundary and the provider-deploy host boundary,
+  respectively. S16's configuration literal is display-only, has no complete
+  parameter set or `diamondOwnerAccount`, and is explicitly not an M44 input;
+  S16 owns no durable prepared attempt.
 - The three declared source paths and two declared test paths are new and
   disjoint from every other card in this batch.
 - The dependency pin is one fact across `apps/web/package.json`, the root
@@ -103,6 +104,10 @@ parameter set, the fail-closed authority gate, and the browser wallet rule.
   wallet, signer, or prepared-attempt check reaches no injected seam, that
   `Bond.create` runs at most once per prepared attempt, and that no SDK,
   provider, or network module loads in either test.
+- The two RED tests use only a complete test-local fixture. The M44 action is
+  disabled until a future scoped Stage B bridge provides both a trusted full
+  configuration and a durable prepared attempt; neither value may be read,
+  imported, or derived from S16-T010 in this card.
 - The accepted web dependency assertion changes by exactly one entry, and no
   other accepted web route, component, or test changes.
 - `npm run typecheck`, `npm run test`, `npm run lint`, `npm run queue:check`,
@@ -129,7 +134,10 @@ exist, and the live path is unreachable: the client fails closed before
 `Network.init`, connecting a provider, or prompting a wallet, and returns
 `attempt_not_prepared` once the wallet and signer gates pass. Provisioning the
 authority row, granting the Stage B GO, and running any live SDK call remain
-human-only actions tracked in the runtime human-actions record.
+human-only actions tracked in the runtime human-actions record. A later
+dedicated bridge must supply the trusted full configuration and durable attempt
+after its own authority review; this card must not add or adapt a Web runtime
+configuration source.
 
 ## Ready review
 
@@ -152,3 +160,19 @@ target absent. This activation authorizes only
 `apps/web/tests/ats-client.test.mjs`. It does not authorize the SDK pin,
 source, configuration access, wallet/provider/network interaction,
 transactions, deployment, or live behavior.
+
+## Configuration-boundary amendment
+
+An M44 scope review found that S16-T010's accepted literal is a deliberately
+partial display projection rather than the full real-issuer configuration this
+card's builder parses. It lacks the full `parameters` object and
+`diamondOwnerAccount`; importing or adapting it would make a partial display
+record appear executable. M44 therefore retains its existing caller-supplied
+`configuration: unknown` seam, but accepts only the complete real-issuer Stage
+B shape under the closed parser. Its durable RED fixtures are complete and
+test-local. The action remains disabled because the current Web surface has
+neither a trusted configuration nor a durable prepared attempt. A future
+separately scoped Stage B bridge, after its own authority review, must provide
+both inputs. This amendment does not reopen S16-T010 or authorize a new Web
+configuration source, the SDK pin, source, a wallet/provider interaction, a
+transaction, deployment, or live behavior.
