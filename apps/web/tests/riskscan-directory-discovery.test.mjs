@@ -153,8 +153,9 @@ test("maps only Directory inspection states to their truthful fixed messages", a
 });
 
 test("keeps static Explore separate from the bounded client-only Directory island", async () => {
-  const [page, island, state, staticCard] = await Promise.all([
+  const [page, workbench, island, state, staticCard] = await Promise.all([
     readAppFile("src/app/explore/page.tsx"),
+    readAppFile("src/components/workspace/guest-riskscan-workbench.tsx"),
     readAppFile("src/components/discovery/riskscan-directory-discovery.tsx"),
     readAppFile("src/components/discovery/riskscan-directory-state.ts"),
     readAppFile("src/components/discovery/riskscan-discovery-card.tsx"),
@@ -162,7 +163,8 @@ test("keeps static Explore separate from the bounded client-only Directory islan
 
   assert.doesNotMatch(page, /["']use client["']/);
   assert.match(page, /<RiskScanDiscoveryCard\s*\/>/);
-  assert.match(page, /<RiskScanDirectoryDiscovery\s*\/>/);
+  assert.doesNotMatch(page, /RiskScanDirectoryDiscovery/);
+  assert.match(workbench, /<RiskScanDirectoryDiscovery\s*\/>/);
   assert.match(island, /^["']use client["'];/);
   assert.match(island, /from ["']@tool402\/agent\/riskscan-tool-directory["']/);
   assert.equal((island.match(/\bdiscoverRiskScanQuick\b/g) ?? []).length, 2);
