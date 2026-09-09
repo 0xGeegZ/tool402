@@ -7,7 +7,7 @@ including the remediation source commit
 `506f038fffb87739cc5fd302a30033b5c56d36ee` and its recorded build-shape
 correction.
 
-The review covers the local [S15 control card](../queue/20-active/S15-T010-metamask-wallet-island.md)
+The review covers the local [S15 control card](../queue/60-done/S15-T010-metamask-wallet-island.md)
 and [UI-S15 manifest](../../ui/UI-S15.md). It uses source and test fakes only:
 no environment file, wallet/provider session, relay configuration, external
 route, account, transaction, deployment, or live action was accessed.

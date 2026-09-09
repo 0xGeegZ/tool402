@@ -5,7 +5,7 @@
 Independent activation audit at clean pushed
 `d63ae66d47512a0722cd76ebbc92852159a685bc` of:
 
-- [S15 control card](../queue/20-active/S15-T010-metamask-wallet-island.md)
+- [S15 control card](../queue/60-done/S15-T010-metamask-wallet-island.md)
 - [UI-S15 wallet-island and command-relay manifest](../../ui/UI-S15.md)
 - the accepted S15 ready review and queue records.
 

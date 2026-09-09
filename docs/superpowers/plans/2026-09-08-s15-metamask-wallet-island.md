@@ -1,6 +1,6 @@
 # S15 implementation plan — MetaMask wallet island and command relay
 
-Execution plan for [S15-T010](../../work-queue/queue/20-active/S15-T010-metamask-wallet-island.md)
+Execution plan for [S15-T010](../../work-queue/queue/60-done/S15-T010-metamask-wallet-island.md)
 against the [UI-S15 manifest](../../ui/UI-S15.md), the
 [HA-COMMAND-AUTHORITY-001 decision](../../work-queue/evidence/HA-COMMAND-AUTHORITY-001-decision.md),
 the [M22 envelope contract](../../specs/m22-ingress-envelope.md), the
