@@ -18,6 +18,10 @@ const sourceUrl = new URL(
   "../src/ingress/authenticated-wallet-command-normalizer.ts",
   import.meta.url,
 );
+const m30SourceUrl = new URL(
+  "../src/ingress/authenticated-external-prepare-normalizer.ts",
+  import.meta.url,
+);
 const sourcePath = fileURLToPath(sourceUrl);
 const sourceExists = existsSync(sourcePath);
 const implementedTest = sourceExists ? test : test.skip;
@@ -242,14 +246,20 @@ function canonicalPayloadBytes(type, payload) {
   throw new TypeError("unsupported test command type");
 }
 
-async function signedCommand(type, payload, nonce) {
+async function signedCommand(
+  type,
+  payload,
+  nonce,
+  wireSigner = signingAddress,
+  signedType = type,
+) {
   const payloadHash = keccak256(
     stringToHex(new TextDecoder().decode(canonicalPayloadBytes(type, payload))),
   );
   const message = {
     version: 1,
-    type,
-    signer: signingAddress,
+    type: signedType,
+    signer: wireSigner,
     nonce,
     issuedAt: commandIssuedAt,
     expiresAt: commandExpiry,
@@ -284,6 +294,22 @@ function authorityFor(signer, role = "ISSUER", ownedSubjectPublicIds = ["subject
   };
 }
 
+async function assertRejectedBeforeResolver(command, payload) {
+  let resolverCalls = 0;
+  assert.equal(
+    await api.normalizeClaimedWalletCommand(
+      await claimText(transportText(command, payload)),
+      serverNow,
+      () => {
+        resolverCalls += 1;
+        return [authorityFor(signingAddress)];
+      },
+    ),
+    null,
+  );
+  assert.equal(resolverCalls, 0);
+}
+
 test("requires the declared wallet-command normalizer source module", () => {
   assert.equal(sourceExists, true, `missing declared source module: ${sourcePath}`);
 });
@@ -295,8 +321,17 @@ test.before(async () => {
 });
 
 implementedTest("preserves M30 external.prepare normalization byte-for-byte", async () => {
+  const m30 = await import(m30SourceUrl.href);
+  const claimed = await claimText(
+    transportText(externalPrepareCommand(), externalPreparePayload()),
+  );
   const normalized = await api.normalizeClaimedWalletCommand(
-    await claimText(transportText(externalPrepareCommand(), externalPreparePayload())),
+    claimed,
+    serverNow,
+    () => [authorityFor(firstSigner)],
+  );
+  const m30Normalized = await m30.normalizeClaimedExternalPrepareCommand(
+    claimed,
     serverNow,
     () => [authorityFor(firstSigner)],
   );
@@ -317,6 +352,26 @@ implementedTest("preserves M30 external.prepare normalization byte-for-byte", as
     authorityVersion: "authority-v1",
     payload: externalPreparePayload(),
   });
+  assert.deepEqual(normalized, m30Normalized);
+
+  const rejectedClaim = await claimText(
+    transportText(
+      externalPrepareCommand({ payloadHash: `0x${"0".repeat(64)}` }),
+      externalPreparePayload(),
+    ),
+  );
+  assert.equal(
+    await api.normalizeClaimedWalletCommand(
+      rejectedClaim,
+      serverNow,
+      () => [authorityFor(firstSigner)],
+    ),
+    await m30.normalizeClaimedExternalPrepareCommand(
+      rejectedClaim,
+      serverNow,
+      () => [authorityFor(firstSigner)],
+    ),
+  );
 });
 
 implementedTest("dispatches each signed M38 payload to exactly one closed command member", async () => {
@@ -340,6 +395,24 @@ implementedTest("dispatches each signed M38 payload to exactly one closed comman
     assert.equal(Object.isFrozen(normalized.payload), true);
     assert.equal(Object.hasOwn(normalized, "signature"), false);
     assert.equal(Object.hasOwn(normalized, "rawBody"), false);
+    assert.deepEqual(
+      [...Reflect.ownKeys(normalized)].sort(),
+      [
+        "authorityVersion",
+        "canonicalSignerAddress",
+        "chainId",
+        "expiresAt",
+        "nonce",
+        "payload",
+        "payloadHash",
+        "principalPublicId",
+        "replayIdentity",
+        "role",
+        "type",
+        "version",
+        ...(type === "offering.create" ? [] : ["deferredSubjectOwnership"]),
+      ].sort(),
+    );
   }
 });
 
@@ -360,6 +433,7 @@ implementedTest("returns only the required deferred ownership references for sub
     offeringPublicId: "offering_42",
     offeringVersion: 1,
   });
+  assert.equal(Object.isFrozen(directory.deferredSubjectOwnership), true);
 
   const candidatePayload = attachCandidatePayload();
   const candidateCommand = await signedCommand(
@@ -376,15 +450,38 @@ implementedTest("returns only the required deferred ownership references for sub
     kind: "ATTEMPT",
     attemptPublicId: "DDDDDDDDDDDDDDDDDDDDDw",
   });
+  assert.equal(Object.isFrozen(candidate.deferredSubjectOwnership), true);
 });
 
-implementedTest("fails closed before authority resolution for payload expiry or type-bound digest drift", async () => {
+implementedTest("fails closed before authority resolution for payload expiry, digest drift, and cross-type signatures", async () => {
   const payload = offeringCreatePayload();
   const command = await signedCommand("offering.create", payload, "KKKKKKKKKKKKKKKKKKKKKw");
+  await assertRejectedBeforeResolver(
+    command,
+    offeringCreatePayload({ expiresAt: "2026-09-07T19:03:59.999Z" }),
+  );
+
+  const directoryPayload = directoryPublishPayload();
+  const signedAsOffering = await signedCommand(
+    "directory.publish",
+    directoryPayload,
+    "LLLLLLLLLLLLLLLLLLLLLQ",
+    signingAddress,
+    "offering.create",
+  );
+  await assertRejectedBeforeResolver(
+    { ...signedAsOffering, type: "directory.publish" },
+    directoryPayload,
+  );
+});
+
+implementedTest("rejects every non-claimed or noncanonical M25 transport before dispatch", async () => {
+  const payload = offeringCreatePayload();
+  const command = await signedCommand("offering.create", payload, "MMMMMMMMMMMMMMMMMMMMMw");
   let resolverCalls = 0;
   assert.equal(
     await api.normalizeClaimedWalletCommand(
-      await claimText(transportText(command, offeringCreatePayload({ expiresAt: "2026-09-07T19:03:59.999Z" }))),
+      new TextEncoder().encode(transportText(command, payload)),
       serverNow,
       () => {
         resolverCalls += 1;
@@ -395,15 +492,70 @@ implementedTest("fails closed before authority resolution for payload expiry or 
   );
   assert.equal(resolverCalls, 0);
 
-  const crossType = { ...command, type: "directory.publish" };
-  assert.equal(
-    await api.normalizeClaimedWalletCommand(
-      await claimText(transportText(crossType, payload)),
-      serverNow,
-      () => [authorityFor(signingAddress)],
-    ),
-    null,
+  const commandJson = JSON.stringify(command);
+  const payloadJson = JSON.stringify(payload);
+  const malformed = [
+    `{"command":${commandJson},"command":${commandJson},"payload":${payloadJson}}`,
+    transportText(command, payload).replace("offering.create", "offering\\u002ecreate"),
+    `{"command":${commandJson},"payload":{"items":[1]}}`,
+    `{"command":${commandJson},"payload":{"one":{"two":{"three":{}}}}}`,
+    `{"command":${commandJson},"payload":{"padding":"${"x".repeat(16_385)}"}}`,
+  ];
+  for (const text of malformed) {
+    let calls = 0;
+    assert.equal(
+      await api.normalizeClaimedWalletCommand(
+        await claimText(text),
+        serverNow,
+        () => {
+          calls += 1;
+          return [authorityFor(signingAddress)];
+        },
+      ),
+      null,
+    );
+    assert.equal(calls, 0);
+  }
+});
+
+implementedTest("fails closed on malformed signatures, recovered-signer mismatch, and every authority-table rejection", async () => {
+  const payload = offeringCreatePayload();
+  const command = await signedCommand("offering.create", payload, "NNNNNNNNNNNNNNNNNNNNNg");
+  await assertRejectedBeforeResolver(
+    { ...command, signature: command.signature.slice(0, -2) },
+    payload,
   );
+  const signedForAnotherWireSigner = await signedCommand(
+    "offering.create",
+    payload,
+    "OOOOOOOOOOOOOOOOOOOOOw",
+    firstSigner,
+  );
+  await assertRejectedBeforeResolver(signedForAnotherWireSigner, payload);
+
+  for (const records of [
+    [],
+    [authorityFor(signingAddress), authorityFor(signingAddress)],
+    [authorityFor(signingAddress, "BACKER")],
+    [authorityFor(signingAddress, "ISSUER", [])],
+    [{ ...authorityFor(signingAddress), enabled: false }],
+    [{ ...authorityFor(signingAddress), role: "ADMIN" }],
+    [authorityFor("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")],
+  ]) {
+    let resolverCalls = 0;
+    assert.equal(
+      await api.normalizeClaimedWalletCommand(
+        await claimText(transportText(command, payload)),
+        serverNow,
+        () => {
+          resolverCalls += 1;
+          return records;
+        },
+      ),
+      null,
+    );
+    assert.equal(resolverCalls, 1);
+  }
 });
 
 implementedTest("enforces the inherited clock boundary through the M39 test-only predicate", () => {
