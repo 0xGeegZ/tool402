@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M04-T010 accepted, M32-T010 accepted, M33-T010 accepted,
   M38-T010 (this batch), M39-T010 (this batch)
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -223,3 +223,18 @@ singular existing malformed, non-`ACTIVE`, drifted, or unsafe pairing consumes
 the fresh identity as an unlinked conflict; duplicate target rows remain a
 no-write fail-closed error. This preserves the durable replay boundary rather
 than leaving a retryable conflict.
+
+## Acceptance
+
+At clean pushed `9f45f35a2dd43a80dd8e727be04ea3136e0c5cfa`, the final M40
+source and replay-integrity correction were clear in an independent task
+review and two fresh module-review generations. Focused M40 tests passed
+34/34, direct M04/M32 regressions and complete root quality passed under Node
+22.21.1, and queue/reference/whitespace/Git-guard checks were clear. The
+evidence is the [task review](../../evidence/M40-T010-task-review.md),
+[payload and lifecycle review](../../evidence/M40-T010-module-review-spec.md),
+and [Directory standards review](../../evidence/M40-T010-module-review-standards.md).
+
+M40 is accepted as local durable admission only. It does not publish Convex,
+configure an environment, invoke a wallet, provider, SDK, or network, create
+an ATS asset, submit a transaction, deploy, or make a live claim.

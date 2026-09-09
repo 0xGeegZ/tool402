@@ -3,7 +3,7 @@
 ## Scope
 
 Independent review of the three durable RED contracts against the committed
-[M40 card](../queue/20-active/M40-T010-offering-directory-durable-admission.md),
+[M40 card](../queue/60-done/M40-T010-offering-directory-durable-admission.md),
 the local [M40 specification](../../specs/m40-offering-directory-durable-admission.md),
 and the two scoped control amendments.
 
