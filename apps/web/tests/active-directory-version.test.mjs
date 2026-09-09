@@ -301,7 +301,7 @@ implementedTest("keeps the opt-in response detached from controlled environment 
     CREDENTIAL: "controlled-credential",
     KEY: "controlled-key",
     RISKSCAN_X402_FACILITATOR_URL: "https://facilitator.example.test/controlled",
-    RISKSCAN_X402_FEE_PAYER: "0.0.456",
+    RISKSCAN_X402_FEE_PAYER: "0.0.654",
     PAYMENT_HEADER: "controlled-payment-header",
     PAYMENT_PAYLOAD: "controlled-payment-payload",
     TRANSACTION: "controlled-transaction",

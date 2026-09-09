@@ -1,3 +1,4 @@
+import type { ActiveDirectoryView } from "./active-directory-version.ts";
 import { readRiskScanX402Configuration } from "./riskscan-x402.ts";
 
 export function buildToolDirectory(environment: NodeJS.ProcessEnv) {
@@ -58,8 +59,14 @@ export function buildToolDirectory(environment: NodeJS.ProcessEnv) {
   } as const;
 }
 
-export function toolDirectoryResponse(environment: NodeJS.ProcessEnv): Response {
-  return Response.json(buildToolDirectory(environment), {
+export function toolDirectoryResponse(
+  environment: NodeJS.ProcessEnv,
+  activeDirectory: ActiveDirectoryView | null = null,
+): Response {
+  const body = activeDirectory === null
+    ? buildToolDirectory(environment)
+    : { view: "active-directory-version", directory: activeDirectory };
+  return Response.json(body, {
     headers: { "cache-control": "no-store" },
   });
 }
