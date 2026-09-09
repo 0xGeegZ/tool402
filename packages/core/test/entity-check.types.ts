@@ -75,6 +75,7 @@ if (result.disposition === "found") {
 // @ts-expect-error The sanctions descriptor never carries entries.
 result.sanctionsDataset.entries;
 // @ts-expect-error The jurisdiction is the closed FR literal.
-parseEntityCheckRequest({ requestRef: "r", jurisdiction: "DE", query: "q" });
+const otherJurisdiction: EntityCheckRequestInput = { requestRef: "r", jurisdiction: "DE", query: "q" };
+void otherJurisdiction;
 // @ts-expect-error A result has no score field.
 result.score;

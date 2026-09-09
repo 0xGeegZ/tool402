@@ -183,3 +183,30 @@ export type {
   CandidateTransactionId,
   MirrorTransactionId,
 } from "./attach-candidate-payload.ts";
+export {
+  assessEntityCheck,
+  ENTITY_CHECK_AMBIGUITY_LIMITATION,
+  ENTITY_CHECK_BASELINE_LIMITATION,
+  normaliseEntityName,
+  parseEntityCheckRequest,
+} from "./entity-check.ts";
+export type {
+  EntityAdministrativeStatus,
+  EntityCheckAmbiguityCandidate,
+  EntityCheckAmbiguousResult,
+  EntityCheckDisposition,
+  EntityCheckFoundResult,
+  EntityCheckJurisdiction,
+  EntityCheckNotFoundResult,
+  EntityCheckRecords,
+  EntityCheckRequest,
+  EntityCheckRequestInput,
+  EntityCheckResult,
+  EntityRegistryCandidate,
+  EntityRegistrySource,
+  EntitySanctionsScreen,
+  SanctionsDataset,
+  SanctionsDatasetDescriptor,
+  SanctionsEntry,
+  SanctionsMatch,
+} from "./entity-check.ts";

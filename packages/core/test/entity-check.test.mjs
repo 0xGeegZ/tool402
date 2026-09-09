@@ -244,7 +244,7 @@ implementedTest("normalises names by NFKD, mark removal, case, punctuation, and 
     ["  société   générale ", "SOCIETE GENERALE"],
     ["Société-Générale, S.A.", "SOCIETE GENERALE S A"],
     ["Ｓｏｃｉｅｔｅ", "SOCIETE"],
-    ["Ærø A/S", "ÆRO A S"],
+    ["Ærø A/S", "ÆRØ A S"],
     ["l'Oréal", "L OREAL"],
     ["Tab\tand\nnewline", "TAB AND NEWLINE"],
     ["", ""],
