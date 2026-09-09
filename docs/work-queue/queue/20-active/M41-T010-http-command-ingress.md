@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M22-T010 accepted; M23-T010 accepted; M24-T010 accepted;
   M25-T010 accepted; M32-T010 accepted; M39-T010 accepted;
   M40-T010 accepted
@@ -173,3 +173,15 @@ M41 implementation/test paths remained absent and disjoint; and the M40 schema
 reservation precedes this M41 amendment. S21 is Web-only and has no ownership
 or dependency collision. The local-only boundary has no human-action blocker.
 A fresh activation may authorize only the two durable test-only RED contracts.
+
+## Activation review
+
+At clean pushed `1558823fe6fafa2a81808428fae0d76fe7f1c84f`, a fresh independent
+activation review found M41-T010 to be the sole ready card, all accepted
+dependencies unchanged, all five declared M41 paths absent, and no ownership
+collision with the Web-only M44-T010 or S21-T010 inbox cards. The Backend
+baseline passed 202/202 under Node 22.21.1, alongside Backend typecheck/lint,
+queue validation, whitespace, and the enabled local-reference guard. This
+activation authorizes only the two durable test-only RED files named in
+Verification. Schema and production modules remain absent until a separate
+independent RED review accepts the exact failure contract.
