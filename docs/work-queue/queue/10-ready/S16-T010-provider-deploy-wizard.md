@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M02-T020 accepted, M11-T020 accepted, M20-T010 accepted,
   M29-T010 accepted, M38-T010 (this batch), S15-T010 (this batch)
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,

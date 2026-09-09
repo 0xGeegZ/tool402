@@ -4,10 +4,18 @@
 
 Independent read-only readiness audit at local source commit
 `480f125e2bdcf0d7d5d4827b91a1dd5818e2f2ef` for
-[S16-T010](../queue/00-inbox/S16-T010-provider-deploy-wizard.md).
+[S16-T010](../queue/10-ready/S16-T010-provider-deploy-wizard.md).
 
 No source, configuration, provider or wallet interaction, network request,
 ATS action, transaction, deployment, or live action was performed.
+
+## Later resolution
+
+This historical blocker was superseded after HA-ATS-RETARGET-001 was accepted,
+M42's frozen values were locally specified, and the independent
+[S16 ready review](S16-T010-ready-review.md) cleared the current control
+plane. Its original review and verdict remain a record of the earlier inbox
+state only.
 
 ## Review
 

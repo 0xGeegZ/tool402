@@ -157,7 +157,7 @@ workspace obtains the web-facing subset of these values (`network`,
 `chainId`, `subjectPublicId`, `offeringVersion`, `registryRevision`,
 `operationKind`, `targetKind`, `expectedTarget`, `canonicalParametersHash`,
 `factoryHederaId`, and `resolverHederaId`) as a frozen literal committed by
-[S16-T010](../work-queue/queue/00-inbox/S16-T010-provider-deploy-wizard.md) at
+[S16-T010](../work-queue/queue/10-ready/S16-T010-provider-deploy-wizard.md) at
 `apps/web/src/components/provider/deploy/ats-create-configuration.ts`,
 transcribed from this specification and asserted field-for-field against it by
 S16's focused test; that transcription creates no code dependency in either
