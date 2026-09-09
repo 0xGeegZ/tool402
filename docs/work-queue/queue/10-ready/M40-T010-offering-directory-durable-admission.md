@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M04-T010 accepted, M32-T010 accepted, M33-T010 accepted,
   M38-T010 (this batch), M39-T010 (this batch)
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -139,3 +139,13 @@ and holds no key, seed, signature, or raw request body. It does not enable an
 ATS target, call the ATS SDK, create or fund an account, sign, submit, or
 verify a transaction, activate a real directory listing, or claim that any
 offering is deployed, funded, paid, or verified.
+
+## Ready review
+
+At clean pushed `39e07ec`, an independent review confirmed all dependencies,
+local references, absent/disjoint non-schema paths, and the root schema
+reservation before M41/M43. M04 passed 1/1, M32 schema/admission/recovery
+passed 26/26, and Backend typecheck/lint plus queue/reference/whitespace/Git
+guard checks passed under Node 22.21.1. M40 is `10-ready` only: a fresh
+activation may authorize the three test-only RED files; schema and source stay
+prohibited until a separate RED review clears.

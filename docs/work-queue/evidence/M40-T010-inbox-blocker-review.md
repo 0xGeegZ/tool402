@@ -4,7 +4,7 @@
 
 Independent read-only readiness audit at clean pushed
 `b4d14d6f38577800cc5386538255259e4b84e5cf` for
-[M40-T010](../queue/00-inbox/M40-T010-offering-directory-durable-admission.md).
+[M40-T010](../queue/10-ready/M40-T010-offering-directory-durable-admission.md).
 
 No source, configuration, Convex publication, wallet/provider interaction,
 account action, transaction, deployment, or live action was performed.
