@@ -42,7 +42,7 @@ test("renders the guest workspace route without a fabricated session", async () 
   assert.doesNotMatch(navigation, /<(?:a|button)\b/i);
 });
 
-test("preserves the exact four-entry local navigation", async () => {
+test("preserves the exact five-entry local navigation", async () => {
   const navigation = await readAppFile("src/components/discovery/local-navigation.tsx");
 
   assert.match(navigation, /\{ href: "\/dashboard", label: "Workspace" \}/);
@@ -52,6 +52,7 @@ test("preserves the exact four-entry local navigation", async () => {
     { href: "/explore", label: "Explore" },
     { href: "/dashboard", label: "Workspace" },
     { href: "/demo", label: "Demo" },
+    { href: "/provider", label: "Provider" },
   ]);
 });
 
