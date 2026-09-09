@@ -242,7 +242,7 @@ implementedTest("enables only an actionable control the bridge reports and deriv
   const state = await import("../src/components/provider/deploy/provider-deploy-state.ts");
   const { atsCreateConfiguration } = await import("../src/components/provider/deploy/ats-create-configuration.ts");
   const done = { kind: "done" };
-  const candidate = { transactionId: "0.0.9213391@1789430400.000000001", evmAddress: "0x1111111111111111111111111111111111111111" };
+  const candidate = { transactionId: "0.0.9213391-1789430400-000000001", evmAddress: "0x1111111111111111111111111111111111111111" };
   const connected = { connected: true, results: [], candidate: null, recordComplete: false };
 
   assert.deepEqual(state.providerDeployStageControl(0, { kind: "actionable" }, true), {

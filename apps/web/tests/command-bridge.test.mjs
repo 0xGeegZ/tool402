@@ -32,7 +32,7 @@ const values = Object.freeze({
   risks: "Testnet terms do not promise yield, principal, or return.",
 });
 const candidate = Object.freeze({
-  transactionId: "0.0.9213391@1789430400.000000001",
+  transactionId: "0.0.9213391-1789430400-000000001",
   evmAddress: "0x1111111111111111111111111111111111111111",
 });
 const attemptPublicId = "AAAAAAAAAAAAAAAAAAAAAA";

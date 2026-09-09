@@ -283,19 +283,47 @@ export type AtsCreateConfigurationProjection = Readonly<{
   }>;
 }>;
 
+export type ProviderDeployStageSession = Readonly<{
+  connected: boolean;
+  results: readonly (ProviderDeployStageState | undefined)[];
+  candidate: AtsCreateCandidate | null;
+  recordComplete: boolean;
+}>;
+
+export const stageFourUnavailableDetail = "No accepted clearing account or public x402 endpoint is recorded.";
+
+function sessionStageState(
+  result: ProviderDeployStageState | undefined,
+  predecessor: ProviderDeployStageState | undefined,
+): ProviderDeployStageState {
+  if (result) return Object.freeze({ ...result });
+  return Object.freeze({ kind: !predecessor || predecessor.kind === "done" ? "actionable" : "blocked" });
+}
+
 export function providerDeployStageStates(
   projection: AtsCreateConfigurationProjection | undefined,
+  session?: ProviderDeployStageSession,
 ): readonly ProviderDeployStageState[] {
-  return Object.freeze([
-    Object.freeze({ kind: "unavailable" }),
-    Object.freeze({ kind: projection ? "blocked" : "unavailable" }),
-    Object.freeze({ kind: "unavailable" }),
-    Object.freeze({ kind: "blocked" }),
-  ]);
+  if (!session?.connected) {
+    return Object.freeze([
+      Object.freeze({ kind: "unavailable" }),
+      Object.freeze({ kind: projection ? "blocked" : "unavailable" }),
+      Object.freeze({ kind: "unavailable" }),
+      Object.freeze({ kind: "blocked" }),
+    ]);
+  }
+
+  const first = sessionStageState(session.results[0], undefined);
+  const second = projection ? sessionStageState(session.results[1], first) : Object.freeze({ kind: "unavailable" as const });
+  const third = session.candidate ? sessionStageState(session.results[2], second) : Object.freeze({ kind: "unavailable" as const });
+  const fourth = session.recordComplete
+    ? sessionStageState(session.results[3], third)
+    : Object.freeze({ kind: "unavailable" as const, detail: stageFourUnavailableDetail });
+  return Object.freeze([first, second, third, fourth]);
 }
 
 export type ProviderDeployStageControl = Readonly<{
-  disabled: true;
+  disabled: boolean;
   label: string;
   description: string;
 }>;
@@ -303,9 +331,18 @@ export type ProviderDeployStageControl = Readonly<{
 export function providerDeployStageControl(
   index: number,
   state: ProviderDeployStageState,
+  signatureAvailable = false,
 ): ProviderDeployStageControl {
   if (!Number.isInteger(index) || index < 0 || index >= providerDeployStages.length) {
     throw new RangeError("unknown provider deploy stage");
+  }
+
+  if (state.kind === "actionable" && signatureAvailable) {
+    return Object.freeze({
+      disabled: false,
+      label: "Request signature",
+      description: "Opens one signature request for this stage. Nothing is recorded unless the relay reports ACCEPTED.",
+    });
   }
 
   if (state.kind === "blocked") {

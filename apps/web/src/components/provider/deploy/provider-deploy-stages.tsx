@@ -26,7 +26,7 @@ const stageStatusCopy: Record<ProviderDeployStageKind, string> = {
 
 const stageStatusDescription: Record<ProviderDeployStageKind, string> = {
   blocked: "Finish the preceding stage before this one becomes available.",
-  actionable: "This local preview has no enabled command bridge for this step.",
+  actionable: "This stage is ready for one signature request from the connected wallet.",
   in_progress: "This local preview does not infer a signature result.",
   done: "This browser session received a reported result. Reloading restores the local starting state.",
   unavailable: "A required local projection or separately carded human step is not available here.",
@@ -104,9 +104,13 @@ function ConfigurationContext({ projection, stageIndex }: { projection?: AtsCrea
 export function ProviderDeployStages({
   states,
   projection,
+  enabledStage = -1,
+  onActivate,
 }: {
   states: readonly ProviderDeployStageState[];
   projection?: AtsCreateConfigurationProjection;
+  enabledStage?: number;
+  onActivate?: (index: number) => void;
 }) {
   const visibleStates = orderedStageStates(states);
 
@@ -125,7 +129,7 @@ export function ProviderDeployStages({
       <ol className="grid gap-3">
         {providerDeployStages.map((definition, index) => {
           const stage = visibleStates[index] ?? { kind: "blocked" as const };
-          const control = providerDeployStageControl(index, stage);
+          const control = providerDeployStageControl(index, stage, enabledStage === index);
           const controlDescriptionId = `provider-deploy-stage-${index + 1}-control-description`;
           return (
             <li key={definition.label}>
@@ -149,7 +153,7 @@ export function ProviderDeployStages({
                   <p id={controlDescriptionId} className="text-sm leading-6 text-muted-foreground">
                     {control.description}
                   </p>
-                  <Button type="button" aria-describedby={controlDescriptionId} disabled={control.disabled} variant="outline" className="w-full sm:w-auto">
+                  <Button type="button" aria-describedby={controlDescriptionId} disabled={control.disabled} onClick={() => onActivate?.(index)} variant={control.disabled ? "outline" : "default"} className="w-full sm:w-auto">
                     {control.label}
                   </Button>
                 </CardContent>
