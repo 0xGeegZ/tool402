@@ -463,7 +463,7 @@ atomicTest("keeps the M41 ATS_CREATE link and exact replay integrity check insid
     "zero or duplicate by_ats_attempt_id rows must become an idempotency conflict",
   );
   const indexedOffering = atomic.match(new RegExp(
-    `(?:const|let)\\s+(?<offering>[A-Za-z_$][\\w$]*)\\s*=\\s*${rowsPattern}\\s*\\[\\s*0\\s*\\]`,
+    `(?:const|let)\\s+(?<offering>[A-Za-z_$][\\w$]*)\\s*=\\s*readAtsCreateReplayOffering\\(\\s*${rowsPattern}\\s*\\[\\s*0\\s*\\]\\s*\\)`,
     "u",
   ));
   assert.notEqual(indexedOffering, null);
@@ -486,6 +486,26 @@ atomicTest("keeps the M41 ATS_CREATE link and exact replay integrity check insid
     atomic,
     /\bIDEMPOTENCY_CONFLICT\b/u,
     "orphaned, duplicate, or mismatched ATS_CREATE replays must become conflicts",
+  );
+});
+
+atomicTest("snapshots indexed ATS_CREATE replay offerings before classifying a conflict", () => {
+  const atomic = registeredMutationSource("admitAtsCreateAndMarkAssetPending");
+
+  assert.match(
+    atomic,
+    /const\s+offering\s*=\s+readAtsCreateReplayOffering\(\s*offeringRows\s*\[\s*0\s*\]\s*\)/u,
+    "an indexed replay offering must be captured through the closed own-data snapshot",
+  );
+  assert.match(
+    atomic,
+    /offering\s*===\s*null[\s\S]{0,640}IDEMPOTENCY_CONFLICT/u,
+    "a malformed indexed replay offering must become a linked idempotency conflict",
+  );
+  assert.doesNotMatch(
+    atomic,
+    /const\s+offering\s*=\s*offeringRows\s*\[\s*0\s*\]/u,
+    "the atomic replay branch must not dereference a raw indexed offering",
   );
 });
 

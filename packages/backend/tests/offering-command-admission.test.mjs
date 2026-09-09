@@ -597,6 +597,75 @@ test("requires the M41 atomic DRAFT-offering linker and its exact additive looku
   );
 });
 
+atomicTest("reads only a complete safe ASSET_PENDING offering before an M41 ATS_CREATE replay", async (t) => {
+  const { offerings } = await loadOfferings(t);
+  assert.equal(
+    typeof offerings.readAtsCreateReplayOffering,
+    "function",
+    "missing M41 safe ATS_CREATE replay-offering reader",
+  );
+
+  const input = admissionInput();
+  const valid = offeringDocument(input, {
+    state: "ASSET_PENDING",
+    atsAttemptId,
+  });
+  const expected = {
+    atsAttemptId,
+    state: "ASSET_PENDING",
+    subjectPublicId: input.payload.subjectPublicId,
+    canonicalSignerAddress: input.canonicalSignerAddress,
+    principalPublicId: input.principalPublicId,
+    authorityVersion: input.authorityVersion,
+  };
+  const replayOffering = offerings.readAtsCreateReplayOffering(valid);
+  assert.deepEqual(replayOffering, expected);
+  assert.equal(Object.isFrozen(replayOffering), true);
+
+  const accessorBacked = { ...valid };
+  let accessorReads = 0;
+  Object.defineProperty(accessorBacked, "state", {
+    enumerable: true,
+    get() {
+      accessorReads += 1;
+      throw new Error("unsafe accessor must not run");
+    },
+  });
+  const ownKeysThrowingProxy = new Proxy(valid, {
+    ownKeys() {
+      throw new Error("unsafe proxy reflection must not run");
+    },
+  });
+  const cases = [
+    null,
+    Object.create(valid),
+    {
+      atsAttemptId,
+      state: "ASSET_PENDING",
+      subjectPublicId: input.payload.subjectPublicId,
+      canonicalSignerAddress: input.canonicalSignerAddress,
+      principalPublicId: input.principalPublicId,
+      authorityVersion: input.authorityVersion,
+    },
+    offeringDocument(input, {
+      state: "ASSET_PENDING",
+      atsAttemptId,
+      atsAssetEvmAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    }),
+    offeringDocument(input, {
+      state: "ASSET_PENDING",
+      atsAttemptId,
+      activeDirectoryVersionId: "directoryVersions:active",
+    }),
+    accessorBacked,
+    ownKeysThrowingProxy,
+  ];
+  for (const candidate of cases) {
+    assert.equal(offerings.readAtsCreateReplayOffering(candidate), null);
+  }
+  assert.equal(accessorReads, 0);
+});
+
 implementedTest("registers the exact closed M40 admission, asset-seam, and public-projection interfaces", async (t) => {
   const { admission, offerings } = await loadOfferings(t);
   assert.deepEqual(Object.keys(offerings).sort(), [
@@ -605,6 +674,7 @@ implementedTest("registers the exact closed M40 admission, asset-seam, and publi
     ...(atomicHelperSourceDeclared ? ["linkAtsCreateAttemptToDraftOffering"] : []),
     "markAssetPending",
     "markAssetReady",
+    "readAtsCreateReplayOffering",
   ]);
   for (const mutation of [
     offerings.admitOfferingCreate,

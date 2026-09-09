@@ -3,7 +3,10 @@ import { v, type GenericId } from "convex/values";
 import { parseExternalPreparePayload, type ExternalPreparePayload } from "@tool402/core";
 import { keccak256, stringToHex } from "viem";
 import { assertCurrentAtsPrepareAuthority } from "./ats_prepare_authority.ts";
-import { linkAtsCreateAttemptToDraftOffering } from "./offerings.ts";
+import {
+  linkAtsCreateAttemptToDraftOffering,
+  readAtsCreateReplayOffering,
+} from "./offerings.ts";
 import type schema from "./schema.ts";
 
 const contextValidators = {
@@ -348,9 +351,9 @@ export const admitAtsCreateAndMarkAssetPending = internalMutation({
       });
       return { status: "IDEMPOTENCY_CONFLICT" as const };
     }
-    const offering = offeringRows[0];
+    const offering = readAtsCreateReplayOffering(offeringRows[0]);
     if (
-      offering === undefined
+      offering === null
       || offering.atsAttemptId !== stored.attemptId
       || offering.state !== "ASSET_PENDING"
       || offering.subjectPublicId !== bound.payload.subjectPublicId

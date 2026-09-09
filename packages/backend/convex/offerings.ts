@@ -306,6 +306,37 @@ function readSafeOffering(input: unknown): SafeOffering {
   });
 }
 
+export function readAtsCreateReplayOffering(input: unknown): {
+  readonly atsAttemptId: GenericId<"externalPrepareCommandAttempts">;
+  readonly state: "ASSET_PENDING";
+  readonly subjectPublicId: string;
+  readonly canonicalSignerAddress: string;
+  readonly principalPublicId: string;
+  readonly authorityVersion: string;
+} | null {
+  try {
+    const offering = readSafeOffering(input);
+    if (
+      offering.state !== "ASSET_PENDING"
+      || offering.atsAttemptId === undefined
+      || offering.atsAssetEvmAddress !== undefined
+      || offering.activeDirectoryVersionId !== undefined
+    ) {
+      return null;
+    }
+    return Object.freeze({
+      atsAttemptId: offering.atsAttemptId,
+      state: "ASSET_PENDING" as const,
+      subjectPublicId: offering.subjectPublicId,
+      canonicalSignerAddress: offering.canonicalSignerAddress,
+      principalPublicId: offering.principalPublicId,
+      authorityVersion: offering.authorityVersion,
+    });
+  } catch {
+    return null;
+  }
+}
+
 function readSafePreparedAtsCreateAttempt(input: unknown) {
   const record = readStoredRecord(input, externalPrepareAttemptFields);
   if (
