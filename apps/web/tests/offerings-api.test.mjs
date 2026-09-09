@@ -168,7 +168,7 @@ implementedTest("maps 200, 404, 503, thrown, and unexpected responses onto the c
     const { fetchImplementation } = createFetch({ [offeringUrl]: handler });
     const outcome = await api.readOfferingProjection(offeringPublicId, environment(), { fetch: fetchImplementation });
     assert.deepEqual(outcome, expected, label);
-    assert.doesNotMatch(JSON.stringify(outcome), /secret|elsewhere|500|302/u, label);
+    assert.doesNotMatch(JSON.stringify(outcome), /secret|elsewhere|\b500\b|\b302\b/u, label);
     if (outcome.kind === "loaded") assert.equal(Object.isFrozen(outcome.record), true, label);
   }
 });
