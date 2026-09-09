@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T020 accepted, M02-T080 accepted, M08-T010 accepted, M09-T010 accepted, M13-T010 accepted, M15-T010 accepted, M29-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
@@ -81,3 +81,16 @@ The accepted slice history it amends is recorded in the
 This card changes presentation of state the accepted components already
 compute. Its exclusions are the manifest's truthfulness and authority boundary,
 which governs; this card does not restate them.
+
+## Acceptance
+
+Accepted at source commit `ece66c2fd7b2278ed0f801ad1febd478d9ddc39f` after
+the final independent task and module reviews found no Critical, Important, or
+Minor finding. The focused S13 and unchanged dependent suites passed 32/32,
+the complete Web and root quality suites passed under Node 22.21.1, and the
+Webpack production build with Cache Components passed. Isolated local browser
+checks showed labelled Attention and Complete feedback with zero WCAG 2 A/AA
+violations; Next diagnostics were clear. The standalone Turbopack build remains
+host-blocked by its internal CSS-helper port, while the equivalent Webpack build
+is green. This acceptance grants no runtime, provider, payment, transaction,
+deployment, or live behavior.

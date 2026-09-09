@@ -179,10 +179,11 @@ B01-T010 is an accepted record comprising its card, `docs/specs/b01-convex-modul
 
 M29-T010 is an accepted record comprising its card, `docs/specs/m29-shell-accessibility-amendment.md`, `docs/imports/SPEC-IMPORT-LEDGER.md`, `docs/ui/UI-S00.md`, `docs/ui/IMPORT-LEDGER.md`, `docs/superpowers/plans/2026-09-07-m29-shell-accessibility-amendment.md`, `apps/web/src/app/globals.css`, and `apps/web/tests/shell-accessibility.test.mjs`. The root owns queue state, catalog, decisions, browser evidence, reviews, commits, and pushes. UI-S00 and M11-T020 are accepted shared-shell context, not reopened route behavior. All other Web/UI paths, route business logic, package metadata, lockfile, runtime configuration, client state, identity/session/provider/wallet/signer/payment surfaces, Core, Agent, backend, persistence, accounts, transactions, reserve, allocation, clearing, ATS, HCS, payout, deployment, and live evidence are excluded.
 
-S13-T010 is an active root-owned presentation record comprising its card,
-`docs/ui/UI-S13.md`, `docs/ui/IMPORT-LEDGER.md`, its intake-amendment evidence,
-queue state, catalog, decisions, reviews, commits, and pushes. It exclusively
-owns the new `apps/web/src/components/ui/status.tsx`,
+S13-T010 is an accepted root-owned presentation record comprising its card,
+`docs/ui/UI-S13.md`, `docs/ui/IMPORT-LEDGER.md`, its intake-amendment, ready,
+activation, RED, final task-review, and module-review evidence, queue state,
+catalog, decisions, reviews, commits, and pushes. It exclusively owns the new
+`apps/web/src/components/ui/status.tsx`,
 `apps/web/src/components/ui/state-panel.tsx`,
 `apps/web/tests/status.test.mjs`, and
 `apps/web/tests/state-panel.test.mjs`. Under one explicit root integration
@@ -195,7 +196,9 @@ reservation, it may amend only the outcome-rendering lines of
 `apps/web/src/components/discovery/riskscan-directory-discovery.tsx`. M29-T010,
 M02-T080, M08-T010, M13-T010, M15-T010, and M09-T010 remain accepted owners;
 their state, outcome wording, live-region semantics, domain logic, and focused
-tests are not reopened. Every other Web/UI, route, package/lockfile,
+tests are not reopened. The exact targets are accepted after the final review
+confirmed one outer polite region for structured results and no nested duplicate
+announcements. Every other Web/UI, route, package/lockfile,
 configuration, identity/provider/payment, backend, Agent, account, transaction,
 deployment, and live-evidence path remains excluded.
 
