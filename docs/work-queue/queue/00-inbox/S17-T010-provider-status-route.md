@@ -125,3 +125,28 @@ no record, resolves no authority, reads no Mirror Node or chain data, and never
 turns an absent or failed read into a rendered value. Its exclusions are the
 manifest's truthfulness and authority boundary, which governs; this card does
 not restate them.
+
+## Human worktree lane request
+
+- Requested at `2026-09-09T21:00:31Z` by the human operator (repository owner) through the
+  operator's delegated session, under the explicit-request rule of the
+  [runtime worktree policy](../../WORKTREE-POLICY.md). The card's tier,
+  dependencies, declared paths, verification list, and boundary are unchanged.
+  M41-T010 and S16-T010 are now accepted and S11-T010 is done, so every
+  dependency this card names is satisfied.
+- Worktree `.worktrees/s17`, branch `work/s17`, pushed to `origin/work/s17`.
+  Implementer: the operator's delegated session. Reviewer: the root's
+  independent task review and module review, unchanged.
+- The lane delivers, in this commit order on that branch: one test-only RED
+  commit adding exactly the two declared focused tests and the navigation-list
+  assertion amendments in the two accepted tests, failing only because the
+  five declared source paths and the navigation entry are absent; then the
+  minimal GREEN commits limited to the five declared source paths and the one
+  navigation entry. It adds no dependency and touches no package manifest or
+  lockfile.
+- The branch changes no queue state, ledger, catalog, ownership, STATE,
+  decision, human-action, or evidence file. The root keeps the ready review,
+  the activation decision, the independent reviews, the integration decision,
+  and every queue record. The branch is mirrored as a pull request for human
+  visibility only; nothing from it reaches `main` outside the root's
+  integration decision.
