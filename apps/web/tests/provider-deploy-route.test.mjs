@@ -30,9 +30,10 @@ function capabilityViolations(sources) {
     "fetch", "sendCommand", "relayCommand", "submitCommand", "dispatchCommand",
     "mutation", "action", "query", "useMutation", "useAction", "useQuery",
     "runMutation", "runAction", "runQuery", "insert", "patch", "replace", "delete",
+    "sendBeacon", "require",
   ]);
   const forbiddenConstructors = new Set([
-    "XMLHttpRequest", "WebSocket", "Function", "ConvexReactClient", "ConvexHttpClient",
+    "XMLHttpRequest", "WebSocket", "EventSource", "Function", "ConvexReactClient", "ConvexHttpClient",
   ]);
 
   function report(path, sourceFile, node, message) {
@@ -48,7 +49,7 @@ function capabilityViolations(sources) {
       true,
       path.endsWith(".tsx") ? typescript.ScriptKind.TSX : typescript.ScriptKind.TS,
     );
-    const aliases = collectCapabilityAliases(sourceFile);
+    const aliases = collectCapabilityAliases(sourceFile, forbiddenCalls, forbiddenConstructors);
 
     function visit(node) {
       if (typescript.isImportDeclaration(node) && typescript.isStringLiteral(node.moduleSpecifier) && forbiddenModule.test(node.moduleSpecifier.text)) {
@@ -72,6 +73,7 @@ function capabilityViolations(sources) {
           if (node.expression.text === "eval") report(path, sourceFile, node, "eval is not permitted");
           if (node.expression.text === "Function") report(path, sourceFile, node, "Function is not permitted");
           if (aliases.walletRequestAliases.has(node.expression.text)) report(path, sourceFile, node, "aliased wallet/provider request is not permitted");
+          if (aliases.capabilityCallAliases.has(node.expression.text)) report(path, sourceFile, node, "aliased durable/runtime invocation is not permitted");
           if (forbiddenCalls.has(node.expression.text)) report(path, sourceFile, node, `forbidden invocation: ${node.expression.text}`);
         }
         if (isMemberExpression(node.expression)) {
@@ -83,8 +85,13 @@ function capabilityViolations(sources) {
         }
       }
       if (typescript.isNewExpression(node)) {
-        if (typescript.isIdentifier(node.expression) && forbiddenConstructors.has(node.expression.text)) {
-          report(path, sourceFile, node, `forbidden constructor: ${node.expression.text}`);
+        if (typescript.isIdentifier(node.expression)) {
+          if (forbiddenConstructors.has(node.expression.text)) {
+            report(path, sourceFile, node, `forbidden constructor: ${node.expression.text}`);
+          }
+          if (aliases.capabilityConstructorAliases.has(node.expression.text)) {
+            report(path, sourceFile, node, "aliased durable/runtime constructor is not permitted");
+          }
         }
         if (isMemberExpression(node.expression)) {
           const member = staticMemberName(node.expression);
@@ -147,10 +154,12 @@ function capabilityViolations(sources) {
   return violations;
 }
 
-function collectCapabilityAliases(sourceFile) {
+function collectCapabilityAliases(sourceFile, forbiddenCalls, forbiddenConstructors) {
   const runtimeAliases = new Set(["window", "globalThis", "global"]);
   const walletAliases = new Set(["ethereum", "web3"]);
   const walletRequestAliases = new Set();
+  const capabilityCallAliases = new Set();
+  const capabilityConstructorAliases = new Set();
   let changed = true;
 
   function isMemberExpression(node) {
@@ -179,6 +188,15 @@ function collectCapabilityAliases(sourceFile) {
     return isMemberExpression(node) && staticMemberName(node) === "request" && isWalletExpression(node.expression);
   }
 
+  function isForbiddenCallExpression(node) {
+    return isMemberExpression(node) && forbiddenCalls.has(staticMemberName(node));
+  }
+
+  function isForbiddenConstructorExpression(node) {
+    return (typescript.isIdentifier(node) && forbiddenConstructors.has(node.text)) ||
+      (isMemberExpression(node) && forbiddenConstructors.has(staticMemberName(node)));
+  }
+
   function addAlias(aliases, name) {
     if (aliases.has(name)) return;
     aliases.add(name);
@@ -189,6 +207,8 @@ function collectCapabilityAliases(sourceFile) {
     if (isRuntimeExpression(initializer)) addAlias(runtimeAliases, name);
     if (isWalletExpression(initializer)) addAlias(walletAliases, name);
     if (isWalletRequestExpression(initializer)) addAlias(walletRequestAliases, name);
+    if (isForbiddenCallExpression(initializer)) addAlias(capabilityCallAliases, name);
+    if (isForbiddenConstructorExpression(initializer)) addAlias(capabilityConstructorAliases, name);
   }
 
   while (changed) {
@@ -210,6 +230,12 @@ function collectCapabilityAliases(sourceFile) {
             if (isWalletExpression(node.initializer) && property === "request") {
               addAlias(walletRequestAliases, element.name.text);
             }
+            if (forbiddenCalls.has(property)) {
+              addAlias(capabilityCallAliases, element.name.text);
+            }
+            if (forbiddenConstructors.has(property)) {
+              addAlias(capabilityConstructorAliases, element.name.text);
+            }
           }
         }
       }
@@ -218,7 +244,64 @@ function collectCapabilityAliases(sourceFile) {
     visit(sourceFile);
   }
 
-  return { runtimeAliases, walletAliases, walletRequestAliases };
+  return {
+    runtimeAliases,
+    walletAliases,
+    walletRequestAliases,
+    capabilityCallAliases,
+    capabilityConstructorAliases,
+  };
+}
+
+function namedFunctionContext(path, source, name) {
+  const sourceFile = typescript.createSourceFile(
+    path,
+    source,
+    typescript.ScriptTarget.ES2022,
+    true,
+    path.endsWith(".tsx") ? typescript.ScriptKind.TSX : typescript.ScriptKind.TS,
+  );
+  let declaration;
+
+  function visit(node) {
+    if (typescript.isFunctionDeclaration(node) && node.name?.text === name) declaration = node;
+    typescript.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  assert.ok(declaration, `missing ${name} function`);
+
+  const elements = [];
+  function collect(node) {
+    if (typescript.isJsxOpeningElement(node) || typescript.isJsxSelfClosingElement(node)) elements.push(node);
+    typescript.forEachChild(node, collect);
+  }
+  collect(declaration);
+
+  return { sourceFile, declaration, elements };
+}
+
+function jsxAttribute(element, name) {
+  return element.attributes.properties.find((attribute) => typescript.isJsxAttribute(attribute) && attribute.name.text === name);
+}
+
+function jsxAttributeExpressionText(attribute, sourceFile) {
+  if (!attribute?.initializer) return null;
+  if (typescript.isStringLiteral(attribute.initializer)) return attribute.initializer.text;
+  if (typescript.isJsxExpression(attribute.initializer) && attribute.initializer.expression) {
+    return attribute.initializer.expression.getText(sourceFile);
+  }
+  return null;
+}
+
+function jsxElementText(element, sourceFile) {
+  return typescript.isJsxOpeningElement(element) && typescript.isJsxElement(element.parent)
+    ? element.parent.getText(sourceFile)
+    : element.getText(sourceFile);
+}
+
+function normalizedSource(value) {
+  return value.replace(/\s+/g, "");
 }
 
 test("requires all six declared S16 source paths before route GREEN", () => {
@@ -242,7 +325,8 @@ implementedTest("renders the direct provider deploy route as a server page over 
 implementedTest("keeps the route and every step transition local with no external or persistent read", async () => {
   const sources = Object.values(await readS16Sources()).join("\n");
 
-  assert.doesNotMatch(sources, /\bfetch\s*\(|\bXMLHttpRequest\b|\bWebSocket\b/);
+  assert.doesNotMatch(sources, /\bfetch\s*\(|\bXMLHttpRequest\b|\bWebSocket\b|\bEventSource\b/);
+  assert.doesNotMatch(sources, /\b(?:navigator\.sendBeacon|module\.require)\b/);
   assert.doesNotMatch(sources, /\b(?:localStorage|sessionStorage|indexedDB|document\.cookie)\b/);
   assert.doesNotMatch(sources, /\b(?:process\.env|import\.meta\.env)\b/);
   assert.doesNotMatch(sources, /\b(?:setInterval|setTimeout|requestAnimationFrame)\s*\(/);
@@ -252,7 +336,7 @@ implementedTest("keeps the presentation boundary clear of direct wallet, provide
   assert.deepEqual(capabilityViolations(await readS16Sources()), []);
 });
 
-test("rejects Convex durable and aliased wallet/provider capability paths", () => {
+test("rejects durable, transport, and aliased wallet/provider capability paths", () => {
   const cases = {
     "convex-import.ts": 'import { useMutation as mutate } from "convex/react"; mutate();',
     "convex-generated.ts": 'import { api } from "../../convex/_generated/api"; api.campaigns.create();',
@@ -262,6 +346,12 @@ test("rejects Convex durable and aliased wallet/provider capability paths", () =
     "wallet-alias.ts": 'const browser = globalThis; const injected = browser["ethereum"]; injected.request({ method: "eth_requestAccounts" });',
     "wallet-request-alias.ts": 'const provider = window["web3"]; const request = provider.request; request({ method: "eth_signTypedData_v4" });',
     "wallet-destructure.ts": 'const browser = globalThis; const { ethereum: provider } = browser; provider.request({ method: "eth_requestAccounts" });',
+    "navigator-beacon.ts": 'navigator.sendBeacon("/provider/deploy");',
+    "navigator-beacon-alias.ts": 'const browser = globalThis; const navigatorClient = browser.navigator; const send = navigatorClient.sendBeacon; send("/provider/deploy");',
+    "event-source.ts": 'new EventSource("/provider/deploy");',
+    "event-source-alias.ts": 'const browser = globalThis; const Stream = browser.EventSource; new Stream("/provider/deploy");',
+    "module-require.ts": 'module.require("convex");',
+    "module-require-alias.ts": 'const localModule = module; const load = localModule.require; load("convex");',
   };
 
   for (const [path, source] of Object.entries(cases)) {
@@ -283,21 +373,52 @@ implementedTest("keeps unavailable configuration rows blank and stage outcomes a
 
 implementedTest("renders explanatory inert stage controls instead of implying that signing is available", async () => {
   const stages = (await readS16Sources())["src/components/provider/deploy/provider-deploy-stages.tsx"];
+  const { sourceFile, elements } = namedFunctionContext(
+    "provider-deploy-stages.tsx",
+    stages,
+    "ProviderDeployStages",
+  );
+
+  const stageControl = elements.find((element) => {
+    if (!["button", "Button"].includes(element.tagName.getText(sourceFile))) return false;
+    const describedBy = jsxAttributeExpressionText(jsxAttribute(element, "aria-describedby"), sourceFile);
+    const disabled = jsxAttributeExpressionText(jsxAttribute(element, "disabled"), sourceFile);
+    return describedBy !== null && normalizedSource(disabled ?? "") === "control.disabled" && jsxElementText(element, sourceFile).includes("control.label");
+  });
+
+  assert.ok(stageControl, "each inert stage control must bind its label, disabled state, and description");
+  const descriptionReference = jsxAttributeExpressionText(jsxAttribute(stageControl, "aria-describedby"), sourceFile);
+  const description = elements.find((element) => {
+    if (element.tagName.getText(sourceFile) !== "p") return false;
+    return jsxAttributeExpressionText(jsxAttribute(element, "id"), sourceFile) === descriptionReference &&
+      jsxElementText(element, sourceFile).includes("control.description");
+  });
 
   assert.match(stages, /providerDeployStageControl\s*\(/);
-  assert.match(stages, /aria-describedby=/);
-  assert.match(stages, /disabled=\{[^}]*disabled[^}]*\}/);
+  assert.ok(description, "aria-describedby must reference the control's explanatory description");
   assert.doesNotMatch(stages, /Signing is available in its separate screen/i);
 });
 
 implementedTest("keeps progress responsive and lets only completed steps receive focusable return controls", async () => {
   const wizard = (await readS16Sources())["src/components/provider/deploy/provider-deploy-wizard.tsx"];
+  const progress = namedFunctionContext("provider-deploy-wizard.tsx", wizard, "StepProgress");
+  const progressControl = progress.elements.find((element) => {
+    if (!["button", "Button"].includes(element.tagName.getText(progress.sourceFile))) return false;
+    const type = jsxAttributeExpressionText(jsxAttribute(element, "type"), progress.sourceFile);
+    const ariaLabel = jsxAttributeExpressionText(jsxAttribute(element, "aria-label"), progress.sourceFile);
+    const disabled = jsxAttributeExpressionText(jsxAttribute(element, "disabled"), progress.sourceFile);
+    const onClick = jsxAttributeExpressionText(jsxAttribute(element, "onClick"), progress.sourceFile);
+    return type === "button" && ariaLabel?.includes("step.label") &&
+      normalizedSource(disabled ?? "") === "index>=currentStep" &&
+      normalizedSource(onClick ?? "") === "()=>onStepSelect(index)";
+  });
+  const wizardContext = namedFunctionContext("provider-deploy-wizard.tsx", wizard, "ProviderDeployWizard");
+  const progressBoundary = wizardContext.elements.find((element) => element.tagName.getText(wizardContext.sourceFile) === "StepProgress");
+  const onStepSelect = progressBoundary
+    ? jsxAttributeExpressionText(jsxAttribute(progressBoundary, "onStepSelect"), wizardContext.sourceFile)
+    : null;
 
-  assert.doesNotMatch(wizard, /\boverflow-x-auto\b|\bmin-w-max\b/);
-  assert.match(wizard, /function StepProgress\s*\(\{[^}]*onStepSelect/);
-  assert.match(wizard, /type=["']button["']/);
-  assert.match(wizard, /aria-label=/);
-  assert.match(wizard, /disabled=\{index\s*>=\s*currentStep\}/);
-  assert.match(wizard, /onClick=\{\(\)\s*=>\s*onStepSelect\(index\)\}/);
-  assert.match(wizard, /onStepSelect=\{\(step\)\s*=>\s*setCurrentStep\(step\)\}/);
+  assert.doesNotMatch(progress.declaration.getText(progress.sourceFile), /\boverflow-x-auto\b|\bmin-w-max\b/);
+  assert.ok(progressControl, "StepProgress must own labelled button controls that return only to completed steps");
+  assert.equal(normalizedSource(onStepSelect ?? ""), "(step)=>setCurrentStep(step)");
 });

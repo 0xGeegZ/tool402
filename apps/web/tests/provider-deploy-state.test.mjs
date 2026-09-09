@@ -113,6 +113,25 @@ implementedTest("marks stages two and three unavailable and renders no sensitive
   assert.equal(state.prepareAssetConfiguration(undefined), null);
 });
 
+implementedTest("keeps the initial projected deployment sequence local-only and non-actionable", async () => {
+  const state = await import("../src/components/provider/deploy/provider-deploy-state.ts");
+  const { atsCreateConfiguration } = await import("../src/components/provider/deploy/ats-create-configuration.ts");
+
+  const states = state.providerDeployStageStates(atsCreateConfiguration);
+
+  assert.deepEqual(states, [
+    { kind: "unavailable" },
+    { kind: "blocked" },
+    { kind: "unavailable" },
+    { kind: "blocked" },
+  ]);
+  assert.equal(states.some((stage) => stage.kind === "actionable"), false);
+  for (const stage of states) {
+    assert.equal(Object.isFrozen(stage), true);
+    assert.match(stage.kind, /^(?:blocked|unavailable)$/);
+  }
+});
+
 implementedTest("keeps blocked and unavailable deployment controls explanatory and inert", async () => {
   const state = await import("../src/components/provider/deploy/provider-deploy-state.ts");
 
