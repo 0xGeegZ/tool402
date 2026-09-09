@@ -25,11 +25,15 @@ async function readS16Sources() {
 
 function capabilityViolations(sources) {
   const violations = [];
-  const forbiddenModule = /(?:^|\/)(?:viem(?:\/|$)|wagmi(?:\/|$)|metamask(?:\/|$)|walletconnect(?:\/|$)|command-relay(?:\/|$)|commands?(?:\/|$)|asset-tokenization-sdk(?:\/|$)|@hashgraph\/asset-tokenization-sdk(?:\/|$)|axios(?:\/|$)|node:(?:http|https)(?:\/|$)|(?:http|https)(?:\/|$)|lib\/wallet\/(?:metamask-provider|tool402-command|command-relay)(?:\.ts)?$)/i;
+  const forbiddenModule = /(?:^|\/)(?:viem(?:\/|$)|wagmi(?:\/|$)|metamask(?:\/|$)|walletconnect(?:\/|$)|command-relay(?:\/|$)|commands?(?:\/|$)|asset-tokenization-sdk(?:\/|$)|@hashgraph\/asset-tokenization-sdk(?:\/|$)|convex(?:\/|$)|_generated\/(?:api|server)(?:\.[jt]sx?)?$|@tool402\/backend(?:\/|$)|axios(?:\/|$)|node:(?:http|https)(?:\/|$)|(?:http|https)(?:\/|$)|lib\/wallet\/(?:metamask-provider|tool402-command|command-relay)(?:\.ts)?$)/i;
   const forbiddenCalls = new Set([
     "fetch", "sendCommand", "relayCommand", "submitCommand", "dispatchCommand",
+    "mutation", "action", "query", "useMutation", "useAction", "useQuery",
+    "runMutation", "runAction", "runQuery", "insert", "patch", "replace", "delete",
   ]);
-  const forbiddenConstructors = new Set(["XMLHttpRequest", "WebSocket", "Function"]);
+  const forbiddenConstructors = new Set([
+    "XMLHttpRequest", "WebSocket", "Function", "ConvexReactClient", "ConvexHttpClient",
+  ]);
 
   function report(path, sourceFile, node, message) {
     const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
@@ -44,6 +48,7 @@ function capabilityViolations(sources) {
       true,
       path.endsWith(".tsx") ? typescript.ScriptKind.TSX : typescript.ScriptKind.TS,
     );
+    const aliases = collectCapabilityAliases(sourceFile);
 
     function visit(node) {
       if (typescript.isImportDeclaration(node) && typescript.isStringLiteral(node.moduleSpecifier) && forbiddenModule.test(node.moduleSpecifier.text)) {
@@ -66,6 +71,7 @@ function capabilityViolations(sources) {
           if (node.expression.text === "require") report(path, sourceFile, node, "require is not permitted");
           if (node.expression.text === "eval") report(path, sourceFile, node, "eval is not permitted");
           if (node.expression.text === "Function") report(path, sourceFile, node, "Function is not permitted");
+          if (aliases.walletRequestAliases.has(node.expression.text)) report(path, sourceFile, node, "aliased wallet/provider request is not permitted");
           if (forbiddenCalls.has(node.expression.text)) report(path, sourceFile, node, `forbidden invocation: ${node.expression.text}`);
         }
         if (isMemberExpression(node.expression)) {
@@ -87,6 +93,26 @@ function capabilityViolations(sources) {
           }
         }
       }
+      if (isMemberExpression(node)) {
+        const member = staticMemberName(node);
+        if (member !== null && forbiddenCalls.has(member)) {
+          report(path, sourceFile, node, `forbidden durable/runtime capability reference: ${member}`);
+        }
+        if (["ethereum", "web3"].includes(member) && isRuntimeGlobal(node.expression)) {
+          report(path, sourceFile, node, `runtime wallet/provider global is not permitted: ${member}`);
+        }
+        if (member === "request" && isWalletGlobal(node.expression, aliases)) {
+          report(path, sourceFile, node, "wallet/provider request reference is not permitted");
+        }
+      }
+      if (typescript.isBindingElement(node)) {
+        const member = node.propertyName
+          ? staticMemberName(node.propertyName)
+          : typescript.isIdentifier(node.name) ? node.name.text : null;
+        if (member !== null && forbiddenCalls.has(member)) {
+          report(path, sourceFile, node, `forbidden durable/runtime capability binding: ${member}`);
+        }
+      }
       if (typescript.isIdentifier(node) && (node.text === "ethereum" || node.text === "web3")) {
         report(path, sourceFile, node, `runtime wallet/provider global is not permitted: ${node.text}`);
       }
@@ -94,11 +120,11 @@ function capabilityViolations(sources) {
     }
 
     function isRuntimeGlobal(node) {
-      return typescript.isIdentifier(node) && ["window", "globalThis", "global"].includes(node.text);
+      return typescript.isIdentifier(node) && aliases.runtimeAliases.has(node.text);
     }
 
     function isWalletGlobal(node) {
-      return (typescript.isIdentifier(node) && ["ethereum", "web3"].includes(node.text)) ||
+      return (typescript.isIdentifier(node) && aliases.walletAliases.has(node.text)) ||
         (isMemberExpression(node) && isRuntimeGlobal(node.expression) && ["ethereum", "web3"].includes(staticMemberName(node)));
     }
 
@@ -107,6 +133,7 @@ function capabilityViolations(sources) {
     }
 
     function staticMemberName(node) {
+      if (typescript.isIdentifier(node)) return node.text;
       if (typescript.isPropertyAccessExpression(node)) return node.name.text;
       if (typescript.isElementAccessExpression(node) && node.argumentExpression && (typescript.isStringLiteral(node.argumentExpression) || typescript.isNoSubstitutionTemplateLiteral(node.argumentExpression))) {
         return node.argumentExpression.text;
@@ -118,6 +145,80 @@ function capabilityViolations(sources) {
   }
 
   return violations;
+}
+
+function collectCapabilityAliases(sourceFile) {
+  const runtimeAliases = new Set(["window", "globalThis", "global"]);
+  const walletAliases = new Set(["ethereum", "web3"]);
+  const walletRequestAliases = new Set();
+  let changed = true;
+
+  function isMemberExpression(node) {
+    return typescript.isPropertyAccessExpression(node) || typescript.isElementAccessExpression(node);
+  }
+
+  function staticMemberName(node) {
+    if (typescript.isIdentifier(node)) return node.text;
+    if (typescript.isPropertyAccessExpression(node)) return node.name.text;
+    if (typescript.isElementAccessExpression(node) && node.argumentExpression && (typescript.isStringLiteral(node.argumentExpression) || typescript.isNoSubstitutionTemplateLiteral(node.argumentExpression))) {
+      return node.argumentExpression.text;
+    }
+    return null;
+  }
+
+  function isRuntimeExpression(node) {
+    return typescript.isIdentifier(node) && runtimeAliases.has(node.text);
+  }
+
+  function isWalletExpression(node) {
+    return (typescript.isIdentifier(node) && walletAliases.has(node.text)) ||
+      (isMemberExpression(node) && isRuntimeExpression(node.expression) && ["ethereum", "web3"].includes(staticMemberName(node)));
+  }
+
+  function isWalletRequestExpression(node) {
+    return isMemberExpression(node) && staticMemberName(node) === "request" && isWalletExpression(node.expression);
+  }
+
+  function addAlias(aliases, name) {
+    if (aliases.has(name)) return;
+    aliases.add(name);
+    changed = true;
+  }
+
+  function addBindingAlias(name, initializer) {
+    if (isRuntimeExpression(initializer)) addAlias(runtimeAliases, name);
+    if (isWalletExpression(initializer)) addAlias(walletAliases, name);
+    if (isWalletRequestExpression(initializer)) addAlias(walletRequestAliases, name);
+  }
+
+  while (changed) {
+    changed = false;
+    function visit(node) {
+      if (typescript.isVariableDeclaration(node) && node.initializer) {
+        if (typescript.isIdentifier(node.name)) {
+          addBindingAlias(node.name.text, node.initializer);
+        }
+        if (typescript.isObjectBindingPattern(node.name)) {
+          for (const element of node.name.elements) {
+            if (!typescript.isIdentifier(element.name)) continue;
+            const property = element.propertyName
+              ? staticMemberName(element.propertyName)
+              : element.name.text;
+            if (isRuntimeExpression(node.initializer) && ["ethereum", "web3"].includes(property)) {
+              addAlias(walletAliases, element.name.text);
+            }
+            if (isWalletExpression(node.initializer) && property === "request") {
+              addAlias(walletRequestAliases, element.name.text);
+            }
+          }
+        }
+      }
+      typescript.forEachChild(node, visit);
+    }
+    visit(sourceFile);
+  }
+
+  return { runtimeAliases, walletAliases, walletRequestAliases };
 }
 
 test("requires all six declared S16 source paths before route GREEN", () => {
@@ -151,6 +252,23 @@ implementedTest("keeps the presentation boundary clear of direct wallet, provide
   assert.deepEqual(capabilityViolations(await readS16Sources()), []);
 });
 
+test("rejects Convex durable and aliased wallet/provider capability paths", () => {
+  const cases = {
+    "convex-import.ts": 'import { useMutation as mutate } from "convex/react"; mutate();',
+    "convex-generated.ts": 'import { api } from "../../convex/_generated/api"; api.campaigns.create();',
+    "convex-client.ts": 'const invoke = client.mutation; invoke(api.campaigns.create);',
+    "convex-destructure.ts": 'const { mutation: invoke } = client; invoke(api.campaigns.create);',
+    "wallet-global-alias.ts": 'const browser = globalThis; const injected = browser["ethereum"];',
+    "wallet-alias.ts": 'const browser = globalThis; const injected = browser["ethereum"]; injected.request({ method: "eth_requestAccounts" });',
+    "wallet-request-alias.ts": 'const provider = window["web3"]; const request = provider.request; request({ method: "eth_signTypedData_v4" });',
+    "wallet-destructure.ts": 'const browser = globalThis; const { ethereum: provider } = browser; provider.request({ method: "eth_requestAccounts" });',
+  };
+
+  for (const [path, source] of Object.entries(cases)) {
+    assert.notDeepEqual(capabilityViolations({ [path]: source }), [], path);
+  }
+});
+
 implementedTest("keeps unavailable configuration rows blank and stage outcomes accessible without claiming a cause", async () => {
   const sources = await readS16Sources();
   const wizard = sources["src/components/provider/deploy/provider-deploy-wizard.tsx"];
@@ -161,4 +279,25 @@ implementedTest("keeps unavailable configuration rows blank and stage outcomes a
   assert.match(stages, /server gave no reason/i);
   assert.match(stages, /nothing was recorded/i);
   assert.doesNotMatch(sources["src/app/provider/deploy/page.tsx"], /(?:attempt|transaction|account|asset|digest)/i);
+});
+
+implementedTest("renders explanatory inert stage controls instead of implying that signing is available", async () => {
+  const stages = (await readS16Sources())["src/components/provider/deploy/provider-deploy-stages.tsx"];
+
+  assert.match(stages, /providerDeployStageControl\s*\(/);
+  assert.match(stages, /aria-describedby=/);
+  assert.match(stages, /disabled=\{[^}]*disabled[^}]*\}/);
+  assert.doesNotMatch(stages, /Signing is available in its separate screen/i);
+});
+
+implementedTest("keeps progress responsive and lets only completed steps receive focusable return controls", async () => {
+  const wizard = (await readS16Sources())["src/components/provider/deploy/provider-deploy-wizard.tsx"];
+
+  assert.doesNotMatch(wizard, /\boverflow-x-auto\b|\bmin-w-max\b/);
+  assert.match(wizard, /function StepProgress\s*\(\{[^}]*onStepSelect/);
+  assert.match(wizard, /type=["']button["']/);
+  assert.match(wizard, /aria-label=/);
+  assert.match(wizard, /disabled=\{index\s*>=\s*currentStep\}/);
+  assert.match(wizard, /onClick=\{\(\)\s*=>\s*onStepSelect\(index\)\}/);
+  assert.match(wizard, /onStepSelect=\{\(step\)\s*=>\s*setCurrentStep\(step\)\}/);
 });
