@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M22-T010 accepted; M23-T010 accepted; M24-T010 accepted;
   M25-T010 accepted; M32-T010 accepted; M39-T010 accepted;
   M40-T010 accepted
@@ -241,3 +241,22 @@ scope is now authorized for minimal GREEN: `http.ts`, `command_dispatch.ts`,
 M32/M40 atomic-handoff amendments. No configuration, key, publication,
 wallet/provider/SDK access, transaction, deployment, or live behavior is
 authorized.
+
+## Acceptance
+
+At clean pushed `20983649632f4812d9ee045637eb183b3158cc38`, the final
+independent task review and two consecutive fresh module-review generations
+were clear. The focused M41/M32/M40 integration command passed 75/75 and the
+complete Backend suite passed 242/242 under Node 22.21.1. Root typecheck and
+lint, queue validation, whitespace, and the enabled local-reference guard are
+clear.
+
+The complete root test command was also executed. Its only two failures are
+the separately active, intentionally source-absent M44 RED contracts for
+`apps/web/src/lib/ats/ats-client.ts` and
+`apps/web/src/lib/ats/create-bond-request.ts`; no M41 test, source path, or
+dependency failed. That shared RED baseline is recorded as an explicit
+non-waiver: M41 neither changes nor accepts M44, and M44 remains blocked on
+its separate SDK bundle authority. M41 moves to `60-done` as a local HTTP and
+durable-admission boundary only. It grants no configuration, key, publication,
+wallet, provider, SDK, transaction, deployment, or live authority.

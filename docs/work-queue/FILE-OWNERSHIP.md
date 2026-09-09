@@ -479,6 +479,12 @@ focused test amendments. No other M32/M40 behavior, schema field/table/index,
 configuration, key, publication, Web, Agent, package, wallet, provider, SDK,
 transaction, deployment, or live-evidence path is eligible.
 
+M41-T010 is accepted at `20983649632f4812d9ee045637eb183b3158cc38` as the
+closed local ingress/replay/atomic-admission/public-projection boundary. Its
+ownership is complete. M43-T010 may not amend the shared schema, its schema
+assertion, or `command_dispatch.ts` until its own root control record reserves
+only the already-declared state/field, assertion, and disabled-entry changes.
+
 The root additionally reserves one M41 regression-baseline correction in
 `packages/backend/tests/offering-durable-schema.test.mjs`: only the exact
 `by_ats_create_draft_binding` expected M40 index vector may be appended to
