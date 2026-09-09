@@ -9,6 +9,9 @@ current origin and delegates once to the accepted public
 credential-free directory `GET`; the browser never constructs an endpoint,
 header, request body, or payment material.
 
+UI-S20 amends only the accepted mount: the unchanged inspection island belongs
+to the guest RiskScan workbench at `/dashboard/riskscan`, not `/explore`.
+
 The surface projects only the accepted, strictly validated RiskScan Quick
 descriptor: its stable identity and name, the bounded input names and limits,
 the two known limitations, and the already-safe local configuration summary.

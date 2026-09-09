@@ -16,6 +16,9 @@ exact price. The native summary keeps the exact `hedera:testnet` network,
 canonical asset, and atomic amount; neither summary converts value or presents
 a payment control.
 
+UI-S20 amends only this island's accepted mount: the unchanged island belongs
+to the guest RiskScan workbench at `/dashboard/riskscan`, not `/explore`.
+
 ## Local targets
 
 The slice may amend `apps/web/src/app/explore/page.tsx`, add client components

@@ -472,3 +472,13 @@ be accepted before M44 is reviewed; S16's provider-deploy component boundary
 must be accepted before M44 touches its declared action path. No other
 cross-card source overlap is authorized. Every card retains its explicit
 human-action and external-capability exclusions.
+
+S20-T010 owns the new `apps/web/src/components/discovery/explore-catalog.tsx`
+and `apps/web/tests/explore-catalog.test.mjs`. The root integration reservation
+allows only its declared presentation amendments to
+`apps/web/src/app/explore/page.tsx`,
+`apps/web/src/components/discovery/riskscan-discovery-card.tsx`,
+`apps/web/tests/landing-explore.test.mjs`, and
+`apps/web/tests/riskscan-directory-discovery.test.mjs`, plus the narrow M09
+and UI-S05 mount-record amendments. It must not modify the Directory island's
+source or state, the guest workbench, the RiskScan detail route, or navigation.
