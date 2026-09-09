@@ -486,6 +486,15 @@ be accepted before M44 touches its declared action path. No other cross-card
 source overlap is authorized. Every card retains its explicit human-action and
 external-capability exclusions.
 
+M44-T010's independently reviewed RED contract is accepted at `c5d2bf3`.
+Before any remaining M44 source, the root-owned next step may amend only
+`apps/web/package.json`, the root `package-lock.json`,
+`apps/web/tests/static-shell.test.mjs`, and the minimum client-island import
+needed for the official SDK bundle gate. The request builder and injected
+client remain absent until that gate passes. No trusted configuration bridge,
+durable attempt, wallet/provider interaction, transaction, deployment, or live
+behavior is authorized.
+
 S20-T010 owns the new `apps/web/src/components/discovery/explore-catalog.tsx`
 and `apps/web/tests/explore-catalog.test.mjs`. The root integration reservation
 allows only its declared presentation amendments to

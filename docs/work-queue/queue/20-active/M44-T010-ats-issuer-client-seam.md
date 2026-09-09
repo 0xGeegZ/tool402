@@ -176,3 +176,15 @@ separately scoped Stage B bridge, after its own authority review, must provide
 both inputs. This amendment does not reopen S16-T010 or authorize a new Web
 configuration source, the SDK pin, source, a wallet/provider interaction, a
 transaction, deployment, or live behavior.
+
+## RED acceptance
+
+Independent review at `c5d2bf3` is clear for the two durable RED contracts.
+The focused Node 22.21.1 run reports only the two declared absent M44 modules,
+with the remaining assertions skipped. Before any builder or injected client
+source, the root may make exactly one official bundle-gate attempt: pin the
+approved SDK, update its lockfile and strict static-shell assertion, and add
+the smallest client-island import necessary for the Web typecheck and build.
+If either check fails because of the SDK, stop and record the failure. This
+does not authorize a configuration bridge, durable attempt, wallet/provider
+interaction, transaction, deployment, or live behavior.
