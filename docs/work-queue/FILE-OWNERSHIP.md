@@ -541,3 +541,13 @@ the neutral `PREP-UI-001` landing alias already recorded locally; it may not
 commit external source identifiers, URLs, archives, or an extracted tree. No
 route outside `/`, provider/wallet/payment/transaction behavior, deployment,
 recording, or external action is authorized by this intake.
+
+S24-T010 is a root-owned `00-inbox` POLISH intake comprising its card,
+`docs/ui/UI-S24.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog, this
+ownership record, decisions, reviews, commits, and pushes. It reserves no
+dashboard source, component, asset, or test path until a post-rehearsal
+source-to-current comparison and independent readiness review name them. UI-S07
+and every accepted dashboard route remain dependencies, not reopened behavior.
+Authentication, session, account, wallet, provider, balance, client-data,
+configuration, payment, transaction, external activity, deployment, video, and
+submission surfaces are excluded.
