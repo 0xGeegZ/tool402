@@ -134,3 +134,38 @@ A relayed `ACCEPTED` remains a backend admission, never an on-chain fact. The
 first sub-step of stage 3 stays with M44, live ATS execution stays with
 `HA-ATS-STAGE-B-001`, and the provider status route stays the only surface
 that reports an offering state.
+
+## Stage 4 control recommendation
+
+The card's ready requirements leave one root decision open: whether the
+directory record literal transcribes an accepted clearing account. No accepted
+record carries one. The recommended ruling is that the literal ships with
+`clearingAccount` absent, the stage 4 builder refuses to produce a request for
+an incomplete literal, and the stage 4 control stays `unavailable` with the
+reason "No accepted clearing account is recorded." until a later human-owned
+record supplies that account and a root amendment transcribes it. This keeps
+stages 1 through 3 deliverable now and invents nothing.
+
+## Human worktree lane request
+
+- Requested at `2026-09-09T18:05:42Z` by the human operator (repository owner) through the
+  operator's delegated session, under the explicit-request rule of the
+  [runtime worktree policy](../../WORKTREE-POLICY.md). The card's tier,
+  dependencies, declared paths, verification list, and boundary are unchanged.
+- Worktree `.worktrees/s21`, branch `work/s21`, pushed to `origin/work/s21`.
+  Implementer: the operator's delegated session. Reviewer: the root's
+  independent task review and module review, unchanged.
+- The lane delivers, in this commit order on that branch: the local
+  implementation plan; one test-only RED commit adding exactly the two
+  declared focused tests and the named assertion amendments in the accepted
+  S15 and S16 focused tests, failing only because the three declared source
+  paths and the enabled stage control are absent; and the minimal GREEN
+  commits limited to the three declared source paths and the constrained S15
+  and S16 amendments this card names. It adds no dependency and touches no
+  package manifest or lockfile.
+- The branch changes no queue state, ledger, catalog, ownership, STATE,
+  decision, human-action, or evidence file. The root keeps the ready review,
+  the activation decision, the independent reviews, the integration decision,
+  and every queue record. The branch is mirrored as a pull request for human
+  visibility only; nothing from it reaches `main` outside the root's
+  integration decision.
