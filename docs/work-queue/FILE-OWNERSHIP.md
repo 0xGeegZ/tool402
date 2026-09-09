@@ -479,6 +479,13 @@ focused test amendments. No other M32/M40 behavior, schema field/table/index,
 configuration, key, publication, Web, Agent, package, wallet, provider, SDK,
 transaction, deployment, or live-evidence path is eligible.
 
+The root additionally reserves one M41 regression-baseline correction in
+`packages/backend/tests/offering-durable-schema.test.mjs`: only the exact
+`by_ats_create_draft_binding` expected M40 index vector may be appended to
+`expectedM40.offerings.indexes`. This test-only correction confirms the
+already-authorized M41 schema index; it reserves no source, schema, or other
+test change.
+
 S15-T010 owns its exact wallet-island and relay paths. S16-T010 owns its exact
 provider-deploy page, components, state, fixture, display configuration literal,
 and tests. S17-T010 owns its exact provider-status/API/projection paths and its

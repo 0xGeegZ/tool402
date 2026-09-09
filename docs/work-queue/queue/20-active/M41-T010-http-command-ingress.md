@@ -34,6 +34,13 @@
   M40 lookup index/closed helper recorded in the local specifications; no
   existing non-`ATS_CREATE` M32 behavior, M40 public projection, or external
   capability is eligible.
+- Scoped schema-baseline amendment: the root may amend only
+  `packages/backend/tests/offering-durable-schema.test.mjs` to add the already
+  required `by_ats_create_draft_binding` five-field index to its
+  `expectedM40.offerings.indexes` assertion. The evidence in
+  [M41 schema-baseline amendment review](../../evidence/M41-T010-schema-baseline-amendment-review.md)
+  records why this is a regression expectation correction, not a new schema or
+  runtime authority.
 - Human actions: none for local delivery; `HA-CAMPAIGN-CONVEX-001` gates every
   published deployment, ingress key pair, and live request, and
   `HA-COMMAND-AUTHORITY-002` gates the command vocabulary M39-T010 normalizes.
