@@ -4,7 +4,7 @@
 
 Fresh independent read-only review at the durable M39 RED baseline of:
 
-- the active [M39 control card](../queue/20-active/M39-T010-wallet-command-normalizer.md);
+- the active [M39 control card](../queue/60-done/M39-T010-wallet-command-normalizer.md);
 - the [M39 wallet-command normalizer specification](../../specs/m39-wallet-command-normalizer.md);
 - the test-only M39 normalizer contract; and
 - the accepted M30 normalizer and its focused contract.

@@ -5,7 +5,7 @@
 Independent review of the committed local Backend implementation at
 `1ded953bed68d62145e10f38de61fad0094d0466`:
 
-- [M39 control card](../queue/20-active/M39-T010-wallet-command-normalizer.md);
+- [M39 control card](../queue/60-done/M39-T010-wallet-command-normalizer.md);
 - [M39 wallet-command normalizer specification](../../specs/m39-wallet-command-normalizer.md);
 - `packages/backend/src/ingress/authenticated-wallet-command-normalizer.ts`; and
 - `packages/backend/tests/authenticated-wallet-command-normalizer.test.mjs`.

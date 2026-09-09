@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M25-T010 accepted, M26-T010 accepted, M30-T010 accepted,
   M31-T010 accepted, M38-T010 (this batch)
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -127,3 +127,13 @@ The `ISSUER` role is the only ownership fact this boundary can prove for
 carries a subject identifier. It returns the offering or attempt reference so
 that the durable boundary owning those records enforces subject ownership
 before any write. This card claims no such enforcement of its own.
+
+## Acceptance
+
+The source at `1ded953bed68d62145e10f38de61fad0094d0466` passed its focused
+M39/M30 contracts (22/22), complete Backend suite (168/168), Backend and root
+typecheck/lint, queue/reference/whitespace/Git-guard checks, independent task
+review, and two clear module-review generations. After the separately active
+S20 RED contract reached its GREEN source, the shared root suite also passed
+at `746bf87`; M39 is therefore accepted locally. This acceptance grants no
+durable, provider, wallet, ATS, transaction, deployment, or live behavior.
