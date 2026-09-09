@@ -336,7 +336,7 @@ test("builds a frozen unsigned command that binds the payload expiry byte for by
   assert.throws(() => createUnsignedCommand(unsignedInput({ type: "" })));
   assert.throws(() => createUnsignedCommand(unsignedInput({ type: 42 })));
   assert.throws(() =>
-    createUnsignedCommand(unsignedInput({ type: "external.attachCandidate" })),
+    createUnsignedCommand(unsignedInput({ type: "offering.delete" })),
   );
   assert.throws(() =>
     createUnsignedCommand(
@@ -503,3 +503,27 @@ test("holds no provider, storage, network, or logging reference and signs with o
   assert.doesNotMatch(source, /toLowerCase\(\)/u);
 });
 }
+
+implementedTest("admits exactly the closed four-member command type set and refuses every other type first", () => {
+  assert.deepEqual([...api.TOOL402_COMMAND_TYPES], [
+    "external.prepare",
+    "offering.create",
+    "directory.publish",
+    "external.attachCandidate",
+  ]);
+  assert.equal(Object.isFrozen(api.TOOL402_COMMAND_TYPES), true);
+  assert.equal(api.TOOL402_COMMAND_TYPE, "external.prepare");
+  const nonce = api.createCommandNonce(() => nonceBytes);
+  for (const type of api.TOOL402_COMMAND_TYPES) {
+    assert.equal(api.isTool402CommandType(type), true);
+    const command = api.createUnsignedCommand({ type, signer, nonce, issuedAt, expiresAt: payloadExpiresAt, canonicalPayloadBytes: payloadBytes });
+    assert.equal(command.type, type);
+  }
+  for (const type of ["offering.delete", "External.prepare", "external.prepare ", "", null, undefined, 7]) {
+    assert.equal(api.isTool402CommandType(type), false);
+    assert.throws(
+      () => api.createUnsignedCommand({ type, signer, nonce, issuedAt, expiresAt: payloadExpiresAt, canonicalPayloadBytes: payloadBytes }),
+      /closed Tool402 command types/,
+    );
+  }
+});
