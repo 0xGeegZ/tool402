@@ -582,6 +582,18 @@ allows only its declared presentation amendments to
 and UI-S05 mount-record amendments. It must not modify the Directory island's
 source or state, the guest workbench, the RiskScan detail route, or navigation.
 
+M46-T010 is a root-controlled `00-inbox` CORE_P0 record comprising its card,
+`docs/specs/m46-entity-check-core.md`, the future new Core module
+`packages/core/src/entity-check.ts`, and the future focused runtime/type
+fixtures `packages/core/test/entity-check.test.mjs` and
+`packages/core/test/entity-check.types.ts`. The root integration reservation
+permits, only after a fresh RED review, one export-only addition of the
+EntityCheck values and types to `packages/core/src/index.ts`; it must preserve
+every existing export and source order. No source, test, barrel, I/O, source
+adapter, API, Directory, UI, package, lockfile, configuration, payment,
+wallet, provider, transaction, deployment, or live path is authorized until
+the card completes its own ready, activation, and RED gates.
+
 S22-T010 is a root-owned post-rehearsal POLISH intake comprising only its card,
 `docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog,
 decisions, this ownership record, reviews, commits, and pushes. It owns no
