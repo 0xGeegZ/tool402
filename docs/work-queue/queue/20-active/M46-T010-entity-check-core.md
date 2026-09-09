@@ -130,6 +130,10 @@ gated virtual TypeScript fixture directly imports the named public type-only
 exports after GREEN and checks them against the public value signatures and
 closed unions.
 
+The follow-up test correction at `f893759` explicitly serves that virtual
+fixture through the TypeScript compiler host. It preserves the same
+source-absence-only RED outcome and does not alter the GREEN scope.
+
 Only `packages/core/src/entity-check.ts` and the declared export-only
 EntityCheck amendment to `packages/core/src/index.ts` are now authorized. No
 I/O, source adapter, API, Directory, UI, package, configuration, payment,

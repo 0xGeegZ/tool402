@@ -20,6 +20,10 @@ the result. Its gated virtual TypeScript fixture directly imports each named
 type-only public export after GREEN and checks it against the value signatures
 and closed disposition and screen unions.
 
+The follow-up test correction at `f893759` explicitly serves that virtual
+fixture through the TypeScript compiler host. It preserves the same
+source-absence-only RED outcome and adds no source behavior.
+
 ## Verdict
 
 CLEAR. Only these local GREEN targets are authorized:
