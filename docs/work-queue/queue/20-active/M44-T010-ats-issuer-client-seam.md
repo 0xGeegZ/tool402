@@ -188,3 +188,18 @@ the smallest client-island import necessary for the Web typecheck and build.
 If either check fails because of the SDK, stop and record the failure. This
 does not authorize a configuration bridge, durable attempt, wallet/provider
 interaction, transaction, deployment, or live behavior.
+
+## Bundle-gate observation
+
+The exact official SDK pin and integrity resolved, and the strict static-shell
+test plus Node 22.21.1 typecheck passed. The default Turbopack build stopped in
+the known host CSS-worker port-bind restriction; the equivalent Webpack build
+with Cache Components enabled passed with only the existing optional RiskScan
+warning. The island was not reachable from a production route, so it did not
+enter a client manifest and cannot prove client-bundle compatibility. Further,
+the official root entry invokes `dotenv.config()` when evaluated. Mounting it
+would exceed this card's no-configuration/no-mount boundary. The gate is
+blocked: remove the experimental uncommitted changes, retain the RED contract,
+and require a new scoped authority before another bundle attempt. No trusted
+configuration, durable attempt, wallet/provider interaction, transaction,
+deployment, or live behavior is authorized.

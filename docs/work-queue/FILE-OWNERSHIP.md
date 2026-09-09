@@ -503,6 +503,16 @@ client remain absent until that gate passes. No trusted configuration bridge,
 durable attempt, wallet/provider interaction, transaction, deployment, or live
 behavior is authorized.
 
+M44-T010's single bundle-gate experiment is exhausted and BLOCKED. Its
+uncommitted package pin, lockfile closure, static-shell assertion, and client
+island are removed; the existing RED files remain M44-owned. The root retains
+the package/lockfile reservation, but no M44 dependency, import, source, or
+mount change is authorized until a new scoped human decision identifies and
+independently verifies a compatible official SDK entry and a real
+non-executing client mount, or explicitly resolves the root-entry environment
+side effect. No trusted configuration bridge, durable attempt, wallet/provider
+interaction, transaction, deployment, or live behavior is authorized.
+
 S20-T010 owns the new `apps/web/src/components/discovery/explore-catalog.tsx`
 and `apps/web/tests/explore-catalog.test.mjs`. The root integration reservation
 allows only its declared presentation amendments to
