@@ -81,9 +81,10 @@ string is the lower-case `0x` and forty hexadecimal characters that is also
 submitted; nothing is re-cased later. The transport `command` object carries
 exactly nine own fields: the seven signed fields plus `chainId` integer `296`
 and `signature`, the `0x` and 130 lower-case hexadecimal characters MetaMask
-returns, submitted unaltered. The command type is exactly
-`external.prepare`; another type is refused before provider, nonce, signature,
-or relay work. The signature must be a low-s recoverable secp256k1 signature
+returns, submitted unaltered. The command type is one of the closed set
+`external.prepare`, `offering.create`, `directory.publish`, and
+`external.attachCandidate` that HA-COMMAND-AUTHORITY-002 admits; another type
+is refused before provider, nonce, signature, or relay work. The signature must be a low-s recoverable secp256k1 signature
 whose final byte is exactly `00`, `01`, `1b`, or `1c`; the browser preserves
 that accepted lower-case wire form. The two-key `{ command, payload }` body admits no
 extra, missing, or re-cased field, as HA-COMMAND-AUTHORITY-001 and the accepted

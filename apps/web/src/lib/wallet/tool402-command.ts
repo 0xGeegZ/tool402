@@ -10,6 +10,20 @@ export const TOOL402_TYPED_DATA_DOMAIN = Object.freeze({
 
 export const TOOL402_COMMAND_PRIMARY_TYPE = "Tool402Command";
 export const TOOL402_COMMAND_TYPE = "external.prepare";
+export const TOOL402_COMMAND_TYPES = Object.freeze([
+  "external.prepare",
+  "offering.create",
+  "directory.publish",
+  "external.attachCandidate",
+] as const);
+
+export type Tool402CommandType = (typeof TOOL402_COMMAND_TYPES)[number];
+
+export function isTool402CommandType(
+  value: unknown,
+): value is Tool402CommandType {
+  return TOOL402_COMMAND_TYPES.some((type) => type === value);
+}
 
 function field(name: string, type: string) {
   return Object.freeze({ name, type });
@@ -197,9 +211,11 @@ function validateCommandFields(
   nonce: unknown,
   issuedAt: unknown,
   expiresAt: unknown,
-): asserts type is typeof TOOL402_COMMAND_TYPE {
-  if (type !== TOOL402_COMMAND_TYPE) {
-    throw new TypeError("the command type is external.prepare");
+): asserts type is Tool402CommandType {
+  if (!isTool402CommandType(type)) {
+    throw new TypeError(
+      "the command type is one of the closed Tool402 command types",
+    );
   }
   if (typeof signer !== "string" || !lowerCaseAddressPattern.test(signer)) {
     throw new TypeError("a command signer is a lower-case EVM address");

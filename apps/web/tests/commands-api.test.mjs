@@ -695,7 +695,7 @@ test("signs and relays through one flow that re-reads the session, draws a fresh
   assert.deepEqual(
     await signAndRelayCommand(
       invalidTypeProvider,
-      { ...request, type: "external.attachCandidate" },
+      { ...request, type: "offering.delete" },
       {
         relay: invalidTypeRelay,
         nowMilliseconds: beforeExpiry,
