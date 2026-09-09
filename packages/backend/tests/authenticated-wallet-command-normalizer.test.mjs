@@ -323,8 +323,14 @@ async function signedCommand(
   nonce,
   wireSigner = signingAddress,
   signedType = type,
+  timing = {},
 ) {
-  const payloadHash = keccak256(
+  const {
+    issuedAt = commandIssuedAt,
+    expiresAt = commandExpiry,
+    payloadHashOverride,
+  } = timing;
+  const payloadHash = payloadHashOverride ?? keccak256(
     stringToHex(new TextDecoder().decode(canonicalPayloadBytes(type, payload))),
   );
   const message = {
@@ -332,8 +338,8 @@ async function signedCommand(
     type: signedType,
     signer: wireSigner,
     nonce,
-    issuedAt: commandIssuedAt,
-    expiresAt: commandExpiry,
+    issuedAt,
+    expiresAt,
     payloadHash,
   };
   const signature = await signingAccount.signTypedData({
@@ -787,16 +793,17 @@ function staticPropertyName(node) {
   return null;
 }
 
-function isObjectFunctionConstructorReference(functionConstructor) {
-  if (staticPropertyName(functionConstructor) !== "constructor") {
+function hasForbiddenBindingProperty(node) {
+  if (!typescript.isBindingElement(node) || node.propertyName === undefined) {
     return false;
   }
-  const objectConstructor = functionConstructor.expression;
-  return (
-    staticPropertyName(objectConstructor) === "constructor"
-    && typescript.isIdentifier(objectConstructor.expression)
-    && objectConstructor.expression.text === "Object"
-  );
+  if (typescript.isComputedPropertyName(node.propertyName)) {
+    return true;
+  }
+  const propertyName = typescript.isIdentifier(node.propertyName)
+    ? node.propertyName.text
+    : staticStringValue(node.propertyName);
+  return propertyName === "constructor";
 }
 
 function isExactClaimedBodyCall(node, name) {
@@ -928,6 +935,47 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
   const viemRuntimeImports = new Set();
   const m25RuntimeImports = [];
   const prohibited = [];
+  const callableBindingNames = new Set();
+  const collectCallableBindings = (node) => {
+    if (
+      (typescript.isFunctionDeclaration(node) || typescript.isClassDeclaration(node))
+      && node.name !== undefined
+    ) {
+      callableBindingNames.add(node.name.text);
+    }
+    if (
+      typescript.isVariableDeclaration(node)
+      && typescript.isIdentifier(node.name)
+      && node.initializer !== undefined
+      && (
+        typescript.isArrowFunction(node.initializer)
+        || typescript.isFunctionExpression(node.initializer)
+        || typescript.isClassExpression(node.initializer)
+      )
+    ) {
+      callableBindingNames.add(node.name.text);
+    }
+    typescript.forEachChild(node, collectCallableBindings);
+  };
+  typescript.forEachChild(sourceFile, collectCallableBindings);
+  let discoveredCallableAlias = true;
+  while (discoveredCallableAlias) {
+    discoveredCallableAlias = false;
+    const collectCallableAliases = (node) => {
+      if (
+        typescript.isVariableDeclaration(node)
+        && typescript.isIdentifier(node.name)
+        && typescript.isIdentifier(node.initializer)
+        && callableBindingNames.has(node.initializer.text)
+        && !callableBindingNames.has(node.name.text)
+      ) {
+        callableBindingNames.add(node.name.text);
+        discoveredCallableAlias = true;
+      }
+      typescript.forEachChild(node, collectCallableAliases);
+    };
+    typescript.forEachChild(sourceFile, collectCallableAliases);
+  }
 
   for (const statement of sourceFile.statements) {
     assert.equal(typescript.isImportEqualsDeclaration(statement), false);
@@ -971,10 +1019,16 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
     }
     if (
       moduleSpecifier === "./claimed-protected-body.ts"
-      && statement.importClause?.namedBindings !== undefined
-      && typescript.isNamedImports(statement.importClause.namedBindings)
     ) {
-      for (const imported of statement.importClause.namedBindings.elements) {
+      assert.equal(statement.importClause?.name, undefined);
+      assert.equal(statement.importClause?.isTypeOnly, false);
+      const namedBindings = statement.importClause?.namedBindings;
+      assert.notEqual(namedBindings, undefined);
+      assert.equal(typescript.isNamedImports(namedBindings), true);
+      if (!typescript.isNamedImports(namedBindings)) {
+        continue;
+      }
+      for (const imported of namedBindings.elements) {
         if (!statement.importClause.isTypeOnly && !imported.isTypeOnly) {
           assert.equal(imported.name.text, imported.propertyName?.text ?? imported.name.text);
           m25RuntimeImports.push(imported.name.text);
@@ -1014,6 +1068,7 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
     "setImmediate",
     "setInterval",
     "setTimeout",
+    "String",
     "wagmi",
     "window",
   ]);
@@ -1058,6 +1113,108 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
     "isClaimedProtectedBody",
     "readClaimedProtectedBody",
   ]);
+  const intrinsicGlobalNames = new Set([
+    "Array",
+    "Function",
+    "Number",
+    "Object",
+    "Reflect",
+    "String",
+  ]);
+  const unsafeReflectionReceiverNames = new Set([
+    "Array",
+    "Bun",
+    "claimedBody",
+    "Deno",
+    "Function",
+    "Number",
+    "Object",
+    "Reflect",
+    "String",
+    "document",
+    "eval",
+    "fetch",
+    "global",
+    "globalThis",
+    "module",
+    "process",
+    "require",
+    "resolveCommandAuthorities",
+    "serverNow",
+    "window",
+  ]);
+
+  const directStaticMemberCall = (identifier) => {
+    const member = identifier.parent;
+    if (
+      !typescript.isPropertyAccessExpression(member)
+      || member.expression !== identifier
+      || !typescript.isCallExpression(member.parent)
+      || member.parent.expression !== member
+    ) {
+      return null;
+    }
+    return member.parent;
+  };
+  const isSafeReflectionReceiver = (node) =>
+    typescript.isIdentifier(node)
+    && !unsafeReflectionReceiverNames.has(node.text)
+    && !callableBindingNames.has(node.text);
+  const isClosedReflectionField = (node) => {
+    const field = staticStringValue(node);
+    return field !== null && field !== "constructor";
+  };
+  const isAllowedIntrinsicReference = (identifier) => {
+    const call = directStaticMemberCall(identifier);
+    if (call === null) {
+      return false;
+    }
+    const method = call.expression.name.text;
+    if (identifier.text === "Object") {
+      if (method === "freeze") {
+        return call.arguments.length === 1;
+      }
+      if (
+        method === "getPrototypeOf"
+        || method === "getOwnPropertyDescriptors"
+        || method === "keys"
+      ) {
+        return (
+          call.arguments.length === 1
+          && isSafeReflectionReceiver(call.arguments[0])
+        );
+      }
+      if (method === "hasOwn") {
+        return (
+          call.arguments.length === 2
+          && isSafeReflectionReceiver(call.arguments[0])
+          && isClosedReflectionField(call.arguments[1])
+        );
+      }
+      return false;
+    }
+    if (identifier.text === "Reflect") {
+      if (method === "ownKeys") {
+        return (
+          call.arguments.length === 1
+          && isSafeReflectionReceiver(call.arguments[0])
+        );
+      }
+      return (
+        method === "getOwnPropertyDescriptor"
+        && call.arguments.length === 2
+        && isSafeReflectionReceiver(call.arguments[0])
+        && isClosedReflectionField(call.arguments[1])
+      );
+    }
+    if (identifier.text === "Array") {
+      return method === "isArray" && call.arguments.length === 1;
+    }
+    if (identifier.text === "Number") {
+      return method === "isSafeInteger" && call.arguments.length === 1;
+    }
+    return false;
+  };
 
   const inspectNode = (node) => {
     if (
@@ -1065,11 +1222,18 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
         && node.expression.kind === typescript.SyntaxKind.ImportKeyword)
       || (typescript.isMetaProperty(node)
         && node.keywordToken === typescript.SyntaxKind.ImportKeyword)
+      || (typescript.isIdentifier(node)
+        && intrinsicGlobalNames.has(node.text)
+        && !isAllowedIntrinsicReference(node))
       || (typescript.isIdentifier(node) && forbiddenIdentifiers.has(node.text))
     ) {
       prohibited.push(node.getText(sourceFile));
     }
-    if (isObjectFunctionConstructorReference(node)) {
+    if (
+      typescript.isElementAccessExpression(node)
+      || staticPropertyName(node) === "constructor"
+      || hasForbiddenBindingProperty(node)
+    ) {
       prohibited.push(node.getText(sourceFile));
     }
     if (declaresM25Binding(node)) {
@@ -1145,6 +1309,20 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
   assert.equal(normalizers.length, 1);
   const [normalizer] = normalizers;
   assert.notEqual(normalizer, undefined);
+  const expectedParameterNames = [
+    "claimedBody",
+    "serverNow",
+    "resolveCommandAuthorities",
+  ];
+  assert.equal(normalizer.parameters.length, expectedParameterNames.length);
+  for (const [index, expectedName] of expectedParameterNames.entries()) {
+    const parameter = normalizer.parameters[index];
+    assert.notEqual(parameter, undefined);
+    assert.equal(typescript.isIdentifier(parameter.name), true);
+    assert.equal(parameter.name.text, expectedName);
+    assert.equal(parameter.dotDotDotToken, undefined);
+    assert.equal(parameter.initializer, undefined);
+  }
   const claimedGuardIndex = normalizer.body.statements.findIndex(isExactClaimedBodyGuard);
   assert.equal(claimedGuardIndex, 0);
   const claimedGuard = normalizer.body.statements[claimedGuardIndex];
@@ -1165,7 +1343,11 @@ import {
   readClaimedProtectedBody,
 } from "./claimed-protected-body.ts";
 
-export async function normalizeClaimedWalletCommand(claimedBody: unknown) {
+export async function normalizeClaimedWalletCommand(
+  claimedBody: unknown,
+  serverNow: string,
+  resolveCommandAuthorities: unknown,
+) {
 ${statements}
 }
 `;
@@ -1175,11 +1357,33 @@ test("rejects helper, shadow, and static module capability escapes from the M25 
   const directBoundary = minimalM25BoundarySource(`
   if (!isClaimedProtectedBody(claimedBody)) return null;
   const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const authorityRecord = {
+    principalPublicId: "principal_42",
+    canonicalSignerAddress: "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454",
+  };
+  const prototype = Object.getPrototypeOf(authorityRecord);
+  const keys = Object.keys(authorityRecord);
+  const hasPrincipalPublicId = Object.hasOwn(authorityRecord, "principalPublicId");
+  const principalPublicIdDescriptor = Reflect.getOwnPropertyDescriptor(
+    authorityRecord,
+    "principalPublicId",
+  );
+  const ownKeys = Reflect.ownKeys(authorityRecord);
+  const descriptors = Object.getOwnPropertyDescriptors(authorityRecord);
+  const keysAreAnArray = Array.isArray(keys);
+  const oneIsSafe = Number.isSafeInteger(1);
   const dataOnlySnapshot = Object.freeze({
     constructor: "pure-data",
     byteLength: bodyBytes.byteLength,
   });
   void bodyBytes;
+  void prototype;
+  void hasPrincipalPublicId;
+  void principalPublicIdDescriptor;
+  void ownKeys;
+  void descriptors;
+  void keysAreAnArray;
+  void oneIsSafe;
   void dataOnlySnapshot;
   return null;`);
   assert.doesNotThrow(() => assertClaimedBodyAndCapabilityBoundary(directBoundary));
@@ -1225,6 +1429,197 @@ test("rejects helper, shadow, and static module capability escapes from the M25 
   void bodyBytes;
   void executable;
   return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const executable = ({}).constructor.constructor("return globalThis.fetch")();
+  void bodyBytes;
+  void executable;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const executable = ({}).toString.constructor("return globalThis.fetch")();
+  void bodyBytes;
+  void executable;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const executable = [].filter.constructor("return globalThis.fetch")();
+  void bodyBytes;
+  void executable;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const executable = Object.getPrototypeOf(() => {}).constructor("return globalThis.fetch")();
+  void bodyBytes;
+  void executable;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const localArrow = () => null;
+  const alias = localArrow;
+  const prototype = Object.getPrototypeOf(alias);
+  void bodyBytes;
+  void prototype;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  class LocalClass {}
+  const prototype = Object.getPrototypeOf(LocalClass);
+  void bodyBytes;
+  void prototype;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const executable = Reflect.getPrototypeOf([].filter).constructor("return globalThis.fetch")();
+  void bodyBytes;
+  void executable;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const executable = Reflect.get(Object, "constructor")("return globalThis.fetch")();
+  void bodyBytes;
+  void executable;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const executable = Object["constructor"]("return globalThis.fetch")();
+  void bodyBytes;
+  void executable;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const objectAlias = Object;
+  const prototype = objectAlias.getPrototypeOf(bodyBytes);
+  void bodyBytes;
+  void prototype;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const reflectAlias = Reflect;
+  const descriptor = reflectAlias.getOwnPropertyDescriptor(bodyBytes, "constructor");
+  void bodyBytes;
+  void descriptor;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const descriptor = Object.getOwnPropertyDescriptor(bodyBytes, "principalPublicId");
+  void bodyBytes;
+  void descriptor;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const prototype = Object.getPrototypeOf(Object);
+  const descriptor = Object.getOwnPropertyDescriptor(prototype, "constructor");
+  const FunctionFactory = descriptor.value;
+  const executable = FunctionFactory("return globalThis.fetch")();
+  void bodyBytes;
+  void executable;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const { constructor: FunctionFactory } = Object;
+  const executable = FunctionFactory("return globalThis.fetch")();
+  void bodyBytes;
+  void executable;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const key = ["con", "structor"].join("");
+  const FunctionFactory = Object[key];
+  const executable = FunctionFactory("return globalThis.fetch")();
+  void bodyBytes;
+  void executable;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const key = String.fromCharCode(99, 111, 110, 115, 116, 114, 117, 99, 116, 111, 114);
+  const FunctionFactory = Object[key];
+  const executable = FunctionFactory("return globalThis.fetch")();
+  void bodyBytes;
+  void executable;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const record = { safe: "value" };
+  const field = ["con", "structor"].join("");
+  const descriptor = Reflect.getOwnPropertyDescriptor(record, field);
+  const FunctionFactory = descriptor.value;
+  const executable = FunctionFactory("return globalThis.fetch")();
+  void bodyBytes;
+  void executable;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const field = "safe";
+  const localArrow = () => null;
+  const alias = localArrow;
+  const prototype = Object.getPrototypeOf(alias);
+  function execute(field: string) {
+    const descriptor = Reflect.getOwnPropertyDescriptor(prototype, field);
+    const FunctionFactory = descriptor.value;
+    return FunctionFactory("return 7")();
+  }
+  const executable = execute("constructor");
+  void bodyBytes;
+  void executable;
+  return null;`),
+    `
+import m25Escape, {
+  isClaimedProtectedBody,
+  readClaimedProtectedBody,
+} from "./claimed-protected-body.ts";
+
+const readerKey = "readClaimedProtectedBody";
+
+export async function normalizeClaimedWalletCommand(
+  claimedBody: unknown,
+  serverNow = m25Escape[readerKey](claimedBody),
+  resolveCommandAuthorities: unknown,
+) {
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  void bodyBytes;
+  void serverNow;
+  void resolveCommandAuthorities;
+  return null;
+}
+`,
+    `
+import * as m25Escape from "./claimed-protected-body.ts";
+
+const readerKey = "readClaimedProtectedBody";
+
+export async function normalizeClaimedWalletCommand(
+  claimedBody: unknown,
+  serverNow = m25Escape[readerKey](claimedBody),
+  resolveCommandAuthorities: unknown,
+) {
+  if (!m25Escape.isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = m25Escape[readerKey](claimedBody);
+  void bodyBytes;
+  void serverNow;
+  void resolveCommandAuthorities;
+  return null;
+}
+`,
     `
 import {
   isClaimedProtectedBody,
@@ -1386,6 +1781,9 @@ implementedTest("dispatches each signed M38 payload to exactly one closed comman
     assert.equal(Object.isFrozen(normalized.payload), true);
     assertPlainFrozenDataProperties(normalized);
     assertPlainFrozenDataProperties(normalized.payload);
+    if (type !== "offering.create") {
+      assertPlainFrozenDataProperties(normalized.deferredSubjectOwnership);
+    }
     assert.equal(Object.hasOwn(normalized, "signature"), false);
     assert.equal(Object.hasOwn(normalized, "rawBody"), false);
     assert.deepEqual(
@@ -1421,12 +1819,13 @@ implementedTest("returns only the required deferred ownership references for sub
     serverNow,
     () => [authorityFor(signingAddress, "ISSUER", [])],
   );
+  assertPlainFrozenDataProperties(directory);
+  assertPlainFrozenDataProperties(directory.deferredSubjectOwnership);
   assert.deepEqual(directory.deferredSubjectOwnership, {
     kind: "OFFERING",
     offeringPublicId: "offering_42",
     offeringVersion: 1,
   });
-  assert.equal(Object.isFrozen(directory.deferredSubjectOwnership), true);
 
   const candidatePayload = attachCandidatePayload();
   const candidateCommand = await signedCommand(
@@ -1439,11 +1838,12 @@ implementedTest("returns only the required deferred ownership references for sub
     serverNow,
     () => [authorityFor(signingAddress, "ISSUER", [])],
   );
+  assertPlainFrozenDataProperties(candidate);
+  assertPlainFrozenDataProperties(candidate.deferredSubjectOwnership);
   assert.deepEqual(candidate.deferredSubjectOwnership, {
     kind: "ATTEMPT",
     attemptPublicId: "DDDDDDDDDDDDDDDDDDDDDw",
   });
-  assert.equal(Object.isFrozen(candidate.deferredSubjectOwnership), true);
 });
 
 implementedTest("fails closed before authority resolution for payload expiry, digest drift, and cross-type signatures", async () => {
@@ -1643,7 +2043,7 @@ implementedTest("enforces every command-specific authority predicate and generic
   }
 });
 
-implementedTest("enforces the inherited M30 clock boundary through the M39 test-only predicate", () => {
+implementedTest("enforces inherited M30 time boundaries for the test predicate and signed offering.create", async () => {
   const cases = [
     {
       name: "accepts the inclusive 300-second lifetime boundary",
@@ -1716,6 +2116,137 @@ implementedTest("enforces the inherited M30 clock boundary through the M39 test-
       timeCase.accepted,
       timeCase.name,
     );
+  }
+
+  const signedOfferingCases = [
+    {
+      name: "accepts signed offering.create at inclusive expiry and 300-second lifetime",
+      timestamps: [
+        "2026-09-07T19:00:00.000Z",
+        "2026-09-07T19:05:00.000Z",
+        "2026-09-07T19:05:00.000Z",
+      ],
+      accepted: true,
+      nonce: "YYYYYYYYYYYYYYYYYYYYYQ",
+    },
+    {
+      name: "rejects signed offering.create one millisecond after expiry",
+      timestamps: [
+        "2026-09-07T19:00:00.000Z",
+        "2026-09-07T19:04:00.000Z",
+        "2026-09-07T19:04:00.001Z",
+      ],
+      accepted: false,
+      nonce: "ZZZZZZZZZZZZZZZZZZZZZg",
+    },
+    {
+      name: "rejects signed offering.create beyond the 300-second lifetime",
+      timestamps: [
+        "2026-09-07T19:00:00.000Z",
+        "2026-09-07T19:05:00.001Z",
+        "2026-09-07T19:00:00.000Z",
+      ],
+      accepted: false,
+      nonce: "aaaaaaaaaaaaaaaaaaaaaw",
+    },
+    {
+      name: "rejects signed offering.create with an expiry before issue",
+      timestamps: [
+        "2026-09-07T19:05:00.000Z",
+        "2026-09-07T19:04:00.000Z",
+        "2026-09-07T19:04:00.000Z",
+      ],
+      accepted: false,
+      nonce: "dddddddddddddddddddddw",
+    },
+    {
+      name: "rejects signed offering.create with expiry equal to issue",
+      timestamps: [
+        "2026-09-07T19:04:00.000Z",
+        "2026-09-07T19:04:00.000Z",
+        "2026-09-07T19:04:00.000Z",
+      ],
+      accepted: false,
+      nonce: "eeeeeeeeeeeeeeeeeeeeew",
+    },
+    {
+      name: "accepts signed offering.create at the 60-second future-skew boundary",
+      timestamps: [
+        "2026-09-07T19:01:00.000Z",
+        "2026-09-07T19:05:00.000Z",
+        "2026-09-07T19:00:00.000Z",
+      ],
+      accepted: true,
+      nonce: "bbbbbbbbbbbbbbbbbbbbbQ",
+    },
+    {
+      name: "rejects signed offering.create one millisecond beyond future skew",
+      timestamps: [
+        "2026-09-07T19:01:00.001Z",
+        "2026-09-07T19:05:00.000Z",
+        "2026-09-07T19:00:00.000Z",
+      ],
+      accepted: false,
+      nonce: "cccccccccccccccccccccg",
+    },
+    {
+      name: "rejects signed offering.create with an impossible issuedAt before authority resolution",
+      timestamps: [
+        "2026-02-29T19:00:00.000Z",
+        "2026-09-07T19:04:00.000Z",
+        "2026-09-07T19:00:00.000Z",
+      ],
+      accepted: false,
+      resolverCalls: 0,
+      nonce: "fffffffffffffffffffffw",
+    },
+    {
+      name: "rejects signed offering.create with an impossible payload expiry before authority resolution",
+      timestamps: [
+        "2026-09-07T19:00:00.000Z",
+        "2026-02-29T19:04:00.000Z",
+        "2026-09-07T19:00:00.000Z",
+      ],
+      accepted: false,
+      resolverCalls: 0,
+      payloadHashOverride: `0x${"0".repeat(64)}`,
+      nonce: "gggggggggggggggggggggw",
+    },
+  ];
+
+  for (const timeCase of signedOfferingCases) {
+    const [issuedAt, expiresAt, timeServerNow] = timeCase.timestamps;
+    const payload = offeringCreatePayload({ expiresAt });
+    const command = await signedCommand(
+      "offering.create",
+      payload,
+      timeCase.nonce,
+      signingAddress,
+      "offering.create",
+      {
+        issuedAt,
+        expiresAt,
+        payloadHashOverride: timeCase.payloadHashOverride,
+      },
+    );
+    let resolverCalls = 0;
+    const normalized = await api.normalizeClaimedWalletCommand(
+      await claimText(transportText(command, payload)),
+      timeServerNow,
+      () => {
+        resolverCalls += 1;
+        return [authorityFor(signingAddress)];
+      },
+    );
+
+    assert.equal(normalized === null, !timeCase.accepted, timeCase.name);
+    assert.equal(resolverCalls, timeCase.resolverCalls ?? 1, timeCase.name);
+    if (timeCase.accepted) {
+      assert.notEqual(normalized, null, timeCase.name);
+      assert.equal(normalized.issuedAt, issuedAt, timeCase.name);
+      assert.equal(normalized.expiresAt, expiresAt, timeCase.name);
+      assert.equal(normalized.payload.expiresAt, expiresAt, timeCase.name);
+    }
   }
 });
 
