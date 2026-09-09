@@ -25,7 +25,7 @@ async function readS16Sources() {
 
 function capabilityViolations(sources) {
   const violations = [];
-  const forbiddenModule = /(?:^|\/)(?:viem(?:\/|$)|wagmi(?:\/|$)|metamask(?:\/|$)|walletconnect(?:\/|$)|command-relay(?:\/|$)|commands?(?:\/|$)|asset-tokenization-sdk(?:\/|$)|@hashgraph\/asset-tokenization-sdk(?:\/|$)|axios(?:\/|$)|node:(?:http|https)(?:\/|$)|(?:http|https)(?:\/|$))/i;
+  const forbiddenModule = /(?:^|\/)(?:viem(?:\/|$)|wagmi(?:\/|$)|metamask(?:\/|$)|walletconnect(?:\/|$)|command-relay(?:\/|$)|commands?(?:\/|$)|asset-tokenization-sdk(?:\/|$)|@hashgraph\/asset-tokenization-sdk(?:\/|$)|axios(?:\/|$)|node:(?:http|https)(?:\/|$)|(?:http|https)(?:\/|$)|lib\/wallet\/(?:metamask-provider|tool402-command|command-relay)(?:\.ts)?$)/i;
   const forbiddenCalls = new Set([
     "fetch", "sendCommand", "relayCommand", "submitCommand", "dispatchCommand",
   ]);
