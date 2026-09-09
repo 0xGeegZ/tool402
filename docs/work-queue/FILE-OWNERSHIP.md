@@ -493,15 +493,32 @@ optional candidate/reconciliation fields; amend only
 `packages/backend/tests/external-prepare-command-durable-schema.test.mjs` to
 match that exact shape; and amend only
 `packages/backend/convex/command_dispatch.ts` to enable the already-declared
-`external.attachCandidate` entry. This reservation grants no source, test,
-configuration, SDK, wallet, provider, transaction, deployment, or live-action
-work; its readiness, activation, and RED reviews remain separate gates.
+`external.attachCandidate` entry. This future GREEN reservation grants no
+implementation, schema, dispatch, configuration, SDK, wallet, provider,
+transaction, deployment, or live-action work today; its readiness, activation,
+and RED reviews remain separate gates.
 
 M43-T010 is active at `84c80f2` only to create its three declared durable
 test-only RED files and the matching narrow
-`external-prepare-command-durable-schema.test.mjs` assertion amendment. Every
-M43 source, schema, and dispatch amendment remains absent until a fresh RED
-review accepts its exact failure contract.
+`external-prepare-command-durable-schema.test.mjs` assertion amendment, plus
+the constrained M41 dispatch-test replacement below. Every M43 source, schema,
+and dispatch amendment remains absent until a fresh RED review accepts its
+exact failure contract.
+
+The root additionally reserves one active M43 test-only RED replacement in
+`packages/backend/tests/command-dispatch.test.mjs`, limited exactly to the
+accepted M41 disabled-attach-candidate assertion at lines 851–866 as they stood
+at M43 activation. It is replaced during M43 RED with the closed
+`ATTACHED`/`ALREADY_ATTACHED`/`COMMAND_REPLAYED` mapping defined in the M43
+specification, must fail against M41's current disabled entry, and may not
+change any source. No other M41 test, response arm, header rule, projection,
+source, schema, configuration, SDK, wallet, provider, transaction, deployment,
+or live behavior is reserved. A fresh independent RED acceptance remains
+required before every M43 source, schema, or dispatch amendment.
+
+M43's current zero-enabled ATS_* receipt action never invokes M40 readiness. A
+post-Stage-B successor needs a new scoped authority before the fixed one-read
+receipt boundary or its result changes.
 
 The root additionally reserves one M41 regression-baseline correction in
 `packages/backend/tests/offering-durable-schema.test.mjs`: only the exact

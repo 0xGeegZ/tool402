@@ -14,8 +14,10 @@ what the read document showed.
 
 The committed control-list configuration has no enabled entry, exactly as
 [M33](m33-ats-prepare-authority-gate.md) ships a zero-enabled ATS authority
-manifest. `ATS_CREATE` fails closed at that resolution and writes nothing until
-HA-ATS-STAGE-B-001 names the call; `HEDERA_FUNDING` is not coupled to it.
+manifest. Every `ATS_*` verification action fails closed as `NOT_CONFIGURED`
+before a Mirror read or its durable outcome write until a separately reviewed
+post-Stage-B successor names the applicable call; `HEDERA_FUNDING` is not
+coupled to that ATS resolution.
 
 ## Durable record amendment
 
@@ -123,7 +125,19 @@ amendment of `packages/backend/convex/command_dispatch.ts` under a root
 integration reservation naming that file. The amendment enables exactly that one
 entry, routing a normalized `external.attachCandidate` command to
 `attachAtsCandidateReceipt`, and changes no other entry, header rule, key
-resolution, projection, or response arm.
+resolution, projection, or response arm. Its closed attachment results map into
+the existing M41 response union exactly as follows:
+
+```text
+ATTACHED                              -> ACCEPTED, publicId = payload.attemptPublicId
+ALREADY_ATTACHED or COMMAND_REPLAYED  -> REPLAYED, publicId = payload.attemptPublicId
+unknown result or thrown boundary     -> REJECTED
+```
+
+The durable Convex `attemptId` never reaches the public response. The one
+accepted M41 regression assertion that currently requires this disabled entry
+to return `UNSUPPORTED_TYPE` is root-reserved for this exact replacement only;
+no response arm is added.
 
 ## Pure Mirror verifier
 
@@ -140,14 +154,19 @@ safety rule above and returns `{ outcome: "VERIFIED" }`, `{ outcome: "REJECTED",
 reason }`, or `{ outcome: "UNKNOWN", reason }`, where `reason` is exactly one of
 `DOCUMENT_UNSAFE`, `RESULT_NOT_SUCCESS`, `TARGET_MISMATCH`, `NETWORK_MISMATCH`,
 `CONSENSUS_TIMESTAMP_MISSING`, and `CREATED_ADDRESS_MISMATCH`. `VERIFIED`
-requires all of: a success result, a consensus timestamp, the transaction's
-network equal to `hedera:testnet` and chain 296, the contract it called equal to
-the expectation's `expectedTarget` under exact lowercase comparison, and — when
-the expectation carries a `candidateEvmAddress` — the created contract address
-equal to it. No case normalization, alias resolution, target-form conversion,
-fallback, or implicit default is allowed. The exact Mirror Node response field
-names are pinned by the durable RED fixture, not asserted here; the verifier has
-no fetch, clock, environment, database, ATS SDK, or provider dependency.
+requires a success result, a consensus timestamp, the transaction's network
+equal to `hedera:testnet` and chain 296, and the contract it called equal to the
+expectation's `expectedTarget` under exact lowercase comparison.
+
+The one permitted ContractResult document exposes a Hedera entity identifier in
+`created_contract_ids`; it does not establish a created EVM address. M43 must
+never convert that identifier or treat `address`, `to`, `contract_id`, logs, or
+another generic field as a created address. Consequently an expectation carrying
+`candidateEvmAddress` always returns `REJECTED` with
+`CREATED_ADDRESS_MISMATCH` under M43's one-read boundary. No case
+normalization, alias resolution, target-form conversion, fallback, or implicit
+default is allowed. The verifier has no fetch, clock, environment, database,
+ATS SDK, or provider dependency.
 
 The bounded reader receives an injected `fetch` implementation and the
 `mirrorNodeBaseUrl` value of the accepted configuration projection. It builds one
@@ -166,29 +185,25 @@ exposes exactly one internal action, `verifyAtsCandidateReceipt`, accepting only
 
 ```text
 read verification context → require state SUBMITTED, else NOT_ELIGIBLE
-→ for ATS_CREATE only, resolve the control-list check; with no enabled entry,
-  return NOT_CONFIGURED before any Mirror read and write nothing
+→ for every ATS_* operation, return NOT_CONFIGURED before any Mirror read or
+  the verification action's durable outcome write because M33's compiled
+  manifest has zero enabled records
 → one bounded Mirror read → pure verification
 → exactly one recordAtsCandidateOutcome write
-→ for a CONFIRMED ATS_CREATE, the M40-owned markAssetReady seam
 ```
 
 It returns exactly one of `{ outcome: "CONFIRMED" }`, `{ outcome: "REJECTED" }`,
 `{ outcome: "OUTCOME_UNKNOWN" }`, `{ outcome: "NOT_CONFIGURED" }`, or
 `{ outcome: "NOT_ELIGIBLE" }`. `VERIFIED` maps to `CONFIRMED` and a `REJECTED`
 verification to `REJECTED`; an `UNKNOWN` verification, a not-found document, an
-unavailable reader, a timeout, or a byte-cap stop maps to `OUTCOME_UNKNOWN`. A
+unavailable reader, a timeout, or a byte-cap stop maps to `OUTCOME_UNKNOWN`.
+Those terminal outcomes are currently reachable only for `HEDERA_FUNDING`. A
 second invocation on a terminal attempt returns `NOT_ELIGIBLE` without a read,
-and nothing retries or resubmits. The offering transition from `ASSET_PENDING`
-to `READY` is the M40-owned
-`markAssetReady(attemptId, atsAssetEvmAddress)` internal mutation. This action
-invokes it only after it has persisted `CONFIRMED` for an `ATS_CREATE` branch, passing the stored
-candidate address from its verification context only after the pure verifier
-has proved the created address equal. It does not accept or derive an offering
-ID, and it does not pass an action argument, browser value, or raw Mirror
-field. M40 resolves the unique offering through its `by_ats_attempt_id` index;
-M43 modifies no M40 file. `OUTCOME_UNKNOWN` and `REJECTED` leave the offering
-where M40 left it.
+and nothing retries or resubmits. M43 never invokes M40's `markAssetReady`
+seam: every ATS_* offering remains in its pre-existing state. A separately
+reviewed successor after a future Stage B authority must name any enabled
+mapping, additional fixed observation, documented created-address field, and
+M40 transition before it may add positive ATS_CREATE verification.
 
 ## Explicit exclusions
 
@@ -201,6 +216,8 @@ connect a provider or wallet, create or fund an account, sign, submit, resubmit,
 or claim a payment, settlement, clearing, HCS event, payout, or live evidence.
 Do not invent a control-list selector, function name, or configuration digest;
 HA-ATS-STAGE-B-001 and the retargeted configuration decision record those.
+Do not create a positive ATS_CREATE receipt result, mark an ATS asset ready, or
+add a second Mirror Node read under this card.
 
 ## Acceptance evidence
 
@@ -218,17 +235,61 @@ HA-ATS-STAGE-B-001 and the retargeted configuration decision record those.
   write, and that `candidateEvmAddress` is required for `ATS_CREATE` and
   refused for every other kind.
 - Focused tests prove the dispatch amendment enables exactly the
-  `external.attachCandidate` entry and leaves every other M41 entry, header
-  rule, projection, and response arm unchanged.
+  `external.attachCandidate` entry, maps its closed attachment statuses into
+  the pre-existing M41 response union without leaking an internal attempt ID,
+  and leaves every other M41 entry, header rule, projection, and response arm
+  unchanged.
 - Focused tests prove verifier purity, descriptor safety without a getter read,
   every arm of the closed outcome and reason unions, and the reader's timeout,
   byte cap, method, and fixed base URL with no caller-supplied URL.
-- Focused tests prove the `NOT_CONFIGURED` stop for `ATS_CREATE` before any
-  Mirror read and before any write, one Mirror read at most, one terminal
-  write, a stamp only for `OUTCOME_UNKNOWN`, and no retry or resubmission.
+- Focused tests prove the `NOT_CONFIGURED` stop for every ATS_* operation
+  before any Mirror read and before the verification action's durable outcome
+  write, one Mirror read at most for `HEDERA_FUNDING`, one terminal write only
+  for that non-ATS path, a stamp only for `OUTCOME_UNKNOWN`, and no retry or
+  resubmission.
 - Focused static checks prove no public export, environment read, HTTP route,
   configuration, publication, or external-action behavior, and that the
   [M33](m33-ats-prepare-authority-gate.md) gate stays zero-enabled.
 - Backend and root typecheck, test, lint, clean-install dry run, queue,
   reference, and whitespace checks, the enabled local guard, independent task
   review, and two fresh module-review generations pass.
+
+## Root correction rationale
+
+This section records the evidence behind the current zero-enabled ATS_* receipt
+boundary and its constrained M41 dispatch mapping.
+
+M33's compiled production manifest is an immutable empty list. Therefore the
+M43 verification action must return `NOT_CONFIGURED` for every ATS_*
+verification context before a Mirror read or its own durable outcome write. It
+must not invent a
+control-list selector, enabled mapping, configuration digest, or a test seam
+that behaves as one. M43's bounded observation and terminal-outcome work is
+limited to non-ATS operations.
+
+The one permitted Mirror ContractResult document exposes a Hedera
+created-entity identifier, not a documented created EVM address. M43 must
+never convert that identifier or treat `address`, `to`, `contract_id`, logs, or
+another generic field as proof of a created address. A pure ATS_CREATE
+expectation carrying `candidateEvmAddress` therefore fails closed as
+`REJECTED` with `CREATED_ADDRESS_MISMATCH`; it cannot produce `VERIFIED`.
+M43 never invokes M40's `markAssetReady` seam. A separately reviewed successor
+after a future Stage B authority must name any additional fixed observation,
+the documented exact created-address field, and the M40 transition before it
+may add positive ATS_CREATE verification.
+
+The already-declared `external.attachCandidate` dispatch enablement maps only
+into M41's existing public response union:
+
+```text
+ATTACHED                              -> ACCEPTED, publicId = payload.attemptPublicId
+ALREADY_ATTACHED or COMMAND_REPLAYED  -> REPLAYED, publicId = payload.attemptPublicId
+unknown result or thrown boundary     -> REJECTED
+```
+
+The durable `attemptId` never reaches a public response and no response arm is
+added. The root reserves only the accepted M41 disabled-entry assertion at
+`packages/backend/tests/command-dispatch.test.mjs` lines 851–866 for this
+M43 RED replacement; its matching source change remains GREEN-only after a
+fresh RED acceptance. Its terms are independently reviewed in
+[the correction record](../work-queue/evidence/M43-T010-red-contract-correction-review.md).
