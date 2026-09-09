@@ -4,7 +4,7 @@
 
 Fresh independent read-only review of:
 
-- the active [S20 control card](../queue/20-active/S20-T010-explore-marketplace-catalog.md);
+- the active [S20 control card](../queue/60-done/S20-T010-explore-marketplace-catalog.md);
 - the local [UI-S20 marketplace catalog manifest](../../ui/UI-S20.md); and
 - the durable test-only contract in `explore-catalog.test.mjs`,
   `landing-explore.test.mjs`, and `riskscan-directory-discovery.test.mjs`.

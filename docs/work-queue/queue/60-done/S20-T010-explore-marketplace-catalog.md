@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T040 accepted; M02-T070 accepted; M09-T010 accepted;
   M11-T020 accepted; M14-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
@@ -127,4 +127,14 @@ them.
   the ready review, the activation decision, the independent reviews, the
   integration decision, and every queue record. The branch is mirrored as a
   pull request for human visibility only; nothing from it reaches `main`
-  outside the root's integration decision.
+outside the root's integration decision.
+
+## Acceptance
+
+At source `746bf87`, the focused S20 tests passed 12/12 and the complete Web
+suite passed 179/179 under Node 22.21.1. Web/root typecheck, root test/lint,
+queue/reference/whitespace/Git-guard checks, equivalent Webpack production
+build, Next diagnostics, desktop/mobile browser checks, and independent task
+and module reviews are clear. The local host's standalone Turbopack build is
+blocked by its CSS-helper port bind; this does not change the verified source
+or grant deployment evidence. S20 is accepted as static presentation only.
