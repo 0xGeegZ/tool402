@@ -118,3 +118,19 @@ found a clean pushed head, no Core-path conflict, accepted M02-T050, and the
 exact targets absent. This activation authorizes only the two declared Core
 test fixtures; EntityCheck source, the Core barrel, and every I/O or external
 boundary remain prohibited pending a fresh RED review.
+
+## RED acceptance record
+
+Accepted at pushed `f8a42e7` after an independent review found the focused
+Node 22.21.1 contract fails exactly once only because the declared
+`packages/core/src/entity-check.ts` module is absent; fifteen source-dependent
+assertions skip, and the Core typecheck passes. The runtime contract covers
+later-index hostile arrays and a returned 513-character sanctions match. Its
+gated virtual TypeScript fixture directly imports the named public type-only
+exports after GREEN and checks them against the public value signatures and
+closed unions.
+
+Only `packages/core/src/entity-check.ts` and the declared export-only
+EntityCheck amendment to `packages/core/src/index.ts` are now authorized. No
+I/O, source adapter, API, Directory, UI, package, configuration, payment,
+wallet, provider, transaction, deployment, or live behavior is authorized.
