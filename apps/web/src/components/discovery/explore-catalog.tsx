@@ -1,5 +1,6 @@
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
+import { EntityCheckDiscoveryCard } from "./entitycheck-discovery-card";
 import { RiskScanDiscoveryCard } from "./riskscan-discovery-card";
 
 const CATALOG = Object.freeze([
@@ -11,6 +12,15 @@ const CATALOG = Object.freeze([
     access: "Read-only preview",
     href: "/explore/riskscan",
     description: "A read-only introduction to a bounded assessment for considering a tool's risk signals with care.",
+  },
+  {
+    id: "entitycheck",
+    name: "EntityCheck",
+    category: "Counterparty verification",
+    status: "In discovery",
+    access: "Read-only preview",
+    href: "/explore/entitycheck",
+    description: "A bounded lookup of a French company's public registry record with a sanctions screen, cited to its sources.",
   },
 ]);
 
@@ -67,13 +77,14 @@ export function ExploreCatalog() {
       <div className="min-w-0 space-y-5">
         <div className="flex items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            {CATALOG.length} tool
+            {CATALOG.length} tools
           </p>
           <Badge variant="outline">Read-only catalog</Badge>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">
           <RiskScanDiscoveryCard />
+          <EntityCheckDiscoveryCard />
           <Card className="border-dashed bg-transparent shadow-none">
             <CardHeader className="gap-4">
               <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-[var(--radius)] bg-secondary text-secondary-foreground">
