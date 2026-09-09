@@ -69,3 +69,17 @@ before distinguishing those outcomes. The ordinary no-version `OPEN` case now
 expects that fourth bounded read and remains `PRECONDITION_UNMET`; it does not
 reach the active-slug query. This changes no allowed state transition or
 external capability.
+
+## GREEN target-conflict correction
+
+The independent GREEN review found that the target Directory version was read
+only after an offering had already appeared eligible for a `NEW` or replay
+path. A fresh nonce paired with an existing target and a `DRAFT` or otherwise
+unsafe offering could therefore return `PRECONDITION_UNMET` without recording
+its conflict. The local specification requires resolving that target before
+choosing `NEW` versus replay. The corrected contract requires the bounded
+target-version lookup after the safe offering/ownership read for every fresh
+command. A singular malformed, non-`ACTIVE`, drifted, or unsafe target pairing
+consumes the fresh identity as an unlinked `IDEMPOTENCY_CONFLICT`; duplicate
+target rows still fail closed with no write. No directory or offering patch is
+permitted on either failure path.

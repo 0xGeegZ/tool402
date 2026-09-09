@@ -775,10 +775,7 @@ implementedTest("refuses non-READY and duplicate offering or ACTIVE directory st
       { status: "PRECONDITION_UNMET" },
       state,
     );
-    assert.deepEqual(
-      db.reads,
-      expectedDirectoryReads(input).slice(0, state === "OPEN" ? 4 : 3),
-    );
+    assert.deepEqual(db.reads, expectedDirectoryReads(input).slice(0, 4));
     assert.deepEqual(db.writes, []);
   }
 
@@ -800,7 +797,7 @@ implementedTest("refuses non-READY and duplicate offering or ACTIVE directory st
       await directory.admitDirectoryPublish._handler(db.ctx, input),
       { status: "PRECONDITION_UNMET" },
     );
-    assert.deepEqual(db.reads, expectedDirectoryReads(input).slice(0, 3));
+    assert.deepEqual(db.reads, expectedDirectoryReads(input).slice(0, 4));
     assertNoDirectoryOrOfferingWrite(db.writes);
   }
 
@@ -817,7 +814,7 @@ implementedTest("refuses non-READY and duplicate offering or ACTIVE directory st
     await directory.admitDirectoryPublish._handler(mismatchedVersionDb.ctx, mismatchedVersionInput),
     { status: "PRECONDITION_UNMET" },
   );
-  assert.deepEqual(mismatchedVersionDb.reads, expectedDirectoryReads(mismatchedVersionInput).slice(0, 3));
+  assert.deepEqual(mismatchedVersionDb.reads, expectedDirectoryReads(mismatchedVersionInput).slice(0, 4));
   assert.deepEqual(mismatchedVersionDb.writes, []);
 
   const duplicateOfferingDb = database({
@@ -838,6 +835,33 @@ implementedTest("refuses non-READY and duplicate offering or ACTIVE directory st
   await assert.rejects(() => directory.admitDirectoryPublish._handler(duplicateActiveDb.ctx, activeInput), undefined);
   assert.deepEqual(duplicateActiveDb.reads, expectedDirectoryReads(activeInput));
   assert.deepEqual(duplicateActiveDb.writes, []);
+});
+
+implementedTest("claims an existing target conflict before retrying a non-NEW offering", async (t) => {
+  const directory = await loadDirectory(t);
+  const input = admissionInput();
+  const target = directoryDocument(input);
+  const missingAttempt = offeringDocument(input);
+  delete missingAttempt.atsAttemptId;
+  const unsafeOfferings = [
+    offeringDocument(input, { state: "DRAFT" }),
+    missingAttempt,
+    offeringDocument(input, { atsAssetEvmAddress: "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }),
+  ];
+  for (const offering of unsafeOfferings) {
+    const db = database({
+      authorities: [authority(input)],
+      offerings: [offering],
+      directoryVersions: ({ index }) => index === "by_offering_public_id_and_directory_version" ? [target] : [],
+    });
+    assert.deepEqual(
+      await directory.admitDirectoryPublish._handler(db.ctx, input),
+      { status: "IDEMPOTENCY_CONFLICT" },
+    );
+    assert.deepEqual(db.reads, expectedDirectoryReads(input).slice(0, 4));
+    assertNoDirectoryOrOfferingWrite(db.writes);
+    assertUnlinkedDirectoryConflictClaim(db, input);
+  }
 });
 
 implementedTest("fails closed on malformed, duplicate, or descriptor-backed referenced offering and directory rows", async (t) => {
@@ -867,21 +891,41 @@ implementedTest("fails closed on malformed, duplicate, or descriptor-backed refe
   assert.equal(hostileOffering.reads(), 0);
 
   const directoryInput = admissionInput({ payload: directoryPayload({ directoryVersion: 2 }) });
-  const targetRows = [
+  const malformedTargetRows = [
     null,
     [],
     directoryDocument(directoryInput, { record: {} }),
-    directoryDocument(directoryInput, { state: "PUBLISH_PREPARED" }),
   ];
-  for (const target of targetRows) {
+  for (const target of malformedTargetRows) {
     const db = database({
       authorities: [authority(directoryInput)],
       offerings: [offeringDocument(directoryInput)],
       directoryVersions: ({ index }) => index === "by_offering_public_id_and_directory_version" ? [target] : [],
     });
-    await assert.rejects(() => directory.admitDirectoryPublish._handler(db.ctx, directoryInput), undefined);
+    assert.deepEqual(
+      await directory.admitDirectoryPublish._handler(db.ctx, directoryInput),
+      { status: "IDEMPOTENCY_CONFLICT" },
+    );
     assert.deepEqual(db.reads, expectedDirectoryReads(directoryInput).slice(0, 4));
     assertNoDirectoryOrOfferingWrite(db.writes);
+    assertUnlinkedDirectoryConflictClaim(db, directoryInput);
+  }
+
+  for (const state of ["PUBLISH_PREPARED", "SUPERSEDED"]) {
+    const db = database({
+      authorities: [authority(directoryInput)],
+      offerings: [offeringDocument(directoryInput)],
+      directoryVersions: ({ index }) => index === "by_offering_public_id_and_directory_version"
+        ? [directoryDocument(directoryInput, { state })]
+        : [],
+    });
+    assert.deepEqual(
+      await directory.admitDirectoryPublish._handler(db.ctx, directoryInput),
+      { status: "IDEMPOTENCY_CONFLICT" },
+    );
+    assert.deepEqual(db.reads, expectedDirectoryReads(directoryInput).slice(0, 4));
+    assertNoDirectoryOrOfferingWrite(db.writes);
+    assertUnlinkedDirectoryConflictClaim(db, directoryInput);
   }
 
   const duplicateTargetDb = database({

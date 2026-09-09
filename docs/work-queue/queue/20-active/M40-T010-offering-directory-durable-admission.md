@@ -216,3 +216,10 @@ Directory mutation now makes its bounded target-version lookup before choosing
 between ordinary `PRECONDITION_UNMET` (no version) and an unsafe persisted
 idempotency conflict (a matching version). This resolves two otherwise
 indistinguishable stored inputs without weakening either failure path.
+
+Every fresh Directory command now resolves its bounded target version after a
+safe offering and ownership read, before it decides `NEW` versus replay. A
+singular existing malformed, non-`ACTIVE`, drifted, or unsafe pairing consumes
+the fresh identity as an unlinked conflict; duplicate target rows remain a
+no-write fail-closed error. This preserves the durable replay boundary rather
+than leaving a retryable conflict.
