@@ -188,3 +188,20 @@ The follow-up review also fixes the exact publish replay after a successful
 `NEW` result has moved its offering to `OPEN`, and requires closed validator
 assertions for the Directory admission and projection. These remain RED-test
 requirements only.
+
+## RED acceptance
+
+At clean committed control head `e646e2e`, a fresh independent review found
+the three RED files clear: 33 focused tests had exactly the three expected
+absence failures (two M40 modules and the additive schema tables), 30 skips,
+and no incidental failure under Node 22.21.1. The review also confirmed the
+parser-first malformed-payload boundary, closed six-function Convex
+interfaces, and the `READY`-only `NEW` versus linked `OPEN` replay rule.
+
+Only the root-reserved additive schema amendment,
+`packages/backend/convex/offerings.ts`,
+`packages/backend/convex/directory_versions.ts`, and
+`packages/backend/src/offering-command-admission.ts` are now authorized for
+minimal local GREEN. The full evidence is the
+[M40 RED review](../../evidence/M40-T010-red-review.md). No external or live
+authority is added.
