@@ -26,8 +26,9 @@ address field uses `v.string()`, per the
 [M04 convention](m04-riskscan-durable-schema.md). Validators never replace
 the handler rules below.
 
-`offerings` has exactly these validators and the
-`by_offering_public_id_and_version` index on `offeringPublicId`, `version`:
+`offerings` has exactly these validators, the
+`by_offering_public_id_and_version` index on `offeringPublicId`, `version`,
+and the `by_ats_attempt_id` index on `atsAttemptId`:
 
 ```text
 offeringPublicId, subjectPublicId, canonicalSignerAddress, principalPublicId,
@@ -123,8 +124,10 @@ write, `packages/backend/src/offering-command-admission.ts` must:
 
 Failure of any check fails closed with zero reads and zero writes. Core emits
 canonical bytes and the consumer holding `viem` hashes them. The module is
-pure: no context, clock, environment, storage, network, or `@tool402/backend`
-export, and it cannot re-prove the upstream signature.
+pure: it receives the internal mutation's one server-derived `durableNow`
+value as an explicit input and has no context, clock, environment, storage,
+network, or `@tool402/backend` export. The mutation, never a caller, obtains
+that durable clock value; the module cannot re-prove the upstream signature.
 
 ## Internal mutations
 
@@ -178,23 +181,49 @@ document ID for `admitOfferingCreate` and the `directoryVersions` document ID
 for `admitDirectoryPublish`, while the stored claim column of the same name
 holds its string form. No status retries, calls out, or submits.
 
-`offerings.ts` also declares two internal transitions:
-`markAssetPending(offeringId, attemptId)`, moving exactly one `DRAFT` offering
-to `ASSET_PENDING` and recording `atsAttemptId`, and
-`markAssetReady(offeringId, attemptId)`, moving exactly one `ASSET_PENDING`
-offering to `READY` and recording `atsAssetEvmAddress` as supplied by the
-caller. Both write `offerings` columns only and are named seams for the
-accepted `ATS_CREATE` path. `markAssetPending` is invoked by the
+`offerings.ts` also declares two internal transitions with closed Convex
+argument and return validators. `markAssetPending(offeringId, attemptId)`
+accepts exactly an `offerings` document ID and an
+`externalPrepareCommandAttempts` document ID, and returns exactly
+`{ offeringId, state: "ASSET_PENDING" }`. It obtains both stored rows itself,
+requires one safe `DRAFT` offering with neither asset-link field, and one safe
+`PREPARED` `ATS_CREATE` attempt whose `subjectPublicId` equals the offering's.
+Before the patch, it reads `by_ats_attempt_id` with `take(2)` and requires no
+existing link for that attempt. It then patches only `state`, `atsAttemptId`,
+and its server-derived `updatedAt` value.
+
+`markAssetReady(attemptId, atsAssetEvmAddress)` deliberately accepts no
+caller-supplied offering ID. It accepts exactly an
+`externalPrepareCommandAttempts` document ID and a canonical lowercase EVM
+address (`0x` plus 40 lowercase hexadecimal characters), returning exactly
+`{ offeringId, state: "READY" }`. It validates that address before accessing
+storage, resolves the offering itself through `by_ats_attempt_id` with
+`take(2)`, and requires exactly one safe `ASSET_PENDING` offering whose stored
+attempt ID is exactly `attemptId` and whose asset address is absent. It then
+patches only `state`, `atsAssetEvmAddress`, and its server-derived
+`updatedAt` value. Zero, duplicate, unsafe, mismatched, or ineligible rows
+fail closed with no patch.
+
+The state/link invariant is exact: `DRAFT` has neither asset-link field;
+`ASSET_PENDING` has `atsAttemptId` and no asset address; and `READY` or `OPEN`
+has both that attempt ID and a canonical asset address. A `directory.publish`
+mutation treats any stored row outside that invariant as unsafe and performs no
+directory or offering write. `CLOSED` does not weaken an existing link's
+canonicality.
+
+Both seams write `offerings` columns only and are named seams for the accepted
+`ATS_CREATE` path. `markAssetPending` is invoked by the
 [M41](m41-http-command-ingress.md) dispatch boundary in
-`packages/backend/convex/command_dispatch.ts` immediately after a
-successful M32 `admitExternalPrepareCommand` returns status `NEW` for an
-`ATS_CREATE` `operationKind` whose `subjectPublicId` matches a `DRAFT`
-offering with the same subject; any other status or kind leaves the offering
-untouched. `markAssetReady` is invoked only by the
-[M43](m43-ats-receipt-verification.md) verification action after `CONFIRMED`.
-M40 declares the seams and writes no caller: every
-`externalPrepareCommandAttempts` change and both wirings belong to those
-cards' own reservations.
+`packages/backend/convex/command_dispatch.ts` immediately after a successful
+M32 `admitExternalPrepareCommand` returns status `NEW` for an `ATS_CREATE`
+operation whose subject matches a `DRAFT` offering; any other status or kind
+leaves every offering untouched. `markAssetReady` is invoked only by the
+[M43](m43-ats-receipt-verification.md) verification action after it has
+persisted `CONFIRMED`. M43 may pass only the stored candidate address after its
+pure verifier has proved that the created address exactly equals it; it may not
+pass a browser, action-argument, or raw Mirror response address. M40 declares the
+seams and writes no caller: every `externalPrepareCommandAttempts` change and
+both wirings belong to those cards' own reservations.
 
 ## Public read-only projections
 
@@ -221,10 +250,18 @@ evidence, M24 through M33 source or tests, a barrel, or the lockfile.
 ## Acceptance evidence
 
 - A test-only RED commit precedes every schema and function production change.
-- Focused tests prove the exact additive three-table contract; unchanged
-  accepted schema subsets; full rebinding, payload-hash and replay-identity
-  equality and durable time validation before any database access; the
-  authority recheck and both ISSUER-owns-subject predicates; replay before
+- Focused tests prove the exact additive three-table contract, including the
+  `by_ats_attempt_id` index; unchanged accepted schema subsets; full rebinding
+  through the M38 parser before hash comparison, including malformed raw
+  payloads paired with independently recomputed JCS hashes; exact command and
+  payload expiry equality; inclusive expiry, 300-second, and future-skew
+  boundaries; and exact replay-identity equality before any database access.
+  They also prove safe bounded handling of duplicate or malformed authority,
+  replay-claim, offering, and directory rows; the exact closed Convex args and
+  returns for both admissions and both asset seams; the
+  `DRAFT` → `ASSET_PENDING` and `ASSET_PENDING` → `READY` guards, attempt
+  binding, canonical asset-address provenance, and zero-write rejection paths.
+  The authority recheck and both ISSUER-owns-subject predicates; replay before
   identity lookup; conflict on drift; one atomic `NEW` write;
   `directory.publish` refused unless the offering is `READY`; one `ACTIVE`
   row per slug with the prior superseded and the offering `OPEN`; and no

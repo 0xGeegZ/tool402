@@ -87,8 +87,12 @@ not coupled to it. Nothing retries and nothing resubmits.
   its mutation and its recovery query — stays byte unchanged, and recovery
   keeps matching only the literal `PREPARED` state.
 - The offering transition from `ASSET_PENDING` to `READY` is the M40-owned
-  `markAssetReady(offeringId, attemptId)` internal mutation, invoked only by
-  this card's verification action after `CONFIRMED`; M43 modifies no M40 file.
+  `markAssetReady(attemptId, atsAssetEvmAddress)` internal mutation. This
+  card's verification action invokes it only after it has persisted `CONFIRMED`
+  for an `ATS_CREATE` verifier result, passing the stored candidate address after the verifier has
+  matched it to the created address. It passes no offering ID, browser value,
+  raw Mirror field, or action argument; M40 resolves the sole offering through
+  its additive `by_ats_attempt_id` index. M43 modifies no M40 file.
 - The attempt is resolved through the accepted `by_idempotency_key` index,
   because M32 mints no public identifier and this card may not amend M32. The
   specification fixes that resolution rule before code.
@@ -127,8 +131,9 @@ not coupled to it. Nothing retries and nothing resubmits.
   `ATS_CREATE` while the control-list configuration has no enabled entry and
   performs no Mirror read on that path; performs at most one Mirror read
   otherwise; writes exactly one terminal outcome; sets a reconciliation
-  timestamp only for `OUTCOME_UNKNOWN`; and never resubmits, retries, or
-  calls a wallet, provider, or SDK.
+  timestamp only for `OUTCOME_UNKNOWN`; invokes the M40 ready seam only on a
+  confirmed `ATS_CREATE` branch with the already verified stored candidate
+  address; and never resubmits, retries, or calls a wallet, provider, or SDK.
 - `npm run typecheck`, `npm run test`, `npm run lint`, `npm run queue:check`,
   and the enabled local-reference guard pass.
 - Independent task review and two fresh module-review generations report no

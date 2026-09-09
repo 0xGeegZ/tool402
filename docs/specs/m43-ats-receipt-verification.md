@@ -180,10 +180,15 @@ verification to `REJECTED`; an `UNKNOWN` verification, a not-found document, an
 unavailable reader, a timeout, or a byte-cap stop maps to `OUTCOME_UNKNOWN`. A
 second invocation on a terminal attempt returns `NOT_ELIGIBLE` without a read,
 and nothing retries or resubmits. The offering transition from `ASSET_PENDING`
-to `READY` is the M40-owned `markAssetReady(offeringId, attemptId)` internal
-mutation, invoked only by this action after `CONFIRMED` and bound to the
-confirmed attempt; M43 modifies no M40 file, and `OUTCOME_UNKNOWN` and
-`REJECTED` leave the offering where M40 left it.
+to `READY` is the M40-owned
+`markAssetReady(attemptId, atsAssetEvmAddress)` internal mutation. This action
+invokes it only after it has persisted `CONFIRMED` for an `ATS_CREATE` branch, passing the stored
+candidate address from its verification context only after the pure verifier
+has proved the created address equal. It does not accept or derive an offering
+ID, and it does not pass an action argument, browser value, or raw Mirror
+field. M40 resolves the unique offering through its `by_ats_attempt_id` index;
+M43 modifies no M40 file. `OUTCOME_UNKNOWN` and `REJECTED` leave the offering
+where M40 left it.
 
 ## Explicit exclusions
 

@@ -83,12 +83,17 @@ exists on chain.
 - `packages/backend/convex/external_prepare_command_admission.ts`,
   `packages/backend/convex/external_prepare_command_recovery.ts`,
   `packages/backend/convex/ats_prepare_authority.ts`, and their tests stay
-  byte unchanged. The `markAssetPending` and `markAssetReady` transitions are
-  declared here as named seams and wired by their named callers under their
-  own reservations: M41-T010 invokes `markAssetPending` from its dispatch
-  boundary immediately after a successful M32 admission returns `NEW` for an
-  `ATS_CREATE` attempt on a `DRAFT` offering's subject, and M43-T010 invokes
-  `markAssetReady` from its verification action after `CONFIRMED`.
+  byte unchanged. The M40-owned seams are closed: `markAssetPending(offeringId,
+  attemptId)` checks the exact safe `DRAFT` offering and matching safe
+  `PREPARED` `ATS_CREATE` attempt before its one pending patch;
+  `markAssetReady(attemptId, atsAssetEvmAddress)` accepts no offering ID,
+  resolves exactly one pending offering through the additive
+  `by_ats_attempt_id` index, and accepts only a canonical address. M41-T010
+  invokes the pending seam after a successful M32 `NEW` `ATS_CREATE` admission.
+  M43-T010 invokes the ready seam only after it has persisted `CONFIRMED` and
+  its pure receipt verifier has bound the stored candidate address to the
+  created address. Neither caller can select a different offering or browser-supplied
+  asset address.
 - The closed record shapes, the mutation ordering, the single-`ACTIVE`
   directory rule, and the sanitized projection fields are fixed in the
   specification before code, so the data plane cannot grow an unreviewed
@@ -102,12 +107,17 @@ exists on chain.
   `packages/backend/tests/directory-version-writer.test.mjs` precede every
   schema and source change. They fail only because the declared tables and
   modules do not yet exist.
-- Focused tests prove the exact additive three-table contract with its
-  literal unions, optional fields, document-ID targets, int64 timestamps and
-  declared indexes; that the accepted RiskScan and external-prepare subsets
-  are unchanged; full serialized rebinding, payload re-parse, recomputed
-  payload-hash equality, replay-identity equality and durable time checks
-  before any database access; the current-authority recheck, with the
+- Focused tests prove the exact additive three-table contract with its literal
+  unions, optional fields, document-ID targets, int64 timestamps and declared
+  indexes including `by_ats_attempt_id`; that the accepted RiskScan and
+  external-prepare subsets are unchanged; parser-first serialized rebinding
+  for raw malformed M38 payloads paired with independently recomputed hashes;
+  exact expiry equality plus inclusive expiry, maximum-lifetime, future-skew,
+  and replay-identity boundary vectors before any database access; safe bounded
+  rejection of malformed or duplicate stored rows; exact internal Convex
+  arguments/returns; and executable pending/ready seam guards, attempt
+  binding, canonical address provenance, and zero-write rejection paths. The
+  current-authority recheck, with the
   ISSUER-owns-subject predicate read from the payload for `offering.create`
   and re-applied to the referenced offering's stored subject for
   `directory.publish`; replay before idempotency; exact context
@@ -159,3 +169,15 @@ baseline checks. M40 is `20-active` only to create its three declared
 test-only RED files. `schema.ts`, Convex modules, and
 `offering-command-admission.ts` remain prohibited until an independent RED
 review clears.
+
+## RED contract correction
+
+The first independent RED review at `ca5e8d3` blocked source authorization:
+the original test contract did not execute either asset transition and left
+both the offering-to-attempt lookup and ready-address provenance ambiguous.
+The scoped amendment recorded in
+[M40 RED contract amendment review](../../evidence/M40-T010-red-contract-amendment.md)
+adds only the additive offering index, exact local seam contract, and missing
+RED vectors. It remains test/spec-only: `schema.ts`, Convex source, and the
+admission helper are still prohibited until a fresh independent RED review is
+clear.
