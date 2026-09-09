@@ -48,10 +48,36 @@ const expectedDescriptor = {
   limitations: ["quick_assessment_only", "caller_declarations_are_not_external_verification"],
 };
 
-test("describes exactly one Quick tool with the accepted bounded input and limitations", () => {
+const expectedEntityCheckDescriptor = {
+  id: "entitycheck.fr",
+  name: "EntityCheck France",
+  request: { method: "POST", path: "/api/entitycheck", contentType: "application/json" },
+  input: {
+    type: "object",
+    required: ["requestRef", "jurisdiction", "query"],
+    properties: {
+      requestRef: { type: "string", minLength: 1, maxLength: 96 },
+      jurisdiction: { type: "string", enum: ["FR"] },
+      query: { type: "string", minLength: 1, maxLength: 160 },
+      registrationNumber: { type: "string", pattern: "^[0-9]{9}$" },
+    },
+    additionalProperties: false,
+  },
+  result: {
+    dispositions: ["found", "ambiguous", "not_found"],
+    sanctionsScreen: ["clear", "hit", "not_screened"],
+  },
+  sources: ["FR_RECHERCHE_ENTREPRISES", "OFAC_SDN"],
+  limitations: [
+    "EntityCheck reflects two public sources at the time they were read and does not verify ownership, solvency, or compliance; a clear screen is not a compliance opinion.",
+  ],
+  configuration: { state: "configuration_required" },
+};
+
+test("describes exactly the Quick tool and the EntityCheck tool with the accepted bounded input and limitations", () => {
   assert.deepEqual(buildToolDirectory({}), {
     version: "v1",
-    tools: [{ ...expectedDescriptor, payment: { state: "configuration_required" } }],
+    tools: [{ ...expectedDescriptor, payment: { state: "configuration_required" } }, expectedEntityCheckDescriptor],
   });
 });
 
@@ -67,7 +93,7 @@ test("fails closed when any configuration field is missing or malformed", () => 
       const directory = buildToolDirectory({ ...configuredEnvironment, [key]: value });
       assert.deepEqual(directory, {
         version: "v1",
-        tools: [{ ...expectedDescriptor, payment: { state: "configuration_required" } }],
+        tools: [{ ...expectedDescriptor, payment: { state: "configuration_required" } }, expectedEntityCheckDescriptor],
       });
     }
   }
@@ -84,7 +110,7 @@ test("exposes only parsed local protocol, network and price for valid configurat
     tools: [{
       ...expectedDescriptor,
       payment: { state: "locally_configured", protocol: "x402", network: "eip155:11155111", price: "$1.25" },
-    }],
+    }, expectedEntityCheckDescriptor],
   });
 });
 
@@ -109,7 +135,7 @@ test("exposes only the native Hedera summary for valid local configuration", asy
 
   assert.deepEqual(buildToolDirectory(environment), {
     version: "v1",
-    tools: [{ ...expectedDescriptor, payment: expectedPayment }],
+    tools: [{ ...expectedDescriptor, payment: expectedPayment }, expectedEntityCheckDescriptor],
   });
 
   const body = await toolDirectoryResponse(environment).text();
@@ -174,7 +200,7 @@ test("uses one parser pass and keeps separate directory builds independent", () 
   directory.tools[0].input.properties.declarations.required.length = 0;
   assert.deepEqual(buildToolDirectory({}), {
     version: "v1",
-    tools: [{ ...expectedDescriptor, payment: { state: "configuration_required" } }],
+    tools: [{ ...expectedDescriptor, payment: { state: "configuration_required" } }, expectedEntityCheckDescriptor],
   });
 });
 
@@ -187,7 +213,7 @@ test("constructs directory responses without network, tool, payment, backend, cl
   }
   t.mock.method(Math, "random", forbidden);
   for (const environment of [{}, configuredEnvironment]) {
-    assert.equal(buildToolDirectory(Object.freeze(environment)).tools.length, 1);
+    assert.equal(buildToolDirectory(Object.freeze(environment)).tools.length, 2);
     assert.equal(toolDirectoryResponse(environment).status, 200);
   }
 });
@@ -203,7 +229,10 @@ test("registers only a GET route with request-time environment access and no leg
   assert.doesNotMatch(route, /\b(?:dynamic|revalidate|fetchCache)\b/u);
   const builder = readFileSync(new URL("../src/lib/tool-directory.ts", import.meta.url), "utf8");
   const imports = builder.match(/^import .+;$/gmu);
-  assert.deepEqual(imports, ['import { readRiskScanX402Configuration } from "./riskscan-x402.ts";']);
+  assert.deepEqual(imports, [
+    'import { buildEntityCheckToolDescriptor } from "./entity-check-tool-descriptor.ts";',
+    'import { readRiskScanX402Configuration } from "./riskscan-x402.ts";',
+  ]);
   assert.equal((builder.match(/readRiskScanX402Configuration\(/gu) ?? []).length, 1);
   assert.doesNotMatch(builder, /\b(?:process|fetch|require|import\(|Date|setTimeout|setInterval|Math\.random)\b/u);
 });
