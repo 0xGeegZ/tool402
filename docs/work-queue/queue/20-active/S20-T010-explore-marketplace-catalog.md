@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T040 accepted; M02-T070 accepted; M09-T010 accepted;
   M11-T020 accepted; M14-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
@@ -14,6 +14,23 @@
 - Human actions: none. This presentation change creates no wallet, payment,
   provider, configuration, account, transaction, deployment, or live
   behavior.
+
+## Activation
+
+At pushed `bb937a7`, an independent activation review found a free Web
+implementation lane, accepted predecessors, recorded root reservations, and
+disjoint targets. This card is active only to create its durable test-only RED
+contract in these existing test paths:
+
+```text
+apps/web/tests/explore-catalog.test.mjs
+apps/web/tests/landing-explore.test.mjs
+apps/web/tests/riskscan-directory-discovery.test.mjs
+```
+
+The Explore page, discovery card, catalog component, Directory island, guest
+workbench, navigation, and every external or durable capability remain
+prohibited until an independent RED review is clear.
 
 ## Scope
 
