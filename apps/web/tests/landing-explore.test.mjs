@@ -3,11 +3,64 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import typescript from "typescript";
 
 const appRoot = fileURLToPath(new URL("..", import.meta.url));
 
 function readAppFile(path) {
   return readFile(join(appRoot, path), "utf8");
+}
+
+function directPageLinkViolations(source) {
+  const sourceFile = typescript.createSourceFile(
+    "src/app/explore/page.tsx",
+    source,
+    typescript.ScriptTarget.ES2022,
+    true,
+    typescript.ScriptKind.TSX,
+  );
+  const violations = [];
+
+  function report(node, message) {
+    const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+    violations.push(`${line + 1}:${character + 1} ${message}`);
+  }
+
+  function propertyName(node) {
+    if (typescript.isIdentifier(node) || typescript.isStringLiteral(node)) return node.text;
+    return null;
+  }
+
+  function visit(node) {
+    if (
+      typescript.isImportDeclaration(node) &&
+      typescript.isStringLiteral(node.moduleSpecifier) &&
+      node.moduleSpecifier.text === "next/link"
+    ) {
+      report(node, "direct next/link import");
+    }
+    if (
+      typescript.isCallExpression(node) &&
+      node.expression.kind === typescript.SyntaxKind.ImportKeyword &&
+      typescript.isStringLiteral(node.arguments[0]) &&
+      node.arguments[0].text === "next/link"
+    ) {
+      report(node, "direct next/link import");
+    }
+    if (typescript.isJsxAttribute(node) && node.name.text === "href") {
+      report(node, "direct JSX href");
+    }
+    if (typescript.isPropertyAssignment(node) && propertyName(node.name) === "href") {
+      report(node, "direct href property");
+    }
+    if ((typescript.isJsxOpeningElement(node) || typescript.isJsxSelfClosingElement(node)) && typescript.isIdentifier(node.tagName)) {
+      if (["a", "Link"].includes(node.tagName.text)) report(node, `direct ${node.tagName.text} element`);
+    }
+    typescript.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return violations;
 }
 
 test("renders labeled navigation between the committed local routes", async () => {
@@ -42,21 +95,28 @@ test("gives the decorative landing artwork an explicit responsive width", async 
   assert.doesNotMatch(hero, /\bw-full\s+max-w-58\b/);
 });
 
-test("renders a single read-only Explore discovery surface", async () => {
-  const [page, card, island] = await Promise.all([
+test("renders a single read-only Explore marketplace catalog", async () => {
+  const [page, card] = await Promise.all([
     readAppFile("src/app/explore/page.tsx"),
     readAppFile("src/components/discovery/riskscan-discovery-card.tsx"),
-    readAppFile("src/components/discovery/riskscan-directory-discovery.tsx"),
   ]);
 
   assert.match(page, /<main\b/);
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
   assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
-  assert.match(page, /<RiskScanDiscoveryCard\s*\/>/);
-  assert.match(page, /<RiskScanDirectoryDiscovery\s*\/>/);
-  assert.match(island, /["']use client["']/);
+  assert.match(page, /<ExploreCatalog\s*\/>/);
+  assert.doesNotMatch(page, /\bRiskScanDirectoryDiscovery\b/);
+  assert.doesNotMatch(page, /<RiskScanDiscoveryCard\s*\/>/);
+  assert.match(page, />\s*Marketplace\s*</);
+  assert.match(page, />\s*Explore tools\s*</);
+  assert.match(page, /Bounded, machine-payable tools with an inspectable journey\. Start with what each one covers\./);
+  assert.deepEqual(directPageLinkViolations(page), []);
   assert.match(card, /RiskScan/);
   assert.match(card, /read-only/i);
+  assert.match(card, /Risk assessment/);
+  assert.match(card, /In discovery/);
+  assert.match(card, /This surface is descriptive only\./);
+  assert.match(card, />\s*View details\s*</);
   assert.match(card, /<Link\b[^>]*href=["']\/explore\/riskscan["']/);
   const hrefs = [...card.matchAll(/href=["']([^"']+)["']/g)].map(([, href]) => href);
   assert.deepEqual(hrefs, ["/explore/riskscan"]);
