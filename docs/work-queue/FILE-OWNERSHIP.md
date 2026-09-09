@@ -467,6 +467,14 @@ response remains the accepted static body; only the exact
 view. No Agent reader or Agent test is reserved, and no served metadata becomes
 payment, availability, or execution authority.
 
+M45-T010's durable RED contract is accepted at `2ee65bb`. Its root-integrated
+GREEN scope is limited to `apps/web/src/lib/active-directory-version.ts`, the
+declared type-only/view amendment to `apps/web/src/lib/tool-directory.ts`, and
+the exact opt-in `GET` amendment to `apps/web/src/app/api/tools/route.ts`.
+The accepted default discovery response, Agent reader/tests, every payment or
+provider boundary, and all configuration, wallet, SDK, transaction, deployment,
+and live paths remain excluded.
+
 M41-T010's scoped atomic-handoff correction is root-integrated only. It may
 amend `packages/backend/convex/external_prepare_command_admission.ts`,
 `packages/backend/convex/offerings.ts`, and `packages/backend/convex/schema.ts`
