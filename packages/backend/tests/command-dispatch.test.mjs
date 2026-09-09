@@ -991,6 +991,43 @@ implementedTest("maps null and malformed public projections to only NOT_FOUND or
   }
 });
 
+implementedTest("fails closed for noncanonical active-directory version bindings", async () => {
+  const { handleActiveDirectory } = await import(dispatchUrl);
+  const directory = {
+    offeringPublicId: "offering_42",
+    offeringVersion: 1,
+    directoryVersion: 1,
+    serviceSlug: "riskscan",
+    record: directoryRecord(),
+    state: "ACTIVE",
+    acceptedAt: 1n,
+  };
+  const cases = [
+    ["zero directory version", { ...directory, directoryVersion: 0 }],
+    ["negative directory version", { ...directory, directoryVersion: -1 }],
+    ["zero offering version", { ...directory, offeringVersion: 0 }],
+    ["negative offering version", { ...directory, offeringVersion: -1 }],
+    ["invalid offering public id", { ...directory, offeringPublicId: "not valid" }],
+    ["offering public id mismatch", { ...directory, offeringPublicId: "offering_99" }],
+    ["offering version mismatch", { ...directory, offeringVersion: 2 }],
+  ];
+
+  for (const [name, queryResult] of cases) {
+    const state = commandContext({ queryResult });
+    const response = await handleActiveDirectory(
+      state.ctx,
+      new Request("https://tool402.test/public/directory/riskscan/active"),
+    );
+    assert.equal(response.status, 503, name);
+    assert.deepEqual(await responseJson(response), { outcome: "UNAVAILABLE" }, name);
+    assert.deepEqual(state.mutations, [], name);
+    assert.deepEqual(state.queries, [{
+      name: "directory_versions:getActive",
+      args: { serviceSlug: "riskscan" },
+    }], name);
+  }
+});
+
 implementedTest("fails closed rather than stripping decorated projection arrays", async () => {
   const { handleActiveDirectory, handleOfferingProjection } = await import(dispatchUrl);
   const offering = {

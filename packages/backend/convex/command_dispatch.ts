@@ -656,8 +656,9 @@ function activeDirectoryRecord(input: unknown, serviceSlug: string) {
     || record.serviceSlug !== serviceSlug
     || record.state !== "ACTIVE"
     || typeof record.offeringPublicId !== "string"
-    || typeof record.offeringVersion !== "number" || !Number.isSafeInteger(record.offeringVersion)
-    || typeof record.directoryVersion !== "number" || !Number.isSafeInteger(record.directoryVersion)
+    || !publicIdPattern.test(record.offeringPublicId)
+    || typeof record.offeringVersion !== "number" || !Number.isSafeInteger(record.offeringVersion) || record.offeringVersion < 1
+    || typeof record.directoryVersion !== "number" || !Number.isSafeInteger(record.directoryVersion) || record.directoryVersion < 1
     || int64(record.acceptedAt) === null
   ) {
     return null;
@@ -666,7 +667,11 @@ function activeDirectoryRecord(input: unknown, serviceSlug: string) {
   if (copied === null) return null;
   try {
     const parsed = parseAgentDirectoryRecordCandidate(copied);
-    if (parsed.serviceSlug !== serviceSlug) return null;
+    if (
+      parsed.serviceSlug !== serviceSlug
+      || parsed.offeringPublicId !== record.offeringPublicId
+      || parsed.offeringVersion !== record.offeringVersion
+    ) return null;
     return {
       directoryVersion: record.directoryVersion,
       record: {
