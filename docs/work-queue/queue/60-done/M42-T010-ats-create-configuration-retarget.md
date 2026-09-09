@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M33-T010 accepted; M35-T010 accepted; M37-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
   commits, and pushes. Proposed implementation paths are exactly:
@@ -57,7 +57,7 @@ web workspace reads the web-facing subset of these values (`network`,
 `chainId`, `subjectPublicId`, `offeringVersion`, `registryRevision`,
 `operationKind`, `targetKind`, `expectedTarget`, `canonicalParametersHash`,
 `factoryHederaId`, and `resolverHederaId`) as a frozen literal committed by
-[S16-T010](S16-T010-provider-deploy-wizard.md) at
+[S16-T010](../20-active/S16-T010-provider-deploy-wizard.md) at
 `apps/web/src/components/provider/deploy/ats-create-configuration.ts` and
 asserted field-for-field against the M42 specification by S16's focused test;
 this card adds no web import and no public Backend export.
@@ -135,3 +135,12 @@ ATS SDK, initializes no network, constructs no request, connects no provider,
 prompts no wallet, creates or funds no account, and submits no transaction.
 It claims no asset, receipt, finality, deployment, or live behavior. Stage B
 remains a separate human-owned gate.
+
+## Acceptance
+
+At source `2d211ed`, the focused M42 tests passed 8/8 and the complete Backend
+suite passed 168/168 under Node 22.21.1. Backend/root quality,
+queue/reference/whitespace/Git-guard checks, independent task review, and two
+fresh independent module-review generations are clear. The two projections
+remain private, frozen, detached, source-only configuration records; M33 stays
+zero-enabled and Stage B remains separately human-owned.

@@ -4,7 +4,7 @@
 
 Independent review of the committed M42 source at `2d211ed`:
 
-- the active [M42 control card](../queue/20-active/M42-T010-ats-create-configuration-retarget.md);
+- the active [M42 control card](../queue/60-done/M42-T010-ats-create-configuration-retarget.md);
 - the local [M42 specification](../../specs/m42-ats-create-configuration-retarget.md);
 - `packages/backend/src/ats/ats-create-configuration-v2.ts`;
 - `packages/backend/src/ats/stage-b-issuer-ats-create-authority.ts`; and
