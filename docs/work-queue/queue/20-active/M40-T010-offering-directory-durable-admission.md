@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M04-T010 accepted, M32-T010 accepted, M33-T010 accepted,
   M38-T010 (this batch), M39-T010 (this batch)
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -149,3 +149,13 @@ passed 26/26, and Backend typecheck/lint plus queue/reference/whitespace/Git
 guard checks passed under Node 22.21.1. M40 is `10-ready` only: a fresh
 activation may authorize the three test-only RED files; schema and source stay
 prohibited until a separate RED review clears.
+
+## Activation
+
+At clean pushed `a14c26e`, an independent activation review confirmed accepted
+dependencies, absent/disjoint RED/source paths, the ordered schema
+reservation, a Web-only S16 lane, and green Node 22.21.1 Backend/M04/M32
+baseline checks. M40 is `20-active` only to create its three declared
+test-only RED files. `schema.ts`, Convex modules, and
+`offering-command-admission.ts` remain prohibited until an independent RED
+review clears.
