@@ -213,3 +213,15 @@ only. This correction adds no source, schema, dispatch, wallet, provider, SDK,
 transaction, deployment, or live authority; the test-only RED replacement is
 permitted before its matching source change.
 See [the local correction review](../../evidence/M43-T010-red-contract-correction-review.md).
+
+## Fresh RED acceptance
+
+At clean pushed `bcb3f7d5895829e44326a8472d495cd8eb62d757`, two independent
+reviews accepted the corrected RED contract. The three declared M43 source
+modules, the reserved attempt-state/optional-field schema amendment, and the
+single closed `external.attachCandidate` dispatch amendment are now authorized
+for local GREEN. The [RED review](../../evidence/M43-T010-red-review.md)
+records the exact boundary: every `ATS_*` verification remains
+`NOT_CONFIGURED`, only `HEDERA_FUNDING` may use the bounded observation path,
+and this card still grants no SDK, wallet, provider, configuration,
+transaction, deployment, or live authority.
