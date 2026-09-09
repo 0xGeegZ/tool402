@@ -36,17 +36,33 @@ before an assessment starts.
   entries }` where each entry has `entryId` (nonblank), `name` (nonblank),
   `entryType` (string), and `programs` (string array).
 
+Every root input, candidate, source descriptor, dataset, and sanctions entry
+is an exact ordinary record: its prototype is exactly `Object.prototype`, it
+has only its documented own enumerable data fields, and accessors, inherited
+fields, non-enumerable fields, symbol keys, and reflection failures are
+rejected without invoking a getter. Arrays are dense ordinary arrays of the
+documented member type.
+
+`registryUpdatedAt` and `registrySource.readAt` are valid ISO timestamps.
+`sanctionsDataset.lastModified` is either a valid ISO timestamp or the exact
+IMF-fixdate `Last-Modified` HTTP-date supplied by the sanctions reader. The
+value is preserved rather than rewritten. `contentHash` is exactly 64 lowercase
+hexadecimal characters: the SHA-256 digest produced by that reader.
+
 Malformed candidates, entries, or source descriptors are rejected as a whole;
-the function never partially assesses.
+the function never partially assesses. No maximum length is imposed on mapped
+public-source strings beyond each documented nonblank or digit rule.
 
 ## Output
 
-The assessment preserves `requestRef`, `jurisdiction`, `query`, and
-`registrationNumber`, echoes both source descriptors without `entries`, and
-returns one disposition:
+Every result preserves `requestRef`, `jurisdiction`, `query`, and
+`registrationNumber`, echoes `registrySource` as `{ source, readAt }` and
+`sanctionsSource` as `{ source, lastModified, contentHash }`, and returns one
+disposition:
 
 - `found`: exactly one candidate, or one candidate whose `siren` equals the
-  supplied `registrationNumber`. The result carries that candidate's fields.
+  supplied `registrationNumber`. The result carries that candidate as
+  `candidate`.
 - `ambiguous`: two or more candidates and no `registrationNumber` match. The
   result carries the candidate count and the first five `siren` and
   `legalName` pairs in supplied order, and the limitation
@@ -57,7 +73,8 @@ The sanctions screen runs only for `found` and returns one of:
 
 - `clear`: no entry name matches the candidate's legal name; or
 - `hit`: at least one entry matches, with the matched `entryId`, `name`,
-  `entryType`, and `programs` for every match in dataset order.
+  `entryType`, and `programs` as `sanctionsMatches` for every match in dataset
+  order. `sanctionsMatches` is absent for `clear`.
 
 `ambiguous` and `not_found` results carry the screen value `not_screened`.
 
