@@ -135,11 +135,22 @@ type _ScreenIsClosed = Assert<
   const host = typescript.createCompilerHost(compilerOptions, true);
   const originalFileExists = host.fileExists.bind(host);
   const originalReadFile = host.readFile.bind(host);
+  const originalGetSourceFile = host.getSourceFile.bind(host);
 
   host.fileExists = (fileName) =>
     resolve(fileName) === fixturePath || originalFileExists(fileName);
   host.readFile = (fileName) =>
     resolve(fileName) === fixturePath ? fixtureSource : originalReadFile(fileName);
+  host.getSourceFile = (fileName, languageVersion, onError, shouldCreateNewSourceFile) =>
+    resolve(fileName) === fixturePath
+      ? typescript.createSourceFile(
+        fileName,
+        fixtureSource,
+        languageVersion,
+        true,
+        typescript.ScriptKind.TS,
+      )
+      : originalGetSourceFile(fileName, languageVersion, onError, shouldCreateNewSourceFile);
 
   const program = typescript.createProgram({
     rootNames: [fixturePath],
