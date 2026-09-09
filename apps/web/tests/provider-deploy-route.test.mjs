@@ -49,6 +49,19 @@ implementedTest("keeps the route and every step transition local with no externa
   assert.doesNotMatch(sources, /\b(?:setInterval|setTimeout|requestAnimationFrame)\s*\(/);
 });
 
+implementedTest("keeps the presentation boundary clear of direct wallet, provider, SDK, relay, and command calls", async () => {
+  const sources = Object.values(await readS16Sources()).join("\n");
+
+  assert.doesNotMatch(
+    sources,
+    /(?:from\s*["'][^"']*(?:metamask|walletconnect|wagmi|command-relay|\/api\/commands|asset-tokenization-sdk)[^"']*["']|require\s*\(\s*["'][^"']*(?:metamask|walletconnect|wagmi|command-relay|\/api\/commands|asset-tokenization-sdk)[^"']*["']\s*\))/i,
+  );
+  assert.doesNotMatch(
+    sources,
+    /\b(?:window\.)?ethereum\b|\beth_requestAccounts\b|\bpersonal_sign\b|\beth_sign(?:TypedData)?\b|\b(?:Bond|CreateBondRequest)\b|\b(?:fetch|relayCommand|sendCommand)\s*\(/,
+  );
+});
+
 implementedTest("keeps unavailable configuration rows blank and stage outcomes accessible without claiming a cause", async () => {
   const sources = await readS16Sources();
   const wizard = sources["src/components/provider/deploy/provider-deploy-wizard.tsx"];

@@ -78,7 +78,20 @@ implementedTest("maps only declared relay outcomes into the closed stage lifecyc
   assert.deepEqual(state.providerDeployStages, [
     { label: "Record the draft offering", commandType: "offering.create" },
     { label: "Prepare asset creation", commandType: "external.prepare", operationKind: "ATS_CREATE" },
-    { label: "Create the revenue note", commandType: "external.attachCandidate" },
+    {
+      label: "Create the revenue note",
+      substeps: [
+        {
+          label: "Create the revenue note in MetaMask",
+          returnsCandidate: ["transactionId", "evmAddress"],
+        },
+        {
+          label: "Attach the returned candidate",
+          commandType: "external.attachCandidate",
+          requiresCandidate: ["transactionId", "evmAddress"],
+        },
+      ],
+    },
     { label: "Publish to the Tool Directory", commandType: "directory.publish" },
   ]);
   assert.deepEqual(Object.fromEntries([
@@ -88,6 +101,16 @@ implementedTest("maps only declared relay outcomes into the closed stage lifecyc
   });
   assert.throws(() => state.stageKindForRelayOutcome("accepted"));
   assert.deepEqual(state.afterDeclinedSignature(), { kind: "actionable", detail: "Nothing was recorded." });
+});
+
+implementedTest("marks stages two and three unavailable and renders no sensitive configuration without a projection", async () => {
+  const state = await import("../src/components/provider/deploy/provider-deploy-state.ts");
+
+  const withoutProjection = state.providerDeployStageStates(undefined);
+  assert.equal(withoutProjection[1].kind, "unavailable");
+  assert.equal(withoutProjection[2].kind, "unavailable");
+  assert.deepEqual(state.revenueNoteConfigurationRows(undefined), []);
+  assert.equal(state.prepareAssetConfiguration(undefined), null);
 });
 
 implementedTest("transcribes the frozen web ATS_CREATE projection field-for-field", async () => {
