@@ -210,7 +210,13 @@ function queryRows(rows, table, request) {
   return typeof source === "function" ? source(request) : source;
 }
 
-function database({ authorities = [], claims = [], offerings = [], directoryVersions = [] } = {}) {
+function database({
+  authorities = [],
+  claims = [],
+  offerings = [],
+  directoryVersions = [],
+  directoryPatchRows = [],
+} = {}) {
   const rows = {
     commandAuthorities: [...authorities],
     walletCommandReplayClaims: [...claims],
@@ -272,8 +278,13 @@ function database({ authorities = [], claims = [], offerings = [], directoryVers
       const copy = structuredClone(document);
       writes.push({ kind: "patch", id, document: copy });
       const table = String(id).split(":", 1)[0];
-      if (!Array.isArray(rows[table])) throw new Error(`unknown patch target: ${id}`);
-      const row = rows[table].find((candidate) => candidate?._id === id);
+      const candidates = Array.isArray(rows[table])
+        ? rows[table]
+        : table === "directoryVersions"
+          ? directoryPatchRows
+          : null;
+      if (candidates === null) throw new Error(`unknown patch target: ${id}`);
+      const row = candidates.find((candidate) => candidate?._id === id);
       if (row === undefined) throw new Error(`unknown patch target: ${id}`);
       Object.assign(row, copy);
     },
@@ -764,7 +775,10 @@ implementedTest("refuses non-READY and duplicate offering or ACTIVE directory st
       { status: "PRECONDITION_UNMET" },
       state,
     );
-    assert.deepEqual(db.reads, expectedDirectoryReads(input).slice(0, 3));
+    assert.deepEqual(
+      db.reads,
+      expectedDirectoryReads(input).slice(0, state === "OPEN" ? 4 : 3),
+    );
     assert.deepEqual(db.writes, []);
   }
 
@@ -947,6 +961,7 @@ implementedTest("atomically publishes one ACTIVE directory version, supersedes t
     authorities: [authority(input)],
     offerings: [offeringDocument(input)],
     directoryVersions: ({ index }) => index === "by_service_slug_and_state" ? [prior] : [],
+    directoryPatchRows: [prior],
   });
 
   assert.deepEqual(

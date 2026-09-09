@@ -48,3 +48,24 @@ Only the M40 root-reserved additive schema amendment,
 `packages/backend/src/offering-command-admission.ts` are authorized for
 minimal local GREEN. No wallet, provider, SDK, configuration, network,
 transaction, deployment, publication, or live authority is added.
+
+## GREEN fixture correction
+
+During the first GREEN run, the valid Directory `NEW` fixture exposed a fake
+database defect: its function-backed indexed query returned the prior active
+row, but the fake `patch` implementation could only locate rows backed by an
+array. A production mutation must patch that prior active row; swallowing the
+patch error would weaken the contract. The fixture therefore supplies that
+same known prior row separately to its fake patch store. This changes neither
+the query result, mutation ordering, expected writes, nor any production
+source authority.
+
+A second GREEN-stage correction resolves an observable precondition conflict:
+an `OPEN` offering with canonical asset linkage and no active-directory pointer
+is structurally identical whether no matching Directory version exists or an
+unsafe matching version does. The latter must fail closed as an idempotency
+conflict, so the mutation must perform the bounded target-directory lookup
+before distinguishing those outcomes. The ordinary no-version `OPEN` case now
+expects that fourth bounded read and remains `PRECONDITION_UNMET`; it does not
+reach the active-slug query. This changes no allowed state transition or
+external capability.

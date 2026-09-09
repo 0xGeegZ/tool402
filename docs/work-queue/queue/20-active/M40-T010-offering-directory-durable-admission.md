@@ -205,3 +205,14 @@ Only the root-reserved additive schema amendment,
 minimal local GREEN. The full evidence is the
 [M40 RED review](../../evidence/M40-T010-red-review.md). No external or live
 authority is added.
+
+The valid Directory `NEW` test fixture has one GREEN-stage harness correction:
+its indexed read and patch backing both expose the same prior `ACTIVE` row.
+The correction keeps the required superseding patch executable and changes no
+production contract, query, write, or capability.
+
+For a canonical `OPEN` offering without an active-directory pointer, the
+Directory mutation now makes its bounded target-version lookup before choosing
+between ordinary `PRECONDITION_UNMET` (no version) and an unsafe persisted
+idempotency conflict (a matching version). This resolves two otherwise
+indistinguishable stored inputs without weakening either failure path.
