@@ -179,7 +179,7 @@ B01-T010 is an accepted record comprising its card, `docs/specs/b01-convex-modul
 
 M29-T010 is an accepted record comprising its card, `docs/specs/m29-shell-accessibility-amendment.md`, `docs/imports/SPEC-IMPORT-LEDGER.md`, `docs/ui/UI-S00.md`, `docs/ui/IMPORT-LEDGER.md`, `docs/superpowers/plans/2026-09-07-m29-shell-accessibility-amendment.md`, `apps/web/src/app/globals.css`, and `apps/web/tests/shell-accessibility.test.mjs`. The root owns queue state, catalog, decisions, browser evidence, reviews, commits, and pushes. UI-S00 and M11-T020 are accepted shared-shell context, not reopened route behavior. All other Web/UI paths, route business logic, package metadata, lockfile, runtime configuration, client state, identity/session/provider/wallet/signer/payment surfaces, Core, Agent, backend, persistence, accounts, transactions, reserve, allocation, clearing, ATS, HCS, payout, deployment, and live evidence are excluded.
 
-S13-T010 is a pending root-owned presentation record comprising its card,
+S13-T010 is a ready root-owned presentation record comprising its card,
 `docs/ui/UI-S13.md`, `docs/ui/IMPORT-LEDGER.md`, its intake-amendment evidence,
 queue state, catalog, decisions, reviews, commits, and pushes. It exclusively
 owns the new `apps/web/src/components/ui/status.tsx`,
