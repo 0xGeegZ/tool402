@@ -371,6 +371,58 @@ implementedTest("keeps unavailable configuration rows blank and stage outcomes a
   assert.doesNotMatch(sources["src/app/provider/deploy/page.tsx"], /(?:attempt|transaction|account|asset|digest)/i);
 });
 
+implementedTest("keeps fixed ATS routing values inside the sole configuration literal", async () => {
+  const sources = await readS16Sources();
+  const configurationPath = "src/components/provider/deploy/ats-create-configuration.ts";
+  const fixedRoutingValues = [
+    "ats_sdk_8_0_0_testnet_v2",
+    "0xd1f118a40f3b02883d35909ef2517e7edd78379d",
+    "39a4d53db2aa60dd40b50c97738f53a888fdadcb350e1e85984fbd4dd76abc9a",
+  ];
+
+  for (const value of fixedRoutingValues) {
+    assert.match(sources[configurationPath], new RegExp(value));
+    for (const [path, source] of Object.entries(sources)) {
+      if (path === configurationPath) continue;
+      assert.doesNotMatch(source, new RegExp(value), `${path} must not carry fixed ATS routing value ${value}`);
+    }
+  }
+});
+
+implementedTest("connects each local validation error to its editable control", async () => {
+  const wizard = (await readS16Sources())["src/components/provider/deploy/provider-deploy-wizard.tsx"];
+  const editableValidationFields = [
+    "toolName",
+    "customerProblem",
+    "quickPrice",
+    "standardPrice",
+    "targetAgentCustomers",
+    "useOfFunds",
+    "risks",
+  ];
+
+  assert.match(wizard, /providerDeployFieldErrors/);
+  assert.match(wizard, /aria-invalid=/);
+  assert.match(wizard, /aria-describedby=/);
+  assert.match(wizard, /id=\{errorId\}/);
+  for (const field of editableValidationFields) {
+    assert.match(wizard, new RegExp(`fieldErrors\\.${field}`));
+  }
+});
+
+implementedTest("keeps visible validation errors derived from the current editable values", async () => {
+  const wizard = (await readS16Sources())["src/components/provider/deploy/provider-deploy-wizard.tsx"];
+  const changeText = namedFunctionContext("provider-deploy-wizard.tsx", wizard, "changeText");
+  const changeCategory = namedFunctionContext("provider-deploy-wizard.tsx", wizard, "changeCategory");
+  const changeAcknowledgement = namedFunctionContext("provider-deploy-wizard.tsx", wizard, "changeAcknowledgement");
+
+  assert.match(normalizedSource(wizard), /constfieldErrors=showValidationErrors\?providerDeployFieldErrors\(values,currentStep\):emptyFieldErrors;/);
+  for (const context of [changeText, changeCategory, changeAcknowledgement]) {
+    const source = context.declaration.getText(context.sourceFile);
+    assert.doesNotMatch(source, /setFieldErrors|setValidationMessage/);
+  }
+});
+
 implementedTest("renders explanatory inert stage controls instead of implying that signing is available", async () => {
   const stages = (await readS16Sources())["src/components/provider/deploy/provider-deploy-stages.tsx"];
   const { sourceFile, elements } = namedFunctionContext(
@@ -417,8 +469,11 @@ implementedTest("keeps progress responsive and lets only completed steps receive
   const onStepSelect = progressBoundary
     ? jsxAttributeExpressionText(jsxAttribute(progressBoundary, "onStepSelect"), wizardContext.sourceFile)
     : null;
+  const returnToStep = namedFunctionContext("provider-deploy-wizard.tsx", wizard, "returnToStep");
 
   assert.doesNotMatch(progress.declaration.getText(progress.sourceFile), /\boverflow-x-auto\b|\bmin-w-max\b/);
   assert.ok(progressControl, "StepProgress must own labelled button controls that return only to completed steps");
-  assert.equal(normalizedSource(onStepSelect ?? ""), "(step)=>setCurrentStep(step)");
+  assert.equal(normalizedSource(onStepSelect ?? ""), "returnToStep");
+  assert.match(returnToStep.declaration.getText(returnToStep.sourceFile), /setCurrentStep\(step\)/);
+  assert.match(returnToStep.declaration.getText(returnToStep.sourceFile), /setShowValidationErrors\(false\)/);
 });

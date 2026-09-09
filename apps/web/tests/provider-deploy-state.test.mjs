@@ -69,6 +69,40 @@ implementedTest("keeps terms v1 read-only and refuses invalid browser payload in
   }
 });
 
+implementedTest("uses the accepted Directory capability and identifies every invalid editable field", async () => {
+  const state = await import("../src/components/provider/deploy/provider-deploy-state.ts");
+  const { campaignFixture } = await import("../src/components/provider/deploy/campaign-fixture.ts");
+
+  assert.equal(campaignFixture.capability, "evm-contract-risk-signals");
+  assert.deepEqual(state.providerDeployFieldErrors(campaignFixture, 0), {});
+  assert.deepEqual(state.providerDeployFieldErrors({
+    ...campaignFixture,
+    toolName: "a".repeat(101),
+    customerProblem: "a".repeat(1001),
+  }, 0), {
+    toolName: "Enter a trimmed tool name of no more than 100 UTF-8 bytes.",
+    customerProblem: "Enter a trimmed customer problem of no more than 1,000 UTF-8 bytes.",
+  });
+  assert.deepEqual(state.providerDeployFieldErrors({
+    ...campaignFixture,
+    quickPrice: "0",
+    standardPrice: "0.10000001",
+    targetAgentCustomers: "",
+  }, 2), {
+    quickPrice: "Enter an HBAR amount from 0.00000001 through 0.1.",
+    standardPrice: "Enter an HBAR amount from 0.00000001 through 0.1.",
+    targetAgentCustomers: "Enter one to six complete target-agent customer lines of no more than 400 UTF-8 bytes each.",
+  });
+  assert.deepEqual(state.providerDeployFieldErrors({
+    ...campaignFixture,
+    useOfFunds: "",
+    risks: "a".repeat(401),
+  }, 3), {
+    useOfFunds: "Enter one to six complete use-of-funds lines of no more than 400 UTF-8 bytes each.",
+    risks: "Enter one to six complete risk lines of no more than 400 UTF-8 bytes each.",
+  });
+});
+
 implementedTest("maps only declared relay outcomes into the closed stage lifecycle", async () => {
   const state = await import("../src/components/provider/deploy/provider-deploy-state.ts");
 

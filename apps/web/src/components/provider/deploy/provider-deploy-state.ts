@@ -127,6 +127,79 @@ export function validateNarrativeField(field: NarrativeField, value: unknown): v
   for (const item of value) assertNarrativeText(item, 400);
 }
 
+export type ProviderDeployValidationField =
+  | "toolName"
+  | "customerProblem"
+  | "quickPrice"
+  | "standardPrice"
+  | "targetAgentCustomers"
+  | "useOfFunds"
+  | "risks";
+
+export type ProviderDeployFieldErrors = Readonly<Partial<Record<ProviderDeployValidationField, string>>>;
+
+type ProviderDeployValidationValues = Readonly<{
+  toolName: string;
+  customerProblem: string;
+  quickPrice: string;
+  standardPrice: string;
+  targetAgentCustomers: string;
+  useOfFunds: string;
+  risks: string;
+}>;
+
+function collectFieldError(
+  errors: Partial<Record<ProviderDeployValidationField, string>>,
+  field: ProviderDeployValidationField,
+  message: string,
+  validate: () => void,
+): void {
+  try {
+    validate();
+  } catch {
+    errors[field] = message;
+  }
+}
+
+export function providerDeployFieldErrors(
+  values: ProviderDeployValidationValues,
+  step: number,
+): ProviderDeployFieldErrors {
+  const errors: Partial<Record<ProviderDeployValidationField, string>> = {};
+
+  if (step === 0) {
+    collectFieldError(errors, "toolName", "Enter a trimmed tool name of no more than 100 UTF-8 bytes.", () => {
+      validateNarrativeField("title", values.toolName);
+    });
+    collectFieldError(errors, "customerProblem", "Enter a trimmed customer problem of no more than 1,000 UTF-8 bytes.", () => {
+      validateNarrativeField("customerProblem", values.customerProblem);
+    });
+  }
+
+  if (step === 2) {
+    collectFieldError(errors, "quickPrice", "Enter an HBAR amount from 0.00000001 through 0.1.", () => {
+      hbarToTinybars(values.quickPrice);
+    });
+    collectFieldError(errors, "standardPrice", "Enter an HBAR amount from 0.00000001 through 0.1.", () => {
+      hbarToTinybars(values.standardPrice);
+    });
+    collectFieldError(errors, "targetAgentCustomers", "Enter one to six complete target-agent customer lines of no more than 400 UTF-8 bytes each.", () => {
+      validateNarrativeField("targetAgentCustomers", values.targetAgentCustomers.split("\n"));
+    });
+  }
+
+  if (step === 3) {
+    collectFieldError(errors, "useOfFunds", "Enter one to six complete use-of-funds lines of no more than 400 UTF-8 bytes each.", () => {
+      validateNarrativeField("useOfFunds", values.useOfFunds.split("\n"));
+    });
+    collectFieldError(errors, "risks", "Enter one to six complete risk lines of no more than 400 UTF-8 bytes each.", () => {
+      validateNarrativeField("risks", values.risks.split("\n"));
+    });
+  }
+
+  return Object.freeze(errors);
+}
+
 export const providerDeployStageKinds = Object.freeze([
   "blocked",
   "actionable",
@@ -190,7 +263,7 @@ export type AtsCreateConfigurationProjection = Readonly<{
   chainId: 296;
   subjectPublicId: "riskscan_revenue_note_demo";
   offeringVersion: "ats_demo_v1";
-  registryRevision: "ats_sdk_8_0_0_testnet_v2";
+  registryRevision: string;
   operationKind: "ATS_CREATE";
   targetKind: "EVM_ADDRESS";
   expectedTarget: string;

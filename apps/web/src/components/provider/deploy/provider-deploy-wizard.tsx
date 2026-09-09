@@ -12,14 +12,15 @@ import {
   acknowledgementCopy,
   canAdvance,
   canGoBack,
-  hbarToTinybars,
   providerDeployCategories,
+  providerDeployFieldErrors,
   providerDeployStageStates,
   providerDeploySteps,
   revenueNoteConfigurationRows,
   stepCaption,
   termsV1Economics,
-  validateNarrativeField,
+  type ProviderDeployFieldErrors,
+  type ProviderDeployValidationField,
 } from "./provider-deploy-state";
 
 type WizardValues = {
@@ -40,6 +41,8 @@ type WizardValues = {
 const inputClassName = "min-h-11 w-full rounded-[calc(var(--radius)*0.75)] border bg-background px-3 py-2 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus:border-ring";
 const fieldLabelClassName = "space-y-2 text-sm font-medium text-foreground";
 const fieldHintClassName = "text-sm leading-6 text-muted-foreground";
+const fieldErrorClassName = "text-sm leading-6 text-destructive";
+const emptyFieldErrors: ProviderDeployFieldErrors = Object.freeze({});
 
 function initialValues(): WizardValues {
   return {
@@ -58,29 +61,12 @@ function initialValues(): WizardValues {
   };
 }
 
-function narrativeItems(value: string): readonly string[] {
-  return value.split("\n");
+function fieldErrorId(field: ProviderDeployValidationField): string {
+  return `provider-deploy-${field}-error`;
 }
 
-function inputError(values: WizardValues, step: number): string | null {
-  try {
-    if (step === 0) {
-      validateNarrativeField("title", values.toolName);
-      validateNarrativeField("customerProblem", values.customerProblem);
-    }
-    if (step === 2) {
-      hbarToTinybars(values.quickPrice);
-      hbarToTinybars(values.standardPrice);
-      validateNarrativeField("targetAgentCustomers", narrativeItems(values.targetAgentCustomers));
-    }
-    if (step === 3) {
-      validateNarrativeField("useOfFunds", narrativeItems(values.useOfFunds));
-      validateNarrativeField("risks", narrativeItems(values.risks));
-    }
-    return null;
-  } catch {
-    return "Review the highlighted field limits before continuing. Narrative entries must be complete, one item per line, and prices must be between 1 and 10,000,000 tinybars.";
-  }
+function fieldClassName(error: string | undefined): string {
+  return error ? `${inputClassName} border-destructive focus:border-destructive` : inputClassName;
 }
 
 function StepProgress({
@@ -123,30 +109,35 @@ function StepProgress({
 function Field({
   label,
   hint,
+  error,
+  errorId,
   children,
 }: {
   label: string;
   hint?: string;
+  error?: string;
+  errorId?: string;
   children: ReactNode;
 }) {
   return (
     <label className={fieldLabelClassName}>
       <span>{label}</span>
       {children}
-      {hint ? <span className={fieldHintClassName}>{hint}</span> : null}
+      {error && errorId ? <span id={errorId} className={fieldErrorClassName}>{error}</span> : hint ? <span className={fieldHintClassName}>{hint}</span> : null}
     </label>
   );
 }
 
-function ToolDetailsStep({ values, onTextChange, onCategoryChange }: {
+function ToolDetailsStep({ values, fieldErrors, onTextChange, onCategoryChange }: {
   values: WizardValues;
+  fieldErrors: ProviderDeployFieldErrors;
   onTextChange: (field: Exclude<keyof WizardValues, "category" | "acknowledgement">) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onCategoryChange: (event: ChangeEvent<HTMLSelectElement>) => void;
 }) {
   return (
     <div className="grid gap-5 sm:grid-cols-2">
-      <Field label="Tool name" hint="Up to 100 UTF-8 bytes.">
-        <input className={inputClassName} value={values.toolName} onChange={onTextChange("toolName")} />
+      <Field label="Tool name" hint="Up to 100 UTF-8 bytes." error={fieldErrors.toolName} errorId={fieldErrorId("toolName")}>
+        <input aria-invalid={fieldErrors.toolName ? true : undefined} aria-describedby={fieldErrors.toolName ? fieldErrorId("toolName") : undefined} className={fieldClassName(fieldErrors.toolName)} value={values.toolName} onChange={onTextChange("toolName")} />
       </Field>
       <Field label="Category" hint="The directory uses this fixed selection.">
         <select className={inputClassName} value={values.category} onChange={onCategoryChange}>
@@ -159,8 +150,8 @@ function ToolDetailsStep({ values, onTextChange, onCategoryChange }: {
         </Field>
       </div>
       <div className="sm:col-span-2">
-        <Field label="Customer problem" hint="Up to 1,000 UTF-8 bytes.">
-          <textarea className={`${inputClassName} min-h-32 resize-y`} value={values.customerProblem} onChange={onTextChange("customerProblem")} />
+        <Field label="Customer problem" hint="Up to 1,000 UTF-8 bytes." error={fieldErrors.customerProblem} errorId={fieldErrorId("customerProblem")}>
+          <textarea aria-invalid={fieldErrors.customerProblem ? true : undefined} aria-describedby={fieldErrors.customerProblem ? fieldErrorId("customerProblem") : undefined} className={`${fieldClassName(fieldErrors.customerProblem)} min-h-32 resize-y`} value={values.customerProblem} onChange={onTextChange("customerProblem")} />
         </Field>
       </div>
     </div>
@@ -188,22 +179,23 @@ function InterfaceStep({ values, onTextChange }: {
   );
 }
 
-function PricingStep({ values, onTextChange }: {
+function PricingStep({ values, fieldErrors, onTextChange }: {
   values: WizardValues;
+  fieldErrors: ProviderDeployFieldErrors;
   onTextChange: (field: Exclude<keyof WizardValues, "category" | "acknowledgement">) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }) {
   return (
     <div className="space-y-5">
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Quick price (HBAR)" hint="0.1 HBAR is the largest accepted advertised price.">
-          <input inputMode="decimal" className={inputClassName} value={values.quickPrice} onChange={onTextChange("quickPrice")} />
+        <Field label="Quick price (HBAR)" hint="0.1 HBAR is the largest accepted advertised price." error={fieldErrors.quickPrice} errorId={fieldErrorId("quickPrice")}>
+          <input inputMode="decimal" aria-invalid={fieldErrors.quickPrice ? true : undefined} aria-describedby={fieldErrors.quickPrice ? fieldErrorId("quickPrice") : undefined} className={fieldClassName(fieldErrors.quickPrice)} value={values.quickPrice} onChange={onTextChange("quickPrice")} />
         </Field>
-        <Field label="Standard price (HBAR)" hint="Display price only; the payment challenge remains authoritative.">
-          <input inputMode="decimal" className={inputClassName} value={values.standardPrice} onChange={onTextChange("standardPrice")} />
+        <Field label="Standard price (HBAR)" hint="Display price only; the payment challenge remains authoritative." error={fieldErrors.standardPrice} errorId={fieldErrorId("standardPrice")}>
+          <input inputMode="decimal" aria-invalid={fieldErrors.standardPrice ? true : undefined} aria-describedby={fieldErrors.standardPrice ? fieldErrorId("standardPrice") : undefined} className={fieldClassName(fieldErrors.standardPrice)} value={values.standardPrice} onChange={onTextChange("standardPrice")} />
         </Field>
       </div>
-      <Field label="Target agent customers" hint="One use case per line, from one through six items.">
-        <textarea className={`${inputClassName} min-h-32 resize-y`} value={values.targetAgentCustomers} onChange={onTextChange("targetAgentCustomers")} />
+      <Field label="Target agent customers" hint="One use case per line, from one through six items." error={fieldErrors.targetAgentCustomers} errorId={fieldErrorId("targetAgentCustomers")}>
+        <textarea aria-invalid={fieldErrors.targetAgentCustomers ? true : undefined} aria-describedby={fieldErrors.targetAgentCustomers ? fieldErrorId("targetAgentCustomers") : undefined} className={`${fieldClassName(fieldErrors.targetAgentCustomers)} min-h-32 resize-y`} value={values.targetAgentCustomers} onChange={onTextChange("targetAgentCustomers")} />
       </Field>
     </div>
   );
@@ -211,10 +203,12 @@ function PricingStep({ values, onTextChange }: {
 
 function TermsStep({
   values,
+  fieldErrors,
   onTextChange,
   onAcknowledgementChange,
 }: {
   values: WizardValues;
+  fieldErrors: ProviderDeployFieldErrors;
   onTextChange: (field: Exclude<keyof WizardValues, "category" | "acknowledgement">) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onAcknowledgementChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
@@ -231,11 +225,11 @@ function TermsStep({
   return (
     <div className="space-y-6">
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Use of funds" hint="One item per line, from one through six items.">
-          <textarea className={`${inputClassName} min-h-32 resize-y`} value={values.useOfFunds} onChange={onTextChange("useOfFunds")} />
+        <Field label="Use of funds" hint="One item per line, from one through six items." error={fieldErrors.useOfFunds} errorId={fieldErrorId("useOfFunds")}>
+          <textarea aria-invalid={fieldErrors.useOfFunds ? true : undefined} aria-describedby={fieldErrors.useOfFunds ? fieldErrorId("useOfFunds") : undefined} className={`${fieldClassName(fieldErrors.useOfFunds)} min-h-32 resize-y`} value={values.useOfFunds} onChange={onTextChange("useOfFunds")} />
         </Field>
-        <Field label="Risks" hint="One item per line, from one through six items.">
-          <textarea className={`${inputClassName} min-h-32 resize-y`} value={values.risks} onChange={onTextChange("risks")} />
+        <Field label="Risks" hint="One item per line, from one through six items." error={fieldErrors.risks} errorId={fieldErrorId("risks")}>
+          <textarea aria-invalid={fieldErrors.risks ? true : undefined} aria-describedby={fieldErrors.risks ? fieldErrorId("risks") : undefined} className={`${fieldClassName(fieldErrors.risks)} min-h-32 resize-y`} value={values.risks} onChange={onTextChange("risks")} />
         </Field>
       </div>
       <section aria-labelledby="provider-deploy-terms" className="rounded-[calc(var(--radius)*0.75)] border bg-muted/40 p-4">
@@ -308,13 +302,16 @@ function ReviewStep({ values }: { values: WizardValues }) {
 export function ProviderDeployWizard() {
   const [currentStep, setCurrentStep] = useState(0);
   const [values, setValues] = useState<WizardValues>(initialValues);
-  const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const fieldErrors = showValidationErrors ? providerDeployFieldErrors(values, currentStep) : emptyFieldErrors;
+  const validationMessage = Object.keys(fieldErrors).length > 0
+    ? "Correct the fields marked invalid before continuing."
+    : null;
   const currentDefinition = providerDeploySteps[currentStep];
 
   function changeText(field: Exclude<keyof WizardValues, "category" | "acknowledgement">) {
     return (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setValues((previous) => ({ ...previous, [field]: event.target.value }));
-      setValidationMessage(null);
     };
   }
 
@@ -326,17 +323,21 @@ export function ProviderDeployWizard() {
 
   function changeAcknowledgement(event: ChangeEvent<HTMLInputElement>) {
     setValues((previous) => ({ ...previous, acknowledgement: event.target.checked }));
-    setValidationMessage(null);
+  }
+
+  function returnToStep(step: number) {
+    setCurrentStep(step);
+    setShowValidationErrors(false);
   }
 
   function moveForward() {
-    const invalidInputMessage = inputError(values, currentStep);
-    if (invalidInputMessage) {
-      setValidationMessage(invalidInputMessage);
+    const nextFieldErrors = providerDeployFieldErrors(values, currentStep);
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setShowValidationErrors(true);
       return;
     }
     if (!canAdvance(currentStep, values)) return;
-    setValidationMessage(null);
+    setShowValidationErrors(false);
     setCurrentStep((step) => Math.min(step + 1, providerDeploySteps.length - 1));
   }
 
@@ -348,13 +349,13 @@ export function ProviderDeployWizard() {
   function renderCurrentStep() {
     switch (currentStep) {
       case 0:
-        return <ToolDetailsStep values={values} onTextChange={changeText} onCategoryChange={changeCategory} />;
+        return <ToolDetailsStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} onCategoryChange={changeCategory} />;
       case 1:
         return <InterfaceStep values={values} onTextChange={changeText} />;
       case 2:
-        return <PricingStep values={values} onTextChange={changeText} />;
+        return <PricingStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} />;
       case 3:
-        return <TermsStep values={values} onTextChange={changeText} onAcknowledgementChange={changeAcknowledgement} />;
+        return <TermsStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} onAcknowledgementChange={changeAcknowledgement} />;
       default:
         return <ReviewStep values={values} />;
     }
@@ -388,7 +389,7 @@ export function ProviderDeployWizard() {
             </div>
             <Badge variant="outline" className="w-fit">{currentStep + 1} / {providerDeploySteps.length}</Badge>
           </div>
-          <StepProgress currentStep={currentStep} onStepSelect={(step) => setCurrentStep(step)} />
+          <StepProgress currentStep={currentStep} onStepSelect={returnToStep} />
         </CardHeader>
         <form onSubmit={onSubmit}>
           <CardContent className="space-y-6">
@@ -396,7 +397,7 @@ export function ProviderDeployWizard() {
             {validationMessage ? <p aria-live="polite" className="rounded-[calc(var(--radius)*0.75)] border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
           </CardContent>
           <CardFooter className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Button type="button" variant="ghost" disabled={!canGoBack(currentStep)} onClick={() => { setCurrentStep((step) => Math.max(0, step - 1)); setValidationMessage(null); }}>
+            <Button type="button" variant="ghost" disabled={!canGoBack(currentStep)} onClick={() => returnToStep(Math.max(0, currentStep - 1))}>
               Back
             </Button>
             {currentStep < providerDeploySteps.length - 1 ? (

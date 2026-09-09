@@ -23,7 +23,7 @@ export const campaignFixture: CampaignFixture = Object.freeze({
   oneLiner: "Explainable local risk assessment for tool requests.",
   customerProblem: "Tool operators need a bounded way to assess request risk before they continue a workflow.",
   qualifyingResource: "riskscan-local-assessment",
-  capability: "security_assessment",
+  capability: "evm-contract-risk-signals",
   capabilitySummary: "Produces a local, explainable assessment from provider-supplied request context.",
   quickPrice: "0.1",
   standardPrice: "0.1",
