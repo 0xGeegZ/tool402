@@ -197,17 +197,68 @@ export type AtsCreateConfigurationProjection = Readonly<{
   canonicalParametersHash: string;
   factoryHederaId: string;
   resolverHederaId: string;
+  revenueNote: Readonly<{
+    name: string;
+    symbol: string;
+    isin: string;
+    numberOfUnits: string;
+    nominalValue: string;
+    currency: string;
+    decimals: number;
+    isWhiteList: boolean;
+    isControllable: boolean;
+  }>;
 }>;
 
 export function providerDeployStageStates(
   projection: AtsCreateConfigurationProjection | undefined,
 ): readonly ProviderDeployStageState[] {
   return Object.freeze([
-    Object.freeze({ kind: "actionable" }),
+    Object.freeze({ kind: "unavailable" }),
     Object.freeze({ kind: projection ? "blocked" : "unavailable" }),
     Object.freeze({ kind: "unavailable" }),
     Object.freeze({ kind: "blocked" }),
   ]);
+}
+
+export type ProviderDeployStageControl = Readonly<{
+  disabled: true;
+  label: string;
+  description: string;
+}>;
+
+export function providerDeployStageControl(
+  index: number,
+  state: ProviderDeployStageState,
+): ProviderDeployStageControl {
+  if (!Number.isInteger(index) || index < 0 || index >= providerDeployStages.length) {
+    throw new RangeError("unknown provider deploy stage");
+  }
+
+  if (state.kind === "blocked") {
+    const predecessor = providerDeployStages[index - 1];
+    return Object.freeze({
+      disabled: true,
+      label: "Complete the preceding stage first",
+      description: `This signature handoff stays blocked until ${predecessor?.label ?? "the preceding stage"} is done.`,
+    });
+  }
+
+  if (state.kind === "unavailable") {
+    return Object.freeze({
+      disabled: true,
+      label: "Signature handoff unavailable",
+      description: index === 2
+        ? "This stage needs its separate human action and a command bridge before any signature can be requested."
+        : "This stage needs a command bridge and its separately accepted authority before any signature can be requested.",
+    });
+  }
+
+  return Object.freeze({
+    disabled: true,
+    label: "Signature handoff unavailable",
+    description: "This local preview has no enabled command bridge for this stage.",
+  });
 }
 
 export type RevenueNoteConfigurationRow = Readonly<{
@@ -219,12 +270,17 @@ export function revenueNoteConfigurationRows(
   projection: AtsCreateConfigurationProjection | undefined,
 ): readonly RevenueNoteConfigurationRow[] {
   if (!projection) return Object.freeze([]);
+  const { revenueNote } = projection;
   return Object.freeze([
-    Object.freeze({ label: "Network", value: projection.network }),
-    Object.freeze({ label: "Chain ID", value: String(projection.chainId) }),
-    Object.freeze({ label: "Subject", value: projection.subjectPublicId }),
-    Object.freeze({ label: "Offering version", value: projection.offeringVersion }),
-    Object.freeze({ label: "Registry revision", value: projection.registryRevision }),
+    Object.freeze({ label: "Note name", value: revenueNote.name }),
+    Object.freeze({ label: "Symbol", value: revenueNote.symbol }),
+    Object.freeze({ label: "ISIN", value: revenueNote.isin }),
+    Object.freeze({ label: "Unit count", value: revenueNote.numberOfUnits }),
+    Object.freeze({ label: "Nominal value", value: revenueNote.nominalValue }),
+    Object.freeze({ label: "Currency", value: revenueNote.currency }),
+    Object.freeze({ label: "Decimals", value: String(revenueNote.decimals) }),
+    Object.freeze({ label: "Whitelist", value: revenueNote.isWhiteList ? "Enabled" : "Disabled" }),
+    Object.freeze({ label: "Controllable", value: revenueNote.isControllable ? "Enabled" : "Disabled" }),
     Object.freeze({ label: "Factory", value: projection.factoryHederaId }),
     Object.freeze({ label: "Resolver", value: projection.resolverHederaId }),
   ]);

@@ -83,25 +83,35 @@ function inputError(values: WizardValues, step: number): string | null {
   }
 }
 
-function StepProgress({ currentStep }: { currentStep: number }) {
+function StepProgress({
+  currentStep,
+  onStepSelect,
+}: {
+  currentStep: number;
+  onStepSelect: (step: number) => void;
+}) {
   return (
-    <nav aria-label="Provider deploy progress" className="overflow-x-auto pb-1">
-      <ol className="flex min-w-max items-center gap-2">
+    <nav aria-label="Provider deploy progress">
+      <ol className="grid grid-cols-5 gap-1 sm:gap-2">
         {providerDeploySteps.map((step, index) => {
           const isCurrent = index === currentStep;
           const isComplete = index < currentStep;
           return (
-            <li key={step.label} className="flex items-center gap-2">
-              <span
+            <li key={step.label} className="min-w-0">
+              <button
+                type="button"
+                aria-label={`Return to step ${index + 1}: ${step.label}`}
                 aria-current={isCurrent ? "step" : undefined}
-                className={`flex size-8 items-center justify-center rounded-full border text-xs font-semibold ${isCurrent ? "border-primary bg-primary text-primary-foreground" : isComplete ? "border-border bg-secondary text-secondary-foreground" : "border-border bg-background text-muted-foreground"}`}
+                disabled={index >= currentStep}
+                onClick={() => onStepSelect(index)}
+                title={step.label}
+                className={`grid w-full min-w-0 gap-1 rounded-[calc(var(--radius)*0.75)] border px-1 py-2 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 ${isCurrent ? "border-primary bg-primary text-primary-foreground" : isComplete ? "border-border bg-secondary text-secondary-foreground hover:border-primary" : "border-border bg-background text-muted-foreground"}`}
               >
-                {index + 1}
-              </span>
-              <span className={`hidden text-xs font-medium sm:inline ${isCurrent ? "text-foreground" : "text-muted-foreground"}`}>
-                {step.label}
-              </span>
-              {index < providerDeploySteps.length - 1 ? <span aria-hidden="true" className="h-px w-6 bg-border" /> : null}
+                <span className="mx-auto flex size-7 items-center justify-center rounded-full border border-current text-xs font-semibold">
+                  {index + 1}
+                </span>
+                <span className="truncate text-xs font-medium">{step.label}</span>
+              </button>
             </li>
           );
         })}
@@ -378,7 +388,7 @@ export function ProviderDeployWizard() {
             </div>
             <Badge variant="outline" className="w-fit">{currentStep + 1} / {providerDeploySteps.length}</Badge>
           </div>
-          <StepProgress currentStep={currentStep} />
+          <StepProgress currentStep={currentStep} onStepSelect={(step) => setCurrentStep(step)} />
         </CardHeader>
         <form onSubmit={onSubmit}>
           <CardContent className="space-y-6">

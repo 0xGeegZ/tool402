@@ -5,6 +5,7 @@ import { Button } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
 import {
   providerDeployStages,
+  providerDeployStageControl,
   type AtsCreateConfigurationProjection,
   type ProviderDeployStageKind,
   type ProviderDeployStageState,
@@ -25,8 +26,8 @@ const stageStatusCopy: Record<ProviderDeployStageKind, string> = {
 
 const stageStatusDescription: Record<ProviderDeployStageKind, string> = {
   blocked: "Finish the preceding stage before this one becomes available.",
-  actionable: "The separate signing surface owns this step. This wizard does not open it.",
-  in_progress: "A separate signing surface is open. This page does not infer its result.",
+  actionable: "This local preview has no enabled command bridge for this step.",
+  in_progress: "This local preview does not infer a signature result.",
   done: "This browser session received a reported result. Reloading restores the local starting state.",
   unavailable: "A required local projection or separately carded human step is not available here.",
   unsupported_type: "The server did not enable this command type.",
@@ -58,7 +59,7 @@ function StageCommand({ index }: { index: number }) {
               <p>The separately carded human action returns the candidate details required by the next sub-step.</p>
             ) : (
               <p>
-                The following signature binds the returned candidate&apos;s <code className="font-mono text-xs">transactionId</code> and <code className="font-mono text-xs">evmAddress</code>.
+                A later command bridge would bind the returned candidate&apos;s <code className="font-mono text-xs">transactionId</code> and <code className="font-mono text-xs">evmAddress</code> after it is separately accepted.
               </p>
             )}
           </li>
@@ -124,6 +125,8 @@ export function ProviderDeployStages({
       <ol className="grid gap-3">
         {providerDeployStages.map((definition, index) => {
           const stage = visibleStates[index] ?? { kind: "blocked" as const };
+          const control = providerDeployStageControl(index, stage);
+          const controlDescriptionId = `provider-deploy-stage-${index + 1}-control-description`;
           return (
             <li key={definition.label}>
               <Card className="overflow-hidden">
@@ -143,8 +146,11 @@ export function ProviderDeployStages({
                   <p aria-live="polite" className="text-sm text-muted-foreground">
                     {stage.detail ?? stageStatusDescription[stage.kind]}
                   </p>
-                  <Button disabled variant="outline" className="w-full sm:w-auto">
-                    {stage.kind === "actionable" ? "Signing is available in its separate screen" : "Stage is not available in this screen"}
+                  <p id={controlDescriptionId} className="text-sm leading-6 text-muted-foreground">
+                    {control.description}
+                  </p>
+                  <Button type="button" aria-describedby={controlDescriptionId} disabled={control.disabled} variant="outline" className="w-full sm:w-auto">
+                    {control.label}
                   </Button>
                 </CardContent>
               </Card>

@@ -12,4 +12,15 @@ export const atsCreateConfiguration: AtsCreateConfigurationProjection = Object.f
   canonicalParametersHash: "39a4d53db2aa60dd40b50c97738f53a888fdadcb350e1e85984fbd4dd76abc9a",
   factoryHederaId: "0.0.9213391",
   resolverHederaId: "0.0.9212226",
+  revenueNote: Object.freeze({
+    name: "Tool402 RiskScan Revenue Note Demo",
+    symbol: "T402RN",
+    isin: "XS402RISKN02",
+    numberOfUnits: "1000",
+    nominalValue: "1",
+    currency: "0x555344",
+    decimals: 0,
+    isWhiteList: true,
+    isControllable: false,
+  }),
 });
