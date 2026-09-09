@@ -53,15 +53,22 @@ The accepted slice history it amends is recorded in the
 
 ## Verification
 
-- A durable RED test precedes the source change and fails because the status
-  component does not exist.
+- A durable RED commit creates only `apps/web/tests/status.test.mjs` and
+  `apps/web/tests/state-panel.test.mjs` before any source change. Run
+  `node --test apps/web/tests/status.test.mjs apps/web/tests/state-panel.test.mjs`
+  under the repository's selected Node 22 runtime. It must exit nonzero only
+  because the two declared UI source modules do not exist; it must not amend or
+  probe an existing outcome component in RED. Re-run that exact command after
+  GREEN and require zero failures.
 - Focused tests prove the closed tone vocabulary, that no amended component
   gains an outcome branch, that live regions and wording are preserved, and
   that tone is never carried by colour alone.
 - The contrast check reproduces the ratio the manifest records for each token
   pair; the source material's solid coral is not adopted as a text pair because
   it fails AA.
-- Every amended component's existing focused suite passes unchanged.
+- Every amended component's existing focused suite passes unchanged. Run
+  `node --test apps/web/tests/riskscan-request-state.test.mjs apps/web/tests/riskscan-try.test.mjs apps/web/tests/riskscan-tool-loop.test.mjs apps/web/tests/riskscan-directory-discovery.test.mjs apps/web/tests/riskscan-native-quote-compatibility.test.mjs apps/web/tests/riskscan-quick-preflight.test.mjs`
+  after GREEN; none of those files is an S13 amendment target.
 - `npm run typecheck --workspace @tool402/web`, `npm run test --workspace @tool402/web`,
   `npm run build --workspace @tool402/web`, root `npm run typecheck`,
   `npm run test`, `npm run lint`, `npm run queue:check`, and the enabled

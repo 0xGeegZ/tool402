@@ -21,6 +21,11 @@ interaction, payment, transaction, deployment, or live action was performed.
   `apps/web/tests/status.test.mjs` and
   `apps/web/tests/state-panel.test.mjs`. Existing focused suites remain
   unchanged and are verification, not S13 amendment targets.
+- Fix the RED/GREEN invocation as
+  `node --test apps/web/tests/status.test.mjs apps/web/tests/state-panel.test.mjs`
+  under the selected Node 22 runtime. RED must fail only for the two absent
+  declared source modules; GREEN must pass that same command. The unchanged
+  existing focused suites have their exact direct Node command in the card.
 - Add UI-S13 to the local UI record and ledger so every S13 document reference
   resolves in the committed repository.
 
@@ -28,5 +33,5 @@ interaction, payment, transaction, deployment, or live action was performed.
 
 S13-T010 remains in `00-inbox` pending a fresh independent ready review after
 this amendment. That review must confirm the corrected dependency, exact
-reservation, absent new paths, no active collision, and concrete RED/GREEN
-commands before any queue-state move or source change.
+reservation, absent new paths, no active collision, and the recorded concrete
+RED/GREEN commands before any queue-state move or source change.
