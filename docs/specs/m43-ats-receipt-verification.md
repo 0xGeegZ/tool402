@@ -43,6 +43,13 @@ advanced. The accepted M32 assertion of the exact validator shape in
 `packages/backend/tests/external-prepare-command-durable-schema.test.mjs` is
 amended, under its own reservation, to the widened union and three fields.
 
+The complete Backend M40 compatibility assertion in
+`packages/backend/tests/offering-durable-schema.test.mjs` also compares this
+accepted M32 subset. It is amended under a root reservation only to the same
+widened union and the same three optional fields. This preserves M40's table,
+index, source, and runtime behavior byte unchanged; it corrects an expected
+fixture which otherwise still describes the superseded M32-only schema shape.
+
 ## Attempt resolution and stored-row safety
 
 M32 mints no public identifier and M43 may not amend M32. M43 therefore
@@ -94,7 +101,11 @@ M40-owned `walletCommandReplayClaims` table through `by_replay_identity`, with
 `commandType` exactly `external.attachCandidate` — the third literal M40
 reserves for this boundary and never writes itself — before any patch, and the
 claim row carries no signature, raw body, or key. A reused identity returns
-`{ status: "COMMAND_REPLAYED" }` and writes no candidate field.
+`{ status: "COMMAND_REPLAYED" }` and writes no candidate field. A singular safe
+existing claim from any closed wallet-command type and any closed claim outcome
+also proves the wallet-command identity is consumed and returns that same replay
+result; `targetId` is optional only for a conflict outcome. A malformed,
+unknown, or duplicate claim row fails closed.
 
 For a `PREPARED` attempt it patches `state` to `SUBMITTED`, stores the two
 candidate fields, and returns `{ status: "ATTACHED", attemptId, state:
@@ -153,10 +164,15 @@ The verifier reads only the supplied document through descriptors under the
 safety rule above and returns `{ outcome: "VERIFIED" }`, `{ outcome: "REJECTED",
 reason }`, or `{ outcome: "UNKNOWN", reason }`, where `reason` is exactly one of
 `DOCUMENT_UNSAFE`, `RESULT_NOT_SUCCESS`, `TARGET_MISMATCH`, `NETWORK_MISMATCH`,
-`CONSENSUS_TIMESTAMP_MISSING`, and `CREATED_ADDRESS_MISMATCH`. `VERIFIED`
-requires a success result, a consensus timestamp, the transaction's network
-equal to `hedera:testnet` and chain 296, and the contract it called equal to the
-expectation's `expectedTarget` under exact lowercase comparison.
+`CONSENSUS_TIMESTAMP_MISSING`, `CREATED_ADDRESS_MISMATCH`, and
+`OPERATION_NOT_ELIGIBLE`. An expectation carrying `candidateEvmAddress` returns
+`CREATED_ADDRESS_MISMATCH` before inspecting any raw document. Otherwise, only
+an exact `HEDERA_FUNDING` operation is eligible for pure verification; every ATS
+operation or unknown operation returns `OPERATION_NOT_ELIGIBLE` before document
+inspection. `VERIFIED` requires a success result, a consensus timestamp, the
+transaction's network equal to `hedera:testnet` and chain 296, and the contract
+it called equal to the expectation's `expectedTarget` under exact lowercase
+comparison.
 
 The one permitted ContractResult document exposes a Hedera entity identifier in
 `created_contract_ids`; it does not establish a created EVM address. M43 must
@@ -293,3 +309,19 @@ added. The root reserves only the accepted M41 disabled-entry assertion at
 M43 RED replacement; its matching source change remains GREEN-only after a
 fresh RED acceptance. Its terms are independently reviewed in
 [the correction record](../work-queue/evidence/M43-T010-red-contract-correction-review.md).
+
+## Acceptance
+
+M43 is accepted as a local candidate-receipt and bounded Mirror verification
+boundary. The final focused M43 integration suite passes 56/56 and the complete
+Backend suite passes 275/275 under Node 22.21.1. Root typecheck and lint,
+queue validation, local-reference validation, whitespace validation, and the
+enabled Git guard are clear. The aggregate root test remains nonzero only for the separately blocked
+M44 source-absent RED files; M43 neither changes nor waives that independent
+blocker.
+
+Independent task review and two fresh module-review generations found no
+Critical, Important, or Minor finding. Every `ATS_*` path remains
+`NOT_CONFIGURED` before Mirror I/O or outcome writes; only the bounded
+`HEDERA_FUNDING` fixture path can reach a terminal outcome. No SDK, wallet,
+provider, configuration, transaction, deployment, or live authority is added.

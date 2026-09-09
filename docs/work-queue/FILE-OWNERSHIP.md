@@ -491,7 +491,9 @@ an eventual authorized GREEN cycle, it may amend only
 `externalPrepareCommandAttempts.state` and add exactly its three declared
 optional candidate/reconciliation fields; amend only
 `packages/backend/tests/external-prepare-command-durable-schema.test.mjs` to
-match that exact shape; and amend only
+match that exact shape; amend only
+`packages/backend/tests/offering-durable-schema.test.mjs` to match that same
+M32 subset shape; and amend only
 `packages/backend/convex/command_dispatch.ts` to enable the already-declared
 `external.attachCandidate` entry. This future GREEN reservation grants no
 implementation, schema, dispatch, configuration, SDK, wallet, provider,
@@ -500,8 +502,10 @@ and RED reviews remain separate gates.
 
 M43-T010 is active at `84c80f2` only to create its three declared durable
 test-only RED files and the matching narrow
-`external-prepare-command-durable-schema.test.mjs` assertion amendment, plus
-the constrained M41 dispatch-test replacement below. Every M43 source, schema,
+`external-prepare-command-durable-schema.test.mjs` assertion amendment, the
+same-shape `offering-durable-schema.test.mjs` M40 compatibility assertion
+amendment, plus the constrained M41 dispatch-test replacement below. Every M43
+source, schema,
 and dispatch amendment remains absent until a fresh RED review accepts its
 exact failure contract.
 
@@ -519,6 +523,13 @@ required before every M43 source, schema, or dispatch amendment.
 M43's current zero-enabled ATS_* receipt action never invokes M40 readiness. A
 post-Stage-B successor needs a new scoped authority before the fixed one-read
 receipt boundary or its result changes.
+
+M43-T010 is accepted as the complete local owner of its three declared receipt
+source modules, their focused tests, its reserved attempt-state/optional-field
+schema widening, the matching M32/M40 schema assertions, and the one closed
+dispatch-entry enablement. Its ownership adds no positive ATS verification,
+M40 readiness transition, SDK, wallet, provider, configuration, transaction,
+deployment, or live behavior.
 
 The root additionally reserves one M41 regression-baseline correction in
 `packages/backend/tests/offering-durable-schema.test.mjs`: only the exact

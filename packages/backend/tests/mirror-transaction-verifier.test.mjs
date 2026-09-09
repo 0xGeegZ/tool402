@@ -95,6 +95,36 @@ implementedTest("fails closed for every raw Mirror response mismatch without nor
   assert.equal(getterReads, 0);
 });
 
+implementedTest("rejects a result inherited from a temporarily polluted object prototype", { concurrency: false }, () => {
+  const raw = contractResult();
+  delete raw.result;
+  assert.equal(Object.hasOwn(raw, "result"), false);
+
+  const priorResultDescriptor = Object.getOwnPropertyDescriptor(Object.prototype, "result");
+  try {
+    Object.defineProperty(Object.prototype, "result", {
+      configurable: true,
+      enumerable: false,
+      value: "SUCCESS",
+      writable: true,
+    });
+    assert.deepEqual(
+      api.verifyMirrorTransactionReceipt(expectation(), raw),
+      { outcome: "REJECTED", reason: "RESULT_NOT_SUCCESS" },
+    );
+  } finally {
+    if (priorResultDescriptor === undefined) {
+      delete Object.prototype.result;
+    } else {
+      Object.defineProperty(Object.prototype, "result", priorResultDescriptor);
+    }
+  }
+  assert.deepEqual(
+    Object.getOwnPropertyDescriptor(Object.prototype, "result"),
+    priorResultDescriptor,
+  );
+});
+
 implementedTest("never mistakes a generic address or Hedera entity id for the created ATS EVM address", () => {
   const raw = contractResult({ address: candidateAddress });
   assert.deepEqual(
@@ -104,6 +134,41 @@ implementedTest("never mistakes a generic address or Hedera entity id for the cr
     ),
     { outcome: "REJECTED", reason: "CREATED_ADDRESS_MISMATCH" },
   );
+});
+
+implementedTest("fails closed before document inspection for candidate addresses and non-funding operations", () => {
+  const accessor = {};
+  let getterReads = 0;
+  Object.defineProperty(accessor, "result", {
+    enumerable: true,
+    get() {
+      getterReads += 1;
+      throw new Error("candidate address must reject before document inspection");
+    },
+  });
+  assert.deepEqual(
+    api.verifyMirrorTransactionReceipt(
+      expectation({ operationKind: "ATS_CREATE", candidateEvmAddress: candidateAddress }),
+      accessor,
+    ),
+    { outcome: "REJECTED", reason: "CREATED_ADDRESS_MISMATCH" },
+  );
+  assert.equal(getterReads, 0);
+
+  for (const operationKind of [
+    "ATS_CREATE",
+    "ATS_CONTROL_LIST",
+    "ATS_ISSUE",
+    "ATS_TRANSFER",
+    "ATS_COUPON",
+    "UNSUPPORTED_OPERATION",
+  ]) {
+    assert.deepEqual(
+      api.verifyMirrorTransactionReceipt(expectation({ operationKind }), contractResult()),
+      { outcome: "REJECTED", reason: "OPERATION_NOT_ELIGIBLE" },
+      operationKind,
+    );
+  }
 });
 
 implementedTest("uses exactly one credential-free GET against the fixed Mirror ContractResult path", async () => {

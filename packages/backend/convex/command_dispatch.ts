@@ -76,6 +76,9 @@ const admitOfferingCreateReference = makeFunctionReference<"mutation">(
 const admitDirectoryPublishReference = makeFunctionReference<"mutation">(
   "directory_versions:admitDirectoryPublish",
 );
+const attachAtsCandidateReceiptReference = makeFunctionReference<"mutation">(
+  "ats_candidate_receipts:attachAtsCandidateReceipt",
+);
 const getOfferingProjectionReference = makeFunctionReference<"query">(
   "offerings:getPublicProjection",
 );
@@ -111,7 +114,22 @@ const commandDispatch: Readonly<Record<NormalizedCommand["type"], DispatchEntry>
     },
   }),
   "external.attachCandidate": Object.freeze({
-    enabled: false,
+    enabled: true,
+    dispatch: async (ctx: ActionContext, command: NormalizedCommand) => {
+      if (command.type !== "external.attachCandidate") return rejected();
+      const result = await ctx.runMutation(attachAtsCandidateReceiptReference, {
+        attemptPublicId: command.payload.attemptPublicId,
+        operationKind: command.payload.operationKind,
+        candidateTransactionId: command.payload.candidateTransactionId,
+        candidateEvmAddress: command.payload.candidateEvmAddress,
+        canonicalSignerAddress: command.canonicalSignerAddress,
+        principalPublicId: command.principalPublicId,
+        role: command.role,
+        authorityVersion: command.authorityVersion,
+        replayIdentity: command.replayIdentity,
+      });
+      return mapAttachmentResult(result, command.payload.attemptPublicId);
+    },
   }),
 });
 
@@ -265,6 +283,18 @@ function mapAdmissionResult(result: unknown, publicId: string): Response {
   }
   if (status === "IDEMPOTENCY_CONFLICT") {
     return response({ outcome: "CONFLICT", publicId } satisfies WriteOutcome);
+  }
+  return rejected();
+}
+
+function mapAttachmentResult(result: unknown, publicId: string): Response {
+  if (result === null || typeof result !== "object") return rejected();
+  const status = Object.getOwnPropertyDescriptor(result, "status")?.value;
+  if (status === "ATTACHED") {
+    return response({ outcome: "ACCEPTED", publicId } satisfies WriteOutcome);
+  }
+  if (status === "ALREADY_ATTACHED" || status === "COMMAND_REPLAYED") {
+    return response({ outcome: "REPLAYED", publicId } satisfies WriteOutcome);
   }
   return rejected();
 }

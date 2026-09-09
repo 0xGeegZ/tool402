@@ -887,6 +887,7 @@ implementedTest("maps M43 attachment results through the existing public respons
   for (const [name, mutationResult, mutationError, expected] of cases) {
     const transport = await signedTransport("external.attachCandidate", payload);
     const ingress = await signedIngressRequest(transport);
+    const walletReplayIdentity = `tool402:wallet-command:v1:296:${canonicalSignerAddress}:${transport.command.nonce}`;
     const state = commandContext({ mutationResult, mutationError });
     const seamState = testSeams({ key: ingress.key, type: "external.attachCandidate", payload });
 
@@ -909,7 +910,7 @@ implementedTest("maps M43 attachment results through the existing public respons
       principalPublicId: "principal_42",
       role: "ISSUER",
       authorityVersion: "authority-v1",
-      replayIdentity: ingress.replayIdentity,
+      replayIdentity: walletReplayIdentity,
     }, name);
     assert.equal(Object.hasOwn(body, "publicId"), expected.outcome !== "REJECTED", name);
   }

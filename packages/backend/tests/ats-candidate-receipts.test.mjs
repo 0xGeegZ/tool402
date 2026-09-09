@@ -328,6 +328,119 @@ implementedTest("attaches one non-ATS candidate without an EVM address", async (
   ]);
 });
 
+implementedTest("does not persist a prototype-supplied candidate address for non-ATS attachment input", { concurrency: false }, async () => {
+  const nonAtsAttempt = attempt({ operationKind: "HEDERA_FUNDING" });
+  const nonAtsInput = input({ operationKind: "HEDERA_FUNDING" });
+  delete nonAtsInput.candidateEvmAddress;
+  assert.equal(Object.hasOwn(nonAtsInput, "candidateEvmAddress"), false);
+
+  const priorCandidateDescriptor = Object.getOwnPropertyDescriptor(
+    Object.prototype,
+    "candidateEvmAddress",
+  );
+  try {
+    Object.defineProperty(Object.prototype, "candidateEvmAddress", {
+      configurable: true,
+      enumerable: false,
+      value: candidateAddress,
+      writable: true,
+    });
+    const db = database({ attempts: [nonAtsAttempt] });
+    assert.deepEqual(
+      await api.attachAtsCandidateReceipt._handler(db.ctx, nonAtsInput),
+      { status: "ATTACHED", attemptId, state: "SUBMITTED" },
+    );
+    assert.deepEqual(db.writes, [
+      {
+        kind: "insert",
+        table: "walletCommandReplayClaims",
+        rowId: "walletCommandReplayClaims:0",
+        document: {
+          replayIdentity: replayIdentity(),
+          commandType: "external.attachCandidate",
+          outcome: "NEW",
+          targetId: attemptId,
+          claimedAt: db.writes[0].document.claimedAt,
+        },
+      },
+      {
+        kind: "patch",
+        rowId: attemptId,
+        patch: {
+          state: "SUBMITTED",
+          candidateTransactionId: "0.0.123@1735689600.123456789",
+        },
+      },
+    ]);
+    assert.equal(
+      Object.hasOwn(db.rows.externalPrepareCommandAttempts[0], "candidateEvmAddress"),
+      false,
+    );
+  } finally {
+    if (priorCandidateDescriptor === undefined) {
+      delete Object.prototype.candidateEvmAddress;
+    } else {
+      Object.defineProperty(
+        Object.prototype,
+        "candidateEvmAddress",
+        priorCandidateDescriptor,
+      );
+    }
+  }
+  assert.deepEqual(
+    Object.getOwnPropertyDescriptor(Object.prototype, "candidateEvmAddress"),
+    priorCandidateDescriptor,
+  );
+});
+
+implementedTest("does not project a prototype-supplied candidate address from a non-ATS submitted attempt", { concurrency: false }, async () => {
+  const submitted = attempt({
+    operationKind: "HEDERA_FUNDING",
+    state: "SUBMITTED",
+    candidateTransactionId: "0.0.123@1735689600.123456789",
+  });
+  assert.equal(Object.hasOwn(submitted, "candidateEvmAddress"), false);
+
+  const priorCandidateDescriptor = Object.getOwnPropertyDescriptor(
+    Object.prototype,
+    "candidateEvmAddress",
+  );
+  try {
+    Object.defineProperty(Object.prototype, "candidateEvmAddress", {
+      configurable: true,
+      enumerable: false,
+      value: candidateAddress,
+      writable: true,
+    });
+    const db = database({ attempts: [submitted] });
+    const context = await api.readAtsCandidateVerificationContext._handler(db.ctx, { attemptId });
+    assert.deepEqual(context, {
+      attemptId,
+      state: "SUBMITTED",
+      operationKind: "HEDERA_FUNDING",
+      network: "hedera:testnet",
+      chainId: 296,
+      expectedTarget,
+      candidateTransactionId: "0.0.123@1735689600.123456789",
+    });
+    assert.equal(Object.hasOwn(context, "candidateEvmAddress"), false);
+  } finally {
+    if (priorCandidateDescriptor === undefined) {
+      delete Object.prototype.candidateEvmAddress;
+    } else {
+      Object.defineProperty(
+        Object.prototype,
+        "candidateEvmAddress",
+        priorCandidateDescriptor,
+      );
+    }
+  }
+  assert.deepEqual(
+    Object.getOwnPropertyDescriptor(Object.prototype, "candidateEvmAddress"),
+    priorCandidateDescriptor,
+  );
+});
+
 implementedTest("rejects reused replay identities, missing or duplicate attempts, unsafe rows, and context mismatches without a candidate write", async () => {
   const claimed = database({
     claims: [{
@@ -351,6 +464,35 @@ implementedTest("rejects reused replay identities, missing or duplicate attempts
     limit: 2,
   });
   assert.deepEqual(claimed.writes, []);
+
+  for (const [commandType, outcome, targetId] of [
+    ["offering.create", "NEW", "offerings:existing"],
+    ["directory.publish", "IDEMPOTENCY_REPLAYED", "directoryVersions:existing"],
+    ["offering.create", "IDEMPOTENCY_CONFLICT", undefined],
+  ]) {
+    const crossCommand = database({
+      claims: [{
+        _id: "walletCommandReplayClaims:cross-command",
+        _creationTime: 1,
+        replayIdentity: replayIdentity(),
+        commandType,
+        outcome,
+        ...(targetId === undefined ? {} : { targetId }),
+        claimedAt: 1n,
+      }],
+    });
+    assert.deepEqual(
+      await api.attachAtsCandidateReceipt._handler(crossCommand.ctx, input()),
+      { status: "COMMAND_REPLAYED" },
+      `${commandType}/${outcome}`,
+    );
+    assert.deepEqual(crossCommand.writes, [], `${commandType}/${outcome}`);
+    assert.equal(
+      crossCommand.reads.some(({ table }) => table === "externalPrepareCommandAttempts"),
+      false,
+      `${commandType}/${outcome}: replay must stop before attempt lookup`,
+    );
+  }
 
   const getterRow = attempt();
   let getterReads = 0;
@@ -438,7 +580,11 @@ implementedTest("returns only the minimal verification context and terminalizes 
   assert.equal(typeof unknownDb.writes[0].patch.nextReconciliationAt, "bigint");
   assert.ok(unknownDb.writes[0].patch.nextReconciliationAt > 0n);
 
-  const terminalDb = database({ attempts: [attempt({ state: "CONFIRMED" })] });
+  const terminalDb = database({ attempts: [attempt({
+    state: "CONFIRMED",
+    candidateTransactionId: "0.0.123@1735689600.123456789",
+    candidateEvmAddress: candidateAddress,
+  })] });
   await assert.rejects(
     api.recordAtsCandidateOutcome._handler(terminalDb.ctx, { attemptId, outcome: "REJECTED" }),
     RangeError,

@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M04-T010 accepted, M26-T010 accepted, M32-T010 accepted,
   M33-T010 accepted, M38-T010 (this batch), M39-T010 (this batch),
   M40-T010 (this batch), M41-T010 (this batch), M42-T010 (this batch)
@@ -19,6 +19,9 @@
   integration reservation naming that file,
   `packages/backend/tests/external-prepare-command-durable-schema.test.mjs`
   as an amendment under a root integration reservation naming that file, and
+  `packages/backend/tests/offering-durable-schema.test.mjs` as a test-only
+  amendment under a root integration reservation naming that file, limited to
+  the same M43-amended M32 subset shape, and
   `packages/backend/convex/command_dispatch.ts` as an amendment under a root
   integration reservation naming that file, enabling only the
   `external.attachCandidate` dispatch entry M41-T010 declares disabled, plus
@@ -91,6 +94,12 @@ and nothing resubmits.
   [M32 source](../../../specs/m32-durable-external-prepare-admission.md) —
   its mutation and its recovery query — stays byte unchanged, and recovery
   keeps matching only the literal `PREPARED` state.
+- The complete Backend M40 compatibility assertion in
+  `packages/backend/tests/offering-durable-schema.test.mjs` compares the same
+  M32 subset. Under a root test-only reservation it may be amended only to
+  that same widened union and the same three optional M43 fields. It may not
+  change an M40 table, index, source path, behavior, or any other expected
+  subset.
 - M43 never invokes M40's `markAssetReady` mutation. The one permitted Mirror
   ContractResult response exposes only a Hedera created-entity identifier, not
   a documented created EVM address; M43 neither converts that identifier nor
@@ -110,10 +119,12 @@ and nothing resubmits.
 ## Verification
 
 - Durable RED test files at the three declared test paths, the amended M32
-  durable-schema assertion, and the one constrained M41 dispatch-test
-  replacement precede every source and schema change. The three new files fail
-  only because the declared modules do not yet exist; the M41 replacement fails
-  against its currently disabled entry.
+  durable-schema assertion, the same-shape M40 compatibility assertion, and
+  the one constrained M41 dispatch-test replacement precede every source and
+  schema change. The three new files fail only because the declared modules do
+  not yet exist; the M41 replacement fails against its currently disabled
+  entry, and the M40 assertion fails only because it still expects the
+  superseded M32-only attempt shape.
 - Focused tests prove the additive schema shape, the widened state union, and
   that no other accepted table or index changes.
 - Focused tests prove attachment rejects a missing, duplicate, unsafe,
@@ -145,7 +156,8 @@ and nothing resubmits.
   invokes M40's ready seam, and never resubmits, retries, or calls a wallet,
   provider, or SDK.
 - `npm run typecheck`, `npm run test`, `npm run lint`, `npm run queue:check`,
-  and the enabled local-reference guard pass.
+  and the enabled local-reference guard are required. The aggregate root test
+  retains only M44's separately declared source-absent RED failures.
 - Independent task review and two fresh module-review generations report no
   Critical, Important, or Minor finding.
 
@@ -225,3 +237,17 @@ records the exact boundary: every `ATS_*` verification remains
 `NOT_CONFIGURED`, only `HEDERA_FUNDING` may use the bounded observation path,
 and this card still grants no SDK, wallet, provider, configuration,
 transaction, deployment, or live authority.
+
+## Acceptance
+
+The local delivery is accepted after the independent task review and two fresh
+module reviews found no Critical, Important, or Minor finding. The focused M43
+integration suite passes 56/56, the complete Backend suite passes 275/275, and
+root typecheck/lint, queue/reference/whitespace/Git-guard checks are clear under Node
+22.21.1. The aggregate root test has only M44's separately declared
+source-absent RED failures; this card does not change or accept them.
+
+M43 remains local-only: every `ATS_*` verification returns `NOT_CONFIGURED`
+before any Mirror observation or outcome write, only `HEDERA_FUNDING` can use
+the bounded fixture path, and no SDK, wallet, provider, configuration,
+transaction, deployment, or live capability is added.

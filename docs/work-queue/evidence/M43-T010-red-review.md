@@ -38,3 +38,28 @@ modules, the reserved attempt-state/optional-field schema amendment, and the
 single `external.attachCandidate` dispatch-entry amendment. The implementation
 must preserve every boundary above; any enabled ATS receipt verification,
 asset-ready transition, or live action remains a separately gated successor.
+
+## GREEN-stage contract correction
+
+The first dispatch GREEN run exposed one test-only mismatch: its M43 assertion
+passed the protected HTTP transport replay identity to the candidate mutation,
+while the local M43 specification requires the already-normalized wallet-command
+replay identity. The constrained assertion now derives the latter from the
+signed command's canonical signer and nonce. This corrects the test to the
+accepted local specification; it adds no source target, state transition, or
+external capability.
+
+## Prototype-safety correction
+
+Final independent review identified two inherited-property hazards in the
+GREEN implementation: a Mirror document without an own `result` field could
+inherit a success value, and a non-ATS candidate could inherit an EVM address.
+The implementation now captures internal records with a null prototype and
+reads optional stored candidate fields only after an own-property check.
+
+Three durable regressions reproduce those cases and pass after the correction:
+one Mirror result case, one attachment case, and one verification-context
+projection case. The bounded reader retains its ordinary frozen public document
+shape; the verifier captures it again before inspecting it. This correction
+preserves the already-authorized local M43 scope and adds no configuration,
+SDK, wallet, provider, transaction, deployment, or live capability.

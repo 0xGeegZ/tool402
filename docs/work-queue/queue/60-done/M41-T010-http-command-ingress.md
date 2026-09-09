@@ -17,7 +17,7 @@
   `docs/specs/m41-http-command-ingress.md`, and one amendment under a root
   integration reservation to `packages/backend/convex/schema.ts` adding only
   the `ingressCommandReplayClaims` table and its `by_replay_identity` index.
-  M40-T010 and [M43-T010](../20-active/M43-T010-ats-receipt-verification.md) amend the
+  M40-T010 and [M43-T010](M43-T010-ats-receipt-verification.md) amend the
   same accepted file in this batch, so the root sequences the three
   reservations before any of those cards is ready.
   `packages/backend/convex/command_dispatch.ts` is declared here with the

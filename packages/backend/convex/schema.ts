@@ -42,7 +42,13 @@ export default defineSchema({
     canonicalParametersHash: v.string(),
     idempotencyKey: v.string(),
     expiresAt: v.string(),
-    state: v.literal("PREPARED"),
+    state: v.union(
+      v.literal("PREPARED"), v.literal("SUBMITTED"), v.literal("CONFIRMED"),
+      v.literal("OUTCOME_UNKNOWN"), v.literal("REJECTED"),
+    ),
+    candidateTransactionId: v.optional(v.string()),
+    candidateEvmAddress: v.optional(v.string()),
+    nextReconciliationAt: v.optional(v.int64()),
     acceptedAt: v.int64(),
   }).index("by_idempotency_key", ["idempotencyKey"]),
   offerings: defineTable({
