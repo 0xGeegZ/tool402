@@ -84,7 +84,7 @@ test("defines the closed, labelled Status treatment without client or runtime be
     ["directory_unavailable", "error"],
     ["directory_invalid", "error"],
     ["native_summary_unavailable", "error"],
-    ["input_invalid", "error"],
+    ["invalid_input", "error"],
   ]) {
     assert.match(
       source,
@@ -104,13 +104,28 @@ test("declares the exact feedback tokens and routes only existing outcomes throu
     return;
   }
 
-  const [styles, request, toolLoop, nativeQuote, preflight, directory] = await Promise.all([
+  const [
+    styles,
+    request,
+    toolLoop,
+    nativeQuote,
+    preflight,
+    directory,
+    toolLoopState,
+    nativeQuoteState,
+    preflightState,
+    directoryState,
+  ] = await Promise.all([
     readAppFile("src/app/globals.css"),
     readAppFile("src/components/riskscan/request/riskscan-request-flow.tsx"),
     readAppFile("src/components/riskscan/tool-loop/riskscan-tool-loop.tsx"),
     readAppFile("src/components/riskscan/native-quote/riskscan-native-quote-compatibility.tsx"),
     readAppFile("src/components/riskscan/preflight/riskscan-quick-preflight.tsx"),
     readAppFile("src/components/discovery/riskscan-directory-discovery.tsx"),
+    readAppFile("src/components/riskscan/tool-loop/riskscan-tool-loop-state.ts"),
+    readAppFile("src/components/riskscan/native-quote/riskscan-native-quote-state.ts"),
+    readAppFile("src/components/riskscan/preflight/riskscan-quick-preflight-state.ts"),
+    readAppFile("src/components/discovery/riskscan-directory-state.ts"),
   ]);
 
   for (const [name, value] of [
@@ -133,19 +148,44 @@ test("declares the exact feedback tokens and routes only existing outcomes throu
     [directory, "../ui/status"],
   ]) {
     assert.match(source, new RegExp(`from ["']${importSpecifier}["']`));
-    assert.match(source, /\bStatus\b/);
-    assert.match(source, /\bstatusToneForOutcome\(/);
-    assert.match(source, /aria-live=["']polite["']/);
+    assert.match(
+      source,
+      /<Status\b(?=[^>]*\btone=\{[^}]*statusToneForOutcome\()(?=[^>]*\baria-live=["']polite["'])[^>]*>/,
+    );
+    assert.match(source, /<Status\b[\s\S]*?<\/Status>/);
   }
 
   for (const [source, message] of [
+    [request, "Sending the request boundary."],
     [request, "RiskScan is unavailable. No payment challenge or result was returned."],
     [request, "A payment challenge was returned. No payment was made in this browser."],
     [request, "The request was rejected before a result. Check the fields and try again."],
-    [toolLoop, "Sending the ToolLoop request boundary."],
-    [nativeQuote, "Evaluating local native quote compatibility."],
-    [preflight, "Quick preflight"],
-    [directory, "Inspecting the local directory."],
+    [request, "The request could not reach the service. No payment or result was confirmed."],
+    [request, "The service returned an unexpected response. No payment or result is shown."],
+    [request, "Quick endpoint response"],
+    [request, "This is only an endpoint response. It is not payment or lifecycle evidence."],
+    [toolLoopState, "Sending the ToolLoop request boundary."],
+    [toolLoopState, "RiskScan directory is unavailable. No RiskScan request was sent."],
+    [toolLoopState, "RiskScan directory is invalid. No RiskScan request was sent."],
+    [toolLoopState, "The input was rejected. No RiskScan request was sent."],
+    [toolLoopState, "The request could not reach the service. No payment or result is confirmed or shown."],
+    [toolLoopState, "RiskScan is unavailable. No payment or result is confirmed or shown."],
+    [toolLoopState, "A payment challenge was returned. No payment was made in this browser."],
+    [toolLoopState, "The service returned an unexpected response. No payment or result is confirmed or shown."],
+    [nativeQuoteState, "Evaluating local native quote compatibility."],
+    [nativeQuoteState, "RiskScan directory is unavailable. Local compatibility was not evaluated."],
+    [nativeQuoteState, "RiskScan directory is invalid. Local compatibility was not evaluated."],
+    [nativeQuoteState, "A local native summary is unavailable. Local compatibility was not evaluated."],
+    [nativeQuoteState, "The submitted local policy is not compatible with the advertised native summary."],
+    [nativeQuoteState, "The advertised native summary is locally compatible. This is not consent, availability, a quote guarantee, payment authorization, or a transaction."],
+    [preflightState, "This is caller-reported local preparation only. No request was sent, and it does not confirm a payment, service, evidence, or live availability."],
+    [preflightState, "The local preflight input is invalid."],
+    [preflightState, "One or more caller-reported disclosures are absent."],
+    [preflightState, "All four disclosures are caller reported."],
+    [directoryState, "The local directory descriptor was selected. No RiskScan request was sent."],
+    [directoryState, "Inspecting the local directory."],
+    [directoryState, "The local directory could not be read. No RiskScan request was sent."],
+    [directoryState, "The local directory response could not be used. No RiskScan request was sent."],
   ]) {
     assert.match(source, new RegExp(message.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
