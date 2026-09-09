@@ -49,8 +49,11 @@ function capabilityViolations(sources) {
       if (typescript.isImportDeclaration(node) && typescript.isStringLiteral(node.moduleSpecifier) && forbiddenModule.test(node.moduleSpecifier.text)) {
         report(path, sourceFile, node, `forbidden module import: ${node.moduleSpecifier.text}`);
       }
-      if (typescript.isImportEqualsDeclaration(node) && typescript.isExternalModuleReference(node.moduleReference) && typescript.isStringLiteral(node.moduleReference.expression) && forbiddenModule.test(node.moduleReference.expression.text)) {
-        report(path, sourceFile, node, `forbidden module import: ${node.moduleReference.expression.text}`);
+      if (typescript.isImportEqualsDeclaration(node) && typescript.isExternalModuleReference(node.moduleReference)) {
+        report(path, sourceFile, node, "require-style import equals is not permitted");
+      }
+      if (typescript.isExportDeclaration(node) && typescript.isStringLiteral(node.moduleSpecifier) && forbiddenModule.test(node.moduleSpecifier.text)) {
+        report(path, sourceFile, node, `forbidden module export: ${node.moduleSpecifier.text}`);
       }
       if (typescript.isMetaProperty(node) && node.keywordToken === typescript.SyntaxKind.ImportKeyword) {
         report(path, sourceFile, node, "import.meta is not permitted");
@@ -65,16 +68,24 @@ function capabilityViolations(sources) {
           if (node.expression.text === "Function") report(path, sourceFile, node, "Function is not permitted");
           if (forbiddenCalls.has(node.expression.text)) report(path, sourceFile, node, `forbidden invocation: ${node.expression.text}`);
         }
-        if (typescript.isPropertyAccessExpression(node.expression)) {
+        if (isMemberExpression(node.expression)) {
           const receiver = node.expression.expression;
-          const member = node.expression.name.text;
+          const member = staticMemberName(node.expression);
           if (member === "request" && isWalletGlobal(receiver)) report(path, sourceFile, node, "provider request is not permitted");
           if ((member === "fetch" || member === "eval" || member === "Function") && isRuntimeGlobal(receiver)) report(path, sourceFile, node, `forbidden global invocation: ${member}`);
-          if (forbiddenCalls.has(member)) report(path, sourceFile, node, `forbidden invocation: ${member}`);
+          if (member !== null && forbiddenCalls.has(member)) report(path, sourceFile, node, `forbidden invocation: ${member}`);
         }
       }
-      if (typescript.isNewExpression(node) && typescript.isIdentifier(node.expression) && forbiddenConstructors.has(node.expression.text)) {
-        report(path, sourceFile, node, `forbidden constructor: ${node.expression.text}`);
+      if (typescript.isNewExpression(node)) {
+        if (typescript.isIdentifier(node.expression) && forbiddenConstructors.has(node.expression.text)) {
+          report(path, sourceFile, node, `forbidden constructor: ${node.expression.text}`);
+        }
+        if (isMemberExpression(node.expression)) {
+          const member = staticMemberName(node.expression);
+          if (member !== null && forbiddenConstructors.has(member) && isRuntimeGlobal(node.expression.expression)) {
+            report(path, sourceFile, node, `forbidden global constructor: ${member}`);
+          }
+        }
       }
       if (typescript.isIdentifier(node) && (node.text === "ethereum" || node.text === "web3")) {
         report(path, sourceFile, node, `runtime wallet/provider global is not permitted: ${node.text}`);
@@ -88,7 +99,19 @@ function capabilityViolations(sources) {
 
     function isWalletGlobal(node) {
       return (typescript.isIdentifier(node) && ["ethereum", "web3"].includes(node.text)) ||
-        (typescript.isPropertyAccessExpression(node) && isRuntimeGlobal(node.expression) && ["ethereum", "web3"].includes(node.name.text));
+        (isMemberExpression(node) && isRuntimeGlobal(node.expression) && ["ethereum", "web3"].includes(staticMemberName(node)));
+    }
+
+    function isMemberExpression(node) {
+      return typescript.isPropertyAccessExpression(node) || typescript.isElementAccessExpression(node);
+    }
+
+    function staticMemberName(node) {
+      if (typescript.isPropertyAccessExpression(node)) return node.name.text;
+      if (typescript.isElementAccessExpression(node) && node.argumentExpression && (typescript.isStringLiteral(node.argumentExpression) || typescript.isNoSubstitutionTemplateLiteral(node.argumentExpression))) {
+        return node.argumentExpression.text;
+      }
+      return null;
     }
 
     visit(sourceFile);
