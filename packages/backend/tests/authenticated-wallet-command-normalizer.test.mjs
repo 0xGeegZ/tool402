@@ -349,6 +349,45 @@ async function signedCommand(
   };
 }
 
+function canonicalExternalPreparePayloadText(payload) {
+  return JSON.stringify({
+    canonicalParametersHash: payload.canonicalParametersHash,
+    chainId: payload.chainId,
+    expectedTarget: payload.expectedTarget,
+    expiresAt: payload.expiresAt,
+    idempotencyKey: payload.idempotencyKey,
+    network: payload.network,
+    operationKind: payload.operationKind,
+    subjectPublicId: payload.subjectPublicId,
+  });
+}
+
+async function signedExternalPrepareCommand(payload, nonce) {
+  const payloadHash = keccak256(
+    stringToHex(canonicalExternalPreparePayloadText(payload)),
+  );
+  const message = {
+    version: 1,
+    type: "external.prepare",
+    signer: signingAddress,
+    nonce,
+    issuedAt: commandIssuedAt,
+    expiresAt: payload.expiresAt,
+    payloadHash,
+  };
+  const signature = await signingAccount.signTypedData({
+    domain: typedDataDomain,
+    types: typedDataTypes,
+    primaryType: "Tool402Command",
+    message,
+  });
+  return {
+    ...message,
+    chainId: 296,
+    signature: signature.toLowerCase(),
+  };
+}
+
 function transportText(command, payload) {
   return JSON.stringify({ command, payload });
 }
@@ -698,6 +737,21 @@ async function assertM30CompatibilityVector(m30, vector) {
   vector.verify?.();
 }
 
+function assertPlainFrozenDataProperties(record) {
+  assert.equal(Object.getPrototypeOf(record), Object.prototype);
+  assert.equal(Object.isFrozen(record), true);
+  for (const key of Reflect.ownKeys(record)) {
+    const descriptor = Object.getOwnPropertyDescriptor(record, key);
+    assert.notEqual(descriptor, undefined, String(key));
+    assert.equal(Object.hasOwn(descriptor, "value"), true, String(key));
+    assert.equal(Object.hasOwn(descriptor, "get"), false, String(key));
+    assert.equal(Object.hasOwn(descriptor, "set"), false, String(key));
+    assert.equal(descriptor.enumerable, true, String(key));
+    assert.equal(descriptor.configurable, false, String(key));
+    assert.equal(descriptor.writable, false, String(key));
+  }
+}
+
 function staticStringValue(node) {
   if (
     typescript.isStringLiteral(node)
@@ -731,6 +785,18 @@ function staticPropertyName(node) {
     return staticStringValue(node.argumentExpression);
   }
   return null;
+}
+
+function isObjectFunctionConstructorReference(functionConstructor) {
+  if (staticPropertyName(functionConstructor) !== "constructor") {
+    return false;
+  }
+  const objectConstructor = functionConstructor.expression;
+  return (
+    staticPropertyName(objectConstructor) === "constructor"
+    && typescript.isIdentifier(objectConstructor.expression)
+    && objectConstructor.expression.text === "Object"
+  );
 }
 
 function isExactClaimedBodyCall(node, name) {
@@ -1003,6 +1069,9 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
     ) {
       prohibited.push(node.getText(sourceFile));
     }
+    if (isObjectFunctionConstructorReference(node)) {
+      prohibited.push(node.getText(sourceFile));
+    }
     if (declaresM25Binding(node)) {
       prohibited.push(node.getText(sourceFile));
     }
@@ -1106,7 +1175,12 @@ test("rejects helper, shadow, and static module capability escapes from the M25 
   const directBoundary = minimalM25BoundarySource(`
   if (!isClaimedProtectedBody(claimedBody)) return null;
   const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const dataOnlySnapshot = Object.freeze({
+    constructor: "pure-data",
+    byteLength: bodyBytes.byteLength,
+  });
   void bodyBytes;
+  void dataOnlySnapshot;
   return null;`);
   assert.doesNotThrow(() => assertClaimedBodyAndCapabilityBoundary(directBoundary));
 
@@ -1141,6 +1215,13 @@ test("rejects helper, shadow, and static module capability escapes from the M25 
   if (!isClaimedProtectedBody(claimedBody)) return null;
   const bodyBytes = readClaimedProtectedBody(claimedBody);
   const executable = module.createRequire("node:module")("node:fs");
+  void bodyBytes;
+  void executable;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const executable = Object.constructor.constructor("return globalThis.fetch")();
   void bodyBytes;
   void executable;
   return null;`),
@@ -1239,6 +1320,8 @@ implementedTest("preserves M30 external.prepare normalization byte-for-byte", as
   assert.notEqual(normalized, null);
   assert.equal(Object.isFrozen(normalized), true);
   assert.equal(Object.isFrozen(normalized.payload), true);
+  assertPlainFrozenDataProperties(normalized);
+  assertPlainFrozenDataProperties(normalized.payload);
   assert.throws(() => {
     normalized.principalPublicId = "mutated";
   }, TypeError);
@@ -1301,6 +1384,8 @@ implementedTest("dispatches each signed M38 payload to exactly one closed comman
     assert.equal(normalized.payloadHash, command.payloadHash);
     assert.equal(Object.isFrozen(normalized), true);
     assert.equal(Object.isFrozen(normalized.payload), true);
+    assertPlainFrozenDataProperties(normalized);
+    assertPlainFrozenDataProperties(normalized.payload);
     assert.equal(Object.hasOwn(normalized, "signature"), false);
     assert.equal(Object.hasOwn(normalized, "rawBody"), false);
     assert.deepEqual(
@@ -1469,17 +1554,30 @@ implementedTest("enforces every command-specific authority predicate and generic
     candidatePayload,
     "RRRRRRRRRRRRRRRRRRRRRw",
   );
+  const atsCases = await Promise.all(
+    [
+      ["ATS_CREATE", "SSSSSSSSSSSSSSSSSSSSSQ"],
+      ["ATS_CONTROL_LIST", "TTTTTTTTTTTTTTTTTTTTTQ"],
+      ["ATS_ISSUE", "UUUUUUUUUUUUUUUUUUUUUg"],
+      ["ATS_TRANSFER", "VVVVVVVVVVVVVVVVVVVVVw"],
+      ["ATS_COUPON", "WWWWWWWWWWWWWWWWWWWWWQ"],
+    ].map(async ([operationKind, nonce]) => {
+      const payload = externalPreparePayload({ operationKind });
+      return {
+        name: `${operationKind} requires an owning issuer`,
+        command: await signedExternalPrepareCommand(payload, nonce),
+        payload,
+        allowedRecords: [authorityFor(signingAddress, "ISSUER", ["subject_42"])],
+        rejectedRecords: [
+          [authorityFor(signingAddress, "BACKER", ["subject_42"])],
+          [authorityFor(signingAddress, "ISSUER", [])],
+          [authorityFor(signingAddress, "ISSUER", ["other_subject"])],
+        ],
+      };
+    }),
+  );
   const cases = [
-    {
-      name: "ATS_CREATE requires an owning issuer",
-      command: externalPrepareCommand(),
-      payload: externalPreparePayload(),
-      allowedRecords: [authorityFor(firstSigner, "ISSUER", ["subject_42"])],
-      rejectedRecords: [
-        [authorityFor(firstSigner, "BACKER", [])],
-        [authorityFor(firstSigner, "ISSUER", [])],
-      ],
-    },
+    ...atsCases,
     {
       name: "HEDERA_FUNDING requires a backer",
       command: fundingCommand(),
@@ -1545,23 +1643,80 @@ implementedTest("enforces every command-specific authority predicate and generic
   }
 });
 
-implementedTest("enforces the inherited clock boundary through the M39 test-only predicate", () => {
-  assert.equal(
-    api.isWalletCommandTimeWindowValidForTest(
-      commandIssuedAt,
-      commandExpiry,
-      serverNow,
-    ),
-    true,
-  );
-  assert.equal(
-    api.isWalletCommandTimeWindowValidForTest(
-      commandIssuedAt,
-      "2026-09-07T19:04:00.001Z",
-      commandIssuedAt,
-    ),
-    false,
-  );
+implementedTest("enforces the inherited M30 clock boundary through the M39 test-only predicate", () => {
+  const cases = [
+    {
+      name: "accepts the inclusive 300-second lifetime boundary",
+      timestamps: [
+        "2026-09-07T19:00:00.000Z",
+        "2026-09-07T19:05:00.000Z",
+        "2026-09-07T19:00:00.000Z",
+      ],
+      accepted: true,
+    },
+    {
+      name: "rejects an expiry before issue",
+      timestamps: [
+        "2026-09-07T19:05:00.000Z",
+        "2026-09-07T19:04:00.000Z",
+        "2026-09-07T19:04:00.000Z",
+      ],
+      accepted: false,
+    },
+    {
+      name: "rejects an expiry equal to issue",
+      timestamps: [
+        "2026-09-07T19:04:00.000Z",
+        "2026-09-07T19:04:00.000Z",
+        "2026-09-07T19:04:00.000Z",
+      ],
+      accepted: false,
+    },
+    {
+      name: "rejects a 300-second-and-one-millisecond lifetime",
+      timestamps: [
+        "2026-09-07T19:00:00.000Z",
+        "2026-09-07T19:05:00.001Z",
+        "2026-09-07T19:00:00.000Z",
+      ],
+      accepted: false,
+    },
+    {
+      name: "rejects an impossible issue timestamp",
+      timestamps: [
+        "2026-02-29T19:00:00.000Z",
+        "2026-09-07T19:05:00.000Z",
+        "2026-09-07T19:00:00.000Z",
+      ],
+      accepted: false,
+    },
+    {
+      name: "rejects an impossible expiry timestamp",
+      timestamps: [
+        "2026-09-07T19:00:00.000Z",
+        "2026-02-29T19:05:00.000Z",
+        "2026-09-07T19:00:00.000Z",
+      ],
+      accepted: false,
+    },
+    {
+      name: "rejects an impossible server timestamp",
+      timestamps: [
+        "2026-09-07T19:00:00.000Z",
+        "2026-09-07T19:05:00.000Z",
+        "2026-02-29T19:00:00.000Z",
+      ],
+      accepted: false,
+    },
+  ];
+
+  for (const timeCase of cases) {
+    assert.equal(
+      api.isWalletCommandTimeWindowValidForTest(...timeCase.timestamps),
+      timeCase.accepted,
+      timeCase.name,
+    );
+  }
 });
 
 implementedTest("keeps the normalizer private and free of external capability", () => {
