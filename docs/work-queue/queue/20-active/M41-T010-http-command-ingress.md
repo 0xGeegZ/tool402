@@ -23,6 +23,17 @@
   `packages/backend/convex/command_dispatch.ts` is declared here with the
   `external.attachCandidate` entry disabled; M43-T010 amends that file under a
   root integration reservation to enable exactly that one entry.
+- Scoped atomic-handoff amendment: M41 owns the constrained integration
+  amendments to `packages/backend/convex/external_prepare_command_admission.ts`,
+  `packages/backend/convex/offerings.ts`, and
+  `packages/backend/convex/schema.ts`, plus the corresponding focused M32/M40
+  test amendments at
+  `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`
+  and `packages/backend/tests/offering-command-admission.test.mjs`. They add
+  only the M32 `ATS_CREATE` atomic admission and the
+  M40 lookup index/closed helper recorded in the local specifications; no
+  existing non-`ATS_CREATE` M32 behavior, M40 public projection, or external
+  capability is eligible.
 - Human actions: none for local delivery; `HA-CAMPAIGN-CONVEX-001` gates every
   published deployment, ingress key pair, and live request, and
   `HA-COMMAND-AUTHORITY-002` gates the command vocabulary M39-T010 normalizes.
@@ -38,7 +49,9 @@ router exposes `POST /internal/commands` plus two unauthenticated read prefixes,
 accepted M22 envelope from five `x-tool402-*` headers, runs the accepted M25
 claimed-body composition over the exact raw bytes, normalizes one authenticated
 wallet command through M39-T010, and forwards it to exactly one durable
-admission mutation chosen by command type. The read routes serve the sanitized
+admission mutation chosen by command type and `ATS_CREATE` operation kind. The
+M32 atomic ATS_CREATE mutation links the offering in its own durable
+transaction; the HTTP action cannot select an offering document ID. The read routes serve the sanitized
 offering and active-directory projections M40-T010 owns.
 
 The local contract is the
@@ -86,9 +99,9 @@ outside one JavaScript process. This card is that adapter and nothing more.
   respectively, before either card is ready.
 - The in-batch interfaces this card consumes are confirmed to exist as named:
   the M40 `admitOfferingCreate`, `admitDirectoryPublish`,
-  `getPublicProjection`, and `getActive` functions, the M40-owned
-  `markAssetPending(offeringId, attemptId)` transition this card's dispatch
-  boundary invokes after an `ATS_CREATE` `NEW` admission, and one M39
+  `getPublicProjection`, and `getActive` functions, the M32
+  `admitAtsCreateAndMarkAssetPending` atomic transition, which resolves and
+  links its offering server-side after an `ATS_CREATE` `NEW` admission, and one M39
   normalizer over the four command types admitted by
   `HA-COMMAND-AUTHORITY-002`, whose `external.prepare` behavior is identical to
   the accepted M30 boundary.
@@ -106,6 +119,11 @@ outside one JavaScript process. This card is that adapter and nothing more.
   and `packages/backend/tests/command-dispatch.test.mjs` precede every source
   change and introduce no source, manifest, lockfile, configuration, or
   external behavior.
+- The scoped atomic-handoff RED also permits only the two named M32/M40 focused
+  test amendments in State. It proves full rollback on missing, duplicate,
+  malformed, linked, or cross-context offering candidates; generic M32
+  ATS_CREATE rejection; exact replay only with an already-linked matching
+  `ASSET_PENDING` offering; and no M41 dispatch-side offering transition.
 - Focused Node commands from the repository root under Node 22.21.1:
 
   ```bash
@@ -120,8 +138,8 @@ outside one JavaScript process. This card is that adapter and nothing more.
   shared by the skew and command windows, exactly one transport replay claim
   per request, the reason-free `REJECTED` arm for every upstream failure, the
   exact M32 status mapping, `UNSUPPORTED_TYPE` only for a disabled dispatch
-  entry, exactly one `markAssetPending` call on an `ATS_CREATE` `NEW` result
-  and none on any other status or command kind, echo-only `publicId`, and both
+  entry, selection of the atomic M32 entry only for `ATS_CREATE`, no
+  dispatch-side `markAssetPending` call, echo-only `publicId`, and both
   read-route grammars with their three outcomes.
 - One focused test imports
   `packages/backend/convex/external_prepare_command_admission.ts`,
@@ -150,11 +168,12 @@ its ingress key pair, the router has no configured key and rejects every
 request; until an issuer authority row exists, every normalized command fails
 closed before a durable write.
 
-Beyond the one reserved `ingressCommandReplayClaims` table it adds no schema
-change, Convex component, generated API output, cron, scheduler, retry, cache,
-CORS policy, session, or second environment reader, and no wallet, provider,
-ATS SDK, Mirror Node, funding, payment, transaction, settlement, clearing, HCS,
-payout, or live behavior. The
+Beyond the reserved `ingressCommandReplayClaims` table and the scoped
+`by_ats_create_draft_binding` M40 index, it adds no schema change, Convex
+component, generated API output, cron, scheduler, retry, cache, CORS policy,
+session, or second environment reader, and no wallet, provider, ATS SDK, Mirror
+Node, funding, payment, transaction, settlement, clearing, HCS, payout, or live
+behavior. The
 `external.attachCandidate` dispatch entry is declared and disabled, so that
 command type is answered `UNSUPPORTED_TYPE` until M43-T010 enables the entry
 through its own reservation on
@@ -185,3 +204,20 @@ queue validation, whitespace, and the enabled local-reference guard. This
 activation authorizes only the two durable test-only RED files named in
 Verification. Schema and production modules remain absent until a separate
 independent RED review accepts the exact failure contract.
+
+## Atomic handoff amendment
+
+Independent review found that the prior two-mutation ATS_CREATE handoff could
+leave a `PREPARED` attempt unlinked when its later offering transition failed.
+This card therefore amends the local M32/M40/M41 specifications and reserves
+only the closed atomic M32 path, its M40 helper/index, and focused M32/M40 test
+amendments. The generic M32 mutation rejects ATS_CREATE; M41 dispatches that
+operation only to `admitAtsCreateAndMarkAssetPending`. The correction is local
+durable integrity work only: it adds no signed field, authority, target,
+configuration access, wallet, provider, SDK, transaction, deployment, or live
+behavior. A fresh independent amendment review must clear before the expanded
+test-only RED contract is written. That review is clear at this control commit:
+the four named test files are authorized, while every production source,
+schema, configuration, wallet, provider, SDK, transaction, deployment, and
+live path remains prohibited until a separate RED review accepts their exact
+failure contract.

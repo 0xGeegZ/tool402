@@ -116,13 +116,14 @@ external.attachCandidate  declared entry, disabled until M43-T010 enables it
 ```
 
 The `external.prepare` argument is exactly the accepted M32 serialized record
-with its payload; M41 adds no field or clock and M32 rechecks everything. When
-`admitExternalPrepareCommand` returns status `NEW` for an `ATS_CREATE`
-`operationKind` whose `subjectPublicId` matches a `DRAFT` offering with the same
-subject, the dispatch boundary then invokes the M40-owned
-`markAssetPending(offeringId, attemptId)` transition for that offering; any
-other status or `operationKind` leaves every offering untouched. M41 owns no
-offering column of its own, and the paired `markAssetReady` transition stays
+with its payload; M41 adds no field or clock and M32 rechecks everything. For
+every non-`ATS_CREATE` operation, the frozen dispatch calls
+`admitExternalPrepareCommand`. For `ATS_CREATE`, it calls only the scoped M32
+`admitAtsCreateAndMarkAssetPending` atomic admission. That mutation performs
+the M32 admission and the M40-owned offering link in one transaction; M41 never
+receives an offering document ID and never calls `markAssetPending` itself. A
+new attempt, its `ASSET_PENDING` offering link, and its replay claim therefore
+commit together or all roll back. The paired `markAssetReady` transition stays
 with the M43 verification action.
 
 The `external.attachCandidate` entry is declared here and disabled. M43-T010
@@ -185,15 +186,14 @@ document identifier, and a served record asserts no on-chain fact.
 
 ## Explicit exclusions
 
-Beyond the single reserved `ingressCommandReplayClaims` amendment to
-`packages/backend/convex/schema.ts`, change no accepted file, package, lockfile,
+Beyond the reserved `ingressCommandReplayClaims` amendment and the scoped M32
+atomic-handoff amendment below, change no accepted file, package, lockfile,
 generated output, or Web or Agent path. Add no Convex component, generated API
-module, authority writer, offering column write of its own beyond the one
-declared `markAssetPending` invocation, cron, scheduler, retry, cache, rate
-limiter, CORS policy, session, cookie, second environment reader, wallet,
-provider, ATS SDK, Mirror Node, or funding, payment, settlement, payout, or
-deployment behavior. Declare the `external.attachCandidate` seam, disabled;
-M43-T010 enables it under its own reservation.
+module, authority writer, cron, scheduler, retry, cache, rate limiter, CORS
+policy, session, cookie, second environment reader, wallet, provider, ATS SDK,
+Mirror Node, funding, payment, settlement, payout, or deployment behavior.
+Declare the `external.attachCandidate` seam, disabled; M43-T010 enables it
+under its own reservation.
 
 ## Acceptance evidence
 
@@ -203,8 +203,8 @@ M43-T010 enables it under its own reservation.
   real `Request`, and the established valid M23 envelope and key vector to prove
   the route table, header mapping, byte cap, one clock reading, one exact
   transport replay claim, the M32 status mapping, `UNSUPPORTED_TYPE` only for a
-  disabled entry, exactly one `markAssetPending` call on an `ATS_CREATE` `NEW`
-  result and none on any other status or kind, echo-only `publicId`, both
+  disabled entry, selection of the atomic M32 entry only for `ATS_CREATE`, no
+  dispatch-side `markAssetPending` call, echo-only `publicId`, both
   read-route grammars and `record` field sets, that no response or row exposes
   key, secret, signature, digest, body, or identifier material, and `http.ts`
   routing only.
@@ -217,3 +217,37 @@ M43-T010 enables it under its own reservation.
 - Backend and root typecheck, test, lint, clean-install dry run, queue,
   reference, and whitespace checks, the enabled local guard, independent task
   review, and two fresh module-review generations pass before acceptance.
+
+## M41 atomic ATS_CREATE handoff amendment
+
+The initially proposed two-mutation M41 handoff was unsafe: an M32 `NEW`
+attempt could commit before a later M40 transition failed, leaving an unlinked
+`PREPARED` attempt. `subjectPublicId` is correlation data rather than an
+offering document identity, so the HTTP action cannot safely select an offering
+or repair that state on a replay.
+
+The local correction adds no signed field, target rule, authority, provider,
+wallet, SDK, environment value, or live capability. It adds the exact M32
+internal mutation `admitAtsCreateAndMarkAssetPending`, with the same serialized
+arguments and closed result union as M32 admission. It shares every accepted
+M32 rebind, authority, replay, idempotency, and time rule, and owns one atomic
+`ATS_CREATE` sequence:
+
+```text
+validate and revalidate the exact M32 command
+→ resolve replay/idempotency
+→ insert PREPARED attempt
+→ resolve exactly one matching DRAFT offering through M40's indexed binding
+→ patch that offering to ASSET_PENDING with the exact attempt ID
+→ insert the linked NEW replay claim
+```
+
+The M40 lookup keys are exactly `subjectPublicId`, `canonicalSignerAddress`,
+`principalPublicId`, `authorityVersion`, and `state: DRAFT`; zero, duplicate,
+malformed, linked, or cross-context candidates reject the entire transaction.
+For an exact idempotency replay, the stored attempt must already link through
+the existing `by_ats_attempt_id` index to exactly one matching
+`ASSET_PENDING` offering; an orphaned or mismatched row is an
+`IDEMPOTENCY_CONFLICT`, never an implicit relink. The generic M32 admission
+rejects `ATS_CREATE`, preserving its existing behavior for every other
+operation kind and preventing an internal bypass of the atomic path.

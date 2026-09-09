@@ -224,18 +224,36 @@ directory or offering write. `CLOSED` does not weaken an existing link's
 canonicality.
 
 Both seams write `offerings` columns only and are named seams for the accepted
-`ATS_CREATE` path. `markAssetPending` is invoked by the
-[M41](m41-http-command-ingress.md) dispatch boundary in
-`packages/backend/convex/command_dispatch.ts` immediately after a successful
-M32 `admitExternalPrepareCommand` returns status `NEW` for an `ATS_CREATE`
-operation whose subject matches a `DRAFT` offering; any other status or kind
-leaves every offering untouched. `markAssetReady` is invoked only by the
+`ATS_CREATE` path. `markAssetReady` is invoked only by the
 [M43](m43-ats-receipt-verification.md) verification action after it has
 persisted `CONFIRMED`. M43 may pass only the stored candidate address after its
 pure verifier has proved that the created address exactly equals it; it may not
-pass a browser, action-argument, or raw Mirror response address. M40 declares the
-seams and writes no caller: every `externalPrepareCommandAttempts` change and
-both wirings belong to those cards' own reservations.
+pass a browser, action-argument, or raw Mirror response address. M40 declares
+the seams and writes no caller: every `externalPrepareCommandAttempts` change
+and both wirings belong to those cards' own reservations.
+
+### M41 atomic ATS_CREATE handoff amendment
+
+`markAssetPending(offeringId, attemptId)` remains a closed M40 seam, but M41
+does not call it. The initial cross-mutation proposal could commit a generic
+`PREPARED` attempt before failing to link its offering. Instead, M40 exports a
+non-registered helper used only by M32's
+`admitAtsCreateAndMarkAssetPending` transaction. The helper resolves exactly
+one safe unlinked `DRAFT` offering through a new additive
+`by_ats_create_draft_binding` index over:
+
+```text
+subjectPublicId, canonicalSignerAddress, principalPublicId, authorityVersion,
+state
+```
+
+It requires equality with the freshly revalidated `ATS_CREATE` attempt and
+patches only that record to `ASSET_PENDING` with the exact attempt ID. Zero,
+multiple, malformed, linked, or cross-context rows reject the encompassing M32
+transaction. The existing `by_ats_attempt_id` index proves the exact linked
+`ASSET_PENDING` offering before an M32 idempotency replay can be returned. No
+document ID enters M41 or the browser, and no provider, SDK, target, authority,
+or live behavior changes.
 
 ## Public read-only projections
 

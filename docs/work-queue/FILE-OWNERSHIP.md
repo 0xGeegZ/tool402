@@ -461,6 +461,16 @@ until its own ready cycle. M45-T010 owns its exact Web active-directory paths
 and only the constrained accepted Tool Directory/API/test amendments listed in
 its card.
 
+M41-T010's scoped atomic-handoff correction is root-integrated only. It may
+amend `packages/backend/convex/external_prepare_command_admission.ts`,
+`packages/backend/convex/offerings.ts`, and `packages/backend/convex/schema.ts`
+to add the closed `ATS_CREATE` atomic handoff and only the
+`by_ats_create_draft_binding` offering index. Its test-only RED scope also
+includes constrained amendments to the existing M32/M40 focused tests and its
+two new M41 test files. No other M32/M40 behavior, schema field/table/index,
+M40 projection, Web, Agent, package, configuration, provider, wallet, SDK,
+transaction, deployment, or live-evidence path is eligible.
+
 S15-T010 owns its exact wallet-island and relay paths. S16-T010 owns its exact
 provider-deploy page, components, state, fixture, configuration literal, and
 tests. S17-T010 owns its exact provider-status/API/projection paths and its
