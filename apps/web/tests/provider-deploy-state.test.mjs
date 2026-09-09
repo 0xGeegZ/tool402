@@ -237,3 +237,51 @@ implementedTest("renders only the approved immutable revenue-note subprojection"
   ]);
   assert.equal(Object.isFrozen(state.revenueNoteConfigurationRows(atsCreateConfiguration)), true);
 });
+
+implementedTest("enables only an actionable control the bridge reports and derives stage states from this session", async () => {
+  const state = await import("../src/components/provider/deploy/provider-deploy-state.ts");
+  const { atsCreateConfiguration } = await import("../src/components/provider/deploy/ats-create-configuration.ts");
+  const done = { kind: "done" };
+  const candidate = { transactionId: "0.0.9213391@1789430400.000000001", evmAddress: "0x1111111111111111111111111111111111111111" };
+  const connected = { connected: true, results: [], candidate: null, recordComplete: false };
+
+  assert.deepEqual(state.providerDeployStageControl(0, { kind: "actionable" }, true), {
+    disabled: false,
+    label: "Request signature",
+    description: "Opens one signature request for this stage. Nothing is recorded unless the relay reports ACCEPTED.",
+  });
+  assert.equal(state.providerDeployStageControl(0, { kind: "actionable" }).disabled, true);
+  assert.equal(state.providerDeployStageControl(1, { kind: "blocked" }, true).disabled, true);
+  assert.equal(state.providerDeployStageControl(2, { kind: "unavailable" }, true).disabled, true);
+  assert.equal(state.providerDeployStageControl(3, { kind: "done" }, true).disabled, true);
+
+  assert.deepEqual(
+    state.providerDeployStageStates(atsCreateConfiguration, { ...connected, connected: false }),
+    state.providerDeployStageStates(atsCreateConfiguration),
+  );
+  assert.equal(state.stageFourUnavailableDetail, "No accepted clearing account or public x402 endpoint is recorded.");
+  assert.deepEqual(state.providerDeployStageStates(atsCreateConfiguration, connected), [
+    { kind: "actionable" },
+    { kind: "blocked" },
+    { kind: "unavailable" },
+    { kind: "unavailable", detail: state.stageFourUnavailableDetail },
+  ]);
+  assert.deepEqual(state.providerDeployStageStates(undefined, connected)[1], { kind: "unavailable" });
+  assert.deepEqual(state.providerDeployStageStates(atsCreateConfiguration, { ...connected, results: [done] }).slice(0, 3), [
+    done,
+    { kind: "actionable" },
+    { kind: "unavailable" },
+  ]);
+  assert.deepEqual(state.providerDeployStageStates(atsCreateConfiguration, { ...connected, results: [done], candidate })[2], { kind: "blocked" });
+  assert.deepEqual(state.providerDeployStageStates(atsCreateConfiguration, { ...connected, results: [done, done], candidate })[2], { kind: "actionable" });
+  const complete = state.providerDeployStageStates(atsCreateConfiguration, { connected: true, results: [done, done, done], candidate, recordComplete: true });
+  assert.deepEqual(complete, [done, done, done, { kind: "actionable" }]);
+  assert.deepEqual(
+    state.providerDeployStageStates(atsCreateConfiguration, { ...connected, results: [state.afterDeclinedSignature()] })[0],
+    { kind: "actionable", detail: "Nothing was recorded." },
+  );
+  assert.deepEqual(state.providerDeployStageStates(atsCreateConfiguration, { ...connected, results: [{ kind: "conflict" }] })[1], { kind: "blocked" });
+  for (const stage of [...complete, ...state.providerDeployStageStates(atsCreateConfiguration, connected)]) {
+    assert.equal(Object.isFrozen(stage), true);
+  }
+});

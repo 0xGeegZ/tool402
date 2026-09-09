@@ -477,3 +477,25 @@ implementedTest("keeps progress responsive and lets only completed steps receive
   assert.match(returnToStep.declaration.getText(returnToStep.sourceFile), /setCurrentStep\(step\)/);
   assert.match(returnToStep.declaration.getText(returnToStep.sourceFile), /setShowValidationErrors\(false\)/);
 });
+
+implementedTest("mounts the signing island on the review step and lets the stage list render an enabled control", async () => {
+  const sources = await readS16Sources();
+  const wizard = sources["src/components/provider/deploy/provider-deploy-wizard.tsx"];
+  const stages = sources["src/components/provider/deploy/provider-deploy-stages.tsx"];
+
+  assert.match(wizard, /import\s*\{\s*DeployStageSigning\s*\}\s+from\s+["']\.\/deploy-stage-signing["']/);
+  const review = namedFunctionContext("provider-deploy-wizard.tsx", wizard, "ReviewStep");
+  const island = review.elements.find((element) => element.tagName.getText(review.sourceFile) === "DeployStageSigning");
+  assert.ok(island, "ReviewStep must mount DeployStageSigning");
+  assert.doesNotMatch(review.declaration.getText(review.sourceFile), /<ProviderDeployStages\b/);
+  assert.doesNotMatch(wizard, /providerDeployStageStates/);
+
+  const stageList = namedFunctionContext("provider-deploy-stages.tsx", stages, "ProviderDeployStages");
+  const control = stageList.elements.find((element) => {
+    if (!["button", "Button"].includes(element.tagName.getText(stageList.sourceFile))) return false;
+    const disabled = jsxAttributeExpressionText(jsxAttribute(element, "disabled"), stageList.sourceFile);
+    return normalizedSource(disabled ?? "") === "control.disabled" && jsxAttribute(element, "onClick") !== undefined;
+  });
+  assert.ok(control, "the stage control must bind its activation to the bridge callback");
+  assert.match(stages, /providerDeployStageControl\s*\(\s*index\s*,\s*stage\s*,\s*enabledStage\s*===\s*index\s*\)/);
+});
