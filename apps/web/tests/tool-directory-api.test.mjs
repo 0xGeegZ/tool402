@@ -192,18 +192,22 @@ test("constructs directory responses without network, tool, payment, backend, cl
   }
 });
 
-test("registers only a GET route with request-time environment access and no legacy cache configuration", () => {
+test("registers the bounded opt-in active-directory view without changing the default discovery path", () => {
   const route = readFileSync(new URL("../src/app/api/tools/route.ts", import.meta.url), "utf8");
   assert.match(route, /import\s*\{\s*connection\s*\}\s*from\s*["']next\/server["']/u);
+  assert.match(route, /import\s*\{\s*activeDirectoryViewRequested\s*,\s*readActiveDirectoryVersion\s*\}\s*from\s*["']\.\.\/\.\.\/\.\.\/lib\/active-directory-version["']/u);
   assert.match(route, /import\s*\{\s*toolDirectoryResponse\s*\}\s*from\s*["']\.\.\/\.\.\/\.\.\/lib\/tool-directory(?:\.ts)?["']/u);
-  assert.match(route, /export\s+async\s+function\s+GET\(\)\s*\{\s*await\s+connection\(\);\s*return\s+toolDirectoryResponse\(process\.env\);\s*\}/u);
+  assert.match(route, /export\s+async\s+function\s+GET\(request:\s*Request\)\s*\{\s*await\s+connection\(\);\s*const\s+read\s*=\s*\(\)\s*=>\s*readActiveDirectoryVersion\(process\.env,\s*\(i,\s*init\)\s*=>\s*fetch\(i,\s*init\)\);\s*const\s+directory\s*=\s*activeDirectoryViewRequested\(request\)\s*\?\s*await\s+read\(\)\s*:\s*null;\s*return\s+toolDirectoryResponse\(process\.env,\s*directory\);\s*\}/u);
   assert.equal((route.match(/\bexport\b/gu) ?? []).length, 1);
-  assert.equal((route.match(/\bimport\b/gu) ?? []).length, 2);
-  assert.equal((route.match(/process\.env/gu) ?? []).length, 1);
+  assert.equal((route.match(/\bimport\b/gu) ?? []).length, 3);
+  assert.equal((route.match(/process\.env/gu) ?? []).length, 2);
   assert.doesNotMatch(route, /\b(?:dynamic|revalidate|fetchCache)\b/u);
   const builder = readFileSync(new URL("../src/lib/tool-directory.ts", import.meta.url), "utf8");
   const imports = builder.match(/^import .+;$/gmu);
-  assert.deepEqual(imports, ['import { readRiskScanX402Configuration } from "./riskscan-x402.ts";']);
+  assert.deepEqual(imports, [
+    'import type { ActiveDirectoryView } from "./active-directory-version.ts";',
+    'import { readRiskScanX402Configuration } from "./riskscan-x402.ts";',
+  ]);
   assert.equal((builder.match(/readRiskScanX402Configuration\(/gu) ?? []).length, 1);
   assert.doesNotMatch(builder, /\b(?:process|fetch|require|import\(|Date|setTimeout|setInterval|Math\.random)\b/u);
 });
