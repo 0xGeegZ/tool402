@@ -15,9 +15,8 @@ mounted, unchanged, as the first section of the accepted UI-S09 guest
 workbench at `/dashboard/riskscan`, which is its RiskScan-specific home. The
 island's source, state module, and Agent boundary are not modified.
 
-The approved layout is the "D · Marketplace grid" artboard of the local
-design canvas, https://claude.ai/code/artifact/39a1a9c6-86ae-4d5f-9d94-526e3c663d9e,
-which the human operator reviewed on 2026-09-09.
+The approved layout is the "D · Marketplace grid" treatment defined by this
+local manifest and reviewed by the human operator on 2026-09-09.
 
 ## Local targets
 
