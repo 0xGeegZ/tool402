@@ -12,11 +12,16 @@ import { keccak256, stringToHex } from "viem";
 
 const admissionUrl = new URL("../src/offering-command-admission.ts", import.meta.url);
 const offeringsUrl = new URL("../convex/offerings.ts", import.meta.url);
+const schemaUrl = new URL("../convex/schema.ts", import.meta.url);
 const backendIndexUrl = new URL("../src/index.ts", import.meta.url);
 const admissionPath = fileURLToPath(admissionUrl);
 const offeringsPath = fileURLToPath(offeringsUrl);
 const sourcesExist = existsSync(admissionPath) && existsSync(offeringsPath);
 const implementedTest = sourcesExist ? test : test.skip;
+const atomicHelperSourceDeclared = sourcesExist && readFileSync(offeringsPath, "utf8").includes(
+  "linkAtsCreateAttemptToDraftOffering",
+);
+const atomicTest = atomicHelperSourceDeclared ? test : test.skip;
 
 const durableNow = Date.parse("2026-09-09T13:00:30.000Z");
 const issuedAt = "2026-09-09T13:00:00.000Z";
@@ -188,6 +193,17 @@ function atsCreateAttempt(input = admissionInput(), overrides = {}) {
   };
 }
 
+function atsCreateDraftBinding(input = admissionInput(), overrides = {}) {
+  return {
+    attemptId: atsAttemptId,
+    subjectPublicId: input.payload.subjectPublicId,
+    canonicalSignerAddress: input.canonicalSignerAddress,
+    principalPublicId: input.principalPublicId,
+    authorityVersion: input.authorityVersion,
+    ...overrides,
+  };
+}
+
 function queryRows(rows, table, request) {
   const source = rows[table] ?? [];
   return typeof source === "function" ? source(request) : source;
@@ -292,6 +308,88 @@ function database({
       runMutation: forbidden,
       runQuery: forbidden,
       scheduler: { runAfter: forbidden, runAt: forbidden },
+    },
+  };
+}
+
+function atomicTransactionDatabase({ offerings = [] } = {}) {
+  const rows = {
+    offerings: structuredClone(offerings),
+    externalPrepareCommandAttempts: [],
+    externalPrepareCommandReplayClaims: [],
+  };
+  const writes = [];
+  const reads = [];
+  const db = {
+    query(table) {
+      assert.equal(table, "offerings");
+      return {
+        withIndex(index, select) {
+          const filters = [];
+          const range = {
+            eq(field, value) {
+              filters.push([field, value]);
+              return range;
+            },
+          };
+          select(range);
+          return {
+            async take(limit) {
+              assert.equal(limit, 2);
+              reads.push({ table, index, filters: [...filters], limit });
+              return rows.offerings.slice(0, limit);
+            },
+          };
+        },
+      };
+    },
+    async insert(table, document) {
+      assert.ok([
+        "externalPrepareCommandAttempts",
+        "externalPrepareCommandReplayClaims",
+      ].includes(table));
+      const id = table === "externalPrepareCommandAttempts"
+        ? atsAttemptId
+        : `externalPrepareCommandReplayClaims:${rows.externalPrepareCommandReplayClaims.length}`;
+      rows[table].push({ _id: id, _creationTime: durableNow, ...structuredClone(document) });
+      writes.push({ kind: "insert", table, id, document: structuredClone(document) });
+      return id;
+    },
+    async patch(id, document) {
+      const row = rows.offerings.find((candidate) => candidate?._id === id);
+      assert.notEqual(row, undefined);
+      Object.assign(row, structuredClone(document));
+      writes.push({ kind: "patch", id, document: structuredClone(document) });
+    },
+  };
+  return {
+    ctx: {
+      db,
+      runAction() { throw new Error("unexpected external action"); },
+      runMutation() { throw new Error("unexpected nested mutation"); },
+      runQuery() { throw new Error("unexpected query adapter"); },
+      scheduler: {
+        runAfter() { throw new Error("unexpected scheduler"); },
+        runAt() { throw new Error("unexpected scheduler"); },
+      },
+    },
+    reads,
+    writes,
+    rows,
+    async transaction(work) {
+      const snapshot = structuredClone(rows);
+      const writeCount = writes.length;
+      const readCount = reads.length;
+      try {
+        return await work();
+      } catch (error) {
+        for (const table of Object.keys(rows)) {
+          rows[table].splice(0, rows[table].length, ...snapshot[table]);
+        }
+        writes.splice(writeCount);
+        reads.splice(readCount);
+        throw error;
+      }
     },
   };
 }
@@ -485,11 +583,26 @@ test("requires the declared M40 offering command and Convex source modules", () 
   assert.equal(existsSync(offeringsPath), true, `missing declared source module: ${offeringsPath}`);
 });
 
+test("requires the M41 atomic DRAFT-offering linker and its exact additive lookup index", async () => {
+  const offerings = await import(offeringsUrl);
+  assert.equal(
+    typeof offerings.linkAtsCreateAttemptToDraftOffering,
+    "function",
+    "missing M41 non-registered ATS_CREATE DRAFT-offering linker",
+  );
+  const schemaSource = readFileSync(schemaUrl, "utf8");
+  assert.match(
+    schemaSource,
+    /\.index\(\s*"by_ats_create_draft_binding"\s*,\s*\[\s*"subjectPublicId"\s*,\s*"canonicalSignerAddress"\s*,\s*"principalPublicId"\s*,\s*"authorityVersion"\s*,\s*"state"\s*\]\s*\)/u,
+  );
+});
+
 implementedTest("registers the exact closed M40 admission, asset-seam, and public-projection interfaces", async (t) => {
   const { admission, offerings } = await loadOfferings(t);
   assert.deepEqual(Object.keys(offerings).sort(), [
     "admitOfferingCreate",
     "getPublicProjection",
+    ...(atomicHelperSourceDeclared ? ["linkAtsCreateAttemptToDraftOffering"] : []),
     "markAssetPending",
     "markAssetReady",
   ]);
@@ -557,6 +670,106 @@ implementedTest("registers the exact closed M40 admission, asset-seam, and publi
   assert.doesNotMatch(admissionSource, /\bDate\.now\b/u);
   assert.equal(Object.hasOwn(admission, "default"), false);
   assert.doesNotMatch(readFileSync(backendIndexUrl, "utf8"), /offering-command-admission/u);
+});
+
+atomicTest("links exactly one matching unlinked DRAFT offering through the five-field atomic binding index", async (t) => {
+  const { offerings } = await loadOfferings(t);
+  const input = admissionInput();
+  const binding = atsCreateDraftBinding(input);
+  const draft = offeringDocument(input);
+  const db = database({
+    offerings: [draft],
+    queryResults: { "offerings:by_ats_create_draft_binding": [draft] },
+  });
+
+  await offerings.linkAtsCreateAttemptToDraftOffering(db.ctx, binding);
+  assert.deepEqual(db.reads, [{
+    table: "offerings",
+    index: "by_ats_create_draft_binding",
+    filters: [
+      ["subjectPublicId", binding.subjectPublicId],
+      ["canonicalSignerAddress", binding.canonicalSignerAddress],
+      ["principalPublicId", binding.principalPublicId],
+      ["authorityVersion", binding.authorityVersion],
+      ["state", "DRAFT"],
+    ],
+    orders: [],
+    limit: 2,
+  }]);
+  assert.equal(db.writes.length, 1);
+  assert.equal(db.writes[0].kind, "patch");
+  assert.equal(db.writes[0].id, offeringId);
+  assert.equal(typeof db.writes[0].document.updatedAt, "bigint");
+  assert.deepEqual(db.writes[0].document, {
+    state: "ASSET_PENDING",
+    atsAttemptId,
+    updatedAt: db.writes[0].document.updatedAt,
+  });
+});
+
+atomicTest("fails closed without an offering patch for missing, duplicate, malformed, linked, or cross-context atomic candidates", async (t) => {
+  const { offerings } = await loadOfferings(t);
+  const input = admissionInput();
+  const binding = atsCreateDraftBinding(input);
+  const draft = offeringDocument(input);
+  const malformed = { ...draft };
+  delete malformed.payloadHash;
+  const cases = [
+    ["missing", []],
+    ["duplicate", [draft, { ...draft, _id: "offerings:duplicate" }]],
+    ["malformed", [malformed]],
+    ["already linked", [offeringDocument(input, {
+      state: "ASSET_PENDING",
+      atsAttemptId,
+    })]],
+    ["different subject", [offeringDocument(input, { subjectPublicId: "subject_other" })]],
+    ["different signer", [offeringDocument(input, {
+      canonicalSignerAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    })]],
+    ["different principal", [offeringDocument(input, { principalPublicId: "principal_other" })]],
+    ["different authority", [offeringDocument(input, { authorityVersion: "authority-other" })]],
+  ];
+
+  for (const [name, candidates] of cases) {
+    const db = database({
+      offerings: candidates,
+      queryResults: { "offerings:by_ats_create_draft_binding": candidates },
+    });
+    await assert.rejects(
+      () => offerings.linkAtsCreateAttemptToDraftOffering(db.ctx, binding),
+      undefined,
+      name,
+    );
+    assert.deepEqual(db.writes, [], `${name} must leave the offering unpatched`);
+  }
+});
+
+atomicTest("rolls back the synthetic attempt, DRAFT link, and replay claim together when the atomic offering lookup rejects", async (t) => {
+  const { offerings } = await loadOfferings(t);
+  const input = admissionInput();
+  const binding = atsCreateDraftBinding(input);
+  const db = atomicTransactionDatabase({ offerings: [] });
+
+  await assert.rejects(() => db.transaction(async () => {
+    const { _id, _creationTime, ...attemptDocument } = atsCreateAttempt(input);
+    const attemptId = await db.ctx.db.insert("externalPrepareCommandAttempts", {
+      ...attemptDocument,
+    });
+    await offerings.linkAtsCreateAttemptToDraftOffering(db.ctx, {
+      ...binding,
+      attemptId,
+    });
+    await db.ctx.db.insert("externalPrepareCommandReplayClaims", {
+      replayIdentity: "tool402:wallet-command:v1:296:0xbfb8ea59964b307a79d4f0b98201db95e6dfa454:AAAAAAAAAAAAAAAAAAAAAA",
+      outcome: "NEW",
+      attemptId,
+      claimedAt: 1n,
+    });
+  }));
+  assert.deepEqual(db.rows.externalPrepareCommandAttempts, []);
+  assert.deepEqual(db.rows.externalPrepareCommandReplayClaims, []);
+  assert.deepEqual(db.rows.offerings, []);
+  assert.deepEqual(db.writes, []);
 });
 
 implementedTest("parses raw M38 offering payloads before any durable access or admission hash trust", async (t) => {

@@ -199,6 +199,37 @@ and no result arm has extra fields.
 No status causes an automatic retry, provider call, wallet call, or external
 submission.
 
+## M41 atomic ATS_CREATE handoff amendment
+
+The generic `admitExternalPrepareCommand` remains the exact durable admission
+for every non-`ATS_CREATE` operation kind. It rejects `ATS_CREATE` after the
+same closed command rebinding and authority checks, so an internal caller cannot
+create an orphaned creation attempt.
+
+`admitAtsCreateAndMarkAssetPending` is a second internal mutation with exactly
+the same arguments and result union. It accepts only an `ATS_CREATE` command
+and shares the generic admission's complete rebind, authority, replay,
+idempotency, and durable-clock checks. On a fresh valid command, it performs
+in one Convex transaction:
+
+```text
+insert PREPARED attempt
+→ resolve one eligible M40 DRAFT offering by the exact five-field binding
+→ patch only that offering to ASSET_PENDING with the new attempt ID
+→ insert the linked NEW replay claim
+```
+
+The M40 helper resolves through the additive
+`by_ats_create_draft_binding` index over `subjectPublicId`,
+`canonicalSignerAddress`, `principalPublicId`, `authorityVersion`, and `state`.
+It requires exactly one safe unlinked `DRAFT` record. Any missing, duplicate,
+malformed, cross-principal, cross-authority, or already-linked offering throws,
+which rolls back the attempted insert and replay claim. An exact idempotency
+replay returns `IDEMPOTENCY_REPLAYED` only when the stored attempt links through
+`by_ats_attempt_id` to exactly one matching `ASSET_PENDING` offering; it never
+retroactively links an orphaned row. No new target, parameters, authority,
+provider, wallet, SDK, transaction, or live action is introduced.
+
 ## Internal recovery query
 
 `packages/backend/convex/external_prepare_command_recovery.ts` exposes one

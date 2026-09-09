@@ -4,7 +4,7 @@
 
 Fresh independent read-only review at pushed `8bac790` of:
 
-- the active [S16 control card](../queue/20-active/S16-T010-provider-deploy-wizard.md);
+- the [S16 control card](../queue/60-done/S16-T010-provider-deploy-wizard.md);
 - the local [UI-S16 manifest](../../ui/UI-S16.md); and
 - the two focused provider-deploy contracts.
 

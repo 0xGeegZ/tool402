@@ -1,4 +1,4 @@
-# S22-T010 — Explore EntityCheck entry and detail route
+# S23-T010 — Explore EntityCheck entry and detail route
 
 ## State
 
@@ -9,7 +9,7 @@
   page describes an existing route and descriptor
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
-  exactly the UI-S22 local targets:
+  exactly the UI-S23 local targets:
   `apps/web/src/components/discovery/entitycheck-discovery-card.tsx`,
   `apps/web/src/app/explore/entitycheck/page.tsx`,
   `apps/web/src/app/explore/entitycheck/loading.tsx`,
@@ -35,7 +35,7 @@ The rail stays static; a second entry is what makes a later interactive
 filter card meaningful, but that card is not this one.
 
 The local contract is the
-[UI-S22 Explore EntityCheck entry manifest](../../../ui/UI-S22.md). The
+[UI-S23 Explore EntityCheck entry manifest](../../../ui/UI-S23.md). The
 accepted slices it builds on are the
 [UI-S20 manifest](../../../ui/UI-S20.md) and the
 [UI-S02 manifest](../../../ui/UI-S02.md), recorded in the

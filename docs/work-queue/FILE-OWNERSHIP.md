@@ -461,17 +461,39 @@ until its own ready cycle. M45-T010 owns its exact Web active-directory paths
 and only the constrained accepted Tool Directory/API/test amendments listed in
 its card.
 
+M41-T010's scoped atomic-handoff correction is root-integrated only. It may
+amend `packages/backend/convex/external_prepare_command_admission.ts`,
+`packages/backend/convex/offerings.ts`, and `packages/backend/convex/schema.ts`
+to add the closed `ATS_CREATE` atomic handoff and only the
+`by_ats_create_draft_binding` offering index. Its test-only RED scope also
+includes constrained amendments to the existing M32/M40 focused tests and its
+two new M41 test files. No other M32/M40 behavior, schema field/table/index,
+M40 projection, Web, Agent, package, configuration, provider, wallet, SDK,
+transaction, deployment, or live-evidence path is eligible.
+
 S15-T010 owns its exact wallet-island and relay paths. S16-T010 owns its exact
-provider-deploy page, components, state, fixture, configuration literal, and
-tests. S17-T010 owns its exact provider-status/API/projection paths and its
+provider-deploy page, components, state, fixture, display configuration literal,
+and tests. S17-T010 owns its exact provider-status/API/projection paths and its
 single local-navigation/test integration after S11-T010. M44-T010 owns its
-exact ATS client/request/action and test paths. S18-T010 owns its exact backing
-route, components, state, fixtures, and tests. S15 and M44 both reserve the
-Web manifest, root lockfile, and static-shell dependency contract, so S15 must
-be accepted before M44 is reviewed; S16's provider-deploy component boundary
-must be accepted before M44 touches its declared action path. No other
-cross-card source overlap is authorized. Every card retains its explicit
-human-action and external-capability exclusions.
+exact ATS client/request/action and test paths. M44 must not import, adapt, or
+reuse S16's display configuration literal: its complete real-issuer fixture is
+test-local, and a future separately scoped bridge owns every trusted runtime
+configuration or durable-attempt handoff. S18-T010 owns its exact backing route,
+components, state, fixtures, and tests. S15 and M44 both reserve the Web
+manifest, root lockfile, and static-shell dependency contract, so S15 must be
+accepted before M44 is reviewed; S16's provider-deploy component boundary must
+be accepted before M44 touches its declared action path. No other cross-card
+source overlap is authorized. Every card retains its explicit human-action and
+external-capability exclusions.
+
+M44-T010's independently reviewed RED contract is accepted at `c5d2bf3`.
+Before any remaining M44 source, the root-owned next step may amend only
+`apps/web/package.json`, the root `package-lock.json`,
+`apps/web/tests/static-shell.test.mjs`, and the minimum client-island import
+needed for the official SDK bundle gate. The request builder and injected
+client remain absent until that gate passes. No trusted configuration bridge,
+durable attempt, wallet/provider interaction, transaction, deployment, or live
+behavior is authorized.
 
 S20-T010 owns the new `apps/web/src/components/discovery/explore-catalog.tsx`
 and `apps/web/tests/explore-catalog.test.mjs`. The root integration reservation
@@ -482,3 +504,15 @@ allows only its declared presentation amendments to
 `apps/web/tests/riskscan-directory-discovery.test.mjs`, plus the narrow M09
 and UI-S05 mount-record amendments. It must not modify the Directory island's
 source or state, the guest workbench, the RiskScan detail route, or navigation.
+
+S22-T010 is a root-owned post-rehearsal POLISH intake comprising only its card,
+`docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog,
+decisions, this ownership record, reviews, commits, and pushes. It owns no
+landing source, asset, test, package, lockfile, runtime configuration, or
+dependency today. After the first complete Provider campaign / ATS rehearsal is
+recorded as secret-free evidence, the root must add a fresh local comparison
+record before reserving exact source/test paths. The comparison may use only
+the neutral `PREP-UI-001` landing alias already recorded locally; it may not
+commit external source identifiers, URLs, archives, or an extracted tree. No
+route outside `/`, provider/wallet/payment/transaction behavior, deployment,
+recording, or external action is authorized by this intake.

@@ -4,6 +4,19 @@ import test from "node:test";
 import { keccak256, stringToHex } from "viem";
 
 const moduleUrl = new URL("../convex/external_prepare_command_admission.ts", import.meta.url);
+const atomicMutationSourceDeclared = readFileSync(moduleUrl, "utf8").includes(
+  "admitAtsCreateAndMarkAssetPending",
+);
+const atomicTest = atomicMutationSourceDeclared ? test : test.skip;
+
+function registeredMutationSource(name, nextName) {
+  const source = readFileSync(moduleUrl, "utf8");
+  const start = source.indexOf(`export const ${name}`);
+  assert.notEqual(start, -1, `missing registered mutation source: ${name}`);
+  const end = nextName === undefined ? source.length : source.indexOf(`export const ${nextName}`, start + 1);
+  assert.notEqual(end, -1, `missing following registered mutation source: ${nextName}`);
+  return source.slice(start, end);
+}
 const signer = "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454";
 const now = Date.parse("2026-09-07T19:00:30.000Z");
 const attemptId = "externalPrepareCommandAttempts:accepted";
@@ -108,9 +121,13 @@ function lookups(args = input()) {
 
 async function loadMutation(t, clock = now) {
   t.mock.timers.enable({ apis: ["Date"], now: clock });
-  const exports = await import(moduleUrl);
-  assert.equal(Object.keys(exports).length, 1, "one internal admission function only");
-  return Object.values(exports)[0];
+  const admissions = await import(moduleUrl);
+  assert.equal(
+    typeof admissions.admitExternalPrepareCommand,
+    "function",
+    "generic M32 admission must remain a registered internal mutation",
+  );
+  return admissions.admitExternalPrepareCommand;
 }
 
 const string = { type: "string" };
@@ -119,7 +136,7 @@ const union = (...values) => ({ type: "union", value: values.map(literal) });
 const object = (fields) => ({ type: "object", value: Object.fromEntries(Object.entries(fields).map(([key, fieldType]) => [key, { fieldType, optional: false }])) });
 const payloadValidator = object({ operationKind: union(...operations), subjectPublicId: string, network: literal("hedera:testnet"), chainId: literal(296), expectedTarget: string, canonicalParametersHash: string, idempotencyKey: string, expiresAt: string });
 
-test("registers only an internal mutation with exact closed args and result arms", async (t) => {
+test("registers the generic internal mutation with exact closed args and result arms", async (t) => {
   const mutation = await loadMutation(t);
   assert.equal(mutation.isInternal, true);
   assert.equal(mutation.isMutation, true);
@@ -247,7 +264,7 @@ test("retains the historical ATS_CREATE M30 JCS payload-hash binding vector", ()
   );
 });
 
-test("rejects every ATS operation after current issuer authority and before durable state", async (t) => {
+test("generic admission rejects every ATS operation, including ATS_CREATE, after current issuer authority and before durable state", async (t) => {
   const mutation = await loadMutation(t);
   for (const operationKind of atsOperations) {
     await t.test(operationKind, async () => {
@@ -355,4 +372,134 @@ test("keeps admission module internal and excludes external integrations and con
   const source = readFileSync(moduleUrl, "utf8");
   assert.match(source, /\binternalMutationGeneric\b/u);
   assert.doesNotMatch(source, /\b(?:queryGeneric|mutationGeneric|actionGeneric|internalActionGeneric|httpActionGeneric|fetch|runAction|runMutation|runQuery)\b|process\s*\.\s*env|import\.meta\.env|@hashgraph|wagmi|viem\/accounts|viem\/actions|createWalletClient|createPublicClient|_generated|convex\/nextjs|from\s+["'](?:node:)?https?["']/u);
+});
+
+test("requires the M41 atomic ATS_CREATE admission mutation before its durable scenarios", async () => {
+  const admissions = await import(moduleUrl);
+  assert.equal(
+    typeof admissions.admitAtsCreateAndMarkAssetPending,
+    "function",
+    "missing M41 atomic ATS_CREATE admission mutation",
+  );
+});
+
+atomicTest("registers the M41 atomic ATS_CREATE mutation with the exact generic M32 wire contract", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now });
+  const admissions = await import(moduleUrl);
+  const generic = admissions.admitExternalPrepareCommand;
+  const atomic = admissions.admitAtsCreateAndMarkAssetPending;
+  assert.deepEqual(Object.keys(admissions).sort(), [
+    "admitAtsCreateAndMarkAssetPending",
+    "admitExternalPrepareCommand",
+  ]);
+  assert.equal(atomic.isInternal, true);
+  assert.equal(atomic.isMutation, true);
+  for (const flag of ["isPublic", "isQuery", "isAction"]) assert.equal(atomic[flag], undefined);
+  assert.deepEqual(JSON.parse(atomic.exportArgs()), JSON.parse(generic.exportArgs()));
+  assert.deepEqual(JSON.parse(atomic.exportReturns()), JSON.parse(generic.exportReturns()));
+});
+
+atomicTest("keeps ATS_CREATE exclusively on the explicit atomic M32 source path", () => {
+  const generic = registeredMutationSource(
+    "admitExternalPrepareCommand",
+    "admitAtsCreateAndMarkAssetPending",
+  );
+  const atomic = registeredMutationSource("admitAtsCreateAndMarkAssetPending");
+
+  assert.match(
+    generic,
+    /\boperationKind\s*===\s*["']ATS_CREATE["'][\s\S]{0,320}\breject\s*\(/u,
+    "generic M32 must explicitly reject ATS_CREATE before durable admission",
+  );
+  assert.match(
+    atomic,
+    /\boperationKind\s*!==\s*["']ATS_CREATE["'][\s\S]{0,320}\breject\s*\(/u,
+    "atomic M32 must accept no operation kind other than ATS_CREATE",
+  );
+});
+
+atomicTest("keeps the M41 ATS_CREATE link and exact replay integrity check inside one M32 mutation", () => {
+  const atomic = registeredMutationSource("admitAtsCreateAndMarkAssetPending");
+
+  assert.match(
+    atomic,
+    /\bawait\s+linkAtsCreateAttemptToDraftOffering\s*\(\s*ctx\s*,/u,
+    "atomic M32 must invoke the non-registered M40 linker directly with its own transaction context",
+  );
+  assert.doesNotMatch(
+    atomic,
+    /\bctx\s*\.\s*runMutation\s*\(/u,
+    "atomic M32 must not split the offering link into a nested mutation",
+  );
+  assert.doesNotMatch(
+    atomic,
+    /\bmarkAssetPending\b/u,
+    "atomic M32 must not use the separate M40 transition",
+  );
+  assert.match(
+    atomic,
+    /\breadAttempt\s*\(\s*attempts\s*\[\s*0\s*\]\s*,\s*bound\s*\)/u,
+    "atomic replay must first revalidate the stored attempt against the command context",
+  );
+  assert.match(
+    atomic,
+    /(?:const|let)\s+(?<offeringRows>[A-Za-z_$][\w$]*)\s*=\s*await\s+ctx\.db\.query\(\s*["']offerings["']\s*\)[\s\S]{0,640}\.withIndex\(\s*["']by_ats_attempt_id["']\s*,\s*\(\s*[A-Za-z_$][\w$]*\s*\)\s*=>[\s\S]{0,160}\.eq\(\s*["']atsAttemptId["']\s*,\s*(?<storedAttempt>[A-Za-z_$][\w$]*\.(?:_id|attemptId))\s*\)[\s\S]{0,640}\.take\(\s*2\s*\)/u,
+    "exact idempotency replay must query by_ats_attempt_id using the actual durable stored attempt ID",
+  );
+
+  const indexedReplay = atomic.match(
+    /(?:const|let)\s+(?<offeringRows>[A-Za-z_$][\w$]*)\s*=\s*await\s+ctx\.db\.query\(\s*["']offerings["']\s*\)[\s\S]{0,640}\.withIndex\(\s*["']by_ats_attempt_id["']\s*,\s*\(\s*[A-Za-z_$][\w$]*\s*\)\s*=>[\s\S]{0,160}\.eq\(\s*["']atsAttemptId["']\s*,\s*(?<storedAttempt>[A-Za-z_$][\w$]*\.(?:_id|attemptId))\s*\)[\s\S]{0,640}\.take\(\s*2\s*\)/u,
+  );
+  assert.notEqual(indexedReplay, null);
+  const offeringRows = indexedReplay.groups.offeringRows;
+  const storedAttempt = indexedReplay.groups.storedAttempt;
+  const escaped = (value) => value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const rowsPattern = escaped(offeringRows);
+  const attemptPattern = escaped(storedAttempt);
+
+  assert.match(
+    atomic,
+    new RegExp(`\\b${rowsPattern}\\.length\\s*!==\\s*1[\\s\\S]{0,640}IDEMPOTENCY_CONFLICT`, "u"),
+    "zero or duplicate by_ats_attempt_id rows must become an idempotency conflict",
+  );
+  const indexedOffering = atomic.match(new RegExp(
+    `(?:const|let)\\s+(?<offering>[A-Za-z_$][\\w$]*)\\s*=\\s*${rowsPattern}\\s*\\[\\s*0\\s*\\]`,
+    "u",
+  ));
+  assert.notEqual(indexedOffering, null);
+  const offering = escaped(indexedOffering.groups.offering);
+  for (const [field, expected] of [
+    ["atsAttemptId", attemptPattern],
+    ["state", `["']ASSET_PENDING["']`],
+    ["subjectPublicId", "bound\\.payload\\.subjectPublicId"],
+    ["canonicalSignerAddress", "bound\\.canonicalSignerAddress"],
+    ["principalPublicId", "bound\\.principalPublicId"],
+    ["authorityVersion", "bound\\.authorityVersion"],
+  ]) {
+    assert.match(
+      atomic,
+      new RegExp(`\\b${offering}\\.${field}\\s*!==\\s*${expected}`, "u"),
+      `the indexed offering must match ${field} before an idempotency replay is accepted`,
+    );
+  }
+  assert.match(
+    atomic,
+    /\bIDEMPOTENCY_CONFLICT\b/u,
+    "orphaned, duplicate, or mismatched ATS_CREATE replays must become conflicts",
+  );
+});
+
+atomicTest("keeps the atomic mutation behind the existing zero-enabled M33 authority gate before replay or durable access", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now });
+  const { admitAtsCreateAndMarkAssetPending: atomic } = await import(moduleUrl);
+  const args = withPayload({
+    operationKind: "ATS_CREATE",
+    expectedTarget: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  });
+  args.role = "ISSUER";
+  const db = database({ authorities: [authority(args)] });
+  await assert.rejects(() => atomic._handler(db.ctx, args), TypeError);
+  assert.deepEqual(db.reads, lookups(args).slice(0, 1));
+  assert.deepEqual(db.writes, []);
+  assert.deepEqual(db.accesses, ["commandAuthorities"]);
 });

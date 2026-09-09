@@ -34,7 +34,7 @@ The local authority is the
 [M46 EntityCheck core contract](../../../specs/m46-entity-check-core.md). It
 follows the accepted [RiskScan Quick contract](../../../specs/m02-riskscan-quick.md)
 shape: a validator, a pure assessment, closed unions, and no I/O. The four
-sibling cards in this batch (M46-T020, M46-T030, M46-T040, S22-T010) depend
+sibling cards in this batch (M46-T020, M46-T030, M46-T040, S23-T010) depend
 on this card in that order.
 
 ## Candidate ready requirements

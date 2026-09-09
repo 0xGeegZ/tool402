@@ -160,7 +160,7 @@ workspace obtains the web-facing routing subset of these values (`network`,
 subset of `parameters` (`name`, `symbol`, `isin`, `numberOfUnits`,
 `nominalValue`, `currency`, `decimals`, `isWhiteList`, and `isControllable`) as
 a frozen literal committed by
-[S16-T010](../work-queue/queue/20-active/S16-T010-provider-deploy-wizard.md) at
+[S16-T010](../work-queue/queue/60-done/S16-T010-provider-deploy-wizard.md) at
 `apps/web/src/components/provider/deploy/ats-create-configuration.ts`. S16's
 focused test asserts that twenty-field display projection field-for-field
 against this specification. The literal excludes `diamondOwnerAccount`, every

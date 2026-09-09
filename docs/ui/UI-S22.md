@@ -1,78 +1,68 @@
-# UI-S22 Explore EntityCheck entry manifest
+# UI-S22 public landing reconciliation manifest
 
-## Delivery boundary
+## Purpose
 
-UI-S22 adds the second real tool to the accepted UI-S20 Explore marketplace
-catalog and one server-rendered detail route for it at `/explore/entitycheck`.
-The catalog constant gains one frozen entry, the filter rail gains one
-category row from that entry, the count line becomes `2 tools`, and the grid
-renders the RiskScan card, the EntityCheck card, and the unchanged empty-state
-tile. The rail stays static text; no filter changes state.
+UI-S22 is a post-rehearsal POLISH slice for the public root route (`/`). Its
+visual comparison authority is the already recorded `PREP-UI-001` landing
+slice. It does not replace the landing with a new concept or import a complete
+source tree. It compares that selected visual reference with the then-current
+Tool402 landing and adapts only the compatible landing surface.
 
-The detail route follows the accepted UI-S02 pattern: descriptive,
-implementation-backed, derived only from the M46 core and API contracts.
+The result must preserve the selected visual hierarchy, illustration language,
+branding, spacing rhythm, section composition, and responsive intent wherever
+they are compatible with the demonstrated product. Every CTA, label, state,
+and capability claim must instead point to an existing current local route and
+describe only a capability verified by the completed rehearsal or a clearly
+conditional local state.
 
-## Local targets
+## Trigger and order
 
-The slice may amend or add only:
+This slice is deliberately not eligible during the CORE_P0 build. It begins
+only after a secret-free local evidence record confirms the first complete
+Provider campaign / ATS rehearsal under the existing Stage B human gate. It
+must be accepted before the human-owned public deployment and demo-video
+actions begin.
 
-- `apps/web/src/components/discovery/explore-catalog.tsx`: the second catalog
-  entry and the second card mount, under a root integration reservation;
-- one new `apps/web/src/components/discovery/entitycheck-discovery-card.tsx`
-  with the UI-S20 tool card anatomy and the single link `/explore/entitycheck`;
-- `apps/web/src/app/explore/entitycheck/page.tsx` and its `loading.tsx`;
-- `apps/web/src/components/entitycheck/detail/entitycheck-detail.tsx`;
-- `apps/web/tests/entitycheck-detail.test.mjs`, new;
-- `apps/web/tests/explore-catalog.test.mjs`: the one-entry assertions become
-  two-entry assertions, under a root integration reservation;
-- `apps/web/tests/route-loading-skeletons.test.mjs`: one loader row for the
-  new route, under a root integration reservation; and
-- `apps/web/tests/landing-explore.test.mjs`: only if its Explore href
-  assertions constrain the page, under a root integration reservation.
+## Required comparison before source work
 
-## Catalog contract
+Before a readiness review selects source paths, the root must:
 
-The second entry is: id `entitycheck`, name `EntityCheck`, category
-`Counterparty verification`, status `In discovery`, access
-`Read-only preview`, href `/explore/entitycheck`, and the description
-`A bounded lookup of a French company's public registry record with a
-sanctions screen, cited to its sources.`
+1. inspect the current `/` route and its current rendered desktop and narrow
+   viewport states;
+2. compare only the selected `PREP-UI-001` landing slice in the existing
+   quarantine workflow;
+3. create a fresh, local UI-S22 ledger amendment that records the selected
+   compatible sections and exact local target paths; and
+4. record which prepared elements are omitted because they would be mock,
+   deferred, unsupported, or otherwise untruthful today.
 
-The rail's `Category` group renders `All tools 2`, `Risk assessment 1`, and
-`Counterparty verification 1`; `Status` renders `In discovery 2`; `Access`
-renders `Read-only preview 2`. Rows remain static text.
+The comparison is a design-translation exercise, not permission to copy an
+archive, preserve historical mock copy, or retain unsupported interactions.
 
-The EntityCheck card uses the UI-S20 anatomy with a decorative building icon
-tile, the status badge, the name, the category line, the description, and the
-footer sentence `This surface is descriptive only.` with a `View details` link.
+## Allowed outcome
 
-## Detail contract
+After its own readiness, RED, GREEN, review, and verification cycle, UI-S22
+may improve the existing public landing's visual clarity and orientation. It
+may retain or restore compatible:
 
-The detail page has one `main` landmark, one `h1` `EntityCheck France`, a back
-link to `/explore`, a capability summary, an input-contract list
-(`requestRef`, `jurisdiction`, `query`, optional `registrationNumber`), a
-result-boundary list for `found`, `ambiguous`, and `not_found` with the three
-screen values, a sources list naming the French registry API and the OFAC
-SDN list, the exact baseline limitation, and a configuration-boundary notice
-that the API returns unavailable until its host supplies both x402 and source
-configuration.
+- page hierarchy and section sequencing;
+- visual illustrations and local branded assets;
+- typography scale, spacing, color treatment, and responsive composition; and
+- CTAs mapped only to committed current routes.
 
-## Explicit exclusions
+It may replace stale mock or deferred elements with current truthful copy,
+explicitly unavailable states, or no element at all. It must keep all form
+inputs editable and must not submit or request anything automatically.
 
-Do not add a form, submit action, client fetch, price, wallet, payment state,
-provider, account, metric, receipt, evidence, external link, mock result,
-live-availability claim, client component, filter that changes state, sort,
-search, or a third tool entry.
+## Exclusions
 
-## Acceptance evidence
+UI-S22 must not add a new product workflow, client data source, mock adapter,
+authentication/session surface, wallet/provider/account control, payment or
+transaction behavior, analytics, hosted font, runtime configuration read,
+external link, fabricated metric/testimonial/evidence, deployment, or video
+recording behavior. It must not modify a route outside the landing unless a
+later root-owned integration amendment names that exact route and its tests.
 
-- A durable test-only RED commit precedes source changes.
-- Focused tests prove the two-entry catalog with the fixed fields, the rail
-  rows above, no interactive element, the only page hrefs being
-  `/explore/riskscan`, `/explore/entitycheck`, and the accepted navigation
-  entries, and the detail page's fixed regions with no form or external link.
-- Web typecheck, test, build, root typecheck, test, lint, `queue:check`, and
-  the local-reference guard pass.
-- Desktop and narrow browser checks show the three-tile grid, the stacked
-  rail, one main landmark, one `h1`, visible focus, and no horizontal
-  overflow.
+No source path, asset, dependency, or test is authorized by this manifest
+alone. Those are selected only after the post-rehearsal comparison records a
+fresh local scope.
