@@ -421,6 +421,51 @@ function staticPropertyName(node) {
   return null;
 }
 
+function isExactClaimedBodyCall(node, name) {
+  return (
+    typescript.isCallExpression(node) &&
+    typescript.isIdentifier(node.expression) &&
+    node.expression.text === name &&
+    node.arguments.length === 1 &&
+    typescript.isIdentifier(node.arguments[0]) &&
+    node.arguments[0].text === "claimedBody"
+  );
+}
+
+function returnsExactlyNull(statement) {
+  if (typescript.isReturnStatement(statement)) {
+    return statement.expression?.kind === typescript.SyntaxKind.NullKeyword;
+  }
+  return (
+    typescript.isBlock(statement) &&
+    statement.statements.length === 1 &&
+    returnsExactlyNull(statement.statements[0])
+  );
+}
+
+function isExactClaimedBodyGuard(statement) {
+  return (
+    typescript.isIfStatement(statement) &&
+    statement.elseStatement === undefined &&
+    typescript.isPrefixUnaryExpression(statement.expression) &&
+    statement.expression.operator === typescript.SyntaxKind.ExclamationToken &&
+    isExactClaimedBodyCall(
+      statement.expression.operand,
+      "isClaimedProtectedBody",
+    ) &&
+    returnsExactlyNull(statement.thenStatement)
+  );
+}
+
+function findNormalizerDeclaration(sourceFile) {
+  return sourceFile.statements.find(
+    (statement) =>
+      typescript.isFunctionDeclaration(statement) &&
+      statement.name?.text === "normalizeClaimedWalletCommand" &&
+      statement.body !== undefined,
+  );
+}
+
 function assertClaimedBodyAndCapabilityBoundary(source) {
   const sourceFile = typescript.createSourceFile(
     "authenticated-wallet-command-normalizer.ts",
@@ -437,6 +482,13 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
     "./authenticated-external-prepare-normalizer.ts",
     "./claimed-protected-body.ts",
   ]);
+  const permittedViemRuntimeImports = new Set([
+    "keccak256",
+    "recoverTypedDataAddress",
+    "stringToHex",
+  ]);
+  const permittedViemTypeImports = new Set(["Address", "Hex"]);
+  const viemRuntimeImports = new Set();
   const m25RuntimeImports = new Set();
   const prohibited = [];
 
@@ -453,6 +505,33 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
     assert.equal(typescript.isStringLiteral(statement.moduleSpecifier), true);
     const moduleSpecifier = statement.moduleSpecifier.text;
     assert.equal(allowedModuleSpecifiers.has(moduleSpecifier), true, moduleSpecifier);
+    if (moduleSpecifier === "viem") {
+      assert.equal(statement.importClause?.name, undefined);
+      const namedBindings = statement.importClause?.namedBindings;
+      assert.notEqual(namedBindings, undefined);
+      assert.equal(
+        typescript.isNamedImports(namedBindings),
+        true,
+      );
+      if (!typescript.isNamedImports(namedBindings)) {
+        continue;
+      }
+      for (const imported of namedBindings.elements) {
+        const importedName = imported.propertyName?.text ?? imported.name.text;
+        const typeOnly = statement.importClause.isTypeOnly || imported.isTypeOnly;
+        assert.equal(imported.name.text, importedName);
+        assert.equal(
+          (typeOnly ? permittedViemTypeImports : permittedViemRuntimeImports).has(
+            importedName,
+          ),
+          true,
+          `unexpected viem ${typeOnly ? "type" : "runtime"} import: ${importedName}`,
+        );
+        if (!typeOnly) {
+          viemRuntimeImports.add(importedName);
+        }
+      }
+    }
     if (
       moduleSpecifier === "./claimed-protected-body.ts"
       && statement.importClause?.namedBindings !== undefined
@@ -518,8 +597,19 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
     "signTypedData",
     "webSocket",
   ]);
+  const forbiddenViemCalls = new Set([
+    "createPublicClient",
+    "createTransport",
+    "createWalletClient",
+    "custom",
+    "fallback",
+    "http",
+    "webSocket",
+  ]);
   let claimedPredicateCalls = 0;
   let claimedReaderCalls = 0;
+  const claimedPredicateNodes = [];
+  const claimedReaderNodes = [];
 
   const inspectNode = (node) => {
     if (
@@ -533,12 +623,27 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
     }
     if (typescript.isCallExpression(node) && typescript.isIdentifier(node.expression)) {
       if (node.expression.text === "isClaimedProtectedBody") {
-        claimedPredicateCalls += 1;
+        if (isExactClaimedBodyCall(node, "isClaimedProtectedBody")) {
+          claimedPredicateCalls += 1;
+          claimedPredicateNodes.push(node);
+        } else {
+          prohibited.push(node.getText(sourceFile));
+        }
       }
       if (node.expression.text === "readClaimedProtectedBody") {
-        claimedReaderCalls += 1;
+        if (isExactClaimedBodyCall(node, "readClaimedProtectedBody")) {
+          claimedReaderCalls += 1;
+          claimedReaderNodes.push(node);
+        } else {
+          prohibited.push(node.getText(sourceFile));
+        }
       }
-      if (node.expression.text === "require") {
+      if (
+        node.expression.text === "require" ||
+        forbiddenViemCalls.has(node.expression.text) ||
+        (viemRuntimeImports.has(node.expression.text) &&
+          !permittedViemRuntimeImports.has(node.expression.text))
+      ) {
         prohibited.push(node.getText(sourceFile));
       }
     }
@@ -547,10 +652,27 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
       prohibited.push(node.getText(sourceFile));
     }
     if (
-      typescript.isPropertyAccessExpression(node)
-      && typescript.isIdentifier(node.expression)
-      && node.expression.text === "Date"
-      && node.name.text === "now"
+      (typescript.isPropertyAccessExpression(node) ||
+        typescript.isElementAccessExpression(node)) &&
+      typescript.isIdentifier(node.expression) &&
+      node.expression.text === "module" &&
+      staticPropertyName(node) === "require"
+    ) {
+      prohibited.push(node.getText(sourceFile));
+    }
+    if (
+      (typescript.isPropertyAccessExpression(node) ||
+        typescript.isElementAccessExpression(node)) &&
+      typescript.isIdentifier(node.expression) &&
+      node.expression.text === "Date" &&
+      staticPropertyName(node) === "now"
+    ) {
+      prohibited.push(node.getText(sourceFile));
+    }
+    if (
+      typescript.isNewExpression(node) &&
+      typescript.isIdentifier(node.expression) &&
+      node.expression.text === "Date"
     ) {
       prohibited.push(node.getText(sourceFile));
     }
@@ -559,8 +681,24 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
   typescript.forEachChild(sourceFile, inspectNode);
 
   assert.deepEqual(prohibited, []);
-  assert.equal(claimedPredicateCalls > 0, true);
-  assert.equal(claimedReaderCalls > 0, true);
+  assert.equal(claimedPredicateCalls, 1);
+  assert.equal(claimedReaderCalls, 1);
+
+  const normalizer = findNormalizerDeclaration(sourceFile);
+  assert.notEqual(normalizer, undefined);
+  const claimedGuardIndex = normalizer.body.statements.findIndex(
+    isExactClaimedBodyGuard,
+  );
+  assert.notEqual(claimedGuardIndex, -1);
+  const claimedGuard = normalizer.body.statements[claimedGuardIndex];
+  assert.equal(
+    claimedGuard.end <= claimedReaderNodes[0].getStart(sourceFile),
+    true,
+  );
+  assert.equal(
+    claimedPredicateNodes[0].getStart(sourceFile) >= claimedGuard.getStart(sourceFile),
+    true,
+  );
 }
 
 test("requires the declared wallet-command normalizer source module", () => {
@@ -605,6 +743,31 @@ implementedTest("preserves M30 external.prepare normalization byte-for-byte", as
     authorityVersion: "authority-v1",
     payload: externalPreparePayload(),
   });
+  assert.deepEqual(Reflect.ownKeys(normalized), [
+    "version",
+    "type",
+    "chainId",
+    "canonicalSignerAddress",
+    "nonce",
+    "issuedAt",
+    "expiresAt",
+    "payloadHash",
+    "replayIdentity",
+    "principalPublicId",
+    "role",
+    "authorityVersion",
+    "payload",
+  ]);
+  assert.deepEqual(Reflect.ownKeys(normalized.payload), [
+    "operationKind",
+    "subjectPublicId",
+    "network",
+    "chainId",
+    "expectedTarget",
+    "canonicalParametersHash",
+    "idempotencyKey",
+    "expiresAt",
+  ]);
   assert.deepEqual(normalized, m30Normalized);
   assert.notEqual(normalized, null);
   assert.equal(Object.isFrozen(normalized), true);
@@ -645,7 +808,7 @@ implementedTest("preserves M30 external.prepare normalization byte-for-byte", as
   );
 });
 
-implementedTest("matches the complete shared M30 external.prepare vector set", async () => {
+implementedTest("matches bounded M30 compatibility vectors for accepted and rejected external.prepare cases", async () => {
   const m30 = await import(m30SourceUrl.href);
   const vectors = [
     {
