@@ -519,6 +519,39 @@ implementedTest("fails closed before replay, authority, or admission when requir
   }
 });
 
+implementedTest("rejects a malformed production ingress key identifier before importing its secret", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: serverNowMilliseconds });
+  const { handleCommandIngress } = await import(dispatchUrl);
+  const payload = externalPreparePayload();
+  const transport = await signedTransport("external.prepare", payload);
+  const originalImportKey = globalThis.crypto.subtle.importKey.bind(globalThis.crypto.subtle);
+  let importCalls = 0;
+  t.mock.method(globalThis.crypto.subtle, "importKey", async (...args) => {
+    importCalls += 1;
+    return originalImportKey(...args);
+  });
+
+  for (const [name, keyId] of [
+    ["punctuated key identifier", "key:A"],
+    ["oversized key identifier", "a".repeat(65)],
+  ]) {
+    const ingress = await signedIngressRequest(transport);
+    const state = commandContext();
+    const importsBeforeResponse = importCalls;
+    await withIngressEnvironment({
+      TOOL402_INGRESS_KEY_ID: keyId,
+      TOOL402_INGRESS_SECRET: safeIngressSecret,
+    }, async () => {
+      const response = await handleCommandIngress(state.ctx, ingress.request);
+      assert.equal(response.status, 200, name);
+      assert.deepEqual(await responseJson(response), { outcome: "REJECTED" }, name);
+    });
+    assert.equal(importCalls, importsBeforeResponse, name);
+    assert.deepEqual(state.mutations, [], name);
+    assert.deepEqual(state.queries, [], name);
+  }
+});
+
 implementedTest("uses only a safe injected production ingress environment to claim, resolve authority, and delegate a verified command", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now: serverNowMilliseconds });
   const { handleCommandIngress } = await import(dispatchUrl);
@@ -1026,6 +1059,40 @@ implementedTest("fails closed for noncanonical active-directory version bindings
       args: { serviceSlug: "riskscan" },
     }], name);
   }
+});
+
+implementedTest("fails closed when an active-directory record carries an own special key", async () => {
+  const { handleActiveDirectory } = await import(dispatchUrl);
+  const record = directoryRecord();
+  Object.defineProperty(record, "__proto__", {
+    configurable: true,
+    enumerable: true,
+    value: "unexpected",
+    writable: true,
+  });
+  const state = commandContext({
+    queryResult: {
+      offeringPublicId: "offering_42",
+      offeringVersion: 1,
+      directoryVersion: 1,
+      serviceSlug: "riskscan",
+      record,
+      state: "ACTIVE",
+      acceptedAt: 1n,
+    },
+  });
+
+  const response = await handleActiveDirectory(
+    state.ctx,
+    new Request("https://tool402.test/public/directory/riskscan/active"),
+  );
+  assert.equal(response.status, 503);
+  assert.deepEqual(await responseJson(response), { outcome: "UNAVAILABLE" });
+  assert.deepEqual(state.mutations, []);
+  assert.deepEqual(state.queries, [{
+    name: "directory_versions:getActive",
+    args: { serviceSlug: "riskscan" },
+  }]);
 });
 
 implementedTest("fails closed rather than stripping decorated projection arrays", async () => {

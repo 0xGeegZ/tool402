@@ -18,6 +18,7 @@ import type {
 const maximumBodyBytes = 65_536;
 const maximumInt64 = 9_223_372_036_854_775_807n;
 const publicIdPattern = /^[A-Za-z0-9_-]{1,96}$/u;
+const ingressKeyIdPattern = /^[A-Za-z0-9_-]{1,64}$/u;
 const canonicalAddressPattern = /^0x[0-9a-f]{40}$/u;
 const ingressHeaders = [
   ["x-tool402-key-id", "keyId"],
@@ -340,7 +341,7 @@ async function readProductionIngressKey(): Promise<{
     const keyId = process.env.TOOL402_INGRESS_KEY_ID;
     const secret = process.env.TOOL402_INGRESS_SECRET;
     if (
-      typeof keyId !== "string" || keyId.length === 0
+      typeof keyId !== "string" || !ingressKeyIdPattern.test(keyId)
       || typeof secret !== "string" || !/^[0-9a-f]{64}$/u.test(secret)
       || globalThis.crypto?.subtle === undefined
     ) {
@@ -497,7 +498,12 @@ function copyJson(value: unknown): unknown | null {
       if (!descriptor?.enumerable || !Object.hasOwn(descriptor, "value")) return null;
       const cloned = copyJson(descriptor.value);
       if (cloned === null) return null;
-      copy[key] = cloned;
+      Object.defineProperty(copy, key, {
+        configurable: true,
+        enumerable: true,
+        value: cloned,
+        writable: true,
+      });
     }
     return copy;
   } catch {
