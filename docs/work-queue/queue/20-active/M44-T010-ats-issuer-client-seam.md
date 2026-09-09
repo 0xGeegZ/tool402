@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T040 accepted, M02-T020 accepted, M42-T010 accepted,
   S15-T010 accepted, S16-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -141,3 +141,14 @@ HA-ISSUER-ACCOUNT-001 is accepted bounded evidence only, while
 HA-ATS-STAGE-B-001 remains the separate live gate. A fresh activation may
 authorize only the two durable test-only RED files; it cannot install the SDK,
 read configuration, connect a wallet, or submit an operation.
+
+## Activation review
+
+At clean pushed `00ea2c8bb8dcfd5be7085cb5bcf55e1eb0c43939`, a fresh independent
+activation review found M44-T010 ready, all five dependencies accepted, M41's
+Backend-only RED lane disjoint, and every M44 source, dependency-pin, and SDK
+target absent. This activation authorizes only
+`apps/web/tests/create-bond-request.test.mjs` and
+`apps/web/tests/ats-client.test.mjs`. It does not authorize the SDK pin,
+source, configuration access, wallet/provider/network interaction,
+transactions, deployment, or live behavior.
