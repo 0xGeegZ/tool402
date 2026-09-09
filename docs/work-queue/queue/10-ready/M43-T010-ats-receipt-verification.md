@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M04-T010 accepted, M26-T010 accepted, M32-T010 accepted,
   M33-T010 accepted, M38-T010 (this batch), M39-T010 (this batch),
   M40-T010 (this batch), M41-T010 (this batch), M42-T010 (this batch)
@@ -151,3 +151,22 @@ An attached candidate is caller-supplied data and asserts nothing. A verified
 outcome asserts only what the read document showed. No state here claims a
 deployment, a payment, a settlement, finality, an issued unit, a published
 directory version, or any live behavior.
+
+## Ready review
+
+At clean pushed `89a496e`, an independent readiness review found all nine
+declared dependencies accepted in `60-done`, including the M41 disabled
+attach-candidate seam and M42 fixed Mirror configuration projection. The six
+new M43 implementation/test paths are absent, and the root reservations are
+disjoint: only the declared attempt-state/field widening, its matching schema
+assertion, and the disabled dispatch entry may later be amended. Focused
+predecessor/seam checks passed 33/33 under Node 22.21.1; Backend typecheck and
+queue/reference validation are clear. M44 is Web-only and blocked, with no
+ownership collision.
+
+`HA-ATS-STAGE-B-001` blocks live verification only. It does not block the
+fixture-only local RED cycle. M43 moves to `10-ready`; a separate independent
+activation may authorize only its three durable test-only RED files and the
+declared durable-schema assertion amendment. No source, schema, dispatch,
+configuration, SDK, wallet, provider, transaction, deployment, or live action
+is authorized by this readiness review.

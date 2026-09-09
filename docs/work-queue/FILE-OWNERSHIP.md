@@ -497,6 +497,12 @@ match that exact shape; and amend only
 configuration, SDK, wallet, provider, transaction, deployment, or live-action
 work; its readiness, activation, and RED reviews remain separate gates.
 
+M43-T010 is ready at `89a496e`. A later independent activation may authorize
+only its three declared durable test-only RED files and the matching narrow
+`external-prepare-command-durable-schema.test.mjs` assertion amendment.
+Every M43 source, schema, and dispatch amendment remains absent until a fresh
+RED review accepts its exact failure contract.
+
 The root additionally reserves one M41 regression-baseline correction in
 `packages/backend/tests/offering-durable-schema.test.mjs`: only the exact
 `by_ats_create_draft_binding` expected M40 index vector may be appended to
