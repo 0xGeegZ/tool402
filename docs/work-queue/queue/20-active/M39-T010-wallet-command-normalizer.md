@@ -101,6 +101,19 @@ its own internal mutation.
 - Independent task review and two fresh clean module-review generations report
   no Critical, Important, or Minor finding.
 
+## Test-contract correction
+
+The independent
+[M39 test-contract correction review](../../evidence/M39-T010-test-contract-correction-review.md)
+found two contradictions in the durable test that source cannot resolve: its
+invalid-byte factory called an undeclared lexical helper before either
+normalizer ran, and its M38 DTO own-key assertion omitted the spec-required
+`issuedAt` field. This corrective scope permits exactly those two repairs in
+`packages/backend/tests/authenticated-wallet-command-normalizer.test.mjs`, in
+addition to the declared normalizer source. It preserves every existing vector,
+acceptance criterion, and exclusion; it adds no behavior or external
+authority.
+
 ## Boundary
 
 This card creates one local authentication predicate. It admits three

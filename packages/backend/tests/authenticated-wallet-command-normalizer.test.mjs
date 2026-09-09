@@ -266,8 +266,7 @@ async function createIngressKey() {
   );
 }
 
-async function claimText(text) {
-  const rawBody = new TextEncoder().encode(text);
+async function claimRawBody(rawBody) {
   const { claimProtectedBody } = await import(
     new URL("../src/ingress/claimed-protected-body.ts", import.meta.url),
   );
@@ -302,6 +301,10 @@ async function claimText(text) {
   );
   assert.notEqual(claimed, null);
   return claimed;
+}
+
+async function claimText(text) {
+  return claimRawBody(new TextEncoder().encode(text));
 }
 
 function canonicalPayloadBytes(type, payload) {
@@ -1793,6 +1796,7 @@ implementedTest("dispatches each signed M38 payload to exactly one closed comman
         "canonicalSignerAddress",
         "chainId",
         "expiresAt",
+        "issuedAt",
         "nonce",
         "payload",
         "payloadHash",
