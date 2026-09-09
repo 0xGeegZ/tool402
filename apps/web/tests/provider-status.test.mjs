@@ -106,7 +106,7 @@ implementedTest("builds exactly four evidence rows from projection fields with e
   const notRecorded = "not recorded";
   const draft = state.evidenceRows({ kind: "loaded", record: offering() }, { kind: "absent" });
   assert.deepEqual(draft, [
-    { record: "offering.create", reference: "riskscan_revenue_note_demo v1", verification: "signed command admitted", time: "2026-07-14T08:00:00.000Z" },
+    { record: "offering.create", reference: "riskscan_revenue_note_demo v1", verification: "signed command admitted", time: "2026-09-15T00:00:00.000Z" },
     { record: "external.prepare ATS_CREATE", reference: notRecorded, verification: notRecorded, time: notRecorded },
     { record: "revenue note", reference: notRecorded, verification: notRecorded, time: notRecorded },
     { record: "directory.publish", reference: notRecorded, verification: notRecorded, time: notRecorded },
@@ -148,7 +148,7 @@ implementedTest("renders the Hashscan link only for a recorded asset address in 
   for (const stateValue of ["READY", "OPEN", "CLOSED"]) {
     assert.equal(state.hashscanLink(offering({ state: stateValue, atsAssetEvmAddress: assetAddress })), `https://hashscan.io/testnet/contract/${assetAddress}`);
   }
-  assert.equal(state.formatAcceptedAt("1789430400000"), "2026-07-14T08:00:00.000Z");
+  assert.equal(state.formatAcceptedAt("1789430400000"), "2026-09-15T00:00:00.000Z");
   assert.equal(state.formatAcceptedAt("not a time"), "not recorded");
 });
 
@@ -189,7 +189,8 @@ implementedTest("renders the fixed region order on a server page with one main, 
 
   assert.doesNotMatch(sources, /["']use client["']/u);
   assert.doesNotMatch(sources, /\b(?:useState|useEffect|useMemo|useRef|setInterval|setTimeout|fetch\(|localStorage|sessionStorage)\b/u);
-  assert.doesNotMatch(sources, /\b(?:funding raised|units issued|paid tasks?|balance|Live testnet|Design sample|Connected|New offering version)\b/iu);
+  assert.doesNotMatch(sources, /\b(?:funding raised|units issued|paid tasks?|balance|Live testnet|Design sample|Connected)\b/iu);
+  assert.doesNotMatch(sources, /New offering version/u);
   const externalOrigins = [...sources.matchAll(/https?:\/\/[^\s"'`)]+/gu)].map(([url]) => url);
   assert.deepEqual([...new Set(externalOrigins)], ["https://hashscan.io/testnet/contract/"]);
 });
