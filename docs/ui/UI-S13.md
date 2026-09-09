@@ -53,7 +53,8 @@ their mappings, and may add:
 
 - `apps/web/src/components/ui/status.tsx` — the status treatment
 - `apps/web/src/components/ui/state-panel.tsx` — the empty and error panel shape
-- one focused test for each
+- `apps/web/tests/status.test.mjs` — the status treatment's focused contract
+- `apps/web/tests/state-panel.test.mjs` — the panel's focused contract
 
 It may amend the outcome-rendering lines of exactly these five accepted
 components, and no others:
@@ -68,7 +69,8 @@ components, and no others:
 scope. The stylesheet and each amended component belong to accepted cards, so
 each needs an explicit root integration reservation recorded in the ownership
 file before the amendment, in the manner the accepted route-wiring amendment
-already used.
+already used. Existing focused suites remain unchanged and are verification
+only; these two new tests are the slice's only test amendment paths.
 
 ## Required status behavior
 

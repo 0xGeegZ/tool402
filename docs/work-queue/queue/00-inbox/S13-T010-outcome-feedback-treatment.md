@@ -4,14 +4,19 @@
 
 - Tier: POLISH
 - Queue state: 00-inbox
-- Dependencies: M02-T020 accepted, M02-T080 accepted, M09-T010 accepted, M13-T010 accepted, M14-T010 accepted, M15-T010 accepted, M29-T010 accepted
+- Dependencies: M02-T020 accepted, M02-T080 accepted, M08-T010 accepted, M09-T010 accepted, M13-T010 accepted, M15-T010 accepted, M29-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
-  `apps/web/src/app/globals.css`, `apps/web/src/components/ui/status.tsx`, the
-  outcome-rendering lines of the accepted components under
-  `apps/web/src/components/riskscan/` and
-  `apps/web/src/components/discovery/riskscan-directory-discovery.tsx`, and
-  their focused tests.
+  `apps/web/src/app/globals.css`, `apps/web/src/components/ui/status.tsx`,
+  `apps/web/src/components/ui/state-panel.tsx`, the outcome-rendering lines of
+  `apps/web/src/components/riskscan/request/riskscan-request-flow.tsx`,
+  `apps/web/src/components/riskscan/tool-loop/riskscan-tool-loop.tsx`,
+  `apps/web/src/components/riskscan/native-quote/riskscan-native-quote-compatibility.tsx`,
+  `apps/web/src/components/riskscan/preflight/riskscan-quick-preflight.tsx`,
+  `apps/web/src/components/discovery/riskscan-directory-discovery.tsx`,
+  `apps/web/tests/status.test.mjs`, and
+  `apps/web/tests/state-panel.test.mjs`. Existing focused suites are
+  verification-only and are not S13 amendment targets.
 - Human actions: none. This presentation amendment grants no authority over
   configuration, identity, providers, payments, transactions, deployment, or
   submission.
@@ -39,8 +44,9 @@ The accepted slice history it amends is recorded in the
   each needs an explicit root integration reservation recorded in the ownership
   file before the amendment. The accepted route-wiring amendment is the
   precedent.
-- The two new component paths are disjoint from every other card, including the
-  sibling skeleton card, which names its own file.
+- The two new component paths and two new focused-test paths are disjoint from
+  every other card, including the sibling skeleton card, which names its own
+  file. Existing focused suites remain unchanged.
 - The tone vocabulary and the rule that a tone may only follow a distinction a
   component already makes are fixed in the manifest before code, so the slice
   cannot grow a new outcome branch.
