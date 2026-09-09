@@ -4,9 +4,15 @@ import test from "node:test";
 const string = { type: "string" };
 const literal = (value) => ({ type: "literal", value });
 const union = (...values) => ({ type: "union", value: values.map(literal) });
+const optional = (fieldType) => ({ fieldType, optional: true });
 const object = (fields) => ({
   type: "object",
-  value: Object.fromEntries(Object.entries(fields).map(([key, fieldType]) => [key, { fieldType, optional: false }])),
+  value: Object.fromEntries(Object.entries(fields).map(([key, fieldType]) => [
+    key,
+    fieldType?.fieldType !== undefined && typeof fieldType.optional === "boolean"
+      ? fieldType
+      : { fieldType, optional: false },
+  ])),
 });
 
 test("declares exactly the three additive M32 tables with closed validators and bounded-read indexes", async () => {
@@ -50,7 +56,9 @@ test("declares exactly the three additive M32 tables with closed validators and 
         operationKind: union("ATS_CREATE", "ATS_CONTROL_LIST", "ATS_ISSUE", "ATS_TRANSFER", "ATS_COUPON", "HEDERA_FUNDING"),
         subjectPublicId: string, network: literal("hedera:testnet"), expectedTarget: string,
         canonicalParametersHash: string, idempotencyKey: string, expiresAt: string,
-        state: literal("PREPARED"), acceptedAt: { type: "bigint" },
+        state: union("PREPARED", "SUBMITTED", "CONFIRMED", "OUTCOME_UNKNOWN", "REJECTED"),
+        candidateTransactionId: optional(string), candidateEvmAddress: optional(string),
+        nextReconciliationAt: optional({ type: "bigint" }), acceptedAt: { type: "bigint" },
       }),
       indexes: [["by_idempotency_key", ["idempotencyKey"]]], searchIndexes: [], vectorIndexes: [],
     },

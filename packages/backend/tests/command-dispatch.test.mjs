@@ -848,21 +848,71 @@ implementedTest("maps a claimed transport replay to the reason-free rejected res
   assert.deepEqual(state.queries, []);
 });
 
-implementedTest("reports a valid disabled attach-candidate command as unsupported without durable dispatch", async () => {
+implementedTest("maps M43 attachment results through the existing public response union without exposing durable identifiers", async () => {
   const { handleCommandIngressForTest } = await import(dispatchUrl);
   const payload = attachCandidatePayload();
-  const transport = await signedTransport("external.attachCandidate", payload);
-  const ingress = await signedIngressRequest(transport);
-  const state = commandContext();
-  const seamState = testSeams({ key: ingress.key, type: "external.attachCandidate", payload });
+  const cases = [
+    [
+      "ATTACHED",
+      { status: "ATTACHED", attemptId: "externalPrepareCommandAttempts:private", state: "SUBMITTED" },
+      undefined,
+      { outcome: "ACCEPTED", publicId: payload.attemptPublicId },
+    ],
+    [
+      "ALREADY_ATTACHED",
+      { status: "ALREADY_ATTACHED", attemptId: "externalPrepareCommandAttempts:private", state: "SUBMITTED" },
+      undefined,
+      { outcome: "REPLAYED", publicId: payload.attemptPublicId },
+    ],
+    [
+      "COMMAND_REPLAYED",
+      { status: "COMMAND_REPLAYED" },
+      undefined,
+      { outcome: "REPLAYED", publicId: payload.attemptPublicId },
+    ],
+    [
+      "unknown attachment result",
+      { status: "UNEXPECTED" },
+      undefined,
+      { outcome: "REJECTED" },
+    ],
+    [
+      "thrown attachment result",
+      undefined,
+      new Error("attachment failure remains reason-free at HTTP"),
+      { outcome: "REJECTED" },
+    ],
+  ];
 
-  const response = await handleCommandIngressForTest(state.ctx, ingress.request, seamState.seams);
-  assert.equal(response.status, 200);
-  assert.deepEqual(await responseJson(response), { outcome: "UNSUPPORTED_TYPE" });
-  assert.deepEqual(state.mutations, []);
-  assert.deepEqual(state.queries, []);
-  assert.equal(seamState.clockReads, 1);
-  assert.deepEqual(seamState.claims, [ingress.replayIdentity]);
+  for (const [name, mutationResult, mutationError, expected] of cases) {
+    const transport = await signedTransport("external.attachCandidate", payload);
+    const ingress = await signedIngressRequest(transport);
+    const state = commandContext({ mutationResult, mutationError });
+    const seamState = testSeams({ key: ingress.key, type: "external.attachCandidate", payload });
+
+    const response = await handleCommandIngressForTest(state.ctx, ingress.request, seamState.seams);
+    assert.equal(response.status, 200, name);
+    const body = await responseJson(response);
+    assert.deepEqual(body, expected, name);
+    assertNoSensitiveResponseFields(body);
+    assert.equal(seamState.clockReads, 1, name);
+    assert.deepEqual(seamState.claims, [ingress.replayIdentity], name);
+    assert.deepEqual(state.queries, [], name);
+    assert.equal(state.mutations.length, 1, name);
+    assert.equal(state.mutations[0].name, "ats_candidate_receipts:attachAtsCandidateReceipt", name);
+    assert.deepEqual(state.mutations[0].args, {
+      attemptPublicId: payload.attemptPublicId,
+      operationKind: payload.operationKind,
+      candidateTransactionId: payload.candidateTransactionId,
+      candidateEvmAddress: payload.candidateEvmAddress,
+      canonicalSignerAddress,
+      principalPublicId: "principal_42",
+      role: "ISSUER",
+      authorityVersion: "authority-v1",
+      replayIdentity: ingress.replayIdentity,
+    }, name);
+    assert.equal(Object.hasOwn(body, "publicId"), expected.outcome !== "REJECTED", name);
+  }
 });
 
 implementedTest("serves only closed offering and active-directory read projections", async () => {
