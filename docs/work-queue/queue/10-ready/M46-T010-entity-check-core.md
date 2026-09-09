@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M02-T050 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
   commits, and pushes. Proposed implementation paths are exactly
@@ -100,4 +100,13 @@ compliance opinion.
   ready review, the activation decision, the independent reviews, the
   integration decision, and every queue record. The branch is mirrored as a
   pull request for human visibility only; nothing from it reaches `main`
-  outside the root's integration decision.
+outside the root's integration decision.
+
+## Ready record
+
+Ready at 2026-09-09T22:33:30Z after an independent current-head review found
+M02-T050 accepted, the full committed local authority resolvable, the three
+new paths absent and disjoint, and the no-reorder Core barrel reservation
+recorded. A separate activation may authorize only the durable test-only RED
+fixtures; the source module and barrel remain prohibited until a fresh RED
+review.

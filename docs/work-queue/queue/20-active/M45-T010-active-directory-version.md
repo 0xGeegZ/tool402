@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M05-T010 accepted, M28-T010 accepted, M09-T010 accepted,
   M40-T010 accepted, M41-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -141,3 +141,12 @@ all five accepted predecessors, the recorded opt-in decision, exact root
 reservations for the three accepted M05 paths, absent/disjoint new paths, and
 no human action blocking controlled local delivery. A future activation may
 authorize only the durable test-only RED scope in the ready-review evidence.
+
+## Activation record
+
+Activated at 2026-09-09T22:33:30Z after an independent current-head review
+found a clean pushed head, no conflicting lane, accepted dependencies, and the
+exact RED targets absent. This activation authorizes only
+`apps/web/tests/active-directory-version.test.mjs` and the constrained
+`apps/web/tests/tool-directory-api.test.mjs` amendment; all source and external
+boundaries remain prohibited pending a fresh RED review.
