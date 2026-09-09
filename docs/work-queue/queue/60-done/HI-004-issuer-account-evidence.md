@@ -12,7 +12,7 @@ deployment, publication, or live action.
 ## State
 
 - Tier: intake
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: none
 - Raised by: human operator, 2026-09-09
 - Owner: root integrator on intake. The human-action row and its decision
@@ -57,3 +57,10 @@ deployment, publication, or live action.
 This card authorizes no wallet, key, signature, SDK, provider, asset
 creation, transaction, funding of any other account, deployment,
 publication, or live action.
+
+## Resolution
+
+The root recorded `HA-ISSUER-ACCOUNT-001` as bounded human-provided testnet
+account evidence. It establishes only the public account observation required
+by that row. It does not authorize any agent access to the account, a wallet,
+SDK, provider, asset, transaction, deployment, publication, or live action.

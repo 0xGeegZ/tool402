@@ -13,7 +13,7 @@ relay, or submission action.
 ## State
 
 - Tier: intake
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: none
 - Raised by: human operator, 2026-09-09
 - Owner: root integrator on intake. The human-action row and its decision
@@ -68,3 +68,11 @@ relay, or submission action.
 This card authorizes no wallet, key, signature, SDK, provider, asset
 creation, transaction, funding, live relay traffic, public web deployment,
 video, or submission action.
+
+## Resolution
+
+The root recorded `HA-CAMPAIGN-CONVEX-001` as bounded human-provided
+development-deployment evidence. The named development deployment and
+confined environment evidence do not authorize environment access, a live
+relay, public web deployment, wallet, SDK, provider, transaction, or any other
+external action.

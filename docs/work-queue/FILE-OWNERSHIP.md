@@ -351,13 +351,21 @@ unavailable to every runtime or external path. Any successor must receive
 separate ownership and a separate human authorization before provisioning or
 an executable ATS action.
 
-HA-ATS-RUNTIME-BINDING-001 is a root-owned pending human-control record
-comprising only its recommended decision, HUMAN-ACTIONS.md, queue state, this
-ownership record, and decisions. It owns no source, test, schema, manifest,
-authority row, package, configuration, environment, provider, wallet, SDK,
-network, account, asset, transaction, deployment, or live-evidence path.
-Until the human approves it and a separately scoped card receives its own
-ownership, M32 and M33 remain unchanged and M33 remains zero-enabled.
+HA-ATS-RUNTIME-BINDING-001 is an accepted root-owned human-control record
+comprising only its recommended and recorded decisions, HUMAN-ACTIONS.md,
+queue state, this ownership record, and decisions. It owns no source, test,
+schema, manifest, authority row, package, configuration, environment,
+provider, wallet, SDK, network, account, asset, transaction, deployment, or
+live-evidence path. Until a separately scoped card receives its own ownership,
+M32 and M33 remain unchanged and M33 remains zero-enabled.
+
+HI-003, HI-004, and HI-005 are accepted root-owned control/evidence records
+comprising only their completed intake cards, decision and human-action rows,
+queue state, catalog, control reviews, this ownership record, commits, and
+pushes. They own no product source, test, configuration, environment,
+credential, provider, wallet, SDK, account, funding, transaction, deployment,
+or live-evidence path. Their closure does not advance any successor outside its
+own local lifecycle.
 
 S19-T010 is a root-owned direct demo-usability intake comprising its card,
 docs/ui/UI-S19.md, docs/ui/IMPORT-LEDGER.md, queue state, catalog, decisions,

@@ -11,7 +11,7 @@ accepts no product behavior and authorizes no external action.
 ## State
 
 - Tier: intake
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: none
 - Raised by: human operator, 2026-09-09
 - Owner: root integrator on intake. Each acceptance is human-owned and
@@ -69,3 +69,12 @@ This card authorizes no wallet, key, signature, account, funding,
 provisioning, environment access, SDK use, transaction, asset creation,
 deployment, publication, or live action. Every executable ATS step and every
 live relay remains gated by its own pending human-action row.
+
+## Resolution
+
+The root recorded the three bounded human decisions and reviewed the resulting
+control records. `HA-COMMAND-AUTHORITY-002` and `HA-ATS-RETARGET-001` remain
+local-only readiness authority; `HA-ATS-RUNTIME-BINDING-001` permits only a
+future separately scoped local safety amendment while the manifest stays
+disabled. No card moved to ready, no RED contract was created, and no source or
+external capability is authorized by this intake closure.

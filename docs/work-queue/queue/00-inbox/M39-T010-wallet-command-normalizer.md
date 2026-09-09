@@ -26,7 +26,7 @@
 
 ## Scope
 
-The accepted command vocabulary contains exactly one type. The
+The accepted M30 command vocabulary contains exactly one type. The
 [approved campaign deploy design](../../../superpowers/specs/2026-09-08-campaign-deploy-flow-design.md)
 needs four: the provider signs `offering.create`, then `external.prepare` with
 kind `ATS_CREATE`, then `external.attachCandidate` for the receipt, then
