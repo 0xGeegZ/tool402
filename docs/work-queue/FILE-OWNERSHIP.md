@@ -495,3 +495,15 @@ allows only its declared presentation amendments to
 `apps/web/tests/riskscan-directory-discovery.test.mjs`, plus the narrow M09
 and UI-S05 mount-record amendments. It must not modify the Directory island's
 source or state, the guest workbench, the RiskScan detail route, or navigation.
+
+S22-T010 is a root-owned post-rehearsal POLISH intake comprising only its card,
+`docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog,
+decisions, this ownership record, reviews, commits, and pushes. It owns no
+landing source, asset, test, package, lockfile, runtime configuration, or
+dependency today. After the first complete Provider campaign / ATS rehearsal is
+recorded as secret-free evidence, the root must add a fresh local comparison
+record before reserving exact source/test paths. The comparison may use only
+the neutral `PREP-UI-001` landing alias already recorded locally; it may not
+commit external source identifiers, URLs, archives, or an extracted tree. No
+route outside `/`, provider/wallet/payment/transaction behavior, deployment,
+recording, or external action is authorized by this intake.
