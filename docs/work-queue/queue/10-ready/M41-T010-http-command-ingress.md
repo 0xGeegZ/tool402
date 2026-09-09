@@ -3,10 +3,10 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M22-T010 accepted; M23-T010 accepted; M24-T010 accepted;
-  M25-T010 accepted; M32-T010 accepted; M39-T010 (this batch);
-  M40-T010 (this batch)
+  M25-T010 accepted; M32-T010 accepted; M39-T010 accepted;
+  M40-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
   commits, and pushes. Proposed implementation paths are exactly:
   `packages/backend/convex/http.ts`,
@@ -17,7 +17,7 @@
   `docs/specs/m41-http-command-ingress.md`, and one amendment under a root
   integration reservation to `packages/backend/convex/schema.ts` adding only
   the `ingressCommandReplayClaims` table and its `by_replay_identity` index.
-  M40-T010 and [M43-T010](M43-T010-ats-receipt-verification.md) amend the
+  M40-T010 and [M43-T010](../00-inbox/M43-T010-ats-receipt-verification.md) amend the
   same accepted file in this batch, so the root sequences the three
   reservations before any of those cards is ready.
   `packages/backend/convex/command_dispatch.ts` is declared here with the
@@ -26,8 +26,9 @@
 - Human actions: none for local delivery; `HA-CAMPAIGN-CONVEX-001` gates every
   published deployment, ingress key pair, and live request, and
   `HA-COMMAND-AUTHORITY-002` gates the command vocabulary M39-T010 normalizes.
-  Both rows are requested by
-  [HI-002](../60-done/HI-002-campaign-deploy-reinstatement.md) and neither is complete.
+  Both rows are accepted only as bounded local authority or human evidence;
+  they do not authorize configuration access, publication, keys, or a live
+  request.
 
 ## Scope
 
@@ -163,3 +164,12 @@ because M32 throws rather than returning a status, so it surfaces as
 `REJECTED`; a distinguishable arm would require an M32 or M33 amendment outside
 this card. Publication and any live request remain human-owned actions recorded
 as redacted evidence.
+
+## Ready review
+
+At clean pushed `cf6f617578b7656d36109f80b4b9ad2d1db5df51`, all accepted M22
+through M25, M32, M39, and M40 predecessors resolved locally; all five declared
+M41 implementation/test paths remained absent and disjoint; and the M40 schema
+reservation precedes this M41 amendment. S21 is Web-only and has no ownership
+or dependency collision. The local-only boundary has no human-action blocker.
+A fresh activation may authorize only the two durable test-only RED contracts.
