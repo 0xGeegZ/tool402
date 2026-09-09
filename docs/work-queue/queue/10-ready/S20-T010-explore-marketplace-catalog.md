@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M02-T040 accepted; M02-T070 accepted; M09-T010 accepted;
   M11-T020 accepted; M14-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
