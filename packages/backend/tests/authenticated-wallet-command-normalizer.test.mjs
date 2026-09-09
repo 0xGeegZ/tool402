@@ -404,19 +404,331 @@ async function assertRejectedAfterResolver(command, payload, authorityRecords) {
   assert.equal(resolverCalls, 1);
 }
 
+function claimedTextFactory(text) {
+  return () => claimText(text);
+}
+
+function claimedBytesFactory(bytes) {
+  return () => claimRawBody(new Uint8Array(bytes));
+}
+
+function defaultExternalPrepareAuthorityRecords() {
+  return [authorityFor(firstSigner)];
+}
+
+function m30CompatibilityVectors() {
+  const externalTransport = (command = externalPrepareCommand(), payload = externalPreparePayload()) =>
+    transportText(command, payload);
+  const rejected = (name, claimedBody, options = {}) => ({
+    name,
+    accepts: false,
+    claimedBody,
+    serverTime: options.serverTime ?? serverNow,
+    authorityRecords:
+      options.authorityRecords ?? defaultExternalPrepareAuthorityRecords,
+    verify: options.verify,
+  });
+  const accepted = (name, claimedBody, options = {}) => ({
+    name,
+    accepts: true,
+    claimedBody,
+    serverTime: options.serverTime ?? serverNow,
+    authorityRecords:
+      options.authorityRecords ?? defaultExternalPrepareAuthorityRecords,
+    verify: options.verify,
+  });
+  const withoutOwn = (value, key) => {
+    const copy = { ...value };
+    delete copy[key];
+    return copy;
+  };
+  let accessorReads = 0;
+
+  return [
+    accepted("accepts the canonical M30 external.prepare vector", claimedTextFactory(externalTransport())),
+    accepted(
+      "accepts HEDERA_FUNDING for its backer",
+      claimedTextFactory(externalTransport(fundingCommand(), fundingPayload())),
+      { authorityRecords: () => [authorityFor(fundingSigner, "BACKER", [])] },
+    ),
+    accepted(
+      "accepts recovery suffix 01",
+      claimedTextFactory(
+        externalTransport(
+          externalPrepareCommand({ signature: `${firstSignature.slice(0, -2)}01` }),
+        ),
+      ),
+    ),
+    accepted(
+      "accepts recovery suffix 00",
+      claimedTextFactory(
+        externalTransport(
+          recoveryZeroCommand({
+            signature: `${recoveryZeroSignature.slice(0, -2)}00`,
+          }),
+          recoveryZeroPayload(),
+        ),
+      ),
+      { authorityRecords: () => [authorityFor(recoveryZeroSigner)] },
+    ),
+    accepted(
+      "accepts the future-skew boundary",
+      claimedTextFactory(externalTransport()),
+      { serverTime: "2026-09-07T18:59:00.000Z" },
+    ),
+    accepted(
+      "accepts the expiry boundary",
+      claimedTextFactory(externalTransport()),
+      { serverTime: commandExpiry },
+    ),
+
+    rejected(
+      "rejects a raw byte body outside the M25 capability",
+      () => new Uint8Array(new TextEncoder().encode(externalTransport())),
+    ),
+    rejected(
+      "rejects a raw text body outside the M25 capability",
+      () => externalTransport(),
+    ),
+    rejected(
+      "rejects a forged structural body outside the M25 capability",
+      () => ({ replayIdentity: "forged" }),
+    ),
+    rejected(
+      "rejects a proxy outside the M25 capability",
+      () => new Proxy({}, {}),
+    ),
+    rejected(
+      "rejects a structural copy of an M30 normalized DTO",
+      async (m30) => {
+        const normalized = await m30.normalizeClaimedExternalPrepareCommand(
+          await claimText(externalTransport()),
+          serverNow,
+          defaultExternalPrepareAuthorityRecords,
+        );
+        assert.notEqual(normalized, null);
+        return { ...normalized };
+      },
+    ),
+    rejected(
+      "rejects invalid UTF-8 before the M30 decoder",
+      claimedBytesFactory([0xff]),
+    ),
+    rejected(
+      "rejects duplicate command keys",
+      claimedTextFactory(
+        externalTransport().replace('"version":1', '"version":1,"version":1'),
+      ),
+    ),
+    rejected(
+      "rejects escaped command strings",
+      claimedTextFactory(
+        externalTransport().replace('"external.prepare"', '"\\u0065xternal.prepare"'),
+      ),
+    ),
+    rejected(
+      "rejects an unexpected transport field",
+      claimedTextFactory(externalTransport().replace("}", ',"unexpected":1}')),
+    ),
+    ...[
+      ["leading-zero command numbers", '"version":01'],
+      ["fractional command numbers", '"version":1.0'],
+      ["exponent command numbers", '"version":1e0'],
+    ].map(([name, replacement]) =>
+      rejected(
+        `rejects ${name}`,
+        claimedTextFactory(externalTransport().replace('"version":1', replacement)),
+      ),
+    ),
+    ...[
+      ["an uppercase signer", { signer: firstSigner.toUpperCase() }],
+      ["a noncanonical nonce", { nonce: "AAAAAAAAAAAAAAAAAAAAAB" }],
+      ["a timestamp without milliseconds", { issuedAt: "2026-09-07T19:00:00.00Z" }],
+      ["a non-UTC timestamp", { issuedAt: "2026-09-07T19:00:00.000+00:00" }],
+      ["an impossible timestamp", { issuedAt: "2026-02-29T19:00:00.000Z" }],
+      ["a command expiry drift", { expiresAt: "2026-09-07T19:04:00.001Z" }],
+      ["an uppercase payload hash", { payloadHash: `0x${"A".repeat(64)}` }],
+      ["an uppercase signature", { signature: firstSignature.toUpperCase() }],
+      ["an unsupported recovery suffix", { signature: `${firstSignature.slice(0, -2)}02` }],
+      ["a zero r signature", { signature: `0x${"0".repeat(64)}${firstSignature.slice(66)}` }],
+      ["a zero s signature", { signature: `${firstSignature.slice(0, 66)}${"0".repeat(64)}1c` }],
+      ["a high-s signature", { signature: `${firstSignature.slice(0, 66)}${"f".repeat(64)}1c` }],
+      ["an unsupported command type", { type: "external.submit" }],
+      ["an unsupported chain", { chainId: 295 }],
+      ["an unsupported command version", { version: 2 }],
+    ].map(([name, overrides]) =>
+      rejected(
+        `rejects ${name}`,
+        claimedTextFactory(externalTransport(externalPrepareCommand(overrides))),
+      ),
+    ),
+    ...[
+      ["a payload expiry drift", externalPreparePayload({ expiresAt: "2026-09-07T19:04:00.001Z" })],
+      ["an unsupported operation kind", externalPreparePayload({ operationKind: "ATS_UNKNOWN" })],
+      ["an uppercase canonical parameters hash", externalPreparePayload({ canonicalParametersHash: "A".repeat(64) })],
+    ].map(([name, payload]) =>
+      rejected(
+        `rejects ${name}`,
+        claimedTextFactory(externalTransport(externalPrepareCommand(), payload)),
+      ),
+    ),
+    rejected(
+      "rejects a signed payload hash mismatch",
+      claimedTextFactory(
+        externalTransport(
+          externalPrepareCommand({ payloadHash: `0x${"0".repeat(64)}` }),
+        ),
+      ),
+    ),
+    rejected(
+      "rejects a valid-format recovered signer mismatch",
+      claimedTextFactory(
+        externalTransport(externalPrepareCommand({ signer: signingAddress })),
+      ),
+      { authorityRecords: () => [authorityFor(signingAddress)] },
+    ),
+    rejected(
+      "rejects a truncated signature",
+      claimedTextFactory(
+        externalTransport(
+          externalPrepareCommand({ signature: firstSignature.slice(0, -2) }),
+        ),
+      ),
+    ),
+    rejected(
+      "rejects non-ASCII UTF-8 transport strings",
+      claimedTextFactory(externalTransport().replace("subject_42", "subject_é")),
+    ),
+    ...[
+      "2026-09-07T19:04:00.001Z",
+      "2026-09-07T18:58:59.999Z",
+      "2026-09-07T19:00:30Z",
+      "2026-02-29T19:00:00.000Z",
+    ].map((serverTime) =>
+      rejected(
+        `rejects server clock ${serverTime}`,
+        claimedTextFactory(externalTransport()),
+        { serverTime },
+      ),
+    ),
+    ...[
+      ["no authority record", () => []],
+      ["multiple authority records", () => [authorityFor(firstSigner), authorityFor(firstSigner)]],
+      ["a mismatched ownership record", () => [authorityFor(firstSigner, "ISSUER", ["other_subject"])]],
+      ["a backer ATS_CREATE record", () => [authorityFor(firstSigner, "BACKER")]],
+      ["a disabled authority record", () => [{ ...authorityFor(firstSigner), enabled: false }]],
+      ["a mismatched signer record", () => [authorityFor("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]],
+      ["an unsupported authority role", () => [authorityFor(firstSigner, "ADMIN")]],
+    ].map(([name, authorityRecords]) =>
+      rejected(
+        `rejects ${name}`,
+        claimedTextFactory(externalTransport()),
+        { authorityRecords },
+      ),
+    ),
+    rejected(
+      "rejects HEDERA_FUNDING for an issuer",
+      claimedTextFactory(externalTransport(fundingCommand(), fundingPayload())),
+      { authorityRecords: () => [authorityFor(fundingSigner, "ISSUER")] },
+    ),
+    ...[
+      ["a duplicated root command", `{"command":${JSON.stringify(externalPrepareCommand())},"command":${JSON.stringify(externalPrepareCommand())},"payload":${JSON.stringify(externalPreparePayload())}}`],
+      ["a duplicated payload operation", externalTransport().replace('"operationKind":"ATS_CREATE"', '"operationKind":"ATS_CREATE","operationKind":"ATS_CREATE"')],
+      ["a missing payload", JSON.stringify({ command: externalPrepareCommand() })],
+      ["a missing command signature", JSON.stringify({ command: withoutOwn(externalPrepareCommand(), "signature"), payload: externalPreparePayload() })],
+      ["a missing payload expiry", JSON.stringify({ command: externalPrepareCommand(), payload: withoutOwn(externalPreparePayload(), "expiresAt") })],
+      ["an array root", "[]"],
+      ["an array command", JSON.stringify({ command: [], payload: externalPreparePayload() })],
+      ["an array payload", JSON.stringify({ command: externalPrepareCommand(), payload: [] })],
+      ["a boolean command", JSON.stringify({ command: true, payload: externalPreparePayload() })],
+      ["a boolean payload", JSON.stringify({ command: externalPrepareCommand(), payload: false })],
+      ["a null root", "null"],
+      ["a null payload", JSON.stringify({ command: externalPrepareCommand(), payload: null })],
+      ["a proto-polluting root field", `{"command":${JSON.stringify(externalPrepareCommand())},"payload":${JSON.stringify(externalPreparePayload())},"__proto__":{}}`],
+      ["a constructor command field", `{"command":{${JSON.stringify(externalPrepareCommand()).slice(1, -1)},"constructor":"Object"},"payload":${JSON.stringify(externalPreparePayload())}}`],
+      ["a prototype payload field", `{"command":${JSON.stringify(externalPrepareCommand())},"payload":{${JSON.stringify(externalPreparePayload()).slice(1, -1)},"prototype":{}}}`],
+    ].map(([name, text]) =>
+      rejected(`rejects ${name}`, claimedTextFactory(text)),
+    ),
+    ...[
+      ["a null authority record", () => [null]],
+      ["an authority record missing its principal", () => [withoutOwn(authorityFor(firstSigner), "principalPublicId")]],
+      ["an authority record with an extra field", () => [{ ...authorityFor(firstSigner), unexpected: true }]],
+      ["an authority record with a custom prototype", () => [Object.assign(Object.create(null), authorityFor(firstSigner))]],
+      ["an accessor-backed authority record", () => {
+        const record = authorityFor(firstSigner);
+        Object.defineProperty(record, "principalPublicId", {
+          enumerable: true,
+          configurable: true,
+          get() {
+            accessorReads += 1;
+            return "principal_42";
+          },
+        });
+        return [record];
+      }],
+    ].map(([name, authorityRecords]) =>
+      rejected(
+        `rejects ${name}`,
+        claimedTextFactory(externalTransport()),
+        {
+          authorityRecords,
+          verify: () => assert.equal(accessorReads, 0),
+        },
+      ),
+    ),
+  ];
+}
+
+async function assertM30CompatibilityVector(m30, vector) {
+  const normalized = await api.normalizeClaimedWalletCommand(
+    await vector.claimedBody(m30),
+    vector.serverTime,
+    () => vector.authorityRecords(),
+  );
+  const m30Normalized = await m30.normalizeClaimedExternalPrepareCommand(
+    await vector.claimedBody(m30),
+    vector.serverTime,
+    () => vector.authorityRecords(),
+  );
+
+  assert.equal(normalized === null, !vector.accepts, vector.name);
+  assert.equal(m30Normalized === null, !vector.accepts, `${vector.name} (M30)`);
+  assert.deepEqual(normalized, m30Normalized, vector.name);
+  vector.verify?.();
+}
+
+function staticStringValue(node) {
+  if (
+    typescript.isStringLiteral(node)
+    || typescript.isNoSubstitutionTemplateLiteral(node)
+  ) {
+    return node.text;
+  }
+  if (
+    typescript.isParenthesizedExpression(node)
+    || typescript.isAsExpression(node)
+    || typescript.isTypeAssertionExpression(node)
+  ) {
+    return staticStringValue(node.expression);
+  }
+  if (
+    typescript.isBinaryExpression(node)
+    && node.operatorToken.kind === typescript.SyntaxKind.PlusToken
+  ) {
+    const left = staticStringValue(node.left);
+    const right = staticStringValue(node.right);
+    return left === null || right === null ? null : left + right;
+  }
+  return null;
+}
+
 function staticPropertyName(node) {
   if (typescript.isPropertyAccessExpression(node)) {
     return node.name.text;
   }
-  if (
-    typescript.isElementAccessExpression(node)
-    && node.argumentExpression !== undefined
-    && (
-      typescript.isStringLiteral(node.argumentExpression)
-      || typescript.isNoSubstitutionTemplateLiteral(node.argumentExpression)
-    )
-  ) {
-    return node.argumentExpression.text;
+  if (typescript.isElementAccessExpression(node) && node.argumentExpression !== undefined) {
+    return staticStringValue(node.argumentExpression);
   }
   return null;
 }
@@ -432,17 +744,6 @@ function isExactClaimedBodyCall(node, name) {
   );
 }
 
-function returnsExactlyNull(statement) {
-  if (typescript.isReturnStatement(statement)) {
-    return statement.expression?.kind === typescript.SyntaxKind.NullKeyword;
-  }
-  return (
-    typescript.isBlock(statement) &&
-    statement.statements.length === 1 &&
-    returnsExactlyNull(statement.statements[0])
-  );
-}
-
 function isExactClaimedBodyGuard(statement) {
   return (
     typescript.isIfStatement(statement) &&
@@ -453,16 +754,86 @@ function isExactClaimedBodyGuard(statement) {
       statement.expression.operand,
       "isClaimedProtectedBody",
     ) &&
-    returnsExactlyNull(statement.thenStatement)
+    typescript.isReturnStatement(statement.thenStatement) &&
+    statement.thenStatement.expression?.kind === typescript.SyntaxKind.NullKeyword
   );
 }
 
-function findNormalizerDeclaration(sourceFile) {
-  return sourceFile.statements.find(
-    (statement) =>
-      typescript.isFunctionDeclaration(statement) &&
-      statement.name?.text === "normalizeClaimedWalletCommand" &&
-      statement.body !== undefined,
+function isExactClaimedBodyReaderStatement(statement) {
+  if (
+    !typescript.isVariableStatement(statement)
+    || (statement.declarationList.flags & typescript.NodeFlags.Const) === 0
+    || statement.declarationList.declarations.length !== 1
+  ) {
+    return false;
+  }
+
+  const [declaration] = statement.declarationList.declarations;
+  return (
+    typescript.isIdentifier(declaration.name)
+    && declaration.initializer !== undefined
+    && isExactClaimedBodyCall(
+      declaration.initializer,
+      "readClaimedProtectedBody",
+    )
+  );
+}
+
+function bindingNames(name) {
+  if (typescript.isIdentifier(name)) {
+    return [name.text];
+  }
+  if (typescript.isObjectBindingPattern(name) || typescript.isArrayBindingPattern(name)) {
+    return name.elements.flatMap((element) =>
+      typescript.isBindingElement(element) ? bindingNames(element.name) : [],
+    );
+  }
+  return [];
+}
+
+function declaresM25Binding(node) {
+  const m25Names = new Set([
+    "isClaimedProtectedBody",
+    "readClaimedProtectedBody",
+  ]);
+  const hasM25Name = (name) => bindingNames(name).some((value) => m25Names.has(value));
+
+  if (
+    (typescript.isVariableDeclaration(node)
+      || typescript.isParameter(node)
+      || typescript.isBindingElement(node))
+    && hasM25Name(node.name)
+  ) {
+    return true;
+  }
+  if (
+    (typescript.isFunctionDeclaration(node)
+      || typescript.isFunctionExpression(node)
+      || typescript.isClassDeclaration(node)
+      || typescript.isClassExpression(node))
+    && node.name !== undefined
+    && m25Names.has(node.name.text)
+  ) {
+    return true;
+  }
+  if (
+    typescript.isCatchClause(node)
+    && node.variableDeclaration !== undefined
+    && hasM25Name(node.variableDeclaration.name)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function isAllowedM25IdentifierReference(node) {
+  if (typescript.isImportSpecifier(node.parent)) {
+    return true;
+  }
+  return (
+    typescript.isCallExpression(node.parent)
+    && node.parent.expression === node
+    && isExactClaimedBodyCall(node.parent, node.text)
   );
 }
 
@@ -489,7 +860,7 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
   ]);
   const permittedViemTypeImports = new Set(["Address", "Hex"]);
   const viemRuntimeImports = new Set();
-  const m25RuntimeImports = new Set();
+  const m25RuntimeImports = [];
   const prohibited = [];
 
   for (const statement of sourceFile.statements) {
@@ -540,18 +911,19 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
       for (const imported of statement.importClause.namedBindings.elements) {
         if (!statement.importClause.isTypeOnly && !imported.isTypeOnly) {
           assert.equal(imported.name.text, imported.propertyName?.text ?? imported.name.text);
-          m25RuntimeImports.add(imported.name.text);
+          m25RuntimeImports.push(imported.name.text);
         }
       }
     }
   }
   assert.deepEqual(
-    [...m25RuntimeImports].sort(),
+    m25RuntimeImports.sort(),
     ["isClaimedProtectedBody", "readClaimedProtectedBody"],
   );
 
   const forbiddenIdentifiers = new Set([
     "Bun",
+    "createRequire",
     "Deno",
     "Function",
     "JSON",
@@ -563,12 +935,15 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
     "ethereum",
     "eval",
     "fetch",
+    "global",
     "globalThis",
     "indexedDB",
     "localStorage",
     "navigator",
     "performance",
     "process",
+    "module",
+    "require",
     "sessionStorage",
     "setImmediate",
     "setInterval",
@@ -578,6 +953,7 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
   ]);
   const forbiddenProperties = new Set([
     "connect",
+    "createRequire",
     "createPublicClient",
     "createTransport",
     "createWalletClient",
@@ -590,6 +966,8 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
     "open",
     "personal_sign",
     "request",
+    "module",
+    "require",
     "send",
     "sendAsync",
     "setItem",
@@ -610,6 +988,10 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
   let claimedReaderCalls = 0;
   const claimedPredicateNodes = [];
   const claimedReaderNodes = [];
+  const m25BindingNames = new Set([
+    "isClaimedProtectedBody",
+    "readClaimedProtectedBody",
+  ]);
 
   const inspectNode = (node) => {
     if (
@@ -618,6 +1000,16 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
       || (typescript.isMetaProperty(node)
         && node.keywordToken === typescript.SyntaxKind.ImportKeyword)
       || (typescript.isIdentifier(node) && forbiddenIdentifiers.has(node.text))
+    ) {
+      prohibited.push(node.getText(sourceFile));
+    }
+    if (declaresM25Binding(node)) {
+      prohibited.push(node.getText(sourceFile));
+    }
+    if (
+      typescript.isIdentifier(node)
+      && m25BindingNames.has(node.text)
+      && !isAllowedM25IdentifierReference(node)
     ) {
       prohibited.push(node.getText(sourceFile));
     }
@@ -655,15 +1047,6 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
       (typescript.isPropertyAccessExpression(node) ||
         typescript.isElementAccessExpression(node)) &&
       typescript.isIdentifier(node.expression) &&
-      node.expression.text === "module" &&
-      staticPropertyName(node) === "require"
-    ) {
-      prohibited.push(node.getText(sourceFile));
-    }
-    if (
-      (typescript.isPropertyAccessExpression(node) ||
-        typescript.isElementAccessExpression(node)) &&
-      typescript.isIdentifier(node.expression) &&
       node.expression.text === "Date" &&
       staticPropertyName(node) === "now"
     ) {
@@ -684,22 +1067,106 @@ function assertClaimedBodyAndCapabilityBoundary(source) {
   assert.equal(claimedPredicateCalls, 1);
   assert.equal(claimedReaderCalls, 1);
 
-  const normalizer = findNormalizerDeclaration(sourceFile);
+  const normalizers = sourceFile.statements.filter(
+    (statement) =>
+      typescript.isFunctionDeclaration(statement)
+      && statement.name?.text === "normalizeClaimedWalletCommand"
+      && statement.body !== undefined,
+  );
+  assert.equal(normalizers.length, 1);
+  const [normalizer] = normalizers;
   assert.notEqual(normalizer, undefined);
-  const claimedGuardIndex = normalizer.body.statements.findIndex(
-    isExactClaimedBodyGuard,
-  );
-  assert.notEqual(claimedGuardIndex, -1);
+  const claimedGuardIndex = normalizer.body.statements.findIndex(isExactClaimedBodyGuard);
+  assert.equal(claimedGuardIndex, 0);
   const claimedGuard = normalizer.body.statements[claimedGuardIndex];
-  assert.equal(
-    claimedGuard.end <= claimedReaderNodes[0].getStart(sourceFile),
-    true,
-  );
-  assert.equal(
-    claimedPredicateNodes[0].getStart(sourceFile) >= claimedGuard.getStart(sourceFile),
-    true,
-  );
+  const readerStatement = normalizer.body.statements[claimedGuardIndex + 1];
+  assert.equal(isExactClaimedBodyReaderStatement(readerStatement), true);
+  const [readerDeclaration] = readerStatement.declarationList.declarations;
+  const readerCall = readerDeclaration.initializer;
+  assert.strictEqual(claimedPredicateNodes[0], claimedGuard.expression.operand);
+  assert.strictEqual(claimedReaderNodes[0], readerCall);
+  assert.strictEqual(readerCall.parent, readerDeclaration);
+  assert.strictEqual(readerDeclaration.parent.parent, readerStatement);
 }
+
+function minimalM25BoundarySource(statements) {
+  return `
+import {
+  isClaimedProtectedBody,
+  readClaimedProtectedBody,
+} from "./claimed-protected-body.ts";
+
+export async function normalizeClaimedWalletCommand(claimedBody: unknown) {
+${statements}
+}
+`;
+}
+
+test("rejects helper, shadow, and static module capability escapes from the M25 boundary", () => {
+  const directBoundary = minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  void bodyBytes;
+  return null;`);
+  assert.doesNotThrow(() => assertClaimedBodyAndCapabilityBoundary(directBoundary));
+
+  const rejectedBoundaries = [
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const readClaimedProtectedBody = () => new Uint8Array();
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  void bodyBytes;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const reader = readClaimedProtectedBody;
+  const bodyBytes = reader(claimedBody);
+  void bodyBytes;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const executable = global.module.createRequire("node:module")("node:fs");
+  void bodyBytes;
+  void executable;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const executable = global["module"]["create" + "Require"]("node:module")("node:fs");
+  void bodyBytes;
+  void executable;
+  return null;`),
+    minimalM25BoundarySource(`
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = readClaimedProtectedBody(claimedBody);
+  const executable = module.createRequire("node:module")("node:fs");
+  void bodyBytes;
+  void executable;
+  return null;`),
+    `
+import {
+  isClaimedProtectedBody,
+  readClaimedProtectedBody,
+} from "./claimed-protected-body.ts";
+
+function snapshot(body: unknown) {
+  return readClaimedProtectedBody(body);
+}
+
+export async function normalizeClaimedWalletCommand(claimedBody: unknown) {
+  if (!isClaimedProtectedBody(claimedBody)) return null;
+  const bodyBytes = snapshot(claimedBody);
+  void bodyBytes;
+  return null;
+}
+`,
+  ];
+
+  for (const source of rejectedBoundaries) {
+    assert.throws(() => assertClaimedBodyAndCapabilityBoundary(source));
+  }
+});
 
 test("requires the declared wallet-command normalizer source module", () => {
   assert.equal(sourceExists, true, `missing declared source module: ${sourcePath}`);
@@ -808,103 +1275,10 @@ implementedTest("preserves M30 external.prepare normalization byte-for-byte", as
   );
 });
 
-implementedTest("matches bounded M30 compatibility vectors for accepted and rejected external.prepare cases", async () => {
+implementedTest("matches every M30 external.prepare acceptance and rejection vector", async () => {
   const m30 = await import(m30SourceUrl.href);
-  const vectors = [
-    {
-      name: "accepts ATS_CREATE for its owning issuer",
-      accepted: true,
-      command: externalPrepareCommand(),
-      payload: externalPreparePayload(),
-      authorityRecords: [authorityFor(firstSigner)],
-    },
-    {
-      name: "accepts HEDERA_FUNDING for a backer",
-      accepted: true,
-      command: fundingCommand(),
-      payload: fundingPayload(),
-      authorityRecords: [authorityFor(fundingSigner, "BACKER", [])],
-    },
-    {
-      name: "accepts recovery suffix 01",
-      accepted: true,
-      command: externalPrepareCommand({ signature: `${firstSignature.slice(0, -2)}01` }),
-      payload: externalPreparePayload(),
-      authorityRecords: [authorityFor(firstSigner)],
-    },
-    {
-      name: "accepts recovery suffix 00",
-      accepted: true,
-      command: recoveryZeroCommand({ signature: `${recoveryZeroSignature.slice(0, -2)}00` }),
-      payload: recoveryZeroPayload(),
-      authorityRecords: [authorityFor(recoveryZeroSigner)],
-    },
-    {
-      name: "rejects payload-hash drift",
-      accepted: false,
-      command: externalPrepareCommand({ payloadHash: `0x${"0".repeat(64)}` }),
-      payload: externalPreparePayload(),
-      authorityRecords: [authorityFor(firstSigner)],
-    },
-    {
-      name: "rejects a recovered signer mismatch",
-      accepted: false,
-      command: externalPrepareCommand({ signer: signingAddress }),
-      payload: externalPreparePayload(),
-      authorityRecords: [authorityFor(signingAddress)],
-    },
-    {
-      name: "rejects a truncated signature",
-      accepted: false,
-      command: externalPrepareCommand({ signature: firstSignature.slice(0, -2) }),
-      payload: externalPreparePayload(),
-      authorityRecords: [authorityFor(firstSigner)],
-    },
-    {
-      name: "rejects an unsupported command type",
-      accepted: false,
-      command: externalPrepareCommand({ type: "external.submit" }),
-      payload: externalPreparePayload(),
-      authorityRecords: [authorityFor(firstSigner)],
-    },
-    {
-      name: "rejects command-to-payload expiry drift",
-      accepted: false,
-      command: externalPrepareCommand(),
-      payload: externalPreparePayload({ expiresAt: "2026-09-07T19:03:59.999Z" }),
-      authorityRecords: [authorityFor(firstSigner)],
-    },
-    {
-      name: "rejects ATS_CREATE for a backer",
-      accepted: false,
-      command: externalPrepareCommand(),
-      payload: externalPreparePayload(),
-      authorityRecords: [authorityFor(firstSigner, "BACKER", [])],
-    },
-    {
-      name: "rejects HEDERA_FUNDING for an issuer",
-      accepted: false,
-      command: fundingCommand(),
-      payload: fundingPayload(),
-      authorityRecords: [authorityFor(fundingSigner, "ISSUER")],
-    },
-  ];
-
-  for (const vector of vectors) {
-    const claimed = await claimText(transportText(vector.command, vector.payload));
-    const normalized = await api.normalizeClaimedWalletCommand(
-      claimed,
-      serverNow,
-      () => cloneAuthorityRecords(vector.authorityRecords),
-    );
-    const m30Normalized = await m30.normalizeClaimedExternalPrepareCommand(
-      claimed,
-      serverNow,
-      () => cloneAuthorityRecords(vector.authorityRecords),
-    );
-    assert.equal(normalized === null, !vector.accepted, vector.name);
-    assert.equal(m30Normalized === null, !vector.accepted, `${vector.name} (M30)`);
-    assert.deepEqual(normalized, m30Normalized, vector.name);
+  for (const vector of m30CompatibilityVectors()) {
+    await assertM30CompatibilityVector(m30, vector);
   }
 });
 
