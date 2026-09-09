@@ -19,6 +19,10 @@ export default defineSchema({
     attemptId: v.optional(v.id("externalPrepareCommandAttempts")),
     claimedAt: v.int64(),
   }).index("by_replay_identity", ["replayIdentity"]),
+  ingressCommandReplayClaims: defineTable({
+    replayIdentity: v.string(),
+    claimedAt: v.int64(),
+  }).index("by_replay_identity", ["replayIdentity"]),
   externalPrepareCommandAttempts: defineTable({
     version: v.literal(1),
     type: v.literal("external.prepare"),
@@ -85,7 +89,14 @@ export default defineSchema({
     atsAssetEvmAddress: v.optional(v.string()),
     activeDirectoryVersionId: v.optional(v.id("directoryVersions")),
   }).index("by_offering_public_id_and_version", ["offeringPublicId", "version"])
-    .index("by_ats_attempt_id", ["atsAttemptId"]),
+    .index("by_ats_attempt_id", ["atsAttemptId"])
+    .index("by_ats_create_draft_binding", [
+      "subjectPublicId",
+      "canonicalSignerAddress",
+      "principalPublicId",
+      "authorityVersion",
+      "state"
+    ]),
   directoryVersions: defineTable({
     offeringPublicId: v.string(),
     payloadHash: v.string(),

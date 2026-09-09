@@ -4,6 +4,7 @@ import {
 } from "convex/server";
 import type {
   DataModelFromSchemaDefinition,
+  GenericMutationCtx,
   MutationBuilder,
   QueryBuilder,
 } from "convex/server";
@@ -546,6 +547,51 @@ export const markAssetPending = internalMutation({
     return { offeringId, state: "ASSET_PENDING" as const };
   },
 });
+
+export async function linkAtsCreateAttemptToDraftOffering(
+  ctx: GenericMutationCtx<DataModelFromSchemaDefinition<typeof schema>>,
+  binding: {
+    readonly attemptId: GenericId<"externalPrepareCommandAttempts">;
+    readonly subjectPublicId: string;
+    readonly canonicalSignerAddress: string;
+    readonly principalPublicId: string;
+    readonly authorityVersion: string;
+  },
+): Promise<void> {
+  const candidates = await ctx.db.query("offerings")
+    .withIndex("by_ats_create_draft_binding", (query) => (
+      query
+        .eq("subjectPublicId", binding.subjectPublicId)
+        .eq("canonicalSignerAddress", binding.canonicalSignerAddress)
+        .eq("principalPublicId", binding.principalPublicId)
+        .eq("authorityVersion", binding.authorityVersion)
+        .eq("state", "DRAFT")
+    ))
+    .take(2);
+  if (candidates.length !== 1) {
+    return reject();
+  }
+
+  const offering = readSafeOffering(candidates[0]);
+  if (
+    offering.state !== "DRAFT"
+    || offering.atsAttemptId !== undefined
+    || offering.atsAssetEvmAddress !== undefined
+    || offering.activeDirectoryVersionId !== undefined
+    || offering.subjectPublicId !== binding.subjectPublicId
+    || offering.canonicalSignerAddress !== binding.canonicalSignerAddress
+    || offering.principalPublicId !== binding.principalPublicId
+    || offering.authorityVersion !== binding.authorityVersion
+  ) {
+    return reject();
+  }
+
+  await ctx.db.patch(offering.offeringId, {
+    state: "ASSET_PENDING" as const,
+    atsAttemptId: binding.attemptId,
+    updatedAt: durableNow(),
+  });
+}
 
 export const markAssetReady = internalMutation({
   args: {

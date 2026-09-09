@@ -3,6 +3,7 @@ import { v, type GenericId } from "convex/values";
 import { parseExternalPreparePayload, type ExternalPreparePayload } from "@tool402/core";
 import { keccak256, stringToHex } from "viem";
 import { assertCurrentAtsPrepareAuthority } from "./ats_prepare_authority.ts";
+import { linkAtsCreateAttemptToDraftOffering } from "./offerings.ts";
 import type schema from "./schema.ts";
 
 const contextValidators = {
@@ -226,6 +227,7 @@ export const admitExternalPrepareCommand = internalMutation({
       .take(2);
     if (authorities.length !== 1) return reject();
     revalidateAuthority(authorities[0], bound);
+    if (bound.payload.operationKind === "ATS_CREATE") return reject();
     assertCurrentAtsPrepareAuthority(bound.payload);
 
     const claims = await ctx.db.query("externalPrepareCommandReplayClaims")
@@ -269,5 +271,105 @@ export const admitExternalPrepareCommand = internalMutation({
       replayIdentity, outcome: "IDEMPOTENCY_REPLAYED", attemptId: stored.attemptId, claimedAt: durableNow,
     });
     return { status: "IDEMPOTENCY_REPLAYED" as const, attemptId: stored.attemptId, state: "PREPARED" as const };
+  },
+});
+
+export const admitAtsCreateAndMarkAssetPending = internalMutation({
+  args: commandValidators,
+  returns: v.union(
+    v.object({ status: v.literal("NEW"), attemptId: v.id("externalPrepareCommandAttempts"), state: v.literal("PREPARED") }),
+    v.object({ status: v.literal("IDEMPOTENCY_REPLAYED"), attemptId: v.id("externalPrepareCommandAttempts"), state: v.literal("PREPARED") }),
+    v.object({ status: v.literal("COMMAND_REPLAYED") }),
+    v.object({ status: v.literal("IDEMPOTENCY_CONFLICT") }),
+  ),
+  handler: async (ctx, args) => {
+    const { bound, replayIdentity, durableNow } = bindCommand(args);
+    if (bound.payload.operationKind !== "ATS_CREATE") return reject();
+
+    const authorities = await ctx.db.query("commandAuthorities")
+      .withIndex("by_chain_id_and_canonical_signer_address", (query) =>
+        query.eq("chainId", bound.chainId).eq("canonicalSignerAddress", bound.canonicalSignerAddress))
+      .take(2);
+    if (authorities.length !== 1) return reject();
+    revalidateAuthority(authorities[0], bound);
+    assertCurrentAtsPrepareAuthority(bound.payload);
+
+    const claims = await ctx.db.query("externalPrepareCommandReplayClaims")
+      .withIndex("by_replay_identity", (query) => query.eq("replayIdentity", replayIdentity))
+      .take(2);
+    if (claims.length > 1) return reject();
+    if (claims.length === 1) {
+      revalidateClaim(claims[0], replayIdentity);
+      return { status: "COMMAND_REPLAYED" as const };
+    }
+
+    const attempts = await ctx.db.query("externalPrepareCommandAttempts")
+      .withIndex("by_idempotency_key", (query) => query.eq("idempotencyKey", bound.payload.idempotencyKey))
+      .take(2);
+    if (attempts.length === 0) {
+      const { payload, ...context } = bound;
+      const attemptId = await ctx.db.insert("externalPrepareCommandAttempts", {
+        ...context, ...payload, state: "PREPARED", acceptedAt: durableNow,
+      });
+      await linkAtsCreateAttemptToDraftOffering(ctx, {
+        attemptId,
+        subjectPublicId: bound.payload.subjectPublicId,
+        canonicalSignerAddress: bound.canonicalSignerAddress,
+        principalPublicId: bound.principalPublicId,
+        authorityVersion: bound.authorityVersion,
+      });
+      await ctx.db.insert("externalPrepareCommandReplayClaims", {
+        replayIdentity, outcome: "NEW", attemptId, claimedAt: durableNow,
+      });
+      return { status: "NEW" as const, attemptId, state: "PREPARED" as const };
+    }
+
+    let stored = null;
+    if (attempts.length === 1) {
+      try {
+        stored = readAttempt(attempts[0], bound);
+      } catch {
+        stored = null;
+      }
+    }
+    if (stored === null) {
+      await ctx.db.insert("externalPrepareCommandReplayClaims", {
+        replayIdentity, outcome: "IDEMPOTENCY_CONFLICT", claimedAt: durableNow,
+      });
+      return { status: "IDEMPOTENCY_CONFLICT" as const };
+    }
+
+    const offeringRows = await ctx.db.query("offerings")
+      .withIndex("by_ats_attempt_id", (query) => query.eq("atsAttemptId", stored.attemptId))
+      .take(2);
+    if (offeringRows.length !== 1) {
+      await ctx.db.insert("externalPrepareCommandReplayClaims", {
+        replayIdentity, outcome: "IDEMPOTENCY_CONFLICT", claimedAt: durableNow,
+      });
+      return { status: "IDEMPOTENCY_CONFLICT" as const };
+    }
+    const offering = offeringRows[0];
+    if (
+      offering === undefined
+      || offering.atsAttemptId !== stored.attemptId
+      || offering.state !== "ASSET_PENDING"
+      || offering.subjectPublicId !== bound.payload.subjectPublicId
+      || offering.canonicalSignerAddress !== bound.canonicalSignerAddress
+      || offering.principalPublicId !== bound.principalPublicId
+      || offering.authorityVersion !== bound.authorityVersion
+    ) {
+      await ctx.db.insert("externalPrepareCommandReplayClaims", {
+        replayIdentity, outcome: "IDEMPOTENCY_CONFLICT", claimedAt: durableNow,
+      });
+      return { status: "IDEMPOTENCY_CONFLICT" as const };
+    }
+    await ctx.db.insert("externalPrepareCommandReplayClaims", {
+      replayIdentity, outcome: "IDEMPOTENCY_REPLAYED", attemptId: stored.attemptId, claimedAt: durableNow,
+    });
+    return {
+      status: "IDEMPOTENCY_REPLAYED" as const,
+      attemptId: stored.attemptId,
+      state: "PREPARED" as const,
+    };
   },
 });

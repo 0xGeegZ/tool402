@@ -770,6 +770,26 @@ implementedTest("rejects a body over 65536 bytes before ingress cryptography or 
   assert.deepEqual(state.queries, []);
 });
 
+implementedTest("rejects an invalid body digest before resolving the ingress key", async () => {
+  const { handleCommandIngressForTest } = await import(dispatchUrl);
+  const payload = externalPreparePayload();
+  const transport = await signedTransport("external.prepare", payload);
+  const ingress = await signedIngressRequest(transport, {
+    headers: { "x-tool402-content-sha256": "b".repeat(64) },
+  });
+  const state = commandContext();
+  const seamState = testSeams({ key: ingress.key, type: "external.prepare", payload });
+
+  const response = await handleCommandIngressForTest(state.ctx, ingress.request, seamState.seams);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await responseJson(response), { outcome: "REJECTED" });
+  assert.equal(seamState.clockReads, 1);
+  assert.deepEqual(seamState.claims, []);
+  assert.deepEqual(seamState.resolutions, []);
+  assert.deepEqual(state.mutations, []);
+  assert.deepEqual(state.queries, []);
+});
+
 implementedTest("maps a claimed transport replay to the reason-free rejected response before normalization or dispatch", async () => {
   const { handleCommandIngressForTest } = await import(dispatchUrl);
   const payload = externalPreparePayload();
@@ -966,6 +986,63 @@ implementedTest("maps null and malformed public projections to only NOT_FOUND or
     const response = await handler(state.ctx, new Request(url));
     assert.equal(response.status, status, name);
     assert.deepEqual(await responseJson(response), expected, name);
+    assert.deepEqual(state.mutations, [], name);
+    assert.deepEqual(state.queries, [{ name: queryName, args: queryArgs }], name);
+  }
+});
+
+implementedTest("fails closed rather than stripping decorated projection arrays", async () => {
+  const { handleActiveDirectory, handleOfferingProjection } = await import(dispatchUrl);
+  const offering = {
+    offeringPublicId: "offering_42",
+    version: 1,
+    subjectPublicId: "subject_42",
+    state: "DRAFT",
+    definition: offeringCreatePayload().definition,
+    narrative: offeringCreatePayload().narrative,
+    advertisedQuickPriceTinybars: "10",
+    advertisedStandardPriceTinybars: "25",
+    canonicalSignerAddress,
+    acceptedAt: 1n,
+    updatedAt: 1n,
+  };
+  const directory = {
+    offeringPublicId: "offering_42",
+    offeringVersion: 1,
+    directoryVersion: 1,
+    serviceSlug: "riskscan",
+    record: directoryRecord(),
+    state: "ACTIVE",
+    acceptedAt: 1n,
+  };
+  const capabilities = [...directory.record.capabilities];
+  capabilities.unexpected = true;
+  const risks = [...offering.narrative.risks];
+  risks.unexpected = true;
+  const cases = [
+    [
+      "directory capabilities",
+      handleActiveDirectory,
+      "https://tool402.test/public/directory/riskscan/active",
+      { ...directory, record: { ...directory.record, capabilities } },
+      "directory_versions:getActive",
+      { serviceSlug: "riskscan" },
+    ],
+    [
+      "offering narrative",
+      handleOfferingProjection,
+      "https://tool402.test/public/offerings/offering_42",
+      { ...offering, narrative: { ...offering.narrative, risks } },
+      "offerings:getPublicProjection",
+      { offeringPublicId: "offering_42" },
+    ],
+  ];
+
+  for (const [name, handler, url, queryResult, queryName, queryArgs] of cases) {
+    const state = commandContext({ queryResult });
+    const response = await handler(state.ctx, new Request(url));
+    assert.equal(response.status, 503, name);
+    assert.deepEqual(await responseJson(response), { outcome: "UNAVAILABLE" }, name);
     assert.deepEqual(state.mutations, [], name);
     assert.deepEqual(state.queries, [{ name: queryName, args: queryArgs }], name);
   }

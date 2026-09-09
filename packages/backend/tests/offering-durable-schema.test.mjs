@@ -108,6 +108,16 @@ const expectedM40 = {
     indexes: [
       ["by_offering_public_id_and_version", ["offeringPublicId", "version"]],
       ["by_ats_attempt_id", ["atsAttemptId"]],
+      [
+        "by_ats_create_draft_binding",
+        [
+          "subjectPublicId",
+          "canonicalSignerAddress",
+          "principalPublicId",
+          "authorityVersion",
+          "state",
+        ],
+      ],
     ],
     searchIndexes: [],
     vectorIndexes: [],
