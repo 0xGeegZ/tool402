@@ -4,26 +4,26 @@
 
 - Tier: POLISH
 - Queue state: 00-inbox
-- Dependencies: a secret-free local evidence record confirms the first complete
-  Provider campaign / ATS rehearsal under `HA-ATS-STAGE-B-001`; every local
-  CORE_P0 card actually exercised by that rehearsal is accepted; and both
-  `HA-PUBLIC-DEPLOY-001` and `HA-DEMO-VIDEO-001` remain pending.
+- Dependencies: M02-T040 accepted; M11-T010 accepted; S20-T010 accepted; and
+  `D-S22-010-002` accepted. `HA-ATS-STAGE-B-001` remains pending as a hard
+  truth filter and a prerequisite to public deployment or demo recording, but
+  is not a prerequisite to this local landing reconciliation.
 - Owner: The root owns queue state, catalog, ownership, the local UI ledger,
   decisions, reviews, commits, and pushes. This intake owns only this card,
   `docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, and the root control
-  records. A post-rehearsal comparison must name exact source/test paths before
-  a readiness review can reserve them.
-- Human actions: the existing Stage B action supplies the rehearsal evidence;
-  this card creates no wallet/provider/ATS authority. Public deployment and
-  demo recording remain human-owned downstream actions.
+  records. The early source-to-current comparison must name exact source/test
+  paths before a readiness review can reserve them.
+- Human actions: this card creates no wallet/provider/ATS authority. The
+  existing Stage B action, public deployment, and demo recording remain
+  distinct human-owned downstream actions.
 
 ## Scope
 
-After the first complete Provider campaign / ATS rehearsal, compare the
-selected `PREP-UI-001` landing visual slice with the current local `/` route.
-Bring the public landing substantially back toward that selected prepared
-visual direction without redesigning it from scratch or bulk-importing any
-source material.
+Under the explicit early truth-first decision, compare the selected
+`PREP-UI-001` landing visual slice with the current local `/` route. Bring the
+public landing substantially back toward that selected prepared visual
+direction without redesigning it from scratch or bulk-importing any source
+material.
 
 The reconciliation retains compatible visual hierarchy, illustrations,
 branding, spacing, section composition, and responsive intent. It maps every
@@ -38,9 +38,9 @@ may be committed here.
 
 ## Required intake before readiness
 
-This card stays in `00-inbox` until the trigger is recorded. Once it is, the
-root performs a fresh source-to-current comparison and commits a narrow UI-S22
-ledger amendment that names:
+This card stays in `00-inbox` until the early-start decision and fresh
+source-to-current comparison are recorded. The root then commits a narrow
+UI-S22 ledger amendment that names:
 
 1. the selected compatible sections and local visual assets;
 2. the exact landing source and focused test paths;
@@ -49,8 +49,8 @@ ledger amendment that names:
 
 Only then may an independent readiness review decide whether a dependency-safe
 RED/implementation slice exists. The comparison cannot reopen unrelated
-routes, import a general archive, or substitute fake product states for the
-rehearsed flow.
+routes, import a general archive, or substitute fake product states for
+current local truth.
 
 ## Acceptance criteria
 
@@ -59,8 +59,8 @@ rehearsed flow.
 - The implementation preserves compatible prepared visual intent while every
   visible route, CTA, statement, and status reflects current local truth.
 - No mock/deferred testimonial, metric, provider, payment, transaction,
-  account, receipt, evidence, or live-availability claim survives unless the
-  then-current repository independently proves it.
+  account, receipt, evidence, funding, return, availability, or live claim
+  survives unless the then-current repository independently proves it.
 - Responsive desktop and narrow-viewport layouts, keyboard navigation,
   semantic landmarks, reduced motion, and visible focus receive browser
   verification.
