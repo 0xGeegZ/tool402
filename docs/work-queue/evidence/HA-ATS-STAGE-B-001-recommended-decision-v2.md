@@ -12,6 +12,20 @@ not yet exist. Acceptance creates a distinct
 `HA-ATS-STAGE-B-001` human-action row **PENDING and untouched** until a later
 live GO.
 
+This packet is the new explicit human decision required by
+`HA-ATS-AUTHORITY-001` before a reviewed source revision may add one enabled
+M33 mapping.
+
+Acceptance supersedes only the earlier sequencing allocation that reserves the
+reviewed static M33 source mapping to `HA-ATS-STAGE-B-001`: the M42 card and
+retarget decision's local-mapping qualifier, the M47 zero-enabled sequencing
+assertion, and the matching mapping clause in the pending human-action row.
+It does not supersede the M42 tuple or digest, M33 matching and durable
+ordering, the M47 runtime binding, the pending state of
+`HA-ATS-STAGE-B-001`, or any live authority. After acceptance, root records
+only those mechanical wording changes so that the human-action row continues
+to reserve authority-row provisioning and every execution action to Stage B.
+
 ## Fixed ATS_CREATE authority
 
 The only configured operation is one `ATS_CREATE` on Hedera Testnet:
@@ -79,13 +93,15 @@ attachment, a `deployBond` execution boundary, a provider/wallet connection,
 Convex publication, a `commandAuthorities` row, a host, a transaction, or
 receipt/finality observation.
 
-Before a separate live Stage-B decision can be requested, three independently
-reviewed successors must first define and accept:
+Before a separate live Stage-B decision can be requested, independently
+reviewed work must define the exact browser/provider transaction-execution
+boundary and the exact rehearsal commit and named host/runtime proof.
 
-1. the exact ATS_CREATE receipt observation, documented created-address field,
-   candidate binding, and M40 state transition;
-2. the exact browser/provider transaction-execution boundary; and
-3. the exact rehearsal commit and named host/runtime proof.
+The live Stage-B packet must still require redacted transaction and finality
+evidence. Positive local `ATS_CREATE` receipt verification, its documented
+created-address field, candidate binding, and any M40 transition remain a
+separately reviewed post-Stage-B successor. They are neither a prerequisite to
+this source-only mapping nor an implicit part of Stage B.
 
 That later packet must state the bounded fee cap, stop conditions, no-retry
 rule, and a single permitted `ATS_CREATE` transaction. It must not authorize
@@ -98,10 +114,15 @@ complete mappings and verification rules.
 > I approve HA-ATS-M33-ENABLEMENT-001 exactly as recorded in
 > `docs/work-queue/evidence/HA-ATS-STAGE-B-001-recommended-decision-v2.md`.
 > I approve only the Phase-A local source-only M33 ATS_CREATE enablement work
-> described here. I reject every live, provider, wallet, authority-row,
-> deployment, host, transaction, candidate, receipt, finality, funding, and
-> lifecycle action. HA-ATS-STAGE-B-001 remains PENDING and untouched. I reject
-> all implicit defaults and all operations not expressly listed.
+> described here. This supersedes only the earlier allocation of that reviewed
+> static source mapping to HA-ATS-STAGE-B-001, including only the named M42,
+> M47, and human-action sequencing clauses. I reject every live, provider,
+> wallet, authority-row, deployment, host, transaction, candidate, receipt
+> verifier, funding, and lifecycle action. HA-ATS-STAGE-B-001 remains PENDING
+> and is the only execution gate; its transaction/finality evidence requirement
+> remains in force. Positive ATS_CREATE verification and M40 readiness remain
+> separately reviewed post-Stage-B work. I reject all implicit defaults and all
+> operations not expressly listed.
 
 Decision owner: `0xGeegZ`
 
