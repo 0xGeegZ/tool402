@@ -838,28 +838,28 @@ its independent task and two module reviews are recorded at
 change to any S21 source requires its own scoped authority; no active source
 path remains authorized by this completed corrective cycle.
 
-M47-T010 is a root-controlled `20-active` CORE_P0 correction comprising its
-card, specification, plan, reconciliation evidence, readiness and activation
-reviews, RED review, import-ledger row, catalog, State, decisions, reviews,
-commits, and pushes. Its accepted durable RED contract is limited to
+M47-T010 is an accepted `60-done` CORE_P0 runtime-binding correction. Its
+completed scope comprised its card, specification, plan, reconciliation
+evidence, readiness/activation/RED reviews, import-ledger row, catalog, State,
+decisions, reviews, commits, and pushes. Its durable RED contract covered
 `packages/backend/tests/stage-b-ats-create-runtime-binding.test.mjs`,
 `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`,
 `apps/web/tests/stage-b-ats-create-command-projection.test.mjs`,
 `apps/web/tests/command-bridge.test.mjs`, and
-`apps/web/tests/deploy-stage-signing.test.mjs`. Fresh independent RED
-acceptance authorizes only `packages/backend/convex/stage_b_ats_create_runtime_binding.ts`,
+`apps/web/tests/deploy-stage-signing.test.mjs`. Its completed source scope was
+`packages/backend/convex/stage_b_ats_create_runtime_binding.ts`,
 `packages/backend/convex/external_prepare_command_admission.ts`,
 `apps/web/src/lib/ats/stage-b-ats-create-command-projection.ts`,
 `apps/web/src/lib/wallet/command-bridge.ts`, and
-`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, with the
-five tests reserved for matching updates. The private admission amendment must
-run only after M32 has rebound and revalidated the durable signer authority and
-before M33, replay, idempotency, or state. The M42 real projection stays
-private; the browser may receive only its six fixed M26 fields. M33's manifest,
-M44's Factory helper, S16's display literal, packages, lockfiles, environment,
-public Backend exports, routes, and submission documents are not amendable. No
-authority provision, SDK, provider, wallet, network, transaction, candidate,
-or live path is authorized.
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, with those
+five tests. No active M47 source reservation remains; a future amendment needs
+a fresh scoped authority. The private admission binding remains ordered after
+M32 revalidation and before M33, replay, idempotency, or state; the M42 real
+projection stays private and the browser receives only its six fixed M26
+fields. M33's manifest, M44's Factory helper, S16's display literal, packages,
+lockfiles, environment, public Backend exports, routes, and submission documents
+remain excluded. No authority provision, SDK, provider, wallet, network,
+transaction, candidate, or live path is authorized.
 
 M48-T010 is a root-controlled accepted `60-done` CORE_P0 successor. Its committed
 control surface is its card, specification, plan, accepted human decision,
@@ -903,19 +903,43 @@ Backend/Convex, packages, lockfiles, environment, key, SDK, deployment, and
 every live provider/request/transaction/candidate/verification/lifecycle path
 remain excluded until their own authority gates.
 
-M44-T030 is a root-controlled `20-active` CORE_P0 corrective successor to
-accepted M44-T020. It comprises its card, specification, local plan, intake
-review, catalog, ownership, State, decisions, reviews, commits, and pushes.
-Its only future implementation paths are the narrow decoded-event amendment of
+M44-T030 is an accepted `60-done` CORE_P0 decoded-event correction to M44-T020.
+Its completed source is `8d019e599c320d951197d3a405d5fa3969958380`; no active
+reservation remains. It changed only
 `apps/web/src/lib/ats/factory-deploy-bond.ts` and
-`apps/web/tests/factory-deploy-bond.test.mjs`. The independent RED review of
-`8053346d9aa25e666bf0fe14a12a767d9be3cdb7` now authorizes only that test and
-`apps/web/src/lib/ats/factory-deploy-bond.ts` for matching local GREEN:
-validate a decoded non-zero EVM address before lowercase normalization while
-leaving trusted configuration parsing strict. The selected
-official Factory artifact and viem seam, every package/lockfile, SDK/browser
-compatibility, M47 path, provider, wallet, RPC, transaction, candidate,
-deployment, and live path are excluded.
+`apps/web/tests/factory-deploy-bond.test.mjs` after the independent RED review
+of `8053346d9aa25e666bf0fe14a12a767d9be3cdb7`: validate a decoded non-zero EVM
+address, then lowercase that valid event value while leaving trusted
+configuration parsing strict. Any future amendment requires a new scoped card.
+The selected official Factory artifact and viem seam, every package/lockfile,
+SDK/browser compatibility, M47 path, provider, wallet, RPC, transaction,
+candidate, deployment, and live path remain excluded.
+
+S26-T010 is an `00-inbox` POLISH card with no active source reservation. Its
+proposed new paths are `apps/web/src/components/wallet/wallet-session.tsx` and
+`apps/web/tests/wallet-session.test.mjs`; its root-only integration reservations
+are `apps/web/src/components/wallet/wallet-connect.tsx`, the header block and
+shell wrapper in `apps/web/src/app/layout.tsx`, the wallet block in
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, the
+conditional accepted `apps/web/src/components/backing/backing-flow.tsx` island
+mount, and only the named assertions in
+`apps/web/tests/deploy-stage-signing.test.mjs`,
+`apps/web/tests/static-shell.test.mjs`, and
+`apps/web/tests/shell-accessibility.test.mjs`. M49-T010 retains CORE_P0
+precedence over the shared signing-island path: S26 may not activate or amend
+it until M49 is accepted and S26 is freshly rebased. S26 adds no current wallet
+permission, provider request, signature, transaction, or live authority.
+
+S27-T010 is an `00-inbox` POLISH card with no active source reservation. Its
+proposed new test is `apps/web/tests/deploy-wizard-stepper.test.mjs`; its
+root-only integration reservations are the `StepProgress` function, caption,
+and badge in `apps/web/src/components/provider/deploy/provider-deploy-wizard.tsx`,
+the step-3 label in `apps/web/src/components/provider/deploy/provider-deploy-state.ts`,
+and only the named label/caption/progress assertions in
+`apps/web/tests/provider-deploy-state.test.mjs` and
+`apps/web/tests/provider-deploy-route.test.mjs`. It must follow S25's wizard
+amendment and remains disjoint from M49. S27 adds no provider, wallet,
+transaction, deployment, or live authority.
 
 S22-T010 is a root-owned early truth-first POLISH lane. Its first independently
 accepted GREEN scope comprised only `apps/web/src/app/page.tsx`,
