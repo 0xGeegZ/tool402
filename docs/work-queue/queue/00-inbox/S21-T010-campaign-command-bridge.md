@@ -5,8 +5,7 @@
 - Tier: CORE_P0
 - Queue state: 00-inbox
 - Dependencies: M26-T010 accepted, M30-T010 accepted, M38-T010 accepted,
-  S15-T010 accepted, S16-T010 (this batch; its amendments below wait for its
-  acceptance)
+  S15-T010 accepted, S16-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed new implementation paths
   are exactly `apps/web/src/lib/wallet/command-bridge.ts`,
@@ -88,7 +87,7 @@ stage has a durable admission to reach as soon as M41 lands.
   the focused assertions that name the single type, and one sentence in
   UI-S15. Domain, primary type, field order, nonce, timestamp, signature,
   body, and relay behavior are unchanged.
-- The S16 amendment waits for S16 acceptance and is limited to: the stage
+- The accepted S16 amendment is limited to: the stage
   control type gaining an enabled form whose activation opens the dialog for
   that stage; `providerDeployStageStates` accepting this session's reported
   results; the stages component rendering the enabled control; the wizard
@@ -103,9 +102,11 @@ stage has a durable admission to reach as soon as M41 lands.
   command.
 - Stage 4 needs `issuerRevenueAccount` and `clearingAccount` in its directory
   record. The accepted `HA-ISSUER-ACCOUNT-001` evidence records the issuer
-  account; no accepted record carries a clearing account. The root decides at
-  ready time whether the literal transcribes an accepted clearing account or
-  stage 4 stays `unavailable` with that reason. The bridge never invents one.
+  account; no accepted record carries a clearing account. Root decision
+  `D-S21-010-001` fixes the safe local default: the literal leaves
+  `clearingAccount` absent, the stage 4 builder refuses to produce a request,
+  and stage 4 remains `unavailable` with its recorded reason. The bridge never
+  invents one.
 
 ## Verification
 
@@ -137,14 +138,13 @@ that reports an offering state.
 
 ## Stage 4 control recommendation
 
-The card's ready requirements leave one root decision open: whether the
-directory record literal transcribes an accepted clearing account. No accepted
-record carries one. The recommended ruling is that the literal ships with
-`clearingAccount` absent, the stage 4 builder refuses to produce a request for
-an incomplete literal, and the stage 4 control stays `unavailable` with the
-reason "No accepted clearing account is recorded." until a later human-owned
-record supplies that account and a root amendment transcribes it. This keeps
-stages 1 through 3 deliverable now and invents nothing.
+Root decision `D-S21-010-001` adopts the safe local default: no accepted
+record carries a clearing account, so the literal ships with `clearingAccount`
+absent, the stage 4 builder refuses to produce a request for an incomplete
+literal, and the stage 4 control stays `unavailable` with the reason "No
+accepted clearing account is recorded." until a later human-owned record
+supplies that account and a root amendment transcribes it. This keeps stages 1
+through 3 deliverable now and invents nothing.
 
 ## Human worktree lane request
 

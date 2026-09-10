@@ -673,6 +673,22 @@ branch is unreviewed and has no ownership or implementation authority. No client
 state, timer, command, write, Mirror/chain read, wallet, provider, payment,
 transaction, deployment, or live path is authorized.
 
+S21-T010 remains a root-controlled `00-inbox` CORE_P0 record pending its own
+independent readiness review. Its future-only Web reservation is exactly
+`apps/web/src/lib/wallet/command-bridge.ts`,
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`,
+`apps/web/src/components/provider/deploy/directory-record-literal.ts`,
+`apps/web/tests/command-bridge.test.mjs`, and
+`apps/web/tests/deploy-stage-signing.test.mjs`. Under root integration
+reservation only, it may make the exact S15 command-type/UI/test amendments
+and S16 deploy-state, stages, wizard, and focused-test amendments named in its
+local card and `docs/ui/UI-S21.md`. This reservation is disjoint from S17's
+provider-status paths and M44's ATS action path; S21 owns neither. Its stage 4
+literal must keep `clearingAccount` absent under `D-S21-010-001`, with no
+request built and the stage unavailable. No source, wallet, provider, SDK,
+configuration, durable write, transaction, deployment, or live path is
+authorized until a separate ready, activation, and RED cycle accepts it.
+
 S22-T010 is a root-owned post-rehearsal POLISH intake comprising only its card,
 `docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog,
 decisions, this ownership record, reviews, commits, and pushes. It owns no
