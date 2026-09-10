@@ -22,8 +22,27 @@ const expectedProjection = Object.freeze({
   expectedTarget: "0xd1f118a40f3b02883d35909ef2517e7edd78379d",
   canonicalParametersHash: realCanonicalParametersHash,
 });
+const moduleLoaderTrivia = String.raw`(?:\s|/\*[\s\S]*?\*/|//[^\r\n]*)*`;
+const staticModuleLoader = new RegExp(
+  String.raw`\bimport\b${moduleLoaderTrivia}(?:["'{*]|[A-Za-z_$])`,
+  "mu",
+);
+const dynamicModuleLoader = new RegExp(
+  String.raw`\bimport\b${moduleLoaderTrivia}\(`,
+  "u",
+);
+const requireModuleLoader = new RegExp(
+  String.raw`\brequire\b${moduleLoaderTrivia}\(`,
+  "u",
+);
 let moduleExports;
 let stageBAtsCreateCommandProjection;
+
+function assertNoPrivateModuleLoader(source) {
+  assert.doesNotMatch(source, staticModuleLoader);
+  assert.doesNotMatch(source, dynamicModuleLoader);
+  assert.doesNotMatch(source, requireModuleLoader);
+}
 
 test("requires the declared public M47 Stage-B command projection source module", () => {
   assert.equal(sourceExists, true, `missing declared source module: ${sourcePath}`);
@@ -75,12 +94,40 @@ implementedTest("contains no owner, authority, SDK, descriptor, parameter, or pr
 
 implementedTest("keeps the browser projection inert and free of configuration, provider, or network authority", () => {
   const source = readFileSync(sourceUrl, "utf8");
-  const moduleLoaderTrivia = String.raw`(?:\s|/\*[\s\S]*?\*/|//[^\r\n])*`;
-  assert.doesNotMatch(source, new RegExp(String.raw`^\s*import\b${moduleLoaderTrivia}(?:["'{*]|[A-Za-z_$])`, "mu"));
-  assert.doesNotMatch(source, new RegExp(String.raw`\bimport\b${moduleLoaderTrivia}\(`, "u"));
-  assert.doesNotMatch(source, new RegExp(String.raw`\brequire\b${moduleLoaderTrivia}\(`, "u"));
+  assertNoPrivateModuleLoader(source);
   assert.doesNotMatch(
     source,
     /\b(?:process\s*\.\s*env|import\.meta\.env|fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|window|ethereum|MetaMask|wagmi|WalletConnect|createWalletClient|createPublicClient|@hashgraph|convex|operationDescriptor|diamondOwnerAccount|plannedCommandAuthority|principalPublicId|authorityVersion|sdk(?:Package|Version|Integrity)|resolver(?:HederaId|EvmAddress))\b/u,
   );
+});
+
+test("private-loader guard rejects static, dynamic, and require mutations across comment separators", () => {
+  const mutations = [
+    [
+      "same-line static import after preceding JavaScript",
+      'const inert = 1; import { value } from "private";',
+    ],
+    ["normal static import", 'import { value } from "private";'],
+    ["block-comment static import", 'import /* private loader */ { value } from "private";'],
+    [
+      "line-comment static import",
+      'import // arbitrary same-line loader commentary\n{ value } from "private";',
+    ],
+    ["normal dynamic import", 'import("private");'],
+    ["block-comment dynamic import", 'import /* private loader */ ("private");'],
+    [
+      "line-comment dynamic import",
+      'import // arbitrary same-line loader commentary\n("private");',
+    ],
+    ["normal require", 'require("private");'],
+    ["block-comment require", 'require /* private loader */ ("private");'],
+    [
+      "line-comment require",
+      'require // arbitrary same-line loader commentary\n("private");',
+    ],
+  ];
+
+  for (const [name, mutatedSource] of mutations) {
+    assert.throws(() => assertNoPrivateModuleLoader(mutatedSource), undefined, name);
+  }
 });
