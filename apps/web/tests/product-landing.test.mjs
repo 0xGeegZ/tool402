@@ -64,7 +64,10 @@ test("offers only the specified current local CTA destinations", async () => {
     ["/explore", "Explore tools"],
     ["/demo", "Open guided demo"],
     ["/explore", "Browse all tools →"],
+    ["/explore", "Explore tools"],
+    ["/demo", "Open guided demo"],
     ["/provider/deploy", "Prepare a tool offering"],
+    ["/provider", "Provider overview"],
     ["/explore", "Explore tools"],
     ["/explore/riskscan", "RiskScan"],
     ["/demo", "Guided demo"],
@@ -73,11 +76,9 @@ test("offers only the specified current local CTA destinations", async () => {
     ["/", "Home"],
     ["/dashboard", "Workspace"],
   ]);
-  assert.match(landing, /const marketplaceCards = \[/);
-  assert.match(landing, /href=\{card\.href\}/);
+  assert.match(landing, /href=\{campaign\.href\}/);
   assert.match(landing, /route: "\/explore\/riskscan"/);
-  assert.match(landing, /route: "\/explore"/);
-  assert.match(landing, /route: "\/provider\/deploy"/);
+  assert.match(landing, /route: "\/provider"/);
   assert.doesNotMatch(landing, /<Link\b[^>]*>\s*<Button\b/);
 });
 
@@ -96,6 +97,8 @@ test("keeps the fuller footer limited to existing local routes", async () => {
     ["/", "Home"],
     ["/dashboard", "Workspace"],
   ]);
+  assert.match(footer, /Hedera testnet prototype/);
+  assert.doesNotMatch(footer, /new Date\s*\(/);
   assert.doesNotMatch(footer, /(?:https?:\/\/|\/api\/)/i);
 });
 
@@ -106,12 +109,16 @@ test("keeps each repeated step heading subordinate to the how-it-works heading",
   assert.doesNotMatch(sections, /<CardTitle>\{step\.title\}<\/CardTitle>/);
 });
 
-test("keeps the three catalogue cards readable and route-backed", async () => {
+test("keeps campaign cards limited to current routes and truthful preparation states", async () => {
   const sections = await readAppFile("src/components/landing/landing-sections.tsx");
 
-  assert.match(sections, /description: "A bounded assessment route/);
-  assert.match(sections, /className="min-h-16 text-sm leading-6 text-muted-foreground">\{card\.description\}/);
+  assert.match(sections, /const campaignCards = \[/);
+  assert.match(sections, /name: "RiskScan"/);
+  assert.match(sections, /name: "EntityCheck France"/);
+  assert.match(sections, /status: "Campaign preview"/);
+  assert.match(sections, /Campaign preparation/);
   assert.match(sections, /grid grid-cols-2 gap-4 rounded-\[var\(--radius\)\] border border-dashed/);
+  assert.doesNotMatch(sections, /RiskScan Quick|No public route/);
 });
 
 test("keeps the selected visual asset decorative, local, and free of unsupported claims", async () => {

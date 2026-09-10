@@ -5,7 +5,7 @@ import { Logo } from "../tool402/logo";
 
 export function LandingFooter() {
   return (
-    <footer className="border-y border-border py-12">
+    <footer className="border-t border-border py-12">
       <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between lg:gap-16">
         <div className="relative max-w-xs space-y-3">
           <Logo className="h-7" />
@@ -46,6 +46,10 @@ export function LandingFooter() {
             </p>
           </aside>
         </div>
+      </div>
+      <div className="mt-10 flex flex-col gap-3 border-t border-border pt-6 text-xs leading-relaxed text-muted-foreground lg:flex-row lg:items-center lg:justify-between lg:gap-8">
+        <p>© 2026 Tool402. Hedera testnet prototype.</p>
+        <p className="max-w-xl lg:text-right">Current local routes are labelled with their boundaries.</p>
       </div>
     </footer>
   );

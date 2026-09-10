@@ -30,8 +30,8 @@ function countsFor(field: "category" | "status" | "access") {
 
 export function ExploreCatalog() {
   return (
-    <section className="grid gap-8 lg:grid-cols-[14rem_minmax(0,1fr)]" aria-label="Tool catalog">
-      <aside className="space-y-6 rounded-[var(--radius)] border bg-card p-5 shadow-sm">
+    <section className="grid gap-8 border-t border-border pt-10 lg:grid-cols-[19.5rem_minmax(0,1fr)]" aria-label="Tool catalog">
+      <aside className="space-y-7 rounded-[calc(var(--radius)*2)] border bg-card p-5 shadow-sm">
         <div className="space-y-1">
           <p className="text-sm font-semibold">Browse tools</p>
           <p className="text-sm leading-6 text-muted-foreground">A static view of the journeys currently ready to inspect.</p>
@@ -64,7 +64,7 @@ export function ExploreCatalog() {
         })}
       </aside>
 
-      <div className="min-w-0 space-y-5">
+      <div className="min-w-0 space-y-6">
         <div className="flex items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
             {CATALOG.length} tool
@@ -72,9 +72,9 @@ export function ExploreCatalog() {
           <Badge variant="outline">Read-only catalog</Badge>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <RiskScanDiscoveryCard />
-          <Card className="border-dashed bg-transparent shadow-none">
+          <Card className="min-h-[25rem] rounded-[calc(var(--radius)*2)] border-dashed bg-transparent shadow-none">
             <CardHeader className="gap-4">
               <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-[var(--radius)] bg-secondary text-secondary-foreground">
                 <svg viewBox="0 0 16 16" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.75}>

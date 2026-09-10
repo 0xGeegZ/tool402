@@ -65,15 +65,18 @@ function directPageLinkViolations(source) {
 
 test("renders labeled navigation between the committed local routes", async () => {
   const navigation = await readAppFile("src/components/discovery/local-navigation.tsx");
+  const layout = await readAppFile("src/app/layout.tsx");
 
   assert.match(navigation, /<nav\b[^>]*aria-label=["']Main navigation["']/);
-  assert.match(navigation, /\{ href: "\/", label: "Home" \}/);
-  assert.match(navigation, /\{ href: "\/explore", label: "Explore" \}/);
-  assert.match(navigation, /\{ href: "\/dashboard", label: "Workspace" \}/);
-  assert.match(navigation, /\{ href: "\/demo", label: "Demo" \}/);
-  assert.match(navigation, /\{ href: "\/provider", label: "Provider" \}/);
+  assert.match(navigation, /\{ href: "\/explore", label: "Explore tools" \}/);
+  assert.match(navigation, /\{ href: "\/#how-it-works", label: "How it works" \}/);
+  assert.match(navigation, /\{ href: "\/demo", label: "Guided demo" \}/);
+  assert.match(navigation, /\{ href: "\/provider", label: "For providers" \}/);
   assert.match(navigation, /<Link href=\{link\.href\}/);
-  assert.doesNotMatch(navigation, /\{ href: "(?!\/"|\/explore"|\/dashboard"|\/demo"|\/provider")[^"]+/);
+  assert.doesNotMatch(navigation, /\{ href: "(?!\/explore"|\/#how-it-works"|\/demo"|\/provider")[^"]+/);
+  assert.match(layout, /<Link href="\/" aria-label="Tool402 home"/);
+  assert.match(layout, /<Link href="\/provider\/deploy"/);
+  assert.match(layout, />\s*Prepare a tool\s*</);
 });
 
 test("renders a single landing main landmark and page heading", async () => {

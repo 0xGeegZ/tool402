@@ -26,7 +26,7 @@ test("gives the reconciled landing the selected five-part marketplace hierarchy"
   assert.deepEqual(sectionLabels, [
     "landing-title",
     "how-it-works-title",
-    "riskscan-feature-title",
+    "campaigns-title",
     "inspectable-scope-title",
     "provider-path-title",
   ]);

@@ -145,7 +145,7 @@ test("defines the one-entry static Explore catalog without interactive controls"
   assert.match(source, /More tools to come/);
   assert.match(source, /New tools appear here once their journey is accepted\./);
   assert.match(source, /<RiskScanDiscoveryCard\s*\/>/);
-  assert.match(source, /lg:grid-cols-\[14rem_minmax\(0,1fr\)\]/);
+  assert.match(source, /lg:grid-cols-\[19\.5rem_minmax\(0,1fr\)\]/);
   assert.match(source, /\bmin-w-0\b/);
   assert.match(source, /\bsm:grid-cols-2\b/);
   assert.deepEqual(jsxViolations(sourceFile), []);
