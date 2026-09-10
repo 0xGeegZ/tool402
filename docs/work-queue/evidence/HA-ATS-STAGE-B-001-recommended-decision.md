@@ -2,25 +2,17 @@
 
 ## Status and scope
 
-**DRAFT — requested by HI-009, not yet accepted.** This packet is prepared
-ahead of time so the Stage B GO can be issued without delay once its
-predecessors are accepted. It became a request when HI-009 cited it and
-becomes authority only when the human operator accepts it and the root records
-that acceptance as a decision row and the updated human-action row.
+**DRAFT — not yet requested.** This packet is prepared ahead of time so the
+Stage B GO can be issued without delay once its predecessors are accepted. It
+becomes a request only when a later human intake card cites it, and authority
+only when the human operator accepts it and the root records that acceptance
+as a decision row and the updated human-action row.
 
 - Prepared: 2026-09-09 by the human operator's delegated session.
-- Amended: 2026-09-10 by the same session; see the amendment history below.
 - Decision owner on acceptance: human operator (repository owner).
-- Source preconditions, all accepted at the time of the amendment: M41-T010,
-  M43-T010, M44-T020 with M44-T030, M47-T010, and S21-T010.
-- Remaining precondition before acceptance: the two successor cards that
-  HI-009 asks the root to catalogue (one enabled `ATS_CREATE` manifest record;
-  Factory `deployBond` execution and candidate capture in the deploy wizard)
-  exist in the catalog. Acceptance of this packet is what gates their ready
-  state, so it must not wait for their acceptance.
-- Preconditions before execution: both successor cards accepted, and
-  `HA-PUBLIC-DEPLOY-001` recorded or an explicitly named local host for the
-  rehearsal.
+- Preconditions before this packet may be requested: M41-T010, M43-T010,
+  M44-T020, M47-T010, and S21-T010 accepted; `HA-PUBLIC-DEPLOY-001` recorded,
+  or an explicitly named local host for the rehearsal.
 
 ## What Stage B authorizes, exactly
 
@@ -42,22 +34,18 @@ that acceptance as a decision row and the updated human-action row.
    the deploy wizard, then executes exactly one Factory `deployBond` call from
    MetaMask on Hedera Testnet through M44-T020's direct Factory artifact +
    viem seam, with the revenue-note parameters transcribed in the accepted M42
-   projection. Transaction cap: exactly one Factory `deployBond`, attempted at
-   most once. No other contract call is authorized. Total HBAR spend cap for
-   the rehearsal, fees included: 50 HBAR from the issuer account
-   `0.0.10430887`.
-4. **Candidate attachment.** The wizard captures the candidate as the mirror
-   form transaction id and the `BondDeployed` address, and the provider signs
-   the `external.attachCandidate` command in stage 3. The rehearsal's terminal
-   state is a `SUBMITTED` attempt with the candidate attached and the offering
-   at `ASSET_PENDING`. No verification action is invoked under this authority:
-   `verifyAtsCandidateReceipt` returns `NOT_CONFIGURED` for `ATS_CREATE` until
-   the M43 successor is separately accepted, and the offering does not become
-   `READY` during the rehearsal.
-
-Control-list and lifecycle operations (`ATS_CONTROL_LIST`, `ATS_ISSUE`) are
-outside this authority. They have no manifest mapping, calldata encoder, or
-wizard stage and are deferred to post-rehearsal cards.
+   projection. Transaction cap: one Factory `deployBond`, one `ATS_CONTROL_LIST`, and one
+   declared lifecycle operation, each attempted at most once. Total HBAR
+   spend cap for the rehearsal, fees included: 50 HBAR from the issuer
+   account `0.0.10430887`.
+4. **Receipt attachment and verification.** The candidate is attached through
+   the signed `external.attachCandidate` command, and the M43 verification
+   reads Mirror Node for finality. The offering becomes `READY` only from a
+   `CONFIRMED` verification record.
+5. **One lifecycle operation.** After `READY`, one `ATS_CONTROL_LIST` update
+   (whitelist the issuer's own account) and one declared lifecycle operation,
+   named here as `ATS_ISSUE` of the minimum unit to the issuer's own account,
+   each through the same prepare, execute, attach, verify path.
 
 ## Stop conditions and no-retry handling
 
@@ -71,9 +59,8 @@ wizard stage and are deferred to post-rehearsal cards.
   checks the provider status route and Mirror Node before anything else and
   never signs the same stage again with a fresh nonce until that check is
   recorded.
-- The rehearsal ends at `ASSET_PENDING` by design. Nobody marks the asset
-  ready or narrates the offering as live; the demo shows the attached
-  candidate and its Mirror Node evidence as a truthful pending state.
+- A verification that lands anywhere but `CONFIRMED` leaves the offering in
+  `ASSET_PENDING`. The rehearsal ends there as a truthful stopping point.
 
 ## Evidence the operator records
 
@@ -83,6 +70,7 @@ wizard stage and are deferred to post-rehearsal cards.
   address, and the Mirror Node links for the transaction and the contract.
 - The offering public id, its state transitions with timestamps as the
   provider status route reports them, and the directory version published.
+- The control-list and lifecycle transaction ids with their Mirror Node links.
 - A statement that no key, signed payload, or funded secret entered any
   tracked file, transcript, or chat.
 
@@ -92,13 +80,3 @@ At most 50 HBAR of testnet funds and one afternoon. A failed or partial
 rehearsal leaves truthful `ASSET_PENDING` or `unknown` states that the demo
 can show as such; nothing false is recorded because no state advances without
 a verified record.
-
-## Amendment history
-
-- 2026-09-10, with HI-009: the accepted source has an empty M33 manifest, a
-  disabled `AtsCreateAction` with no transaction or candidate path, and an M43
-  verification that returns `NOT_CONFIGURED` for every ATS operation. The
-  transaction cap is reduced to exactly one Factory `deployBond`, step 4 now
-  ends at `ASSET_PENDING` without verification, the lifecycle step is removed,
-  and the preconditions name the two successor cards HI-009 requests. The
-  spend cap, stop conditions, and no-retry handling are unchanged.
