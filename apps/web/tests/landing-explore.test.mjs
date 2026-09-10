@@ -84,6 +84,20 @@ test("renders labeled navigation between the committed local routes", async () =
   assert.match(layout, />\s*Prepare a tool\s*</);
 });
 
+test("keeps the shared shell compact while preserving the two truthful notices", async () => {
+  const [navigation, layout] = await Promise.all([
+    readAppFile("src/components/discovery/local-navigation.tsx"),
+    readAppFile("src/app/layout.tsx"),
+  ]);
+
+  assert.match(layout, /min-h-7/);
+  assert.match(layout, /min-h-6/);
+  assert.match(layout, /min-h-14/);
+  assert.doesNotMatch(layout, /\bshadow-sm\b/);
+  assert.match(navigation, /hover:bg-secondary/);
+  assert.match(navigation, /px-3 py-1\.5 text-\[12px\]/);
+});
+
 test("renders a single landing main landmark and page heading", async () => {
   const [page, hero] = await Promise.all([
     readAppFile("src/app/page.tsx"),
