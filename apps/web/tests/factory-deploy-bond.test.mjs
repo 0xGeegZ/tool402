@@ -165,6 +165,17 @@ function artifactParameter(parameter) {
   };
 }
 
+function createBondDeployedLog(bondAddress) {
+  const request = api.buildFactoryDeployBondRequest(createConfiguration(), { issuerEvmAddress: issuer });
+  const event = factoryArtifact.abi.find((entry) => entry.type === "event" && entry.name === "BondDeployed");
+  assert.ok(event, "the official artifact must expose BondDeployed");
+  const nonIndexed = event.inputs.filter((input) => !input.indexed).map(artifactParameter);
+  return {
+    data: encodeAbiParameters(nonIndexed, [bondAddress, request.bondData, request.factoryRegulationData]),
+    topics: encodeEventTopics({ abi: factoryArtifact.abi, eventName: "BondDeployed", args: { deployer: issuer } }),
+  };
+}
+
 test("requires the declared direct Factory source before GREEN", () => {
   assert.equal(sourceExists, true, `missing declared M44 direct Factory source: ${sourcePath}`);
 });
@@ -246,17 +257,37 @@ implementedTest("rejects every missing or surplus accepted configuration field b
   }
 });
 
-implementedTest("decodes the official BondDeployed event from artifact-derived topics and data", () => {
-  const request = api.buildFactoryDeployBondRequest(createConfiguration(), { issuerEvmAddress: issuer });
-  const event = factoryArtifact.abi.find((entry) => entry.type === "event" && entry.name === "BondDeployed");
-  assert.ok(event, "the official artifact must expose BondDeployed");
-  const deployedBond = "0x1111111111111111111111111111111111111111";
-  const nonIndexed = event.inputs.filter((input) => !input.indexed).map(artifactParameter);
-  const data = encodeAbiParameters(nonIndexed, [deployedBond, request.bondData, request.factoryRegulationData]);
-  const topics = encodeEventTopics({ abi: factoryArtifact.abi, eventName: "BondDeployed", args: { deployer: issuer } });
+implementedTest("canonicalizes a valid EIP-55 BondDeployed address decoded from the official artifact", () => {
+  const checksummedAddress = "0x52908400098527886E0F7030069857D2E4169EE7";
 
-  assert.deepEqual(api.decodeBondDeployed({ data, topics }), { evmAddress: deployedBond });
-  assert.throws(() => api.decodeBondDeployed({ data: "0x", topics: [] }));
+  assert.deepEqual(
+    api.decodeBondDeployed(createBondDeployedLog(checksummedAddress)),
+    { evmAddress: "0x52908400098527886e0f7030069857d2e4169ee7" },
+  );
+});
+
+implementedTest("keeps lowercase BondDeployed event output canonical", () => {
+  const lowercaseAddress = "0x52908400098527886e0f7030069857d2e4169ee7";
+
+  assert.deepEqual(api.decodeBondDeployed(createBondDeployedLog(lowercaseAddress)), { evmAddress: lowercaseAddress });
+});
+
+implementedTest("rejects zero, malformed, and wrong BondDeployed logs", () => {
+  const validLog = createBondDeployedLog("0x52908400098527886e0f7030069857d2e4169ee7");
+  const zeroLog = createBondDeployedLog(zeroAddress);
+  const wrongEventTopics = [`0x${"ff".repeat(32)}`, ...validLog.topics.slice(1)];
+
+  assert.throws(() => api.decodeBondDeployed(zeroLog));
+  assert.throws(() => api.decodeBondDeployed({ data: "0x1234", topics: validLog.topics }));
+  assert.throws(() => api.decodeBondDeployed({ data: validLog.data, topics: wrongEventTopics }));
+  assert.throws(() => api.decodeBondDeployed({ data: validLog.data, topics: [] }));
+});
+
+implementedTest("keeps trusted configuration addresses lowercase-only", () => {
+  assert.throws(() => api.buildFactoryDeployBondRequest(
+    createConfiguration(),
+    { issuerEvmAddress: "0xC89f87052c3e080B4A9b021d4930055031EF378E" },
+  ));
 });
 
 implementedTest("normalizes only valid candidate ids to the HI-007 mirror wire form", () => {
