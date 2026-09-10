@@ -18,8 +18,10 @@ The only ABI is imported from:
 
 The package is pinned exactly to `8.0.0` with integrity
 `sha512-OGxFWfb0FTaQtRSqETDGBPdxakYt0L/L2A5OgVlBtBCqs/Pz74NTLpqzPw/QOnOnhWiLLo9wYCKNze7sz5B8iQ==`.
-The published artifact defines the Factory target and its `deployBond` ABI;
-M44 never duplicates or transcribes that ABI.
+The published artifact defines `deployBond` and its ABI only. The Factory
+target is the accepted M42 `expectedTarget`
+`0xd1f118a40f3b02883d35909ef2517e7edd78379d`; M44 never duplicates or
+transcribes the ABI.
 
 ## Local pure seam
 
@@ -30,17 +32,53 @@ returns a detached artifact-shaped request. It has no environment, Backend,
 S16 display-literal, storage, fetch, wallet, provider, RPC, signer,
 simulation, transaction, or durable-write access.
 
-The request fixes all data only from accepted M42 configuration:
+The input is the complete accepted Stage-B issuer configuration: M42 frozen
+values plus the accepted canonical issuer. The following closed table is the
+complete mapping. Each left-hand path is an artifact tuple field and every
+right-hand item is a required input or fixed upstream compatibility value; no
+other field or implicit default is permitted.
 
-- Factory target `0xd1f118a40f3b02883d35909ef2517e7edd78379d`, resolver
-  `0xba2d5fc2083a0b8f164c50e65d782087fba18e0a`, configuration key/version,
-  issuer, `DEFAULT_ADMIN_ROLE`, canonical issuer membership, supply and ERC20
-  metadata.
-- `BondData.security`, `bondDetails`, all external list arrays, proceeds, bond
-  currency, nominal value, dates, regulation type and subtype.
-- The M42-omitted `complianceId` and `identityRegistryId` are ABI-required
-  `0x0000000000000000000000000000000000000000`. This is the upstream
-  `deployBondFromFactory` compatibility mapping, not a Tool402 default.
+| Artifact tuple path | Exact mapping |
+|---|---|
+| Factory `address` | `expectedTarget` (`0xd1f118a40f3b02883d35909ef2517e7edd78379d`) |
+| `BondData.security.resolver` | `resolverEvmAddress` (`0xba2d5fc2083a0b8f164c50e65d782087fba18e0a`) |
+| `BondData.security.maxSupply` | `parameters.numberOfUnits` |
+| `BondData.security.resolverProxyConfiguration.key` | `parameters.configId` |
+| `BondData.security.resolverProxyConfiguration.version` | `parameters.configVersion` |
+| `BondData.security.erc20MetadataInfo.name` | `parameters.name` |
+| `BondData.security.erc20MetadataInfo.symbol` | `parameters.symbol` |
+| `BondData.security.erc20MetadataInfo.isin` | `parameters.isin` |
+| `BondData.security.erc20MetadataInfo.decimals` | `parameters.decimals` |
+| `BondData.security.rbacs[0].role` | upstream `DEFAULT_ADMIN_ROLE` (`0x0000000000000000000000000000000000000000000000000000000000000000`) |
+| `BondData.security.rbacs[0].members` | one canonical issuer: `parameters.diamondOwnerAccount`, equal to the Stage-B signer |
+| `BondData.security.externalPauses` | `parameters.externalPausesIds` |
+| `BondData.security.externalControlLists` | `parameters.externalControlListsIds` |
+| `BondData.security.externalKycLists` | `parameters.externalKycListsIds` |
+| `BondData.security.compliance` | `0x0000000000000000000000000000000000000000` for omitted `complianceId` |
+| `BondData.security.identityRegistry` | `0x0000000000000000000000000000000000000000` for omitted `identityRegistryId` |
+| `BondData.security.arePartitionsProtected` | `parameters.arePartitionsProtected` |
+| `BondData.security.isMultiPartition` | `parameters.isMultiPartition` |
+| `BondData.security.isControllable` | `parameters.isControllable` |
+| `BondData.security.isWhiteList` | `parameters.isWhiteList` |
+| `BondData.security.clearingActive` | `parameters.clearingActive` |
+| `BondData.security.internalKycActivated` | `parameters.internalKycActivated` |
+| `BondData.security.erc20VotesActivated` | `parameters.erc20VotesActivated` |
+| `BondData.bondDetails.currency` | `parameters.currency` |
+| `BondData.bondDetails.nominalValue` | `parameters.nominalValue` |
+| `BondData.bondDetails.nominalValueDecimals` | `parameters.nominalValueDecimals` |
+| `BondData.bondDetails.startingDate` | `parameters.startingDate` |
+| `BondData.bondDetails.maturityDate` | `parameters.maturityDate` |
+| `BondData.proceedRecipients` | `parameters.proceedRecipientsIds` |
+| `BondData.proceedRecipientsData` | `parameters.proceedRecipientsData` |
+| `FactoryRegulationData.regulationType` | `parameters.regulationType` |
+| `FactoryRegulationData.regulationSubType` | `parameters.regulationSubType` |
+| `FactoryRegulationData.additionalSecurityData.countriesControlListType` | `parameters.isCountryControlListWhiteList` |
+| `FactoryRegulationData.additionalSecurityData.listOfCountries` | `parameters.countries` |
+| `FactoryRegulationData.additionalSecurityData.info` | `parameters.info` |
+
+The two zero-address rows reproduce the official upstream
+`deployBondFromFactory` compatibility mapping for ABI-required values deliberately
+omitted by M42. They are not Tool402 economic or configuration defaults.
 
 `encodeFactoryDeployBond` calls `viem.encodeFunctionData` with the imported
 artifact's `abi`, `functionName: "deployBond"`, and the two exact tuples. Its

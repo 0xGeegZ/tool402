@@ -14,6 +14,16 @@
   reservation covers `apps/web/package.json`, `package-lock.json`,
   `apps/web/next.config.ts`, the existing static-shell dependency assertion,
   and the one existing stage-three mount only to remove the SDK experiment.
+  Exact historical removals are `apps/web/src/lib/ats/create-bond-request.ts`,
+  `apps/web/src/lib/ats/ats-client.ts`,
+  `apps/web/src/lib/ats/browser/dotenv-mock.ts`,
+  `apps/web/src/lib/ats/browser/winston-mock.ts`,
+  `apps/web/tests/create-bond-request.test.mjs`,
+  `apps/web/tests/ats-client.test.mjs`, and
+  `apps/web/tests/ats-sdk-bundle-gate.test.mjs`; the bounded
+  `next.config.ts` aliases, `serverExternalPackages`, package pin, strict
+  static-shell assertion, and stage-three `ats-create-action.tsx` import are
+  replaced, not extended.
 - Human actions: HA-ATS-CONTRACTS-VIEM-001 is local architecture authority;
   HA-ATS-STAGE-B-001 remains pending and is the only execution authority.
 

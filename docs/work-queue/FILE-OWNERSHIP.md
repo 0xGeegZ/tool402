@@ -624,9 +624,17 @@ selected execution architecture. M44-T020 reserves its new pure
 bundle-gate tests, the existing disabled `ats-create-action.tsx`, and (under
 root integration) `apps/web/package.json`, `package-lock.json`,
 `apps/web/tests/static-shell.test.mjs`, and `apps/web/next.config.ts`. Its
-first accepted RED contract may remove only the M44-T010 SDK source/tests,
-pin, mocks, aliases, and BBS externalization while adding only the exact
-official contracts artifact and existing viem seam. It owns no wallet,
+first accepted RED contract may remove only
+`apps/web/src/lib/ats/create-bond-request.ts`,
+`apps/web/src/lib/ats/ats-client.ts`,
+`apps/web/src/lib/ats/browser/dotenv-mock.ts`,
+`apps/web/src/lib/ats/browser/winston-mock.ts`,
+`apps/web/tests/create-bond-request.test.mjs`,
+`apps/web/tests/ats-client.test.mjs`, and
+`apps/web/tests/ats-sdk-bundle-gate.test.mjs`, plus the exact SDK pin,
+static-shell assertion, browser aliases, BBS externalization, and disabled
+action import. It may add only the exact official contracts artifact and
+existing viem seam. It owns no wallet,
 provider, RPC, signer, simulation, transaction, configuration bridge, durable
 attempt, candidate attachment, or M43 source. The older reservation is
 historical only and cannot authorize retained compatibility code.
