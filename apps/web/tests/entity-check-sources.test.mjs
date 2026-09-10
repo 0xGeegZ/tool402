@@ -567,15 +567,17 @@ implementedTest("fails closed for malformed sanctions metadata or CSV and uses t
   assert.equal(blankRows.kind, "read");
 });
 
-implementedTest("fails closed before a request when the injected clock is not finite and safe", async () => {
-  for (const now of [NaN, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+implementedTest("fails closed before a request when the injected clock is not Core-compatible", async () => {
+  for (const now of [NaN, Infinity, Number.MAX_SAFE_INTEGER + 1, 8_640_000_000_000_000]) {
     let calls = 0;
     const result = await api.readEntityCheckSources(request(), readConfiguration({
       ENTITYCHECK_SANCTIONS_URL: `https://sanctions.example.test/invalid-clock-${String(now)}.csv`,
     }), {
-      fetch: async () => {
+      fetch: async (input) => {
         calls += 1;
-        return registryResponse();
+        return input.hostname === "registry.example.test"
+          ? registryResponse()
+          : sanctionsResponse(sanctionsCsv(), { "last-modified": "Wed, 09 Sep 2026 12:00:00 GMT" });
       },
       now: () => now,
     });

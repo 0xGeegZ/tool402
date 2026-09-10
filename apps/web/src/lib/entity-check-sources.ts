@@ -234,6 +234,9 @@ function canonicalClock(dependencies: unknown): CanonicalClock | null {
       return null;
     }
     const timestamp = new Date(milliseconds).toISOString();
+    if (!isIsoTimestamp(timestamp)) {
+      return null;
+    }
     return Object.freeze({ milliseconds, timestamp });
   } catch {
     return null;

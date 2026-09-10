@@ -30,9 +30,11 @@ text other than the URL-encoded lookup value.
 
 Every source request uses `GET`, `credentials: "omit"`, `redirect: "error"`,
 and `cache: "no-store"`. The injected `now` dependency is a function returning
-a finite, safe Unix-millisecond value. Descriptors generated from that clock
-use `new Date(now()).toISOString()`; an invalid clock value makes the relevant
-read unavailable rather than producing an unparseable descriptor.
+a finite, safe Unix-millisecond value whose `toISOString()` result is a
+Core-compatible canonical four-digit-year timestamp. Descriptors generated
+from that clock use `new Date(now()).toISOString()`; an invalid clock value
+makes the relevant read unavailable rather than producing an unparseable
+descriptor.
 
 ## Registry read
 
