@@ -12,7 +12,8 @@
   `apps/web/src/lib/ats/ats-client.ts`,
   `apps/web/src/components/provider/deploy/ats-create-action.tsx`,
   `apps/web/tests/create-bond-request.test.mjs`, and
-  `apps/web/tests/ats-client.test.mjs`, plus one dependency pin recorded as an
+  `apps/web/tests/ats-client.test.mjs`, and the bounded bundle-gate test
+  `apps/web/tests/ats-sdk-bundle-gate.test.mjs`, plus one dependency pin recorded as an
   amendment under a root integration reservation in `apps/web/package.json`,
   the root `package-lock.json`, and `apps/web/tests/static-shell.test.mjs`.
 - Human actions: HA-ISSUER-ACCOUNT-001 is accepted only as bounded public
@@ -203,3 +204,19 @@ blocked: remove the experimental uncommitted changes, retain the RED contract,
 and require a new scoped authority before another bundle attempt. No trusted
 configuration, durable attempt, wallet/provider interaction, transaction,
 deployment, or live behavior is authorized.
+
+## HI-006 bundle retry authority
+
+The human GO recorded in `HI-006` and `D-M44-010-006` activates exactly one
+replacement bundle gate. Before any remaining M44 GREEN source, the root may
+pin the recorded official SDK, update its lockfile and strict static-shell
+assertion, create the dedicated bundle-gate test, and create one client island
+whose static root import is mounted exactly once at the stage-3 first substep
+of `/provider/deploy`. The control is disabled and observable only as
+unavailable; it calls no SDK method and reads no configuration. The retry
+passes only if Web typecheck, Webpack production build with Cache Components,
+emitted client-manifest/chunk inspection, and browser route evaluation show
+the real client graph and no uncaught import-time exception. On the first SDK
+or browser failure, stop and record that exact diagnostic. No shim, polyfill,
+patch, fork, alias, configuration bridge, durable attempt, wallet/provider
+interaction, transaction, deployment, or live behavior is authorized.

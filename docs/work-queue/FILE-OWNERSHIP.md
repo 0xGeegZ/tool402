@@ -581,15 +581,20 @@ client remain absent until that gate passes. No trusted configuration bridge,
 durable attempt, wallet/provider interaction, transaction, deployment, or live
 behavior is authorized.
 
-M44-T010's single bundle-gate experiment is exhausted and BLOCKED. Its
-uncommitted package pin, lockfile closure, static-shell assertion, and client
-island are removed; the existing RED files remain M44-owned. The root retains
-the package/lockfile reservation, but no M44 dependency, import, source, or
-mount change is authorized until a new scoped human decision identifies and
-independently verifies a compatible official SDK entry and a real
-non-executing client mount, or explicitly resolves the root-entry environment
-side effect. No trusted configuration bridge, durable attempt, wallet/provider
-interaction, transaction, deployment, or live behavior is authorized.
+The first M44 bundle-gate experiment was exhausted and removed because its
+island was unreachable. `D-M44-010-006` now reserves exactly one retry:
+`apps/web/package.json`, the root `package-lock.json`,
+`apps/web/tests/static-shell.test.mjs`,
+`apps/web/tests/ats-sdk-bundle-gate.test.mjs`, the new
+`apps/web/src/components/provider/deploy/ats-create-action.tsx`, and only
+`apps/web/src/components/provider/deploy/provider-deploy-stages.tsx` for its
+single stage-3-first-substep mount. The island may statically import only the
+official `@hashgraph/asset-tokenization-sdk@8.0.0` root and render a disabled
+unavailable control. It may not invoke the SDK, read or adapt configuration,
+construct a client, touch a wallet/provider, create a durable attempt, submit a
+transaction, or add a shim, polyfill, patch, fork, or alias. A Webpack build,
+client-manifest/chunk inspection, and browser import-evaluation proof decide
+the retry; an SDK failure stops the lane with its exact diagnostic.
 
 S20-T010 owns the new `apps/web/src/components/discovery/explore-catalog.tsx`
 and `apps/web/tests/explore-catalog.test.mjs`. The root integration reservation
