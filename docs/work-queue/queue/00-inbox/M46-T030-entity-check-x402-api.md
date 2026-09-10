@@ -4,8 +4,8 @@
 
 - Tier: CORE_P0
 - Queue state: 00-inbox
-- Dependencies: M02-T060 accepted, M06-T010 accepted; M46-T010 and M46-T020
-  (this batch) must be accepted before activation
+- Dependencies: M02-T060 accepted, M06-T010 accepted, M46-T010 accepted, and
+  M46-T020 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
   commits, and pushes. Proposed implementation paths are exactly
   `apps/web/src/lib/x402-protected-route.ts`,

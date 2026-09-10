@@ -5,9 +5,9 @@
 - Tier: CORE_P0
 - Queue state: 00-inbox
 - Dependencies: M02-T020 accepted, M11-T020 accepted, M29-T010 accepted,
-  M41-T010 (this batch), S16-T010 (this batch); S11-T010 (active at intake)
-  must be accepted before this card's navigation amendment, because S11 holds
-  the reserved integration pair over the same navigation file and test
+  M41-T010 accepted, S16-T010 accepted, and S11-T010 accepted. S11's
+  accepted navigation assertions remain a constrained root integration
+  boundary for this card.
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
   exactly `apps/web/src/app/provider/page.tsx`,
@@ -18,10 +18,11 @@
   `apps/web/tests/provider-status.test.mjs`, and
   `apps/web/tests/offerings-api.test.mjs`, plus one navigation entry added as an
   amendment under a root integration reservation to
-  `apps/web/src/components/discovery/local-navigation.tsx` and to the two
-  accepted tests that assert the exact navigation list,
-  `apps/web/tests/workspace-shell.test.mjs` and
-  `apps/web/tests/landing-explore.test.mjs`.
+  `apps/web/src/components/discovery/local-navigation.tsx` and to the three
+  accepted tests that freeze the exact navigation list,
+  `apps/web/tests/workspace-shell.test.mjs`,
+  `apps/web/tests/landing-explore.test.mjs`, and
+  `apps/web/tests/guided-demo-route.test.mjs`.
 - Human actions: none for local delivery. Reading a real record additionally
   requires the `HA-CAMPAIGN-CONVEX-001` row requested by the
   [HI-002 intake card](../60-done/HI-002-campaign-deploy-reinstatement.md); until those
@@ -61,16 +62,16 @@ accepted slice history it builds on is recorded in the
   The sibling wizard card owns `apps/web/src/app/provider/deploy/` and the
   `provider/deploy` component directory; this card owns neither.
 - `apps/web/src/components/discovery/local-navigation.tsx`,
-  `apps/web/tests/workspace-shell.test.mjs`, and
-  `apps/web/tests/landing-explore.test.mjs` belong to the accepted M11-T020
-  card, so the single navigation entry needs an explicit root integration
-  reservation recorded in the ownership file before the amendment. At intake,
-  the active S11-T010 card already holds a reserved integration pair over
-  `local-navigation.tsx` and `landing-explore.test.mjs` for its `/demo` entry;
-  this card's amendment is sequenced after S11-T010 is accepted and applies to
-  the navigation list as S11 leaves it. Both tests
-  are named because both constrain the list today: one deep-equals the
-  accepted entries and the other refuses any href outside the accepted set.
+  `apps/web/tests/workspace-shell.test.mjs`,
+  `apps/web/tests/landing-explore.test.mjs`, and
+  `apps/web/tests/guided-demo-route.test.mjs` belong to accepted M11-T020 or
+  S11-T010 records, so the single navigation entry needs an explicit root
+  integration reservation recorded in the ownership file before the
+  amendment. The constrained guided-demo amendment may update only its exact
+  navigation-list expectation; it preserves all nine demo steps, route links,
+  and other S11 assertions. The other two tests remain named because one
+  deep-equals the accepted entries and the other refuses any href outside the
+  accepted set.
   The accepted `apps/web/tests/shell-accessibility.test.mjs` asserts only the
   navigation label and is not amended.
 - The two closed outcome unions, the fixed region order, the next-action
@@ -134,17 +135,20 @@ not restate them.
   dependencies, declared paths, verification list, and boundary are unchanged.
   M41-T010 and S16-T010 are now accepted and S11-T010 is done, so every
   dependency this card names is satisfied.
-- Worktree `.worktrees/s17`, branch `work/s17`, pushed to `origin/work/s17`.
-  Implementer: the operator's delegated session. Reviewer: the root's
-  independent task review and module review, unchanged.
-- The lane delivers, in this commit order on that branch: one test-only RED
-  commit adding exactly the two declared focused tests and the navigation-list
-  assertion amendments in the two accepted tests, failing only because the
-  five declared source paths and the navigation entry are absent; then the
-  minimal GREEN commits limited to the five declared source paths and the one
+- The historical `work/s17` branch is stale and unreviewed relative to the
+  current root control plane. It is not implementation evidence and must not
+  be integrated. Any later lane starts from the ready current main head with
+  the corrected four-file navigation reservation. Implementer: the operator's
+  delegated session. Reviewer: the root's independent task review and module
+  review, unchanged.
+- The lane delivers, in this commit order: one test-only RED commit adding
+  exactly the two declared focused tests and the navigation-list assertion
+  amendments in the three accepted tests, failing only because the five
+  declared source paths and the navigation entry are absent; then the minimal
+  GREEN commits limited to the five declared source paths and the one
   navigation entry. It adds no dependency and touches no package manifest or
   lockfile.
-- The branch changes no queue state, ledger, catalog, ownership, STATE,
+- The lane changes no queue state, ledger, catalog, ownership, STATE,
   decision, human-action, or evidence file. The root keeps the ready review,
   the activation decision, the independent reviews, the integration decision,
   and every queue record. The branch is mirrored as a pull request for human

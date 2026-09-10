@@ -28,15 +28,16 @@ The slice may add `apps/web/src/app/provider/page.tsx`,
 `provider-status-state.ts`, `apps/web/tests/provider-status.test.mjs`, and
 `apps/web/tests/offerings-api.test.mjs`. It adds one entry,
 `{ href: "/provider", label: "Provider" }`, to
-`apps/web/src/components/discovery/local-navigation.tsx`. That file and the two
-accepted tests asserting the exact navigation list,
+`apps/web/src/components/discovery/local-navigation.tsx`. That file and the
+three accepted tests that freeze the exact navigation list,
 `apps/web/tests/workspace-shell.test.mjs` and
-`apps/web/tests/landing-explore.test.mjs`, belong to accepted M11-T020, so all
-three amendments need an explicit root integration reservation. The active
-S11-T010 card holds a reserved integration pair over the navigation file and
-`landing-explore.test.mjs` for its `/demo` entry, so this slice's entry is
-applied only after S11-T010 is accepted and is added to the list as S11
-leaves it.
+`apps/web/tests/landing-explore.test.mjs`, plus the accepted S11
+`apps/web/tests/guided-demo-route.test.mjs`, belong to accepted M11-T020 or
+S11-T010 records, so all four amendments need an explicit root integration
+reservation. The guided-demo amendment changes only its frozen navigation-list
+expectation and preserves its nine narrated demo steps, links, and all other
+assertions. This slice's entry is applied after S11-T010 and is added to the
+list as S11 leaves it.
 `apps/web/tests/shell-accessibility.test.mjs` asserts only the navigation label,
 which a fourth entry does not change, and is not amended. The slice reuses the
 accepted tokens and the `button`, `card`, and `badge` primitives, changes no
@@ -155,7 +156,7 @@ dependency, and reads no environment value outside the reader and its handler.
 - Focused contracts cover the fixed region order, the next-action mapping
   including the `CLOSED` row with no control, the four evidence rows and their
   `not recorded` cells, the gated Hashscan link, the absence of every non-adopted
-  canvas figure, and the amended list in both accepted navigation tests.
+  canvas figure, and the amended list in all three accepted navigation tests.
 - Browser checks run with the environment name absent and observe only the
   not-configured route: visible keyboard focus, no horizontal overflow at narrow
   widths, and no loaded-record claim. Web typecheck/test, production build with

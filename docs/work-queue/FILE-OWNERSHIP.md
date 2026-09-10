@@ -559,8 +559,8 @@ test change.
 
 S15-T010 owns its exact wallet-island and relay paths. S16-T010 owns its exact
 provider-deploy page, components, state, fixture, display configuration literal,
-and tests. S17-T010 owns its exact provider-status/API/projection paths and its
-single local-navigation/test integration after S11-T010. M44-T010 owns its
+and tests. S17-T010 is governed by its root-controlled record below and owns no
+source while it remains `00-inbox`. M44-T010 owns its
 exact ATS client/request/action and test paths. M44 must not import, adapt, or
 reuse S16's display configuration literal: its complete real-issuer fixture is
 test-local, and a future separately scoped bridge owns every trusted runtime
@@ -626,6 +626,45 @@ any fetch. `HA-ENTITYCHECK-LIVE-001` remains pending and was neither required
 nor exercised. No package, lockfile, browser, live source read, configuration
 value, payment, wallet, provider, transaction, deployment, or other live path
 is authorized.
+
+M46-T030 is a root-controlled `00-inbox` CORE_P0 record comprising its card,
+`docs/specs/m46-entity-check-x402-api.md`, and only the future Web paths
+`apps/web/src/lib/x402-protected-route.ts`,
+`apps/web/src/lib/entity-check-x402.ts`,
+`apps/web/src/app/api/entitycheck/route.ts`, and
+`apps/web/tests/entitycheck-api.test.mjs`. M02-T060, M06-T010, M46-T010, and
+M46-T020 are accepted. The root integration reservation permits only a
+behaviour-preserving extraction of `apps/web/src/lib/riskscan-x402.ts`: every
+existing export, accepted RiskScan response, cache boundary, configuration rule,
+Hedera capability check, and B02 settlement-observer semantic remains intact;
+`apps/web/tests/riskscan-api.test.mjs` is not amendable. No package, lockfile,
+configuration value, live facilitator/source read, payment, wallet, provider,
+transaction, deployment, or live path is authorized before the card's fresh
+readiness, activation, RED acceptance, implementation, and independent reviews.
+
+S17-T010 is a root-controlled `00-inbox` CORE_P0 record comprising its card,
+`docs/ui/UI-S17.md`, the UI-S17 ledger row, and only the future Web paths
+`apps/web/src/app/provider/page.tsx`,
+`apps/web/src/lib/offering-projection.ts`,
+`apps/web/src/app/api/offerings/route.ts`,
+`apps/web/src/components/provider/status/provider-status.tsx`,
+`apps/web/src/components/provider/status/provider-status-state.ts`,
+`apps/web/tests/provider-status.test.mjs`, and
+`apps/web/tests/offerings-api.test.mjs`. M02-T020, M11-T020, M29-T010,
+M41-T010, S16-T010, and S11-T010 are accepted. The root integration reservation
+permits only the one `{ href: "/provider", label: "Provider" }` navigation
+entry and its exact-list assertion amendments in
+`apps/web/src/components/discovery/local-navigation.tsx`,
+`apps/web/tests/workspace-shell.test.mjs`,
+`apps/web/tests/landing-explore.test.mjs`, and
+`apps/web/tests/guided-demo-route.test.mjs`; the guided-demo amendment preserves
+its nine steps, route links, and every non-navigation assertion.
+`apps/web/tests/shell-accessibility.test.mjs` is not amendable. The stale remote
+S17 branch is unreviewed and has no ownership or implementation authority. No
+client state, timer, command, write, Mirror/chain read, wallet, provider,
+payment, transaction, deployment, or live path is authorized before the card's
+fresh readiness, activation, RED acceptance, implementation, and independent
+reviews.
 
 S22-T010 is a root-owned post-rehearsal POLISH intake comprising only its card,
 `docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog,
