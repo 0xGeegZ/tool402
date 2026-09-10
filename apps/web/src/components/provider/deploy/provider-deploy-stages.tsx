@@ -3,6 +3,7 @@
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
+import { AtsCreateAction } from "./ats-create-action";
 import {
   providerDeployStages,
   providerDeployStageControl,
@@ -55,7 +56,12 @@ function StageCommand({ index }: { index: number }) {
         {definition.substeps.map((substep, substepIndex) => (
           <li key={substep.label} className="space-y-1">
             <p className="font-medium text-foreground">{substepIndex + 1}. {substep.label}</p>
-            {"returnsCandidate" in substep ? (
+            {index === 2 && substepIndex === 0 && "returnsCandidate" in substep ? (
+              <>
+                <AtsCreateAction />
+                <p>The separately carded human action returns the candidate details required by the next sub-step.</p>
+              </>
+            ) : "returnsCandidate" in substep ? (
               <p>The separately carded human action returns the candidate details required by the next sub-step.</p>
             ) : (
               <p>

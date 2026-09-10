@@ -596,6 +596,22 @@ transaction, or add a shim, polyfill, patch, fork, or alias. A Webpack build,
 client-manifest/chunk inspection, and browser import-evaluation proof decide
 the retry; an SDK failure stops the lane with its exact diagnostic.
 
+After the observed Turbopack client-graph failures, `D-M44-010-007` additionally
+reserves only `apps/web/next.config.ts`,
+`apps/web/src/lib/ats/browser/dotenv-mock.ts`,
+`apps/web/src/lib/ats/browser/winston-mock.ts`, and the exact assertions in
+`apps/web/tests/ats-sdk-bundle-gate.test.mjs`. The client-only aliases must
+match the four upstream ATS web aliases and remain no-op compatibility adapters;
+they may not add general Node polyfills, change the official SDK, expose an
+environment value, or enable an SDK action. A fresh Turbopack build decides
+whether those four aliases resolve the diagnosed logger graph before any other
+adaptation can be considered.
+
+`D-M44-010-008` permits one further browser-only entry in that same reserved
+`turbopack.resolveAlias` map: map the optional Node BBS binding to its own
+package-provided WebAssembly fallback. It creates no source path and may not
+introduce a BBS mock, generic Node polyfill, or executable BBS/SDK behavior.
+
 S20-T010 owns the new `apps/web/src/components/discovery/explore-catalog.tsx`
 and `apps/web/tests/explore-catalog.test.mjs`. The root integration reservation
 allows only its declared presentation amendments to

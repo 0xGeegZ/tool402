@@ -220,3 +220,21 @@ the real client graph and no uncaught import-time exception. On the first SDK
 or browser failure, stop and record that exact diagnostic. No shim, polyfill,
 patch, fork, alias, configuration bridge, durable attempt, wallet/provider
 interaction, transaction, deployment, or live behavior is authorized.
+
+## Turbopack browser-compatibility retry
+
+The first real Turbopack build reaches the declared SDK root and stops in the
+Node-only `winston`/`winston-daily-rotate-file` graph, while separately exposing
+the Terminal3 BBS native-binding graph. The human accepted
+`HA-ATS-SDK-BROWSER-COMPAT-002` to reproduce only the four logger/environment
+browser aliases from the official ATS web app in Next's client-only
+`turbopack.resolveAlias` form. The aliases use local no-op `dotenv` and
+`winston` adapters; they do not provide configuration or general Node
+polyfills. A fresh Turbopack production build must show whether this minimal
+upstream-compatible layer clears the logger graph. If another dependency fails,
+record it exactly before expanding the scope.
+
+The logger aliases removed all `fs` diagnostics. `D-M44-010-008` now permits
+only the conditional browser mapping from the optional Node BBS binding to the
+BBS package's own WASM fallback. It is not a mock, SDK patch, or BBS execution.
+A fresh Turbopack production build remains the gate.
