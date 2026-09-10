@@ -953,7 +953,7 @@ root/three component paths, their three focused tests, and the individually
 selected `apps/web/public/brand/hero-trio.png` asset for GREEN. Every global
 layout/navigation/CSS, non-root route, provider/ATS, configuration, package,
 README, submission, deployment, video, and all other path remains prohibited.
-S29-T010 holds the sole root integration reservation to amend only the
+S31-T010 holds the sole root integration reservation to amend only the
 `LocalNavigation` entry assertions in `apps/web/tests/landing-explore.test.mjs`;
 all other S22 assertions and every S22 source path remain unchanged.
 
@@ -968,13 +968,13 @@ layout/navigation/CSS, child route/island, API/Agent, Provider/Demo, asset,
 configuration, package, README, submission, deployment, and video paths remain
 prohibited. Independent task and module review remain required before
 acceptance.
-S29-T010 holds the sole root integration reservation to amend only the
+S31-T010 holds the sole root integration reservation to amend only the
 `LocalNavigation` entry and responsive-list assertions in
 `apps/web/tests/workspace-shell.test.mjs`; all other S24 assertions and every
 S24 source path remain unchanged.
 
-S28-T010 is a root-owned truth-first POLISH intake comprising its card,
-`docs/ui/UI-S28.md`, the local UI ledger, decision, state, catalog, this
+S30-T010 is a root-owned truth-first POLISH intake comprising its card,
+`docs/ui/UI-S30.md`, the local UI ledger, decision, state, catalog, this
 ownership record, reviews, commits, and pushes. Its proposed source/test set
 is exactly `apps/web/src/app/explore/riskscan/tool-loop/page.tsx`,
 `apps/web/src/components/riskscan/tool-loop/riskscan-tool-loop.tsx`,
@@ -989,13 +989,16 @@ CSS, asset, configuration, wallet/provider, payment, transaction, deployment,
 and live path remains prohibited until a separate accepted scope says
 otherwise.
 
-D-S28-010-002 reserves only the `/dashboard` expected-row assertion in
-`apps/web/tests/guided-demo-route.test.mjs` for S28-T010. S29-T010 retains
+D-S30-010-002 reserves only the `/dashboard` expected-row assertion in
+`apps/web/tests/guided-demo-route.test.mjs` for S30-T010. S31-T010 retains
 every navigation assertion in that file, including its four local navigation
 entries; neither slice may change the other's assertion or source path.
+S30-T010's test-only RED activation permits only that reserved assertion and
+`apps/web/tests/riskscan-tool-loop.test.mjs`; every S30 source path remains
+prohibited until fresh independent RED acceptance.
 
-S29-T010 is a root-owned truth-first POLISH source scope comprising its card,
-`docs/ui/UI-S29.md`, the local UI ledger, decision, state, catalog, this
+S31-T010 is a root-owned truth-first POLISH source scope comprising its card,
+`docs/ui/UI-S31.md`, the local UI ledger, decision, state, catalog, this
 ownership record, reviews, commits, and pushes. Its accepted source/test set
 is exactly `apps/web/src/app/layout.tsx`,
 `apps/web/src/components/discovery/local-navigation.tsx`,

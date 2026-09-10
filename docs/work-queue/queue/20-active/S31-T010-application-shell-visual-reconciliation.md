@@ -1,4 +1,4 @@
-# S29-T010 — Application shell visual reconciliation
+# S31-T010 — Application shell visual reconciliation
 
 ## State
 
@@ -8,7 +8,7 @@
   remain active with disjoint landing/dashboard paths.
 - Owner: The root owns queue state, catalog, ownership, UI ledger, decisions,
   reviews, commits, and pushes. The proposed source/test paths are exactly
-  those listed in UI-S29.
+  those listed in UI-S31.
 - Human actions: none. This visual shell work creates no payment, wallet,
   provider, account, configuration, transaction, deployment, or live action.
 
@@ -21,13 +21,13 @@ superseding its presentation tokens only after a fresh, focused RED. The
 existing two local truth strips, logo home target, four route hrefs, and
 provider-deploy CTA are fixed inputs, not optional content.
 
-The local [UI-S29 manifest](../../../ui/UI-S29.md) is the full source and
+The local [UI-S31 manifest](../../../ui/UI-S31.md) is the full source and
 truthfulness boundary. It is a complete shell pass, not a request to copy
 prepared mock navigation, assets, or data.
 
 ## Candidate ready requirements
 
-- UI-S29, this card, the ledger, catalog, ownership, state, and decision
+- UI-S31, this card, the ledger, catalog, ownership, state, and decision
   records are committed before test or source changes.
 - Every source/test path belongs to an accepted prior slice; the root records
   the exact shell-only integration reservation before RED.
@@ -51,7 +51,7 @@ prepared mock navigation, assets, or data.
 The independent readiness review at `a31ff2a4771585f431ea59f62ca6f2cae202b27c`
 and the fresh independent RED review at
 `b5d3c9e095f08ab7b517b0cdeac08d190448188d` are clear. The accepted RED
-proves only the absent compact mobile menu/right-side sheet. D-S29-010-004
+proves only the absent compact mobile menu/right-side sheet. D-S31-010-004
 therefore permits the two declared shell source paths and the three matching
 focused tests for minimal presentational GREEN.
 

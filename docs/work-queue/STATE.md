@@ -26,27 +26,26 @@
   continue beyond test-only RED. Its exact active scope is the dashboard page,
   workspace shell/overview/navigation, and the two focused dashboard tests
   recorded in `D-S24-010-003`; all other paths remain prohibited.
-- S28_TOOLLOOP_TERMINOLOGY_INTAKE: The human explicitly directs the existing
+- S30_TOOLLOOP_TERMINOLOGY_RED: The human explicitly directs the existing
   ToolLoop route to match the selected visual direction without mock behavior
   and to use Dashboard terminology for the existing Guided Demo dashboard
-  step. S28-T010 is `00-inbox`; no test or source path is authorized until its
-  independent readiness review and separate RED activation are accepted.
-
-- S28_DASHBOARD_ASSERTION_RESERVATION: D-S28-010-002 resolves the sole
-  S28/S29 test-path overlap: S28 may amend only the Guided Demo /dashboard
-  expected-row assertion, while S29 retains its navigation assertions. This
-  reservation grants no test or source change and S28 remains 00-inbox.
-- S29_APPLICATION_SHELL_GREEN: The fresh independent RED review at b5d3c9e
-  is clear: its two failures prove only the absent compact mobile menu. S29-T010
+  step. The fresh readiness re-review at `7385937` is clear; S30-T010 is
+  `20-active` only for its two reserved focused test assertions to create
+  durable RED. Source remains prohibited pending fresh independent RED
+  acceptance.
+- S30_DASHBOARD_ASSERTION_RESERVATION: D-S30-010-002 resolves the sole
+  S30/S31 test-path overlap: S30 may amend only the Guided Demo `/dashboard`
+  expected-row assertion, while S31 retains its navigation assertions. This
+  reservation grants no test or source change and S30 remains `20-active` for
+  its test-only RED assertions.
+- S31_APPLICATION_SHELL_GREEN: The fresh independent RED review at `b5d3c9e`
+  is clear: its two failures prove only the absent compact mobile menu. S31-T010
   is 20-active for the two exact shell source paths and its three focused
-  navigation tests, as recorded in D-S29-010-004. The two truthful strips,
+  navigation tests, as recorded in `D-S31-010-004`. The two truthful strips,
   current local hrefs, and all no-mock exclusions remain fixed.
-- S29_UI_RECORD: docs/ui/UI-S29.md is the local visual manifest for the
-  S29-T010 intake and is subject to its separate readiness and activation
-  controls.
-- S29_NAVIGATION_ASSERTION_RESERVATION: The root may transfer only the exact
+- S31_NAVIGATION_ASSERTION_RESERVATION: The root may transfer only the exact
   shared-navigation entry/list assertions in landing-explore.test.mjs and
-  workspace-shell.test.mjs to S29-T010. S22/S24 retain every other assertion
+  workspace-shell.test.mjs to S31-T010. S22/S24 retain every other assertion
   and source path. This reservation itself grants no test or source change.
 
 - PRODUCT_OVERVIEW: accepted as P00-T010

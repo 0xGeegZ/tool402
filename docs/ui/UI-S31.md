@@ -1,8 +1,8 @@
-# UI-S29 Application shell visual reconciliation manifest
+# UI-S31 Application shell visual reconciliation manifest
 
 ## Purpose
 
-UI-S29 brings the shared Tool402 header, truthful scope banners, desktop
+UI-S31 brings the shared Tool402 header, truthful scope banners, desktop
 navigation, mobile navigation, home link, and provider CTA into the selected
 prepared visual language. It is the first shell pass in the human-directed
 full-application visual program and does not import the prepared source tree.

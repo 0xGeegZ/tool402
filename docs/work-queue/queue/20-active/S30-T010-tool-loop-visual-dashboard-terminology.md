@@ -1,15 +1,15 @@
-# S28-T010 — ToolLoop visual and Dashboard terminology reconciliation
+# S30-T010 — ToolLoop visual and Dashboard terminology reconciliation
 
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 20-active (test-only RED)
 - Dependencies: M08-T010 accepted, S11-T010 accepted, S19-T010 accepted,
-  M46-T040 accepted; S22-T010, S24-T010, and S29-T010 retain their disjoint
+  M46-T040 accepted; S22-T010, S24-T010, and S31-T010 retain their disjoint
   active landing/dashboard/shell paths.
 - Owner: The root owns queue state, catalog, ownership, UI ledger, decisions,
   reviews, commits, and pushes. The proposed source/test paths are exactly
-  those listed in UI-S28.
+  those listed in UI-S30.
 - Human actions: none. This presentation work does not create an Agent, x402,
   payment, wallet, provider, account, transaction, deployment, or live action.
 
@@ -22,21 +22,21 @@ composition, and closed truthful outcomes. Rename the one existing Guided Demo
 Dashboard step so visitors see the same product terminology used by the
 dashboard itself.
 
-The local [UI-S28 manifest](../../../ui/UI-S28.md) fixes the exact visual,
+The local [UI-S30 manifest](../../../ui/UI-S30.md) fixes the exact visual,
 copy, target, and truthfulness boundary. The existing selected reference alias
 in the local ledger is the only visual authority; no source archive, URL, or
 source tree is tracked here.
 
 ## Candidate ready requirements
 
-- UI-S28, this card, the ledger, catalog, ownership, state, and decision
+- UI-S30, this card, the ledger, catalog, ownership, state, and decision
   records are committed before test or source changes.
 - The two ToolLoop source paths and their test are accepted M08/S19 paths; the
   Guided Demo component and test are accepted S11/S19 paths. The root records
   the exact limited presentation reservation before RED.
 - No active lane owns the same source paths. The S22 and S24 Dashboard
-  wording changes remain constrained to their already authorized paths. S29
-  retains the navigation assertion in `guided-demo-route.test.mjs`; D-S28-010-002
+  wording changes remain constrained to their already authorized paths. S31
+  retains the navigation assertion in `guided-demo-route.test.mjs`; D-S30-010-002
   reserves only that test's separate `/dashboard` expected-row assertion.
 
 ## Verification
@@ -47,6 +47,15 @@ source tree is tracked here.
 - Browser checks at desktop and 390px cover the real local route, keyboard
   focus, semantic landmarks, reduced motion, and no horizontal overflow.
 - Independent task and module review report no Critical finding.
+
+## RED activation
+
+The fresh independent readiness re-review at
+`73859377cb91565a35207e6ad15a612fd18887d3` is clear. D-S30-010-003 permits
+only `apps/web/tests/riskscan-tool-loop.test.mjs` and the separately reserved
+`/dashboard` expected-row assertion in `apps/web/tests/guided-demo-route.test.mjs`
+to define durable visual/terminology RED. Every S30 source path remains
+prohibited until a fresh independent RED review accepts its exact GREEN scope.
 
 ## Boundary
 

@@ -1,8 +1,8 @@
-# UI-S28 ToolLoop visual and Dashboard terminology reconciliation manifest
+# UI-S30 ToolLoop visual and Dashboard terminology reconciliation manifest
 
 ## Purpose
 
-UI-S28 is a truth-first POLISH slice for the existing
+UI-S30 is a truth-first POLISH slice for the existing
 `/explore/riskscan/tool-loop` journey. It migrates the complete prepared
 ToolLoop/Try visual composition into the current local request boundary
 without copying its simulated inputs, prices, networks, history, or outcomes.
@@ -23,9 +23,9 @@ The slice may amend only:
   by the above presentational changes.
 
 The active S22 and S24 scopes separately own their landing-footer and
-dashboard wording amendments. S29 owns the frozen navigation assertion in
-`guided-demo-route.test.mjs`; S28 may amend only that file's separate
-`/dashboard` expected-row assertion under D-S28-010-002. Internal component
+dashboard wording amendments. S31 owns the frozen navigation assertion in
+`guided-demo-route.test.mjs`; S30 may amend only that file's separate
+`/dashboard` expected-row assertion under D-S30-010-002. Internal component
 and file names remain unchanged.
 
 ## Visual and copy contract
