@@ -49,3 +49,9 @@ test("keeps the reference section rhythm without synthetic inter-section gaps", 
   assert.match(sections, /min-h-60[^"']*rounded-2xl/);
   assert.match(sections, /w-screen -translate-x-1\/2/);
 });
+
+test("keeps the landing footer compact once its final legal row is reached", async () => {
+  const footer = await readAppFile("src/components/landing/landing-footer.tsx");
+
+  assert.match(footer, /<footer className="border-t border-border pt-12 pb-10">/);
+});

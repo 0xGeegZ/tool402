@@ -5,7 +5,7 @@ import { Logo } from "../tool402/logo";
 
 export function LandingFooter() {
   return (
-    <footer className="border-t border-border py-[4.375rem]">
+    <footer className="border-t border-border pt-12 pb-10">
       <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between lg:gap-16">
         <div className="relative max-w-xs space-y-3">
           <Logo className="h-7" />
