@@ -7,6 +7,7 @@ import { AtsCreateAction } from "./ats-create-action";
 import {
   providerDeployStages,
   providerDeployStageControl,
+  type AtsCreateCandidate,
   type AtsCreateConfigurationProjection,
   type ProviderDeployStageKind,
   type ProviderDeployStageState,
@@ -46,7 +47,19 @@ function orderedStageStates(states: readonly ProviderDeployStageState[]): readon
   });
 }
 
-function StageCommand({ index }: { index: number }) {
+function StageCommand({
+  index,
+  session,
+  stageTwoDone,
+  candidate,
+  onCandidate,
+}: {
+  index: number;
+  session: { readonly provider: { request(input: { readonly method: string; readonly params?: readonly unknown[] }): Promise<unknown> }; readonly address: string } | null;
+  stageTwoDone: boolean;
+  candidate: AtsCreateCandidate | null;
+  onCandidate: (candidate: AtsCreateCandidate) => void;
+}) {
   const definition = providerDeployStages[index];
   if (!definition) return null;
 
@@ -58,7 +71,7 @@ function StageCommand({ index }: { index: number }) {
             <p className="font-medium text-foreground">{substepIndex + 1}. {substep.label}</p>
             {"returnsCandidate" in substep ? (
               <>
-                {index === 2 && substepIndex === 0 ? <AtsCreateAction /> : null}
+                {index === 2 && substepIndex === 0 ? <AtsCreateAction session={session} stageTwoDone={stageTwoDone} hasCandidate={candidate !== null} onCandidate={onCandidate} /> : null}
                 <p>The separately carded human action returns the candidate details required by the next sub-step.</p>
               </>
             ) : (
@@ -110,13 +123,20 @@ export function ProviderDeployStages({
   projection,
   enabledStage = -1,
   onActivate,
+  session = null,
+  candidate = null,
+  onCandidate = () => {},
 }: {
   states: readonly ProviderDeployStageState[];
   projection?: AtsCreateConfigurationProjection;
   enabledStage?: number;
   onActivate?: (index: number) => void;
+  session?: { readonly provider: { request(input: { readonly method: string; readonly params?: readonly unknown[] }): Promise<unknown> }; readonly address: string } | null;
+  candidate?: AtsCreateCandidate | null;
+  onCandidate?: (candidate: AtsCreateCandidate) => void;
 }) {
   const visibleStates = orderedStageStates(states);
+  const stageTwoDone = visibleStates[1]?.kind === "done";
 
   return (
     <section aria-labelledby="provider-deploy-stages" className="space-y-4">
@@ -149,7 +169,7 @@ export function ProviderDeployStages({
                   </Badge>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <StageCommand index={index} />
+                  <StageCommand index={index} session={session} stageTwoDone={stageTwoDone} candidate={candidate} onCandidate={onCandidate} />
                   <ConfigurationContext projection={projection} stageIndex={index} />
                   <p aria-live="polite" className="text-sm text-muted-foreground">
                     {stage.detail ?? stageStatusDescription[stage.kind]}

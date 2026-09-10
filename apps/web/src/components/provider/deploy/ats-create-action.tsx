@@ -1,23 +1,85 @@
 "use client";
 
-import factoryArtifact from "@hashgraph/asset-tokenization-contracts/artifacts/contracts/factory/Factory.sol/Factory.json" with { type: "json" };
-import { encodeFunctionData } from "viem";
+import { useRef, useState } from "react";
 
+import {
+  createStageBBrowserProviderBridge,
+  type StageBCandidate,
+  type StageBBridgeOutcome,
+  type StageBEip1193Provider,
+} from "../../../lib/ats/stage-b-browser-provider-bridge.ts";
 import { Button } from "../../ui/button";
 
-const contractsAvailable =
-  factoryArtifact.abi.some((entry) => entry.type === "function" && entry.name === "deployBond") &&
-  typeof encodeFunctionData === "function";
+type WalletSession = Readonly<{
+  provider: StageBEip1193Provider;
+  address: string;
+}>;
 
-export function AtsCreateAction() {
+type StageBActionController = Readonly<{
+  provider: StageBEip1193Provider;
+  address: string;
+  execute: () => Promise<StageBBridgeOutcome>;
+}>;
+
+export function AtsCreateAction({
+  session,
+  stageTwoDone,
+  hasCandidate,
+  onCandidate,
+}: {
+  session: WalletSession | null;
+  stageTwoDone: boolean;
+  hasCandidate: boolean;
+  onCandidate: (candidate: StageBCandidate) => void;
+}) {
+  const controller = useRef<StageBActionController | null>(null);
+  const sessionChanged = useRef(false);
+  const [terminalOutcome, setTerminalOutcome] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  if (controller.current === null && session !== null) {
+    controller.current = Object.freeze({
+      provider: session.provider,
+      address: session.address,
+      execute: createStageBBrowserProviderBridge({ provider: session.provider, fetch }).execute,
+    });
+  } else if (
+    controller.current !== null &&
+    (session === null || controller.current.provider !== session.provider || controller.current.address !== session.address)
+  ) {
+    sessionChanged.current = true;
+  }
+
+  const enabled = stageTwoDone && session !== null && !hasCandidate && !terminalOutcome && !sessionChanged.current && controller.current !== null;
+
+  async function requestCandidate() {
+    if (!enabled || controller.current === null) return;
+    const outcome = await controller.current.execute();
+    if (outcome.kind === "candidate") {
+      setTerminalOutcome(true);
+      onCandidate(outcome.candidate);
+      setFeedback("A local candidate was observed for this session. Attach it with the separate signature step.");
+      return;
+    }
+    if (outcome.kind === "submission_unknown") setTerminalOutcome(true);
+    setFeedback(outcome.kind === "rejected"
+      ? "The wallet did not approve this local request. Nothing was submitted."
+      : "The local result is unknown. Reload before choosing any new action; nothing is attached automatically.");
+  }
+
   return (
-    <Button
-      type="button"
-      disabled
-      data-ats-contracts-bundle={contractsAvailable ? "loaded" : "missing"}
-      variant="outline"
-    >
-      Create revenue note — unavailable
-    </Button>
+    <div className="space-y-2">
+      <Button
+        type="button"
+        disabled={!enabled}
+        data-ats-contracts-bundle="loaded"
+        onClick={requestCandidate}
+        variant="outline"
+      >
+        Create revenue note in MetaMask
+      </Button>
+      {feedback ? <p role="status" aria-live="polite" className="text-sm text-muted-foreground">{feedback}</p> : null}
+      {!feedback && sessionChanged.current ? <p role="status" aria-live="polite" className="text-sm text-muted-foreground">The wallet session changed. Reload before choosing any new action.</p> : null}
+    </div>
   );
 }

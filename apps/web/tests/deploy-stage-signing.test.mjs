@@ -29,10 +29,16 @@ async function signingIslandHarness(values) {
           slots[index] = typeof value === "function" ? value(slots[index]) : value;
         }];
       },
+      useRef(initial) {
+        const index = cursor++;
+        if (!(index in slots)) slots[index] = { current: initial };
+        return slots[index];
+      },
       useEffect(effect) { effect(); },
     },
     "react/jsx-runtime": jsxRuntime,
     "../../../lib/wallet/command-bridge.ts": await import("../src/lib/wallet/command-bridge.ts"),
+    "../../../lib/ats/stage-b-ats-create-execution-projection.ts": await import("../src/lib/ats/stage-b-ats-create-execution-projection.ts"),
     "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
     "../../wallet/wallet-connect": { WalletIsland: "WalletIsland" },
     "./ats-create-configuration": await import("../src/components/provider/deploy/ats-create-configuration.ts"),

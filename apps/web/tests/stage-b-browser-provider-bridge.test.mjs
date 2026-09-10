@@ -75,6 +75,57 @@ function responseQueue(entries) {
   };
 }
 
+function controlledTimers() {
+  const timers = [];
+  return {
+    timers,
+    api: {
+      set(callback, milliseconds) {
+        const timer = { callback, milliseconds, cleared: false };
+        timers.push(timer);
+        return timer;
+      },
+      clear(timer) {
+        timer.cleared = true;
+      },
+    },
+    fire(timer) {
+      assert.equal(timer.cleared, false, "the active deadline must not be cleared before its operation settles");
+      timer.callback();
+    },
+  };
+}
+
+async function settlesBefore(promise, milliseconds = 100) {
+  let timeout;
+  const deadline = new Promise((_, reject) => {
+    timeout = setTimeout(() => reject(new Error("operation did not settle")), milliseconds);
+  });
+  try {
+    return await Promise.race([promise, deadline]);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function waitsFor(condition, message) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    if (condition()) return;
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+  assert.fail(message);
+}
+
+async function withJsonParse(parse, operation) {
+  const original = JSON.parse;
+  JSON.parse = parse;
+  try {
+    return await operation();
+  } finally {
+    JSON.parse = original;
+  }
+}
+
 function createBridge(api, provider, fetch, wait = async () => {}) {
   return api.createStageBBrowserProviderBridge({ provider, fetch, wait });
 }
@@ -109,6 +160,31 @@ function mirrorContractResult(log, overrides = {}) {
   };
 }
 
+function accessorBackedRecord(record, field, reads) {
+  const value = record[field];
+  const copy = { ...record };
+  Object.defineProperty(copy, field, {
+    configurable: true,
+    enumerable: true,
+    get() {
+      reads.push(field);
+      return value;
+    },
+  });
+  return copy;
+}
+
+function nonEnumerableDataRecord(record, field) {
+  const value = record[field];
+  const copy = { ...record };
+  Object.defineProperty(copy, field, {
+    configurable: true,
+    enumerable: false,
+    value,
+  });
+  return copy;
+}
+
 function assertMirrorRequestShape(calls) {
   assert.equal(calls.length, 4, "one unindexed first read then one complete three-read cycle");
   for (const { url, init } of calls) {
@@ -137,7 +213,7 @@ function assertMirrorRequestShape(calls) {
   assert.equal(calls.some(({ url }) => url.href.includes("untrusted.example")), false, "pagination links stay inert");
 }
 
-async function loadBridgeWithM44Spy(decodeBondDeployed) {
+async function loadBridgeWithM44Spy(decodeBondDeployed, { parse = JSON.parse } = {}) {
   const source = readFileSync(sourcePath, "utf8");
   const { outputText } = typescript.transpileModule(source, {
     fileName: sourcePath,
@@ -188,7 +264,10 @@ async function loadBridgeWithM44Spy(decodeBondDeployed) {
     RegExp,
     Number,
     String,
-    JSON,
+    JSON: { parse, stringify: JSON.stringify },
+    TextDecoder,
+    Uint8Array,
+    ArrayBuffer,
     setTimeout,
     clearTimeout,
   }, { filename: sourcePath });
@@ -243,7 +322,7 @@ implementedTest("normalizes a valid EIP-55 account and releases only a pre-hash 
   const provider = fakeProvider({
     send() {
       sends += 1;
-      if (sends === 1) throw new Error("wallet rejected");
+      if (sends === 1) throw Object.assign(new Error("wallet rejected"), { code: 4001 });
       return transactionHash;
     },
   });
@@ -272,6 +351,76 @@ implementedTest("normalizes a valid EIP-55 account and releases only a pre-hash 
   assert.equal(mirror.calls.length, 0);
 });
 
+implementedTest("latches a non-user-rejection send failure as outcome-unknown without a second send", async () => {
+  let sends = 0;
+  const provider = fakeProvider({
+    send() {
+      sends += 1;
+      throw Object.assign(new Error("provider transport failed"), { code: -32000 });
+    },
+  });
+  const mirror = responseQueue([]);
+  const bridge = createBridge(api, provider, mirror.fetch);
+
+  const first = await bridge.execute();
+  const later = await bridge.execute();
+
+  assert.equal(first.kind, "submission_unknown");
+  assert.equal(later.kind, "submission_unknown");
+  assert.equal(sends, 1);
+  assert.equal(mirror.calls.length, 0);
+});
+
+implementedTest("keeps all five receipt observations inside the fixed five-second window", async () => {
+  const provider = fakeProvider({ receipt: null });
+  const mirror = responseQueue([]);
+  const waits = [];
+  const bridge = createBridge(api, provider, mirror.fetch, async (milliseconds) => {
+    waits.push(milliseconds);
+  });
+
+  const outcome = await bridge.execute();
+
+  assert.equal(outcome.kind, "submission_unknown");
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_getTransactionReceipt").length, 5);
+  assert.equal(waits.length, 4, "only the four gaps between five receipt observations may wait");
+  assert.ok(waits.every((milliseconds) => Number.isInteger(milliseconds) && milliseconds > 0));
+  assert.ok(waits.reduce((total, milliseconds) => total + milliseconds, 0) <= 5000);
+  assert.equal(mirror.calls.length, 0);
+});
+
+implementedTest("bounds a hung receipt to the injected receipt deadline and ignores its late resolution", async () => {
+  let resolveReceipt;
+  const provider = fakeProvider({
+    receipt: new Promise((resolve) => { resolveReceipt = resolve; }),
+  });
+  const mirror = responseQueue([]);
+  const deadlines = controlledTimers();
+  const bridge = api.createStageBBrowserProviderBridge({
+    provider,
+    fetch: mirror.fetch,
+    wait: async () => {},
+    timers: deadlines.api,
+  });
+
+  const pending = bridge.execute();
+  await waitsFor(
+    () => provider.calls.filter(({ method }) => method === "eth_getTransactionReceipt").length === 1,
+    "the first bounded receipt observation was not issued",
+  );
+  const receiptDeadline = deadlines.timers.find(({ milliseconds, cleared }) => !cleared && milliseconds > 0 && milliseconds <= 5000);
+  assert.ok(receiptDeadline, "the receipt observation must retain one five-second deadline");
+  deadlines.fire(receiptDeadline);
+
+  const outcome = await settlesBefore(pending);
+  resolveReceipt({ transactionHash, status: "0x1", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] });
+  await Promise.resolve();
+
+  assert.equal(outcome.kind, "submission_unknown");
+  assert.equal(mirror.calls.length, 0, "a late receipt cannot begin Mirror correlation");
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
+});
+
 implementedTest("takes its invocation lock before the first await so same-tick clicks cannot race a second send", async () => {
   let resolveReceipt;
   const provider = fakeProvider({
@@ -282,7 +431,9 @@ implementedTest("takes its invocation lock before the first await so same-tick c
 
   const first = bridge.execute();
   const sameTick = bridge.execute();
-  await Promise.resolve();
+  for (let tick = 0; tick < 4 && provider.calls.filter(({ method }) => method === "eth_sendTransaction").length === 0; tick += 1) {
+    await Promise.resolve();
+  }
   assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
 
   resolveReceipt(null);
@@ -336,8 +487,78 @@ implementedTest("correlates a bounded, fake-only Mirror candidate and never foll
   assertMirrorRequestShape(mirror.calls);
   assert.equal(globalFetchCalls, 0, "the injected fake is the only Mirror transport");
   assert.equal(waitCalls.length, 1, "only the unindexed ContractResult permits a bounded wait");
+  assert.deepEqual(waitCalls, [[2000]], "Mirror polling uses its own bounded cycle delay");
   assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
   assert.equal(Object.hasOwn(outcome, "attach"), false);
+});
+
+implementedTest("bounds all Mirror cycles to one five-second deadline through the injected timing seam", async () => {
+  const provider = fakeProvider({
+    receipt: { transactionHash, status: "0x1", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },
+  });
+  let now = 0;
+  const mirror = responseQueue([() => {
+    now = 4800;
+    return new Response("", { status: 404 });
+  }]);
+  const waits = [];
+  const bridge = api.createStageBBrowserProviderBridge({
+    provider,
+    fetch: mirror.fetch,
+    now: () => now,
+    wait: async (milliseconds) => {
+      waits.push(milliseconds);
+      now += milliseconds;
+    },
+  });
+
+  const outcome = await bridge.execute();
+
+  assert.equal(outcome.kind, "submission_unknown");
+  assert.deepEqual(waits, [200], "the final wait is clipped to the shared five-second deadline");
+  assert.equal(now, 5000);
+  assert.equal(mirror.calls.length, 1, "no post-deadline Mirror request is issued");
+});
+
+implementedTest("keeps the one remaining Mirror deadline armed through a headers-first stalled body", async () => {
+  const provider = fakeProvider({
+    receipt: { transactionHash, status: "0x1", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },
+  });
+  const deadlines = controlledTimers();
+  let bodyReadStarted = false;
+  let bodyCancelled = false;
+  const mirror = responseQueue([{
+    status: 200,
+    headers: { get: () => "application/json" },
+    body: new ReadableStream({
+      pull() {
+        bodyReadStarted = true;
+        return new Promise(() => {});
+      },
+      cancel() {
+        bodyCancelled = true;
+      },
+    }),
+  }]);
+  const bridge = api.createStageBBrowserProviderBridge({
+    provider,
+    fetch: mirror.fetch,
+    wait: async () => {},
+    timers: deadlines.api,
+  });
+
+  const pending = bridge.execute();
+  await waitsFor(() => bodyReadStarted, "the JSON body must be consumed under the Mirror deadline");
+  const mirrorDeadline = deadlines.timers.find(({ milliseconds, cleared }) => !cleared && milliseconds > 0 && milliseconds <= 5000);
+  assert.ok(mirrorDeadline, "the one active Mirror deadline must remain available after response headers");
+  deadlines.fire(mirrorDeadline);
+
+  const outcome = await settlesBefore(pending);
+  await waitsFor(() => bodyCancelled, "an aborted stalled body must be cancelled");
+
+  assert.equal(outcome.kind, "submission_unknown");
+  assert.equal(mirror.calls.length, 1, "a timed-out body cannot advance the read cycle");
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
 });
 
 implementedTest("rejects or ignores caller-supplied routing and transaction overrides while retaining the fixed send", async () => {
@@ -412,6 +633,112 @@ implementedTest("validates a Factory event emitter before it can hand a valid-lo
   assert.equal(outcome.kind, "submission_unknown");
   assert.equal(decoded, false, "the emitter check precedes M44 decodeBondDeployed");
   assert.equal(mirror.calls.length, 0);
+});
+
+implementedTest("rejects an accessor-backed Mirror ContractResult field before Factory decoding or a second read", async () => {
+  const reads = [];
+  const log = createBondDeployedLog(factoryApi, projectionApi);
+  const hostile = accessorBackedRecord(mirrorContractResult(log), "hash", reads);
+  const provider = fakeProvider({
+    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+  });
+  const mirror = responseQueue([jsonResponse({ ignored: true })]);
+
+  const outcome = await withJsonParse(() => hostile, () => createBridge(api, provider, mirror.fetch).execute());
+
+  assert.equal(outcome.kind, "submission_unknown");
+  assert.deepEqual(reads, [], "an accessor-backed Mirror field must not be invoked");
+  assert.equal(mirror.calls.length, 1, "descriptor rejection precedes the next Mirror read");
+});
+
+implementedTest("rejects an inherited Mirror ContractResult field before Factory decoding", async () => {
+  const log = createBondDeployedLog(factoryApi, projectionApi);
+  const hostile = mirrorContractResult(log);
+  delete hostile.chain_id;
+  const inherited = Object.getOwnPropertyDescriptor(Object.prototype, "chain_id");
+  Object.defineProperty(Object.prototype, "chain_id", {
+    configurable: true,
+    enumerable: true,
+    value: "0x128",
+  });
+  const provider = fakeProvider({
+    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+  });
+  const mirror = responseQueue([jsonResponse({ ignored: true })]);
+
+  try {
+    const outcome = await withJsonParse(() => hostile, () => createBridge(api, provider, mirror.fetch).execute());
+    assert.equal(outcome.kind, "submission_unknown");
+    assert.equal(mirror.calls.length, 1);
+  } finally {
+    if (inherited === undefined) {
+      delete Object.prototype.chain_id;
+    } else {
+      Object.defineProperty(Object.prototype, "chain_id", inherited);
+    }
+  }
+});
+
+implementedTest("rejects an accessor-backed Mirror log field before it can reach M44", async () => {
+  const reads = [];
+  const hostileLog = accessorBackedRecord(createBondDeployedLog(factoryApi, projectionApi), "address", reads);
+  const provider = fakeProvider({
+    receipt: { transactionHash, status: "0x1", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },
+  });
+  const mirror = responseQueue([jsonResponse({ ignored: true })]);
+
+  const outcome = await withJsonParse(
+    () => mirrorContractResult(hostileLog),
+    () => createBridge(api, provider, mirror.fetch).execute(),
+  );
+
+  assert.equal(outcome.kind, "submission_unknown");
+  assert.deepEqual(reads, [], "an accessor-backed log field must not be invoked");
+  assert.equal(mirror.calls.length, 1);
+});
+
+implementedTest("rejects a non-enumerable Mirror transactions envelope before a final ContractResult read", async () => {
+  const log = createBondDeployedLog(factoryApi, projectionApi);
+  const hostileEnvelope = nonEnumerableDataRecord({ transactions: [{
+    name: "ETHEREUMTRANSACTION",
+    result: "SUCCESS",
+    nonce: 0,
+    consensus_timestamp: timestamp,
+    transaction_id: rawTransactionId,
+  }] }, "transactions");
+  const documents = [mirrorContractResult(log), hostileEnvelope];
+  const provider = fakeProvider({
+    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+  });
+  const mirror = responseQueue([jsonResponse({ ignored: true }), jsonResponse({ ignored: true })]);
+
+  const outcome = await withJsonParse(() => documents.shift(), () => createBridge(api, provider, mirror.fetch).execute());
+
+  assert.equal(outcome.kind, "submission_unknown");
+  assert.equal(mirror.calls.length, 2, "a non-enumerable transactions field cannot advance to the final read");
+});
+
+implementedTest("rejects an accessor-backed Mirror transaction entry before it can create a final URL", async () => {
+  const reads = [];
+  const log = createBondDeployedLog(factoryApi, projectionApi);
+  const hostileTransaction = accessorBackedRecord({
+    name: "ETHEREUMTRANSACTION",
+    result: "SUCCESS",
+    nonce: 0,
+    consensus_timestamp: timestamp,
+    transaction_id: rawTransactionId,
+  }, "transaction_id", reads);
+  const documents = [mirrorContractResult(log), { transactions: [hostileTransaction] }];
+  const provider = fakeProvider({
+    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+  });
+  const mirror = responseQueue([jsonResponse({ ignored: true }), jsonResponse({ ignored: true })]);
+
+  const outcome = await withJsonParse(() => documents.shift(), () => createBridge(api, provider, mirror.fetch).execute());
+
+  assert.equal(outcome.kind, "submission_unknown");
+  assert.deepEqual(reads, [], "an accessor-backed transaction id must not be invoked");
+  assert.equal(mirror.calls.length, 2, "an unsafe transaction id cannot create a final URL");
 });
 
 implementedTest("treats ambiguous Mirror transaction records as terminal with no candidate or resend", async () => {
@@ -519,6 +846,30 @@ implementedTest("rejects an invalid returned Mirror transaction id and a final e
     assert.equal(Object.hasOwn(outcome, "candidate"), false, name);
     assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1, name);
   }
+});
+
+implementedTest("validates a returned Mirror transaction id before it can contribute to a final URL path", async () => {
+  const receiptLog = createBondDeployedLog(factoryApi, projectionApi);
+  const provider = fakeProvider({
+    receipt: { transactionHash, status: "0x1", to: factory, logs: [receiptLog] },
+  });
+  const mirror = responseQueue([
+    jsonResponse(mirrorContractResult(receiptLog)),
+    jsonResponse({ transactions: [{
+      name: "ETHEREUMTRANSACTION",
+      result: "SUCCESS",
+      nonce: 0,
+      consensus_timestamp: timestamp,
+      transaction_id: "../../accounts",
+    }] }),
+  ]);
+
+  const outcome = await createBridge(api, provider, mirror.fetch).execute();
+
+  assert.equal(outcome.kind, "submission_unknown");
+  assert.equal(mirror.calls.length, 2, "an invalid id must be rejected before any final ContractResult URL is constructed");
+  assert.equal(mirror.calls.some(({ url }) => url.pathname.includes("accounts")), false);
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
 });
 
 implementedTest("contains the closed receipt, Factory-emitter, and bounded Mirror boundary without browser/global capability", () => {
