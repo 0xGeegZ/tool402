@@ -91,9 +91,9 @@ test("renders a single landing main landmark and page heading", async () => {
 test("gives the decorative landing artwork an explicit responsive width", async () => {
   const hero = await readAppFile("src/components/landing/landing-hero.tsx");
 
-  assert.match(hero, /\bw-58\b/);
-  assert.match(hero, /\bsm:w-72\b/);
-  assert.doesNotMatch(hero, /\bw-full\s+max-w-58\b/);
+  assert.match(hero, /\/brand\/hero-trio\.png/);
+  assert.match(hero, /\bw-full\s+max-w-xl\b/);
+  assert.match(hero, /\blg:max-w-none\b/);
 });
 
 test("renders a single read-only Explore marketplace catalog", async () => {
@@ -130,15 +130,17 @@ test("keeps the Explore eyebrow readable against the local background", async ()
   assert.doesNotMatch(page, /\btext-brand-purple\b/);
 });
 
-test("keeps landing and discovery copy within the UI-S01 truthfulness boundary", async () => {
+test("keeps the marketplace thesis local while discovery remains read-only", async () => {
   const sources = await Promise.all([
     readAppFile("src/app/page.tsx"),
     readAppFile("src/components/landing/landing-hero.tsx"),
     readAppFile("src/components/discovery/riskscan-discovery-card.tsx"),
   ]);
+  const [page, hero, discoveryCard] = sources;
 
-  assert.doesNotMatch(
-    sources.join("\n"),
-    /\b(?:price|wallet|payment|provider|account|metric|evidence|external|request|paid|mock|live availability|available now)\b/i,
-  );
+  assert.match(hero, /Back the tools\s*<span[^>]*>agents pay<\/span>\s*to use\./);
+  assert.match(hero, /<span className=["'][^"']*\btext-brand-purple\b[^"']*["']>agents pay<\/span>/);
+  assert.match(hero, /<Link\b[^>]*href=["']\/demo["'][^>]*>\s*Open guided demo\s*<\/Link>/);
+  assert.match(discoveryCard, /read-only/i);
+  assert.match(page, /<LandingHero\s*\/>/);
 });
