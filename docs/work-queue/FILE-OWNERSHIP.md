@@ -806,6 +806,20 @@ its independent task and two module reviews are recorded at
 change to any S21 source requires its own scoped authority; no active source
 path remains authorized by this completed corrective cycle.
 
+M47-T010 is a root-controlled `00-inbox` CORE_P0 correction. Before its
+independent readiness review it owns only its card, specification, plan,
+reconciliation evidence, import-ledger row, catalog, State, decisions,
+reviews, commits, and pushes. A clear readiness review may reserve only its
+named private Convex binding and focused Backend tests, plus the named public
+Web stage-2 projection, bridge, signing-island, and focused Web tests. Its
+single admission amendment must run only after M32 has rebound and revalidated
+the durable signer authority and before M33, replay, idempotency, or state.
+The M42 real projection stays private; the browser may receive only its six
+fixed M26 fields. M33's manifest, M44's Factory helper, S16's display literal,
+packages, lockfiles, environment, public Backend exports, routes, and
+submission documents are not amendable. No authority provision, SDK, provider,
+wallet, network, transaction, candidate, or live path is authorized.
+
 S22-T010 is a root-owned post-rehearsal POLISH intake comprising only its card,
 `docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog,
 decisions, this ownership record, reviews, commits, and pushes. It owns no
