@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: B01-T010 accepted, M32-T010 accepted, M33-T010 accepted, M41-T010 accepted,
   M42-T010 accepted, M43-T010 accepted, M44-T020 accepted, S21-T010 accepted,
   and HA-ATS-RUNTIME-BINDING-001 accepted
@@ -83,6 +83,14 @@ This card is `10-ready`; a separate fresh activation may authorize only its
 durable test-only RED contract at the five focused test paths recorded in that
 review. Every production source and live boundary remains prohibited pending
 that activation and a fresh independent RED review.
+
+## Activation review
+
+The independent current-head review at
+[M47-T010 activation review](../../evidence/M47-T010-activation-review.md) is
+clear. This card is `20-active` only to create the durable RED contract at its
+five named test paths. Every production source and live boundary remains
+prohibited pending fresh independent RED acceptance.
 
 ## Verification
 
