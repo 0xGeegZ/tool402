@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M02-T020 accepted, M11-T020 accepted, M29-T010 accepted,
   M41-T010 accepted, S16-T010 accepted, and S11-T010 accepted. S11's
   accepted navigation assertions remain a constrained root integration
@@ -80,6 +80,20 @@ accepted slice history it builds on is recorded in the
 - The route consumes the projections named by M41-T010 and links to the wizard
   route owned by S16-T010, so the root evaluates this card after both.
 
+## Ready record
+
+Ready at 2026-09-10T06:08:28Z after independent review at clean pushed
+`13114343abf05043071cba80d3eefcfe3e2615aa`. The card, UI-S17 manifest, ledger,
+catalog, ownership, State, and decision resolve locally; M41-T010, S16-T010,
+and S11-T010 are accepted. The seven future source/test paths are absent and
+disjoint. The root reservation allows only the `/provider` navigation entry and
+the exact-list amendments in the three named navigation tests; the guided-demo
+test retains all nine steps and its non-navigation behavior. Node 22.21.1
+focused navigation/a11y checks and Web/root typechecks are clear. A separate
+activation may authorize only the durable test-only RED contract; no source,
+environment read, live request, command, write, wallet/provider, payment,
+transaction, deployment, or other external capability is authorized.
+
 ## Verification
 
 - A durable test-only RED commit precedes every source change and fails
@@ -105,7 +119,7 @@ accepted slice history it builds on is recorded in the
 - Focused tests prove that none of the non-adopted canvas figures appears:
   no funding-raised, units-issued, paid-task, or balance figure, no liveness or
   connection badge, and no second offering version.
-- The amended navigation list is asserted in both accepted navigation tests and
+- The amended navigation list is asserted in all three accepted navigation tests and
   the accepted shell accessibility suite passes unchanged.
 - `npm run typecheck --workspace @tool402/web`,
   `npm run test --workspace @tool402/web`,

@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M02-T060 accepted, M06-T010 accepted, M46-T010 accepted, and
   M46-T020 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -57,6 +57,19 @@ the [M06 Hedera compatibility contract](../../../specs/m06-riskscan-hedera-x402.
 - The EntityCheck route registers no settlement observer; durable EntityCheck
   settlement evidence is a separate later card and is named as deferred in
   the specification.
+
+## Ready record
+
+Ready at 2026-09-10T06:08:28Z after independent review at clean pushed
+`13114343abf05043071cba80d3eefcfe3e2615aa`. The card, specification, catalog,
+ownership, State, and control decision resolve locally; M02-T060, M06-T010,
+M46-T010, and M46-T020 are accepted. The four future Web paths are absent and
+disjoint, and the root reservation permits only a behaviour-preserving
+RiskScan extraction while its accepted API test stays unchanged. Node 22.21.1
+focused RiskScan/EntityCheck verification and Web typecheck are clear. A
+separate activation may authorize only the durable test-only RED contract; no
+production source, configuration, facilitator/source read, payment,
+wallet/provider, transaction, deployment, or live behavior is authorized.
 
 ## Verification
 

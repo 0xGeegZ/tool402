@@ -559,8 +559,8 @@ test change.
 
 S15-T010 owns its exact wallet-island and relay paths. S16-T010 owns its exact
 provider-deploy page, components, state, fixture, display configuration literal,
-and tests. S17-T010 is governed by its root-controlled record below and owns no
-source while it remains `00-inbox`. M44-T010 owns its
+and tests. S17-T010 is governed by its root-controlled record below and has no
+source authority until its separate activation. M44-T010 owns its
 exact ATS client/request/action and test paths. M44 must not import, adapt, or
 reuse S16's display configuration literal: its complete real-issuer fixture is
 test-local, and a future separately scoped bridge owns every trusted runtime
@@ -627,8 +627,9 @@ nor exercised. No package, lockfile, browser, live source read, configuration
 value, payment, wallet, provider, transaction, deployment, or other live path
 is authorized.
 
-M46-T030 is a root-controlled `00-inbox` CORE_P0 record comprising its card,
-`docs/specs/m46-entity-check-x402-api.md`, and only the future Web paths
+M46-T030 is a root-controlled `10-ready` CORE_P0 record comprising its card,
+`docs/specs/m46-entity-check-x402-api.md`, its ready review evidence, and only
+the future Web paths
 `apps/web/src/lib/x402-protected-route.ts`,
 `apps/web/src/lib/entity-check-x402.ts`,
 `apps/web/src/app/api/entitycheck/route.ts`, and
@@ -642,8 +643,9 @@ configuration value, live facilitator/source read, payment, wallet, provider,
 transaction, deployment, or live path is authorized before the card's fresh
 readiness, activation, RED acceptance, implementation, and independent reviews.
 
-S17-T010 is a root-controlled `00-inbox` CORE_P0 record comprising its card,
-`docs/ui/UI-S17.md`, the UI-S17 ledger row, and only the future Web paths
+S17-T010 is a root-controlled `10-ready` CORE_P0 record comprising its card,
+`docs/ui/UI-S17.md`, the UI-S17 ledger row, its ready review evidence, and only
+the future Web paths
 `apps/web/src/app/provider/page.tsx`,
 `apps/web/src/lib/offering-projection.ts`,
 `apps/web/src/app/api/offerings/route.ts`,
