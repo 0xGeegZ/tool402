@@ -76,6 +76,8 @@ implementedTest("contains no owner, authority, SDK, descriptor, parameter, or pr
 implementedTest("keeps the browser projection inert and free of configuration, provider, or network authority", () => {
   const source = readFileSync(sourceUrl, "utf8");
   assert.doesNotMatch(source, /^\s*import(?:\s|["'{])/mu);
+  assert.doesNotMatch(source, /\bimport\s*\(/u);
+  assert.doesNotMatch(source, /\brequire\s*\(/u);
   assert.doesNotMatch(
     source,
     /\b(?:process\s*\.\s*env|import\.meta\.env|fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|window|ethereum|MetaMask|wagmi|WalletConnect|createWalletClient|createPublicClient|@hashgraph|convex|operationDescriptor|diamondOwnerAccount|plannedCommandAuthority|principalPublicId|authorityVersion|sdk(?:Package|Version|Integrity)|resolver(?:HederaId|EvmAddress))\b/u,
