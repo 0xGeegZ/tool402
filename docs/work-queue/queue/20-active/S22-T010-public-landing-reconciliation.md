@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 20-active
 - Dependencies: M02-T040 accepted; M11-T010 accepted; S20-T010 accepted; and
   `D-S22-010-002` accepted. `HA-ATS-STAGE-B-001` remains pending as a hard
   truth filter and a prerequisite to public deployment or demo recording, but
@@ -11,8 +11,8 @@
 - Owner: The root owns queue state, catalog, ownership, the local UI ledger,
   decisions, reviews, commits, and pushes. This intake owns only this card,
   `docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, and the root control
-  records. The early source-to-current comparison must name exact source/test
-  paths before a readiness review can reserve them.
+  records. The early source-to-current comparison and independent readiness
+  review reserve only the focused test RED paths named in the activation record.
 - Human actions: this card creates no wallet/provider/ATS authority. The
   existing Stage B action, public deployment, and demo recording remain
   distinct human-owned downstream actions.
@@ -38,19 +38,18 @@ may be committed here.
 
 ## Required intake before readiness
 
-This card stays in `00-inbox` until the early-start decision and fresh
-source-to-current comparison are recorded. The root then commits a narrow
-UI-S22 ledger amendment that names:
+The early-start decision and fresh source-to-current comparison are recorded.
+The root has committed a narrow UI-S22 ledger amendment that names:
 
 1. the selected compatible sections and local visual assets;
 2. the exact landing source and focused test paths;
 3. the current route target for every CTA; and
 4. each omitted prepared element and the truthful reason for omitting it.
 
-Only then may an independent readiness review decide whether a dependency-safe
-RED/implementation slice exists. The comparison cannot reopen unrelated
-routes, import a general archive, or substitute fake product states for
-current local truth.
+The independent readiness review is clear. This active phase authorizes only
+the focused test RED paths in the activation record; it cannot reopen unrelated
+routes, import a general archive, or substitute fake product states for current
+local truth.
 
 ## Acceptance criteria
 

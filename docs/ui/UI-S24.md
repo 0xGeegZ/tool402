@@ -2,7 +2,7 @@
 
 ## Purpose
 
-UI-S24 is a post-rehearsal POLISH slice for the guest workspace route
+UI-S24 is an early truth-first POLISH slice for the guest workspace route
 (`/dashboard`). It follows accepted UI-S22 and uses only the already recorded
 `PREP-UI-001` workspace visual slice as its comparison authority. It does not
 replace the dashboard with a new concept or import a complete source tree.
@@ -17,10 +17,13 @@ current local truth.
 
 ## Trigger and order
 
-This slice begins only after secret-free local evidence confirms the first
-complete Provider campaign / ATS rehearsal and UI-S22 is accepted. It must be
-accepted before a human-owned public deployment or demo-video action uses the
-dashboard surface.
+`D-S24-010-002` supersedes only the former start-order condition: this slice
+may begin before the first complete Provider campaign / ATS rehearsal and before
+S22 acceptance. The pending Stage B human gate remains a hard truth filter: no
+claim may imply an account, wallet, provider, balance, payment, transaction,
+receipt, evidence, availability, funding, return, or live capability that
+current local evidence does not independently support. Stage B remains required
+before a human-owned public deployment or demo-video action uses the dashboard.
 
 ## Required comparison before source work
 
@@ -29,7 +32,7 @@ Before a readiness review selects any source path, the root must:
 1. inspect the current `/dashboard` route in desktop and narrow viewport
    states;
 2. compare only the selected `PREP-UI-001` workspace visual slice through the
-   existing quarantine workflow;
+   existing local source workflow;
 3. amend the local UI-S24 ledger with compatible sections, local assets, exact
    source/test paths, and the current local route target for every CTA; and
 4. record each omitted element and the truthful reason it cannot appear today.
@@ -60,5 +63,5 @@ deployment, or video behavior. It must not redesign from scratch or import a
 bulk archive.
 
 No source path, asset, dependency, or test is authorized by this manifest
-alone. Those are selected only after the post-rehearsal comparison records a
-fresh local scope.
+alone. The activation record authorizes only focused RED tests; source remains
+prohibited until a later independent RED review accepts exact GREEN paths.

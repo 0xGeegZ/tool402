@@ -3,27 +3,27 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
-- Dependencies: M11-T020 accepted. Eligibility is deferred until a secret-free
-  local evidence record confirms the first complete Provider campaign / ATS
-  rehearsal under `HA-ATS-STAGE-B-001`, S22-T010 is accepted, every local
-  CORE_P0 card represented by the dashboard is accepted, and both
-  `HA-PUBLIC-DEPLOY-001` and `HA-DEMO-VIDEO-001` remain pending.
+- Queue state: 20-active
+- Dependencies: M11-T020 accepted. `D-S24-010-002` supersedes only the former
+  start-order conditions. `HA-ATS-STAGE-B-001` remains a hard truth filter and
+  a prerequisite to public deployment or demo recording, but is not a
+  prerequisite to this local dashboard reconciliation.
 - Owner: The root owns queue state, catalog, ownership, the local UI ledger,
   decisions, reviews, commits, and pushes. This intake owns only this card,
   `docs/ui/UI-S24.md`, `docs/ui/IMPORT-LEDGER.md`, and the root control
-  records. A post-rehearsal comparison must name exact source/test paths before
-  a readiness review can reserve them.
-- Human actions: the existing Stage B action supplies the rehearsal evidence;
-  this card creates no wallet/provider/ATS authority. Public deployment and
-  demo recording remain human-owned downstream actions.
+  records. The early source-to-current comparison and root-directed activation
+  reserve only the focused test RED paths named in the activation record.
+- Human actions: this card creates no wallet/provider/ATS authority. The
+  existing Stage B action, public deployment, and demo recording remain
+  distinct human-owned downstream actions.
 
 ## Scope
 
-After UI-S22 is accepted, compare the selected `PREP-UI-001` dashboard visual
-slice with the current local `/dashboard` route. Bring the guest workspace
-substantially back toward that selected prepared visual direction without
-redesigning it from scratch or bulk-importing source material.
+Under the explicit early truth-first decision, compare the selected
+`PREP-UI-001` dashboard visual slice with the current local `/dashboard` route.
+Bring the guest workspace substantially back toward that selected prepared
+visual direction without redesigning it from scratch or bulk-importing source
+material.
 
 The reconciliation retains compatible visual hierarchy, illustrations,
 branding, spacing, section composition, and responsive intent. It makes the
@@ -39,19 +39,19 @@ be committed here.
 
 ## Required intake before readiness
 
-This card stays in `00-inbox` until its trigger is recorded. Once it is, the
-root performs a fresh source-to-current comparison and commits a narrow UI-S24
-ledger amendment that names:
+The early-start decision and fresh source-to-current comparison are recorded.
+The root commits a narrow UI-S24 ledger amendment that names:
 
 1. the selected compatible dashboard sections and local visual assets;
 2. the exact workspace source and focused test paths;
 3. the current route target for every CTA and clear unavailable state; and
 4. each omitted prepared element and the truthful reason for omitting it.
 
-Only then may an independent readiness review decide whether a dependency-safe
-RED/implementation slice exists. The comparison cannot reopen unrelated routes,
-import a general archive, or invent account, session, wallet, provider, balance,
-payment, transaction, evidence, or live state.
+The root-directed activation authorizes only the focused test RED paths in the
+activation record. The comparison cannot reopen unrelated routes, import a
+general archive, or invent account, session, wallet, provider, balance,
+payment, transaction, evidence, or live state. Independent RED review remains
+required before any source path can be authorized.
 
 ## Acceptance criteria
 

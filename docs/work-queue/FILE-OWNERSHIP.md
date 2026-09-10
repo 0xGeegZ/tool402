@@ -848,27 +848,19 @@ public Backend exports, routes, and submission documents are not amendable. No
 authority provision, SDK, provider, wallet, network, transaction, candidate,
 or live path is authorized.
 
-S22-T010 is a root-owned early truth-first POLISH intake comprising only its
-card, `docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, comparison/control
-evidence, plan, queue state, catalog, decisions, this ownership record,
-reviews, commits, and pushes. It owns no active implementation path today. The
-early local comparison reserves only `apps/web/src/app/page.tsx`, the three
-files under `apps/web/src/components/landing/`,
-`apps/web/tests/product-landing.test.mjs`,
-`apps/web/tests/landing-explore.test.mjs`, one new focused landing test, and
-at most two landing-only brand assets for an independent readiness review. The
-comparison may use only the neutral `PREP-UI-001` landing alias already
-recorded locally; it may not commit external source identifiers, URLs, archives,
-or an extracted tree. No route outside `/`, global layout/navigation/CSS,
-provider/wallet/payment/transaction behavior, deployment, recording, README,
-submission documentation, or external action is authorized by this intake.
+S22-T010 is a root-owned early truth-first POLISH lane. It is `20-active` only
+for `apps/web/tests/product-landing.test.mjs`,
+`apps/web/tests/landing-explore.test.mjs`, and the new
+`apps/web/tests/public-landing-reconciliation.test.mjs` RED contract. Every
+landing source, asset, global layout/navigation/CSS, non-root route,
+provider/ATS, configuration, package, README, submission, deployment, and
+video path remains prohibited until independent RED review authorizes exact
+GREEN paths.
 
-S24-T010 is a root-owned `00-inbox` POLISH intake comprising its card,
-`docs/ui/UI-S24.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog, this
-ownership record, decisions, reviews, commits, and pushes. It reserves no
-dashboard source, component, asset, or test path until a post-rehearsal
-source-to-current comparison and independent readiness review name them. UI-S07
-and every accepted dashboard route remain dependencies, not reopened behavior.
-Authentication, session, account, wallet, provider, balance, client-data,
-configuration, payment, transaction, external activity, deployment, video, and
-submission surfaces are excluded.
+S24-T010 is a root-owned early truth-first POLISH lane. It is `20-active` only
+for `apps/web/tests/workspace-shell.test.mjs` and the new
+`apps/web/tests/dashboard-workspace-reconciliation.test.mjs` RED contract.
+Every dashboard source, global layout/navigation/CSS, child route/island,
+API/Agent, Provider/Demo, configuration, package, README, submission,
+deployment, and video path remains prohibited until independent RED review
+authorizes exact GREEN paths.

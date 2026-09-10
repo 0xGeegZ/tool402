@@ -5,6 +5,17 @@
   readiness, and test-only RED/GREEN cycle now; `HA-ATS-STAGE-B-001` remains a
   hard truth filter and is still required before public deployment or demo
   recording.
+- S22_ELIGIBILITY_RECONCILIATION: The older post-rehearsal wording under
+  `NEXT_ELIGIBLE_TASKS` is superseded only for S22-T010 by
+  `D-S22-010-002`. It is not an eligibility condition for S22 comparison,
+  readiness, RED, or GREEN; it remains a truth filter and a public
+  deployment/demo-video prerequisite.
+- S22_S24_ACTIVATION: The human explicitly directed immediate local POLISH
+  activation. S22-T010 is `20-active` only for its three landing RED test
+  paths; S24-T010 is `20-active` only for its two dashboard RED test paths.
+  All GREEN source/assets remain prohibited pending separate independent RED
+  review. Both retain Stage B as a truth filter and public deployment/video
+  prerequisite.
 
 - PRODUCT_OVERVIEW: accepted as P00-T010
 - CURRENT_MODULE: S13 outcome-feedback treatment is accepted at source commit `ece66c2fd7b2278ed0f801ad1febd478d9ddc39f`; S15 wallet-island/relay is accepted at `506f038fffb87739cc5fd302a30033b5c56d36ee`; S16 provider deploy wizard is accepted at `ed46ae18a08c859d5f2c94722ab84453ef674835`; M38 offering command payloads and M40 durable offering/Directory admission are accepted at `60-done`. HA-COMMAND-AUTHORITY-002, HA-ATS-RETARGET-001, HA-ATS-RUNTIME-BINDING-001, HA-ISSUER-ACCOUNT-001, and HA-CAMPAIGN-CONVEX-001 are accepted only as bounded local authority or human evidence. B03 Agent payment remains locally green and awaits its separate human-owned testnet exercise.
