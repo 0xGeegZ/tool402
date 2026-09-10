@@ -38,7 +38,9 @@ test("translates the selected marketplace composition through current local orie
   assert.match(landing, /Tool402/);
   assert.match(landing, /RiskScan/);
   assert.match(hero, /<section\b[^>]*className=["'][^"']*radial-gradient[^"']*["']/);
+  assert.match(hero, /<section\b[^>]*className=["'][^"']*\bborder-b\b[^"']*\bbg-card\/30\b[^"']*["']/);
   assert.match(hero, /<h1\b[^>]*>\s*Back the tools\s*<span className=["'][^"']*\btext-brand-purple\b[^"']*["']>agents pay<\/span>\s*to use\./);
+  assert.match(hero, /<h1\b[^>]*className=["'][^"']*\bfont-extrabold\b[^"']*\bleading-\[1\.04\][^"']*["']/);
   assert.match(hero, /hero-trio\.png/);
   assert.match(landing, /id=["']how-it-works["']/);
   assert.match(landing, /Explore a current tool/i);

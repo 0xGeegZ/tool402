@@ -7,14 +7,14 @@ export function LandingHero() {
   return (
     <section
       aria-labelledby="landing-title"
-      className="relative isolate overflow-hidden py-12 sm:py-16 lg:py-24 [background-image:radial-gradient(color-mix(in_oklab,var(--border)_70%,transparent)_1px,transparent_1px)] [background-size:1.35rem_1.35rem]"
+      className="relative isolate overflow-hidden border-b border-border bg-card/30 py-14 sm:py-16 lg:py-24 [background-image:radial-gradient(color-mix(in_oklab,var(--border)_70%,transparent)_1px,transparent_1px)] [background-size:1.35rem_1.35rem]"
     >
       <div aria-hidden="true" className="absolute -right-28 top-0 size-96 rounded-full bg-[#e9e1ff]/80 blur-3xl" />
       <div aria-hidden="true" className="absolute bottom-8 left-[48%] size-32 rounded-full border border-brand-purple/15" />
       <div className="relative grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(25rem,0.9fr)] lg:gap-16">
         <div className="max-w-2xl space-y-6">
           <Badge variant="secondary">Agent tool marketplace</Badge>
-          <h1 id="landing-title" className="max-w-xl text-5xl font-semibold tracking-[-0.055em] sm:text-6xl lg:text-7xl">
+          <h1 id="landing-title" className="max-w-xl text-5xl font-extrabold leading-[1.04] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
             Back the tools <span className="text-brand-purple">agents pay</span> to use.
           </h1>
           <p className="max-w-xl text-lg leading-8 text-muted-foreground sm:text-xl">
