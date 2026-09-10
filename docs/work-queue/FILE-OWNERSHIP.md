@@ -1029,3 +1029,10 @@ durable RED. The Provider page and status component remain source-prohibited;
 the S17 reader/state and test, deploy wizard, every live/financial claim, and
 all other paths remain outside S28 until a fresh independent RED review grants
 an exact GREEN scope.
+
+D-S28-010-003 authorizes exactly `apps/web/src/app/provider/page.tsx`,
+`apps/web/src/components/provider/status/provider-status.tsx`, and
+`apps/web/tests/provider-visual-reconciliation.test.mjs` for S28's minimal
+presentational GREEN. The RiskScan card is a local `/provider/deploy` path,
+not an admitted/active/published offering assertion; all real states remain in
+the existing closed projection regions. No other source/test path is granted.

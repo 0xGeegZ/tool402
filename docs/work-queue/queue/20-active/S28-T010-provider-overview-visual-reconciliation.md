@@ -43,6 +43,16 @@ only the new `apps/web/tests/provider-visual-reconciliation.test.mjs` to define
 the absent visual hierarchy. The Provider page and status component remain
 prohibited until a fresh independent RED review accepts exact GREEN.
 
+## GREEN authorization
+
+The independent RED review at `a36f536` is clear. D-S28-010-003 permits only
+`apps/web/src/app/provider/page.tsx`,
+`apps/web/src/components/provider/status/provider-status.tsx`, and
+`apps/web/tests/provider-visual-reconciliation.test.mjs` for minimal
+truth-first GREEN. The static RiskScan card remains a local path only; current
+admission, Directory, publication, and action state continue to come only from
+the existing bounded projection regions.
+
 ## Verification
 
 - A durable focused test-only RED precedes source changes.

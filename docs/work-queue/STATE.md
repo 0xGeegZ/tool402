@@ -57,6 +57,11 @@
   D-S28-010-002. The Provider page/status component remain source-prohibited
   until fresh independent RED acceptance; the RiskScan card may never imply an
   admitted/active offering when the current projection is absent or unconfigured.
+- S28_PROVIDER_OVERVIEW_GREEN: The independent RED review at `a36f536` is
+  clear. D-S28-010-003 permits only the Provider page, Provider status
+  component, and focused S28 visual test for minimal GREEN. S17 projection
+  reads/state/tests and the deploy wizard remain unchanged; the local RiskScan
+  card may not assert any admission, publication, or live state.
 
 - PRODUCT_OVERVIEW: accepted as P00-T010
 - CURRENT_MODULE: S13 outcome-feedback treatment is accepted at source commit `ece66c2fd7b2278ed0f801ad1febd478d9ddc39f`; S15 wallet-island/relay is accepted at `506f038fffb87739cc5fd302a30033b5c56d36ee`; S16 provider deploy wizard is accepted at `ed46ae18a08c859d5f2c94722ab84453ef674835`; M38 offering command payloads and M40 durable offering/Directory admission are accepted at `60-done`. HA-COMMAND-AUTHORITY-002, HA-ATS-RETARGET-001, HA-ATS-RUNTIME-BINDING-001, HA-ISSUER-ACCOUNT-001, and HA-CAMPAIGN-CONVEX-001 are accepted only as bounded local authority or human evidence. B03 Agent payment remains locally green and awaits its separate human-owned testnet exercise.
