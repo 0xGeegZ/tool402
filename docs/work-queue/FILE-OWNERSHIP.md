@@ -691,10 +691,12 @@ amendable. The stage 4 literal keeps `clearingAccount` absent under
 `D-S21-010-001`; no request is built and the stage stays unavailable. No
 wallet, provider, SDK, configuration, durable write, transaction, deployment,
 or live path is authorized by the corrective scope. The independent ready
-review is recorded at `docs/work-queue/evidence/S21-T010-ready-review.md` and
-the activation at `docs/work-queue/evidence/S21-T010-activation-review.md`.
-Only the named test-only RED paths are now authorized; every source path stays
-prohibited pending independent RED acceptance.
+review is recorded at `docs/work-queue/evidence/S21-T010-ready-review.md`, the
+activation at `docs/work-queue/evidence/S21-T010-activation-review.md`, and
+the RED acceptance at `docs/work-queue/evidence/S21-T010-red-review.md`.
+Only `provider-deploy-state.ts`, `provider-deploy-wizard.tsx`, and
+`deploy-stage-signing.tsx` may now receive the minimal GREEN correction; every
+other source path stays prohibited pending fresh task and module reviews.
 
 S22-T010 is a root-owned post-rehearsal POLISH intake comprising only its card,
 `docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog,

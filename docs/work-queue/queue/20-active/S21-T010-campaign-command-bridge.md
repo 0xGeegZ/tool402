@@ -173,6 +173,11 @@ no command, schema, canonicalizer, wallet/provider/SDK behavior, relay
 semantics, configuration, durable write, transaction, deployment, or live
 authority. The historical source and every excluded path remain unchanged.
 
+The corrective RED contract is accepted at `1b1eea8f8a77b9b626c0230dc88fba226f21abd8`
+and its independent review is recorded at
+`docs/work-queue/evidence/S21-T010-red-review.md`. Only the three named GREEN
+paths above are authorized until fresh task and module reviews complete.
+
 ## Human worktree lane request
 
 - Requested at `2026-09-09T18:05:42Z` by the human operator (repository owner) through the
