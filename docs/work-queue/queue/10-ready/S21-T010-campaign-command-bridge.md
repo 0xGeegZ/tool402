@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready — corrective test-only RED awaits a fresh activation
 - Dependencies: M26-T010 accepted, M30-T010 accepted, M38-T010 accepted,
   S15-T010 accepted, S16-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
