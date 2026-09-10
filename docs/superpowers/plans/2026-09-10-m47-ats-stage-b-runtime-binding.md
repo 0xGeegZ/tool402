@@ -57,8 +57,11 @@ Node 22.21.1 tests.
 - [ ] Amend the bridge tests so stage 2 must construct exactly the real M42
   payload without a `projection` input, while stages 1/3/4 retain their
   accepted behavior. Add a source assertion that the bridge does not import
-  the S16 display literal. Amend the signing-island source assertion to pass
-  no stage-2 projection.
+  the S16 display literal, contains no `projection` input, and preserves only
+  its module-private neutral campaign subject in stages 1 and 4. Pass a
+  synthetic surplus `projection` from the JavaScript fixture and prove stage 2
+  still emits the real M42 fields. Amend the signing-island source assertion
+  to pass no stage-2 projection while preserving its S16 display-state use.
 - [ ] Run the focused Backend and Web commands. Confirm RED fails only for the
   absent M47 binding/projection and intentional old bridge behavior; commit
   the RED contract.
@@ -91,7 +94,9 @@ Node 22.21.1 tests.
   accepted real M42 record. Do not import Backend/private source or export an
   owner, descriptor, parameter, RPC/Mirror, authority, or secret value.
 - [ ] Make stage 2 use that module directly and remove the caller-provided
-  stage-2 projection input. Preserve the S16 literal for display-only state.
+  stage-2 projection input. Replace the bridge's former S16-derived subject
+  with its one private neutral subject literal used only for stages 1 and 4.
+  Preserve the S16 literal for display-only state.
 - [ ] Update the signing island to stop passing a stage-2 projection. Do not
   invoke signing, relay, provider, or wallet code as part of this task.
 - [ ] Run the focused Web tests, Web typecheck, and relevant S15/S16/S21

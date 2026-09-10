@@ -52,7 +52,10 @@ M47 introduces exactly two fail-closed projections:
 2. A browser-only public command projection transcribes only the M26 fields
    required to sign the already approved real `ATS_CREATE` payload. The S21
    bridge uses that projection only for stage 2; the S16 display literal stays
-   display-only and is never accepted as a stage-2 input.
+   display-only and is never accepted as a stage-2 input. The bridge retains
+   one module-private neutral campaign subject literal exclusively for stages
+   1 and 4; it is not an ATS configuration/projection and never forms the
+   stage-2 `external.prepare` payload.
 
 The production M33 manifest remains zero-enabled. This card does not make an
 ATS command admissible, create an attempt, prompt a wallet, send calldata,
@@ -81,7 +84,8 @@ attach a candidate, or inspect a chain/Mirror response.
   drift before M33 or a durable lookup; and leaves M33 zero-enabled.
 - Focused Web tests prove stage 2 uses the exact real M26 projection, exposes
   no owner or private configuration value, takes no caller-provided projection,
-  and cannot import the S16 display literal into the command bridge.
+  and cannot import the S16 display literal into the command bridge. They also
+  preserve the bridge-local neutral subject only for stages 1 and 4.
 - Backend/Web/root typecheck, focused tests, full relevant workspace tests,
   lint, queue/reference/whitespace checks, the enabled local-reference guard,
   and independent task plus module reviews pass before acceptance.

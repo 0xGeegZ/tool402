@@ -109,6 +109,13 @@ The S21 command bridge uses this projection only when building stage 2. Stage
 display literal continues to drive display rows and stage presentation, but
 must not be imported by the command bridge or used to form a stage-2 payload.
 
+The bridge retains one module-private neutral campaign subject literal
+`"riskscan_revenue_note_demo"` exclusively for stages 1 and 4. It is not an
+ATS configuration/projection, is not accepted from a caller, and never forms
+the stage-2 `external.prepare` payload. The focused bridge contract must prove
+that it remains equal to the public projection's subject while the public
+projection itself is used only for stage 2.
+
 The browser projection is never a server authority. The server-side binding
 and M33 independently fail closed before any durable state.
 
@@ -132,7 +139,8 @@ call, fund an account, deploy, or claim a live result.
 - Backend tests prove exact real-issuer matching and rejection of every
   synthetic or context/payload drift before M33 or durable state.
 - Web tests prove the exact real public projection, no caller-selected stage-2
-  projection, and no S16 display-literal import in the bridge.
+  projection, no S16 display-literal import in the bridge, and the neutral
+  campaign subject's confinement to stages 1 and 4.
 - M33 remains zero-enabled and ATS commands remain rejected after M47's local
   binding until a separate Stage-B human decision is accepted and executed.
 - Focused and workspace verification, typechecks, lint, queue/reference/
