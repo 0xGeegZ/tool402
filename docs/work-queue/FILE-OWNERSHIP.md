@@ -1036,3 +1036,9 @@ D-S28-010-003 authorizes exactly `apps/web/src/app/provider/page.tsx`,
 presentational GREEN. The RiskScan card is a local `/provider/deploy` path,
 not an admitted/active/published offering assertion; all real states remain in
 the existing closed projection regions. No other source/test path is granted.
+
+S28-T010 is accepted at source `5352f05`. Its final local source/test set is
+exactly the Provider page, Provider status component, and focused S28 visual
+test named above. This is a completed presentation-only scope: it grants no
+further reservation, no reader/state/deploy-wizard amendment, and no data,
+wallet/provider/payment/transaction/deployment/live path.

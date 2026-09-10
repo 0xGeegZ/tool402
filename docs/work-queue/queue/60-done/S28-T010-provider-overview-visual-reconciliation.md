@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active (test-only RED)
+- Queue state: 60-done
 - Dependencies: S17-T010 accepted; S30-T010 accepted. S31-T010 retains its
   disjoint shared-shell source scope.
 - Owner: The root owns queue state, catalog, ownership, UI ledger, decisions,
@@ -52,6 +52,15 @@ The independent RED review at `a36f536` is clear. D-S28-010-003 permits only
 truth-first GREEN. The static RiskScan card remains a local path only; current
 admission, Directory, publication, and action state continue to come only from
 the existing bounded projection regions.
+
+## Acceptance
+
+S28-T010 is accepted at source `5352f05` after durable RED/GREEN, Node 22.21.1
+focused S28/S17 tests 11/11, Web typecheck, whitespace/queue checks, 1440px
+and 390px browser verification, and clear independent review. It changes only
+Provider presentation: the server projection reader/state and Provider deploy
+wizard remain untouched, and the RiskScan card remains an explicitly local
+path rather than an admitted, published, or live offering claim.
 
 ## Verification
 
