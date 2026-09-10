@@ -92,8 +92,8 @@ test("gives the decorative landing artwork an explicit responsive width", async 
   const hero = await readAppFile("src/components/landing/landing-hero.tsx");
 
   assert.match(hero, /\/brand\/hero-trio\.png/);
-  assert.match(hero, /\bw-full\s+max-w-xl\b/);
-  assert.match(hero, /\blg:max-w-none\b/);
+  assert.match(hero, /\bw-full\s+max-w-sm\b/);
+  assert.match(hero, /\blg:grid-cols-\[minmax\(0,1fr\)_24rem\]/);
 });
 
 test("renders a single read-only Explore marketplace catalog", async () => {
