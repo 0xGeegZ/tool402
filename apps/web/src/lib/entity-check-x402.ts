@@ -93,10 +93,7 @@ export async function createEntityCheckProtectedHandler(
   options: EntityCheckPostOptions = {},
 ): Promise<EntityCheckProtectedHandler> {
   const configuration = readX402Configuration(environment, "ENTITYCHECK_X402");
-  if (
-    configuration === null ||
-    (configuration.kind === "evm" && configuration.network !== "eip155:84532")
-  ) {
+  if (configuration === null) {
     throw new RangeError("EntityCheck x402 configuration is unavailable");
   }
   if (readEntityCheckSourceConfiguration(environment) === null) {
@@ -146,7 +143,6 @@ export async function handleEntityCheckPost(
   const configuration = readX402Configuration(environment, "ENTITYCHECK_X402");
   if (
     configuration === null ||
-    (configuration.kind === "evm" && configuration.network !== "eip155:84532") ||
     readEntityCheckSourceConfiguration(environment) === null
   ) {
     return unavailableResponse();

@@ -88,11 +88,14 @@ function sourceResult(overrides = {}) {
   };
 }
 
-function createLocalFacilitator(settle = ({ requirements }) => ({
-  success: true,
-  network: requirements.network,
-  transaction: "entitycheck-settlement-42",
-})) {
+function createLocalFacilitator(
+  settle = ({ requirements }) => ({
+    success: true,
+    network: requirements.network,
+    transaction: "entitycheck-settlement-42",
+  }),
+  supportedNetwork = "eip155:84532",
+) {
   const calls = { getSupported: 0, verify: 0, settle: 0 };
 
   return {
@@ -101,7 +104,7 @@ function createLocalFacilitator(settle = ({ requirements }) => ({
       async getSupported() {
         calls.getSupported += 1;
         return {
-          kinds: [{ x402Version: 2, scheme: "exact", network: "eip155:84532" }],
+          kinds: [{ x402Version: 2, scheme: "exact", network: supportedNetwork }],
           extensions: [],
           signers: {},
         };
@@ -193,7 +196,7 @@ implementedTest("fails closed without a payment challenge when EntityCheck x402 
     ["missing recipient", configuredEnvironment({ ENTITYCHECK_X402_PAY_TO: undefined })],
     ["malformed recipient", configuredEnvironment({ ENTITYCHECK_X402_PAY_TO: "0xabc" })],
     ["unencrypted facilitator", configuredEnvironment({ ENTITYCHECK_X402_FACILITATOR_URL: "http://facilitator.invalid" })],
-    ["unsupported network", configuredEnvironment({ ENTITYCHECK_X402_NETWORK: "eip155:1" })],
+    ["malformed network", configuredEnvironment({ ENTITYCHECK_X402_NETWORK: "eip155:chain" })],
   ]) {
     const reads = [];
     const response = await entityCheck.handleEntityCheckPost(createRequest(), environment, {
@@ -205,6 +208,26 @@ implementedTest("fails closed without a payment challenge when EntityCheck x402 
     assert.deepEqual(await response.json(), { error: "entity_check_unavailable" }, description);
     assert.equal(reads.length, 0, description);
   }
+});
+
+implementedTest("issues a challenge for every accepted EVM CAIP-2 network", async () => {
+  const reads = [];
+  const environment = configuredEnvironment({ ENTITYCHECK_X402_NETWORK: "eip155:1" });
+  const facilitator = createLocalFacilitator(undefined, "eip155:1");
+  const handler = await createProtectedHandler({
+    environment,
+    facilitator,
+    readSources: createSourceReader(sourceResult(), reads),
+  });
+
+  const response = await handler(createRequest());
+
+  assert.equal(response.status, 402);
+  assert.match(response.headers.get("payment-required") ?? "", /\S/u);
+  assert.equal(facilitator.calls.getSupported, 1);
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+  assert.equal(reads.length, 0);
 });
 
 implementedTest("fails closed without a payment challenge when EntityCheck source configuration is missing", async () => {
