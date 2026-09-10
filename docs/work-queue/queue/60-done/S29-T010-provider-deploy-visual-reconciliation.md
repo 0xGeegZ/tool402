@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active (presentation GREEN)
+- Queue state: 60-done
 - Dependencies: S16-T010 accepted; S30-T010 and S28-T010 accepted. S31-T010
   retains its disjoint shared-shell source scope.
 - Owner: The root owns queue state, catalog, ownership, UI ledger, decisions,
@@ -56,6 +56,16 @@ once only for the absent footer hierarchy, while the unchanged S16/S21/M47/M44
 behavior suite passes 47/47. D-S29-010-004 therefore permits only the four
 presentation components named above and the focused visual test for minimal
 GREEN. Existing behavior tests are verification-only and remain unamendable.
+
+## Acceptance
+
+S29-T010 is accepted at source `dc9f010`. The independent review is clear;
+the focused S29/S16/S21/M47/M44 suite passes 48/48, Web typecheck,
+queue/whitespace, and 1440px/390px browser checks are clear. The page adds
+only the selected `PREP-UI-001` presentation direction: local return, RiskScan
+identity, local editable/testnet boundary, compact purple step progress, flat
+surfaces, and the existing shared footer. All S16 behavior and every
+wallet/signature/ATS boundary remain unchanged.
 
 ## Verification
 

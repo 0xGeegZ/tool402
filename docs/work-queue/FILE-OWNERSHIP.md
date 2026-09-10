@@ -1078,3 +1078,10 @@ D-S29-010-004 authorizes exactly
 presentational GREEN. The current S16/S21/M47/M44 behavior tests are
 verification-only. No other path, state transition, handler, wallet/signature,
 ATS, data, payment, transaction, deployment, or live claim is granted.
+
+S29-T010 is accepted at source `dc9f010`. Its final local source/test set is
+exactly the Provider deploy page, wizard, stages, signing component, and
+focused S29 visual test named above. This completed presentation-only slice
+grants no further reservation and no amendment to any existing S16/S21/M47/M44
+behavior test, state, fixture, configuration, wallet/signature, ATS, data,
+payment, transaction, deployment, or live path.
