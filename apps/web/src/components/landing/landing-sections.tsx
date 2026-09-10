@@ -36,7 +36,7 @@ export function LandingSections() {
         <div className="mx-auto max-w-2xl space-y-3 text-center">
           <Badge variant="outline" className="border-brand-purple/30 text-brand-purple">How it works</Badge>
           <h2 id="how-it-works-title" className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
-            From a tool to a clearer next step
+            Three clear steps,<br />one current route at a time
           </h2>
           <p className="leading-7 text-muted-foreground">
             Keep discovery practical: see the current tool, inspect its local boundary, then continue where the
@@ -48,7 +48,7 @@ export function LandingSections() {
           <ol className="relative grid gap-5 lg:grid-cols-3">
             {steps.map((step, index) => (
               <li key={step.title}>
-                <Card className="relative h-full rounded-[calc(var(--radius)*2)] border border-border bg-card shadow-[0_1rem_2rem_color-mix(in_oklab,var(--foreground)_6%,transparent)] transition-shadow hover:shadow-[0_1.25rem_2.5rem_color-mix(in_oklab,var(--foreground)_9%,transparent)] motion-reduce:transition-none">
+                <Card className="relative min-h-64 rounded-[calc(var(--radius)*2)] border border-border bg-card shadow-[0_1rem_2rem_color-mix(in_oklab,var(--foreground)_6%,transparent)] transition-shadow hover:shadow-[0_1.25rem_2.5rem_color-mix(in_oklab,var(--foreground)_9%,transparent)] motion-reduce:transition-none">
                   <CardHeader className="gap-5">
                     <div className="flex items-center justify-between gap-4">
                       <span className={`flex size-11 items-center justify-center rounded-2xl text-sm font-semibold ${step.tone}`}>
