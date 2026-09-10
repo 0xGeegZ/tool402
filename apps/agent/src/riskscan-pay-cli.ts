@@ -3,6 +3,7 @@ import { x402Client, x402HTTPClient } from "@x402/core/client";
 import { decodePaymentRequiredHeader } from "@x402/core/http";
 import type { SchemeNetworkClient } from "@x402/core/types";
 import { evaluateRiskScanNativeQuote } from "@tool402/core";
+import type { RiskScanQuickInput } from "@tool402/core";
 
 import {
   createRiskScanQuickPaymentAgent,
@@ -149,9 +150,56 @@ function unsignedRequest(input: unknown): RequestInit {
   };
 }
 
+function snapshotPreflightInput(value: unknown): RiskScanQuickInput | null {
+  try {
+    if (typeof value !== "object" || value === null || Object.getPrototypeOf(value) !== Object.prototype) return null;
+    const fields = ["requestRef", "subjectRef", "context", "declarations"] as const;
+    if (Reflect.ownKeys(value).length !== fields.length || !fields.every((field) => Object.hasOwn(value, field))) return null;
+    const input = value as Record<string, unknown>;
+    const strings = [["requestRef", 96], ["subjectRef", 160], ["context", 280]] as const;
+    const snapshot: Record<string, string> = Object.create(null) as Record<string, string>;
+    for (const [field, maximumLength] of strings) {
+      const descriptor = Object.getOwnPropertyDescriptor(input, field);
+      if (descriptor === undefined || descriptor.get !== undefined || descriptor.set !== undefined || typeof descriptor.value !== "string") return null;
+      const normalized = descriptor.value.trim();
+      if (normalized.length === 0 || normalized.length > maximumLength) return null;
+      snapshot[field] = normalized;
+    }
+    const declarations = input.declarations;
+    if (typeof declarations !== "object" || declarations === null || Object.getPrototypeOf(declarations) !== Object.prototype) return null;
+    const declarationFields = ["identity", "pricing", "limitations", "evidence"] as const;
+    if (Reflect.ownKeys(declarations).length !== declarationFields.length || !declarationFields.every((field) => Object.hasOwn(declarations, field))) return null;
+    const reported: Record<string, boolean> = Object.create(null) as Record<string, boolean>;
+    for (const field of declarationFields) {
+      const descriptor = Object.getOwnPropertyDescriptor(declarations, field);
+      if (descriptor === undefined || descriptor.get !== undefined || descriptor.set !== undefined || typeof descriptor.value !== "boolean") return null;
+      reported[field] = descriptor.value;
+    }
+    return {
+      requestRef: snapshot.requestRef,
+      subjectRef: snapshot.subjectRef,
+      context: snapshot.context,
+      declarations: {
+        identity: reported.identity,
+        pricing: reported.pricing,
+        limitations: reported.limitations,
+        evidence: reported.evidence,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function preflight(): Promise<void> {
   const configuration = readServiceConfiguration();
   if (configuration === null) {
+    writeDiagnostic({ phase: "configuration" });
+    process.exitCode = 1;
+    return;
+  }
+  const input = snapshotPreflightInput(configuration.input);
+  if (input === null) {
     writeDiagnostic({ phase: "configuration" });
     process.exitCode = 1;
     return;
@@ -174,7 +222,7 @@ async function preflight(): Promise<void> {
   }
   let response: Response;
   try {
-    response = await fetch(new URL("/api/riskscan", configuration.serviceBase), unsignedRequest(configuration.input));
+    response = await fetch(new URL("/api/riskscan", configuration.serviceBase), unsignedRequest(input));
     if (response.status !== 402) throw new Error("initial request failed");
     const challenge = decodePaymentRequiredHeader(response.headers.get("payment-required") ?? "");
     if (!matchesRiskScanPayPreflightChallenge(challenge, quote)) throw new Error("challenge mismatch");

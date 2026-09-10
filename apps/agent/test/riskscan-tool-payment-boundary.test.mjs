@@ -223,6 +223,7 @@ function runCliPreflight({
   initialStatus = 402,
   signedRetryStatus = 200,
   terminalCatch = false,
+  preflightInput = input,
 } = {}) {
   const paymentRequired = {
     x402Version: 2,
@@ -335,7 +336,7 @@ function runCliPreflight({
           B03_SECRET_SENTINEL: "SECRET_SENTINEL_B03",
           NODE_NO_WARNINGS: "1",
           RISKSCAN_PAY_SERVICE_BASE_URL: base.href,
-          RISKSCAN_PAY_INPUT_JSON: JSON.stringify(input),
+          RISKSCAN_PAY_INPUT_JSON: JSON.stringify(preflightInput),
           RISKSCAN_PAY_POLICY_JSON: JSON.stringify(preflightPolicy),
           ...(defaultPayment ? {
             RISKSCAN_PAY_PAYER_ACCOUNT_ID: "0.0.1001",
@@ -529,6 +530,21 @@ boundaryTest("maps a missing preflight configuration to a closed nonzero diagnos
   assert.equal(stdout, "RISKSCAN_PAY_DIAGNOSTIC CONFIGURATION_INVALID\n");
   assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03/u);
 });
+
+for (const [label, preflightInput] of [["an empty object", {}], ["null", null]]) {
+  boundaryTest(`rejects ${label} preflight input before Directory or payment boundaries`, async () => {
+    const { error, stdout, stderr } = await runCliPreflight({ preflightInput });
+
+    assert.notEqual(error, null);
+    assert.equal(stderr, "");
+    assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_PAYER_READ|B03_TEST_RESULT_PARSE/u);
+    const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
+    assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC CONFIGURATION_INVALID"]);
+    assert.deepEqual(requests, []);
+    assert.deepEqual(boundaries, []);
+    assert.deepEqual(transportAttempts, []);
+  });
+}
 
 async function assertCliPhaseFailure(failurePhase, expectedDiagnostic, expectedOutcome, expectedRequests, expectedBoundaries) {
   const { error, stdout, stderr } = await runCliPreflight({ defaultPayment: true, failurePhase });
