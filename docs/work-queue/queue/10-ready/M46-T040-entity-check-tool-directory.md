@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M05-T010 accepted, M05-T020 accepted, M06-T010 accepted,
   M45-T010 accepted, and M46-T030 accepted. The canonical-directory migration
   correction recorded in [D-M46-040-001](../../DECISIONS.md) is a required
@@ -33,6 +33,10 @@
 - Human actions: none. Discovery is static metadata plus a fail-closed
   configuration summary; it authorises no publication, payment, provider,
   wallet, account, transaction, deployment, or live claim.
+- Ready authority: the clear independent review at
+  [M46-T040 readiness review](../../evidence/M46-T040-ready-review.md)
+  authorises a separate activation only for the durable test-only RED contract
+  at the eleven declared test paths. No source path is authorized yet.
 
 ## Scope
 
