@@ -3,6 +3,7 @@ import { v, type GenericId } from "convex/values";
 import { parseExternalPreparePayload, type ExternalPreparePayload } from "@tool402/core";
 import { keccak256, stringToHex } from "viem";
 import { assertCurrentAtsPrepareAuthority } from "./ats_prepare_authority.ts";
+import { assertStageBAtsCreateRuntimeBinding } from "./stage_b_ats_create_runtime_binding.ts";
 import {
   linkAtsCreateAttemptToDraftOffering,
   readAtsCreateReplayOffering,
@@ -295,6 +296,7 @@ export const admitAtsCreateAndMarkAssetPending = internalMutation({
       .take(2);
     if (authorities.length !== 1) return reject();
     revalidateAuthority(authorities[0], bound);
+    assertStageBAtsCreateRuntimeBinding(bound);
     assertCurrentAtsPrepareAuthority(bound.payload);
 
     const claims = await ctx.db.query("externalPrepareCommandReplayClaims")

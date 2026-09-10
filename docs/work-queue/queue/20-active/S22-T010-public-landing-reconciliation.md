@@ -11,8 +11,10 @@
 - Owner: The root owns queue state, catalog, ownership, the local UI ledger,
   decisions, reviews, commits, and pushes. This intake owns only this card,
   `docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, and the root control
-  records. The early source-to-current comparison and independent readiness
-  review reserve only the focused test RED paths named in the activation record.
+  records. The first accepted GREEN scope named the root page, its three
+  landing components, and three focused landing tests. D-S22-010-006 accepts
+  the visual-fidelity RED and authorizes those existing source/test paths plus
+  the one selected text-free `hero-trio.png` asset for renewed GREEN only.
 - Human actions: this card creates no wallet/provider/ATS authority. The
   existing Stage B action, public deployment, and demo recording remain
   distinct human-owned downstream actions.
@@ -46,10 +48,11 @@ The root has committed a narrow UI-S22 ledger amendment that names:
 3. the current route target for every CTA; and
 4. each omitted prepared element and the truthful reason for omitting it.
 
-The independent readiness review is clear. This active phase authorizes only
-the focused test RED paths in the activation record; it cannot reopen unrelated
-routes, import a general archive, or substitute fake product states for current
-local truth.
+The independent readiness review and exact-head RED review are clear. The
+active GREEN scope is recorded in
+`docs/work-queue/evidence/S22-T010-green-scope-authorization.md`; it cannot
+reopen unrelated routes, import a general archive, select a new asset, or
+substitute fake product states for current local truth.
 
 ## Acceptance criteria
 

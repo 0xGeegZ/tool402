@@ -7,11 +7,15 @@ or requiring another payable exercise.
 
 ## Steps
 
-1. Obtain independent readiness and activate only the four declared RED paths.
+1. Obtain independent readiness and activate only
+   `apps/agent/test/riskscan-pay-observability.test.mjs` and the narrow
+   `apps/agent/test/riskscan-tool-payment-boundary.test.mjs` amendment for
+   durable RED; both source paths remain prohibited.
 2. Add failing focused contracts for the closed diagnostic mapping, redaction,
    and one-GET/one-unsigned-request preflight guard.
-3. Review RED; authorize only the two source paths if failures are confined to
-   their absence.
+3. Review RED; if failures are confined to source absence, authorize only
+   `apps/agent/src/riskscan-pay-observability.ts` and the narrow CLI-edge
+   amendment of `apps/agent/src/riskscan-pay-cli.ts`.
 4. Implement a pure private diagnostic mapper and a narrow CLI-edge preflight
    guard; retain the B03 payment library unchanged.
 5. Run focused/full Agent validation, independent task/module review, and

@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 20-active
 - Dependencies: M05-T020 accepted, M05-T030 accepted, M06-T010 accepted,
   M12-T020 accepted, and B02-T010 accepted. B03-T010 is local-GREEN context
   only; its separate human exercise remains blocked and is not a dependency.
@@ -47,6 +47,39 @@ or signed-retry boundary.
   the explicit sequential successor reservation. No active lane owns them.
 - The contract fixes the closed code set, redaction rule, phase mapping, and
   non-payable preflight stop before an implementation begins.
+
+## Readiness review
+
+The independent current-head review at
+[B03-T020 readiness review](../../evidence/B03-T020-ready-review.md) is
+clear. This card is `10-ready`; a separate fresh activation may authorize only
+the two durable test-only RED paths
+`apps/agent/test/riskscan-pay-observability.test.mjs` and
+`apps/agent/test/riskscan-tool-payment-boundary.test.mjs`. Every source path
+and every external boundary remains prohibited pending fresh RED acceptance.
+
+## Activation review
+
+The fresh independent activation review at
+[B03-T020 activation review](../../evidence/B03-T020-activation-review.md) is
+clear. This card is `20-active` only to create the durable RED contract in
+exactly these paths:
+
+- `apps/agent/test/riskscan-pay-observability.test.mjs`
+- `apps/agent/test/riskscan-tool-payment-boundary.test.mjs`
+
+Every source path, key/signer/provider boundary, request, retry, settlement,
+preflight execution, replacement attempt, deployment, and live action remains
+prohibited pending fresh independent RED acceptance.
+
+## RED review
+
+The independent review at
+[B03-T020 RED review](../../evidence/B03-T020-red-review.md) found the
+delegated test-only commit correctly scoped but insufficient to prove the
+non-payable preflight stop boundary. This card remains `20-active` only for the
+two already-authorized test paths while that RED contract is strengthened.
+Source remains prohibited.
 
 ## Verification
 

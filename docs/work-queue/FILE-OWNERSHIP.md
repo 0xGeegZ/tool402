@@ -252,18 +252,17 @@ Core, backend, Web and UI paths, S12-T010's boundary routes and assets, runtime
 configuration, key material, accounts, wallets, deployment, and live evidence
 are excluded.
 
-B03-T020 is a root-controlled `00-inbox` CORE_P0 successor comprising its
+B03-T020 is a root-controlled `20-active` CORE_P0 successor comprising its
 card, `docs/specs/b03-agent-safe-phase-diagnostics.md`, its local plan and
-intake review, catalog, ownership, State, decisions, reviews, commits, and
-pushes. After independent readiness and activation, it may own only
-`apps/agent/src/riskscan-pay-observability.ts`, the narrow CLI-edge amendment
-of `apps/agent/src/riskscan-pay-cli.ts`,
-`apps/agent/test/riskscan-pay-observability.test.mjs`, and the narrow secrecy/
-preflight amendment of `apps/agent/test/riskscan-tool-payment-boundary.test.mjs`.
-This is an explicit sequential successor reservation: B03-T010 is `50-blocked`
-with no active source lane and is not reopened. B03-T020 may not change the
-payment library, manifest, lockfile, public export, configuration, key,
-account, signer, wallet, provider, request payload/header, signed retry,
+intake/ready/activation reviews, catalog, ownership, State, decisions,
+reviews, commits, and pushes. Its activation authorizes only
+`apps/agent/test/riskscan-pay-observability.test.mjs` and the narrow secrecy/
+preflight amendment of `apps/agent/test/riskscan-tool-payment-boundary.test.mjs`
+for durable RED. The two source paths remain prohibited pending independent RED
+acceptance. This is an explicit sequential successor reservation: B03-T010 is
+`50-blocked` with no active source lane and is not reopened. B03-T020 may not
+change the payment library, manifest, lockfile, public export, configuration,
+key, account, signer, wallet, provider, request payload/header, signed retry,
 settlement, deployment, or live-evidence path. No agent executes a preflight
 or replacement payment.
 
@@ -840,30 +839,52 @@ path remains authorized by this completed corrective cycle.
 
 M47-T010 is a root-controlled `20-active` CORE_P0 correction comprising its
 card, specification, plan, reconciliation evidence, readiness and activation
-reviews, import-ledger row, catalog, State, decisions, reviews, commits, and
-pushes. Its activation authorizes only the durable test-only RED contract at
+reviews, RED review, import-ledger row, catalog, State, decisions, reviews,
+commits, and pushes. Its accepted durable RED contract is limited to
 `packages/backend/tests/stage-b-ats-create-runtime-binding.test.mjs`,
 `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`,
 `apps/web/tests/stage-b-ats-create-command-projection.test.mjs`,
 `apps/web/tests/command-bridge.test.mjs`, and
-`apps/web/tests/deploy-stage-signing.test.mjs`. No production source is
-authorized yet. Its single future admission amendment must run only after M32
-has rebound and revalidated the durable signer authority and before M33,
-replay, idempotency, or state. The M42 real projection stays private; the
-browser may receive only its six fixed M26 fields. M33's manifest, M44's
-Factory helper, S16's display literal, packages, lockfiles, environment,
+`apps/web/tests/deploy-stage-signing.test.mjs`. Fresh independent RED
+acceptance authorizes only `packages/backend/convex/stage_b_ats_create_runtime_binding.ts`,
+`packages/backend/convex/external_prepare_command_admission.ts`,
+`apps/web/src/lib/ats/stage-b-ats-create-command-projection.ts`,
+`apps/web/src/lib/wallet/command-bridge.ts`, and
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, with the
+five tests reserved for matching updates. The private admission amendment must
+run only after M32 has rebound and revalidated the durable signer authority and
+before M33, replay, idempotency, or state. The M42 real projection stays
+private; the browser may receive only its six fixed M26 fields. M33's manifest,
+M44's Factory helper, S16's display literal, packages, lockfiles, environment,
 public Backend exports, routes, and submission documents are not amendable. No
 authority provision, SDK, provider, wallet, network, transaction, candidate,
 or live path is authorized.
 
-S22-T010 is a root-owned early truth-first POLISH lane. It is `20-active` only
-for `apps/web/tests/product-landing.test.mjs`,
-`apps/web/tests/landing-explore.test.mjs`, and the new
-`apps/web/tests/public-landing-reconciliation.test.mjs` RED contract. Every
-landing source, asset, global layout/navigation/CSS, non-root route,
-provider/ATS, configuration, package, README, submission, deployment, and
-video path remains prohibited until independent RED review authorizes exact
-GREEN paths.
+M44-T030 is a root-controlled `20-active` CORE_P0 corrective successor to
+accepted M44-T020. It comprises its card, specification, local plan, intake
+review, catalog, ownership, State, decisions, reviews, commits, and pushes.
+Its only future implementation paths are the narrow decoded-event amendment of
+`apps/web/src/lib/ats/factory-deploy-bond.ts` and
+`apps/web/tests/factory-deploy-bond.test.mjs`. Only that test is active for
+durable RED; source remains prohibited pending a separate independent RED
+review. The selected
+official Factory artifact and viem seam, every package/lockfile, SDK/browser
+compatibility, M47 path, provider, wallet, RPC, transaction, candidate,
+deployment, and live path are excluded.
+
+S22-T010 is a root-owned early truth-first POLISH lane. Its first independently
+accepted GREEN scope comprised only `apps/web/src/app/page.tsx`,
+`apps/web/src/components/landing/landing-hero.tsx`,
+`apps/web/src/components/landing/landing-sections.tsx`,
+`apps/web/src/components/landing/landing-footer.tsx`,
+`apps/web/tests/product-landing.test.mjs`,
+`apps/web/tests/landing-explore.test.mjs`, and
+`apps/web/tests/public-landing-reconciliation.test.mjs`. It selected no new
+asset. D-S22-010-006 accepts the renewed RED and authorizes only the existing
+root/three component paths, their three focused tests, and the individually
+selected `apps/web/public/brand/hero-trio.png` asset for GREEN. Every global
+layout/navigation/CSS, non-root route, provider/ATS, configuration, package,
+README, submission, deployment, video, and all other path remains prohibited.
 
 S24-T010 is a root-owned early truth-first POLISH lane. It is `20-active` for
 `apps/web/src/app/dashboard/page.tsx`,

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -14,13 +14,29 @@ let core;
 let state;
 let command;
 let relay;
-let atsCreateConfiguration;
 
 const campaignCommandTypes = ["external.prepare", "offering.create", "directory.publish", "external.attachCandidate"];
 const nowMilliseconds = Date.parse("2026-09-09T18:00:00.000Z");
 const issuedAt = "2026-09-09T18:00:00.000Z";
 const expiresAt = "2026-09-09T18:05:00.000Z";
 const signer = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf";
+const neutralCampaignSubject = "riskscan_revenue_note_demo";
+const realM42Projection = Object.freeze({
+  network: "hedera:testnet",
+  chainId: 296,
+  subjectPublicId: neutralCampaignSubject,
+  operationKind: "ATS_CREATE",
+  expectedTarget: "0xd1f118a40f3b02883d35909ef2517e7edd78379d",
+  canonicalParametersHash: "1880065c5ae64b3fc6279cfdd8c85a6880d43e98ce129ed697c72372204296f9",
+});
+const syntheticSurplusProjection = Object.freeze({
+  network: "hedera:testnet",
+  chainId: 296,
+  subjectPublicId: "caller_selected_subject",
+  operationKind: "ATS_CREATE",
+  expectedTarget: "0x1111111111111111111111111111111111111111",
+  canonicalParametersHash: "39a4d53db2aa60dd40b50c97738f53a888fdadcb350e1e85984fbd4dd76abc9a",
+});
 const values = Object.freeze({
   toolName: "RiskScan",
   customerProblem: "Tool operators need a bounded way to assess request risk before they continue a workflow.",
@@ -55,7 +71,6 @@ function build(stage, overrides = {}) {
     stage,
     states: [actionable, blocked, { kind: "unavailable" }, { kind: "unavailable" }],
     values,
-    projection: atsCreateConfiguration,
     attemptPublicId: null,
     candidate: null,
     record: literal.directoryRecordLiteral,
@@ -87,7 +102,6 @@ test.before(async () => {
   state = await import("../src/components/provider/deploy/provider-deploy-state.ts");
   command = await import("../src/lib/wallet/tool402-command.ts");
   relay = await import("../src/lib/wallet/command-relay.ts");
-  ({ atsCreateConfiguration } = await import("../src/components/provider/deploy/ats-create-configuration.ts"));
 });
 
 implementedTest("closes the campaign command type set on the builder and the relay flow", async () => {
@@ -146,8 +160,8 @@ implementedTest("builds the stage 1 offering.create request through the accepted
   assert.equal(typeof request.title, "string");
   assert.ok(request.title.length > 0);
   assert.ok(request.description.length > 0);
-  assert.equal(parsed.offeringPublicId, atsCreateConfiguration.subjectPublicId);
-  assert.equal(parsed.subjectPublicId, atsCreateConfiguration.subjectPublicId);
+  assert.equal(parsed.offeringPublicId, neutralCampaignSubject);
+  assert.equal(parsed.subjectPublicId, neutralCampaignSubject);
   assert.equal(parsed.offeringVersion, 1);
   assert.equal(parsed.definition.qualifyingResource, values.qualifyingResource);
   assert.equal(parsed.definition.maturityAt, "2026-12-31T00:00:00.000Z");
@@ -187,8 +201,11 @@ implementedTest("preserves the Core rejection of blank and noncanonical offering
   }
 });
 
-implementedTest("builds the stage 2 external.prepare request from the frozen ATS_CREATE literal as the bytes the normalizer hashes", () => {
-  const request = build(1, { states: [done, actionable, { kind: "unavailable" }, { kind: "unavailable" }] });
+implementedTest("builds the stage 2 external.prepare request from the real M42 public projection without caller input", () => {
+  const request = build(1, {
+    states: [done, actionable, { kind: "unavailable" }, { kind: "unavailable" }],
+    projection: syntheticSurplusProjection,
+  });
   const payload = payloadOf(request);
   const parsed = core.parseExternalPreparePayload(payload);
 
@@ -199,12 +216,7 @@ implementedTest("builds the stage 2 external.prepare request from the frozen ATS
   assert.deepEqual(
     { ...parsed, idempotencyKey: undefined, expiresAt: undefined },
     {
-      operationKind: "ATS_CREATE",
-      subjectPublicId: atsCreateConfiguration.subjectPublicId,
-      network: "hedera:testnet",
-      chainId: 296,
-      expectedTarget: atsCreateConfiguration.expectedTarget,
-      canonicalParametersHash: atsCreateConfiguration.canonicalParametersHash,
+      ...realM42Projection,
       idempotencyKey: undefined,
       expiresAt: undefined,
     },
@@ -239,10 +251,10 @@ implementedTest("builds the stage 4 directory.publish request only from a comple
   assert.equal(request.stage, 3);
   assert.equal(request.type, "directory.publish");
   assert.equal(request.expiresAt, expiresAt);
-  assert.equal(parsed.offeringPublicId, atsCreateConfiguration.subjectPublicId);
+  assert.equal(parsed.offeringPublicId, neutralCampaignSubject);
   assert.equal(parsed.offeringVersion, 1);
   assert.equal(parsed.directoryVersion, 1);
-  assert.equal(parsed.record.offeringPublicId, atsCreateConfiguration.subjectPublicId);
+  assert.equal(parsed.record.offeringPublicId, neutralCampaignSubject);
   assert.equal(parsed.record.offeringVersion, 1);
   assert.equal(parsed.record.issuerRevenueAccount, "0.0.10430887");
   assert.equal(parsed.record.clearingAccount, "0.0.4200");
@@ -255,7 +267,10 @@ implementedTest("builds the stage 4 directory.publish request only from a comple
 implementedTest("shares one expiresAt per request and never reuses an idempotency key", () => {
   const first = build(0);
   const second = build(0);
-  const third = build(1, { states: [done, actionable, { kind: "unavailable" }, { kind: "unavailable" }] });
+  const third = build(1, {
+    states: [done, actionable, { kind: "unavailable" }, { kind: "unavailable" }],
+    projection: syntheticSurplusProjection,
+  });
 
   for (const request of [first, second, third]) {
     assert.equal(payloadOf(request).expiresAt, request.expiresAt);
@@ -268,7 +283,6 @@ implementedTest("shares one expiresAt per request and never reuses an idempotenc
 implementedTest("refuses a request whose predecessor is not done or whose stage precondition is missing", () => {
   assert.throws(() => build(1), /predecessor/i);
   assert.throws(() => build(1, { states: [actionable, actionable, blocked, blocked] }), /predecessor/i);
-  assert.throws(() => build(1, { states: [done, actionable, blocked, blocked], projection: undefined }), /ATS_CREATE/i);
   assert.throws(() => build(2, { states: [done, done, actionable, blocked], attemptPublicId }), /candidate/i);
   assert.throws(() => build(2, { states: [done, done, actionable, blocked], candidate }), /stage 2/i);
   assert.throws(() => build(2, { states: [done, actionable, actionable, blocked], attemptPublicId, candidate }), /predecessor/i);
@@ -276,6 +290,34 @@ implementedTest("refuses a request whose predecessor is not done or whose stage 
   assert.throws(() => build(3, { states: [done, done, actionable, actionable], record: completeRecord() }), /predecessor/i);
   assert.throws(() => build(4), RangeError);
   assert.equal(build(0, { states: [actionable, blocked, blocked, blocked] }).stage, 0);
+});
+
+implementedTest("keeps caller and S16 display projections out of stage 2 while confining the neutral subject to stages 1 and 4", () => {
+  const source = readFileSync(bridgeUrl, "utf8");
+
+  assert.equal(
+    /import\s*\{[^}]*\bstageBAtsCreateCommandProjection\b[^}]*\}\s+from\s+["']\.\.\/ats\/stage-b-ats-create-command-projection(?:\.ts)?["']/u.test(source),
+    true,
+    "the bridge must import the public M47 command projection",
+  );
+  assert.doesNotMatch(source, /ats-create-configuration/u);
+  assert.doesNotMatch(source, /\bprojection\b/u);
+  assert.match(
+    source,
+    /const\s+neutralCampaignSubject\s*=\s*["']riskscan_revenue_note_demo["']/u,
+  );
+  assert.match(
+    source,
+    /case\s+0\s*:[\s\S]{0,480}offeringCreateBytes\(\s*input\.values\s*,\s*neutralCampaignSubject\s*,/u,
+  );
+  assert.match(
+    source,
+    /case\s+1\s*:[\s\S]{0,480}externalPrepareBytes\(\s*stageBAtsCreateCommandProjection\s*,/u,
+  );
+  assert.match(
+    source,
+    /case\s+3\s*:[\s\S]{0,480}directoryPublishBytes\(\s*input\.record\s*,\s*neutralCampaignSubject\s*,/u,
+  );
 });
 
 implementedTest("freezes the directory record literal without inventing a clearing account or endpoint", () => {
