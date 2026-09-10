@@ -71,19 +71,18 @@ function captureProjection(input: unknown): readonly unknown[] | null {
   }
 }
 
-async function cancelResponse(response: Response): Promise<void> {
+function cancelResponse(response: Response): void {
   try {
-    await response.body?.cancel();
+    const cancellation = response.body?.cancel();
+    void cancellation?.catch(() => undefined);
   } catch {
     // The body can already be closed or locked by a completed read.
   }
 }
 
-async function cancelReader(
-  reader: ReadableStreamDefaultReader<Uint8Array>,
-): Promise<void> {
+function cancelReader(reader: ReadableStreamDefaultReader<Uint8Array>): void {
   try {
-    await reader.cancel();
+    void reader.cancel().catch(() => undefined);
   } catch {
     // Cancellation is best-effort after a deadline or bounded-read failure.
   }
@@ -124,7 +123,7 @@ async function readBoundedJson(
   try {
     reader = stream.getReader();
   } catch {
-    await cancelResponse(response);
+    cancelResponse(response);
     return null;
   }
 
@@ -134,26 +133,26 @@ async function readBoundedJson(
     for (;;) {
       const read = await settleBeforeDeadline(reader.read(), deadline);
       if (read === abortedRead) {
-        await cancelReader(reader);
+        cancelReader(reader);
         return null;
       }
       if (read.done) {
         break;
       }
       if (!(read.value instanceof Uint8Array)) {
-        await cancelReader(reader);
+        cancelReader(reader);
         return null;
       }
 
       byteLength += read.value.byteLength;
       if (byteLength > maximumResponseBytes) {
-        await cancelReader(reader);
+        cancelReader(reader);
         return null;
       }
       chunks.push(read.value);
     }
   } catch {
-    await cancelReader(reader);
+    cancelReader(reader);
     return null;
   }
 
@@ -272,11 +271,11 @@ export async function readActiveDirectoryVersion(
       return noActiveDirectoryVersion();
     }
     if (response.status !== 200) {
-      await cancelResponse(response);
+      cancelResponse(response);
       return noActiveDirectoryVersion();
     }
     if (!jsonContentType.test(response.headers.get("content-type") ?? "")) {
-      await cancelResponse(response);
+      cancelResponse(response);
       return noActiveDirectoryVersion();
     }
 

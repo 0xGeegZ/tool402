@@ -47,12 +47,12 @@ function jsonResponse(body, options = {}) {
   });
 }
 
-function stallingJsonResponse(onCancel) {
+function stallingJsonResponse(onCancel, status = 200) {
   return new Response(
     new ReadableStream({
       cancel: onCancel,
     }),
-    { status: 200, headers: { "content-type": "application/json" } },
+    { status, headers: { "content-type": "application/json" } },
   );
 }
 
@@ -199,6 +199,23 @@ implementedTest("fails closed for every bounded-read transport and body failure 
   }
 });
 
+implementedTest("does not await a non-settling response cancellation", async () => {
+  const environment = { TOOL402_CONVEX_SITE_URL: "https://convex.example.test/" };
+  let cancellations = 0;
+
+  const view = await settlesBefore(
+    api.readActiveDirectoryVersion(environment, async () =>
+      stallingJsonResponse(() => {
+        cancellations += 1;
+        return new Promise(() => {});
+      }, 503),
+    ),
+  );
+
+  assert.deepEqual(view, { state: "no_active_version" });
+  assert.equal(cancellations, 1);
+});
+
 implementedTest("uses one 2-second abort signal to cancel stalling and over-cap streams", async (t) => {
   const environment = { TOOL402_CONVEX_SITE_URL: "https://convex.example.test/" };
   const timeoutControllers = [];
@@ -212,7 +229,10 @@ implementedTest("uses one 2-second abort signal to cancel stalling and over-cap 
   let stallingCancelled = false;
   const stallingRead = api.readActiveDirectoryVersion(environment, async () => {
     stallingCalls += 1;
-    return stallingJsonResponse(() => { stallingCancelled = true; });
+    return stallingJsonResponse(() => {
+      stallingCancelled = true;
+      return new Promise(() => {});
+    });
   });
   await Promise.resolve();
   assert.equal(timeoutControllers.length, 1);
