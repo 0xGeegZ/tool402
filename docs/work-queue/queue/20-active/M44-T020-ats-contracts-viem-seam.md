@@ -76,3 +76,12 @@ This card moves to `20-active` only for the two durable test-only RED files:
 `apps/web/tests/ats-contracts-bundle-gate.test.mjs`. Every source, dependency,
 compatibility-removal, and execution path remains prohibited pending a fresh
 RED acceptance.
+
+## RED acceptance
+
+The independent RED review at `85c8265fedf028a56854792e26fd82aae512abc8` is
+clear in [M44-T020-red-review](../../evidence/M44-T020-red-review.md): the two
+focused tests fail only for the absent direct Factory source and skip ten
+GREEN assertions. Minimal GREEN may now use only this card's exact ownership
+reservation to add the direct source and replace/remove the historical SDK
+graph. The Stage-B execution exclusion remains unchanged.
