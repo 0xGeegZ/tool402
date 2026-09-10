@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M32-T010 accepted, M33-T010 accepted, M42-T010 accepted, and
   M47-T010 accepted
 - Owner: Root owns queue state, catalog, ownership, decisions, reviews,
@@ -60,3 +60,14 @@ is clear at canonical `816947e1529a49a87026db39aabf5549a6008c07`. M48 is
 `10-ready`; a separate fresh activation may authorize only durable test-only
 RED in the two declared Backend test paths. Production source and every live
 boundary remain prohibited.
+
+## Activation review
+
+The independent [M48 activation review](../../evidence/M48-T010-activation-review.md)
+is clear at canonical `1c35f4c614d71ef27bdc9785c2ed3003e7fcb458`. M48 is
+`20-active` only to create durable RED in exactly:
+
+- `packages/backend/tests/ats-prepare-authority.test.mjs`
+- `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`
+
+The source mapping remains prohibited until independent RED acceptance.
