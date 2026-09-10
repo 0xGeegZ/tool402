@@ -160,7 +160,7 @@ function runCliWithoutConfiguration() {
     "import Module, { register, syncBuiltinESMExports } from 'node:module';",
     "const originalProcess = process; const originalLoad = Module._load; const originalGetBuiltinModule = originalProcess.getBuiltinModule.bind(originalProcess);",
     "const attempts = []; const fail = (name) => () => { attempts.push(name); throw new Error(`B03_TEST_BLOCKED_TRANSPORT:${name}`); };",
-    "for (const [name, members] of [['node:http', ['request', 'get']], ['node:https', ['request', 'get']], ['node:http2', ['connect']], ['node:net', ['connect', 'createConnection']], ['node:tls', ['connect']], ['node:dgram', ['createSocket']]]) { const builtin = originalGetBuiltinModule(name); for (const member of members) builtin[member] = fail(`${name}.${member}`); } syncBuiltinESMExports();",
+    "for (const [name, members] of [['node:http', ['request', 'get']], ['node:https', ['request', 'get']], ['node:http2', ['connect']], ['node:net', ['connect', 'createConnection']], ['node:tls', ['connect']], ['node:dgram', ['createSocket']]]) { const builtin = originalGetBuiltinModule(name); for (const member of members) builtin[member] = fail(`${name}.${member}`); } originalGetBuiltinModule('node:net').Socket.prototype.connect = fail('node:net.Socket.prototype.connect'); originalGetBuiltinModule('node:tls').TLSSocket.prototype.connect = fail('node:tls.TLSSocket.prototype.connect'); syncBuiltinESMExports();",
     "const protectedEnv = new Proxy(originalProcess.env, { get(target, key) { if (key === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || key === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY') throw new Error('B03_TEST_PAYER_READ'); return Reflect.get(target, key, target); }, getOwnPropertyDescriptor(target, key) { if (key === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || key === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY') throw new Error('B03_TEST_PAYER_READ'); return Reflect.getOwnPropertyDescriptor(target, key); } });",
     "Object.defineProperty(originalProcess, 'env', { configurable: true, enumerable: true, get: () => protectedEnv });",
     "Object.defineProperty(originalProcess, 'getBuiltinModule', { configurable: true, writable: true, value(name) { return originalGetBuiltinModule(name); } });",
@@ -179,7 +179,7 @@ function runCliWithoutConfiguration() {
         },
         timeout: 2_000,
       },
-      (error, stdout, stderr) => resolve({ error, stdout, stderr }),
+      (error, stdout, stderr) => resolve({ error: error === null ? null : { exitCode: error.code ?? null, timedOut: error.killed === true }, stdout, stderr }),
     );
   });
 }
@@ -189,7 +189,7 @@ function runCliPreflightWithoutConfiguration() {
     "import Module, { register, syncBuiltinESMExports } from 'node:module';",
     "const originalProcess = process; const originalLoad = Module._load; const originalGetBuiltinModule = originalProcess.getBuiltinModule.bind(originalProcess);",
     "const attempts = []; const fail = (name) => () => { attempts.push(name); throw new Error(`B03_TEST_BLOCKED_TRANSPORT:${name}`); };",
-    "for (const [name, members] of [['node:http', ['request', 'get']], ['node:https', ['request', 'get']], ['node:http2', ['connect']], ['node:net', ['connect', 'createConnection']], ['node:tls', ['connect']], ['node:dgram', ['createSocket']]]) { const builtin = originalGetBuiltinModule(name); for (const member of members) builtin[member] = fail(`${name}.${member}`); } syncBuiltinESMExports();",
+    "for (const [name, members] of [['node:http', ['request', 'get']], ['node:https', ['request', 'get']], ['node:http2', ['connect']], ['node:net', ['connect', 'createConnection']], ['node:tls', ['connect']], ['node:dgram', ['createSocket']]]) { const builtin = originalGetBuiltinModule(name); for (const member of members) builtin[member] = fail(`${name}.${member}`); } originalGetBuiltinModule('node:net').Socket.prototype.connect = fail('node:net.Socket.prototype.connect'); originalGetBuiltinModule('node:tls').TLSSocket.prototype.connect = fail('node:tls.TLSSocket.prototype.connect'); syncBuiltinESMExports();",
     "const protectedEnv = new Proxy(originalProcess.env, { get(target, key) { if (key === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || key === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY') throw new Error('B03_TEST_PAYER_READ'); return Reflect.get(target, key, target); }, getOwnPropertyDescriptor(target, key) { if (key === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || key === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY') throw new Error('B03_TEST_PAYER_READ'); return Reflect.getOwnPropertyDescriptor(target, key); } });",
     "Object.defineProperty(originalProcess, 'env', { configurable: true, enumerable: true, get: () => protectedEnv });",
     "Object.defineProperty(originalProcess, 'getBuiltinModule', { configurable: true, writable: true, value(name) { return originalGetBuiltinModule(name); } });",
@@ -208,7 +208,7 @@ function runCliPreflightWithoutConfiguration() {
         },
         timeout: 2_000,
       },
-      (error, stdout, stderr) => resolve({ error, stdout, stderr }),
+      (error, stdout, stderr) => resolve({ error: error === null ? null : { exitCode: error.code ?? null, timedOut: error.killed === true }, stdout, stderr }),
     );
   });
 }
@@ -229,14 +229,14 @@ function runCliPreflight({
   const coreClientStub = [
     "const boundaries = globalThis.__B03_TEST_PAYMENT_BOUNDARIES;",
     "export class x402Client {",
-    "  constructor() { boundaries.push('payment_client'); }",
+    `  constructor() { boundaries.push('payment_client'); if (${JSON.stringify(failurePhase)} === 'terminal') throw new Error('SECRET_SENTINEL_B03'); }`,
     "  register() { boundaries.push('payment_register'); return this; }",
     `  setSpendControls() { boundaries.push('payment_spend_controls'); if (${JSON.stringify(failurePhase)} === 'terminal') throw new Error('SECRET_SENTINEL_B03'); return this; }`,
     "}",
     "export class x402HTTPClient {",
     "  constructor() { boundaries.push('factory'); }",
     "  getPaymentRequiredResponse() { boundaries.push('challenge_decode'); return globalThis.__B03_TEST_PAYMENT_REQUIRED; }",
-    `  async createPaymentPayload() { boundaries.push('payment_payload'); if (${JSON.stringify(failurePhase)} === 'payment_payload') throw new Error('SECRET_SENTINEL_B03'); return {}; }`,
+    `  async createPaymentPayload() { boundaries.push('payment_payload'); if (${JSON.stringify(failurePhase)} === 'payment_payload') throw new Error('SECRET_SENTINEL_B03'); if (${JSON.stringify(failurePhase)} === 'signer') return globalThis.__B03_TEST_SIGNER.createPartiallySignedTransferTransaction(); return {}; }`,
     "  encodePaymentSignatureHeader() { boundaries.push('payment_header'); return { 'payment-signature': 'test' }; }",
     `  getPaymentSettleResponse() { boundaries.push('settlement_decode'); if (${JSON.stringify(failurePhase)} === 'settlement') throw new Error('SECRET_SENTINEL_B03'); return { success: true, network: 'hedera:testnet', transaction: '0.0.1@1.2' }; }`,
     "}",
@@ -265,7 +265,7 @@ function runCliPreflight({
     "const blockedBuiltinModules = ['node:http', 'http', 'node:https', 'https', 'node:http2', 'http2', 'node:net', 'net', 'node:tls', 'tls', 'node:dgram', 'dgram', 'undici', 'node:undici', 'node:process', 'process'];",
     "const originalGetBuiltinModule = originalProcess.getBuiltinModule.bind(originalProcess);",
     "const failTransport = (name) => () => { transportAttempts.push(name); throw new Error(`B03_TEST_BLOCKED_TRANSPORT:${name}`); };",
-    "for (const [name, members] of [['node:http', ['request', 'get']], ['node:https', ['request', 'get']], ['node:http2', ['connect']], ['node:net', ['connect', 'createConnection']], ['node:tls', ['connect']], ['node:dgram', ['createSocket']]]) { const builtin = originalGetBuiltinModule(name); for (const member of members) builtin[member] = failTransport(`${name}.${member}`); }",
+    "for (const [name, members] of [['node:http', ['request', 'get']], ['node:https', ['request', 'get']], ['node:http2', ['connect']], ['node:net', ['connect', 'createConnection']], ['node:tls', ['connect']], ['node:dgram', ['createSocket']]]) { const builtin = originalGetBuiltinModule(name); for (const member of members) builtin[member] = failTransport(`${name}.${member}`); } originalGetBuiltinModule('node:net').Socket.prototype.connect = failTransport('node:net.Socket.prototype.connect'); originalGetBuiltinModule('node:tls').TLSSocket.prototype.connect = failTransport('node:tls.TLSSocket.prototype.connect');",
     "syncBuiltinESMExports();",
     "globalThis.__B03_TEST_PAYMENT_BOUNDARIES = boundaries;",
     "globalThis.__B03_TEST_PAYMENT_REQUIRED = paymentRequired;",
@@ -274,7 +274,7 @@ function runCliPreflight({
     "  return {",
     "    ExactHederaScheme: class { constructor() { boundaries.push('scheme'); } },",
     "    PrivateKey: { fromString() { boundaries.push('private_key'); return {}; } },",
-    `    createClientHederaSigner() { boundaries.push('signer'); return { accountId: '0.0.1001', async createPartiallySignedTransferTransaction() { boundaries.push('sign'); if (${JSON.stringify(failurePhase)} === 'signer') throw new Error('SECRET_SENTINEL_B03'); return 'test'; } }; },`,
+    `    createClientHederaSigner() { boundaries.push('signer'); const signer = { accountId: '0.0.1001', async createPartiallySignedTransferTransaction() { boundaries.push('sign'); if (${JSON.stringify(failurePhase)} === 'signer') throw new Error('SECRET_SENTINEL_B03'); return 'test'; } }; globalThis.__B03_TEST_SIGNER = signer; return signer; },`,
     "  };",
     "};",
     "const protectedEnv = new Proxy(originalProcess.env, { get(target, name) {",
@@ -337,7 +337,7 @@ function runCliPreflight({
         },
         timeout: 2_000,
       },
-      (error, stdout, stderr) => resolve({ error, stdout, stderr }),
+      (error, stdout, stderr) => resolve({ error: error === null ? null : { exitCode: error.code ?? null, timedOut: error.killed === true }, stdout, stderr }),
     );
   });
 }
@@ -578,7 +578,7 @@ boundaryTest("maps an uncategorized terminal failure at the CLI edge without lea
     "terminal",
     "TERMINAL_UNEXPECTED_FAILURE",
     [],
-    ["private_key", "signer", "scheme", "payment_client", "payment_register", "payment_spend_controls"],
+    ["private_key", "signer", "scheme", "payment_client"],
   );
 });
 
