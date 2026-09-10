@@ -664,30 +664,22 @@ allows only its declared presentation amendments to
 and UI-S05 mount-record amendments. It must not modify the Directory island's
 source or state, the guest workbench, the RiskScan detail route, or navigation.
 
-S23-T010 is a root-owned `20-active` presentation intake comprising its moved
-card, `docs/ui/UI-S23.md`, the UI-S23 ledger row, the ready-review evidence,
-queue state, catalog, this ownership record, and D-S23-010-001. No S23 source
-or test change is authorized at this state except its durable RED test paths.
-D-S23-010-002 authorizes only
-`apps/web/tests/explore-catalog.test.mjs`,
-`apps/web/tests/route-loading-skeletons.test.mjs`, and new
-`apps/web/tests/entitycheck-detail.test.mjs` to define the absent S23
-composition. The independent RED review at `ce21757` authorizes only the
-following minimal GREEN paths alongside those three tests: the existing
-`apps/web/src/components/discovery/explore-catalog.tsx`,
-`apps/web/tests/explore-catalog.test.mjs`, and
-`apps/web/tests/route-loading-skeletons.test.mjs`; the five new paths
+S23-T010 is a root-owned `60-done` presentation delivery at
+`f2c28eafd3da7c2913ef274d41578f34b773f8d2`. Its constrained root integration
+reservation over the completed S20/M14 files covered the existing
+`apps/web/src/components/discovery/explore-catalog.tsx` and
+`apps/web/tests/explore-catalog.test.mjs`; the five new paths were
 `apps/web/src/components/discovery/entitycheck-discovery-card.tsx`,
 `apps/web/src/app/explore/entitycheck/page.tsx`,
 `apps/web/src/app/explore/entitycheck/loading.tsx`,
 `apps/web/src/components/entitycheck/detail/entitycheck-detail.tsx`, and
-`apps/web/tests/entitycheck-detail.test.mjs`. This is a constrained root
-integration reservation over the completed S20/M14 files, not an amendment to
-their accepted behavior. `apps/web/tests/landing-explore.test.mjs` is expressly
-excluded because S22/S31 retain its active shared assertions. The Directory
-island, guest workbench, RiskScan detail route, navigation, all API/data
-behavior, and every wallet/provider/payment/transaction/deployment/live path
-remain excluded.
+`apps/web/tests/entitycheck-detail.test.mjs`. The independent RED review at
+`ce21757` and GREEN review at `f2c28ea` are accepted. This did not amend the
+completed S20/M14 behavior. `apps/web/tests/landing-explore.test.mjs` remains
+expressly excluded because S22/S31 retain its active shared assertions. The
+Directory island, guest workbench, RiskScan detail route, navigation, all
+API/data behavior, and every wallet/provider/payment/transaction/deployment/
+live path remain excluded.
 
 M46-T010 is a root-controlled `60-done` CORE_P0 record comprising its card,
 `docs/specs/m46-entity-check-core.md`, the new Core module

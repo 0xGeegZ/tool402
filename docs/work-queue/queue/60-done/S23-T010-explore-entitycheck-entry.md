@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: S20-T010 accepted, M02-T070 accepted, M14-T010 accepted,
   M46-T040 accepted, and B03-T020 accepted. M46-T040 is the implementation
   boundary that makes the detail page's route/descriptor copy truthful; B03
@@ -109,6 +109,17 @@ minimal GREEN. All exclusions remain unchanged.
   links, and no horizontal overflow.
 - Independent task review and a fresh module-review generation report no
   Critical finding.
+
+## Acceptance
+
+The independently reviewed GREEN source is `f2c28eafd3da7c2913ef274d41578f34b773f8d2`.
+Its exact six-path delivery creates the second static EntityCheck entry and
+descriptive route while preserving the closed Explore and local-data boundary.
+Focused S23 tests pass 5/5 under Node 22.21.1; root typecheck, test, lint,
+queue check, and whitespace validation are clear. Desktop and 390px browser
+checks show one main landmark and h1 with no horizontal overflow. The host
+blocks Turbopack's CSS helper from binding a local port; the equivalent Webpack
+production build passes with the existing optional `@x402/paywall` warning.
 
 ## Boundary
 
