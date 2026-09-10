@@ -200,12 +200,23 @@ test("locks the static ToolLoop page, bounded client form, and non-payment prese
   assert.match(flow, /<form\b[^>]*>/);
   assert.match(flow, /data-ui=["']tool-loop-request-surface["']/);
   assert.match(flow, /\bsm:grid-cols-2\b/);
-  assert.match(flow, /aria-labelledby=["']tool-loop-disclosures["']/);
+  assert.match(flow, /<fieldset[^>]*>\s*<legend id=["']tool-loop-disclosures["']/);
   assert.match(flow, /A payment challenge does not mean a payment, result, or verification has occurred\./);
   assert.match(flow, /focus-visible:outline/);
 
   for (const field of ["requestRef", "subjectRef", "context", "identity", "pricing", "limitations", "evidence"]) {
     assert.match(flow, new RegExp(`name=["']${field}["']`));
+  }
+  for (const label of [
+    "Request reference",
+    "Subject reference",
+    "Request context",
+    "Identity disclosure",
+    "Pricing disclosure",
+    "Limitations disclosure",
+    "Evidence disclosure",
+  ]) {
+    assert.match(flow, new RegExp(`>\\s*${label}\\s*<`));
   }
   assert.match(flow, /name=["']requestRef["'][^>]*required[^>]*maxLength=\{96\}/);
   assert.match(flow, /name=["']subjectRef["'][^>]*required[^>]*maxLength=\{160\}/);
