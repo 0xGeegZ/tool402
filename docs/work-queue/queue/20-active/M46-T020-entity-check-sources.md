@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T040 accepted, M02-T050 accepted; M46-T010 (this batch)
   must be accepted before activation because this card maps into its types
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -57,6 +57,17 @@ absent and disjoint. `HA-ENTITYCHECK-LIVE-001` is explicitly optional future
 evidence and does not block the injected-fetch local delivery. A separate
 activation may authorize only the durable test-only RED contract; the source
 adapter and every source read remain prohibited pending RED acceptance.
+
+## Activation record
+
+Activated at 2026-09-10T04:53:21Z after an independent current-head review at
+`0223f7b8a787e0a903b00d3c958674d3f39ae082` found the ready authority intact,
+M01-T040, M02-T050, and M46-T010 accepted, the declared source/test paths
+absent and disjoint, and no active-path collision. This activation authorizes
+only `apps/web/tests/entity-check-sources.test.mjs` as a durable test-only RED
+contract. The source adapter, configuration, every source read, and every
+payment, wallet, provider, transaction, deployment, or live path remain
+prohibited pending RED acceptance.
 
 ## Verification
 
