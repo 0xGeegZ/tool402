@@ -85,7 +85,7 @@ export function LandingSections() {
           </div>
           <span className="text-sm font-medium text-muted-foreground">Current entry</span>
         </div>
-        <div className="max-w-4xl">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <div className="relative isolate overflow-hidden rounded-[calc(var(--radius)*2)] border border-border bg-card p-6 shadow-[0_1rem_2rem_color-mix(in_oklab,var(--foreground)_6%,transparent)] sm:p-8">
           <div aria-hidden="true" className="absolute inset-x-0 top-0 h-24 bg-[linear-gradient(115deg,#ede8ff_0%,#f9f4e9_48%,#dff7ed_100%)]" />
           <div aria-hidden="true" className="absolute right-8 top-5 size-14 rounded-full border-[0.65rem] border-brand-purple/20" />
@@ -127,6 +127,24 @@ export function LandingSections() {
             </Link>
           </div>
           </div>
+          <article className="flex min-h-72 flex-col rounded-[calc(var(--radius)*2)] border border-border bg-card p-6 shadow-sm sm:p-8">
+            <span className="flex size-11 items-center justify-center rounded-xl bg-brand-green/15 text-sm font-bold text-brand-green">↗</span>
+            <div className="mt-6 space-y-3">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Current route</span>
+              <h3 className="text-2xl font-semibold tracking-tight">Explore tools</h3>
+              <p className="leading-7 text-muted-foreground">Browse the current catalogue from the route already available in Tool402.</p>
+            </div>
+            <span className="mt-auto border-t border-border pt-5 text-sm font-medium text-muted-foreground">Catalogue route</span>
+          </article>
+          <article className="flex min-h-72 flex-col rounded-[calc(var(--radius)*2)] border border-border bg-card p-6 shadow-sm sm:p-8">
+            <span className="flex size-11 items-center justify-center rounded-xl bg-brand-coral/15 text-sm font-bold text-brand-coral">→</span>
+            <div className="mt-6 space-y-3">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Current route</span>
+              <h3 className="text-2xl font-semibold tracking-tight">Provider path</h3>
+              <p className="leading-7 text-muted-foreground">Prepare an offering preview through the current local provider route.</p>
+            </div>
+            <span className="mt-auto border-t border-border pt-5 text-sm font-medium text-muted-foreground">Provider route</span>
+          </article>
         </div>
       </section>
 
