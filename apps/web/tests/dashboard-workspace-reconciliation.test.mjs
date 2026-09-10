@@ -74,3 +74,10 @@ test("adapts the reference dashboard hierarchy to the current guest workspace", 
   assert.match(navigation, /rounded-2xl/);
   assert.match(navigation, /shadow-none/);
 });
+
+test("reuses the truthful local footer below the guest workspace", async () => {
+  const dashboard = await readAppFile("src/app/dashboard/page.tsx");
+
+  assert.match(dashboard, /import \{ LandingFooter \} from "\.\.\/\.\.\/components\/landing\/landing-footer";/);
+  assert.match(dashboard, /<LandingFooter\s*\/>/);
+});
