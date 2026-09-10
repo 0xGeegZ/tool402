@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M05-T010 accepted, M05-T020 accepted, M06-T010 accepted,
   M45-T010 accepted, and M46-T030 accepted. The canonical-directory migration
   correction recorded in [D-M46-040-001](../../DECISIONS.md) is a required
@@ -130,8 +130,11 @@ wallet/provider, transaction, deployment, and live behavior remain prohibited.
   legacy-v1 decoding only for a valid one-tool legacy response, the unchanged
   M45 view, the exact approved three-import builder vector, and construction
   without network, clock, or random calls.
-- Web typecheck, test, and production build; root typecheck, test, lint,
-  `npm run queue:check`, and the enabled local-reference guard pass.
+- Web typecheck and test, plus root typecheck, test, lint,
+  `npm run queue:check`, and the enabled local-reference guard pass. The
+  standalone Turbopack production command is host-blocked before application
+  compilation by its CSS-helper port bind; the equivalent Webpack production
+  build passes with the pre-existing optional `@x402/paywall` warning.
 - Independent task review and a fresh module-review generation report no
   Critical finding.
 
@@ -140,6 +143,26 @@ wallet/provider, transaction, deployment, and live behavior remain prohibited.
 This card publishes static metadata about a local route. It proves no
 configured runtime, recipient, facilitator, source reachability, or live
 availability, and registers nothing outside this repository.
+
+## Acceptance
+
+Accepted at `3ab20483452174931bae0575d2331fa42c999dce` after fresh independent
+task, specification, and standards reviews. The exact three-source delivery
+migrates the one canonical default Directory to its closed v2 ordered pair,
+preserves M45's separate active-directory view, and retains strict legacy-v1
+input only for a valid older remote response. The focused M46 contract passed
+87/87 under Node 22.21.1; complete root tests, Web and Agent typechecks, root
+lint, queue validation, whitespace, and the local-reference guard are clear.
+The standalone Turbopack production command is host-blocked before application
+compilation by the local CSS-helper port bind. The equivalent Webpack
+production build passes with the pre-existing optional `@x402/paywall` warning;
+this card makes no deployment claim from either result.
+
+This local static metadata delivery adds no route, source read, payment,
+wallet/provider, transaction, deployment, or live authority. The review
+records are [task](../../evidence/M46-T040-task-review.md),
+[specification](../../evidence/M46-T040-module-review-spec.md), and
+[standards](../../evidence/M46-T040-module-review-standards.md).
 
 ## Human worktree lane request
 

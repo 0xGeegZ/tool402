@@ -710,14 +710,14 @@ recorded final reports. No package,
 lockfile, configuration value, live facilitator/source read, payment, wallet,
 provider, transaction, deployment, or live path is authorized.
 
-M46-T040 is a root-controlled `20-active` CORE_P0 record comprising its card,
+M46-T040 is a root-controlled `60-done` CORE_P0 record comprising its card,
 `docs/specs/m46-entity-check-tool-directory.md`, the compatibility amendment
 at `docs/work-queue/evidence/M46-T040-directory-v2-compatibility-amendment.md`,
 its clear ready review at
 `docs/work-queue/evidence/M46-T040-ready-review.md`, its clear activation
 review at `docs/work-queue/evidence/M46-T040-activation-review.md`, its
 clear RED acceptance review at `docs/work-queue/evidence/M46-T040-red-review.md`, its
-future reviews, its
+clear final task/specification/standards reviews, its
 new Web descriptor source/test
 `apps/web/src/lib/entity-check-tool-descriptor.ts` and
 `apps/web/tests/entity-check-tool-descriptor.test.mjs`, and only the following
@@ -757,6 +757,13 @@ The corrected RED contract is accepted at
 remain reserved for matching updates. The route, active view, UI, package,
 lockfile, configuration/environment read, source read, payment,
 wallet/provider, transaction, deployment, and live path remain prohibited.
+
+The accepted source is `3ab20483452174931bae0575d2331fa42c999dce`. It emits
+only the one closed v2 default tuple, retains the strict legacy-v1 reader, and
+leaves M45's opt-in active-directory view unchanged. No route, UI, package,
+lockfile, configuration/environment read, source read, payment,
+wallet/provider, transaction, deployment, or live path is authorized by this
+acceptance.
 
 S17-T010 is a root-controlled `60-done` CORE_P0 record comprising its card,
 `docs/ui/UI-S17.md`, the UI-S17 ledger row, its local execution plan, its ready
