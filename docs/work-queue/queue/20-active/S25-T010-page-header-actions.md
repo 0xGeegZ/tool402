@@ -92,6 +92,14 @@ landing hero, the navigation order or hrefs, the wizard state machine, the
 `/provider` reader, or the API routes. The manifest's exclusions govern; this
 card does not restate them.
 
+## Green scope
+
+After independent RED acceptance at `ea19691`, minimal GREEN may amend only
+the fourteen presentation paths named in UI-S25 and the matching twelve
+activated tests. The Provider reader and `Suspense`, all existing page body
+content, deploy wizard fields/state/signing flow, route hrefs, and every data,
+wallet, payment, ATS, transaction, deployment, and live boundary stay fixed.
+
 ## Human worktree lane request
 
 - Requested at `2026-09-10T14:10:00Z` by the human operator (repository

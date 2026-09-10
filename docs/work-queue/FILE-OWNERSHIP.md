@@ -1098,6 +1098,15 @@ twelve named test paths. No S25 source path, including the future
 payment/transaction/deployment, and live boundary remains prohibited pending
 an independent RED review.
 
+D-S25-010-005 accepts RED at `ea19691` and authorizes minimal GREEN only in
+`apps/web/src/components/ui/page-header.tsx`; the nine routed-page header
+blocks named by UI-S25; `apps/web/src/components/riskscan/detail/riskscan-detail.tsx`;
+`apps/web/src/components/provider/deploy/provider-deploy-wizard.tsx`;
+`apps/web/src/components/discovery/local-navigation.tsx`; and
+`apps/web/src/components/provider/status/provider-status.tsx`, with matching
+updates only to the twelve activated tests. Every other source/test path and
+all non-presentation behavior remain prohibited.
+
 S28-T010 is a root-owned 00-inbox truth-first POLISH intake comprising its
 card, `docs/ui/UI-S28.md`, the local UI ledger, decision, state, catalog, this
 ownership record, reviews, commits, and pushes. Its only candidate source/test
