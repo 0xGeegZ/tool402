@@ -61,7 +61,8 @@ test("renders the fixed copy and none of the canvas's sample or simulation conte
   assert.match(flow, /aria-live="polite"/);
   assert.match(flow, /disabled=\{/);
 
-  assert.doesNotMatch(sources, /Units you hold|View verified evidence|Live testnet|\(sample\)|sample|simulat|Connected\b|hashscan|units remain|raised|funded|balance|0\.0\.\d/i);
+  assert.doesNotMatch(sources, /Units you hold|View verified evidence|Live testnet|\(sample\)|sample|simulat|hashscan|units remain|raised|funded|balance|0\.0\.\d/i);
+  assert.doesNotMatch(sources, /Connected\b/);
   assert.doesNotMatch(sources, /\b(?:paid|settled|verified|allocated|(?<!aria-)live)\b(?! only| record)/i);
   assert.doesNotMatch(flow, /attachCandidate|attach/i);
 });
