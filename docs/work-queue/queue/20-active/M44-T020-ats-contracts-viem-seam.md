@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M01-T040 accepted, M02-T020 accepted, M42-T010 accepted,
   S15-T010 accepted, S16-T010 accepted, HA-ATS-CONTRACTS-VIEM-001 accepted
 - Owner: root owns queue state and integration. Future source paths are
@@ -65,3 +65,14 @@ is clear in
 direct source/test paths are absent and every predecessor is accepted. This
 card moves to `10-ready` only. A fresh activation is required before its RED
 test source may be created.
+
+## Activation review
+
+The independent activation review at `52f17b01a77e475808344d14ff077d9eeadfecb3`
+is clear in
+[M44-T020-activation-review](../../evidence/M44-T020-activation-review.md).
+This card moves to `20-active` only for the two durable test-only RED files:
+`apps/web/tests/factory-deploy-bond.test.mjs` and
+`apps/web/tests/ats-contracts-bundle-gate.test.mjs`. Every source, dependency,
+compatibility-removal, and execution path remains prohibited pending a fresh
+RED acceptance.
