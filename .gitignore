@@ -24,6 +24,12 @@ test-results/
 .worktrees/
 .ui-source-quarantine/
 
+# Convex codegen output from `npx convex dev`
+packages/backend/convex/_generated/
+
+# Claude Code local settings and scratch notes
+.claude/
+
 # Editor and operating-system files
 .DS_Store
 .idea/
