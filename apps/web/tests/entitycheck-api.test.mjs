@@ -13,6 +13,7 @@ const {
 
 const protectedRouteUrl = new URL("../src/lib/x402-protected-route.ts", import.meta.url);
 const entityCheckUrl = new URL("../src/lib/entity-check-x402.ts", import.meta.url);
+const entitySourcesUrl = new URL("../src/lib/entity-check-sources.ts", import.meta.url);
 const routeUrl = new URL("../src/app/api/entitycheck/route.ts", import.meta.url);
 const requiredSources = [
   ["shared x402 factory", protectedRouteUrl],
@@ -26,6 +27,7 @@ const implementedTest = missingSources.length === 0 ? test : test.skip;
 
 let protectedRoute;
 let entityCheck;
+let entitySources;
 let routeSource;
 
 function createRequest(body = validRequest(), headers = {}) {
@@ -163,6 +165,7 @@ test.before(async () => {
   if (missingSources.length === 0) {
     protectedRoute = await import(protectedRouteUrl.href);
     entityCheck = await import(entityCheckUrl.href);
+    entitySources = await import(entitySourcesUrl.href);
     routeSource = readFileSync(routeUrl, "utf8");
   }
 });
@@ -216,6 +219,16 @@ implementedTest("fails closed without a payment challenge when EntityCheck sourc
   assert.equal(response.headers.get("payment-required"), null);
   assert.deepEqual(await response.json(), { error: "entity_check_unavailable" });
   assert.equal(reads.length, 0);
+});
+
+implementedTest("rejects direct protected-handler construction when EntityCheck source configuration is missing", async () => {
+  await assert.rejects(
+    entityCheck.createEntityCheckProtectedHandler(
+      configuredEnvironment({ ENTITYCHECK_SANCTIONS_URL: undefined }),
+      { facilitatorClient: createLocalFacilitator().client },
+    ),
+    /EntityCheck source configuration is unavailable/u,
+  );
 });
 
 implementedTest("issues an unsigned EntityCheck challenge without reading a source", async () => {
@@ -325,6 +338,97 @@ implementedTest("returns the bounded core assessment and settles only after the 
   assert.equal(facilitator.calls.settle, 1);
 });
 
+implementedTest("reads fixture sources before settling a bounded EntityCheck assessment", async () => {
+  const phases = [];
+  const fetches = [];
+  const facilitator = createLocalFacilitator(({ requirements }) => {
+    assert.deepEqual(phases, ["registry_read", "sanctions_read"]);
+    phases.push("settled");
+    return {
+      success: true,
+      network: requirements.network,
+      transaction: "entitycheck-fixture-settlement-42",
+    };
+  });
+  const registryFixture = {
+    results: [
+      {
+        siren: "123456789",
+        nom_complet: "Société Étoile SAS",
+        etat_administratif: "A",
+        date_creation: "2018-06-14",
+        siege: { adresse: "12 rue de la Paix, 75002 Paris" },
+        dirigeants: [{ nom: "Responsable" }, { nom: "Directrice" }],
+        date_mise_a_jour: "2026-09-09T12:00:00.000Z",
+      },
+    ],
+  };
+  const sanctionsFixture = ["1", "Société Étoile SAS", "Entity", "-0-", ...Array(8).fill("")].join(",");
+  const readSources = async (request, configuration) =>
+    entitySources.readEntityCheckSources(request, configuration, {
+      fetch: async (url) => {
+        fetches.push(url.href);
+        if (url.hostname === "registry.example.test") {
+          phases.push("registry_read");
+          return new Response(JSON.stringify(registryFixture), { status: 200 });
+        }
+        phases.push("sanctions_read");
+        return new Response(`${sanctionsFixture}\r\n`, {
+          status: 200,
+          headers: { "last-modified": "Wed, 09 Sep 2026 00:00:00 GMT" },
+        });
+      },
+      now: () => Date.UTC(2026, 8, 10, 6, 0, 0),
+    });
+  const handler = await createProtectedHandler({ facilitator, readSources });
+  const response = await handler(await createSignedRequest(handler));
+
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("payment-response") ?? "", /\S/u);
+  assert.deepEqual(fetches, [
+    "https://registry.example.test/search?q=Soci%C3%A9t%C3%A9+%C3%89toile&per_page=5",
+    "https://sanctions.example.test/sdn.csv",
+  ]);
+  assert.deepEqual(await response.json(), {
+    requestRef: "entitycheck-api-42",
+    jurisdiction: "FR",
+    query: "Société Étoile",
+    registrySource: {
+      source: "FR_RECHERCHE_ENTREPRISES",
+      readAt: "2026-09-10T06:00:00.000Z",
+    },
+    sanctionsSource: {
+      source: "OFAC_SDN",
+      lastModified: "Wed, 09 Sep 2026 00:00:00 GMT",
+      contentHash: "c9698501d19135f0127299f8fe2f77c193db347710889c40b6bcb85d0d2a9a95",
+    },
+    limitations: [
+      "EntityCheck reflects two public sources at the time they were read and does not verify ownership, solvency, or compliance; a clear screen is not a compliance opinion.",
+    ],
+    disposition: "found",
+    candidate: {
+      siren: "123456789",
+      legalName: "Société Étoile SAS",
+      administrativeStatus: "active",
+      incorporationDate: "2018-06-14",
+      registeredAddress: "12 rue de la Paix, 75002 Paris",
+      officerCount: 2,
+      registryUpdatedAt: "2026-09-09T12:00:00.000Z",
+    },
+    sanctionsScreen: "hit",
+    sanctionsMatches: [
+      {
+        entryId: "1",
+        name: "Société Étoile SAS",
+        entryType: "Entity",
+        programs: [],
+      },
+    ],
+  });
+  assert.deepEqual(phases, ["registry_read", "sanctions_read", "settled"]);
+  assert.equal(facilitator.calls.settle, 1);
+});
+
 implementedTest("does not release an EntityCheck result for wrong-network or blank-transaction settlements", async () => {
   for (const [description, settle] of [
     ["wrong network", () => ({ success: true, network: "eip155:1", transaction: "wrong-network" })],
@@ -354,7 +458,10 @@ implementedTest("registers only POST and passes ambient configuration only at th
   ].map(([, name]) => name);
 
   assert.deepEqual(exports, ["POST"]);
-  assert.match(routeSource, /export\s+async\s+function\s+POST\s*\(\s*request\s*\)/u);
+  assert.match(
+    routeSource,
+    /export\s+async\s+function\s+POST\s*\(\s*request(?:\s*:\s*NextRequest)?\s*\)/u,
+  );
   assert.match(
     routeSource,
     /handleEntityCheckPost\s*\(\s*request\s*,\s*process\.env\s*\)/u,
