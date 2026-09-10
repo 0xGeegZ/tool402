@@ -222,6 +222,7 @@ function runCliPreflight({
   failurePhase,
   initialStatus = 402,
   signedRetryStatus = 200,
+  terminalCatch = false,
 } = {}) {
   const paymentRequired = {
     x402Version: 2,
@@ -262,12 +263,14 @@ function runCliPreflight({
     `const signedRetryStatus = ${JSON.stringify(signedRetryStatus)};`,
     `const paymentResult = ${JSON.stringify(assessRiskScanQuick(input))};`,
     `const payerAccessAllowed = ${JSON.stringify(defaultPayment)};`,
+    `const terminalCatch = ${JSON.stringify(terminalCatch)};`,
     "const originalProcess = process;",
     "const originalLoad = Module._load;",
     "const boundaries = [];",
     "const transportAttempts = [];",
     "const blockedBuiltinModules = ['node:http', 'http', 'node:https', 'https', 'node:http2', 'http2', 'node:net', 'net', 'node:tls', 'tls', 'node:dgram', 'dgram', 'undici', 'node:undici', 'node:process', 'process'];",
     "const originalGetBuiltinModule = originalProcess.getBuiltinModule.bind(originalProcess);",
+    "if (terminalCatch) Object.defineProperty(originalProcess, 'argv', { configurable: true, value: new Proxy(originalProcess.argv, { get(target, key, receiver) { if (key === 'includes') throw new Error('SECRET_SENTINEL_B03'); return Reflect.get(target, key, receiver); } }) });",
     "const failTransport = (name) => () => { transportAttempts.push(name); throw new Error(`B03_TEST_BLOCKED_TRANSPORT:${name}`); };",
     "for (const [name, members] of [['node:http', ['request', 'get']], ['node:https', ['request', 'get']], ['node:http2', ['connect']], ['node:net', ['connect', 'createConnection']], ['node:tls', ['connect']], ['node:dgram', ['createSocket']]]) { const builtin = originalGetBuiltinModule(name); for (const member of members) builtin[member] = failTransport(`${name}.${member}`); } originalGetBuiltinModule('node:net').Socket.prototype.connect = failTransport('node:net.Socket.prototype.connect'); originalGetBuiltinModule('node:tls').TLSSocket.prototype.connect = failTransport('node:tls.TLSSocket.prototype.connect');",
     "syncBuiltinESMExports();",
@@ -500,7 +503,22 @@ boundaryTest("keeps the CLI as the only runtime configuration edge and redacts a
 
   const { error, stdout, stderr } = await runCliWithoutConfiguration();
   assert.notEqual(error, null);
+  assert.equal(stderr, "RISKSCAN_PAY_CONFIGURATION_INVALID\n");
+  assert.equal(stdout, "RISKSCAN_PAY_DIAGNOSTIC CONFIGURATION_INVALID\n");
   assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03/u);
+});
+
+boundaryTest("preserves the terminal stderr marker alongside a closed diagnostic", async () => {
+  const { error, stdout, stderr } = await runCliPreflight({ terminalCatch: true });
+
+  assert.notEqual(error, null);
+  assert.equal(stderr, "RISKSCAN_PAY_FAILED\n");
+  assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_PAYER_READ|B03_TEST_RESULT_PARSE/u);
+  const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
+  assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC TERMINAL_UNEXPECTED_FAILURE"]);
+  assert.deepEqual(requests, []);
+  assert.deepEqual(boundaries, []);
+  assert.deepEqual(transportAttempts, []);
 });
 
 boundaryTest("maps a missing preflight configuration to a closed nonzero diagnostic", async () => {

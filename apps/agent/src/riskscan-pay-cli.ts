@@ -79,9 +79,10 @@ function readServiceConfiguration(): ServiceConfiguration | null {
 
 function readRuntimeConfiguration(): RuntimeConfiguration | null {
   const service = readServiceConfiguration();
+  if (service === null) return null;
   const payerAccountId = requiredEnvironmentValue("RISKSCAN_PAY_PAYER_ACCOUNT_ID");
   const payerPrivateKey = requiredEnvironmentValue("RISKSCAN_PAY_PAYER_PRIVATE_KEY");
-  return service === null || payerAccountId === null || payerPrivateKey === null
+  return payerAccountId === null || payerPrivateKey === null
     ? null
     : { ...service, payerAccountId, payerPrivateKey };
 }
@@ -131,6 +132,11 @@ function writeOutcome(outcome: RiskScanQuickPaymentOutcome): void {
 
 function writeDiagnostic(phase: Parameters<typeof diagnosticForRiskScanPayPhase>[0]): void {
   process.stdout.write(formatRiskScanPayDiagnostic(diagnosticForRiskScanPayPhase(phase)));
+}
+
+function writeNormalConfigurationFailure(): void {
+  process.stderr.write("RISKSCAN_PAY_CONFIGURATION_INVALID\n");
+  writeDiagnostic({ phase: "configuration" });
 }
 
 function unsignedRequest(input: unknown): RequestInit {
@@ -199,7 +205,7 @@ function diagnosticForOutcome(
 async function payment(): Promise<void> {
   const configuration = readRuntimeConfiguration();
   if (configuration === null) {
-    writeDiagnostic({ phase: "configuration" });
+    writeNormalConfigurationFailure();
     process.exitCode = 1;
     return;
   }
@@ -212,7 +218,7 @@ async function payment(): Promise<void> {
       { network: "hedera:testnet" },
     );
   } catch {
-    writeDiagnostic({ phase: "payment_payload" });
+    writeNormalConfigurationFailure();
     process.exitCode = 1;
     return;
   }
@@ -262,6 +268,7 @@ async function main(): Promise<void> {
 }
 
 void main().catch(() => {
+  process.stderr.write("RISKSCAN_PAY_FAILED\n");
   writeDiagnostic({ phase: "terminal" });
   process.exitCode = 1;
 });
