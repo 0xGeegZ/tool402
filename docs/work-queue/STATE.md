@@ -11,11 +11,16 @@
   readiness, RED, or GREEN; it remains a truth filter and a public
   deployment/demo-video prerequisite.
 - S22_S24_ACTIVATION: The human explicitly directed immediate local POLISH
-  activation. S22-T010 is `20-active` only for its three landing RED test
-  paths; S24-T010 is `20-active` only for its two dashboard RED test paths.
-  All GREEN source/assets remain prohibited pending separate independent RED
-  review. Both retain Stage B as a truth filter and public deployment/video
-  prerequisite.
+  activation. S22-T010 completed its three-test RED cycle and its independently
+  accepted source scope is recorded in `D-S22-010-004`; S24-T010 is
+  `20-active` for its dashboard source scope. Both retain Stage B as a truth
+  filter and public deployment/video prerequisite.
+- S22_GREEN_SCOPE: The independent exact-head RED review accepted
+  `fdf2d1c464ae373b7800a14562747efd993f6590` over canonical `8a26bec6f0b46315374c6cb9f77fffffc14f927f`.
+  S22 may amend only the root page, its three landing components, and its three
+  focused landing tests named in
+  `docs/work-queue/evidence/S22-T010-green-scope-authorization.md`; no asset
+  or other path is authorized.
 - S24_GREEN_SCOPE: The human explicitly directed the S24 dashboard lane to
   continue beyond test-only RED. Its exact active scope is the dashboard page,
   workspace shell/overview/navigation, and the two focused dashboard tests
@@ -27,7 +32,7 @@
 - CURRENT_TASK: M47-T010 (20-active) is the ATS priority and may create only its durable test-only RED contract. B03-T020 is independently `10-ready` for a separate test-only RED activation and is disjoint from M47. M46-T040 is accepted at `60-done` at source `3ab20483452174931bae0575d2331fa42c999dce`. M44-T010 is completed historical bundle evidence; M44-T020 is the accepted direct contracts + viem seam at `d091be93c07807df990975b553352b04df6b4b56`. M46-T020 and M46-T030 are accepted at `60-done` at sources `b8843b03fa0cd5452445ae7b90aaa496757a8bd4` and `7ebfa172bd45178724d2ccf90bc6333ed4fe8391`; S21-T010 is accepted at source `09899fdf269bc78493e39e067fdc57ad867c6564`. M45-T010 is accepted at source `f2275ab15fcde4eb0893c187167ded7e4779c90c`; M46-T010 is accepted at `60-done` at source `2482a9bc5f8937afefe2416cae5d7c6fb7fcf898`. M43-T010 is accepted at `60-done`; no live capability is authorized by any record.
 - M47_RECONCILIATION: At synced `89b8c2c43927d4efd309d1a50d354dbaea4918fe`, M42's accepted real eleven-field preimage and digest `1880065c5ae64b3fc6279cfdd8c85a6880d43e98ce129ed697c72372204296f9` remain byte-identical. M44-T020's Factory artifact + viem seam is a consumer implementation choice, not a preimage member. The current defect is S21 stage 2 deriving a signed payload from S16's synthetic display literal. M47-T010 may correct that local source-only binding after its normal queue cycle; it may not enable M33, provision authority, or execute Stage B.
 - M43_RED_SCOPE_CORRECTION: Every ATS_* operation is fixed to `NOT_CONFIGURED` before Mirror I/O or the verification action's durable outcome write because M33 remains zero-enabled. The one-read ContractResult boundary cannot prove a created EVM address, so positive ATS_CREATE verification and M40 readiness are deferred to a separately reviewed post-Stage-B successor. One exact M41 disabled-entry assertion is replaced as a test-only RED contract for the already-declared M43 dispatch enablement and closed existing-response mapping. Fresh review acceptance now authorizes only the matching local source, schema, and dispatch scope; it grants no configuration, SDK, wallet, provider, transaction, deployment, or live behavior.
-- ACTIVE_LANES: M47-T010 is the priority test-only RED lane at its five declared test paths; every M47 GREEN path remains prohibited. M46-T040 is complete at `60-done`. B03-T010 remains human-blocked after local GREEN.
+- ACTIVE_LANES: M47-T010 is the priority test-only RED lane at its five declared test paths; B03-T020 is independently `10-ready` for a separate test-only RED activation and is disjoint from M47. M46-T040 is complete at `60-done`; S22-T010 and S24-T010 may use only their separately recorded exact GREEN scopes. Every other GREEN path remains prohibited. B03-T010 remains human-blocked after local GREEN.
 - M44_T020_RED_ACCEPTANCE: 2026-09-10 at `85c8265fedf028a56854792e26fd82aae512abc8`. Independent review is clear: Node 22.21.1 focused RED reports only the two declared absent direct Factory source failures and ten GREEN skips. The contract covers every tuple field, field absence/surplus, non-zero identity drift, direct artifact ABI use, event decoding, HI-007, and historical SDK removal. Only the exact reserved minimal GREEN paths are authorized; HA-ATS-STAGE-B-001 still blocks every provider/RPC, simulation, transaction, deployment, candidate, and live action.
 - M44_T020_ACCEPTANCE: 2026-09-10 at `d091be93c07807df990975b553352b04df6b4b56`. The official Factory artifact + viem seam is accepted after focused 12/12 and complete Web 264/264 validation, Web typecheck, root lint, clean-install dry-run, queue/whitespace checks, fresh Turbopack development client-graph inspection, isolated browser evidence, and clear independent GREEN review. The standalone Turbopack production build is host-blocked before app compilation by its CSS-helper port bind, so no deployment claim is made. HA-ATS-STAGE-B-001 continues to block every provider/RPC, simulation, transaction, candidate, and live action.
 - M45_RED_ACCEPTANCE: 2026-09-10. The independent review at pushed `2ee65bb` is clear: focused RED has only the absent active-directory module and route wiring failures. Only M45's declared reader, Tool Directory type/view, and opt-in route GREEN paths are authorized; the accepted default discovery body remains byte-identical.

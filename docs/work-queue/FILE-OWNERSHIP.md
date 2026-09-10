@@ -856,14 +856,17 @@ public Backend exports, routes, and submission documents are not amendable. No
 authority provision, SDK, provider, wallet, network, transaction, candidate,
 or live path is authorized.
 
-S22-T010 is a root-owned early truth-first POLISH lane. It is `20-active` only
-for `apps/web/tests/product-landing.test.mjs`,
-`apps/web/tests/landing-explore.test.mjs`, and the new
-`apps/web/tests/public-landing-reconciliation.test.mjs` RED contract. Every
-landing source, asset, global layout/navigation/CSS, non-root route,
-provider/ATS, configuration, package, README, submission, deployment, and
-video path remains prohibited until independent RED review authorizes exact
-GREEN paths.
+S22-T010 is a root-owned early truth-first POLISH lane. Its independently
+accepted exact GREEN scope comprises only `apps/web/src/app/page.tsx`,
+`apps/web/src/components/landing/landing-hero.tsx`,
+`apps/web/src/components/landing/landing-sections.tsx`,
+`apps/web/src/components/landing/landing-footer.tsx`,
+`apps/web/tests/product-landing.test.mjs`,
+`apps/web/tests/landing-explore.test.mjs`, and
+`apps/web/tests/public-landing-reconciliation.test.mjs`. It selects no new
+asset. Every global layout/navigation/CSS, non-root route, provider/ATS,
+configuration, package, README, submission, deployment, video, and all other
+path remains prohibited until a fresh authority names it.
 
 S24-T010 is a root-owned early truth-first POLISH lane. It is `20-active` for
 `apps/web/src/app/dashboard/page.tsx`,
