@@ -1011,3 +1011,14 @@ their behavior. Every non-shell route/component/test, global CSS, asset,
 dependency, data/runtime/configuration, wallet/provider/payment/transaction,
 deployment, and live path remains prohibited until a separate accepted scope
 says otherwise.
+
+S28-T010 is a root-owned 00-inbox truth-first POLISH intake comprising its
+card, `docs/ui/UI-S28.md`, the local UI ledger, decision, state, catalog, this
+ownership record, reviews, commits, and pushes. Its only candidate source/test
+paths are `apps/web/src/app/provider/page.tsx`,
+`apps/web/src/components/provider/status/provider-status.tsx`, and the new
+`apps/web/tests/provider-visual-reconciliation.test.mjs`. The accepted S17
+projection reader/state, existing provider-status reader test, and provider
+deploy wizard are expressly excluded. No implementation path is reserved until
+an independent readiness review, durable focused RED, and independent RED
+review accept exact GREEN.
