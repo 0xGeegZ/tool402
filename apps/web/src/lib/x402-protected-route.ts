@@ -8,34 +8,30 @@ import type {
   RoutesConfig,
 } from "@x402/core/server";
 import type {
+  RiskScanQuickInput,
   RiskScanRequestInput,
   RiskScanVerifiedSettlement,
 } from "@tool402/core";
-import type {
-  NextRequest,
-  NextResponse as NextResponseType,
-} from "next/server";
+import type { NextRequest, NextResponse as NextResponseType } from "next/server";
+
+import { recordRiskScanVerifiedSettlement } from "./riskscan-settlement-evidence.ts";
 
 const require = createRequire(import.meta.url);
 const { NextResponse } = require("next/server") as typeof import("next/server");
 
-export type X402ProtectedHandler = (
+type RiskScanProtectedHandler = (
   request: NextRequest,
 ) => Promise<NextResponseType>;
 
-const configurationSuffixes = [
-  "PAY_TO",
-  "FACILITATOR_URL",
-  "NETWORK",
-  "PRICE",
-  "HEDERA_ASSET",
-  "HEDERA_AMOUNT",
-] as const;
+const protectedHandlerCache = new Map<
+  string,
+  Promise<RiskScanProtectedHandler>
+>();
 
 const defaultSettlementObserverTimeoutMs = 30_000;
 const maximumSettlementObserverTimeoutMs = 60_000;
 
-export interface EvmX402Configuration {
+export interface RiskScanEvmX402Configuration {
   kind: "evm";
   payTo: `0x${string}`;
   facilitatorUrl: string;
@@ -43,7 +39,7 @@ export interface EvmX402Configuration {
   price: `$${string}`;
 }
 
-export interface HederaX402Configuration {
+export interface RiskScanHederaX402Configuration {
   kind: "hedera";
   payTo: `${number}.${number}.${number}`;
   facilitatorUrl: string;
@@ -54,27 +50,9 @@ export interface HederaX402Configuration {
   };
 }
 
-export type X402Configuration = EvmX402Configuration | HederaX402Configuration;
-
-export interface X402RouteEvaluation {
-  response: NextResponseType;
-  observedRequest?: RiskScanRequestInput;
-}
-
-export interface X402RouteDefinition {
-  readonly path: string;
-  readonly description: string;
-  readonly evaluate: (request: NextRequest) => Promise<X402RouteEvaluation>;
-}
-
-export interface X402ProtectedHandlerOptions {
-  facilitatorClient?: FacilitatorClient;
-  onVerifiedSettlement?: (
-    settlement: RiskScanVerifiedSettlement,
-  ) => void | Promise<void>;
-  /** @internal Test-only handler-construction seam for bounded observer cleanup. */
-  settlementObserverTimeoutMs?: number;
-}
+export type RiskScanX402Configuration =
+  | RiskScanEvmX402Configuration
+  | RiskScanHederaX402Configuration;
 
 function requiredString(value: string | undefined): string | null {
   const trimmedValue = value?.trim();
@@ -108,30 +86,35 @@ function isValidFacilitatorUrl(value: string): boolean {
   }
 }
 
+export function readRiskScanX402Configuration(
+  environment: NodeJS.ProcessEnv,
+): RiskScanX402Configuration | null {
+  return readX402Configuration(environment, "RISKSCAN_X402");
+}
+
 export function readX402Configuration(
   environment: NodeJS.ProcessEnv,
-  environmentPrefix: string,
-): X402Configuration | null {
-  const keys = configurationSuffixes.map(
-    (suffix) => `${environmentPrefix}_${suffix}`,
+  prefix: string,
+): RiskScanX402Configuration | null {
+  const [payTo, facilitatorUrl, network, price] = [
+    "PAY_TO",
+    "FACILITATOR_URL",
+    "NETWORK",
+    "PRICE",
+  ].map((key) => requiredString(environment[`${prefix}_${key}`]));
+  const hederaAsset = optionalEnvironmentString(
+    environment,
+    `${prefix}_HEDERA_ASSET`,
   );
-  const [payTo, facilitatorUrl, network, price] = keys
-    .slice(0, 4)
-    .map((key) => requiredString(environment[key]));
-  const hederaAsset = optionalEnvironmentString(environment, keys[4] as string);
   const hederaAmount = optionalEnvironmentString(
     environment,
-    keys[5] as string,
+    `${prefix}_HEDERA_AMOUNT`,
   );
 
   if (
-    payTo !== undefined &&
     payTo !== null &&
-    facilitatorUrl !== undefined &&
     facilitatorUrl !== null &&
-    network !== undefined &&
     network !== null &&
-    price !== undefined &&
     price !== null &&
     hederaAsset === null &&
     hederaAmount === null &&
@@ -150,12 +133,10 @@ export function readX402Configuration(
   }
 
   if (
-    payTo === undefined ||
     payTo === null ||
-    facilitatorUrl === undefined ||
     facilitatorUrl === null ||
     network !== "hedera:testnet" ||
-    (price !== null && price !== undefined) ||
+    price !== null ||
     hederaAsset === null ||
     hederaAmount === null ||
     !/^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/u.test(payTo) ||
@@ -179,16 +160,23 @@ export function readX402Configuration(
   };
 }
 
-export function unavailableResponse(error: string): NextResponseType {
-  return NextResponse.json({ error }, { status: 503 });
+export function riskScanUnavailableResponse(): NextResponseType {
+  return NextResponse.json({ error: "risk_scan_unavailable" }, { status: 503 });
+}
+
+function invalidRiskScanRequestResponse(): NextResponseType {
+  return NextResponse.json(
+    { error: "invalid_riskscan_request" },
+    { status: 400 },
+  );
+}
+
+function loadRiskScanQuick() {
+  return require("@tool402/core") as typeof import("@tool402/core");
 }
 
 function digest(value: string | Uint8Array): string {
   return createHash("sha256").update(value).digest("hex");
-}
-
-function loadCore() {
-  return require("@tool402/core") as typeof import("@tool402/core");
 }
 
 function loadExactEvmScheme() {
@@ -200,10 +188,10 @@ function loadExactHederaScheme() {
 }
 
 function loadX402ServerDependencies() {
-  const { HTTPFacilitatorClient, x402HTTPResourceServer, x402ResourceServer } =
-    require("@x402/core/server") as typeof import("@x402/core/server");
-  const { withX402FromHTTPServer } =
-    require("@x402/next") as typeof import("@x402/next");
+  const { HTTPFacilitatorClient, x402HTTPResourceServer, x402ResourceServer } = require(
+    "@x402/core/server",
+  ) as typeof import("@x402/core/server");
+  const { withX402FromHTTPServer } = require("@x402/next") as typeof import("@x402/next");
 
   return {
     HTTPFacilitatorClient,
@@ -213,8 +201,8 @@ function loadX402ServerDependencies() {
   };
 }
 
-export async function isX402ConfigurationUsable(
-  configuration: X402Configuration,
+export async function isRiskScanX402ConfigurationUsable(
+  configuration: RiskScanX402Configuration,
 ): Promise<boolean> {
   if (configuration.kind === "hedera") {
     return true;
@@ -306,17 +294,14 @@ function assertNativeHederaFacilitatorSupport(value: unknown): void {
     }
   }
 
-  if (
-    matchingKinds.length !== 1 ||
-    !hasNativeHederaFeePayer(matchingKinds[0])
-  ) {
+  if (matchingKinds.length !== 1 || !hasNativeHederaFeePayer(matchingKinds[0])) {
     throw new RangeError("native Hedera facilitator support is unavailable");
   }
 }
 
 function createSettlementValidatingFacilitatorClient(
   facilitatorClient: FacilitatorClient,
-  configuration: X402Configuration,
+  configuration: RiskScanX402Configuration,
 ): FacilitatorClient {
   return {
     async getSupported() {
@@ -363,10 +348,69 @@ function createSettlementValidatingFacilitatorClient(
   };
 }
 
+interface RiskScanQuickEvaluation {
+  response: NextResponseType;
+  request?: RiskScanRequestInput;
+}
+
+async function evaluateRiskScanQuick(
+  request: NextRequest,
+): Promise<RiskScanQuickEvaluation> {
+  let input: unknown;
+
+  try {
+    input = await request.json();
+  } catch {
+    return { response: invalidRiskScanRequestResponse() };
+  }
+
+  const { assessRiskScanQuick } = loadRiskScanQuick();
+  let assessment: ReturnType<typeof assessRiskScanQuick>;
+
+  try {
+    assessment = assessRiskScanQuick(input as RiskScanQuickInput);
+  } catch (error) {
+    if (!(error instanceof TypeError || error instanceof RangeError)) {
+      throw error;
+    }
+
+    return { response: invalidRiskScanRequestResponse() };
+  }
+
+  return {
+    response: NextResponse.json(assessment),
+    request: {
+      requestRef: assessment.requestRef,
+      subjectRef: assessment.subjectRef,
+      context: assessment.context,
+    },
+  };
+}
+
+export async function runRiskScanQuick(
+  request: NextRequest,
+): Promise<NextResponseType> {
+  return (await evaluateRiskScanQuick(request)).response;
+}
+
+export interface RiskScanProtectedHandlerOptions {
+  facilitatorClient?: FacilitatorClient;
+  onVerifiedSettlement?: (
+    settlement: RiskScanVerifiedSettlement,
+  ) => void | Promise<void>;
+  /** @internal Test-only handler-construction seam for bounded observer cleanup. */
+  settlementObserverTimeoutMs?: number;
+}
+
+export interface X402ProtectedHandlerOptions
+  extends RiskScanProtectedHandlerOptions {
+  handler?: RiskScanProtectedHandler;
+  routePath?: string;
+  routeDescription?: string;
+}
+
 interface SettlementObserverEntry {
-  pending: ReturnType<
-    (typeof import("@tool402/core"))["markRiskScanPaymentPending"]
-  >;
+  pending: ReturnType<typeof import("@tool402/core")["markRiskScanPaymentPending"]>;
   responseDigest: string;
   timeout: ReturnType<typeof setTimeout>;
 }
@@ -394,17 +438,15 @@ function resolveSettlementObserverTimeout(
     configuredTimeout < 1 ||
     configuredTimeout > maximumSettlementObserverTimeoutMs
   ) {
-    throw new RangeError(
-      "settlement observer timeout must be a bounded positive integer",
-    );
+    throw new RangeError("settlement observer timeout must be a bounded positive integer");
   }
 
   return configuredTimeout;
 }
 
 function createSettlementObserver(
-  configuration: X402Configuration,
-  consumer: NonNullable<X402ProtectedHandlerOptions["onVerifiedSettlement"]>,
+  configuration: RiskScanX402Configuration,
+  consumer: NonNullable<RiskScanProtectedHandlerOptions["onVerifiedSettlement"]>,
   timeoutMs: number,
 ): SettlementObserver {
   const entries = new Map<string, SettlementObserverEntry>();
@@ -453,18 +495,15 @@ function createSettlementObserver(
       try {
         const registrationDigest = digest(paymentSignature);
         headerDigest = registrationDigest;
-        const responseBytes = new Uint8Array(
-          await response.clone().arrayBuffer(),
-        );
+        const responseBytes = new Uint8Array(await response.clone().arrayBuffer());
 
         if (entries.has(registrationDigest)) {
           return;
         }
 
-        const { markRiskScanPaymentPending, startRiskScanRequest } = loadCore();
-        const pending = markRiskScanPaymentPending(
-          startRiskScanRequest(request),
-        );
+        const { markRiskScanPaymentPending, startRiskScanRequest } =
+          loadRiskScanQuick();
+        const pending = markRiskScanPaymentPending(startRiskScanRequest(request));
         const timeout = setTimeout(() => {
           discard(registrationDigest);
         }, timeoutMs);
@@ -484,14 +523,9 @@ function createSettlementObserver(
       let headerDigest: string | undefined;
 
       try {
-        const paymentHeader = paymentHeaderFromContext(
-          context.transportContext,
-        );
+        const paymentHeader = paymentHeaderFromContext(context.transportContext);
 
-        if (
-          typeof paymentHeader !== "string" ||
-          paymentHeader.trim().length === 0
-        ) {
+        if (typeof paymentHeader !== "string" || paymentHeader.trim().length === 0) {
           return;
         }
 
@@ -521,7 +555,7 @@ function createSettlementObserver(
         }
 
         discard(headerDigest);
-        const { createRiskScanVerifiedSettlement } = loadCore();
+        const { createRiskScanVerifiedSettlement } = loadRiskScanQuick();
         const settlement = createRiskScanVerifiedSettlement(entry.pending, {
           requestRef: entry.pending.requestRef,
           settlementRef: transaction.trim(),
@@ -551,23 +585,22 @@ function createSettlementObserver(
   };
 }
 
-async function runObservedEvaluation(
-  definition: X402RouteDefinition,
+async function runObservedRiskScanQuick(
   request: NextRequest,
   observer: SettlementObserver,
 ): Promise<NextResponseType> {
-  const evaluation = await definition.evaluate(request);
+  const evaluation = await evaluateRiskScanQuick(request);
   const paymentSignature = request.headers.get("payment-signature");
 
   if (
-    evaluation.observedRequest !== undefined &&
+    evaluation.request !== undefined &&
     typeof paymentSignature === "string" &&
     paymentSignature.trim().length > 0
   ) {
     await observer.observeProtectedResponse(
       paymentSignature,
       evaluation.response,
-      evaluation.observedRequest,
+      evaluation.request,
     );
   }
 
@@ -575,14 +608,11 @@ async function runObservedEvaluation(
 }
 
 export async function createX402ProtectedHandler(
-  definition: X402RouteDefinition,
-  configuration: X402Configuration,
+  configuration: RiskScanX402Configuration,
   options: X402ProtectedHandlerOptions = {},
-): Promise<X402ProtectedHandler> {
-  if (!(await isX402ConfigurationUsable(configuration))) {
-    throw new RangeError(
-      "x402 configuration cannot produce a positive exact amount",
-    );
+): Promise<RiskScanProtectedHandler> {
+  if (!(await isRiskScanX402ConfigurationUsable(configuration))) {
+    throw new RangeError("x402 configuration cannot produce a positive exact amount");
   }
 
   const {
@@ -624,7 +654,7 @@ export async function createX402ProtectedHandler(
   }
 
   const routes = {
-    [definition.path]: {
+    [options.routePath ?? "/api/riskscan"]: {
       accepts: {
         scheme: "exact",
         payTo: configuration.payTo,
@@ -632,7 +662,7 @@ export async function createX402ProtectedHandler(
         network: configuration.network,
         extra: { paymentFlow: "authorization" },
       },
-      description: definition.description,
+      description: options.routeDescription ?? "RiskScan Quick assessment",
       mimeType: "application/json",
     },
   } satisfies RoutesConfig;
@@ -642,8 +672,8 @@ export async function createX402ProtectedHandler(
 
   return withX402FromHTTPServer(
     observer === undefined
-      ? async (request) => (await definition.evaluate(request)).response
-      : (request) => runObservedEvaluation(definition, request, observer),
+      ? (options.handler ?? runRiskScanQuick)
+      : (request) => runObservedRiskScanQuick(request, observer),
     httpServer,
     undefined,
     undefined,
@@ -651,9 +681,14 @@ export async function createX402ProtectedHandler(
   );
 }
 
-export function x402ConfigurationCacheKey(
-  configuration: X402Configuration,
-): string {
+export async function createRiskScanProtectedHandler(
+  configuration: RiskScanX402Configuration,
+  options: RiskScanProtectedHandlerOptions = {},
+): Promise<RiskScanProtectedHandler> {
+  return createX402ProtectedHandler(configuration, options);
+}
+
+function configurationCacheKey(configuration: RiskScanX402Configuration): string {
   return JSON.stringify([
     configuration.kind,
     configuration.payTo,
@@ -664,4 +699,64 @@ export function x402ConfigurationCacheKey(
       : configuration.price.asset,
     configuration.kind === "hedera" ? configuration.price.amount : undefined,
   ]);
+}
+
+function getCachedRiskScanProtectedHandler(
+  configuration: RiskScanX402Configuration,
+): Promise<RiskScanProtectedHandler> {
+  const key = configurationCacheKey(configuration);
+  const cachedHandler = protectedHandlerCache.get(key);
+
+  if (cachedHandler !== undefined) {
+    return cachedHandler;
+  }
+
+  const pendingHandler = createRiskScanProtectedHandler(configuration, {
+    onVerifiedSettlement: recordRiskScanVerifiedSettlement,
+  });
+  protectedHandlerCache.set(key, pendingHandler);
+  void pendingHandler.catch(() => {
+    if (protectedHandlerCache.get(key) === pendingHandler) {
+      protectedHandlerCache.delete(key);
+    }
+  });
+
+  return pendingHandler;
+}
+
+export interface RiskScanPostOptions {
+  facilitatorClient?: FacilitatorClient;
+  onVerifiedSettlement?: RiskScanProtectedHandlerOptions["onVerifiedSettlement"];
+}
+
+export async function handleRiskScanPost(
+  request: NextRequest,
+  environment: NodeJS.ProcessEnv,
+  options?: RiskScanPostOptions,
+): Promise<NextResponseType> {
+  const configuration = readRiskScanX402Configuration(environment);
+
+  if (configuration === null) {
+    return riskScanUnavailableResponse();
+  }
+
+  let handler: RiskScanProtectedHandler;
+
+  const onVerifiedSettlement =
+    options?.onVerifiedSettlement ?? recordRiskScanVerifiedSettlement;
+
+  try {
+    handler =
+      options?.facilitatorClient === undefined &&
+      options?.onVerifiedSettlement === undefined
+        ? await getCachedRiskScanProtectedHandler(configuration)
+        : await createRiskScanProtectedHandler(configuration, {
+            facilitatorClient: options?.facilitatorClient,
+            onVerifiedSettlement,
+          });
+  } catch {
+    return riskScanUnavailableResponse();
+  }
+
+  return handler(request);
 }

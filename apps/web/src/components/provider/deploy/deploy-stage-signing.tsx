@@ -49,6 +49,7 @@ export function DeployStageSigning({
   const [results, setResults] = useState<readonly (ProviderDeployStageState | undefined)[]>([]);
   const [attemptPublicId, setAttemptPublicId] = useState<string | null>(null);
   const [request, setRequest] = useState<StageSignatureRequest | null>(null);
+  const [constructionError, setConstructionError] = useState<string | null>(null);
   const states = providerDeployStageStates(atsCreateConfiguration, {
     connected: session !== null,
     results,
@@ -64,16 +65,22 @@ export function DeployStageSigning({
 
   function activate(stage: number) {
     if (request !== null || stage !== enabledStage) return;
-    setRequest(buildStageSignatureRequest({
-      stage,
-      states,
-      values,
-      projection: atsCreateConfiguration,
-      attemptPublicId,
-      candidate,
-      record: directoryRecordLiteral,
-      nowMilliseconds: Date.now(),
-    }));
+    try {
+      const nextRequest = buildStageSignatureRequest({
+        stage,
+        states,
+        values,
+        projection: atsCreateConfiguration,
+        attemptPublicId,
+        candidate,
+        record: directoryRecordLiteral,
+        nowMilliseconds: Date.now(),
+      });
+      setConstructionError(null);
+      setRequest(nextRequest);
+    } catch {
+      setConstructionError("Check the offering details and correct them before requesting a signature.");
+    }
   }
 
   function finish(result: SignatureResult) {
@@ -91,6 +98,7 @@ export function DeployStageSigning({
   return (
     <div className="space-y-8">
       <ProviderDeployStages states={visibleStates} projection={atsCreateConfiguration} enabledStage={enabledStage} onActivate={activate} />
+      {constructionError ? <p role="status" aria-live="polite" className="rounded-[calc(var(--radius)*0.75)] border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null}
       <section aria-labelledby="deploy-stage-signing-title" className="space-y-4 rounded-[calc(var(--radius)*0.75)] border bg-muted/30 p-4">
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Session-only signing</p>

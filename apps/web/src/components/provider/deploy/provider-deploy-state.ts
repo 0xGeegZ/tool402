@@ -1,3 +1,5 @@
+import { parseOfferingDefinition } from "@tool402/core";
+
 export const providerDeployCategories = Object.freeze([
   "security",
   "data",
@@ -85,6 +87,29 @@ export function hbarToTinybars(value: string): string {
   return tinybars.toString();
 }
 
+function wholeHbarToTinybars(value: string): string {
+  return (BigInt(value) * tinybarsPerHbar).toString();
+}
+
+function validateQualifyingResource(value: unknown): void {
+  parseOfferingDefinition({
+    schemaVersion: 1,
+    terms: {
+      version: "v1",
+      fundingTargetTinybars: wholeHbarToTinybars(termsV1Economics.fundingTargetHbar),
+      noteUnitPriceTinybars: wholeHbarToTinybars(termsV1Economics.noteUnitPriceHbar),
+      maximumNoteUnits: termsV1Economics.maximumNoteUnits,
+      minimumPurchaseUnits: termsV1Economics.minimumPurchaseUnits,
+      reserveShareBps: String(termsV1Economics.revenueRouting.backerReserveBps),
+      issuerShareBps: String(termsV1Economics.revenueRouting.operatorBps),
+      platformFeeBps: String(termsV1Economics.revenueRouting.feeBps),
+      payoutCapTinybars: wholeHbarToTinybars(termsV1Economics.payoutCapHbar),
+    },
+    maturityAt: `${termsV1Economics.maturityDate}T00:00:00.000Z`,
+    qualifyingResource: value,
+  });
+}
+
 type NarrativeField = "title" | "customerProblem" | "customerUseCases" | "useOfFunds" | "risks" | "targetAgentCustomers";
 
 function assertNarrativeText(value: unknown, maximumBytes: number): asserts value is string {
@@ -130,6 +155,7 @@ export function validateNarrativeField(field: NarrativeField, value: unknown): v
 export type ProviderDeployValidationField =
   | "toolName"
   | "customerProblem"
+  | "qualifyingResource"
   | "quickPrice"
   | "standardPrice"
   | "targetAgentCustomers"
@@ -141,6 +167,7 @@ export type ProviderDeployFieldErrors = Readonly<Partial<Record<ProviderDeployVa
 type ProviderDeployValidationValues = Readonly<{
   toolName: string;
   customerProblem: string;
+  qualifyingResource: string;
   quickPrice: string;
   standardPrice: string;
   targetAgentCustomers: string;
@@ -173,6 +200,12 @@ export function providerDeployFieldErrors(
     });
     collectFieldError(errors, "customerProblem", "Enter a trimmed customer problem of no more than 1,000 UTF-8 bytes.", () => {
       validateNarrativeField("customerProblem", values.customerProblem);
+    });
+  }
+
+  if (step === 1) {
+    collectFieldError(errors, "qualifyingResource", "Enter a trimmed qualifying resource of no more than 256 characters.", () => {
+      validateQualifyingResource(values.qualifyingResource);
     });
   }
 
@@ -290,7 +323,7 @@ export type ProviderDeployStageSession = Readonly<{
   recordComplete: boolean;
 }>;
 
-export const stageFourUnavailableDetail = "No accepted clearing account or public x402 endpoint is recorded.";
+export const stageFourUnavailableDetail = "No accepted clearing account is recorded.";
 
 function sessionStageState(
   result: ProviderDeployStageState | undefined,

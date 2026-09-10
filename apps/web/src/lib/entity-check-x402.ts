@@ -1,188 +1,160 @@
-import { createRequire } from "node:module";
 import type { FacilitatorClient } from "@x402/core/server";
 import { assessEntityCheck, parseEntityCheckRequest } from "@tool402/core";
-import type { EntityCheckRequest } from "@tool402/core";
-import type {
-  NextRequest,
-  NextResponse as NextResponseType,
-} from "next/server";
+import type { NextRequest, NextResponse as NextResponseType } from "next/server";
+import { createRequire } from "node:module";
 
 import {
   readEntityCheckSourceConfiguration,
   readEntityCheckSources,
-  type EntityCheckSourceConfiguration,
-  type EntityCheckSourceDependencies,
 } from "./entity-check-sources.ts";
 import {
   createX402ProtectedHandler,
   readX402Configuration,
-  unavailableResponse,
-  x402ConfigurationCacheKey,
-  type X402Configuration,
-  type X402ProtectedHandler,
-  type X402RouteEvaluation,
 } from "./x402-protected-route.ts";
 
 const require = createRequire(import.meta.url);
 const { NextResponse } = require("next/server") as typeof import("next/server");
 
-const environmentPrefix = "ENTITYCHECK_X402";
-const protectedHandlerCache = new Map<string, Promise<X402ProtectedHandler>>();
+type EntityCheckProtectedHandler = (
+  request: NextRequest,
+) => Promise<NextResponseType>;
 
-export type EntityCheckX402Configuration = X402Configuration;
+const protectedHandlerCache = new Map<
+  string,
+  Promise<EntityCheckProtectedHandler>
+>();
 
 export interface EntityCheckPostOptions {
   facilitatorClient?: FacilitatorClient;
-  sourceDependencies?: EntityCheckSourceDependencies;
+  readSources?: typeof readEntityCheckSources;
 }
 
-export function readEntityCheckX402Configuration(
-  environment: NodeJS.ProcessEnv,
-): EntityCheckX402Configuration | null {
-  return readX402Configuration(environment, environmentPrefix);
+function unavailableResponse(): NextResponseType {
+  return NextResponse.json({ error: "entity_check_unavailable" }, { status: 503 });
 }
 
-export function entityCheckUnavailableResponse(): NextResponseType {
-  return unavailableResponse("entity_check_unavailable");
-}
-
-function invalidEntityCheckRequestResponse(): NextResponseType {
+function invalidRequestResponse(): NextResponseType {
   return NextResponse.json(
-    { error: "invalid_entitycheck_request" },
+    { error: "invalid_entity_check_request" },
     { status: 400 },
   );
 }
 
-function createEntityCheckEvaluator(
-  sourceConfiguration: EntityCheckSourceConfiguration,
-  dependencies: EntityCheckSourceDependencies,
-): (request: NextRequest) => Promise<X402RouteEvaluation> {
-  return async (request) => {
-    let input: unknown;
-
-    try {
-      input = await request.json();
-    } catch {
-      return { response: invalidEntityCheckRequestResponse() };
-    }
-
-    let parsed: EntityCheckRequest;
-
-    try {
-      parsed = parseEntityCheckRequest(input);
-    } catch (error) {
-      if (!(error instanceof TypeError || error instanceof RangeError)) {
-        throw error;
-      }
-
-      return { response: invalidEntityCheckRequestResponse() };
-    }
-
-    const outcome = await readEntityCheckSources(
-      parsed,
-      sourceConfiguration,
-      dependencies,
-    );
-
-    if (outcome.kind !== "read") {
-      return {
-        response: unavailableResponse(
-          outcome.kind === "not_configured"
-            ? "entity_check_unavailable"
-            : outcome.kind,
-        ),
-      };
-    }
-
-    const result = assessEntityCheck(parsed, {
-      registryCandidates: outcome.registryCandidates,
-      registrySource: outcome.registrySource,
-      sanctionsDataset: outcome.sanctionsDataset,
-    });
-
-    return { response: NextResponse.json(result) };
-  };
+function unavailableSourceResponse(kind: "registry_unavailable" | "sanctions_unavailable"): NextResponseType {
+  return NextResponse.json({ error: kind }, { status: 503 });
 }
 
-export function createEntityCheckProtectedHandler(
-  configuration: EntityCheckX402Configuration,
-  sourceConfiguration: EntityCheckSourceConfiguration,
-  options: EntityCheckPostOptions = {},
-): Promise<X402ProtectedHandler> {
-  const dependencies = options.sourceDependencies ?? {
-    fetch: globalThis.fetch,
-    now: Date.now,
-  };
+async function evaluateEntityCheck(
+  request: NextRequest,
+  environment: NodeJS.ProcessEnv,
+  readSources: typeof readEntityCheckSources,
+): Promise<NextResponseType> {
+  let input: unknown;
 
-  return createX402ProtectedHandler(
-    {
-      path: "/api/entitycheck",
-      description: "EntityCheck company registry record and sanctions screen",
-      evaluate: createEntityCheckEvaluator(sourceConfiguration, dependencies),
-    },
-    configuration,
-    { facilitatorClient: options.facilitatorClient },
+  try {
+    input = await request.json();
+  } catch {
+    return invalidRequestResponse();
+  }
+
+  let entityRequest;
+  try {
+    entityRequest = parseEntityCheckRequest(input as never);
+  } catch (error) {
+    if (!(error instanceof TypeError || error instanceof RangeError)) {
+      throw error;
+    }
+    return invalidRequestResponse();
+  }
+
+  const sourceResult = await readSources(
+    entityRequest,
+    readEntityCheckSourceConfiguration(environment),
+    { fetch: globalThis.fetch, now: Date.now },
+  );
+  if (sourceResult.kind === "registry_unavailable" || sourceResult.kind === "sanctions_unavailable") {
+    return unavailableSourceResponse(sourceResult.kind);
+  }
+  if (sourceResult.kind !== "read") {
+    return unavailableResponse();
+  }
+
+  return NextResponse.json(
+    assessEntityCheck(entityRequest, {
+      registryCandidates: sourceResult.registryCandidates,
+      registrySource: sourceResult.registrySource,
+      sanctionsDataset: sourceResult.sanctionsDataset,
+    }),
   );
 }
 
-function getCachedEntityCheckProtectedHandler(
-  configuration: EntityCheckX402Configuration,
-  sourceConfiguration: EntityCheckSourceConfiguration,
-): Promise<X402ProtectedHandler> {
-  const key = JSON.stringify([
-    x402ConfigurationCacheKey(configuration),
-    sourceConfiguration.registryBaseUrl,
-    sourceConfiguration.sanctionsUrl,
-  ]);
-  const cachedHandler = protectedHandlerCache.get(key);
+export async function createEntityCheckProtectedHandler(
+  environment: NodeJS.ProcessEnv,
+  options: EntityCheckPostOptions = {},
+): Promise<EntityCheckProtectedHandler> {
+  const configuration = readX402Configuration(environment, "ENTITYCHECK_X402");
+  if (configuration === null) {
+    throw new RangeError("EntityCheck x402 configuration is unavailable");
+  }
+  if (readEntityCheckSourceConfiguration(environment) === null) {
+    throw new RangeError("EntityCheck source configuration is unavailable");
+  }
 
+  const readSources = options.readSources ?? readEntityCheckSources;
+  return createX402ProtectedHandler(configuration, {
+    facilitatorClient: options.facilitatorClient,
+    routePath: "/api/entitycheck",
+    routeDescription: "EntityCheck assessment",
+    handler: (request) => evaluateEntityCheck(request, environment, readSources),
+  });
+}
+
+function configurationCacheKey(environment: NodeJS.ProcessEnv): string {
+  const configuration = readX402Configuration(environment, "ENTITYCHECK_X402");
+  const sources = readEntityCheckSourceConfiguration(environment);
+
+  return JSON.stringify([configuration, sources]);
+}
+
+function getCachedEntityCheckProtectedHandler(
+  environment: NodeJS.ProcessEnv,
+): Promise<EntityCheckProtectedHandler> {
+  const key = configurationCacheKey(environment);
+  const cachedHandler = protectedHandlerCache.get(key);
   if (cachedHandler !== undefined) {
     return cachedHandler;
   }
 
-  const pendingHandler = createEntityCheckProtectedHandler(
-    configuration,
-    sourceConfiguration,
-  );
+  const pendingHandler = createEntityCheckProtectedHandler(environment);
   protectedHandlerCache.set(key, pendingHandler);
   void pendingHandler.catch(() => {
     if (protectedHandlerCache.get(key) === pendingHandler) {
       protectedHandlerCache.delete(key);
     }
   });
-
   return pendingHandler;
 }
 
 export async function handleEntityCheckPost(
   request: NextRequest,
   environment: NodeJS.ProcessEnv,
-  options?: EntityCheckPostOptions,
+  options: EntityCheckPostOptions = {},
 ): Promise<NextResponseType> {
-  const configuration = readEntityCheckX402Configuration(environment);
-  const sourceConfiguration = readEntityCheckSourceConfiguration(environment);
-
-  if (configuration === null || sourceConfiguration === null) {
-    return entityCheckUnavailableResponse();
+  const configuration = readX402Configuration(environment, "ENTITYCHECK_X402");
+  if (
+    configuration === null ||
+    readEntityCheckSourceConfiguration(environment) === null
+  ) {
+    return unavailableResponse();
   }
-
-  let handler: X402ProtectedHandler;
 
   try {
-    handler =
-      options === undefined
-        ? await getCachedEntityCheckProtectedHandler(
-            configuration,
-            sourceConfiguration,
-          )
-        : await createEntityCheckProtectedHandler(
-            configuration,
-            sourceConfiguration,
-            options,
-          );
+    const handler =
+      options.facilitatorClient === undefined && options.readSources === undefined
+        ? await getCachedEntityCheckProtectedHandler(environment)
+        : await createEntityCheckProtectedHandler(environment, options);
+    return await handler(request);
   } catch {
-    return entityCheckUnavailableResponse();
+    return unavailableResponse();
   }
-
-  return handler(request);
 }

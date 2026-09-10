@@ -157,14 +157,15 @@ function ToolDetailsStep({ values, fieldErrors, onTextChange, onCategoryChange }
   );
 }
 
-function InterfaceStep({ values, onTextChange }: {
+function InterfaceStep({ values, fieldErrors, onTextChange }: {
   values: WizardValues;
+  fieldErrors: ProviderDeployFieldErrors;
   onTextChange: (field: Exclude<keyof WizardValues, "category" | "acknowledgement">) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }) {
   return (
     <div className="space-y-5">
-      <Field label="Qualifying resource" hint="Name the local resource that anchors this capability.">
-        <input className={inputClassName} value={values.qualifyingResource} onChange={onTextChange("qualifyingResource")} />
+      <Field label="Qualifying resource" hint="Name the local resource that anchors this capability." error={fieldErrors.qualifyingResource} errorId={fieldErrorId("qualifyingResource")}>
+        <input aria-invalid={fieldErrors.qualifyingResource ? true : undefined} aria-describedby={fieldErrors.qualifyingResource ? fieldErrorId("qualifyingResource") : undefined} className={fieldClassName(fieldErrors.qualifyingResource)} value={values.qualifyingResource} onChange={onTextChange("qualifyingResource")} />
       </Field>
       <Field label="Capability summary" hint="Describe the bounded capability in clear terms.">
         <textarea className={`${inputClassName} min-h-32 resize-y`} value={values.capabilitySummary} onChange={onTextChange("capabilitySummary")} />
@@ -350,7 +351,7 @@ export function ProviderDeployWizard() {
       case 0:
         return <ToolDetailsStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} onCategoryChange={changeCategory} />;
       case 1:
-        return <InterfaceStep values={values} onTextChange={changeText} />;
+        return <InterfaceStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} />;
       case 2:
         return <PricingStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} />;
       case 3:

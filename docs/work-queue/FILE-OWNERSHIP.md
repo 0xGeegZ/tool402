@@ -252,6 +252,20 @@ Core, backend, Web and UI paths, S12-T010's boundary routes and assets, runtime
 configuration, key material, accounts, wallets, deployment, and live evidence
 are excluded.
 
+B03-T020 is a root-controlled `20-active` CORE_P0 successor comprising its
+card, `docs/specs/b03-agent-safe-phase-diagnostics.md`, its local plan and
+intake/ready/activation reviews, catalog, ownership, State, decisions,
+reviews, commits, and pushes. Its activation authorizes only
+`apps/agent/test/riskscan-pay-observability.test.mjs` and the narrow secrecy/
+preflight amendment of `apps/agent/test/riskscan-tool-payment-boundary.test.mjs`
+for durable RED. The two source paths remain prohibited pending independent RED
+acceptance. This is an explicit sequential successor reservation: B03-T010 is
+`50-blocked` with no active source lane and is not reopened. B03-T020 may not
+change the payment library, manifest, lockfile, public export, configuration,
+key, account, signer, wallet, provider, request payload/header, signed retry,
+settlement, deployment, or live-evidence path. No agent executes a preflight
+or replacement payment.
+
 S12-T010 is an accepted record comprising its card, `docs/ui/UI-S12.md`,
 `docs/superpowers/plans/2026-09-08-s12-deploy-readiness.md`, move-only input
 paths `apps/web/public/brand/icon.svg` and
@@ -457,9 +471,28 @@ Backend files named in their cards. The root sequences the three shared
 `walletCommandReplayClaims`, M41 reserves `ingressCommandReplayClaims`, and
 M43 may widen only the declared external-attempt state after its predecessors
 are accepted. M43's `command_dispatch.ts` amendment is likewise unavailable
-until its own ready cycle. M45-T010 owns its exact Web active-directory paths
-and only the constrained accepted Tool Directory/API/test amendments listed in
-its card.
+until its own ready cycle. M45-T010 owns only its exact new Web
+active-directory module and focused test. The root integration reservation
+permits only the declared amendments to
+`apps/web/src/lib/tool-directory.ts`, `apps/web/src/app/api/tools/route.ts`,
+and `apps/web/tests/tool-directory-api.test.mjs`. The default `GET /api/tools`
+response remains the accepted static body; only the exact
+`?view=active-directory-version` query may return the active-version metadata
+view. No Agent reader or Agent test is reserved, and no served metadata becomes
+payment, availability, or execution authority.
+
+M45-T010's durable RED contract is accepted at `2ee65bb`. Its root-integrated
+GREEN scope is limited to `apps/web/src/lib/active-directory-version.ts`, the
+declared type-only/view amendment to `apps/web/src/lib/tool-directory.ts`, and
+the exact opt-in `GET` amendment to `apps/web/src/app/api/tools/route.ts`.
+The accepted default discovery response, Agent reader/tests, every payment or
+provider boundary, and all configuration, wallet, SDK, transaction, deployment,
+and live paths remain excluded.
+
+M45-T010 is accepted at `f2275ab15fcde4eb0893c187167ded7e4779c90c` after
+independent task review and two fresh clean module reviews. Its final
+test-only amendment proves both the pre-response deadline and exact byte-cap
+boundary; it does not widen the declared source, route, or integration scope.
 
 M41-T010's scoped atomic-handoff correction is root-integrated only. It may
 amend `packages/backend/convex/external_prepare_command_admission.ts`,
@@ -479,6 +512,58 @@ focused test amendments. No other M32/M40 behavior, schema field/table/index,
 configuration, key, publication, Web, Agent, package, wallet, provider, SDK,
 transaction, deployment, or live-evidence path is eligible.
 
+M41-T010 is accepted at `20983649632f4812d9ee045637eb183b3158cc38` as the
+closed local ingress/replay/atomic-admission/public-projection boundary. Its
+ownership is complete. M43-T010 may not amend the shared schema, its schema
+assertion, or `command_dispatch.ts` until its own root control record reserves
+only the already-declared state/field, assertion, and disabled-entry changes.
+
+M43-T010's root control reservation is now recorded after M41 acceptance. On
+an eventual authorized GREEN cycle, it may amend only
+`packages/backend/convex/schema.ts` to widen
+`externalPrepareCommandAttempts.state` and add exactly its three declared
+optional candidate/reconciliation fields; amend only
+`packages/backend/tests/external-prepare-command-durable-schema.test.mjs` to
+match that exact shape; amend only
+`packages/backend/tests/offering-durable-schema.test.mjs` to match that same
+M32 subset shape; and amend only
+`packages/backend/convex/command_dispatch.ts` to enable the already-declared
+`external.attachCandidate` entry. This future GREEN reservation grants no
+implementation, schema, dispatch, configuration, SDK, wallet, provider,
+transaction, deployment, or live-action work today; its readiness, activation,
+and RED reviews remain separate gates.
+
+M43-T010 is active at `84c80f2` only to create its three declared durable
+test-only RED files and the matching narrow
+`external-prepare-command-durable-schema.test.mjs` assertion amendment, the
+same-shape `offering-durable-schema.test.mjs` M40 compatibility assertion
+amendment, plus the constrained M41 dispatch-test replacement below. Every M43
+source, schema,
+and dispatch amendment remains absent until a fresh RED review accepts its
+exact failure contract.
+
+The root additionally reserves one active M43 test-only RED replacement in
+`packages/backend/tests/command-dispatch.test.mjs`, limited exactly to the
+accepted M41 disabled-attach-candidate assertion at lines 851–866 as they stood
+at M43 activation. It is replaced during M43 RED with the closed
+`ATTACHED`/`ALREADY_ATTACHED`/`COMMAND_REPLAYED` mapping defined in the M43
+specification, must fail against M41's current disabled entry, and may not
+change any source. No other M41 test, response arm, header rule, projection,
+source, schema, configuration, SDK, wallet, provider, transaction, deployment,
+or live behavior is reserved. A fresh independent RED acceptance remains
+required before every M43 source, schema, or dispatch amendment.
+
+M43's current zero-enabled ATS_* receipt action never invokes M40 readiness. A
+post-Stage-B successor needs a new scoped authority before the fixed one-read
+receipt boundary or its result changes.
+
+M43-T010 is accepted as the complete local owner of its three declared receipt
+source modules, their focused tests, its reserved attempt-state/optional-field
+schema widening, the matching M32/M40 schema assertions, and the one closed
+dispatch-entry enablement. Its ownership adds no positive ATS verification,
+M40 readiness transition, SDK, wallet, provider, configuration, transaction,
+deployment, or live behavior.
+
 The root additionally reserves one M41 regression-baseline correction in
 `packages/backend/tests/offering-durable-schema.test.mjs`: only the exact
 `by_ats_create_draft_binding` expected M40 index vector may be appended to
@@ -488,8 +573,8 @@ test change.
 
 S15-T010 owns its exact wallet-island and relay paths. S16-T010 owns its exact
 provider-deploy page, components, state, fixture, display configuration literal,
-and tests. S17-T010 owns its exact provider-status/API/projection paths and its
-single local-navigation/test integration after S11-T010. M44-T010 owns its
+and tests. S17-T010 is governed by its root-controlled record below and has no
+source authority until its separate activation. M44-T010 owns its
 exact ATS client/request/action and test paths. M44 must not import, adapt, or
 reuse S16's display configuration literal: its complete real-issuer fixture is
 test-local, and a future separately scoped bridge owns every trusted runtime
@@ -510,15 +595,63 @@ client remain absent until that gate passes. No trusted configuration bridge,
 durable attempt, wallet/provider interaction, transaction, deployment, or live
 behavior is authorized.
 
-M44-T010's single bundle-gate experiment is exhausted and BLOCKED. Its
-uncommitted package pin, lockfile closure, static-shell assertion, and client
-island are removed; the existing RED files remain M44-owned. The root retains
-the package/lockfile reservation, but no M44 dependency, import, source, or
-mount change is authorized until a new scoped human decision identifies and
-independently verifies a compatible official SDK entry and a real
-non-executing client mount, or explicitly resolves the root-entry environment
-side effect. No trusted configuration bridge, durable attempt, wallet/provider
-interaction, transaction, deployment, or live behavior is authorized.
+The first M44 bundle-gate experiment was exhausted and removed because its
+island was unreachable. `D-M44-010-006` now reserves exactly one retry:
+`apps/web/package.json`, the root `package-lock.json`,
+`apps/web/tests/static-shell.test.mjs`,
+`apps/web/tests/ats-sdk-bundle-gate.test.mjs`, the new
+`apps/web/src/components/provider/deploy/ats-create-action.tsx`, and only
+`apps/web/src/components/provider/deploy/provider-deploy-stages.tsx` for its
+single stage-3-first-substep mount. The island may statically import only the
+official `@hashgraph/asset-tokenization-sdk@8.0.0` root and render a disabled
+unavailable control. It may not invoke the SDK, read or adapt configuration,
+construct a client, touch a wallet/provider, create a durable attempt, submit a
+transaction, or add a shim, polyfill, patch, fork, or alias. A Webpack build,
+client-manifest/chunk inspection, and browser import-evaluation proof decide
+the retry; an SDK failure stops the lane with its exact diagnostic.
+
+After the observed Turbopack client-graph failures, `D-M44-010-007` additionally
+reserves only `apps/web/next.config.ts`,
+`apps/web/src/lib/ats/browser/dotenv-mock.ts`,
+`apps/web/src/lib/ats/browser/winston-mock.ts`, and the exact assertions in
+`apps/web/tests/ats-sdk-bundle-gate.test.mjs`. The client-only aliases must
+match the four upstream ATS web aliases and remain no-op compatibility adapters;
+they may not add general Node polyfills, change the official SDK, expose an
+environment value, or enable an SDK action. A fresh Turbopack build decides
+whether those four aliases resolve the diagnosed logger graph before any other
+adaptation can be considered.
+
+`D-M44-010-008` permits one further browser-only entry in that same reserved
+`turbopack.resolveAlias` map: map the optional Node BBS binding to its own
+package-provided WebAssembly fallback. It creates no source path and may not
+introduce a BBS mock, generic Node polyfill, or executable BBS/SDK behavior.
+
+`D-M44-010-009` permits exactly one companion Next
+`serverExternalPackages` entry for that same optional Node BBS package. It
+keeps native BBS resolution out of Turbopack's server graph while the existing
+conditional alias remains browser-only; it may not externalize another package
+or introduce any executable BBS/SDK behavior.
+
+`HA-ATS-CONTRACTS-VIEM-001` supersedes the M44-T010 SDK experiment as the
+selected execution architecture. M44-T020 reserves its new pure
+`apps/web/src/lib/ats/factory-deploy-bond.ts`, focused Factory contract and
+bundle-gate tests, the existing disabled `ats-create-action.tsx`, and (under
+root integration) `apps/web/package.json`, `package-lock.json`,
+`apps/web/tests/static-shell.test.mjs`, and `apps/web/next.config.ts`. Its
+first accepted RED contract may remove only
+`apps/web/src/lib/ats/create-bond-request.ts`,
+`apps/web/src/lib/ats/ats-client.ts`,
+`apps/web/src/lib/ats/browser/dotenv-mock.ts`,
+`apps/web/src/lib/ats/browser/winston-mock.ts`,
+`apps/web/tests/create-bond-request.test.mjs`,
+`apps/web/tests/ats-client.test.mjs`, and
+`apps/web/tests/ats-sdk-bundle-gate.test.mjs`, plus the exact SDK pin,
+static-shell assertion, browser aliases, BBS externalization, and disabled
+action import. It may add only the exact official contracts artifact and
+existing viem seam. It owns no wallet,
+provider, RPC, signer, simulation, transaction, configuration bridge, durable
+attempt, candidate attachment, or M43 source. The older reservation is
+historical only and cannot authorize retained compatibility code.
 
 S20-T010 owns the new `apps/web/src/components/discovery/explore-catalog.tsx`
 and `apps/web/tests/explore-catalog.test.mjs`. The root integration reservation
@@ -530,24 +663,236 @@ allows only its declared presentation amendments to
 and UI-S05 mount-record amendments. It must not modify the Directory island's
 source or state, the guest workbench, the RiskScan detail route, or navigation.
 
-S22-T010 is a root-owned post-rehearsal POLISH intake comprising only its card,
-`docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog,
-decisions, this ownership record, reviews, commits, and pushes. It owns no
-landing source, asset, test, package, lockfile, runtime configuration, or
-dependency today. After the first complete Provider campaign / ATS rehearsal is
-recorded as secret-free evidence, the root must add a fresh local comparison
-record before reserving exact source/test paths. The comparison may use only
-the neutral `PREP-UI-001` landing alias already recorded locally; it may not
-commit external source identifiers, URLs, archives, or an extracted tree. No
-route outside `/`, provider/wallet/payment/transaction behavior, deployment,
-recording, or external action is authorized by this intake.
+M46-T010 is a root-controlled `60-done` CORE_P0 record comprising its card,
+`docs/specs/m46-entity-check-core.md`, the new Core module
+`packages/core/src/entity-check.ts`, and the focused runtime/type fixtures
+`packages/core/test/entity-check.test.mjs` and
+`packages/core/test/entity-check.types.ts`. The root integration reservation
+permits one export-only addition of the EntityCheck values and types to
+`packages/core/src/index.ts`; it must preserve every existing export and
+source order. M46-T010's independently reviewed RED contract is accepted at
+`f8a42e7`. Its accepted source is
+`2482a9bc5f8937afefe2416cae5d7c6fb7fcf898`; the root-integrated GREEN scope
+was limited to `packages/core/src/entity-check.ts` and that declared
+export-only addition; the test fixtures are already committed. No I/O, source adapter, API,
+Directory, UI, package, lockfile, configuration, payment, wallet, provider,
+transaction, deployment, or live path is authorized.
 
-S24-T010 is a root-owned `00-inbox` POLISH intake comprising its card,
-`docs/ui/UI-S24.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog, this
-ownership record, decisions, reviews, commits, and pushes. It reserves no
-dashboard source, component, asset, or test path until a post-rehearsal
-source-to-current comparison and independent readiness review name them. UI-S07
-and every accepted dashboard route remain dependencies, not reopened behavior.
-Authentication, session, account, wallet, provider, balance, client-data,
-configuration, payment, transaction, external activity, deployment, video, and
-submission surfaces are excluded.
+M46-T020 is a root-controlled `60-done` CORE_P0 record comprising its card,
+`docs/specs/m46-entity-check-sources.md`, its ready/activation/RED/final review
+evidence, and only the Web paths `apps/web/src/lib/entity-check-sources.ts`
+and `apps/web/tests/entity-check-sources.test.mjs`. M01-T040, M02-T050, and
+M46-T010 are accepted. The final source at `b8843b0` was independently
+reviewed after it closed the Core-incompatible extended-year clock path before
+any fetch. `HA-ENTITYCHECK-LIVE-001` remains pending and was neither required
+nor exercised. No package, lockfile, browser, live source read, configuration
+value, payment, wallet, provider, transaction, deployment, or other live path
+is authorized.
+
+M46-T030 is a root-controlled `60-done` CORE_P0 record comprising its card,
+`docs/specs/m46-entity-check-x402-api.md`, its local execution plan, its ready
+and activation/final review evidence, and only
+the future Web paths
+`apps/web/src/lib/x402-protected-route.ts`,
+`apps/web/src/lib/entity-check-x402.ts`,
+`apps/web/src/app/api/entitycheck/route.ts`, and
+`apps/web/tests/entitycheck-api.test.mjs`. M02-T060, M06-T010, M46-T010, and
+M46-T020 are accepted. The root integration reservation permits only a
+behaviour-preserving extraction of `apps/web/src/lib/riskscan-x402.ts`: every
+existing export, accepted RiskScan response, cache boundary, configuration rule,
+Hedera capability check, and B02 settlement-observer semantic remains intact;
+`apps/web/tests/riskscan-api.test.mjs` is not amendable. The independent RED
+review recorded at `docs/work-queue/evidence/M46-T030-red-review.md` is clear.
+The final correction at `7ebfa172bd45178724d2ccf90bc6333ed4fe8391` restores the
+inherited generic EVM CAIP-2 family and is independently reviewed in the three
+recorded final reports. No package,
+lockfile, configuration value, live facilitator/source read, payment, wallet,
+provider, transaction, deployment, or live path is authorized.
+
+M46-T040 is a root-controlled `60-done` CORE_P0 record comprising its card,
+`docs/specs/m46-entity-check-tool-directory.md`, the compatibility amendment
+at `docs/work-queue/evidence/M46-T040-directory-v2-compatibility-amendment.md`,
+its clear ready review at
+`docs/work-queue/evidence/M46-T040-ready-review.md`, its clear activation
+review at `docs/work-queue/evidence/M46-T040-activation-review.md`, its
+clear RED acceptance review at `docs/work-queue/evidence/M46-T040-red-review.md`, its
+clear final task/specification/standards reviews, its
+new Web descriptor source/test
+`apps/web/src/lib/entity-check-tool-descriptor.ts` and
+`apps/web/tests/entity-check-tool-descriptor.test.mjs`, and only the following
+root-reserved migration paths:
+`apps/web/src/lib/tool-directory.ts`,
+`apps/agent/src/riskscan-tool-directory.ts`,
+`apps/web/tests/tool-directory-api.test.mjs`,
+`apps/agent/test/riskscan-tool-directory.test.mjs`,
+`apps/agent/test/riskscan-tool-flow.test.mjs`,
+`apps/agent/test/riskscan-tool-native-quote-evaluation.test.mjs`,
+`apps/agent/test/riskscan-tool-native-quote-evaluation-package.test.mjs`,
+`apps/agent/test/riskscan-tool-payment.test.mjs`,
+`apps/agent/test/riskscan-tool-payment-boundary.test.mjs`,
+`apps/web/tests/riskscan-directory-discovery.test.mjs`,
+`apps/web/tests/riskscan-native-quote-compatibility.test.mjs`, and
+`apps/web/tests/riskscan-tool-loop.test.mjs`. M05-T010, M05-T020, M06-T010,
+M45-T010, and M46-T030 are accepted. The migration may replace only the
+canonical default `/api/tools` body with the fixed v2 ordered pair and extend
+only the RiskScan decoder to accept that closed pair plus the exact legacy v1
+one-tool input. This narrowly supersedes only M05/M45's default one-tool-v1
+body requirement; the current route, M45 active-directory reader/view, all Web
+UI source, all other Agent source, package metadata, and lockfile are not
+amendable. No second Directory endpoint, content negotiation, retry, source
+read, payment, wallet/provider, account, transaction, deployment, or live
+capability is authorized. EntityCheck remains inert to the RiskScan consumer;
+a later dedicated consumer card is required before any Agent selects it.
+The `tool-directory-api.test.mjs` reservation includes only the exact v2 tuple
+assertions and the M45 builder-import-vector change from its existing two
+imports to the three imports declared in the M46 specification; its route,
+active-directory-view, and no-I/O assertions remain frozen.
+
+The corrected RED contract is accepted at
+`ca1d1bfee99fc53e1844dd52237b73fefd8088f3`. GREEN is authorized only for
+`apps/web/src/lib/entity-check-tool-descriptor.ts`,
+`apps/web/src/lib/tool-directory.ts`, and
+`apps/agent/src/riskscan-tool-directory.ts`; the eleven declared test paths
+remain reserved for matching updates. The route, active view, UI, package,
+lockfile, configuration/environment read, source read, payment,
+wallet/provider, transaction, deployment, and live path remain prohibited.
+
+The accepted source is `3ab20483452174931bae0575d2331fa42c999dce`. It emits
+only the one closed v2 default tuple, retains the strict legacy-v1 reader, and
+leaves M45's opt-in active-directory view unchanged. No route, UI, package,
+lockfile, configuration/environment read, source read, payment,
+wallet/provider, transaction, deployment, or live path is authorized by this
+acceptance.
+
+S17-T010 is a root-controlled `60-done` CORE_P0 record comprising its card,
+`docs/ui/UI-S17.md`, the UI-S17 ledger row, its local execution plan, its ready
+and activation review evidence, and only
+the future Web paths
+`apps/web/src/app/provider/page.tsx`,
+`apps/web/src/lib/offering-projection.ts`,
+`apps/web/src/app/api/offerings/route.ts`,
+`apps/web/src/components/provider/status/provider-status.tsx`,
+`apps/web/src/components/provider/status/provider-status-state.ts`,
+`apps/web/tests/provider-status.test.mjs`, and
+`apps/web/tests/offerings-api.test.mjs`. M02-T020, M11-T020, M29-T010,
+M41-T010, S16-T010, and S11-T010 are accepted. The root integration reservation
+permits the one `{ href: "/provider", label: "Provider" }` navigation
+entry and its exact-list assertion amendments in
+`apps/web/src/components/discovery/local-navigation.tsx`,
+`apps/web/tests/workspace-shell.test.mjs`,
+`apps/web/tests/landing-explore.test.mjs`, and
+`apps/web/tests/guided-demo-route.test.mjs`; the guided-demo amendment preserves
+its nine steps, route links, and every non-navigation assertion. The same-card
+responsive amendment additionally reserves only the existing navigation-list
+class tokens and the existing workspace-shell navigation assertion: the test
+must preserve the exact five-link list and require exactly `flex flex-wrap
+items-center gap-1 text-sm font-medium` without an overflow mask or
+minimum-width escape, and the source may insert only the bare `flex-wrap` token
+after `flex` in its existing literal. No other class token or attribute may be
+added, removed, reordered, or made conditional. `layout.tsx`, global CSS, all
+other navigation assertions, and every semantic/runtime boundary remain outside
+this reservation. The controls-only review at
+`docs/work-queue/evidence/S17-T010-responsive-scope-review.md` is clear; it
+authorized no test or source change before fresh responsive RED acceptance. The
+committed `c1953f4e0de02b0435f5a7d209278254d37c2bf3` RED contract is now clear
+in `docs/work-queue/evidence/S17-T010-responsive-red-review.md`, so only the
+specified bare `flex-wrap` source insertion is authorized before final checks.
+That insertion is accepted at `e7a015565a0579b26c1af439410823e533712043` after
+focused 20/20, browser, and independent task/specification/standards evidence
+recorded under `docs/work-queue/evidence/S17-T010-responsive-`.
+`apps/web/tests/shell-accessibility.test.mjs` is not amendable. The independent
+RED review recorded at `docs/work-queue/evidence/S17-T010-red-review.md` is
+clear, so only the five declared source paths and the root-reserved `/provider`
+navigation entry are authorized for minimal local GREEN. The stale remote S17
+branch is unreviewed and has no ownership or implementation authority. No client
+state, timer, command, write, Mirror/chain read, wallet, provider, payment,
+transaction, deployment, or live path is authorized.
+
+S21-T010 is a root-controlled `60-done` CORE_P0 record. Its historical
+source was integrated at `48421352607a00c1a73f593dcc48160fac771e6a`; that is
+not acceptance evidence. The corrective record
+`docs/work-queue/evidence/S21-T010-corrective-review.md` reserves only a
+test-first correction in `apps/web/tests/provider-deploy-state.test.mjs`,
+`apps/web/tests/provider-deploy-route.test.mjs`, and
+`apps/web/tests/deploy-stage-signing.test.mjs`, with
+`apps/web/tests/command-bridge.test.mjs` only if needed to prove the existing
+Core rejection. After a fresh independent RED acceptance, its exact minimal
+production scope is `apps/web/src/components/provider/deploy/provider-deploy-state.ts`,
+`apps/web/src/components/provider/deploy/provider-deploy-wizard.tsx`, and
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`.
+`command-bridge.ts`, every S15 module, the directory literal, the remaining
+S16 paths, M44's ATS action path, and S17's provider-status paths are not
+amendable. The stage 4 literal keeps `clearingAccount` absent under
+`D-S21-010-001`; no request is built and the stage stays unavailable. No
+wallet, provider, SDK, configuration, durable write, transaction, deployment,
+or live path is authorized by the corrective scope. The independent ready
+review is recorded at `docs/work-queue/evidence/S21-T010-ready-review.md`, the
+activation at `docs/work-queue/evidence/S21-T010-activation-review.md`, and
+the RED acceptance at `docs/work-queue/evidence/S21-T010-red-review.md`.
+The accepted corrective source is `09899fdf269bc78493e39e067fdc57ad867c6564`;
+its independent task and two module reviews are recorded at
+`docs/work-queue/evidence/S21-T010-task-review.md`,
+`docs/work-queue/evidence/S21-T010-module-review-spec.md`, and
+`docs/work-queue/evidence/S21-T010-module-review-standards.md`. A future
+change to any S21 source requires its own scoped authority; no active source
+path remains authorized by this completed corrective cycle.
+
+M47-T010 is a root-controlled `20-active` CORE_P0 correction comprising its
+card, specification, plan, reconciliation evidence, readiness and activation
+reviews, RED review, import-ledger row, catalog, State, decisions, reviews,
+commits, and pushes. Its accepted durable RED contract is limited to
+`packages/backend/tests/stage-b-ats-create-runtime-binding.test.mjs`,
+`packages/backend/tests/external-prepare-command-durable-admission.test.mjs`,
+`apps/web/tests/stage-b-ats-create-command-projection.test.mjs`,
+`apps/web/tests/command-bridge.test.mjs`, and
+`apps/web/tests/deploy-stage-signing.test.mjs`. Fresh independent RED
+acceptance authorizes only `packages/backend/convex/stage_b_ats_create_runtime_binding.ts`,
+`packages/backend/convex/external_prepare_command_admission.ts`,
+`apps/web/src/lib/ats/stage-b-ats-create-command-projection.ts`,
+`apps/web/src/lib/wallet/command-bridge.ts`, and
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, with the
+five tests reserved for matching updates. The private admission amendment must
+run only after M32 has rebound and revalidated the durable signer authority and
+before M33, replay, idempotency, or state. The M42 real projection stays
+private; the browser may receive only its six fixed M26 fields. M33's manifest,
+M44's Factory helper, S16's display literal, packages, lockfiles, environment,
+public Backend exports, routes, and submission documents are not amendable. No
+authority provision, SDK, provider, wallet, network, transaction, candidate,
+or live path is authorized.
+
+M44-T030 is a root-controlled `00-inbox` CORE_P0 corrective successor to
+accepted M44-T020. It comprises its card, specification, local plan, intake
+review, catalog, ownership, State, decisions, reviews, commits, and pushes.
+Its only future implementation paths are the narrow decoded-event amendment of
+`apps/web/src/lib/ats/factory-deploy-bond.ts` and
+`apps/web/tests/factory-deploy-bond.test.mjs`. No test or source is active
+until separate independent readiness and activation reviews. The selected
+official Factory artifact and viem seam, every package/lockfile, SDK/browser
+compatibility, M47 path, provider, wallet, RPC, transaction, candidate,
+deployment, and live path are excluded.
+
+S22-T010 is a root-owned early truth-first POLISH lane. Its first independently
+accepted GREEN scope comprised only `apps/web/src/app/page.tsx`,
+`apps/web/src/components/landing/landing-hero.tsx`,
+`apps/web/src/components/landing/landing-sections.tsx`,
+`apps/web/src/components/landing/landing-footer.tsx`,
+`apps/web/tests/product-landing.test.mjs`,
+`apps/web/tests/landing-explore.test.mjs`, and
+`apps/web/tests/public-landing-reconciliation.test.mjs`. It selected no new
+asset. D-S22-010-006 accepts the renewed RED and authorizes only the existing
+root/three component paths, their three focused tests, and the individually
+selected `apps/web/public/brand/hero-trio.png` asset for GREEN. Every global
+layout/navigation/CSS, non-root route, provider/ATS, configuration, package,
+README, submission, deployment, video, and all other path remains prohibited.
+
+S24-T010 is a root-owned early truth-first POLISH lane. It is `20-active` for
+`apps/web/src/app/dashboard/page.tsx`,
+`apps/web/src/components/workspace/workspace-shell.tsx`,
+`apps/web/src/components/workspace/workspace-overview.tsx`,
+`apps/web/src/components/workspace/workspace-navigation.tsx`,
+`apps/web/tests/workspace-shell.test.mjs`, and the new
+`apps/web/tests/dashboard-workspace-reconciliation.test.mjs`. Global
+layout/navigation/CSS, child route/island, API/Agent, Provider/Demo, asset,
+configuration, package, README, submission, deployment, and video paths remain
+prohibited. Independent task and module review remain required before
+acceptance.

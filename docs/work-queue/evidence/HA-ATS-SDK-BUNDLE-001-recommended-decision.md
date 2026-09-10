@@ -2,16 +2,20 @@
 
 ## Status and scope
 
-**RECOMMENDED — awaiting explicit human acceptance.** This packet proposes the
-new scoped authority the root asked for in
+**ACCEPTED — scoped local bundle authority.** The human operator accepted this
+packet at `2026-09-09T18:48:27Z`; the root records that acceptance in
+`HA-ATS-SDK-BUNDLE-001` and `D-M44-010-006`. This is the scoped authority the
+root requested in
 [the M44 bundle-gate observation](M44-T010-bundle-gate-observation.md) after
 it recorded `D-M44-010-005` (BUNDLE GATE BLOCKED). It becomes authority only
 when the human operator accepts it and the root records that acceptance as a
 decision row and a human-action row.
 
-- Prepared: `2026-09-09T18:48:27Z` by the human operator's delegated session under the
-  [HI-006 intake card](../queue/00-inbox/HI-006-ats-sdk-bundle-authority.md).
-- Decision owner on acceptance: human operator (repository owner).
+- Prepared and accepted: `2026-09-09T18:48:27Z` by the human operator's
+  delegated session under the completed
+  [HI-006 authority card](../queue/60-done/HI-006-ats-sdk-bundle-authority.md).
+- Decision owner: human operator (repository owner); root records the local
+  queue state only.
 
 ## Basis
 

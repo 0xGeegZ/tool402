@@ -63,6 +63,13 @@ failed signature discards the request. A builder refuses to produce a request
 for a stage whose predecessor is not `done` in this session, and refuses stage
 3 without a candidate and stage 4 without a complete record literal.
 
+Before the stage 1 dialog can open, the reviewed `qualifyingResource` must be
+accepted by the existing local offering parser. A blank or noncanonical value
+is a linked step-2 field error; it keeps the dialog closed and does not change
+the stage state. If a request cannot be constructed for any other local parser
+reason, the signing island keeps the dialog closed, preserves the resting stage
+state, and renders actionable nontechnical feedback. It records no result.
+
 ## Required stage behavior
 
 The island mounts on the wizard review step below the stage list. It renders
@@ -79,7 +86,8 @@ predecessor makes the next stage `actionable`. Stage 2 becomes `actionable`
 after stage 1 only when the frozen ATS_CREATE literal is present. Stage 3
 stays `unavailable` until the M44 action returns a candidate in this session;
 its second sub-step is then the stage's control. Stage 4 stays `unavailable`
-while the record literal is incomplete.
+while the record literal is incomplete, with the exact reason "No accepted
+clearing account is recorded.".
 
 Every stage detail line renders only a value the relay actually returned:
 the echoed `publicId` where present, and nothing else. The offering-state
@@ -105,6 +113,9 @@ live ATS execution to the separate Stage B human gate.
   predecessor rule, the candidate and record preconditions, and the
   result-to-stage mapping including the declined return and the single path
   to `done`.
+- Focused corrective contracts keep an invalid `qualifyingResource` linked to
+  its step-2 field, prevent a dialog/result transition when request
+  construction rejects, and pin the exact stage-four unavailable reason.
 - The amended S15 and S16 suites pass unchanged except for the named
   assertions.
 - Web typecheck, test, and lint, root quality, the equivalent Webpack

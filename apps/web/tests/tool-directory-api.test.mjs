@@ -74,11 +74,18 @@ const expectedEntityCheckDescriptor = {
   configuration: { state: "configuration_required" },
 };
 
-test("describes exactly the Quick tool and the EntityCheck tool with the accepted bounded input and limitations", () => {
-  assert.deepEqual(buildToolDirectory({}), {
-    version: "v1",
-    tools: [{ ...expectedDescriptor, payment: { state: "configuration_required" } }, expectedEntityCheckDescriptor],
-  });
+function expectedDirectory(payment) {
+  return {
+    version: "v2",
+    tools: [{ ...expectedDescriptor, payment }, expectedEntityCheckDescriptor],
+  };
+}
+
+test("describes the canonical v2 tuple with the unchanged RiskScan descriptor first", () => {
+  assert.deepEqual(
+    buildToolDirectory({}),
+    expectedDirectory({ state: "configuration_required" }),
+  );
 });
 
 test("fails closed when any configuration field is missing or malformed", () => {
@@ -91,10 +98,7 @@ test("fails closed when any configuration field is missing or malformed", () => 
   for (const [key, values] of Object.entries(malformed)) {
     for (const value of [undefined, ...values]) {
       const directory = buildToolDirectory({ ...configuredEnvironment, [key]: value });
-      assert.deepEqual(directory, {
-        version: "v1",
-        tools: [{ ...expectedDescriptor, payment: { state: "configuration_required" } }, expectedEntityCheckDescriptor],
-      });
+      assert.deepEqual(directory, expectedDirectory({ state: "configuration_required" }));
     }
   }
 });
@@ -105,13 +109,10 @@ test("exposes only parsed local protocol, network and price for valid configurat
     RISKSCAN_X402_NETWORK: " eip155:11155111 ",
     RISKSCAN_X402_PRICE: " $1.25 ",
   });
-  assert.deepEqual(directory, {
-    version: "v1",
-    tools: [{
-      ...expectedDescriptor,
-      payment: { state: "locally_configured", protocol: "x402", network: "eip155:11155111", price: "$1.25" },
-    }, expectedEntityCheckDescriptor],
-  });
+  assert.deepEqual(
+    directory,
+    expectedDirectory({ state: "locally_configured", protocol: "x402", network: "eip155:11155111", price: "$1.25" }),
+  );
 });
 
 test("exposes only the native Hedera summary for valid local configuration", async () => {
@@ -133,10 +134,7 @@ test("exposes only the native Hedera summary for valid local configuration", asy
     RESULT: "controlled-result-content",
   };
 
-  assert.deepEqual(buildToolDirectory(environment), {
-    version: "v1",
-    tools: [{ ...expectedDescriptor, payment: expectedPayment }, expectedEntityCheckDescriptor],
-  });
+  assert.deepEqual(buildToolDirectory(environment), expectedDirectory(expectedPayment));
 
   const body = await toolDirectoryResponse(environment).text();
   assert.deepEqual(JSON.parse(body).tools[0].payment, expectedPayment);
@@ -184,9 +182,16 @@ test("returns JSON with no-store and never serializes controlled private environ
   }
 });
 
-test("uses one parser pass and keeps separate directory builds independent", () => {
+test("uses one parser pass per descriptor and keeps separate directory builds independent", () => {
   const reads = [];
-  const environment = new Proxy(Object.freeze({ ...configuredEnvironment }), {
+  const environmentValues = {
+    ...configuredEnvironment,
+    ENTITYCHECK_X402_PAY_TO: `0x${"2".repeat(40)}`,
+    ENTITYCHECK_X402_FACILITATOR_URL: "https://entitycheck-facilitator.invalid/controlled-private-path",
+    ENTITYCHECK_X402_NETWORK: "eip155:84532",
+    ENTITYCHECK_X402_PRICE: "$0.02",
+  };
+  const environment = new Proxy(Object.freeze(environmentValues), {
     get(target, key) {
       assert.ok(Object.hasOwn(target, key), `unexpected environment read: ${String(key)}`);
       reads.push(key);
@@ -195,13 +200,10 @@ test("uses one parser pass and keeps separate directory builds independent", () 
     set() { throw new Error("environment mutation is forbidden"); },
   });
   const directory = buildToolDirectory(environment);
-  assert.deepEqual(reads, Object.keys(configuredEnvironment));
+  assert.deepEqual(reads, Object.keys(environmentValues));
   directory.tools[0].input.required.push("unexpected");
   directory.tools[0].input.properties.declarations.required.length = 0;
-  assert.deepEqual(buildToolDirectory({}), {
-    version: "v1",
-    tools: [{ ...expectedDescriptor, payment: { state: "configuration_required" } }, expectedEntityCheckDescriptor],
-  });
+  assert.deepEqual(buildToolDirectory({}), expectedDirectory({ state: "configuration_required" }));
 });
 
 test("constructs directory responses without network, tool, payment, backend, clock or random calls", (t) => {
@@ -218,18 +220,20 @@ test("constructs directory responses without network, tool, payment, backend, cl
   }
 });
 
-test("registers only a GET route with request-time environment access and no legacy cache configuration", () => {
+test("registers the bounded opt-in active-directory view without changing the default discovery path", () => {
   const route = readFileSync(new URL("../src/app/api/tools/route.ts", import.meta.url), "utf8");
   assert.match(route, /import\s*\{\s*connection\s*\}\s*from\s*["']next\/server["']/u);
+  assert.match(route, /import\s*\{\s*activeDirectoryViewRequested\s*,\s*readActiveDirectoryVersion\s*\}\s*from\s*["']\.\.\/\.\.\/\.\.\/lib\/active-directory-version["']/u);
   assert.match(route, /import\s*\{\s*toolDirectoryResponse\s*\}\s*from\s*["']\.\.\/\.\.\/\.\.\/lib\/tool-directory(?:\.ts)?["']/u);
-  assert.match(route, /export\s+async\s+function\s+GET\(\)\s*\{\s*await\s+connection\(\);\s*return\s+toolDirectoryResponse\(process\.env\);\s*\}/u);
+  assert.match(route, /export\s+async\s+function\s+GET\(request:\s*Request\)\s*\{\s*await\s+connection\(\);\s*const\s+read\s*=\s*\(\)\s*=>\s*readActiveDirectoryVersion\(process\.env,\s*\(i,\s*init\)\s*=>\s*fetch\(i,\s*init\)\);\s*const\s+directory\s*=\s*activeDirectoryViewRequested\(request\)\s*\?\s*await\s+read\(\)\s*:\s*null;\s*return\s+toolDirectoryResponse\(process\.env,\s*directory\);\s*\}/u);
   assert.equal((route.match(/\bexport\b/gu) ?? []).length, 1);
-  assert.equal((route.match(/\bimport\b/gu) ?? []).length, 2);
-  assert.equal((route.match(/process\.env/gu) ?? []).length, 1);
+  assert.equal((route.match(/\bimport\b/gu) ?? []).length, 3);
+  assert.equal((route.match(/process\.env/gu) ?? []).length, 2);
   assert.doesNotMatch(route, /\b(?:dynamic|revalidate|fetchCache)\b/u);
   const builder = readFileSync(new URL("../src/lib/tool-directory.ts", import.meta.url), "utf8");
   const imports = builder.match(/^import .+;$/gmu);
   assert.deepEqual(imports, [
+    'import type { ActiveDirectoryView } from "./active-directory-version.ts";',
     'import { buildEntityCheckToolDescriptor } from "./entity-check-tool-descriptor.ts";',
     'import { readRiskScanX402Configuration } from "./riskscan-x402.ts";',
   ]);

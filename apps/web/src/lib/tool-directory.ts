@@ -1,3 +1,4 @@
+import type { ActiveDirectoryView } from "./active-directory-version.ts";
 import { buildEntityCheckToolDescriptor } from "./entity-check-tool-descriptor.ts";
 import { readRiskScanX402Configuration } from "./riskscan-x402.ts";
 
@@ -21,7 +22,7 @@ export function buildToolDirectory(environment: NodeJS.ProcessEnv) {
       } as const;
 
   return {
-    version: "v1",
+    version: "v2",
     tools: [{
       id: "riskscan.quick",
       name: "RiskScan Quick",
@@ -59,8 +60,14 @@ export function buildToolDirectory(environment: NodeJS.ProcessEnv) {
   } as const;
 }
 
-export function toolDirectoryResponse(environment: NodeJS.ProcessEnv): Response {
-  return Response.json(buildToolDirectory(environment), {
+export function toolDirectoryResponse(
+  environment: NodeJS.ProcessEnv,
+  activeDirectory: ActiveDirectoryView | null = null,
+): Response {
+  const body = activeDirectory === null
+    ? buildToolDirectory(environment)
+    : { view: "active-directory-version", directory: activeDirectory };
+  return Response.json(body, {
     headers: { "cache-control": "no-store" },
   });
 }

@@ -410,6 +410,30 @@ implementedTest("connects each local validation error to its editable control", 
   }
 });
 
+implementedTest("links the step-two resource input to its current field error", async () => {
+  const wizard = (await readS16Sources())["src/components/provider/deploy/provider-deploy-wizard.tsx"];
+  const context = namedFunctionContext("provider-deploy-wizard.tsx", wizard, "InterfaceStep");
+  const resourceInput = context.elements.find((element) =>
+    element.tagName.getText(context.sourceFile) === "input" &&
+    jsxAttributeExpressionText(jsxAttribute(element, "value"), context.sourceFile) === "values.qualifyingResource",
+  );
+  assert.ok(resourceInput, "the editable qualifying resource input must exist");
+  const invalid = jsxAttributeExpressionText(jsxAttribute(resourceInput, "aria-invalid"), context.sourceFile);
+  const describedBy = jsxAttributeExpressionText(jsxAttribute(resourceInput, "aria-describedby"), context.sourceFile);
+  assert.match(invalid ?? "", /fieldErrors\.qualifyingResource/u, "resource errors must mark the input invalid");
+  assert.match(describedBy ?? "", /fieldErrors\.qualifyingResource/u, "resource errors must describe the input");
+  assert.match(describedBy ?? "", /fieldErrorId\(["']qualifyingResource["']\)/u);
+  const field = context.elements.find((element) =>
+    element.tagName.getText(context.sourceFile) === "Field" &&
+    jsxAttributeExpressionText(jsxAttribute(element, "error"), context.sourceFile) === "fieldErrors.qualifyingResource",
+  );
+  assert.ok(field, "the resource field must render its current error");
+  assert.match(jsxAttributeExpressionText(jsxAttribute(field, "errorId"), context.sourceFile) ?? "", /fieldErrorId\(["']qualifyingResource["']\)/u);
+  const parent = namedFunctionContext("provider-deploy-wizard.tsx", wizard, "ProviderDeployWizard");
+  const step = parent.elements.find((element) => element.tagName.getText(parent.sourceFile) === "InterfaceStep");
+  assert.equal(jsxAttributeExpressionText(jsxAttribute(step, "fieldErrors"), parent.sourceFile), "fieldErrors");
+});
+
 implementedTest("keeps visible validation errors derived from the current editable values", async () => {
   const wizard = (await readS16Sources())["src/components/provider/deploy/provider-deploy-wizard.tsx"];
   const changeText = namedFunctionContext("provider-deploy-wizard.tsx", wizard, "changeText");

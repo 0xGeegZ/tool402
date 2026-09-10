@@ -1,273 +1,851 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import typescript from "typescript";
 
 const sourceUrl = new URL("../src/entity-check.ts", import.meta.url);
 const sourcePath = fileURLToPath(sourceUrl);
+const barrelUrl = new URL("../src/index.ts", import.meta.url);
 const sourceExists = existsSync(sourcePath);
 const implementedTest = sourceExists ? test : test.skip;
-let api;
-let index;
 
-const baselineLimitation =
-  "EntityCheck reflects two public sources at the time they were read and does not verify ownership, solvency, or compliance; a clear screen is not a compliance opinion.";
-const ambiguityLimitation = "Supply the SIREN as registrationNumber to disambiguate.";
+let assessEntityCheck;
+let normaliseEntityName;
+let parseEntityCheckRequest;
 
-const validRequestInput = Object.freeze({
-  requestRef: "entity-42",
-  jurisdiction: "FR",
-  query: "Société Générale",
+test("requires the declared EntityCheck source module before GREEN", () => {
+  assert.equal(sourceExists, true, `missing declared M46 source module: ${sourcePath}`);
 });
 
-function candidate(overrides = {}) {
-  return {
-    siren: "552120222",
-    legalName: "SOCIETE GENERALE",
-    administrativeStatus: "active",
-    incorporationDate: "1864-05-04",
-    registeredAddress: "29 BD HAUSSMANN 75009 PARIS",
-    officerCount: 12,
-    registryUpdatedAt: "2026-09-01T00:00:00.000Z",
-    ...overrides,
-  };
-}
+implementedTest("exports the declared EntityCheck values and types through the public Core barrel", async () => {
+  const core = await import(barrelUrl.href);
 
-function entry(overrides = {}) {
-  return {
-    entryId: "12345",
-    name: "SOCIETE GENERALE",
-    entryType: "Entity",
-    programs: ["SDGT"],
-    ...overrides,
-  };
-}
+  for (const exportName of [
+    "parseEntityCheckRequest",
+    "normaliseEntityName",
+    "assessEntityCheck",
+  ]) {
+    assert.equal(
+      typeof core[exportName],
+      "function",
+      `${exportName} must be exported through packages/core/src/index.ts`,
+    );
+  }
 
-const registrySource = Object.freeze({
-  source: "FR_RECHERCHE_ENTREPRISES",
-  readAt: "2026-09-09T12:00:00.000Z",
+  const barrelSource = readFileSync(barrelUrl, "utf8");
+  for (const typeName of [
+    "EntityCheckAssessmentInput",
+    "EntityCheckDisposition",
+    "EntityCheckRequest",
+    "EntityCheckResult",
+    "EntityCheckScreen",
+    "EntityRegistryCandidate",
+    "EntityRegistrySource",
+    "EntitySanctionsDataset",
+    "EntitySanctionsEntry",
+    "EntitySanctionsSource",
+  ]) {
+    assert.match(
+      barrelSource,
+      new RegExp(`\\b${typeName}\\b`, "u"),
+      `${typeName} must be exported through packages/core/src/index.ts`,
+    );
+  }
 });
 
-function dataset(entries = []) {
-  return {
-    source: "OFAC_SDN",
-    lastModified: "2026-09-08T00:00:00.000Z",
-    contentHash: "a".repeat(64),
-    entries,
+implementedTest("exports the declared EntityCheck type-only API through the public Core barrel", () => {
+  const fixturePath = resolve(
+    fileURLToPath(new URL("./entity-check.public-types.generated.ts", import.meta.url)),
+  );
+  const fixtureSource = `
+import {
+  assessEntityCheck,
+  normaliseEntityName,
+  parseEntityCheckRequest,
+} from "../src/index.ts";
+import type {
+  EntityCheckAssessmentInput,
+  EntityCheckDisposition,
+  EntityCheckRequest,
+  EntityCheckResult,
+  EntityCheckScreen,
+  EntityRegistryCandidate,
+  EntityRegistrySource,
+  EntitySanctionsDataset,
+  EntitySanctionsEntry,
+  EntitySanctionsSource,
+} from "../src/index.ts";
+
+type Assert<Condition extends true> = Condition;
+type Equal<Left, Right> = (<Value>() => Value extends Left ? 1 : 2) extends
+  (<Value>() => Value extends Right ? 1 : 2)
+  ? (<Value>() => Value extends Right ? 1 : 2) extends
+      (<Value>() => Value extends Left ? 1 : 2)
+    ? true
+    : false
+  : false;
+
+type _RequestMatchesParser = Assert<
+  Equal<EntityCheckRequest, ReturnType<typeof parseEntityCheckRequest>>
+>;
+type _AssessmentInputMatchesAssessor = Assert<
+  Equal<EntityCheckAssessmentInput, Parameters<typeof assessEntityCheck>[1]>
+>;
+type _ResultMatchesAssessor = Assert<
+  Equal<EntityCheckResult, ReturnType<typeof assessEntityCheck>>
+>;
+type _NormalizerReturnsString = Assert<
+  Equal<ReturnType<typeof normaliseEntityName>, string>
+>;
+type _CandidateMatchesInput = Assert<
+  Equal<EntityRegistryCandidate, EntityCheckAssessmentInput["registryCandidates"][number]>
+>;
+type _RegistrySourceMatchesInput = Assert<
+  Equal<EntityRegistrySource, EntityCheckAssessmentInput["registrySource"]>
+>;
+type _SanctionsDatasetMatchesInput = Assert<
+  Equal<EntitySanctionsDataset, EntityCheckAssessmentInput["sanctionsDataset"]>
+>;
+type _SanctionsEntryMatchesDataset = Assert<
+  Equal<EntitySanctionsEntry, EntitySanctionsDataset["entries"][number]>
+>;
+type _SanctionsSourceMatchesResult = Assert<
+  Equal<EntitySanctionsSource, EntityCheckResult["sanctionsSource"]>
+>;
+type _DispositionIsClosed = Assert<
+  Equal<EntityCheckDisposition, "found" | "ambiguous" | "not_found">
+>;
+type _ScreenIsClosed = Assert<
+  Equal<EntityCheckScreen, "clear" | "hit" | "not_screened">
+>;
+`;
+  const compilerOptions = {
+    target: typescript.ScriptTarget.ES2022,
+    module: typescript.ModuleKind.NodeNext,
+    moduleResolution: typescript.ModuleResolutionKind.NodeNext,
+    strict: true,
+    noEmit: true,
+    allowImportingTsExtensions: true,
+    isolatedModules: true,
+    erasableSyntaxOnly: true,
+    verbatimModuleSyntax: true,
   };
-}
+  const host = typescript.createCompilerHost(compilerOptions, true);
+  const originalFileExists = host.fileExists.bind(host);
+  const originalReadFile = host.readFile.bind(host);
+  const originalGetSourceFile = host.getSourceFile.bind(host);
 
-function records(overrides = {}) {
-  return {
-    registryCandidates: [candidate()],
-    registrySource,
-    sanctionsDataset: dataset(),
-    ...overrides,
-  };
-}
+  host.fileExists = (fileName) =>
+    resolve(fileName) === fixturePath || originalFileExists(fileName);
+  host.readFile = (fileName) =>
+    resolve(fileName) === fixturePath ? fixtureSource : originalReadFile(fileName);
+  host.getSourceFile = (fileName, languageVersion, onError, shouldCreateNewSourceFile) =>
+    resolve(fileName) === fixturePath
+      ? typescript.createSourceFile(
+        fileName,
+        fixtureSource,
+        languageVersion,
+        true,
+        typescript.ScriptKind.TS,
+      )
+      : originalGetSourceFile(fileName, languageVersion, onError, shouldCreateNewSourceFile);
 
-function assess(requestInput = validRequestInput, overrides = {}) {
-  return api.assessEntityCheck(api.parseEntityCheckRequest(requestInput), records(overrides));
-}
+  const program = typescript.createProgram({
+    rootNames: [fixturePath],
+    options: compilerOptions,
+    host,
+  });
+  const diagnostics = typescript.getPreEmitDiagnostics(program);
 
-test("requires the declared EntityCheck core module before GREEN", () => {
-  assert.equal(sourceExists, true, `missing declared core module: ${sourcePath}`);
+  assert.deepEqual(
+    diagnostics.map((diagnostic) => typescript.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
+    [],
+    "the public Core barrel must directly export the exact named EntityCheck type-only API",
+  );
 });
 
 test.before(async () => {
-  if (!sourceExists) return;
-  api = await import(sourceUrl.href);
-  index = await import("@tool402/core");
-});
-
-implementedTest("exports the EntityCheck values from the package index without reordering anything else", () => {
-  assert.equal(index.parseEntityCheckRequest, api.parseEntityCheckRequest);
-  assert.equal(index.assessEntityCheck, api.assessEntityCheck);
-  assert.equal(index.normaliseEntityName, api.normaliseEntityName);
-  assert.equal(typeof index.assessRiskScanQuick, "function");
-});
-
-implementedTest("rejects malformed requests and preserves a valid one", () => {
-  const rejected = [
-    ["undefined", undefined],
-    ["null", null],
-    ["array", []],
-    ["missing requestRef", { jurisdiction: "FR", query: "x" }],
-    ["blank requestRef", { ...validRequestInput, requestRef: "   " }],
-    ["untrimmed requestRef", { ...validRequestInput, requestRef: " entity-42" }],
-    ["oversized requestRef", { ...validRequestInput, requestRef: "r".repeat(97) }],
-    ["non-string query", { ...validRequestInput, query: 42 }],
-    ["blank query", { ...validRequestInput, query: "" }],
-    ["oversized query", { ...validRequestInput, query: "q".repeat(161) }],
-    ["wrong jurisdiction", { ...validRequestInput, jurisdiction: "DE" }],
-    ["lower-case jurisdiction", { ...validRequestInput, jurisdiction: "fr" }],
-    ["missing jurisdiction", { requestRef: "entity-42", query: "x" }],
-    ["eight-digit registrationNumber", { ...validRequestInput, registrationNumber: "55212022" }],
-    ["ten-digit registrationNumber", { ...validRequestInput, registrationNumber: "5521202220" }],
-    ["non-ASCII digits registrationNumber", { ...validRequestInput, registrationNumber: "٥٥٢١٢٠٢٢٢" }],
-    ["numeric registrationNumber", { ...validRequestInput, registrationNumber: 552120222 }],
-    ["null registrationNumber", { ...validRequestInput, registrationNumber: null }],
-    ["unsupported field", { ...validRequestInput, score: 1 }],
-  ];
-  for (const [label, input] of rejected) {
-    assert.throws(() => api.parseEntityCheckRequest(input), { name: /TypeError|RangeError/u }, label);
+  if (sourceExists) {
+    ({
+      assessEntityCheck,
+      normaliseEntityName,
+      parseEntityCheckRequest,
+    } = await import(sourceUrl.href));
   }
+});
 
-  assert.deepEqual(api.parseEntityCheckRequest(validRequestInput), {
-    requestRef: "entity-42",
+const baselineLimitation =
+  "EntityCheck reflects two public sources at the time they were read and does not verify ownership, solvency, or compliance; a clear screen is not a compliance opinion.";
+const ambiguityLimitation =
+  "Supply the SIREN as registrationNumber to disambiguate.";
+
+function request(overrides = {}) {
+  return {
+    requestRef: "entitycheck-request-42",
     jurisdiction: "FR",
-    query: "Société Générale",
-  });
-  const withSiren = api.parseEntityCheckRequest({ ...validRequestInput, registrationNumber: "552120222" });
-  assert.deepEqual(withSiren, { ...validRequestInput, registrationNumber: "552120222" });
-  assert.equal(Object.isFrozen(withSiren), true);
-  assert.equal(Object.hasOwn(api.parseEntityCheckRequest(validRequestInput), "registrationNumber"), false);
-});
+    query: "Société Étoile",
+    ...overrides,
+  };
+}
 
-implementedTest("rejects malformed candidates, entries, and source descriptors as a whole", () => {
-  const request = api.parseEntityCheckRequest(validRequestInput);
-  const rejected = [
-    ["non-array candidates", { registryCandidates: null }],
-    ["candidate with eight-digit siren", { registryCandidates: [candidate({ siren: "55212022" })] }],
-    ["candidate with blank legal name", { registryCandidates: [candidate({ legalName: " " })] }],
-    ["candidate with unknown status", { registryCandidates: [candidate({ administrativeStatus: "dormant" })] }],
-    ["candidate with malformed date", { registryCandidates: [candidate({ incorporationDate: "1864-5-4" })] }],
-    ["candidate with impossible date", { registryCandidates: [candidate({ incorporationDate: "1864-13-40" })] }],
-    ["candidate with non-string address", { registryCandidates: [candidate({ registeredAddress: null })] }],
-    ["candidate with negative officer count", { registryCandidates: [candidate({ officerCount: -1 })] }],
-    ["candidate with fractional officer count", { registryCandidates: [candidate({ officerCount: 1.5 })] }],
-    ["candidate with non-canonical timestamp", { registryCandidates: [candidate({ registryUpdatedAt: "2026-09-01" })] }],
-    ["candidate with extra field", { registryCandidates: [candidate({ score: 0.9 })] }],
-    ["second candidate malformed", { registryCandidates: [candidate(), candidate({ siren: "x" })] }],
-    ["wrong registry source", { registrySource: { source: "FR_INSEE", readAt: registrySource.readAt } }],
-    ["registry source without readAt", { registrySource: { source: "FR_RECHERCHE_ENTREPRISES" } }],
-    ["wrong sanctions source", { sanctionsDataset: { ...dataset(), source: "EU_FSF" } }],
-    ["sanctions dataset without hash", { sanctionsDataset: { ...dataset(), contentHash: "" } }],
-    ["sanctions dataset with non-array entries", { sanctionsDataset: { ...dataset(), entries: {} } }],
-    ["entry with blank id", { sanctionsDataset: dataset([entry({ entryId: "" })]) }],
-    ["entry with blank name", { sanctionsDataset: dataset([entry({ name: " " })]) }],
-    ["entry with non-string program", { sanctionsDataset: dataset([entry({ programs: [1] })]) }],
-    ["entry with extra field", { sanctionsDataset: dataset([entry({ score: 1 })]) }],
-    ["null records", null],
-  ];
-  for (const [label, overrides] of rejected) {
-    const input = overrides === null ? null : records(overrides);
-    assert.throws(() => api.assessEntityCheck(request, input), { name: /TypeError|RangeError/u }, label);
-  }
-  assert.throws(() => api.assessEntityCheck({ ...request, jurisdiction: "DE" }, records()), { name: /TypeError|RangeError/u });
-});
+function candidate(overrides = {}) {
+  return {
+    siren: "123456789",
+    legalName: "Société Étoile SAS",
+    administrativeStatus: "active",
+    incorporationDate: "2018-06-14",
+    registeredAddress: "12 rue de la Paix, 75002 Paris",
+    officerCount: 2,
+    registryUpdatedAt: "2026-09-09T12:00:00.000Z",
+    ...overrides,
+  };
+}
 
-implementedTest("resolves found by single candidate and by SIREN match, echoing both sources without entries", () => {
-  const single = assess();
-  assert.equal(single.disposition, "found");
-  assert.deepEqual(single.entity, candidate());
-  assert.equal(single.sanctionsScreen, "clear");
-  assert.deepEqual(single.sanctionsMatches, []);
-  assert.deepEqual(single.registrySource, registrySource);
-  assert.deepEqual(single.sanctionsDataset, { source: "OFAC_SDN", lastModified: "2026-09-08T00:00:00.000Z", contentHash: "a".repeat(64) });
-  assert.equal(Object.hasOwn(single.sanctionsDataset, "entries"), false);
-  assert.equal(single.requestRef, "entity-42");
-  assert.equal(single.jurisdiction, "FR");
-  assert.equal(single.query, "Société Générale");
-  assert.deepEqual(single.limitations, [baselineLimitation]);
-  assert.equal(Object.isFrozen(single), true);
+function registrySource(overrides = {}) {
+  return {
+    source: "FR_RECHERCHE_ENTREPRISES",
+    readAt: "2026-09-10T10:00:00.000Z",
+    ...overrides,
+  };
+}
 
-  const other = candidate({ siren: "123456789", legalName: "SOCIETE GENERALE FACTORING" });
-  const bySiren = assess({ ...validRequestInput, registrationNumber: "123456789" }, { registryCandidates: [candidate(), other] });
-  assert.equal(bySiren.disposition, "found");
-  assert.deepEqual(bySiren.entity, other);
-  assert.equal(bySiren.registrationNumber, "123456789");
-});
+function sanctionsDataset(overrides = {}) {
+  return {
+    source: "OFAC_SDN",
+    lastModified: "2026-09-09T00:00:00.000Z",
+    contentHash: "a".repeat(64),
+    entries: [],
+    ...overrides,
+  };
+}
 
-implementedTest("marks two or more unmatched candidates ambiguous with the five-pair cap and exact limitation", () => {
-  const candidates = Array.from({ length: 7 }, (_, index) =>
-    candidate({ siren: String(100000000 + index), legalName: `CANDIDATE ${index}` }),
+function sanctionsEntry(overrides = {}) {
+  return {
+    entryId: "ofac-1",
+    name: "Société Étoile SAS",
+    entryType: "Entity",
+    programs: [],
+    ...overrides,
+  };
+}
+
+function assessmentInput(overrides = {}) {
+  return {
+    registryCandidates: [candidate()],
+    registrySource: registrySource(),
+    sanctionsDataset: sanctionsDataset(),
+    ...overrides,
+  };
+}
+
+function assertInputError(callback, description) {
+  assert.throws(
+    callback,
+    (error) => error instanceof TypeError || error instanceof RangeError,
+    description,
   );
-  const ambiguous = assess(validRequestInput, { registryCandidates: candidates });
-  assert.equal(ambiguous.disposition, "ambiguous");
-  assert.equal(ambiguous.candidateCount, 7);
+}
+
+function customPrototypeRecord(record) {
+  return Object.assign(Object.create({}), record);
+}
+
+function inheritedFieldsRecord(record) {
+  return Object.create(record);
+}
+
+function nonEnumerableFieldRecord(record) {
+  Object.defineProperty(record, "hidden", { value: true });
+  return record;
+}
+
+function symbolFieldRecord(record) {
+  record[Symbol("hidden")] = true;
+  return record;
+}
+
+function accessorFieldRecord(record, field, reads) {
+  const value = record[field];
+
+  Object.defineProperty(record, field, {
+    configurable: true,
+    enumerable: true,
+    get() {
+      reads.push(field);
+      return value;
+    },
+  });
+
+  return record;
+}
+
+function reflectionFailureRecord(record, trap) {
+  return new Proxy(record, {
+    [trap]() {
+      throw new TypeError(`${trap} failed`);
+    },
+  });
+}
+
+function customPrototypeArray(values) {
+  Object.setPrototypeOf(values, {});
+  return values;
+}
+
+function nullPrototypeArray(values) {
+  Object.setPrototypeOf(values, null);
+  return values;
+}
+
+function nonEnumerableArrayField(values) {
+  Object.defineProperty(values, "hidden", { value: true });
+  return values;
+}
+
+function symbolArrayField(values) {
+  values[Symbol("hidden")] = true;
+  return values;
+}
+
+function accessorArrayItem(values, index, reads) {
+  const value = values[index];
+  Object.defineProperty(values, String(index), {
+    configurable: true,
+    enumerable: true,
+    get() {
+      reads.push(String(index));
+      return value;
+    },
+  });
+  return values;
+}
+
+function reflectionFailureArray(values, trap) {
+  return new Proxy(values, {
+    [trap]() {
+      throw new TypeError(`${trap} failed`);
+    },
+  });
+}
+
+function importedSpecifiers(source) {
+  const staticMatches = source.matchAll(
+    /(?:^|\n)\s*(?:import|export)\s+(?:(?:type\s+)?[\s\S]*?\s+from\s+)?["']([^"']+)["']/gu,
+  );
+  const dynamicMatches = source.matchAll(/\bimport\s*\(\s*["']([^"']+)["']\s*\)/gu);
+
+  return [...staticMatches, ...dynamicMatches].map((match) => match[1]);
+}
+
+function expectedSources(input) {
+  return {
+    registrySource: input.registrySource,
+    sanctionsSource: {
+      source: input.sanctionsDataset.source,
+      lastModified: input.sanctionsDataset.lastModified,
+      contentHash: input.sanctionsDataset.contentHash,
+    },
+  };
+}
+
+implementedTest("parses the closed French request and preserves its normalized optional SIREN", () => {
+  assert.equal(
+    typeof parseEntityCheckRequest,
+    "function",
+    "the EntityCheck request parser must be exported from its declared Core module",
+  );
+
   assert.deepEqual(
-    ambiguous.candidates,
-    candidates.slice(0, 5).map(({ siren, legalName }) => ({ siren, legalName })),
+    parseEntityCheckRequest(
+      request({
+        requestRef: " entitycheck-request-43 ",
+        query: " Société Étoile ",
+        registrationNumber: "123456789",
+      }),
+    ),
+    {
+      requestRef: "entitycheck-request-43",
+      jurisdiction: "FR",
+      query: "Société Étoile",
+      registrationNumber: "123456789",
+    },
   );
-  assert.equal(ambiguous.sanctionsScreen, "not_screened");
-  assert.deepEqual(ambiguous.limitations, [baselineLimitation, ambiguityLimitation]);
-  assert.equal(Object.hasOwn(ambiguous, "entity"), false);
-  assert.equal(Object.hasOwn(ambiguous, "sanctionsMatches"), false);
 
-  const unmatchedSiren = assess({ ...validRequestInput, registrationNumber: "999999999" }, { registryCandidates: candidates.slice(0, 2) });
-  assert.equal(unmatchedSiren.disposition, "ambiguous");
-  assert.equal(unmatchedSiren.candidateCount, 2);
+  assert.deepEqual(parseEntityCheckRequest(request()), request());
 
-  const duplicateSiren = assess({ ...validRequestInput, registrationNumber: "552120222" }, {
-    registryCandidates: [candidate(), candidate({ legalName: "SOCIETE GENERALE BIS" })],
-  });
-  assert.equal(duplicateSiren.disposition, "ambiguous");
-});
-
-implementedTest("marks zero candidates not_found and not_screened", () => {
-  const missing = assess(validRequestInput, { registryCandidates: [], sanctionsDataset: dataset([entry()]) });
-  assert.equal(missing.disposition, "not_found");
-  assert.equal(missing.sanctionsScreen, "not_screened");
-  assert.deepEqual(missing.limitations, [baselineLimitation]);
-  assert.equal(Object.hasOwn(missing, "entity"), false);
-  assert.equal(Object.hasOwn(missing, "candidateCount"), false);
-});
-
-implementedTest("screens a found entity against every matching entry in dataset order", () => {
-  const entries = [
-    entry({ entryId: "1", name: "Société Générale", programs: ["SDGT"] }),
-    entry({ entryId: "2", name: "ANOTHER ENTITY", programs: [] }),
-    entry({ entryId: "3", name: "societe-generale", entryType: "Individual", programs: ["CYBER2", "SDGT"] }),
-    entry({ entryId: "4", name: "SOCIETE GENERALE SA" }),
+  const invalidInputs = [
+    ["null root", null],
+    ["array root", []],
+    ["missing query", { requestRef: "entitycheck-request-42", jurisdiction: "FR" }],
+    ["unknown root field", request({ unsupported: true })],
+    ["blank requestRef", request({ requestRef: "   " })],
+    ["oversized requestRef", request({ requestRef: "r".repeat(97) })],
+    ["blank query", request({ query: "   " })],
+    ["oversized query", request({ query: "q".repeat(161) })],
+    ["non-French jurisdiction", request({ jurisdiction: "BE" })],
+    ["non-string jurisdiction", request({ jurisdiction: null })],
+    ["short SIREN", request({ registrationNumber: "12345678" })],
+    ["non-ASCII SIREN digit", request({ registrationNumber: "１２３４５６７８９" })],
+    ["spaced SIREN", request({ registrationNumber: " 123456789 " })],
   ];
-  const hit = assess(validRequestInput, { sanctionsDataset: dataset(entries) });
-  assert.equal(hit.disposition, "found");
-  assert.equal(hit.sanctionsScreen, "hit");
-  assert.deepEqual(hit.sanctionsMatches, [
-    { entryId: "1", name: "Société Générale", entryType: "Entity", programs: ["SDGT"] },
-    { entryId: "3", name: "societe-generale", entryType: "Individual", programs: ["CYBER2", "SDGT"] },
-  ]);
-  for (const match of hit.sanctionsMatches) {
-    assert.equal(Object.isFrozen(match), true);
-    assert.equal(Object.isFrozen(match.programs), true);
+
+  for (const [description, input] of invalidInputs) {
+    assertInputError(() => parseEntityCheckRequest(input), description);
   }
-
-  const clear = assess(validRequestInput, { sanctionsDataset: dataset([entries[1], entries[3]]) });
-  assert.equal(clear.sanctionsScreen, "clear");
-  assert.deepEqual(clear.sanctionsMatches, []);
 });
 
-implementedTest("normalises names by NFKD, mark removal, case, punctuation, and whitespace exactly", () => {
-  const cases = [
-    ["Société Générale", "SOCIETE GENERALE"],
-    ["  société   générale ", "SOCIETE GENERALE"],
-    ["Société-Générale, S.A.", "SOCIETE GENERALE S A"],
-    ["Ｓｏｃｉｅｔｅ", "SOCIETE"],
-    ["Ærø A/S", "ÆRØ A S"],
-    ["l'Oréal", "L OREAL"],
-    ["Tab\tand\nnewline", "TAB AND NEWLINE"],
-    ["", ""],
-    ["...", ""],
+implementedTest("normalises names with NFKD, mark removal, punctuation replacement, and collapsed whitespace", () => {
+  assert.equal(
+    typeof normaliseEntityName,
+    "function",
+    "the EntityCheck normaliser must be exported from its declared Core module",
+  );
+  assert.equal(
+    normaliseEntityName("  Société, Étoile---S.A.S.  "),
+    "SOCIETE ETOILE S A S",
+  );
+  assert.equal(normaliseEntityName("Crédit & Coopération"), "CREDIT COOPERATION");
+  assert.equal(normaliseEntityName("A\u00a0B\tC\nD"), "A B C D");
+});
+
+implementedTest("rejects malformed registry candidates, source descriptors, and sanctions entries as a whole", () => {
+  assert.equal(
+    typeof assessEntityCheck,
+    "function",
+    "the pure EntityCheck assessor must be exported from its declared Core module",
+  );
+
+  const validRequest = parseEntityCheckRequest(request());
+  const invalidInputs = [
+    ["unknown assessment field", assessmentInput({ unsupported: true })],
+    [
+      "candidate with malformed SIREN",
+      assessmentInput({ registryCandidates: [candidate({ siren: "123" })] }),
+    ],
+    [
+      "candidate with blank legal name",
+      assessmentInput({ registryCandidates: [candidate({ legalName: "   " })] }),
+    ],
+    [
+      "candidate with unsupported status",
+      assessmentInput({ registryCandidates: [candidate({ administrativeStatus: "pending" })] }),
+    ],
+    [
+      "candidate with malformed incorporation date",
+      assessmentInput({ registryCandidates: [candidate({ incorporationDate: "2026-02-30" })] }),
+    ],
+    [
+      "candidate with non-integer officer count",
+      assessmentInput({ registryCandidates: [candidate({ officerCount: 1.5 })] }),
+    ],
+    [
+      "candidate with malformed update timestamp",
+      assessmentInput({ registryCandidates: [candidate({ registryUpdatedAt: "not-a-timestamp" })] }),
+    ],
+    [
+      "registry descriptor with another source",
+      assessmentInput({ registrySource: registrySource({ source: "OTHER" }) }),
+    ],
+    [
+      "registry descriptor with malformed read time",
+      assessmentInput({ registrySource: registrySource({ readAt: "not-a-timestamp" }) }),
+    ],
+    [
+      "sanctions descriptor with another source",
+      assessmentInput({ sanctionsDataset: sanctionsDataset({ source: "OTHER" }) }),
+    ],
+    [
+      "sanctions descriptor with malformed content hash",
+      assessmentInput({ sanctionsDataset: sanctionsDataset({ contentHash: "abc" }) }),
+    ],
+    [
+      "sanctions descriptor with uppercase content hash",
+      assessmentInput({ sanctionsDataset: sanctionsDataset({ contentHash: "A".repeat(64) }) }),
+    ],
+    [
+      "sanctions descriptor with non-hex content hash",
+      assessmentInput({ sanctionsDataset: sanctionsDataset({ contentHash: "g".repeat(64) }) }),
+    ],
+    [
+      "sanctions descriptor with malformed Last-Modified",
+      assessmentInput({ sanctionsDataset: sanctionsDataset({ lastModified: "Wed, 09 Sep 2026 00:00:00 UTC" }) }),
+    ],
+    [
+      "sparse registry candidates",
+      assessmentInput({ registryCandidates: [, candidate()] }),
+    ],
+    [
+      "sparse sanctions entries",
+      assessmentInput({ sanctionsDataset: sanctionsDataset({ entries: [, { entryId: "1", name: "Société Étoile SAS", entryType: "Entity", programs: [] }] }) }),
+    ],
+    [
+      "sparse sanctions programs",
+      assessmentInput({
+        sanctionsDataset: sanctionsDataset({
+          entries: [{ entryId: "1", name: "Société Étoile SAS", entryType: "Entity", programs: [, "SDNTK"] }],
+        }),
+      }),
+    ],
+    [
+      "sanctions entry with blank identifier",
+      assessmentInput({
+        sanctionsDataset: sanctionsDataset({
+          entries: [{ entryId: " ", name: "Société Étoile SAS", entryType: "Entity", programs: [] }],
+        }),
+      }),
+    ],
+    [
+      "sanctions entry with non-array programs",
+      assessmentInput({
+        sanctionsDataset: sanctionsDataset({
+          entries: [{ entryId: "1", name: "Société Étoile SAS", entryType: "Entity", programs: "SDNTK" }],
+        }),
+      }),
+    ],
   ];
-  for (const [input, expected] of cases) {
-    assert.equal(api.normaliseEntityName(input), expected, JSON.stringify(input));
+
+  for (const [description, input] of invalidInputs) {
+    assertInputError(() => assessEntityCheck(validRequest, input), description);
   }
-  assert.throws(() => api.normaliseEntityName(42), TypeError);
 });
 
-implementedTest("carries the baseline limitation and no score, price, receipt, payment, settlement, evidence, or availability field", () => {
-  const results = [
-    assess(),
-    assess(validRequestInput, { registryCandidates: [] }),
-    assess(validRequestInput, { registryCandidates: [candidate(), candidate({ siren: "123456789" })] }),
-    assess(validRequestInput, { sanctionsDataset: dataset([entry()]) }),
+implementedTest("rejects every non-ordinary caller record without invoking accessors", () => {
+  const validRequest = parseEntityCheckRequest(request());
+  const recordChecks = [
+    {
+      label: "request",
+      create: () => request(),
+      field: "query",
+      assess: (value) => parseEntityCheckRequest(value),
+    },
+    {
+      label: "assessment input",
+      create: () => assessmentInput(),
+      field: "registryCandidates",
+      assess: (value) => assessEntityCheck(validRequest, value),
+    },
+    {
+      label: "registry candidate",
+      create: () => candidate(),
+      field: "legalName",
+      assess: (value) => assessEntityCheck(
+        validRequest,
+        assessmentInput({ registryCandidates: [value] }),
+      ),
+    },
+    {
+      label: "registry source",
+      create: () => registrySource(),
+      field: "source",
+      assess: (value) => assessEntityCheck(
+        validRequest,
+        assessmentInput({ registrySource: value }),
+      ),
+    },
+    {
+      label: "sanctions dataset",
+      create: () => sanctionsDataset(),
+      field: "source",
+      assess: (value) => assessEntityCheck(
+        validRequest,
+        assessmentInput({ sanctionsDataset: value }),
+      ),
+    },
+    {
+      label: "sanctions entry",
+      create: () => sanctionsEntry(),
+      field: "entryId",
+      assess: (value) => assessEntityCheck(
+        validRequest,
+        assessmentInput({ sanctionsDataset: sanctionsDataset({ entries: [value] }) }),
+      ),
+    },
   ];
-  const forbidden = /score|price|receipt|payment|settlement|evidence|availab/iu;
-  for (const result of results) {
-    assert.equal(result.limitations[0], baselineLimitation);
-    for (const key of Object.keys(result)) {
-      assert.doesNotMatch(key, forbidden, `${result.disposition} carries ${key}`);
+  const mutations = [
+    {
+      label: "custom prototype",
+      apply: (record) => customPrototypeRecord(record),
+    },
+    {
+      label: "inherited document fields",
+      apply: (record) => inheritedFieldsRecord(record),
+    },
+    {
+      label: "unexpected enumerable field",
+      apply: (record) => ({ ...record, unexpected: true }),
+    },
+    {
+      label: "non-enumerable field",
+      apply: (record) => nonEnumerableFieldRecord(record),
+    },
+    {
+      label: "symbol field",
+      apply: (record) => symbolFieldRecord(record),
+    },
+    {
+      label: "accessor field",
+      apply: (record, field, reads) => accessorFieldRecord(record, field, reads),
+    },
+    {
+      label: "ownKeys reflection failure",
+      apply: (record) => reflectionFailureRecord(record, "ownKeys"),
+    },
+    {
+      label: "descriptor reflection failure",
+      apply: (record) => reflectionFailureRecord(record, "getOwnPropertyDescriptor"),
+    },
+    {
+      label: "prototype reflection failure",
+      apply: (record) => reflectionFailureRecord(record, "getPrototypeOf"),
+    },
+  ];
+
+  for (const recordCheck of recordChecks) {
+    for (const mutation of mutations) {
+      const reads = [];
+      const malformed = mutation.apply(recordCheck.create(), recordCheck.field, reads);
+      const description = `${recordCheck.label} with ${mutation.label}`;
+
+      assertInputError(() => recordCheck.assess(malformed), description);
+      assert.deepEqual(reads, [], `${description} must not invoke a getter`);
     }
+  }
+});
+
+implementedTest("rejects every non-ordinary caller array without invoking accessors", () => {
+  const validRequest = parseEntityCheckRequest(request());
+  const arrayChecks = [
+    {
+      label: "registry candidates",
+      create: () => [candidate(), candidate({ siren: "987654321" })],
+      assess: (value) => assessEntityCheck(
+        validRequest,
+        assessmentInput({ registryCandidates: value }),
+      ),
+    },
+    {
+      label: "sanctions entries",
+      create: () => [sanctionsEntry(), sanctionsEntry({ entryId: "ofac-2" })],
+      assess: (value) => assessEntityCheck(
+        validRequest,
+        assessmentInput({ sanctionsDataset: sanctionsDataset({ entries: value }) }),
+      ),
+    },
+    {
+      label: "sanctions programs",
+      create: () => ["SDNTK", "IRAN"],
+      assess: (value) => assessEntityCheck(
+        validRequest,
+        assessmentInput({
+          sanctionsDataset: sanctionsDataset({
+            entries: [sanctionsEntry({ programs: value })],
+          }),
+        }),
+      ),
+    },
+  ];
+  const mutations = [
+    { label: "custom prototype", apply: (values) => customPrototypeArray(values) },
+    { label: "null prototype", apply: (values) => nullPrototypeArray(values) },
+    { label: "extra enumerable field", apply: (values) => Object.assign(values, { unexpected: true }) },
+    { label: "non-enumerable field", apply: (values) => nonEnumerableArrayField(values) },
+    { label: "symbol field", apply: (values) => symbolArrayField(values) },
+    { label: "accessor first item", apply: (values, reads) => accessorArrayItem(values, 0, reads) },
+    { label: "accessor later item", apply: (values, reads) => accessorArrayItem(values, 1, reads) },
+    { label: "ownKeys reflection failure", apply: (values) => reflectionFailureArray(values, "ownKeys") },
+    { label: "descriptor reflection failure", apply: (values) => reflectionFailureArray(values, "getOwnPropertyDescriptor") },
+    { label: "prototype reflection failure", apply: (values) => reflectionFailureArray(values, "getPrototypeOf") },
+  ];
+
+  for (const arrayCheck of arrayChecks) {
+    for (const mutation of mutations) {
+      const reads = [];
+      const malformed = mutation.apply(arrayCheck.create(), reads);
+      const description = `${arrayCheck.label} with ${mutation.label}`;
+
+      assertInputError(() => arrayCheck.assess(malformed), description);
+      assert.deepEqual(reads, [], `${description} must not invoke an accessor`);
+    }
+  }
+});
+
+implementedTest("preserves mapped public-source strings above 512 characters", () => {
+  const longValue = "x".repeat(513);
+  const longEntry = sanctionsEntry({
+    entryId: longValue,
+    name: longValue,
+    entryType: longValue,
+    programs: [longValue],
+  });
+  const input = assessmentInput({
+    registryCandidates: [candidate({
+      legalName: longValue,
+      registeredAddress: longValue,
+    })],
+    sanctionsDataset: sanctionsDataset({
+      entries: [longEntry],
+    }),
+  });
+
+  const result = assessEntityCheck(parseEntityCheckRequest(request()), input);
+
+  assert.equal(result.disposition, "found");
+  assert.equal(result.sanctionsScreen, "hit");
+  assert.equal(result.candidate.legalName, longValue);
+  assert.equal(result.candidate.registeredAddress, longValue);
+  assert.deepEqual(result.sanctionsMatches, [longEntry]);
+});
+
+implementedTest("accepts and preserves the reader's IMF-fixdate Last-Modified and lowercase content hash", () => {
+  const lastModified = "Wed, 09 Sep 2026 00:00:00 GMT";
+  const contentHash = "0123456789abcdef".repeat(4);
+  const input = assessmentInput({
+    sanctionsDataset: sanctionsDataset({ lastModified, contentHash }),
+  });
+
+  const result = assessEntityCheck(parseEntityCheckRequest(request()), input);
+
+  assert.deepEqual(result.sanctionsSource, {
+    source: "OFAC_SDN",
+    lastModified,
+    contentHash,
+  });
+});
+
+implementedTest("returns one clear found result and echoes descriptors without sanctions entries", () => {
+  const validRequest = parseEntityCheckRequest(
+    request({ requestRef: " entitycheck-request-44 ", query: " Société Étoile SAS " }),
+  );
+  const input = assessmentInput();
+
+  const result = assessEntityCheck(validRequest, input);
+
+  assert.deepEqual(result, {
+    requestRef: "entitycheck-request-44",
+    jurisdiction: "FR",
+    query: "Société Étoile SAS",
+    ...expectedSources(input),
+    disposition: "found",
+    candidate: candidate(),
+    sanctionsScreen: "clear",
+    limitations: [baselineLimitation],
+  });
+  assert.equal("entries" in result.sanctionsSource, false);
+  assert.equal("sanctionsMatches" in result, false);
+});
+
+implementedTest("selects the SIREN-matched candidate and returns every exact-normalised sanctions hit in dataset order", () => {
+  const first = candidate({ siren: "987654321", legalName: "Unrelated Industrie SAS" });
+  const matched = candidate({
+    siren: "123456789",
+    legalName: "Société, Étoile---S.A.S.",
+  });
+  const firstHit = {
+    entryId: "ofac-1",
+    name: "SOCIETE ETOILE S A S",
+    entryType: "Entity",
+    programs: ["SDNTK"],
+  };
+  const secondHit = {
+    entryId: "ofac-2",
+    name: "Société, Étoile---S.A.S.",
+    entryType: "Entity",
+    programs: ["IRAN", "SDNTK"],
+  };
+  const nearMiss = {
+    entryId: "ofac-3",
+    name: "Société Étoile",
+    entryType: "Entity",
+    programs: [],
+  };
+  const input = assessmentInput({
+    registryCandidates: [first, matched],
+    sanctionsDataset: sanctionsDataset({ entries: [firstHit, secondHit, nearMiss] }),
+  });
+  const validRequest = parseEntityCheckRequest(
+    request({ registrationNumber: "123456789" }),
+  );
+
+  assert.deepEqual(assessEntityCheck(validRequest, input), {
+    ...validRequest,
+    ...expectedSources(input),
+    disposition: "found",
+    candidate: matched,
+    sanctionsScreen: "hit",
+    sanctionsMatches: [firstHit, secondHit],
+    limitations: [baselineLimitation],
+  });
+});
+
+implementedTest("caps ambiguous candidates at five pairs and records the SIREN disambiguation limitation", () => {
+  const registryCandidates = Array.from({ length: 6 }, (_, index) =>
+    candidate({
+      siren: String(index + 1).padStart(9, "0"),
+      legalName: `Candidate ${index + 1} SAS`,
+    }),
+  );
+  const input = assessmentInput({ registryCandidates });
+  const validRequest = parseEntityCheckRequest(request({ query: "Candidate" }));
+
+  assert.deepEqual(assessEntityCheck(validRequest, input), {
+    ...validRequest,
+    ...expectedSources(input),
+    disposition: "ambiguous",
+    candidateCount: 6,
+    candidates: registryCandidates.slice(0, 5).map(({ siren, legalName }) => ({ siren, legalName })),
+    sanctionsScreen: "not_screened",
+    limitations: [baselineLimitation, ambiguityLimitation],
+  });
+});
+
+implementedTest("returns not_found without a sanctions assertion", () => {
+  const input = assessmentInput({ registryCandidates: [] });
+  const validRequest = parseEntityCheckRequest(request({ query: "Absent Company" }));
+
+  assert.deepEqual(assessEntityCheck(validRequest, input), {
+    ...validRequest,
+    ...expectedSources(input),
+    disposition: "not_found",
+    sanctionsScreen: "not_screened",
+    limitations: [baselineLimitation],
+  });
+});
+
+implementedTest("keeps EntityCheck results free of scoring, payment, settlement, evidence, and availability claims", () => {
+  const result = assessEntityCheck(
+    parseEntityCheckRequest(request()),
+    assessmentInput(),
+  );
+
+  for (const field of [
+    "score",
+    "price",
+    "receipt",
+    "payment",
+    "settlement",
+    "evidenceRecord",
+    "availability",
+  ]) {
+    assert.equal(field in result, false, `${field} must not be part of EntityCheck`);
+  }
+});
+
+implementedTest("keeps the EntityCheck implementation free of external, framework, network, and RiskScan imports", () => {
+  const source = readFileSync(sourcePath, "utf8");
+  const specifiers = importedSpecifiers(source);
+
+  for (const specifier of specifiers) {
+    assert.match(
+      specifier,
+      /^\.\.?(?:\/|$)/u,
+      `EntityCheck must not import an external, framework, or network module: ${specifier}`,
+    );
+    assert.doesNotMatch(
+      specifier,
+      /risk-?scan/iu,
+      `EntityCheck must not import a RiskScan module: ${specifier}`,
+    );
   }
 });

@@ -11,9 +11,8 @@ as a decision row and the updated human-action row.
 - Prepared: 2026-09-09 by the human operator's delegated session.
 - Decision owner on acceptance: human operator (repository owner).
 - Preconditions before this packet may be requested: M41-T010, M43-T010,
-  M44-T010 (bundle gate passed under `HA-ATS-SDK-BUNDLE-001`), and S21-T010
-  accepted; `HA-PUBLIC-DEPLOY-001` recorded, or an explicitly named local
-  host for the rehearsal.
+  M44-T020, M47-T010, and S21-T010 accepted; `HA-PUBLIC-DEPLOY-001` recorded,
+  or an explicitly named local host for the rehearsal.
 
 ## What Stage B authorizes, exactly
 
@@ -31,11 +30,11 @@ as a decision row and the updated human-action row.
    `1880065c5ae64b3fc6279cfdd8c85a6880d43e98ce129ed697c72372204296f9`. The
    record is supplied as a reviewed source revision of the private manifest
    under a root-owned card, not as runtime configuration.
-3. **One bounded `Bond.create`.** The provider signs stages 1 and 2 in the
-   deploy wizard, then executes exactly one `Bond.create` from MetaMask on
-   Hedera Testnet through the official SDK against the factory above, with
-   the revenue-note parameters transcribed in the accepted M42 projection.
-   Transaction cap: one `Bond.create`, one `ATS_CONTROL_LIST`, and one
+3. **One bounded Factory `deployBond`.** The provider signs stages 1 and 2 in
+   the deploy wizard, then executes exactly one Factory `deployBond` call from
+   MetaMask on Hedera Testnet through M44-T020's direct Factory artifact +
+   viem seam, with the revenue-note parameters transcribed in the accepted M42
+   projection. Transaction cap: one Factory `deployBond`, one `ATS_CONTROL_LIST`, and one
    declared lifecycle operation, each attempted at most once. Total HBAR
    spend cap for the rehearsal, fees included: 50 HBAR from the issuer
    account `0.0.10430887`.
@@ -53,9 +52,9 @@ as a decision row and the updated human-action row.
 - Any `REJECTED`, `CONFLICT`, or `UNSUPPORTED_TYPE` from the relay stops the
   rehearsal at that stage. The operator records the outcome and requests a
   ruling before any further action.
-- A `Bond.create` that MetaMask declines, that fails, or whose receipt cannot
-  be found on Mirror Node within 10 minutes stops the rehearsal. No second
-  `Bond.create` is attempted under this authority.
+- A Factory `deployBond` that MetaMask declines, that fails, or whose receipt
+  cannot be found on Mirror Node within 10 minutes stops the rehearsal. No
+  second Factory `deployBond` is attempted under this authority.
 - An `unknown` relay outcome is treated as possibly recorded: the operator
   checks the provider status route and Mirror Node before anything else and
   never signs the same stage again with a fresh nonce until that check is
@@ -67,8 +66,8 @@ as a decision row and the updated human-action row.
 
 - The deployed commit, the host base URL (or the named local host), and the
   time window of the rehearsal.
-- The `Bond.create` transaction id in mirror form, the resulting bond address,
-  and the Mirror Node links for the transaction and the contract.
+- The Factory `deployBond` transaction id in mirror form, the resulting bond
+  address, and the Mirror Node links for the transaction and the contract.
 - The offering public id, its state transitions with timestamps as the
   provider status route reports them, and the directory version published.
 - The control-list and lifecycle transaction ids with their Mirror Node links.

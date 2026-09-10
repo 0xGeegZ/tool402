@@ -185,28 +185,18 @@ export type {
 } from "./attach-candidate-payload.ts";
 export {
   assessEntityCheck,
-  ENTITY_CHECK_AMBIGUITY_LIMITATION,
-  ENTITY_CHECK_BASELINE_LIMITATION,
   normaliseEntityName,
   parseEntityCheckRequest,
 } from "./entity-check.ts";
 export type {
-  EntityAdministrativeStatus,
-  EntityCheckAmbiguityCandidate,
-  EntityCheckAmbiguousResult,
+  EntityCheckAssessmentInput,
   EntityCheckDisposition,
-  EntityCheckFoundResult,
-  EntityCheckJurisdiction,
-  EntityCheckNotFoundResult,
-  EntityCheckRecords,
   EntityCheckRequest,
-  EntityCheckRequestInput,
   EntityCheckResult,
+  EntityCheckScreen,
   EntityRegistryCandidate,
   EntityRegistrySource,
-  EntitySanctionsScreen,
-  SanctionsDataset,
-  SanctionsDatasetDescriptor,
-  SanctionsEntry,
-  SanctionsMatch,
+  EntitySanctionsDataset,
+  EntitySanctionsEntry,
+  EntitySanctionsSource,
 } from "./entity-check.ts";

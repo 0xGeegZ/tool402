@@ -1,6 +1,6 @@
 # S21 implementation plan — campaign command bridge
 
-Execution plan for [S21-T010](../../work-queue/queue/00-inbox/S21-T010-campaign-command-bridge.md)
+Execution plan for [S21-T010](../../work-queue/queue/60-done/S21-T010-campaign-command-bridge.md)
 against the [UI-S21 manifest](../../ui/UI-S21.md), the accepted
 [UI-S15](../../ui/UI-S15.md) and [UI-S16](../../ui/UI-S16.md) manifests, the
 [M38 payload specification](../../specs/m38-offering-command-payloads.md), and

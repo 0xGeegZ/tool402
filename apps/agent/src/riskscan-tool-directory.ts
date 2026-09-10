@@ -143,12 +143,34 @@ function validPayment(value: unknown): RiskScanPayment | null {
   };
 }
 
-function validDirectory(value: unknown): RiskScanPayment | null {
-  const directory = snapshotRecord(value, ["version", "tools"]);
-  if (directory === null || directory.version !== "v1") return null;
-  const tools = snapshotArray(directory.tools, 1);
-  if (tools === null) return null;
-  const tool = snapshotRecord(tools[0], ["id", "name", "request", "input", "limitations", "payment"]);
+function validEntityCheckTool(value: unknown): boolean {
+  const tool = snapshotRecord(value, [
+    "id", "name", "request", "input", "result", "sources", "limitations", "configuration",
+  ]);
+  if (tool === null || tool.id !== "entitycheck.fr" || tool.name !== "EntityCheck France") return false;
+  const request = snapshotRecord(tool.request, ["method", "path", "contentType"]);
+  if (request === null || request.method !== "POST" || request.path !== "/api/entitycheck" || request.contentType !== "application/json") return false;
+  const input = snapshotRecord(tool.input, ["type", "required", "properties", "additionalProperties"]);
+  if (input === null || input.type !== "object" || input.additionalProperties !== false ||
+    !hasArray(input.required, ["requestRef", "jurisdiction", "query"])) return false;
+  const properties = snapshotRecord(input.properties, ["requestRef", "jurisdiction", "query", "registrationNumber"]);
+  if (properties === null || !hasStringBounds(properties.requestRef, 96) || !hasStringBounds(properties.query, 160)) return false;
+  const jurisdiction = snapshotRecord(properties.jurisdiction, ["type", "enum"]);
+  if (jurisdiction === null || jurisdiction.type !== "string" || !hasArray(jurisdiction.enum, ["FR"])) return false;
+  const registrationNumber = snapshotRecord(properties.registrationNumber, ["type", "pattern"]);
+  if (registrationNumber === null || registrationNumber.type !== "string" || registrationNumber.pattern !== "^[0-9]{9}$") return false;
+  const result = snapshotRecord(tool.result, ["dispositions", "sanctionsScreen"]);
+  return result !== null &&
+    hasArray(result.dispositions, ["found", "ambiguous", "not_found"]) &&
+    hasArray(result.sanctionsScreen, ["clear", "hit", "not_screened"]) &&
+    hasArray(tool.sources, ["FR_RECHERCHE_ENTREPRISES", "OFAC_SDN"]) &&
+    hasArray(tool.limitations, [
+      "EntityCheck reflects two public sources at the time they were read and does not verify ownership, solvency, or compliance; a clear screen is not a compliance opinion.",
+    ]) && validPayment(tool.configuration) !== null;
+}
+
+function validRiskScanTool(value: unknown): RiskScanPayment | null {
+  const tool = snapshotRecord(value, ["id", "name", "request", "input", "limitations", "payment"]);
   if (tool === null || tool.id !== "riskscan.quick" || tool.name !== "RiskScan Quick") return null;
   const request = snapshotRecord(tool.request, ["method", "path", "contentType"]);
   if (request === null || request.method !== "POST" || request.path !== "/api/riskscan" || request.contentType !== "application/json") return null;
@@ -164,6 +186,20 @@ function validDirectory(value: unknown): RiskScanPayment | null {
     !hasBoolean(declarationProperties.limitations) || !hasBoolean(declarationProperties.evidence) ||
     !hasArray(tool.limitations, ["quick_assessment_only", "caller_declarations_are_not_external_verification"])) return null;
   return validPayment(tool.payment);
+}
+
+function validDirectory(value: unknown): RiskScanPayment | null {
+  const directory = snapshotRecord(value, ["version", "tools"]);
+  if (directory === null) return null;
+  if (directory.version === "v1") {
+    const tools = snapshotArray(directory.tools, 1);
+    return tools === null ? null : validRiskScanTool(tools[0]);
+  }
+  if (directory.version !== "v2") return null;
+  const tools = snapshotArray(directory.tools, 2);
+  if (tools === null) return null;
+  const payment = validRiskScanTool(tools[0]);
+  return payment === null || !validEntityCheckTool(tools[1]) ? null : payment;
 }
 
 function selection(payment: RiskScanPayment): RiskScanConsumerDiscovery {

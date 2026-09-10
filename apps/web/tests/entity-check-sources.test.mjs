@@ -1,491 +1,640 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
-import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-const sourceUrl = new URL(
-  "../src/lib/entity-check-sources.ts",
-  import.meta.url,
-);
+const sourceUrl = new URL("../src/lib/entity-check-sources.ts", import.meta.url);
 const sourcePath = fileURLToPath(sourceUrl);
 const sourceExists = existsSync(sourcePath);
 const implementedTest = sourceExists ? test : test.skip;
+const oneMebibyte = 1_048_576;
+const sixteenMebibytes = 16_777_216;
+const initialNow = Date.UTC(2026, 8, 10, 6, 0, 0);
 let api;
 
-const registryBaseUrl = "https://registry.invalid/api";
-const sanctionsUrl = "https://sanctions.invalid/sdn.csv";
-const registryUrl = `${registryBaseUrl}/search?q=Soci%C3%A9t%C3%A9%20G%C3%A9n%C3%A9rale&per_page=5`;
-const nowMilliseconds = Date.parse("2026-09-09T18:00:00.000Z");
-const request = Object.freeze({
-  requestRef: "entity-7",
-  jurisdiction: "FR",
-  query: "Société Générale",
-});
-
-// Redacted excerpt of a public recherche-entreprises response observed on 2026-09-09.
-const registryFixture = {
-  results: [
-    {
-      siren: "552120222",
-      nom_complet: "SOCIETE GENERALE (SG)",
-      nom_raison_sociale: "SOCIETE GENERALE",
-      nombre_etablissements: 4258,
-      siege: {
-        adresse: "29 BOULEVARD HAUSSMANN 75009 PARIS",
-        code_postal: "75009",
-      },
-      date_creation: "1900-01-01",
-      date_mise_a_jour: "2026-09-09T14:50:03",
-      dirigeants: Array.from({ length: 18 }, (_, index) => ({
-        nom: `D${index}`,
-        qualite: "Administrateur",
-      })),
-      etat_administratif: "A",
-      nature_juridique: "5599",
-    },
-    {
-      siren: "123456789",
-      nom_complet: "CEASED COMPANY",
-      siege: {},
-      date_creation: "2001-02-03",
-      date_mise_a_jour: "2026-01-01T00:00:00",
-      dirigeants: [],
-      etat_administratif: "C",
-    },
-    {
-      siren: "999999999",
-      nom_complet: "DISSOLVED",
-      etat_administratif: "X",
-      date_creation: "2001-02-03",
-      date_mise_a_jour: "2026-01-01T00:00:00",
-      dirigeants: [],
-    },
-    {
-      siren: "12345678",
-      nom_complet: "SHORT SIREN",
-      etat_administratif: "A",
-      date_creation: "2001-02-03",
-      date_mise_a_jour: "2026-01-01T00:00:00",
-      dirigeants: [],
-    },
-    {
-      siren: "111111111",
-      nom_complet: "  ",
-      etat_administratif: "A",
-      date_creation: "2001-02-03",
-      date_mise_a_jour: "2026-01-01T00:00:00",
-      dirigeants: [],
-    },
-    {
-      siren: "222222222",
-      nom_complet: "BAD DATE",
-      etat_administratif: "A",
-      date_creation: "2001-2-3",
-      date_mise_a_jour: "2026-01-01T00:00:00",
-      dirigeants: [],
-    },
-    "not an object",
-  ],
-  total_results: 7,
-  page: 1,
-  per_page: 5,
-  total_pages: 1,
-};
-
-// Redacted excerpt of the public OFAC SDN CSV observed on 2026-09-09: twelve
-// columns, no header, `-0- ` for empty, CRLF rows, and a trailing 0x1A byte.
-const sanctionsFixture =
-  [
-    '36,"AEROCARIBBEAN AIRLINES",-0- ,"CUBA",-0- ,-0- ,-0- ,-0- ,-0- ,-0- ,-0- ,-0- ',
-    '3751,"MOA NICKEL SA",-0- ,"CUBA] [CUBA-EO14404",-0- ,-0- ,-0- ,-0- ,-0- ,-0- ,-0- ,"Organization Established Date 1994; Organization Type: Mining."',
-    '4632,"BANK MARKAZI JOMHOURI ISLAMI IRAN","individual","IRAN] [SDGT] [IRGC] [IFSR",-0- ,-0- ,-0- ,-0- ,-0- ,-0- ,-0- ,"Additional Sanctions Information, with a comma."',
-    '7001,"SOCIETE ""GENERALE"" TEST",-0- ,-0- ,-0- ,-0- ,-0- ,-0- ,-0- ,-0- ,-0- ,-0- ',
-    "8001,short row",
-  ].join("\r\n") + "\r\n";
-
-function createFetch(handlers) {
-  const calls = [];
-  const fetchImplementation = async (input, init = {}) => {
-    const url = String(input);
-    calls.push({ url, init });
-    const handler = handlers[url];
-    if (handler === undefined) throw new TypeError(`unexpected fetch ${url}`);
-    return handler(init);
-  };
-  return { fetchImplementation, calls };
-}
-
-function jsonResponse(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "content-type": "application/json" },
-  });
-}
-
-function csvResponse(
-  body = sanctionsFixture,
-  headers = { "last-modified": "Wed, 09 Sep 2026 13:32:00 GMT" },
-) {
-  return new Response(body, {
-    status: 200,
-    headers: { "content-type": "text/csv", ...headers },
-  });
-}
-
-function bytesResponse(byteLength) {
-  return new Response(new Uint8Array(byteLength), { status: 200 });
-}
-
-async function sha256Hex(text) {
-  const digest = await globalThis.crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(text),
-  );
-  return [...new Uint8Array(digest)]
-    .map((value) => value.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function configuration(overrides = {}) {
-  return api.readEntityCheckSourceConfiguration({
-    ENTITYCHECK_REGISTRY_BASE_URL: registryBaseUrl,
-    ENTITYCHECK_SANCTIONS_URL: sanctionsUrl,
+function request(overrides = {}) {
+  return {
+    requestRef: "entity_check_request_001",
+    jurisdiction: "FR",
+    query: "Example et Cie",
     ...overrides,
+  };
+}
+
+function environment(overrides = {}) {
+  return {
+    ENTITYCHECK_REGISTRY_BASE_URL: "https://registry.example.test/",
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/sdn.csv",
+    ...overrides,
+  };
+}
+
+function readConfiguration(overrides = {}) {
+  const configuration = api.readEntityCheckSourceConfiguration(environment(overrides));
+  assert.notEqual(configuration, null);
+  return configuration;
+}
+
+function registryRecord(overrides = {}) {
+  return {
+    siren: "123456789",
+    nom_complet: "Example et Cie",
+    etat_administratif: "A",
+    date_creation: "2020-02-29",
+    siege: { adresse: "1 rue de la Paix, 75000 Paris" },
+    dirigeants: [{ nom: "Responsable" }],
+    date_mise_a_jour: "2026-09-09T12:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function registryResponse(results = [registryRecord()]) {
+  return new Response(JSON.stringify({ results }), { status: 200 });
+}
+
+function csvCell(value) {
+  const text = String(value);
+  return /[",\r\n]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function sanctionsRow({
+  entryId = "1",
+  name = "Example et Cie",
+  entryType = "Entity",
+  programs = "-0-",
+  extra = [],
+} = {}) {
+  const values = [entryId, name, entryType, programs, ...extra];
+  while (values.length < 12) {
+    values.push("");
+  }
+  assert.equal(values.length, 12);
+  return values.map(csvCell).join(",");
+}
+
+function sanctionsCsv(rows = [sanctionsRow()], lineEnding = "\r\n") {
+  return `${rows.join(lineEnding)}${lineEnding}`;
+}
+
+function exactSizedCsv(byteLength) {
+  const firstElevenColumns = [
+    "exact-entry",
+    "Exact dataset",
+    "Entity",
+    "-0-",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ];
+  const prefix = `${firstElevenColumns.map(csvCell).join(",")},`;
+  const paddingLength = byteLength - new TextEncoder().encode(`${prefix}\r\n`).byteLength;
+  assert.ok(paddingLength >= 0);
+  const csv = `${prefix}${" ".repeat(paddingLength)}\r\n`;
+  assert.equal(new TextEncoder().encode(csv).byteLength, byteLength);
+  return csv;
+}
+
+function sanctionsResponse(csv, headers = {}) {
+  return new Response(csv, { status: 200, headers });
+}
+
+function exactSizedJsonResponse(body, byteLength) {
+  const json = JSON.stringify(body);
+  const actualLength = new TextEncoder().encode(json).byteLength;
+  assert.ok(actualLength <= byteLength);
+  return new Response(`${json}${" ".repeat(byteLength - actualLength)}`, { status: 200 });
+}
+
+function oversizedResponse(byteLength, onCancel) {
+  return new Response(
+    new ReadableStream({
+      start(controller) {
+        controller.enqueue(new Uint8Array(byteLength));
+      },
+      cancel: onCancel,
+    }),
+    { status: 200 },
+  );
+}
+
+async function settlesBefore(promise, milliseconds = 100) {
+  let timeout;
+  const deadline = new Promise((_, reject) => {
+    timeout = setTimeout(() => reject(new Error("operation did not settle")), milliseconds);
   });
+
+  try {
+    return await Promise.race([promise, deadline]);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
-function read(handlers, options = {}) {
-  const { fetchImplementation, calls } = createFetch(handlers);
-  const outcome = api.readEntityCheckSources(
-    options.request ?? request,
-    options.configuration === undefined
-      ? configuration()
-      : options.configuration,
-    { fetch: fetchImplementation, now: options.now ?? (() => nowMilliseconds) },
-  );
-  return { outcome, calls };
+async function waitsFor(condition, message) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    if (condition()) {
+      return;
+    }
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+  assert.fail(message);
 }
 
-test("requires the declared EntityCheck source adapter module before GREEN", () => {
-  assert.equal(
-    sourceExists,
-    true,
-    `missing declared source module: ${sourcePath}`,
-  );
+test("requires the declared M46 EntityCheck source module before GREEN", () => {
+  assert.equal(sourceExists, true, `missing declared M46 source module: ${sourcePath}`);
 });
 
 test.before(async () => {
-  if (sourceExists) api = await import(sourceUrl.href);
+  if (sourceExists) {
+    api = await import(sourceUrl.href);
+  }
 });
 
-implementedTest(
-  "reads configuration only when both HTTPS values are well formed",
-  () => {
-    assert.deepEqual(configuration(), { registryBaseUrl, sanctionsUrl });
-    assert.deepEqual(
-      configuration({ ENTITYCHECK_REGISTRY_BASE_URL: `${registryBaseUrl}/` }),
-      { registryBaseUrl, sanctionsUrl },
-    );
-    const rejected = [
-      { ENTITYCHECK_REGISTRY_BASE_URL: undefined },
-      { ENTITYCHECK_REGISTRY_BASE_URL: "   " },
-      { ENTITYCHECK_REGISTRY_BASE_URL: "http://registry.invalid/api" },
-      { ENTITYCHECK_REGISTRY_BASE_URL: "https://user:pw@registry.invalid/api" },
-      { ENTITYCHECK_REGISTRY_BASE_URL: "https://registry.invalid/api?x=1" },
-      { ENTITYCHECK_REGISTRY_BASE_URL: "https://registry.invalid/api#frag" },
-      { ENTITYCHECK_REGISTRY_BASE_URL: "not a url" },
-      { ENTITYCHECK_SANCTIONS_URL: undefined },
-      { ENTITYCHECK_SANCTIONS_URL: "" },
-      { ENTITYCHECK_SANCTIONS_URL: "http://sanctions.invalid/sdn.csv" },
-      { ENTITYCHECK_SANCTIONS_URL: "https://user@sanctions.invalid/sdn.csv" },
-      { ENTITYCHECK_SANCTIONS_URL: "ftp://sanctions.invalid/sdn.csv" },
-    ];
-    for (const overrides of rejected) {
-      assert.equal(configuration(overrides), null, JSON.stringify(overrides));
-    }
-    assert.equal(api.readEntityCheckSourceConfiguration({}), null);
-  },
-);
+implementedTest("fails closed for missing, malformed, inherited, or accessor-backed configuration", () => {
+  const accepted = api.readEntityCheckSourceConfiguration(environment());
+  assert.notEqual(accepted, null);
 
-implementedTest(
-  "returns not_configured without any fetch when configuration is null",
-  async () => {
-    const { outcome, calls } = read({}, { configuration: null });
-    assert.deepEqual(await outcome, { kind: "not_configured" });
-    assert.deepEqual(calls, []);
-  },
-);
-
-implementedTest(
-  "requests the exact registry URL with SIREN precedence over the query",
-  async () => {
-    const bySiren = read(
-      {
-        [`${registryBaseUrl}/search?q=552120222&per_page=5`]: () =>
-          jsonResponse({ results: [] }),
-        [sanctionsUrl]: () => csvResponse(),
-      },
-      { request: { ...request, registrationNumber: "552120222" } },
-    );
-    assert.equal((await bySiren.outcome).kind, "read");
+  const malformedRegistryValues = [
+    undefined,
+    "",
+    "http://registry.example.test/",
+    "https://user:pass@registry.example.test/",
+    "https://registry.example.test/subpath/",
+    "https://registry.example.test/?query=1",
+    "https://registry.example.test/#fragment",
+    ["https://registry.example.test/"],
+  ];
+  for (const value of malformedRegistryValues) {
     assert.equal(
-      bySiren.calls[0].url,
-      `${registryBaseUrl}/search?q=552120222&per_page=5`,
+      api.readEntityCheckSourceConfiguration(environment({ ENTITYCHECK_REGISTRY_BASE_URL: value })),
+      null,
     );
-    assert.equal(bySiren.calls[0].init.method ?? "GET", "GET");
-    assert.ok(bySiren.calls[0].init.signal instanceof AbortSignal);
+  }
 
-    const byQuery = read({
-      [registryUrl]: () => jsonResponse({ results: [] }),
-      [sanctionsUrl]: () => csvResponse(),
-    });
-    assert.equal((await byQuery.outcome).kind, "read");
-    assert.equal(byQuery.calls[0].url, registryUrl);
-  },
-);
+  const malformedSanctionsValues = [
+    undefined,
+    "",
+    "http://sanctions.example.test/sdn.csv",
+    "https://user:pass@sanctions.example.test/sdn.csv",
+    ["https://sanctions.example.test/sdn.csv"],
+  ];
+  for (const value of malformedSanctionsValues) {
+    assert.equal(
+      api.readEntityCheckSourceConfiguration(environment({ ENTITYCHECK_SANCTIONS_URL: value })),
+      null,
+    );
+  }
 
-implementedTest(
-  "maps the recorded registry fixture field for field and reports every dropped item",
-  async () => {
-    const { outcome } = read({
-      [registryUrl]: () => jsonResponse(registryFixture),
-      [sanctionsUrl]: () => csvResponse(),
-    });
-    const result = await outcome;
-    assert.equal(result.kind, "read");
-    assert.deepEqual(result.registryCandidates, [
-      {
-        siren: "552120222",
-        legalName: "SOCIETE GENERALE (SG)",
-        administrativeStatus: "active",
-        incorporationDate: "1900-01-01",
-        registeredAddress: "29 BOULEVARD HAUSSMANN 75009 PARIS",
-        officerCount: 18,
-        registryUpdatedAt: "2026-09-09T14:50:03.000Z",
+  const inherited = Object.create(environment());
+  assert.equal(api.readEntityCheckSourceConfiguration(inherited), null);
+
+  let accessed = false;
+  const accessorBacked = {};
+  Object.defineProperty(accessorBacked, "ENTITYCHECK_REGISTRY_BASE_URL", {
+    enumerable: true,
+    get() {
+      accessed = true;
+      return "https://registry.example.test/";
+    },
+  });
+  Object.defineProperty(accessorBacked, "ENTITYCHECK_SANCTIONS_URL", {
+    enumerable: true,
+    value: "https://sanctions.example.test/sdn.csv",
+  });
+  assert.equal(api.readEntityCheckSourceConfiguration(accessorBacked), null);
+  assert.equal(accessed, false);
+});
+
+implementedTest("does not send a request without a complete configuration or an injected fetch", async (t) => {
+  let calls = 0;
+  const noConfiguration = await api.readEntityCheckSources(request(), null, {
+    fetch: async () => {
+      calls += 1;
+      throw new Error("must not fetch");
+    },
+    now: () => initialNow,
+  });
+  assert.deepEqual(noConfiguration, { kind: "not_configured" });
+  assert.equal(calls, 0);
+
+  t.mock.method(globalThis, "fetch", async () => {
+    calls += 1;
+    throw new Error("must not use global fetch");
+  });
+  const missingInjectedFetch = await api.readEntityCheckSources(request(), readConfiguration(), {
+    now: () => initialNow,
+  });
+  assert.deepEqual(missingInjectedFetch, { kind: "registry_unavailable" });
+  assert.equal(calls, 0);
+});
+
+implementedTest("maps the fixed registry and sanctions fixtures using a SIREN ahead of query", async () => {
+  const now = Date.UTC(2026, 8, 10, 6, 0, 0);
+  const lastModified = new Date(Date.UTC(2026, 8, 9, 12, 0, 0)).toUTCString();
+  const csv = sanctionsCsv([
+    sanctionsRow({
+      entryId: "100",
+      name: "Café, \"Example\"",
+      entryType: "Entity",
+      programs: "[SDNTK] [IRAN]",
+    }),
+    sanctionsRow({ entryId: "101", name: "No Programme", programs: "-0-" }),
+  ]);
+  const registry = [
+    registryRecord(),
+    registryRecord({
+      siren: "987654321",
+      nom_complet: "Ceased Example",
+      etat_administratif: "C",
+      siege: undefined,
+      dirigeants: [],
+      date_mise_a_jour: "2026-09-08T11:00:00.000Z",
+    }),
+    registryRecord({ siren: "987654322", etat_administratif: "X" }),
+    registryRecord({ siren: "not-a-siren" }),
+    registryRecord({ nom_complet: "   " }),
+    registryRecord({ date_creation: "2026-02-30" }),
+    registryRecord({ date_mise_a_jour: "2026-09-31T12:00:00.000Z" }),
+    registryRecord({ dirigeants: {} }),
+  ];
+  const calls = [];
+  const result = await api.readEntityCheckSources(
+    request({ query: "ignored query", registrationNumber: "123456789" }),
+    readConfiguration(),
+    {
+      fetch: async (input, init) => {
+        calls.push({ input, init });
+        if (input.hostname === "registry.example.test") {
+          return registryResponse(registry);
+        }
+        return sanctionsResponse(csv, { "last-modified": lastModified });
       },
+      now: () => now,
+    },
+  );
+
+  assert.equal(calls.length, 2);
+  assert.equal(
+    calls[0].input.href,
+    "https://registry.example.test/search?q=123456789&per_page=5",
+  );
+  assert.equal(calls[0].init.method, "GET");
+  assert.equal(calls[0].init.credentials, "omit");
+  assert.equal(calls[0].init.redirect, "error");
+  assert.equal(calls[0].init.cache, "no-store");
+  assert.ok(calls[0].init.signal instanceof AbortSignal);
+  assert.equal(calls[1].input.href, "https://sanctions.example.test/sdn.csv");
+  assert.equal(calls[1].init.method, "GET");
+  assert.equal(calls[1].init.credentials, "omit");
+  assert.equal(calls[1].init.redirect, "error");
+  assert.equal(calls[1].init.cache, "no-store");
+  assert.ok(calls[1].init.signal instanceof AbortSignal);
+
+  assert.deepEqual(result, {
+    kind: "read",
+    registryCandidates: [
       {
         siren: "123456789",
-        legalName: "CEASED COMPANY",
+        legalName: "Example et Cie",
+        administrativeStatus: "active",
+        incorporationDate: "2020-02-29",
+        registeredAddress: "1 rue de la Paix, 75000 Paris",
+        officerCount: 1,
+        registryUpdatedAt: "2026-09-09T12:00:00.000Z",
+      },
+      {
+        siren: "987654321",
+        legalName: "Ceased Example",
         administrativeStatus: "ceased",
-        incorporationDate: "2001-02-03",
+        incorporationDate: "2020-02-29",
         registeredAddress: "",
         officerCount: 0,
-        registryUpdatedAt: "2026-01-01T00:00:00.000Z",
+        registryUpdatedAt: "2026-09-08T11:00:00.000Z",
       },
-    ]);
-    assert.equal(result.droppedCandidates, 5);
-    assert.deepEqual(result.registrySource, {
+    ],
+    droppedCandidates: 6,
+    registrySource: {
       source: "FR_RECHERCHE_ENTREPRISES",
-      readAt: "2026-09-09T18:00:00.000Z",
-    });
-    for (const candidate of result.registryCandidates)
-      assert.equal(Object.isFrozen(candidate), true);
-  },
-);
-
-implementedTest(
-  "fails closed to registry_unavailable on rejection, timeout, cap, non-200, and unparsable bodies",
-  async () => {
-    const abort = () => {
-      const error = new Error("The operation was aborted");
-      error.name = "AbortError";
-      throw error;
-    };
-    const cases = [
-      [
-        "rejection",
-        () => {
-          throw new TypeError("fetch failed");
-        },
-      ],
-      ["timeout", abort],
-      ["cap", () => bytesResponse(api.ENTITYCHECK_REGISTRY_MAX_BYTES + 1)],
-      ["status 500", () => jsonResponse({ results: [] }, 500)],
-      ["not json", () => new Response("<html>", { status: 200 })],
-      ["json without results", () => jsonResponse({ items: [] })],
-      ["json array", () => jsonResponse([])],
-    ];
-    for (const [label, handler] of cases) {
-      const { outcome, calls } = read({
-        [registryUrl]: handler,
-        [sanctionsUrl]: () => csvResponse(),
-      });
-      assert.deepEqual(await outcome, { kind: "registry_unavailable" }, label);
-      assert.equal(
-        calls.length,
-        1,
-        `${label} must not read sanctions after a registry failure`,
-      );
-    }
-  },
-);
-
-implementedTest(
-  "parses the recorded SDN fixture columns, -0- blanks, program lists, and reports Last-Modified and SHA-256",
-  async () => {
-    const { outcome } = read({
-      [registryUrl]: () => jsonResponse({ results: [] }),
-      [sanctionsUrl]: () => csvResponse(),
-    });
-    const result = await outcome;
-    assert.equal(result.kind, "read");
-    assert.deepEqual(result.sanctionsDataset, {
+      readAt: new Date(now).toISOString(),
+    },
+    sanctionsDataset: {
       source: "OFAC_SDN",
-      lastModified: "2026-09-09T13:32:00.000Z",
-      contentHash: await sha256Hex(sanctionsFixture),
+      lastModified,
+      contentHash: createHash("sha256").update(csv).digest("hex"),
       entries: [
         {
-          entryId: "36",
-          name: "AEROCARIBBEAN AIRLINES",
-          entryType: "",
-          programs: ["CUBA"],
+          entryId: "100",
+          name: "Café, \"Example\"",
+          entryType: "Entity",
+          programs: ["SDNTK", "IRAN"],
         },
         {
-          entryId: "3751",
-          name: "MOA NICKEL SA",
-          entryType: "",
-          programs: ["CUBA", "CUBA-EO14404"],
-        },
-        {
-          entryId: "4632",
-          name: "BANK MARKAZI JOMHOURI ISLAMI IRAN",
-          entryType: "individual",
-          programs: ["IRAN", "SDGT", "IRGC", "IFSR"],
-        },
-        {
-          entryId: "7001",
-          name: 'SOCIETE "GENERALE" TEST',
-          entryType: "",
+          entryId: "101",
+          name: "No Programme",
+          entryType: "Entity",
           programs: [],
         },
       ],
+    },
+  });
+});
+
+implementedTest("uses the query when SIREN is absent and returns only closed transport failures", async () => {
+  const registryCalls = [];
+  const registryFailure = await api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/registry-failure.csv",
+  }), {
+    fetch: async (input) => {
+      registryCalls.push(input);
+      return new Response("untrusted detail", { status: 503 });
+    },
+    now: () => initialNow,
+  });
+  assert.deepEqual(registryFailure, { kind: "registry_unavailable" });
+  assert.equal(registryCalls.length, 1);
+  assert.equal(
+    registryCalls[0].href,
+    "https://registry.example.test/search?q=Example+et+Cie&per_page=5",
+  );
+
+  const rejectedRegistry = await api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/rejected-registry.csv",
+  }), {
+    fetch: async () => { throw new Error("untrusted upstream detail"); },
+    now: () => initialNow,
+  });
+  assert.deepEqual(rejectedRegistry, { kind: "registry_unavailable" });
+
+  const sanctionsCalls = [];
+  const sanctionsFailure = await api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/sanctions-failure.csv",
+  }), {
+    fetch: async (input) => {
+      sanctionsCalls.push(input);
+      if (input.hostname === "registry.example.test") {
+        return registryResponse();
+      }
+      return new Response("untrusted detail", { status: 502 });
+    },
+    now: () => initialNow,
+  });
+  assert.deepEqual(sanctionsFailure, { kind: "sanctions_unavailable" });
+  assert.equal(sanctionsCalls.length, 2);
+});
+
+implementedTest("fails closed for malformed registry JSON and top-level result shapes", async () => {
+  const malformedBodies = ["{", JSON.stringify({}), JSON.stringify({ results: {} })];
+  for (const [index, body] of malformedBodies.entries()) {
+    let calls = 0;
+    const result = await api.readEntityCheckSources(request(), readConfiguration({
+      ENTITYCHECK_SANCTIONS_URL: `https://sanctions.example.test/malformed-registry-${index}.csv`,
+    }), {
+      fetch: async () => {
+        calls += 1;
+        return new Response(body, { status: 200 });
+      },
+      now: () => initialNow,
     });
-    assert.equal(Object.isFrozen(result.sanctionsDataset), true);
-    assert.equal(Object.isFrozen(result.sanctionsDataset.entries), true);
+    assert.deepEqual(result, { kind: "registry_unavailable" });
+    assert.equal(calls, 1);
+  }
+});
 
-    const withoutHeader = read(
-      {
-        [registryUrl]: () => jsonResponse({ results: [] }),
-        "https://sanctions.invalid/no-header.csv": () =>
-          csvResponse(sanctionsFixture, {}),
+implementedTest("uses the exact bounded deadlines and does not retry stalled reads", async (t) => {
+  const deadlines = [];
+  t.mock.method(AbortSignal, "timeout", (milliseconds) => {
+    const controller = new AbortController();
+    deadlines.push({ milliseconds, controller });
+    return controller.signal;
+  });
+
+  let registryCalls = 0;
+  const pendingRegistry = api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/pending-registry.csv",
+  }), {
+    fetch: async () => {
+      registryCalls += 1;
+      return new Promise(() => {});
+    },
+    now: () => initialNow,
+  });
+  await waitsFor(() => deadlines.length === 1, "registry deadline was not created");
+  assert.equal(deadlines.length, 1);
+  assert.equal(deadlines[0].milliseconds, 5_000);
+  deadlines[0].controller.abort();
+  assert.deepEqual(await settlesBefore(pendingRegistry), { kind: "registry_unavailable" });
+  assert.equal(registryCalls, 1);
+
+  let sanctionsCalls = 0;
+  const pendingSanctions = api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/pending-sanctions.csv",
+  }), {
+    fetch: async (input) => {
+      sanctionsCalls += 1;
+      if (input.hostname === "registry.example.test") {
+        return registryResponse();
+      }
+      return new Promise(() => {});
+    },
+    now: () => initialNow,
+  });
+  await waitsFor(() => deadlines.length === 3, "sanctions deadline was not created");
+  assert.equal(deadlines.length, 3);
+  assert.equal(deadlines[1].milliseconds, 5_000);
+  assert.equal(deadlines[2].milliseconds, 20_000);
+  deadlines[2].controller.abort();
+  assert.deepEqual(await settlesBefore(pendingSanctions), { kind: "sanctions_unavailable" });
+  assert.equal(sanctionsCalls, 2);
+});
+
+implementedTest("enforces each response cap without retrying or retaining failure detail", async () => {
+  let registryCancelled = false;
+  let registryCalls = 0;
+  const registryOverCap = await api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/registry-cap.csv",
+  }), {
+    fetch: async () => {
+      registryCalls += 1;
+      return oversizedResponse(oneMebibyte + 1, () => { registryCancelled = true; });
+    },
+    now: () => initialNow,
+  });
+  assert.deepEqual(registryOverCap, { kind: "registry_unavailable" });
+  assert.equal(registryCalls, 1);
+  assert.equal(registryCancelled, true);
+
+  let sanctionsCancelled = false;
+  let sanctionsCalls = 0;
+  const sanctionsOverCap = await api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/sanctions-cap.csv",
+  }), {
+    fetch: async (input) => {
+      sanctionsCalls += 1;
+      if (input.hostname === "registry.example.test") {
+        return registryResponse();
+      }
+      return oversizedResponse(sixteenMebibytes + 1, () => { sanctionsCancelled = true; });
+    },
+    now: () => initialNow,
+  });
+  assert.deepEqual(sanctionsOverCap, { kind: "sanctions_unavailable" });
+  assert.equal(sanctionsCalls, 2);
+  assert.equal(sanctionsCancelled, true);
+});
+
+implementedTest("accepts a registry JSON response at exactly the one MiB cap", async () => {
+  const result = await api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/exact-cap.csv",
+  }), {
+    fetch: async (input) => {
+      if (input.hostname === "registry.example.test") {
+        return exactSizedJsonResponse({ results: [registryRecord()] }, oneMebibyte);
+      }
+      return sanctionsResponse(sanctionsCsv());
+    },
+    now: () => initialNow,
+  });
+  assert.equal(result.kind, "read");
+
+  const exactSanctions = exactSizedCsv(sixteenMebibytes);
+  const sanctionsResult = await api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/exact-sanctions-cap.csv",
+  }), {
+    fetch: async (input) => input.hostname === "registry.example.test"
+      ? registryResponse()
+      : sanctionsResponse(exactSanctions),
+    now: () => initialNow,
+  });
+  assert.equal(sanctionsResult.kind, "read");
+  assert.equal(sanctionsResult.sanctionsDataset.entries[0].entryId, "exact-entry");
+});
+
+implementedTest("fails closed for malformed sanctions metadata or CSV and uses the clock only when Last-Modified is absent", async () => {
+  const invalidHeader = await api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/invalid-header.csv",
+  }), {
+    fetch: async (input) => input.hostname === "registry.example.test"
+      ? registryResponse()
+      : sanctionsResponse(sanctionsCsv(), { "last-modified": "not-a-date" }),
+    now: () => initialNow,
+  });
+  assert.deepEqual(invalidHeader, { kind: "sanctions_unavailable" });
+
+  const malformedCsv = await api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/malformed.csv",
+  }), {
+    fetch: async (input) => input.hostname === "registry.example.test"
+      ? registryResponse()
+      : sanctionsResponse("only,two\r\n"),
+    now: () => initialNow,
+  });
+  assert.deepEqual(malformedCsv, { kind: "sanctions_unavailable" });
+
+  const emptyCsv = await api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/empty.csv",
+  }), {
+    fetch: async (input) => input.hostname === "registry.example.test"
+      ? registryResponse()
+      : sanctionsResponse(""),
+    now: () => initialNow,
+  });
+  assert.deepEqual(emptyCsv, { kind: "sanctions_unavailable" });
+
+  const fallback = await api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/no-last-modified.csv",
+  }), {
+    fetch: async (input) => input.hostname === "registry.example.test"
+      ? registryResponse()
+      : sanctionsResponse(sanctionsCsv([sanctionsRow()], "\n")),
+    now: () => initialNow,
+  });
+  assert.equal(fallback.kind, "read");
+  assert.equal(fallback.sanctionsDataset.lastModified, new Date(initialNow).toISOString());
+
+  const blankRows = await api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/blank-rows.csv",
+  }), {
+    fetch: async (input) => input.hostname === "registry.example.test"
+      ? registryResponse()
+      : sanctionsResponse(`\n${sanctionsCsv([sanctionsRow()], "\n")}\n`),
+    now: () => initialNow,
+  });
+  assert.equal(blankRows.kind, "read");
+});
+
+implementedTest("fails closed before a request when the injected clock is not Core-compatible", async () => {
+  for (const now of [NaN, Infinity, Number.MAX_SAFE_INTEGER + 1, 8_640_000_000_000_000]) {
+    let calls = 0;
+    const result = await api.readEntityCheckSources(request(), readConfiguration({
+      ENTITYCHECK_SANCTIONS_URL: `https://sanctions.example.test/invalid-clock-${String(now)}.csv`,
+    }), {
+      fetch: async (input) => {
+        calls += 1;
+        return input.hostname === "registry.example.test"
+          ? registryResponse()
+          : sanctionsResponse(sanctionsCsv(), { "last-modified": "Wed, 09 Sep 2026 12:00:00 GMT" });
       },
-      {
-        configuration: {
-          registryBaseUrl,
-          sanctionsUrl: "https://sanctions.invalid/no-header.csv",
-        },
-      },
-    );
-    assert.equal(
-      (await withoutHeader.outcome).sanctionsDataset.lastModified,
-      "2026-09-09T18:00:00.000Z",
-    );
-  },
-);
-
-implementedTest(
-  "fails closed to sanctions_unavailable without a cached dataset and never exposes upstream detail",
-  async () => {
-    const cases = [
-      [
-        "rejection",
-        () => {
-          throw new TypeError("fetch failed: secret-host");
-        },
-      ],
-      ["status-404", () => new Response("secret body", { status: 404 })],
-      ["cap", () => bytesResponse(api.ENTITYCHECK_SANCTIONS_MAX_BYTES + 1)],
-    ];
-    for (const [label, handler] of cases) {
-      const url = `https://sanctions.invalid/${label}.csv`;
-      const { outcome } = read(
-        { [registryUrl]: () => jsonResponse({ results: [] }), [url]: handler },
-        { configuration: { registryBaseUrl, sanctionsUrl: url } },
-      );
-      const result = await outcome;
-      assert.deepEqual(result, { kind: "sanctions_unavailable" }, label);
-      assert.doesNotMatch(JSON.stringify(result), /secret|404|fetch failed/u);
-    }
-  },
-);
-
-implementedTest(
-  "reuses a parsed dataset for 24 hours per URL, holds no raw body, and re-reads after expiry",
-  async () => {
-    const url = "https://sanctions.invalid/cached.csv";
-    const cachedConfiguration = { registryBaseUrl, sanctionsUrl: url };
-    let sanctionsReads = 0;
-    const handlers = {
-      [registryUrl]: () => jsonResponse({ results: [] }),
-      [url]: () => {
-        sanctionsReads += 1;
-        return csvResponse();
-      },
-    };
-
-    const first = await read(handlers, { configuration: cachedConfiguration })
-      .outcome;
-    assert.equal(first.kind, "read");
-    assert.equal(sanctionsReads, 1);
-
-    const later = read(handlers, {
-      configuration: cachedConfiguration,
-      now: () => nowMilliseconds + 23 * 60 * 60 * 1000,
+      now: () => now,
     });
-    const laterResult = await later.outcome;
-    assert.equal(laterResult.kind, "read");
-    assert.equal(sanctionsReads, 1);
-    assert.equal(later.calls.length, 1);
-    assert.deepEqual(laterResult.sanctionsDataset, first.sanctionsDataset);
+    assert.deepEqual(result, { kind: "registry_unavailable" });
+    assert.equal(calls, 0);
+  }
+});
 
-    const failing = read(
-      {
-        [registryUrl]: () => jsonResponse({ results: [] }),
-        [url]: () => new Response("x", { status: 500 }),
-      },
-      {
-        configuration: cachedConfiguration,
-        now: () => nowMilliseconds + 23 * 60 * 60 * 1000,
-      },
-    );
-    assert.equal(
-      (await failing.outcome).kind,
-      "read",
-      "a cached dataset serves while it is fresh",
-    );
+implementedTest("reuses only a fresh dataset for the same canonical sanctions URL", async () => {
+  let now = initialNow;
+  const calls = [];
+  const configuration = readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/cache-boundary.csv",
+  });
+  const dependencies = {
+    fetch: async (input) => {
+      calls.push(input.href);
+      if (input.hostname === "registry.example.test") {
+        return registryResponse();
+      }
+      return sanctionsResponse(sanctionsCsv([sanctionsRow({ entryId: "cached-entry" })]));
+    },
+    now: () => now,
+  };
 
-    const expired = read(handlers, {
-      configuration: cachedConfiguration,
-      now: () => nowMilliseconds + 24 * 60 * 60 * 1000 + 1,
-    });
-    assert.equal((await expired.outcome).kind, "read");
-    assert.equal(sanctionsReads, 2);
+  const first = await api.readEntityCheckSources(request(), configuration, dependencies);
+  assert.equal(first.kind, "read");
+  now += 86_399_999;
+  const canonicalEquivalentConfiguration = readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test:443/cache-boundary.csv",
+  });
+  const freshCache = await api.readEntityCheckSources(
+    request(),
+    canonicalEquivalentConfiguration,
+    dependencies,
+  );
+  assert.equal(freshCache.kind, "read");
+  assert.equal(calls.filter((url) => url.includes("cache-boundary.csv")).length, 1);
+  assert.equal(calls.filter((url) => url.includes("/search?")).length, 2);
 
-    const cacheText = JSON.stringify(api.inspectEntityCheckSanctionsCache());
-    assert.doesNotMatch(cacheText, /AEROCARIBBEAN AIRLINES",-0-/u);
-    assert.doesNotMatch(cacheText, //u);
-    assert.match(cacheText, /contentHash/u);
-  },
-);
+  now += 1;
+  const expiredCache = await api.readEntityCheckSources(request(), configuration, dependencies);
+  assert.equal(expiredCache.kind, "read");
+  assert.equal(calls.filter((url) => url.includes("cache-boundary.csv")).length, 2);
+  assert.equal(calls.filter((url) => url.includes("/search?")).length, 3);
+  assert.equal(JSON.stringify(expiredCache).includes("cached-entry"), true);
 
-implementedTest(
-  "has no default fetch, no environment read outside the parser, no logging, and rejects missing dependencies",
-  async () => {
-    const source = await readFile(sourcePath, "utf8");
-    assert.doesNotMatch(source, /globalThis\.fetch|[^.]\bfetch\s*\(/u);
-    assert.doesNotMatch(source, /console\./u);
-    assert.doesNotMatch(source, /process\.env/u);
-    assert.doesNotMatch(
-      source,
-      /\bimport\b[^\n]*["'](?:next|react|convex|@x402)/u,
-    );
-    await assert.rejects(
-      () =>
-        api.readEntityCheckSources(request, configuration(), {
-          now: () => nowMilliseconds,
-        }),
-      TypeError,
-    );
-  },
-);
+  now -= 1;
+  const clockRollback = await api.readEntityCheckSources(request(), configuration, dependencies);
+  assert.equal(clockRollback.kind, "read");
+  assert.equal(calls.filter((url) => url.includes("cache-boundary.csv")).length, 3);
+  assert.equal(calls.filter((url) => url.includes("/search?")).length, 4);
+});
+
+implementedTest("keeps the adapter server-only and free of ambient configuration or logging", () => {
+  const source = readFileSync(sourcePath, "utf8");
+  assert.doesNotMatch(source, /process\.env/iu);
+  assert.doesNotMatch(source, /globalThis\.fetch/iu);
+  assert.doesNotMatch(source, /console\.(?:debug|error|info|log|warn)/iu);
+});

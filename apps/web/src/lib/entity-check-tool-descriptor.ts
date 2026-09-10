@@ -1,50 +1,43 @@
-import { ENTITY_CHECK_BASELINE_LIMITATION } from "@tool402/core";
-
 import { readX402Configuration } from "./x402-protected-route.ts";
 
-const environmentPrefix = "ENTITYCHECK_X402";
-const configurationKeys = [
-  "PAY_TO",
-  "FACILITATOR_URL",
-  "NETWORK",
-  "PRICE",
-  "HEDERA_ASSET",
-  "HEDERA_AMOUNT",
-].map((suffix) => `${environmentPrefix}_${suffix}`);
+type LocalX402Summary =
+  | { state: "configuration_required" }
+  | {
+      state: "locally_configured";
+      protocol: "x402";
+      network: `eip155:${number}`;
+      price: `$${string}`;
+    }
+  | {
+      state: "locally_configured";
+      protocol: "x402";
+      network: "hedera:testnet";
+      asset: `${number}.${number}.${number}`;
+      amount: `${bigint}`;
+    };
 
-function ownPrefixedEnvironment(
-  environment: NodeJS.ProcessEnv,
-): NodeJS.ProcessEnv {
-  const view: Record<string, string | undefined> = {};
-  for (const key of configurationKeys) {
-    if (Object.hasOwn(environment, key)) view[key] = environment[key];
-  }
-  return view as NodeJS.ProcessEnv;
+function localX402Summary(environment: NodeJS.ProcessEnv): LocalX402Summary {
+  const configuration = readX402Configuration(environment, "ENTITYCHECK_X402");
+
+  return configuration === null
+    ? { state: "configuration_required" }
+    : configuration.kind === "evm"
+    ? {
+        state: "locally_configured",
+        protocol: "x402",
+        network: configuration.network,
+        price: configuration.price,
+      }
+    : {
+        state: "locally_configured",
+        protocol: "x402",
+        network: configuration.network,
+        asset: configuration.price.asset,
+        amount: configuration.price.amount,
+      };
 }
 
 export function buildEntityCheckToolDescriptor(environment: NodeJS.ProcessEnv) {
-  const configuration = readX402Configuration(
-    ownPrefixedEnvironment(environment),
-    environmentPrefix,
-  );
-  const summary =
-    configuration === null
-      ? ({ state: "configuration_required" } as const)
-      : configuration.kind === "evm"
-        ? ({
-            state: "locally_configured",
-            protocol: "x402",
-            network: configuration.network,
-            price: configuration.price,
-          } as const)
-        : ({
-            state: "locally_configured",
-            protocol: "x402",
-            network: configuration.network,
-            asset: configuration.price.asset,
-            amount: configuration.price.amount,
-          } as const);
-
   return {
     id: "entitycheck.fr",
     name: "EntityCheck France",
@@ -69,7 +62,9 @@ export function buildEntityCheckToolDescriptor(environment: NodeJS.ProcessEnv) {
       sanctionsScreen: ["clear", "hit", "not_screened"],
     },
     sources: ["FR_RECHERCHE_ENTREPRISES", "OFAC_SDN"],
-    limitations: [ENTITY_CHECK_BASELINE_LIMITATION],
-    configuration: summary,
+    limitations: [
+      "EntityCheck reflects two public sources at the time they were read and does not verify ownership, solvency, or compliance; a clear screen is not a compliance opinion.",
+    ],
+    configuration: localX402Summary(environment),
   } as const;
 }

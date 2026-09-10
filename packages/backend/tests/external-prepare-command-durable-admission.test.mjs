@@ -21,6 +21,8 @@ const signer = "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454";
 const now = Date.parse("2026-09-07T19:00:30.000Z");
 const attemptId = "externalPrepareCommandAttempts:accepted";
 const payloadHash = "0xfe32ed7989dfa94699ffc6529b4f5c6214721ef63d4f1a2d08f028366fe19b18";
+const realM42CanonicalParametersHash = "1880065c5ae64b3fc6279cfdd8c85a6880d43e98ce129ed697c72372204296f9";
+const realM42Signer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
 const contextKeys = ["version", "type", "chainId", "canonicalSignerAddress", "principalPublicId", "role", "authorityVersion", "payloadHash"];
 const payloadKeys = ["operationKind", "subjectPublicId", "network", "chainId", "expectedTarget", "canonicalParametersHash", "idempotencyKey", "expiresAt"];
 const operations = ["ATS_CREATE", "ATS_CONTROL_LIST", "ATS_ISSUE", "ATS_TRANSFER", "ATS_COUPON", "HEDERA_FUNDING"];
@@ -48,6 +50,28 @@ function withPayload(changes) {
   args.payload = { ...args.payload, ...changes };
   args.payloadHash = hashPayload(args.payload);
   args.expiresAt = args.payload.expiresAt;
+  return args;
+}
+
+function m47AtsCreateInput() {
+  const args = input({
+    canonicalSignerAddress: realM42Signer,
+    principalPublicId: "tool402_ats_issuer_testnet_v1",
+    role: "ISSUER",
+    authorityVersion: "ats_issuer_testnet_v1",
+  });
+  args.replayIdentity = `tool402:wallet-command:v1:296:${args.canonicalSignerAddress}:${args.nonce}`;
+  args.payload = {
+    operationKind: "ATS_CREATE",
+    subjectPublicId: "riskscan_revenue_note_demo",
+    network: "hedera:testnet",
+    chainId: 296,
+    expectedTarget: "0xd1f118a40f3b02883d35909ef2517e7edd78379d",
+    canonicalParametersHash: realM42CanonicalParametersHash,
+    idempotencyKey: args.nonce,
+    expiresAt: args.expiresAt,
+  };
+  args.payloadHash = hashPayload(args.payload);
   return args;
 }
 
@@ -509,14 +533,40 @@ atomicTest("snapshots indexed ATS_CREATE replay offerings before classifying a c
   );
 });
 
+atomicTest("requires the M47 real-issuer binding after M32 authority revalidation and before M33, replay, idempotency, or durable state", () => {
+  const source = readFileSync(moduleUrl, "utf8");
+  const atomic = registeredMutationSource("admitAtsCreateAndMarkAssetPending");
+
+  assert.equal(
+    /import\s*\{[^}]*\bassertStageBAtsCreateRuntimeBinding\b[^}]*\}\s+from\s+["']\.\/stage_b_ats_create_runtime_binding(?:\.ts)?["']/u.test(source),
+    true,
+    "the atomic mutation must consume the private M47 binding rather than a caller-selected configuration",
+  );
+  const revalidated = atomic.indexOf("revalidateAuthority(authorities[0], bound)");
+  const binding = atomic.indexOf("assertStageBAtsCreateRuntimeBinding(bound)");
+  const m33 = atomic.indexOf("assertCurrentAtsPrepareAuthority(bound.payload)");
+  const replay = atomic.indexOf('ctx.db.query("externalPrepareCommandReplayClaims")');
+  const idempotency = atomic.indexOf('ctx.db.query("externalPrepareCommandAttempts")');
+  const durableInsert = atomic.indexOf('ctx.db.insert("externalPrepareCommandAttempts")');
+  for (const [name, position] of [
+    ["M32 authority revalidation", revalidated],
+    ["M47 runtime binding", binding],
+    ["M33 gate", m33],
+    ["replay lookup", replay],
+    ["idempotency lookup", idempotency],
+    ["durable attempt insert", durableInsert],
+  ]) assert.notEqual(position, -1, `missing ${name}`);
+  assert.ok(revalidated < binding, "the binding must consume M32-revalidated authority context");
+  assert.ok(binding < m33, "the binding must fail before M33");
+  assert.ok(m33 < replay, "M33 must remain before replay");
+  assert.ok(binding < idempotency, "the binding must fail before idempotency");
+  assert.ok(binding < durableInsert, "the binding must fail before a durable write");
+});
+
 atomicTest("keeps the atomic mutation behind the existing zero-enabled M33 authority gate before replay or durable access", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now });
   const { admitAtsCreateAndMarkAssetPending: atomic } = await import(moduleUrl);
-  const args = withPayload({
-    operationKind: "ATS_CREATE",
-    expectedTarget: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  });
-  args.role = "ISSUER";
+  const args = m47AtsCreateInput();
   const db = database({ authorities: [authority(args)] });
   await assert.rejects(() => atomic._handler(db.ctx, args), TypeError);
   assert.deepEqual(db.reads, lookups(args).slice(0, 1));
