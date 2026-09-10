@@ -42,7 +42,7 @@ production change is permitted.
   accepted S31 source, no active ownership collision, and the persisted full
   baseline failure.
 - The corrected test is the only source-tree change. The full Web test reports
-  299/299 passing under Node 22.21.1, with queue/whitespace checks clear.
+  298/298 passing under Node 22.21.1, with queue/whitespace checks clear.
 - An independent exact-diff review confirms the semantic static boundary is
   retained and no UI behaviour or route changed.
 
