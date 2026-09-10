@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M44-T020 accepted and M42-T010 accepted.
 - Owner: root owns queue state, catalog, ownership, decisions, reviews,
   commits, and pushes. The only future paths are the narrow amendment of
@@ -49,6 +49,15 @@ The independent refreshed readiness review at
 at canonical `5a67a64f8d557b47361e3ab3c24588b136d55a44`. This card is
 `10-ready`; a fresh activation may authorize only the durable test-only RED
 path `apps/web/tests/factory-deploy-bond.test.mjs`. Source remains prohibited.
+
+## Activation review
+
+The independent activation review at
+[M44-T030 activation review](../../evidence/M44-T030-activation-review.md) is
+clear at canonical `9942da622f765b5247baf682db0a9247efe50d0f`. This card is
+`20-active` only for durable RED in
+`apps/web/tests/factory-deploy-bond.test.mjs`. The helper source remains
+prohibited pending a separate independent RED review.
 
 ## Verification
 
