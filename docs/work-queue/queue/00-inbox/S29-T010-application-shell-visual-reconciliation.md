@@ -31,6 +31,10 @@ prepared mock navigation, assets, or data.
   records are committed before test or source changes.
 - Every source/test path belongs to an accepted prior slice; the root records
   the exact shell-only integration reservation before RED.
+- The only overlapping paths are `landing-explore.test.mjs` and
+  `workspace-shell.test.mjs`. The reservation may amend only their assertions
+  about `LocalNavigation`'s exact entries and responsive list anatomy; every
+  landing/dashboard assertion remains with S22/S24.
 - S22/S24 retain their active source scopes. No current active lane owns the
   two shell source paths.
 

@@ -953,6 +953,9 @@ root/three component paths, their three focused tests, and the individually
 selected `apps/web/public/brand/hero-trio.png` asset for GREEN. Every global
 layout/navigation/CSS, non-root route, provider/ATS, configuration, package,
 README, submission, deployment, video, and all other path remains prohibited.
+S29-T010 holds the sole root integration reservation to amend only the
+`LocalNavigation` entry assertions in `apps/web/tests/landing-explore.test.mjs`;
+all other S22 assertions and every S22 source path remain unchanged.
 
 S24-T010 is a root-owned early truth-first POLISH lane. It is `20-active` for
 `apps/web/src/app/dashboard/page.tsx`,
@@ -965,6 +968,10 @@ layout/navigation/CSS, child route/island, API/Agent, Provider/Demo, asset,
 configuration, package, README, submission, deployment, and video paths remain
 prohibited. Independent task and module review remain required before
 acceptance.
+S29-T010 holds the sole root integration reservation to amend only the
+`LocalNavigation` entry and responsive-list assertions in
+`apps/web/tests/workspace-shell.test.mjs`; all other S24 assertions and every
+S24 source path remain unchanged.
 
 S28-T010 is a root-owned truth-first POLISH intake comprising its card,
 `docs/ui/UI-S28.md`, the local UI ledger, decision, state, catalog, this
