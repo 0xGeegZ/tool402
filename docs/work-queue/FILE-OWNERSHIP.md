@@ -258,8 +258,10 @@ intake/ready/activation reviews, catalog, ownership, State, decisions,
 reviews, commits, and pushes. Its activation authorizes only
 `apps/agent/test/riskscan-pay-observability.test.mjs` and the narrow secrecy/
 preflight amendment of `apps/agent/test/riskscan-tool-payment-boundary.test.mjs`
-for durable RED. The two source paths remain prohibited pending independent RED
-acceptance. This is an explicit sequential successor reservation: B03-T010 is
+for durable RED. The accepted final RED now authorizes only
+`apps/agent/src/riskscan-pay-observability.ts`, the narrow CLI-edge amendment
+of `apps/agent/src/riskscan-pay-cli.ts`, and matching changes to the two
+already-reserved tests. This is an explicit sequential successor reservation: B03-T010 is
 `50-blocked` with no active source lane and is not reopened. B03-T020 may not
 change the payment library, manifest, lockfile, public export, configuration,
 key, account, signer, wallet, provider, request payload/header, signed retry,

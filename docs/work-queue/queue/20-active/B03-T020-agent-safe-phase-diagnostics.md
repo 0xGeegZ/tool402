@@ -108,6 +108,27 @@ same two paths. Every source, configuration, key, signer, provider, payment,
 preflight execution, replacement attempt, deployment, and live path remains
 prohibited.
 
+## Final RED re-review and GREEN authorization
+
+The independent [final RED re-review](../../evidence/B03-T020-red-rereview-03.md)
+is clear for delegated durable test-only revision
+`025b2050f926abe24e0271662bbfd8c040932264`. Its aggregate diff changes only
+the two activated test paths. Under Node 22.21.1, the focused suite reports
+seven passes, twenty intended source-absence failures, and two skips; no
+loader, transport, command-serialization, or raw-sentinel failure remains.
+
+This card remains `20-active` and authorizes GREEN only in:
+
+- `apps/agent/src/riskscan-pay-observability.ts`
+- the narrow CLI-edge amendment of `apps/agent/src/riskscan-pay-cli.ts`
+- `apps/agent/test/riskscan-pay-observability.test.mjs`
+- the narrow matching amendment of
+  `apps/agent/test/riskscan-tool-payment-boundary.test.mjs`
+
+The payment library, package metadata, lockfile, public exports, configuration,
+keys, signer/wallet/provider authority, external requests, preflight execution,
+replacement attempt, deployment, and every live action remain prohibited.
+
 ## Verification
 
 - A durable test-only RED commit precedes every B03-T020 source change.
