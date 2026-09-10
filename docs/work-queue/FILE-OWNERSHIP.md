@@ -989,9 +989,9 @@ CSS, asset, configuration, wallet/provider, payment, transaction, deployment,
 and live path remains prohibited until a separate accepted scope says
 otherwise.
 
-S29-T010 is a root-owned truth-first POLISH intake comprising its card,
+S29-T010 is a root-owned truth-first POLISH source scope comprising its card,
 `docs/ui/UI-S29.md`, the local UI ledger, decision, state, catalog, this
-ownership record, reviews, commits, and pushes. Its proposed source/test set
+ownership record, reviews, commits, and pushes. Its accepted source/test set
 is exactly `apps/web/src/app/layout.tsx`,
 `apps/web/src/components/discovery/local-navigation.tsx`,
 `apps/web/tests/landing-explore.test.mjs`,

@@ -46,13 +46,14 @@ prepared mock navigation, assets, or data.
   menu operation, local targets, and no overflow.
 - Independent task and module review report no Critical finding.
 
-## RED activation
+## GREEN authorization
 
 The independent readiness review at `a31ff2a4771585f431ea59f62ca6f2cae202b27c`
-is clear. This activation permits only the three focused shell navigation
-assertion amendments named in D-S29-010-002 to create durable RED. Every shell
-source path remains prohibited until a fresh independent RED review accepts
-the exact GREEN scope.
+and the fresh independent RED review at
+`b5d3c9e095f08ab7b517b0cdeac08d190448188d` are clear. The accepted RED
+proves only the absent compact mobile menu/right-side sheet. D-S29-010-004
+therefore permits the two declared shell source paths and the three matching
+focused tests for minimal presentational GREEN.
 
 ## Boundary
 
