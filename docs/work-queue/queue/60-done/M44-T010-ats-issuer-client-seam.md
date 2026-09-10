@@ -1,9 +1,9 @@
-# M44-T010 — ATS SDK issuer client seam
+# M44-T010 — Historical ATS SDK bundle experiment
 
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done (historical evidence)
 - Dependencies: M01-T040 accepted, M02-T020 accepted, M42-T010 accepted,
   S15-T010 accepted, S16-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -22,7 +22,16 @@
   tests, and the recorded bundle-gate result only. HA-ATS-RETARGET-001 gates
   M42-T010, whose accepted configuration this card consumes.
 
-## Scope
+## Supersession
+
+The SDK bundle experiment recorded below is historical evidence only. Human
+acceptance of `HA-ATS-CONTRACTS-VIEM-001` selects M44-T020's direct official
+Factory artifact plus viem seam instead. M44-T010 neither authorizes nor owns
+selected production SDK code, browser mocks, aliases, BBS compatibility, or a
+future execution path. Those experiment-only changes are removed by M44-T020
+after its own RED acceptance.
+
+## Historical scope
 
 Add the one web module set that lets the human provider create the revenue
 note in their own MetaMask through the official Asset Tokenization Studio SDK:

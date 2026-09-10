@@ -618,6 +618,19 @@ keeps native BBS resolution out of Turbopack's server graph while the existing
 conditional alias remains browser-only; it may not externalize another package
 or introduce any executable BBS/SDK behavior.
 
+`HA-ATS-CONTRACTS-VIEM-001` supersedes the M44-T010 SDK experiment as the
+selected execution architecture. M44-T020 reserves its new pure
+`apps/web/src/lib/ats/factory-deploy-bond.ts`, focused Factory contract and
+bundle-gate tests, the existing disabled `ats-create-action.tsx`, and (under
+root integration) `apps/web/package.json`, `package-lock.json`,
+`apps/web/tests/static-shell.test.mjs`, and `apps/web/next.config.ts`. Its
+first accepted RED contract may remove only the M44-T010 SDK source/tests,
+pin, mocks, aliases, and BBS externalization while adding only the exact
+official contracts artifact and existing viem seam. It owns no wallet,
+provider, RPC, signer, simulation, transaction, configuration bridge, durable
+attempt, candidate attachment, or M43 source. The older reservation is
+historical only and cannot authorize retained compatibility code.
+
 S20-T010 owns the new `apps/web/src/components/discovery/explore-catalog.tsx`
 and `apps/web/tests/explore-catalog.test.mjs`. The root integration reservation
 allows only its declared presentation amendments to
