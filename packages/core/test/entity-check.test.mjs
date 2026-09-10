@@ -738,7 +738,10 @@ implementedTest("returns one clear found result and echoes descriptors without s
 
 implementedTest("selects the SIREN-matched candidate and returns every exact-normalised sanctions hit in dataset order", () => {
   const first = candidate({ siren: "987654321", legalName: "Unrelated Industrie SAS" });
-  const matched = candidate({ siren: "123456789", legalName: "Société Étoile SAS" });
+  const matched = candidate({
+    siren: "123456789",
+    legalName: "Société, Étoile---S.A.S.",
+  });
   const firstHit = {
     entryId: "ofac-1",
     name: "SOCIETE ETOILE S A S",
