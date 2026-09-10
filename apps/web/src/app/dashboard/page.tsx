@@ -2,12 +2,12 @@ import { WorkspaceShell } from "../../components/workspace/workspace-shell";
 
 export default function DashboardPage() {
   return (
-    <main className="space-y-10 pb-6 sm:pb-12">
-      <header className="max-w-3xl space-y-4">
+    <main className="space-y-8 pb-10 sm:space-y-10 sm:pb-14">
+      <header className="flex max-w-3xl flex-col gap-1">
         <p className="text-sm font-medium uppercase tracking-[0.18em] text-primary">Guest workspace</p>
-        <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Dashboard</h1>
-        <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-          Explore Tool402&apos;s current local journeys. Start with RiskScan and choose the next boundary you want to inspect.
+        <h1 className="text-3xl font-bold tracking-[-0.04em] sm:text-4xl">Dashboard</h1>
+        <p className="text-sm leading-6 text-muted-foreground">
+          Current local journeys for inspecting Tool402. Start with RiskScan, then choose the next supported boundary.
         </p>
       </header>
       <WorkspaceShell />

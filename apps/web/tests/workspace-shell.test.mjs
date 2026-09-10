@@ -33,17 +33,15 @@ test("presents the guest workspace as a dashboard rather than a preview", async 
   assert.doesNotMatch(navigation, /<(?:a|button)\b/i);
 });
 
-test("preserves the exact five-entry local navigation", async () => {
+test("preserves the current four-entry local navigation", async () => {
   const navigation = await readAppFile("src/components/discovery/local-navigation.tsx");
 
-  assert.match(navigation, /\{ href: "\/dashboard", label: "Workspace" \}/);
   const links = [...navigation.matchAll(/\{ href: "([^"]+)", label: "([^"]+)" \}/g)].map(([, href, label]) => ({ href, label }));
   assert.deepEqual(links, [
-    { href: "/", label: "Home" },
-    { href: "/explore", label: "Explore" },
-    { href: "/dashboard", label: "Workspace" },
-    { href: "/demo", label: "Demo" },
-    { href: "/provider", label: "Provider" },
+    { href: "/explore", label: "Explore tools" },
+    { href: "/#how-it-works", label: "How it works" },
+    { href: "/demo", label: "Guided demo" },
+    { href: "/provider", label: "For providers" },
   ]);
 });
 
@@ -54,7 +52,7 @@ test("keeps the shared local navigation list responsive without a width workarou
   assert.equal(listOpenings.length, 1);
   assert.equal(
     listOpenings[0][1],
-    ' className="flex flex-wrap items-center gap-1 text-sm font-medium"',
+    ' className="flex flex-wrap items-center justify-end gap-1 text-[13px] font-semibold"',
   );
 });
 

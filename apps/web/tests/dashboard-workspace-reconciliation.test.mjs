@@ -49,12 +49,28 @@ test("keeps the dashboard guest-only and free of unsupported state", async () =>
 
   assert.match(workspace, /Guest workspace/);
   assert.match(
-    overview,
-    /These guest routes stay local\. Nothing is sent until you explicitly submit a journey that supports it\./,
+    shell,
+    /Routes stay local until a supported journey asks you to continue\./,
   );
   assert.doesNotMatch(overview, /local and descriptive/i);
   assert.doesNotMatch(
     workspace,
     /\b(?:account|wallet|provider|balance|payment|transaction|receipt|evidence|funding|live)\b/i,
   );
+});
+
+test("adapts the reference dashboard hierarchy to the current guest workspace", async () => {
+  const [shell, overview, navigation] = await readWorkspaceSources();
+  const dashboard = await readAppFile("src/app/dashboard/page.tsx");
+
+  assert.match(dashboard, /Guest workspace/);
+  assert.match(dashboard, /Current local journeys/);
+  assert.match(shell, /space-y-8/);
+  assert.match(overview, /Current access/);
+  assert.match(overview, /Current tool/);
+  assert.match(overview, /Current limits/);
+  assert.match(navigation, /Current tool path/);
+  assert.match(navigation, /Continue a local journey/);
+  assert.match(navigation, /rounded-2xl/);
+  assert.match(navigation, /shadow-none/);
 });
