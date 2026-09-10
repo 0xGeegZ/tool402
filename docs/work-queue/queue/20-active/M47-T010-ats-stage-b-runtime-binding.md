@@ -92,6 +92,28 @@ clear. This card is `20-active` only to create the durable RED contract at its
 five named test paths. Every production source and live boundary remains
 prohibited pending fresh independent RED acceptance.
 
+## RED acceptance and GREEN authorization
+
+The independent review at
+[M47-T010 RED review](../../evidence/M47-T010-red-review.md) is clear. The
+rebased durable RED commit `8aedc8e` changes exactly the five authorized test
+paths; its focused run has 37 passes, six intended source-absence/boundary
+failures, and eight skips. M47 remains `20-active` and now authorizes only
+these source paths, with the same five tests reserved for matching updates:
+
+- `packages/backend/convex/stage_b_ats_create_runtime_binding.ts`
+- `packages/backend/convex/external_prepare_command_admission.ts`
+- `apps/web/src/lib/ats/stage-b-ats-create-command-projection.ts`
+- `apps/web/src/lib/wallet/command-bridge.ts`
+- `apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`
+
+The private binding must follow M32 revalidation and precede M33, replay,
+idempotency, and durable state. The public browser projection stays limited to
+the six fixed M26 fields. The accepted real M42 preimage/digest stays
+byte-identical and M33 remains zero-enabled. Every other source path and every
+provider, wallet, SDK, network, transaction, candidate, verification, or live
+action remains prohibited.
+
 ## Verification
 
 - A durable test-only RED commit precedes every M47 production source change.

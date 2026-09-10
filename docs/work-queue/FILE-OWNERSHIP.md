@@ -840,18 +840,23 @@ path remains authorized by this completed corrective cycle.
 
 M47-T010 is a root-controlled `20-active` CORE_P0 correction comprising its
 card, specification, plan, reconciliation evidence, readiness and activation
-reviews, import-ledger row, catalog, State, decisions, reviews, commits, and
-pushes. Its activation authorizes only the durable test-only RED contract at
+reviews, RED review, import-ledger row, catalog, State, decisions, reviews,
+commits, and pushes. Its accepted durable RED contract is limited to
 `packages/backend/tests/stage-b-ats-create-runtime-binding.test.mjs`,
 `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`,
 `apps/web/tests/stage-b-ats-create-command-projection.test.mjs`,
 `apps/web/tests/command-bridge.test.mjs`, and
-`apps/web/tests/deploy-stage-signing.test.mjs`. No production source is
-authorized yet. Its single future admission amendment must run only after M32
-has rebound and revalidated the durable signer authority and before M33,
-replay, idempotency, or state. The M42 real projection stays private; the
-browser may receive only its six fixed M26 fields. M33's manifest, M44's
-Factory helper, S16's display literal, packages, lockfiles, environment,
+`apps/web/tests/deploy-stage-signing.test.mjs`. Fresh independent RED
+acceptance authorizes only `packages/backend/convex/stage_b_ats_create_runtime_binding.ts`,
+`packages/backend/convex/external_prepare_command_admission.ts`,
+`apps/web/src/lib/ats/stage-b-ats-create-command-projection.ts`,
+`apps/web/src/lib/wallet/command-bridge.ts`, and
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, with the
+five tests reserved for matching updates. The private admission amendment must
+run only after M32 has rebound and revalidated the durable signer authority and
+before M33, replay, idempotency, or state. The M42 real projection stays
+private; the browser may receive only its six fixed M26 fields. M33's manifest,
+M44's Factory helper, S16's display literal, packages, lockfiles, environment,
 public Backend exports, routes, and submission documents are not amendable. No
 authority provision, SDK, provider, wallet, network, transaction, candidate,
 or live path is authorized.
