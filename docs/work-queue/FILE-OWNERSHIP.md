@@ -1032,6 +1032,13 @@ dependency, data/runtime/configuration, wallet/provider/payment/transaction,
 deployment, and live path remains prohibited until a separate accepted scope
 says otherwise.
 
+D-S31-010-006 supersedes only S31's completed status after an independent
+review found one unreserved compact-strip assertion in the shared
+`apps/web/tests/landing-explore.test.mjs`. S31 is `20-active` solely to remove
+that exact test. Its layout, navigation source, and every other test assertion
+are closed; this remedial reservation grants no new behavior, presentation, or
+CTA authority.
+
 S25-T010 is a root-owned `00-inbox` presentation intake. Its only candidate
 new paths are `apps/web/src/components/ui/page-header.tsx` and
 `apps/web/tests/page-header.test.mjs`. Its only candidate amendments are the

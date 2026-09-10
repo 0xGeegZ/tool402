@@ -9,3 +9,10 @@
   focus, menu operation, Escape handling, local hrefs, and no overflow.
 - The two truthful notices, clickable home logo, four local routes,
   provider-deploy CTA, and no-external/no-mock/no-runtime boundary are intact.
+
+## Supersession
+
+This acceptance is provisional. A follow-up scope review found that the
+compact-strip assertion in `landing-explore.test.mjs` exceeded the exact
+assertion reservation. D-S31-010-006 reopens S31 only to remove that test;
+the reviewed shell source remains closed pending a fresh correction review.

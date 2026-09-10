@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 60-done
+- Queue state: 20-active
 - Dependencies: M02-T020, S17-T010, S22-T010, and S24-T010 accepted.
 - Owner: The root owns queue state, catalog, ownership, UI ledger, decisions,
   reviews, commits, and pushes. The proposed source/test paths are exactly
@@ -54,7 +54,7 @@ proves only the absent compact mobile menu/right-side sheet. D-S31-010-004
 therefore permits the two declared shell source paths and the three matching
 focused tests for minimal presentational GREEN.
 
-## Acceptance
+## Provisional acceptance
 
 S31-T010 is accepted at final shell refinement `fb706f1`. The independent
 current-head review at `a4833329fbd72531980283ff269afe6ba8882765` confirms
@@ -63,6 +63,17 @@ suite passes 27/27; Web typecheck, queue validation, and whitespace checks are
 clear. The reviewed shell preserves both truthful notices, the exact local
 href map, clickable home logo, provider-deploy CTA, keyboard-operable mobile
 menu, focus return, Escape handling, and no-external-link boundary.
+
+## Acceptance correction
+
+The independent follow-up review found that the compact-strip assertion added
+to `apps/web/tests/landing-explore.test.mjs` was not an allowed
+`LocalNavigation` entry assertion under D-S31-010-002. D-S31-010-006
+supersedes only the completed status: S31 returns to `20-active` solely to
+remove that named test from the shared file. Its two shell source paths and
+all other tests are closed; no route, shell behavior, CTA, or claim may change.
+A fresh independent correction review is required before S31 returns to
+`60-done`.
 
 ## Boundary
 
