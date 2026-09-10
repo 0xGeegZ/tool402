@@ -70,7 +70,7 @@ Node 22.21.1 tests.
 
 **Files:**
 
-- Create: `packages/backend/convex/stage-b-ats-create-runtime-binding.ts`
+- Create: `packages/backend/convex/stage_b_ats_create_runtime_binding.ts`
 - Modify: `packages/backend/convex/external_prepare_command_admission.ts`
 
 - [ ] Implement one private closed-record binding helper. It obtains the M42

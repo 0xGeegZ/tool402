@@ -53,11 +53,15 @@ server authority, and it must never provide input to an M47 stage-2
 
 ## Server-side binding
 
-`packages/backend/convex/stage-b-ats-create-runtime-binding.ts` is a private
+`packages/backend/convex/stage_b_ats_create_runtime_binding.ts` is a private
 Convex helper. It may import only the private M42 real-issuer projection and
 accepted Core types/utilities needed to compare a command already normalized by
 M32. It may not read a caller-selected configuration, environment, database,
 clock, wallet, provider, network, or SDK.
+
+The underscore-only Convex module filename is required by the accepted B01
+module-naming compatibility boundary. Its Node test filename may use normal
+test naming, but no hyphenated Convex module may be introduced.
 
 For one `ATS_CREATE` command, after M32 has rebound the serialized command and
 revalidated its durable signer authority, the helper requires all of the

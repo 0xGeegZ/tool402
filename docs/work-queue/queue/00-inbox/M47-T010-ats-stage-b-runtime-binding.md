@@ -4,12 +4,12 @@
 
 - Tier: CORE_P0
 - Queue state: 00-inbox
-- Dependencies: M32-T010 accepted, M33-T010 accepted, M41-T010 accepted,
+- Dependencies: B01-T010 accepted, M32-T010 accepted, M33-T010 accepted, M41-T010 accepted,
   M42-T010 accepted, M43-T010 accepted, M44-T020 accepted, S21-T010 accepted,
   and HA-ATS-RUNTIME-BINDING-001 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
   commits, and pushes. Proposed implementation paths are exactly
-  `packages/backend/convex/stage-b-ats-create-runtime-binding.ts`, the
+  `packages/backend/convex/stage_b_ats_create_runtime_binding.ts`, the
   narrowly amended
   `packages/backend/convex/external_prepare_command_admission.ts`,
   `packages/backend/tests/stage-b-ats-create-runtime-binding.test.mjs`, the
