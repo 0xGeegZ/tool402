@@ -4,7 +4,7 @@ import { LandingSections } from "../components/landing/landing-sections";
 
 export default function Home() {
   return (
-    <main className="space-y-20 sm:space-y-28">
+    <main className="-mt-10">
       <LandingHero />
       <LandingSections />
       <LandingFooter />

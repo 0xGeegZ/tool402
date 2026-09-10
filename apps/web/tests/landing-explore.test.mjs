@@ -96,7 +96,7 @@ test("gives the decorative landing artwork an explicit responsive width", async 
 
   assert.match(hero, /\/brand\/hero-trio\.png/);
   assert.match(hero, /\bw-full\s+max-w-sm\b/);
-  assert.match(hero, /\blg:grid-cols-\[minmax\(0,1fr\)_24rem\]/);
+  assert.match(hero, /\blg:grid-cols-\[minmax\(0,1fr\)_minmax\(0,1fr\)\]/);
 });
 
 test("renders a single read-only Explore marketplace catalog", async () => {

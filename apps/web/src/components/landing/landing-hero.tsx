@@ -7,17 +7,17 @@ export function LandingHero() {
   return (
     <section
       aria-labelledby="landing-title"
-      className="relative isolate overflow-hidden border-b border-border bg-card/30 py-14 sm:py-16 lg:py-24 [background-image:radial-gradient(color-mix(in_oklab,var(--border)_70%,transparent)_1px,transparent_1px)] [background-size:1.35rem_1.35rem]"
+      className="relative left-1/2 isolate w-screen -translate-x-1/2 overflow-hidden border-b border-border bg-card/30 [background-image:radial-gradient(color-mix(in_oklab,var(--border)_70%,transparent)_1px,transparent_1px)] [background-size:1.35rem_1.35rem]"
     >
-      <div className="relative grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-20">
+      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-20 lg:px-8 lg:pb-[7.125rem] lg:pt-[5.8125rem]">
         <div className="max-w-2xl space-y-6">
           <Badge variant="secondary">Agent tool marketplace</Badge>
-          <h1 id="landing-title" className="max-w-xl text-5xl font-extrabold leading-[1.04] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
+          <h1 id="landing-title" className="max-w-[36rem] text-4xl font-extrabold leading-[1.04] tracking-[-0.04em] sm:text-5xl lg:text-[4.35rem] lg:leading-[0.86]">
             Back the tools <span className="text-brand-purple">agents pay</span> to use.
           </h1>
-          <p className="max-w-xl text-lg leading-8 text-muted-foreground sm:text-xl">
-            Tool402 brings a current tool catalogue, an inspectable RiskScan path, and a provider preparation route
-            into one clear surface.
+          <p className="max-w-lg text-lg leading-relaxed text-muted-foreground">
+            Tool402 brings discovery, tool inspection, and provider preparation together. Each local route names the
+            boundary of what it can show, so you can choose the next step with context instead of a claim beyond the route.
           </p>
           <div className="flex flex-col items-start gap-3 sm:flex-row">
             <Link
@@ -33,7 +33,7 @@ export function LandingHero() {
               Open guided demo
             </Link>
           </div>
-          <dl className="grid max-w-xl gap-4 border-t border-border pt-6 sm:grid-cols-3">
+          <dl className="grid min-h-36 max-w-xl grid-cols-2 gap-x-5 gap-y-5 border-t border-border pt-6 sm:grid-cols-4 sm:gap-4 lg:translate-y-1">
             <div>
               <dt className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Explore</dt>
               <dd className="mt-1 font-medium">Current catalogue</dd>
@@ -46,29 +46,34 @@ export function LandingHero() {
               <dt className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Prepare</dt>
               <dd className="mt-1 font-medium">Provider route</dd>
             </div>
+            <div>
+              <dt className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Guide</dt>
+              <dd className="mt-1 font-medium">Local demo</dd>
+            </div>
           </dl>
         </div>
-        <div className="relative mx-auto w-full max-w-sm">
-          <div className="absolute inset-0 rounded-[2rem] border border-border bg-muted shadow-[0_1.5rem_5rem_-1.75rem_color-mix(in_oklab,var(--brand-purple)_45%,transparent)]" />
-          <div className="absolute -left-2 top-5 z-20 rounded-2xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur sm:-left-6 sm:top-8">
+        <div className="relative mx-auto w-full max-w-sm lg:translate-y-[0.5625rem]">
+          <div className="aspect-square overflow-hidden rounded-[2rem] border border-border bg-muted shadow-[0_1.5rem_5rem_-1.75rem_color-mix(in_oklab,var(--brand-purple)_45%,transparent)]">
+            <Image
+              src="/brand/hero-trio.png"
+              alt=""
+              width={1024}
+              height={1024}
+              priority
+              unoptimized
+              sizes="(min-width: 1024px) 24rem, (min-width: 640px) 24rem, calc(100vw - 3rem)"
+              className="size-full scale-110 object-cover"
+            />
+          </div>
+          <div className="absolute -left-2 top-2 z-20 rounded-2xl border border-border/80 bg-card/95 p-3.5 shadow-lg backdrop-blur sm:-left-6 sm:top-6 sm:p-4">
             <span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">RiskScan</span>
             <span className="mt-1 block text-base font-bold">Current entry</span>
             <span className="mt-1 block text-[11px] text-muted-foreground">Explore the detail route</span>
           </div>
-          <div className="absolute -right-2 bottom-5 z-20 rounded-2xl border border-border bg-card p-3 shadow-md sm:-right-5 sm:bottom-8">
+          <div className="absolute -right-2 bottom-2 z-20 rounded-2xl border border-border bg-card p-3 shadow-md sm:-right-4 sm:bottom-8 sm:p-3.5">
             <span className="block text-[10px] font-semibold uppercase tracking-wide text-brand-purple">Guided demo</span>
             <span className="mt-1 block text-[11px] text-muted-foreground">Current local route</span>
           </div>
-          <Image
-            src="/brand/hero-trio.png"
-            alt=""
-            width={1024}
-            height={1024}
-            priority
-            unoptimized
-            sizes="(min-width: 1024px) 34rem, (min-width: 640px) 30rem, calc(100vw - 3rem)"
-            className="relative z-10 h-auto w-full scale-110 object-cover"
-          />
         </div>
       </div>
     </section>

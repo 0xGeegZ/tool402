@@ -34,3 +34,18 @@ test("gives the reconciled landing the selected five-part marketplace hierarchy"
   assert.match(sections, /Every current route has a clear boundary/);
   assert.match(sections, /Prepare a tool offering/);
 });
+
+test("keeps the reference section rhythm without synthetic inter-section gaps", async () => {
+  const [page, hero, sections] = await Promise.all([
+    readAppFile("src/app/page.tsx"),
+    readAppFile("src/components/landing/landing-hero.tsx"),
+    readAppFile("src/components/landing/landing-sections.tsx"),
+  ]);
+
+  assert.match(page, /<main className="-mt-10">/);
+  assert.match(hero, /left-1\/2 isolate w-screen -translate-x-1\/2/);
+  assert.match(hero, /mx-auto grid max-w-7xl/);
+  assert.match(sections, /<div className="space-y-0">/);
+  assert.match(sections, /min-h-60[^"']*rounded-2xl/);
+  assert.match(sections, /w-screen -translate-x-1\/2/);
+});
