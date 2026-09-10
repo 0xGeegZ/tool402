@@ -876,6 +876,33 @@ M42, M47, M32 source, schema, public exports, packages, lockfiles, Web, Agent,
 environment, `commandAuthorities` provisioning, and every SDK/provider/wallet/
 network/transaction/candidate/live path are excluded.
 
+M49-T010 is a root-controlled `00-inbox` CORE_P0 successor catalogued from
+HI-009. Its committed control surface is its card, specification, plan, intake
+review, ledger row, catalog, State, decisions, reviews, commits, and pushes.
+Its future implementation surface is exactly new
+`apps/web/src/lib/ats/stage-b-ats-create-execution-projection.ts`, new
+`apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`, their two matching
+tests, new `apps/web/tests/ats-create-action.test.mjs`, and the narrowly
+reserved amendments of `apps/web/src/components/provider/deploy/ats-create-action.tsx`,
+`apps/web/src/components/provider/deploy/provider-deploy-stages.tsx`,
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`,
+`apps/web/tests/ats-contracts-bundle-gate.test.mjs`, and
+`apps/web/tests/deploy-stage-signing.test.mjs`. No path is active until fresh
+readiness, activation, and RED acceptance. The public execution projection must
+be a frozen, rehashed transcription of the exact M42 real configuration passed
+only to M44; M47's six-field command projection and S16's display projection
+remain separate. The fixed Mirror resolver may use only the M42 public testnet
+base, HI-004 issuer-account evidence, and an actually returned transaction id;
+it may never synthesize an id. Its page-session controller must synchronously
+block concurrent sends and latch every post-hash terminal result until reload;
+its read-only Mirror observation must validate Factory event emitters and use
+only the bounded three-cycle resolver contract. S22/S24 are disjoint. M49 takes CORE_P0
+precedence over S26's inbox-only signing-island reservation, which must rebase
+after M49. M42/M44/M47/M48 source, command bridge, provider discovery,
+Backend/Convex, packages, lockfiles, environment, key, SDK, deployment, and
+every live provider/request/transaction/candidate/verification/lifecycle path
+remain excluded until their own authority gates.
+
 M44-T030 is a root-controlled `20-active` CORE_P0 corrective successor to
 accepted M44-T020. It comprises its card, specification, local plan, intake
 review, catalog, ownership, State, decisions, reviews, commits, and pushes.
