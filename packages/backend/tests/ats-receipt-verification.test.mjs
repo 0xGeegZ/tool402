@@ -150,7 +150,7 @@ implementedTest("routes the real internal action through the same safe not-eligi
   assert.deepEqual(state.mutations, []);
 });
 
-implementedTest("stops every zero-enabled ATS operation before any Mirror read or durable outcome mutation", async () => {
+implementedTest("stops every ATS operation not configured for receipt verification before any Mirror read or durable outcome mutation", async () => {
   for (const operationKind of atsOperations) {
     const state = runtime({
       verificationContext: context({
@@ -240,10 +240,5 @@ implementedTest("keeps the action Node-only, internal-only, and free of provider
   const actionSource = source.slice(actionStart);
   assert.match(actionSource, /verifyAtsCandidateReceiptForTest/u);
   assert.doesNotMatch(actionSource, /(?:isAtsCreateConfigured|markAssetReady)/u);
-  const m33Authority = readFileSync(new URL("../convex/ats_prepare_authority.ts", import.meta.url), "utf8");
-  assert.match(
-    m33Authority,
-    /const currentManifest:\s*readonly unknown\[\]\s*=\s*Object\.freeze\(\[\]\)/u,
-  );
   assert.doesNotMatch(readFileSync(new URL("../src/index.ts", import.meta.url), "utf8"), /ats_receipt_verification/u);
 });

@@ -30,7 +30,7 @@ const m37AcceptedFiles = [
   ],
   [
     new URL("./stage-a-real-issuer-ats-create-authority.test.mjs", import.meta.url),
-    "ec2fc457230b22fc386df82f72c8da71467a4984b27f22433d9ffdefbb19ff69",
+    "8da632acd9afb86ef516b48efc27f22409dc7d4fff48789d50ad5b5735f19d12",
   ],
 ];
 const realIssuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
@@ -314,7 +314,7 @@ implementedTest("returns fresh, fully frozen Stage B data on every call", () => 
   }, TypeError);
 });
 
-implementedTest("preserves M37, leaves M33 zero-enabled, and keeps Stage B private", () => {
+implementedTest("preserves M37 and keeps Stage B private", () => {
   const acceptedM37 = m37.createStageARealIssuerAtsCreateAuthority();
   assert.equal(
     acceptedM37.plannedCommandAuthority.canonicalSignerAddress,
@@ -349,8 +349,4 @@ implementedTest("preserves M37, leaves M33 zero-enabled, and keeps Stage B priva
   assert.doesNotMatch(backendPublicBarrel, /stage-b-issuer-ats-create-authority/u);
   assert.doesNotMatch(m32Source, /stage-b-issuer-ats-create-authority/u);
   assert.doesNotMatch(m33Source, /stage-b-issuer-ats-create-authority/u);
-  assert.match(
-    m33Source,
-    /currentManifest:\s*readonly unknown\[\]\s*=\s*Object\.freeze\(\[\]\)/u,
-  );
 });

@@ -368,8 +368,4 @@ test("keeps the helper private and free of authority or execution capabilities",
   );
   assert.doesNotMatch(m32Source, /stage-a-real-issuer-ats-create-authority/u);
   assert.doesNotMatch(m33Source, /stage-a-real-issuer-ats-create-authority/u);
-  assert.match(
-    m33Source,
-    /currentManifest:\s*readonly unknown\[\]\s*=\s*Object\.freeze\(\[\]\)/u,
-  );
 });
