@@ -1092,6 +1092,12 @@ declared header/label/outcome assertions. No S25 source or test path is active
 until that separate review and activation; all other tests are
 verification-only.
 
+D-S25-010-004 activates S25-T010 at `d240d10` only for durable RED in those
+twelve named test paths. No S25 source path, including the future
+`page-header.tsx`, is active. Every route/data/action/state, wallet/provider/
+payment/transaction/deployment, and live boundary remains prohibited pending
+an independent RED review.
+
 S28-T010 is a root-owned 00-inbox truth-first POLISH intake comprising its
 card, `docs/ui/UI-S28.md`, the local UI ledger, decision, state, catalog, this
 ownership record, reviews, commits, and pushes. Its only candidate source/test
