@@ -99,6 +99,10 @@ implementedTest("composes the accepted wallet island, signature dialog, and stag
   assert.match(island, /\bstageStateForSignatureResult\b/u);
   assert.match(island, /\bproviderDeployStageStates\s*\(/u);
   assert.match(island, /\bisDirectoryRecordComplete\s*\(/u);
+  assert.match(island, /\batsCreateConfiguration\b/u, "the S16 display literal must remain available for stage presentation");
+  const activate = island.slice(island.indexOf("function activate"), island.indexOf("function finish"));
+  assert.match(activate, /\bbuildStageSignatureRequest\s*\(/u);
+  assert.doesNotMatch(activate, /\bprojection\s*:/u, "the signing island must not pass a stage-2 projection");
   assert.equal((island.match(/<WalletIsland\b/gu) ?? []).length, 1);
   assert.equal((island.match(/<SignatureDialog\b/gu) ?? []).length, 1);
   assert.match(island, /<SignatureDialog\b[^>]*\bonResult=/u);
