@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M42-T010 accepted, M44-T020 accepted, M44-T030 accepted, M47-T010 accepted, M48-T010 accepted, S15-T010 accepted, S16-T010 accepted, S21-T010 accepted
 - Consumer/evidence context: M41-T010 and M43-T010 are accepted consumers of
   the resulting candidate. HI-004 supplies fixed public issuer-account
@@ -127,6 +127,27 @@ RED test paths may change only to complete that source work. Every other path
 and every real provider request, public Mirror observation, transaction, or
 candidate attachment remains prohibited pending later independent acceptance
 and the separate human action `HA-ATS-STAGE-B-001`.
+
+## GREEN acceptance
+
+The independent [task review](../../evidence/M49-T010-task-review.md),
+[specification review](../../evidence/M49-T010-module-review-spec.md), and
+[standards review](../../evidence/M49-T010-module-review-standards.md) are
+clear. Source `aeb866adbe86e41ab01476a4b54ece95dc234813` follows durable RED
+`dcd60d8d37a3491a900bc007ee882fc83858554c` and stays inside the exact GREEN
+surface declared above.
+
+Under Node 22.21.1, the focused M49 suite passes 40/40 and the complete Web
+suite passes 319/319; Web typecheck, root lint, queue/reference/whitespace
+checks, and the enabled local-reference guard also pass. The frozen real M42
+projection independently rehashes to
+`1880065c5ae64b3fc6279cfdd8c85a6880d43e98ce129ed697c72372204296f9`.
+
+M49 is accepted at `60-done` as a local browser/provider bridge. It does not
+authorize an actual provider request, transaction, public Mirror observation,
+candidate attachment, receipt verification, lifecycle, deployment, or any
+other live action. Root may prepare—but not execute—the separate
+`HA-ATS-STAGE-B-001` human decision packet.
 
 ## Fixed one-shot execution contract
 

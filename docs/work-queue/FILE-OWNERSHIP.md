@@ -876,34 +876,21 @@ M42, M47, M32 source, schema, public exports, packages, lockfiles, Web, Agent,
 environment, `commandAuthorities` provisioning, and every SDK/provider/wallet/
 network/transaction/candidate/live path are excluded.
 
-M49-T010 is a root-controlled `20-active` CORE_P0 successor catalogued from
-HI-009. Its committed control surface is its card, specification, plan, intake
-review, ledger row, catalog, State, decisions, reviews, commits, and pushes.
-Its future implementation surface is exactly new
-`apps/web/src/lib/ats/stage-b-ats-create-execution-projection.ts`, new
-`apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`, their two matching
-tests, new `apps/web/tests/ats-create-action.test.mjs`, and the narrowly
-reserved amendments of `apps/web/src/components/provider/deploy/ats-create-action.tsx`,
-`apps/web/src/components/provider/deploy/provider-deploy-stages.tsx`,
-`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`,
-`apps/web/tests/ats-contracts-bundle-gate.test.mjs`, and
-`apps/web/tests/deploy-stage-signing.test.mjs`. Durable RED was independently
-accepted at clean canonical `dcd60d8d37a3491a900bc007ee882fc83858554c`; only
-this exact implementation surface is now source-authorized for GREEN and the
-five matching tests may change only with it. The public execution projection must
-be a frozen, rehashed transcription of the exact M42 real configuration passed
-only to M44; M47's six-field command projection and S16's display projection
-remain separate. The fixed Mirror resolver may use only the M42 public testnet
-base, HI-004 issuer-account evidence, and an actually returned transaction id;
-it may never synthesize an id. Its page-session controller must synchronously
-block concurrent sends and latch every post-hash terminal result until reload;
-its read-only Mirror observation must validate Factory event emitters and use
-only the bounded three-cycle resolver contract. S22/S24 are disjoint. M49 takes CORE_P0
-precedence over S26's inbox-only signing-island reservation, which must rebase
-after M49. M42/M44/M47/M48 source, command bridge, provider discovery,
-Backend/Convex, packages, lockfiles, environment, key, SDK, deployment, and
-every live provider/request/transaction/candidate/verification/lifecycle path
-remain excluded until their own authority gates.
+M49-T010 is accepted at `60-done` with no active source reservation. Source
+`aeb866adbe86e41ab01476a4b54ece95dc234813` follows durable RED
+`dcd60d8d37a3491a900bc007ee882fc83858554c` and is limited to its exact
+browser bridge, projection, UI, and matching-test surface. The public execution
+projection is a frozen, rehashed transcription of the exact M42 real
+configuration passed only to M44; M47's six-field command projection and S16's
+display projection remain separate. The fixed Mirror resolver uses only the
+M42 public testnet base, HI-004 issuer-account evidence, and an actually
+returned transaction id; it never synthesizes an id. Its page-session controller
+blocks concurrent sends and latches every post-hash terminal result until
+reload. S22/S24 are disjoint. S26 may now rebase its inbox-only signing-island
+reservation on the accepted M49 interface. M42/M44/M47/M48 source, command
+bridge, provider discovery, Backend/Convex, packages, lockfiles, environment,
+key, SDK, deployment, and every live provider/request/transaction/candidate/
+verification/lifecycle path remain excluded until their own authority gates.
 
 M44-T030 is an accepted `60-done` CORE_P0 decoded-event correction to M44-T020.
 Its completed source is `8d019e599c320d951197d3a405d5fa3969958380`; no active
