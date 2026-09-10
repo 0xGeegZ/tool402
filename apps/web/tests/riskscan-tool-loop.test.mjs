@@ -195,7 +195,7 @@ test("locks the static ToolLoop page, bounded client form, and non-payment prese
   assert.match(page, /<Link href=["']\/explore\/riskscan["']/);
   assert.match(page, />\s*Back to RiskScan\s*</);
   assert.match(page, />\s*Testnet request boundary · no payment is made from this form\.\s*</);
-  assert.match(page, />\s*Run RiskScan through ToolLoop\s*</);
+  assert.match(page, /title="Run RiskScan through ToolLoop"/);
   assert.match(page, /<LandingFooter\s*\/>/);
   assert.match(flow, /["']use client["']/);
   assert.match(flow, /<form\b[^>]*>/);
@@ -233,7 +233,7 @@ test("locks the static ToolLoop page, bounded client form, and non-payment prese
   assert.match(flow, /aria-live=["']polite["']/);
   assert.equal((flow.match(/\brunRiskScanQuickFlow\b/g) ?? []).length, 2);
 
-  assert.match(detail, /href=["']\/explore\/riskscan\/tool-loop["']/);
+  assert.match(detail, /href: "\/explore\/riskscan\/tool-loop", label: "Explore RiskScan ToolLoop"/);
 
   assert.doesNotMatch(flow, /\bfetch\b|\/api\//);
   assert.doesNotMatch(flow, /\bheaders\b|payment-required|PAYMENT-REQUIRED/i);

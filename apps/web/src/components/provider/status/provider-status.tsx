@@ -5,8 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import type { ProviderProjections } from "../../../lib/offering-projection";
 import { hashscanContractUrl, nextProviderAction, providerEvidenceRows } from "./provider-status-state";
 
+const outcomeSentences = {
+  not_configured: "No campaign backend is configured for this host.",
+  absent: "No admitted record exists yet.",
+  unavailable: "The campaign backend did not answer.",
+  unexpected_response: "The campaign backend returned a record this page cannot read.",
+} as const;
+
 function Outcome({ outcome }: { outcome: ProviderProjections["offering"] | ProviderProjections["directory"] }) {
-  return <p className="text-sm text-muted-foreground">{outcome.outcome.replaceAll("_", " ")}.</p>;
+  if (outcome.outcome === "loaded") return null;
+  return <p className="text-sm text-muted-foreground">{outcomeSentences[outcome.outcome]}</p>;
 }
 
 function StatusSummary({ title, outcome }: { title: string; outcome: ProviderProjections["offering"] | ProviderProjections["directory"] }) {

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { LandingFooter } from "../../../../components/landing/landing-footer";
 import { RiskScanToolLoop } from "../../../../components/riskscan/tool-loop/riskscan-tool-loop";
+import { PageHeader } from "../../../../components/ui/page-header";
 
 export default function RiskScanToolLoopPage() {
   return (
@@ -13,17 +14,13 @@ export default function RiskScanToolLoopPage() {
               <ChevronLeft />
               Back to RiskScan
             </Link>
-            <header className="space-y-4">
-              <p className="inline-flex rounded-full border border-success/30 bg-success/10 px-3 py-1.5 text-sm font-medium text-success-foreground">
-                Testnet request boundary · no payment is made from this form.
-              </p>
-              <div className="space-y-3">
-                <h1 className="max-w-2xl text-4xl font-extrabold tracking-[-0.05em] sm:text-5xl">Run RiskScan through ToolLoop</h1>
-                <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-                  Prepare a bounded Quick request with the same fields an agent can inspect through the current local route.
-                </p>
-              </div>
-            </header>
+            <p className="inline-flex rounded-full border border-success/30 bg-success/10 px-3 py-1.5 text-sm font-medium text-success-foreground">
+              Testnet request boundary · no payment is made from this form.
+            </p>
+            <PageHeader
+              title="Run RiskScan through ToolLoop"
+              description="Prepare a bounded Quick request with the same fields an agent can inspect through the current local route."
+            />
             <aside aria-label="ToolLoop request boundary" className="flex gap-3 rounded-[calc(var(--radius)*1.5)] border border-border bg-card px-4 py-3 text-sm leading-6 text-muted-foreground">
               <InfoIcon />
               <p>Review the request before sending it. A returned payment challenge does not confirm a payment, result, or verification.</p>

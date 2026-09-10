@@ -116,8 +116,8 @@ test("renders a single read-only Explore marketplace catalog", async () => {
   assert.match(page, /<ExploreCatalog\s*\/>/);
   assert.doesNotMatch(page, /\bRiskScanDirectoryDiscovery\b/);
   assert.doesNotMatch(page, /<RiskScanDiscoveryCard\s*\/>/);
-  assert.match(page, />\s*Marketplace\s*</);
-  assert.match(page, />\s*Explore tools\s*</);
+  assert.match(page, /eyebrow="Marketplace"/);
+  assert.match(page, /title="Explore tools"/);
   assert.match(page, /Bounded, machine-payable tools with an inspectable journey\. Start with what each one covers\./);
   assert.deepEqual(directPageLinkViolations(page), []);
   assert.match(card, /RiskScan/);

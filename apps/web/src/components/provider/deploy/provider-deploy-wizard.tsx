@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../ui/card";
+import { PageHeader } from "../../ui/page-header";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { campaignFixture } from "./campaign-fixture";
 import { DeployStageSigning } from "./deploy-stage-signing";
@@ -364,20 +365,18 @@ export function ProviderDeployWizard() {
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 pb-10 sm:pb-14" data-ui="provider-deploy-surface">
-      <header className="space-y-5 border-b border-border pb-7">
+      <div className="space-y-5 border-b border-border pb-7">
         <Link href="/provider" className="inline-flex w-fit items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
           Back to provider workspace
         </Link>
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-4">
             <div aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-sm font-semibold text-primary">RS</div>
-            <div className="max-w-2xl space-y-2">
-              <p className="text-sm font-semibold text-foreground">RiskScan</p>
-              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Prepare a local offering</h1>
-              <p className="text-lg leading-8 text-muted-foreground">
-                Configure the existing RiskScan context before any separate signing or provider action is considered.
-              </p>
-            </div>
+            <PageHeader
+              eyebrow="RiskScan"
+              title="Prepare a local offering"
+              description="Configure the existing RiskScan context before any separate signing or provider action is considered."
+            />
           </div>
           <div className="flex flex-wrap gap-2 sm:justify-end">
             <Badge variant="secondary">Local editable preview</Badge>
@@ -387,7 +386,7 @@ export function ProviderDeployWizard() {
         <p className="max-w-3xl border-l-2 border-primary/60 pl-4 text-sm leading-6 text-muted-foreground">
           These values stay editable in this browser. They do not create, publish, or verify an offering; a signature is requested only from the wallet section on the review step.
         </p>
-      </header>
+      </div>
 
       <Card className="overflow-hidden shadow-none">
         <CardHeader className="space-y-5 border-b bg-muted/20 p-5 sm:p-6">

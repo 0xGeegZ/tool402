@@ -38,7 +38,7 @@ test("locks the RiskScan Try request and response boundary", async () => {
   assert.match(flow, /The service returned an unexpected response\. No payment or result is shown\./);
   assert.match(flow, /Quick endpoint response/);
   assert.match(flow, /This is only an endpoint response\. It is not payment or lifecycle evidence\./);
-  assert.match(detail, /href=["']\/explore\/riskscan\/try["']/);
+  assert.match(detail, /href: "\/explore\/riskscan\/try", label: "Try RiskScan"/);
 
   assert.doesNotMatch(
     clientSources,

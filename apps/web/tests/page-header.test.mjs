@@ -28,7 +28,9 @@ test("defines the fixed server-safe PageHeader anatomy and action hierarchy", as
   assert.match(source, /readonly title: string/);
   assert.match(source, /readonly description\?: string/);
   assert.match(source, /readonly eyebrow\?: string/);
-  assert.match(source, /readonly actions\?: readonly PageHeaderAction\[\]/);
+  assert.match(source, /type PageHeaderActions =/);
+  assert.match(source, /readonly \[PageHeaderAction, PageHeaderAction, PageHeaderAction\]/);
+  assert.match(source, /readonly actions\?: PageHeaderActions/);
   assert.match(source, /<header className="max-w-3xl space-y-4">/);
   assert.match(source, /<Badge variant="outline" className="w-fit">/);
   assert.match(source, /<h1 className="text-4xl font-extrabold tracking-\[-0\.045em\] sm:text-5xl">/);

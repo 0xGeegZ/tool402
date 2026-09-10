@@ -23,8 +23,8 @@ test("defines the prepared Provider overview hierarchy without prototype metrics
   assert.match(page, /title="Campaign status"/);
   assert.match(page, /eyebrow="Tool operator"/);
   assert.match(page, /Open the deploy wizard/);
-  assert.match(page, /href=["']\/provider\/deploy["']/);
-  assert.match(page, /href=["']\/explore\/riskscan["']/);
+  assert.match(page, /href: "\/provider\/deploy"/);
+  assert.match(page, /href: "\/explore\/riskscan"/);
 
   assert.match(status, /aria-labelledby=["']provider-next-action["']/);
   assert.match(status, /data-ui=["']provider-overview-state-grid["']/);

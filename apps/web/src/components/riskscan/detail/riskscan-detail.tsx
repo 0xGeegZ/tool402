@@ -6,8 +6,8 @@ import type {
 } from "@tool402/core";
 
 import { Badge } from "../../ui/badge";
-import { buttonVariants } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
+import { PageHeader } from "../../ui/page-header";
 
 const requestFields = [
   ["requestRef", "A nonblank reference for the assessment."],
@@ -69,36 +69,25 @@ export function RiskScanDetail() {
           Back to Explore
         </Link>
 
-        <header className="border-b border-border pb-10">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start gap-4">
-              <span aria-hidden="true" className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-brand-purple/15 text-brand-purple">
-                <svg viewBox="0 0 24 24" className="size-7" fill="none" stroke="currentColor" strokeWidth={1.75}>
-                  <path d="M12 3 5 6v5c0 4.5 3 7.8 7 10 4-2.2 7-5.5 7-10V6l-7-3Z" strokeLinejoin="round" />
-                </svg>
-              </span>
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-4xl font-extrabold tracking-[-0.045em] sm:text-5xl">RiskScan</h1>
-                  <Badge variant="secondary">Read-only detail</Badge>
-                </div>
-                <p className="text-lg leading-8 text-muted-foreground">
-                  A bounded Quick assessment that makes caller-reported disclosure gaps visible.
-                </p>
-                <p className="text-sm text-muted-foreground">Current local route · Risk assessment</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Link href="/explore/riskscan/try" className={buttonVariants({ className: "gap-1.5" })}>
-                Try RiskScan
-                <ArrowRight />
-              </Link>
-              <Link href="/explore/riskscan/tool-loop" className={buttonVariants({ variant: "outline" })}>
-                Explore RiskScan ToolLoop
-              </Link>
-            </div>
+        <div className="flex items-start gap-4 border-b border-border pb-10">
+          <span aria-hidden="true" className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-brand-purple/15 text-brand-purple">
+            <svg viewBox="0 0 24 24" className="size-7" fill="none" stroke="currentColor" strokeWidth={1.75}>
+              <path d="M12 3 5 6v5c0 4.5 3 7.8 7 10 4-2.2 7-5.5 7-10V6l-7-3Z" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <div className="space-y-3">
+            <PageHeader
+              eyebrow="Read-only detail"
+              title="RiskScan"
+              description="A bounded Quick assessment that makes caller-reported disclosure gaps visible."
+              actions={[
+                { href: "/explore/riskscan/try", label: "Try RiskScan" },
+                { href: "/explore/riskscan/tool-loop", label: "Explore RiskScan ToolLoop" },
+              ]}
+            />
+            <p className="text-sm text-muted-foreground">Current local route · Risk assessment</p>
           </div>
-        </header>
+        </div>
       </div>
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
@@ -181,14 +170,6 @@ function ChevronLeft() {
   return (
     <svg aria-hidden="true" viewBox="0 0 16 16" className="size-4" fill="none" stroke="currentColor" strokeWidth={1.75}>
       <path d="M10 3.5 5.5 8 10 12.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ArrowRight() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 16 16" className="size-4" fill="none" stroke="currentColor" strokeWidth={1.75}>
-      <path d="M3 8h10m-4-4 4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
