@@ -3,12 +3,12 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M05-T020 accepted, M05-T030 accepted, M06-T010 accepted,
   M12-T020 accepted, and B02-T010 accepted. B03-T010 is local-GREEN context
   only; its separate human exercise remains blocked and is not a dependency.
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
-  commits, and pushes. Proposed implementation paths are exactly
+  commits, and pushes. The accepted implementation paths are exactly
   `apps/agent/src/riskscan-pay-observability.ts`, the narrowly amended
   `apps/agent/src/riskscan-pay-cli.ts`,
   `apps/agent/test/riskscan-pay-observability.test.mjs`, and the narrowly
@@ -138,6 +138,27 @@ stderr markers rather than adding the specified closed diagnostic. B03-T020
 remains `20-active`; the delegated lane retains exactly the already-authorized
 four B03-T020 source/test paths to preserve the legacy markers and add the
 single redacted diagnostic. No renewed activation or external authority exists.
+
+## GREEN acceptance
+
+The historical reviews above remain evidence of the sequential RED/GREEN
+cycle. The corrected delegated source at
+`4cdead5137e1fc65a7d44e9c31e4a1a966d64b04`, merged on canonical main as
+`b81b039f0b5a678b26df633527360c6d8d5758b0`, is independently accepted.
+It preserves the legacy normal-mode stderr markers while adding exactly one
+closed, redacted diagnostic. Invalid `{}` and `null` preflight input are
+rejected before Directory discovery or any request boundary.
+
+The source range changes only the four authorized B03-T020 paths. The focused
+B03 suite passes 34/34; the complete Agent suite passes 99/99; Agent
+typecheck, Agent lint, and whitespace validation pass under Node 22.21.1.
+Independent specification and standards reviews are clear at the merged source.
+No preflight or paid exercise ran during validation.
+
+B03-T020 is accepted and moved to `60-done`. Its source reservation is closed. A Human
+Ops green non-payable preflight is the next evidence-only action; only after
+its result may root prepare `HA-B03-AGENT-PAYMENT-002` for one separately
+authorized replacement paid attempt. No agent executes either action.
 
 ## Verification
 
