@@ -77,10 +77,11 @@ stage has a durable admission to reach as soon as M41 lands.
 
 - The manifest, card, catalog, ownership, and state records are committed
   before any source change.
-- The five new paths are new files in existing directories and are disjoint
-  from every accepted card and from every sibling card: M44 owns
-  `ats-create-action.tsx`, S17 owns `components/provider/status/`, and S18
-  owns `components/backing/`.
+- The historical bridge source and tests were integrated at
+  `48421352607a00c1a73f593dcc48160fac771e6a`; that integration is not
+  acceptance evidence. The corrective scope below is limited to the named
+  existing S21 paths and remains disjoint from M44's `ats-create-action.tsx`,
+  S17's `components/provider/status/`, and S18's `components/backing/`.
 - The S15 amendment is limited to replacing the single-type literal with the
   closed set `external.prepare`, `offering.create`, `directory.publish`,
   `external.attachCandidate`, the matching check in `signAndRelayCommand`,
@@ -145,6 +146,32 @@ literal, and the stage 4 control stays `unavailable` with the reason "No
 accepted clearing account is recorded." until a later human-owned record
 supplies that account and a root amendment transcribes it. This keeps stages 1
 through 3 deliverable now and invents nothing.
+
+## Corrective local scope amendment
+
+The historical S21 source remains unaccepted. Its focused baseline passed 64
+tests, but independent review found that a blank or noncanonical
+`qualifyingResource` could reach the signing island and throw during request
+construction without linked feedback. It also found that the stage-four detail
+was broader than the exact clearing-account reason adopted by
+`D-S21-010-001`.
+
+The corrective sequence is test-first against the existing source; it must not
+delete historical files to manufacture source absence. A fresh test-only RED
+review may amend only `apps/web/tests/provider-deploy-state.test.mjs`,
+`apps/web/tests/provider-deploy-route.test.mjs`, and
+`apps/web/tests/deploy-stage-signing.test.mjs`, with
+`apps/web/tests/command-bridge.test.mjs` only if necessary to pin the existing
+Core rejection. It must prove the linked field error, closed dialog/no-result
+failure path, preserved Core rejection, and exact stage-four reason.
+
+Only after an independent RED acceptance may the minimal GREEN correction touch
+`apps/web/src/components/provider/deploy/provider-deploy-state.ts`,
+`apps/web/src/components/provider/deploy/provider-deploy-wizard.tsx`, and
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`. It may add
+no command, schema, canonicalizer, wallet/provider/SDK behavior, relay
+semantics, configuration, durable write, transaction, deployment, or live
+authority. The historical source and every excluded path remain unchanged.
 
 ## Human worktree lane request
 

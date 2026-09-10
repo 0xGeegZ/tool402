@@ -673,21 +673,24 @@ branch is unreviewed and has no ownership or implementation authority. No client
 state, timer, command, write, Mirror/chain read, wallet, provider, payment,
 transaction, deployment, or live path is authorized.
 
-S21-T010 remains a root-controlled `00-inbox` CORE_P0 record pending its own
-independent readiness review. Its future-only Web reservation is exactly
-`apps/web/src/lib/wallet/command-bridge.ts`,
-`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`,
-`apps/web/src/components/provider/deploy/directory-record-literal.ts`,
-`apps/web/tests/command-bridge.test.mjs`, and
-`apps/web/tests/deploy-stage-signing.test.mjs`. Under root integration
-reservation only, it may make the exact S15 command-type/UI/test amendments
-and S16 deploy-state, stages, wizard, and focused-test amendments named in its
-local card and `docs/ui/UI-S21.md`. This reservation is disjoint from S17's
-provider-status paths and M44's ATS action path; S21 owns neither. Its stage 4
-literal must keep `clearingAccount` absent under `D-S21-010-001`, with no
-request built and the stage unavailable. No source, wallet, provider, SDK,
-configuration, durable write, transaction, deployment, or live path is
-authorized until a separate ready, activation, and RED cycle accepts it.
+S21-T010 remains a root-controlled `00-inbox` CORE_P0 record. Its historical
+source was integrated at `48421352607a00c1a73f593dcc48160fac771e6a`; that is
+not acceptance evidence. The corrective record
+`docs/work-queue/evidence/S21-T010-corrective-review.md` reserves only a
+test-first correction in `apps/web/tests/provider-deploy-state.test.mjs`,
+`apps/web/tests/provider-deploy-route.test.mjs`, and
+`apps/web/tests/deploy-stage-signing.test.mjs`, with
+`apps/web/tests/command-bridge.test.mjs` only if needed to prove the existing
+Core rejection. After a fresh independent RED acceptance, its exact minimal
+production scope is `apps/web/src/components/provider/deploy/provider-deploy-state.ts`,
+`apps/web/src/components/provider/deploy/provider-deploy-wizard.tsx`, and
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`.
+`command-bridge.ts`, every S15 module, the directory literal, the remaining
+S16 paths, M44's ATS action path, and S17's provider-status paths are not
+amendable. The stage 4 literal keeps `clearingAccount` absent under
+`D-S21-010-001`; no request is built and the stage stays unavailable. No
+wallet, provider, SDK, configuration, durable write, transaction, deployment,
+or live path is authorized by the corrective scope.
 
 S22-T010 is a root-owned post-rehearsal POLISH intake comprising only its card,
 `docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog,
