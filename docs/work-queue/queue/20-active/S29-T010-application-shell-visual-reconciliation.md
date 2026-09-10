@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 20-active
 - Dependencies: M02-T020 accepted, S17-T010 accepted, S22-T010 and S24-T010
   remain active with disjoint landing/dashboard paths.
 - Owner: The root owns queue state, catalog, ownership, UI ledger, decisions,
@@ -45,6 +45,14 @@ prepared mock navigation, assets, or data.
 - Browser evidence at 1440px and 390px confirms visual hierarchy, focus,
   menu operation, local targets, and no overflow.
 - Independent task and module review report no Critical finding.
+
+## RED activation
+
+The independent readiness review at `a31ff2a4771585f431ea59f62ca6f2cae202b27c`
+is clear. This activation permits only the three focused shell navigation
+assertion amendments named in D-S29-010-002 to create durable RED. Every shell
+source path remains prohibited until a fresh independent RED review accepts
+the exact GREEN scope.
 
 ## Boundary
 

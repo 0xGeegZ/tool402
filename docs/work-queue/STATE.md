@@ -32,11 +32,12 @@
   step. S28-T010 is `00-inbox`; no test or source path is authorized until its
   independent readiness review and separate RED activation are accepted.
 
-- S29_APPLICATION_SHELL_INTAKE: The human explicitly directs the shared shell,
+- S29_APPLICATION_SHELL_RED: The human explicitly directs the shared shell,
   menu, banners, logo, and CTA to match the selected visual direction with
-  current truthful routes. S29-T010 is 00-inbox; no test or source path is
-  authorized until its independent readiness review and separate RED
-  activation are accepted.
+  current truthful routes. The independent readiness review at a31ff2a is
+  clear; S29-T010 is 20-active only for its three reserved navigation test
+  assertions to create durable RED. Source remains prohibited pending fresh
+  independent RED acceptance.
 - S29_UI_RECORD: docs/ui/UI-S29.md is the local visual manifest for the
   S29-T010 intake and is subject to its separate readiness and activation
   controls.
