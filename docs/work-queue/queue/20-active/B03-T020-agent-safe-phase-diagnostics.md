@@ -129,6 +129,16 @@ The payment library, package metadata, lockfile, public exports, configuration,
 keys, signer/wallet/provider authority, external requests, preflight execution,
 replacement attempt, deployment, and every live action remain prohibited.
 
+## GREEN review
+
+The independent [GREEN review](../../evidence/B03-T020-green-review.md) is
+blocked for delegated candidate `56470c1e9d226c9a071a7106c4e4a4d094107d78`.
+Its preflight boundary and scope are clear, but it replaces existing normal-mode
+stderr markers rather than adding the specified closed diagnostic. B03-T020
+remains `20-active`; the delegated lane retains exactly the already-authorized
+four B03-T020 source/test paths to preserve the legacy markers and add the
+single redacted diagnostic. No renewed activation or external authority exists.
+
 ## Verification
 
 - A durable test-only RED commit precedes every B03-T020 source change.
