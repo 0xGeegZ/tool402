@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import { Badge } from "../ui/badge";
@@ -63,19 +62,23 @@ export function LandingSections() {
 
       <section
         aria-labelledby="riskscan-feature-title"
-        className="grid gap-8 lg:grid-cols-[minmax(0,0.75fr)_minmax(20rem,1.25fr)] lg:items-end"
+        className="space-y-8 border-y border-border py-16 sm:py-20"
       >
-        <div className="max-w-xl space-y-4">
-          <Badge variant="outline">Marketplace</Badge>
-          <h2 id="riskscan-feature-title" className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
-            Start with RiskScan
-          </h2>
-          <p className="leading-7 text-muted-foreground">
-            RiskScan is the current catalogue entry. Its detail route explains the local request shape and the boundary
-            before a route continues.
-          </p>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-3xl space-y-3">
+            <Badge variant="outline" className="border-brand-purple/30 text-brand-purple">Marketplace</Badge>
+            <h2 id="riskscan-feature-title" className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
+              Agent-native tools in the current catalogue
+            </h2>
+            <p className="leading-7 text-muted-foreground">
+              RiskScan is the current catalogue entry. Its detail route explains the local request shape and the boundary
+              before a route continues.
+            </p>
+          </div>
+          <span className="text-sm font-medium text-muted-foreground">Current entry</span>
         </div>
-        <div className="relative isolate overflow-hidden rounded-[calc(var(--radius)*2)] border border-border bg-card p-6 shadow-[0_1rem_2rem_color-mix(in_oklab,var(--foreground)_6%,transparent)] sm:p-8">
+        <div className="max-w-md">
+          <div className="relative isolate overflow-hidden rounded-[calc(var(--radius)*2)] border border-border bg-card p-6 shadow-[0_1rem_2rem_color-mix(in_oklab,var(--foreground)_6%,transparent)] sm:p-8">
           <div aria-hidden="true" className="absolute inset-x-0 top-0 h-24 bg-[linear-gradient(115deg,#ede8ff_0%,#f9f4e9_48%,#dff7ed_100%)]" />
           <div aria-hidden="true" className="absolute right-8 top-5 size-14 rounded-full border-[0.65rem] border-brand-purple/20" />
           <div className="relative flex flex-wrap items-start justify-between gap-4 pt-10">
@@ -102,51 +105,49 @@ export function LandingSections() {
               Try RiskScan
             </Link>
           </div>
+          </div>
         </div>
       </section>
 
       <section
         aria-labelledby="inspectable-scope-title"
-        className="relative isolate overflow-hidden rounded-[calc(var(--radius)*2)] border border-border bg-secondary p-6 sm:p-10"
+        className="grid gap-8 border-y border-border py-16 sm:py-20 lg:grid-cols-[minmax(0,0.85fr)_minmax(22rem,1.15fr)] lg:items-center"
       >
-        <div aria-hidden="true" className="absolute -bottom-24 -left-20 size-72 rounded-full bg-card/60" />
-        <div className="relative grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(20rem,1.2fr)]">
-          <div className="space-y-3">
+          <div className="max-w-xl space-y-3">
             <Badge variant="outline">Inspectable scope</Badge>
             <h2 id="inspectable-scope-title" className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
-              Know what you can inspect
+              Every current route has a clear boundary
             </h2>
-            <p className="leading-7 text-secondary-foreground">
+            <p className="leading-7 text-muted-foreground">
               Tool402 labels the current catalogue, guided demo, and local route boundaries directly. A clear screen is
               an orientation surface, not proof of an action beyond that route.
             </p>
           </div>
-          <ul className="grid gap-4 sm:grid-cols-3">
-            <li className="rounded-[var(--radius)] border border-border bg-card p-4">
+          <ul className="space-y-4">
+            <li className="rounded-[calc(var(--radius)*1.5)] border border-border bg-card p-5 shadow-sm">
               <h3 className="font-semibold">Catalogue</h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">Begin with the current tool entry.</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">Begin with the current tool entry and its local boundary.</p>
             </li>
-            <li className="rounded-[var(--radius)] border border-border bg-card p-4">
+            <li className="rounded-[calc(var(--radius)*1.5)] border border-border bg-card p-5 shadow-sm">
               <h3 className="font-semibold">Guided demo</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">Follow the local route map at your pace.</p>
             </li>
-            <li className="rounded-[var(--radius)] border border-border bg-card p-4">
+            <li className="rounded-[calc(var(--radius)*1.5)] border border-border bg-card p-5 shadow-sm">
               <h3 className="font-semibold">Provider path</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">Prepare an offering preview without an automatic action.</p>
             </li>
           </ul>
-        </div>
       </section>
 
       <section
         aria-labelledby="provider-path-title"
-        className="relative isolate overflow-hidden rounded-[calc(var(--radius)*2)] border border-brand-purple/20 bg-[#e9e1ff] p-6 sm:p-10 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-center lg:gap-10"
+        className="relative isolate overflow-hidden rounded-[calc(var(--radius)*2)] border border-brand-purple/20 bg-[#e9e1ff] px-6 py-14 text-center sm:px-10 sm:py-18"
       >
-        <div aria-hidden="true" className="absolute -right-20 -top-20 size-72 rounded-full bg-card/70" />
-        <div className="relative max-w-2xl space-y-4">
+        <div aria-hidden="true" className="absolute -right-12 -top-12 size-48 rounded-full border-4 border-card/70" />
+        <div className="relative mx-auto max-w-2xl space-y-4">
           <Badge variant="outline" className="border-brand-purple/30 text-brand-purple">For providers</Badge>
           <h2 id="provider-path-title" className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
-            Give a tool a clear provider path
+            Building an agent-native tool? Add it to Tool402.
           </h2>
           <p className="leading-7 text-muted-foreground">
             The provider journey keeps the offering preview editable and clear about what has not run.
@@ -157,9 +158,6 @@ export function LandingSections() {
           >
             Prepare a tool offering
           </Link>
-        </div>
-        <div className="relative mx-auto mt-8 aspect-square w-56 rotate-[-5deg] rounded-[2rem] bg-[#f8f2e8] p-3 shadow-[0_1.25rem_2.5rem_color-mix(in_oklab,var(--foreground)_12%,transparent)] lg:mt-0 lg:w-64">
-          <Image src="/brand/mascot-wave.png" alt="" fill sizes="16rem" className="object-contain p-3" />
         </div>
       </section>
     </div>

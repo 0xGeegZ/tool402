@@ -60,6 +60,7 @@ export function LandingHero() {
             width={1024}
             height={1024}
             priority
+            unoptimized
             sizes="(min-width: 1024px) 34rem, (min-width: 640px) 30rem, calc(100vw - 3rem)"
             className="relative z-10 h-auto w-full scale-[1.06] object-contain sm:scale-110"
           />
