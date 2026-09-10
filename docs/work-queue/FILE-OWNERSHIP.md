@@ -1068,3 +1068,13 @@ durable RED. Its four candidate components remain source-prohibited. The
 S16/M47 logic modules and all existing behavior tests remain outside S29;
 no other source or test path is granted until independent RED acceptance names
 an exact GREEN scope.
+
+D-S29-010-004 authorizes exactly
+`apps/web/src/app/provider/deploy/page.tsx`,
+`apps/web/src/components/provider/deploy/provider-deploy-wizard.tsx`,
+`apps/web/src/components/provider/deploy/provider-deploy-stages.tsx`,
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, and
+`apps/web/tests/provider-deploy-visual-reconciliation.test.mjs` for minimal
+presentational GREEN. The current S16/S21/M47/M44 behavior tests are
+verification-only. No other path, state transition, handler, wallet/signature,
+ATS, data, payment, transaction, deployment, or live claim is granted.

@@ -83,6 +83,13 @@
   accepts exact GREEN. The selected `PREP-UI-001` Provider RiskScan visual
   slice is the sole visual authority; every S16/M47 behavior boundary stays
   immutable.
+- S29_PROVIDER_DEPLOY_GREEN: The independent RED review at `222703b` is clear:
+  the focused visual contract fails once only for the absent footer hierarchy,
+  and unchanged S16/S21/M47/M44 behavior tests pass 47/47. Under
+  D-S29-010-004, S29-T010 may amend only its four declared presentation
+  components and focused visual test. Existing behavior tests remain
+  verification-only; every state, wallet/signature, ATS, payment, transaction,
+  deployment, and live path remains fixed.
 
 - PRODUCT_OVERVIEW: accepted as P00-T010
 - CURRENT_MODULE: S13 outcome-feedback treatment is accepted at source commit `ece66c2fd7b2278ed0f801ad1febd478d9ddc39f`; S15 wallet-island/relay is accepted at `506f038fffb87739cc5fd302a30033b5c56d36ee`; S16 provider deploy wizard is accepted at `ed46ae18a08c859d5f2c94722ab84453ef674835`; M38 offering command payloads and M40 durable offering/Directory admission are accepted at `60-done`. HA-COMMAND-AUTHORITY-002, HA-ATS-RETARGET-001, HA-ATS-RUNTIME-BINDING-001, HA-ISSUER-ACCOUNT-001, and HA-CAMPAIGN-CONVEX-001 are accepted only as bounded local authority or human evidence. B03 Agent payment remains locally green and awaits its separate human-owned testnet exercise.

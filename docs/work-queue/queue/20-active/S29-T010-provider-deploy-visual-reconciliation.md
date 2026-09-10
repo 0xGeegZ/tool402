@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active (test-only RED)
+- Queue state: 20-active (presentation GREEN)
 - Dependencies: S16-T010 accepted; S30-T010 and S28-T010 accepted. S31-T010
   retains its disjoint shared-shell source scope.
 - Owner: The root owns queue state, catalog, ownership, UI ledger, decisions,
@@ -48,6 +48,14 @@ only the new `apps/web/tests/provider-deploy-visual-reconciliation.test.mjs`
 to establish the visual contract. The page, wizard, stages, and signing
 components remain source-prohibited until a separate independent RED review
 accepts an exact GREEN scope.
+
+## GREEN authorization
+
+The independent RED review at `222703b` is clear: the focused contract fails
+once only for the absent footer hierarchy, while the unchanged S16/S21/M47/M44
+behavior suite passes 47/47. D-S29-010-004 therefore permits only the four
+presentation components named above and the focused visual test for minimal
+GREEN. Existing behavior tests are verification-only and remain unamendable.
 
 ## Verification
 
