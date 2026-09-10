@@ -88,6 +88,6 @@ test("keeps the landing local, decorative, and free of unsupported claims", asyn
   assert.doesNotMatch(landing, /(?:https?:\/\/|\/api\/)/i);
   assert.doesNotMatch(
     landing,
-    /\b(?:wallet|account|provider|price|payment|settlement|result|metric|testimonial|partner|balance|evidence|deployed|guaranteed)\b|\b(?:live service|live availability|available now|user session)\b/i,
+    /\b(?:wallet|account|provider|price|payment|settlement|result|metric|testimonial|partner|balance|evidence|deployed|guaranteed|mock|paid|verified|transaction|receipt|funding|asset|backer|revenue|payout|availability)\b|\b(?:holder return|investment return|live service|available now|user session)\b/i,
   );
 });

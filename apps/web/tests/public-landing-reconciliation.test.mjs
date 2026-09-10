@@ -16,10 +16,19 @@ test("gives the reconciled landing four labeled sections and three subordinate s
     readAppFile("src/components/landing/landing-sections.tsx"),
   ]);
   const landing = [hero, sections].join("\n");
+  const sectionLabels = [...landing.matchAll(/<section\b[^>]*aria-labelledby=["']([^"']+)["']/g)].map(
+    ([, label]) => label,
+  );
+  const headingIds = [...landing.matchAll(/<h[12]\b[^>]*id=["']([^"']+)["']/g)].map(([, id]) => id);
 
   assert.equal((landing.match(/<section\b/g) ?? []).length, 4);
   assert.equal((landing.match(/<h2\b/g) ?? []).length, 3);
-  assert.match(hero, /<section\b[^>]*aria-labelledby=["']landing-title["']/);
-  assert.match(hero, /<h1\b[^>]*id=["']landing-title["']/);
+  assert.deepEqual(sectionLabels, [
+    "landing-title",
+    "how-it-works-title",
+    "riskscan-introduction-title",
+    "inspectable-scope-title",
+  ]);
+  assert.deepEqual(headingIds, sectionLabels);
   assert.match(sections, /Know what you can inspect/);
 });
