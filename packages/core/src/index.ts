@@ -183,3 +183,20 @@ export type {
   CandidateTransactionId,
   MirrorTransactionId,
 } from "./attach-candidate-payload.ts";
+export {
+  assessEntityCheck,
+  normaliseEntityName,
+  parseEntityCheckRequest,
+} from "./entity-check.ts";
+export type {
+  EntityCheckAssessmentInput,
+  EntityCheckDisposition,
+  EntityCheckRequest,
+  EntityCheckResult,
+  EntityCheckScreen,
+  EntityRegistryCandidate,
+  EntityRegistrySource,
+  EntitySanctionsDataset,
+  EntitySanctionsEntry,
+  EntitySanctionsSource,
+} from "./entity-check.ts";
