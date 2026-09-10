@@ -73,8 +73,30 @@ function sanctionsRow({
   return values.map(csvCell).join(",");
 }
 
-function sanctionsCsv(rows = [sanctionsRow()]) {
-  return `${rows.join("\r\n")}\r\n`;
+function sanctionsCsv(rows = [sanctionsRow()], lineEnding = "\r\n") {
+  return `${rows.join(lineEnding)}${lineEnding}`;
+}
+
+function exactSizedCsv(byteLength) {
+  const firstElevenColumns = [
+    "exact-entry",
+    "Exact dataset",
+    "Entity",
+    "-0-",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ];
+  const prefix = `${firstElevenColumns.map(csvCell).join(",")},`;
+  const paddingLength = byteLength - new TextEncoder().encode(`${prefix}\r\n`).byteLength;
+  assert.ok(paddingLength >= 0);
+  const csv = `${prefix}${" ".repeat(paddingLength)}\r\n`;
+  assert.equal(new TextEncoder().encode(csv).byteLength, byteLength);
+  return csv;
 }
 
 function sanctionsResponse(csv, headers = {}) {
@@ -227,6 +249,7 @@ implementedTest("maps the fixed registry and sanctions fixtures using a SIREN ah
     registryRecord({ siren: "not-a-siren" }),
     registryRecord({ nom_complet: "   " }),
     registryRecord({ date_creation: "2026-02-30" }),
+    registryRecord({ date_mise_a_jour: "2026-09-31T12:00:00.000Z" }),
     registryRecord({ dirigeants: {} }),
   ];
   const calls = [];
@@ -284,7 +307,7 @@ implementedTest("maps the fixed registry and sanctions fixtures using a SIREN ah
         registryUpdatedAt: "2026-09-08T11:00:00.000Z",
       },
     ],
-    droppedCandidates: 5,
+    droppedCandidates: 6,
     registrySource: {
       source: "FR_RECHERCHE_ENTREPRISES",
       readAt: new Date(now).toISOString(),
@@ -344,6 +367,24 @@ implementedTest("uses the query when SIREN is absent and returns only closed tra
   });
   assert.deepEqual(sanctionsFailure, { kind: "sanctions_unavailable" });
   assert.equal(sanctionsCalls.length, 2);
+});
+
+implementedTest("fails closed for malformed registry JSON and top-level result shapes", async () => {
+  const malformedBodies = ["{", JSON.stringify({}), JSON.stringify({ results: {} })];
+  for (const [index, body] of malformedBodies.entries()) {
+    let calls = 0;
+    const result = await api.readEntityCheckSources(request(), readConfiguration({
+      ENTITYCHECK_SANCTIONS_URL: `https://sanctions.example.test/malformed-registry-${index}.csv`,
+    }), {
+      fetch: async () => {
+        calls += 1;
+        return new Response(body, { status: 200 });
+      },
+      now: () => initialNow,
+    });
+    assert.deepEqual(result, { kind: "registry_unavailable" });
+    assert.equal(calls, 1);
+  }
 });
 
 implementedTest("uses the exact bounded deadlines and does not retry stalled reads", async (t) => {
@@ -441,6 +482,18 @@ implementedTest("accepts a registry JSON response at exactly the one MiB cap", a
     now: () => initialNow,
   });
   assert.equal(result.kind, "read");
+
+  const exactSanctions = exactSizedCsv(sixteenMebibytes);
+  const sanctionsResult = await api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/exact-sanctions-cap.csv",
+  }), {
+    fetch: async (input) => input.hostname === "registry.example.test"
+      ? registryResponse()
+      : sanctionsResponse(exactSanctions),
+    now: () => initialNow,
+  });
+  assert.equal(sanctionsResult.kind, "read");
+  assert.equal(sanctionsResult.sanctionsDataset.entries[0].entryId, "exact-entry");
 });
 
 implementedTest("fails closed for malformed sanctions metadata or CSV and uses the clock only when Last-Modified is absent", async () => {
@@ -479,11 +532,28 @@ implementedTest("fails closed for malformed sanctions metadata or CSV and uses t
   }), {
     fetch: async (input) => input.hostname === "registry.example.test"
       ? registryResponse()
-      : sanctionsResponse(sanctionsCsv()),
+      : sanctionsResponse(sanctionsCsv([sanctionsRow()], "\n")),
     now: () => initialNow,
   });
   assert.equal(fallback.kind, "read");
   assert.equal(fallback.sanctionsDataset.lastModified, new Date(initialNow).toISOString());
+});
+
+implementedTest("fails closed before a request when the injected clock is not finite and safe", async () => {
+  for (const now of [NaN, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+    let calls = 0;
+    const result = await api.readEntityCheckSources(request(), readConfiguration({
+      ENTITYCHECK_SANCTIONS_URL: `https://sanctions.example.test/invalid-clock-${String(now)}.csv`,
+    }), {
+      fetch: async () => {
+        calls += 1;
+        return registryResponse();
+      },
+      now: () => now,
+    });
+    assert.deepEqual(result, { kind: "registry_unavailable" });
+    assert.equal(calls, 0);
+  }
 });
 
 implementedTest("reuses only a fresh dataset for the same canonical sanctions URL", async () => {
@@ -506,7 +576,14 @@ implementedTest("reuses only a fresh dataset for the same canonical sanctions UR
   const first = await api.readEntityCheckSources(request(), configuration, dependencies);
   assert.equal(first.kind, "read");
   now += 86_399_999;
-  const freshCache = await api.readEntityCheckSources(request(), configuration, dependencies);
+  const canonicalEquivalentConfiguration = readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test:443/cache-boundary.csv",
+  });
+  const freshCache = await api.readEntityCheckSources(
+    request(),
+    canonicalEquivalentConfiguration,
+    dependencies,
+  );
   assert.equal(freshCache.kind, "read");
   assert.equal(calls.filter((url) => url.includes("cache-boundary.csv")).length, 1);
   assert.equal(calls.filter((url) => url.includes("/search?")).length, 2);
@@ -517,6 +594,12 @@ implementedTest("reuses only a fresh dataset for the same canonical sanctions UR
   assert.equal(calls.filter((url) => url.includes("cache-boundary.csv")).length, 2);
   assert.equal(calls.filter((url) => url.includes("/search?")).length, 3);
   assert.equal(JSON.stringify(expiredCache).includes("cached-entry"), true);
+
+  now -= 1;
+  const clockRollback = await api.readEntityCheckSources(request(), configuration, dependencies);
+  assert.equal(clockRollback.kind, "read");
+  assert.equal(calls.filter((url) => url.includes("cache-boundary.csv")).length, 3);
+  assert.equal(calls.filter((url) => url.includes("/search?")).length, 4);
 });
 
 implementedTest("keeps the adapter server-only and free of ambient configuration or logging", () => {
