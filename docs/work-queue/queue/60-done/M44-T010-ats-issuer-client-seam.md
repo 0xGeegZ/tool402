@@ -1,9 +1,9 @@
-# M44-T010 — ATS SDK issuer client seam
+# M44-T010 — Historical ATS SDK bundle experiment
 
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done (historical evidence)
 - Dependencies: M01-T040 accepted, M02-T020 accepted, M42-T010 accepted,
   S15-T010 accepted, S16-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -12,7 +12,8 @@
   `apps/web/src/lib/ats/ats-client.ts`,
   `apps/web/src/components/provider/deploy/ats-create-action.tsx`,
   `apps/web/tests/create-bond-request.test.mjs`, and
-  `apps/web/tests/ats-client.test.mjs`, plus one dependency pin recorded as an
+  `apps/web/tests/ats-client.test.mjs`, and the bounded bundle-gate test
+  `apps/web/tests/ats-sdk-bundle-gate.test.mjs`, plus one dependency pin recorded as an
   amendment under a root integration reservation in `apps/web/package.json`,
   the root `package-lock.json`, and `apps/web/tests/static-shell.test.mjs`.
 - Human actions: HA-ISSUER-ACCOUNT-001 is accepted only as bounded public
@@ -21,7 +22,16 @@
   tests, and the recorded bundle-gate result only. HA-ATS-RETARGET-001 gates
   M42-T010, whose accepted configuration this card consumes.
 
-## Scope
+## Supersession
+
+The SDK bundle experiment recorded below is historical evidence only. Human
+acceptance of `HA-ATS-CONTRACTS-VIEM-001` selects M44-T020's direct official
+Factory artifact plus viem seam instead. M44-T010 neither authorizes nor owns
+selected production SDK code, browser mocks, aliases, BBS compatibility, or a
+future execution path. Those experiment-only changes are removed by M44-T020
+after its own RED acceptance.
+
+## Historical scope
 
 Add the one web module set that lets the human provider create the revenue
 note in their own MetaMask through the official Asset Tokenization Studio SDK:
@@ -203,3 +213,40 @@ blocked: remove the experimental uncommitted changes, retain the RED contract,
 and require a new scoped authority before another bundle attempt. No trusted
 configuration, durable attempt, wallet/provider interaction, transaction,
 deployment, or live behavior is authorized.
+
+## HI-006 bundle retry authority
+
+The human GO recorded in `HI-006` and `D-M44-010-006` activates exactly one
+replacement bundle gate. Before any remaining M44 GREEN source, the root may
+pin the recorded official SDK, update its lockfile and strict static-shell
+assertion, create the dedicated bundle-gate test, and create one client island
+whose static root import is mounted exactly once at the stage-3 first substep
+of `/provider/deploy`. The control is disabled and observable only as
+unavailable; it calls no SDK method and reads no configuration. The retry
+passes only if Web typecheck, Webpack production build with Cache Components,
+emitted client-manifest/chunk inspection, and browser route evaluation show
+the real client graph and no uncaught import-time exception. On the first SDK
+or browser failure, stop and record that exact diagnostic. No shim, polyfill,
+patch, fork, alias, configuration bridge, durable attempt, wallet/provider
+interaction, transaction, deployment, or live behavior is authorized.
+
+## Turbopack browser-compatibility retry
+
+The first real Turbopack build reaches the declared SDK root and stops in the
+Node-only `winston`/`winston-daily-rotate-file` graph, while separately exposing
+the Terminal3 BBS native-binding graph. The human accepted
+`HA-ATS-SDK-BROWSER-COMPAT-002` to reproduce only the four logger/environment
+browser aliases from the official ATS web app in Next's client-only
+`turbopack.resolveAlias` form. The aliases use local no-op `dotenv` and
+`winston` adapters; they do not provide configuration or general Node
+polyfills. A fresh Turbopack production build must show whether this minimal
+upstream-compatible layer clears the logger graph. If another dependency fails,
+record it exactly before expanding the scope.
+
+The logger aliases removed all `fs` diagnostics. `D-M44-010-008` now permits
+only the conditional browser mapping from the optional Node BBS binding to the
+BBS package's own WASM fallback. It is not a mock, SDK patch, or BBS execution.
+A fresh Turbopack production build exposed the native BBS package again only
+in the server graph. `D-M44-010-009` permits exactly that package as a Next
+server external while retaining the browser-only WASM alias. A fresh Turbopack
+production build remains the gate.

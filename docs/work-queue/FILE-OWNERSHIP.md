@@ -581,15 +581,63 @@ client remain absent until that gate passes. No trusted configuration bridge,
 durable attempt, wallet/provider interaction, transaction, deployment, or live
 behavior is authorized.
 
-M44-T010's single bundle-gate experiment is exhausted and BLOCKED. Its
-uncommitted package pin, lockfile closure, static-shell assertion, and client
-island are removed; the existing RED files remain M44-owned. The root retains
-the package/lockfile reservation, but no M44 dependency, import, source, or
-mount change is authorized until a new scoped human decision identifies and
-independently verifies a compatible official SDK entry and a real
-non-executing client mount, or explicitly resolves the root-entry environment
-side effect. No trusted configuration bridge, durable attempt, wallet/provider
-interaction, transaction, deployment, or live behavior is authorized.
+The first M44 bundle-gate experiment was exhausted and removed because its
+island was unreachable. `D-M44-010-006` now reserves exactly one retry:
+`apps/web/package.json`, the root `package-lock.json`,
+`apps/web/tests/static-shell.test.mjs`,
+`apps/web/tests/ats-sdk-bundle-gate.test.mjs`, the new
+`apps/web/src/components/provider/deploy/ats-create-action.tsx`, and only
+`apps/web/src/components/provider/deploy/provider-deploy-stages.tsx` for its
+single stage-3-first-substep mount. The island may statically import only the
+official `@hashgraph/asset-tokenization-sdk@8.0.0` root and render a disabled
+unavailable control. It may not invoke the SDK, read or adapt configuration,
+construct a client, touch a wallet/provider, create a durable attempt, submit a
+transaction, or add a shim, polyfill, patch, fork, or alias. A Webpack build,
+client-manifest/chunk inspection, and browser import-evaluation proof decide
+the retry; an SDK failure stops the lane with its exact diagnostic.
+
+After the observed Turbopack client-graph failures, `D-M44-010-007` additionally
+reserves only `apps/web/next.config.ts`,
+`apps/web/src/lib/ats/browser/dotenv-mock.ts`,
+`apps/web/src/lib/ats/browser/winston-mock.ts`, and the exact assertions in
+`apps/web/tests/ats-sdk-bundle-gate.test.mjs`. The client-only aliases must
+match the four upstream ATS web aliases and remain no-op compatibility adapters;
+they may not add general Node polyfills, change the official SDK, expose an
+environment value, or enable an SDK action. A fresh Turbopack build decides
+whether those four aliases resolve the diagnosed logger graph before any other
+adaptation can be considered.
+
+`D-M44-010-008` permits one further browser-only entry in that same reserved
+`turbopack.resolveAlias` map: map the optional Node BBS binding to its own
+package-provided WebAssembly fallback. It creates no source path and may not
+introduce a BBS mock, generic Node polyfill, or executable BBS/SDK behavior.
+
+`D-M44-010-009` permits exactly one companion Next
+`serverExternalPackages` entry for that same optional Node BBS package. It
+keeps native BBS resolution out of Turbopack's server graph while the existing
+conditional alias remains browser-only; it may not externalize another package
+or introduce any executable BBS/SDK behavior.
+
+`HA-ATS-CONTRACTS-VIEM-001` supersedes the M44-T010 SDK experiment as the
+selected execution architecture. M44-T020 reserves its new pure
+`apps/web/src/lib/ats/factory-deploy-bond.ts`, focused Factory contract and
+bundle-gate tests, the existing disabled `ats-create-action.tsx`, and (under
+root integration) `apps/web/package.json`, `package-lock.json`,
+`apps/web/tests/static-shell.test.mjs`, and `apps/web/next.config.ts`. Its
+first accepted RED contract may remove only
+`apps/web/src/lib/ats/create-bond-request.ts`,
+`apps/web/src/lib/ats/ats-client.ts`,
+`apps/web/src/lib/ats/browser/dotenv-mock.ts`,
+`apps/web/src/lib/ats/browser/winston-mock.ts`,
+`apps/web/tests/create-bond-request.test.mjs`,
+`apps/web/tests/ats-client.test.mjs`, and
+`apps/web/tests/ats-sdk-bundle-gate.test.mjs`, plus the exact SDK pin,
+static-shell assertion, browser aliases, BBS externalization, and disabled
+action import. It may add only the exact official contracts artifact and
+existing viem seam. It owns no wallet,
+provider, RPC, signer, simulation, transaction, configuration bridge, durable
+attempt, candidate attachment, or M43 source. The older reservation is
+historical only and cannot authorize retained compatibility code.
 
 S20-T010 owns the new `apps/web/src/components/discovery/explore-catalog.tsx`
 and `apps/web/tests/explore-catalog.test.mjs`. The root integration reservation

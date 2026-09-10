@@ -140,8 +140,9 @@ callback.
    The relay returns only the backend outcome: `ACCEPTED`, `REPLAYED`,
    `CONFLICT`, `REJECTED`, or `UNSUPPORTED_TYPE`.
 4. The revenue note itself is created by the provider's own MetaMask through
-   the official Asset Tokenization Studio SDK against the SDK 8.0.0 testnet
-   factory. The backend never holds a key. Receipt verification against
+   the official Factory artifact from
+   `@hashgraph/asset-tokenization-contracts@8.0.0` and `viem@2.56.1` against
+   the testnet factory. The backend never holds a key. Receipt verification against
    Mirror Node moves the offering from `ASSET_PENDING` to `READY`; only then
    can the directory publish. Live execution sits behind a separate human
    gate (`HA-ATS-STAGE-B-001`).
