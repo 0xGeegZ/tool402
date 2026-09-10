@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M32-T010 accepted, M33-T010 accepted, M42-T010 accepted, and
   M47-T010 accepted
 - Owner: Root owns queue state, catalog, ownership, decisions, reviews,
@@ -108,3 +108,20 @@ assertions, preserving M43's `NOT_CONFIGURED`-before-Mirror behavior. Every
 other source path and every authority provision, publication, configuration,
 SDK/provider/wallet/RPC/network/request/transaction/candidate/live path remain
 prohibited.
+
+## GREEN acceptance
+
+The independent [task review](../../evidence/M48-T010-task-review.md),
+[specification review](../../evidence/M48-T010-module-review-spec.md), and
+[standards review](../../evidence/M48-T010-module-review-standards.md) are
+clear. Source commit `6c78e3d` follows durable RED `7106d01`; its fixed
+M42/M47 descriptor and parameters recompute to the accepted digest
+`1880065c5ae64b3fc6279cfdd8c85a6880d43e98ce129ed697c72372204296f9`.
+
+The five affected suites pass 52/52, the complete Backend suite passes
+285/285, and Backend typecheck/lint plus root lint, queue, whitespace, and the
+enabled reference guard pass under Node 22.21.1. M48 is accepted at `60-done`
+as one local compiled M33 mapping. It does not provision an authority row,
+publish Convex, access configuration, or authorize SDK/provider/wallet/RPC/
+network/request/transaction/candidate/live behavior. HA-ATS-STAGE-B-001 remains
+the separate required human execution gate.

@@ -861,26 +861,17 @@ public Backend exports, routes, and submission documents are not amendable. No
 authority provision, SDK, provider, wallet, network, transaction, candidate,
 or live path is authorized.
 
-M48-T010 is a root-controlled `20-active` CORE_P0 successor. Its committed
+M48-T010 is a root-controlled accepted `60-done` CORE_P0 successor. Its committed
 control surface is its card, specification, plan, accepted human decision,
 intake review, GREEN scope amendment, import-ledger row, catalog, State,
 decisions, reviews, commits, and pushes. Its candidate implementation surface is exactly
 `packages/backend/convex/ats_prepare_authority.ts`,
 `packages/backend/tests/ats-prepare-authority.test.mjs`, and the narrowly
 amended `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`.
-Only `packages/backend/tests/ats-prepare-authority.test.mjs` and the narrowly
-amended `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`
-are active for durable RED. The manifest source remains prohibited until
-independent RED acceptance. After that acceptance only, the three historical
-tests `packages/backend/tests/stage-b-issuer-ats-create-authority.test.mjs`,
-`packages/backend/tests/stage-a-real-issuer-ats-create-authority.test.mjs`, and
-`packages/backend/tests/ats-receipt-verification.test.mjs` are GREEN-only
-assertion amendments under `M48-T010-green-scope-amendment.md`; M37/M42/M43
-sources and every M42 preimage/hash field remain excluded.
-The independent RED review is clear. M48 GREEN is limited exactly to
-`packages/backend/convex/ats_prepare_authority.ts`, its two focused tests, and
-those three historical-test amendments. The manifest is a private frozen literal
-only; it may not import M42 or add an SDK capability.
+Durable RED and the six-path GREEN scope are accepted after clear independent
+task/specification/standards reviews. The manifest is one private frozen literal
+only; it may not import M42 or add an SDK capability. M37/M42/M43 sources and
+every M42 preimage/hash field remain excluded.
 M42, M47, M32 source, schema, public exports, packages, lockfiles, Web, Agent,
 environment, `commandAuthorities` provisioning, and every SDK/provider/wallet/
 network/transaction/candidate/live path are excluded.
