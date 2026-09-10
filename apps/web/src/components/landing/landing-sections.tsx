@@ -73,7 +73,7 @@ export function LandingSections() {
             <ol className="relative grid gap-6 sm:grid-cols-3 lg:grid-cols-3">
               {steps.map((step, index) => (
                 <li key={step.title}>
-                  <Card className="relative flex min-h-60 flex-col gap-3 rounded-2xl border border-border bg-card p-6 shadow-sm transition-shadow hover:shadow-md motion-reduce:transition-none lg:min-h-[15.125rem]">
+                  <Card className="relative flex min-h-60 flex-col gap-3 rounded-2xl border border-border bg-card p-6 shadow-none transition-colors hover:border-foreground/15 motion-reduce:transition-none lg:min-h-[15.125rem]">
                     <div className="flex items-center justify-between gap-4">
                       <span className={`flex size-11 items-center justify-center rounded-xl text-sm font-semibold ${step.tone}`}>
                         {index + 1}
@@ -111,7 +111,7 @@ export function LandingSections() {
           </div>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {campaignCards.map((campaign) => (
-              <article key={campaign.name} className="group flex min-h-[25rem] flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-foreground/15 hover:shadow-lg motion-reduce:transform-none motion-reduce:transition-none">
+              <article key={campaign.name} className="group flex min-h-[25rem] flex-col rounded-2xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-foreground/15 motion-reduce:transform-none motion-reduce:transition-none">
                 <div className="flex items-start justify-between gap-3">
                   <span aria-hidden="true" className={`flex size-11 items-center justify-center rounded-xl text-lg font-bold ${campaign.tone}`}>{campaign.icon}</span>
                   <div className="flex flex-wrap justify-end gap-2">
@@ -173,7 +173,7 @@ export function LandingSections() {
               </div>
             </div>
             <ul className="space-y-4">
-              <li className="flex min-h-28 gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md motion-reduce:transition-none">
+              <li className="flex min-h-28 gap-4 rounded-2xl border border-border bg-card p-5 transition-colors hover:border-foreground/15 motion-reduce:transition-none">
                 <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-green/15 text-brand-green">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-5"><path d="M7 3h8l3 3v15H7z" /><path d="M15 3v4h4M10 12h5M10 16h5" /></svg>
                 </span>
@@ -182,7 +182,7 @@ export function LandingSections() {
                   <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Begin with the current tool entry and its local boundary.</p>
                 </div>
               </li>
-              <li className="flex min-h-28 gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md motion-reduce:transition-none">
+              <li className="flex min-h-28 gap-4 rounded-2xl border border-border bg-card p-5 transition-colors hover:border-foreground/15 motion-reduce:transition-none">
                 <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-green/15 text-brand-green">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-5"><path d="M7 3h8l3 3v15H7z" /><path d="M15 3v4h4M10 12h5M10 16h3" /><circle cx="16" cy="16" r="3" /></svg>
                 </span>
@@ -191,7 +191,7 @@ export function LandingSections() {
                   <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Follow the local route map at your pace.</p>
                 </div>
               </li>
-              <li className="flex min-h-28 gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md motion-reduce:transition-none">
+              <li className="flex min-h-28 gap-4 rounded-2xl border border-border bg-card p-5 transition-colors hover:border-foreground/15 motion-reduce:transition-none">
                 <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-green/15 text-brand-green">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-5"><path d="M4 5h8l2 2h6v12H4z" /><path d="M4 5v12M9 16h7" /><circle cx="17" cy="17" r="2" /></svg>
                 </span>
@@ -224,7 +224,7 @@ export function LandingSections() {
               <div className="flex flex-wrap justify-center gap-3 pt-2">
                 <Link
                   href="/provider/deploy"
-                  className="inline-flex min-h-9 items-center rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-brand-purple motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  className="inline-flex min-h-9 items-center rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-brand-purple motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
                   Prepare a tool offering
                 </Link>

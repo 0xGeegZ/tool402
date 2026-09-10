@@ -50,6 +50,14 @@ test("keeps the reference section rhythm without synthetic inter-section gaps", 
   assert.match(sections, /w-screen -translate-x-1\/2/);
 });
 
+test("keeps the landing content panels border-led instead of shadow-led", async () => {
+  const sections = await readAppFile("src/components/landing/landing-sections.tsx");
+
+  assert.match(sections, /\bshadow-none\b/);
+  assert.match(sections, /hover:border-foreground\/15/);
+  assert.doesNotMatch(sections, /\b(?:shadow-sm|hover:shadow-md|hover:shadow-lg)\b/);
+});
+
 test("keeps the landing footer compact once its final legal row is reached", async () => {
   const footer = await readAppFile("src/components/landing/landing-footer.tsx");
 
