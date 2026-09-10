@@ -59,6 +59,17 @@ clear at canonical `9942da622f765b5247baf682db0a9247efe50d0f`. This card is
 `apps/web/tests/factory-deploy-bond.test.mjs`. The helper source remains
 prohibited pending a separate independent RED review.
 
+## RED review
+
+The independent RED review at
+[M44-T030 RED review](../../evidence/M44-T030-red-review.md) is clear for
+delegated test-only `8053346d9aa25e666bf0fe14a12a767d9be3cdb7`: 9 focused
+passes and 2 intended current-helper failures. This card may now amend only
+`apps/web/src/lib/ats/factory-deploy-bond.ts` and
+`apps/web/tests/factory-deploy-bond.test.mjs` for validate-then-lowercase
+handling of a valid, decoded, non-zero event address. Trusted configuration
+address parsing remains strict.
+
 ## Verification
 
 - RED uses the official Factory artifact to reproduce the valid mixed-case

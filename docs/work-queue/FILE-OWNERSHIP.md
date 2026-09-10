@@ -865,9 +865,11 @@ accepted M44-T020. It comprises its card, specification, local plan, intake
 review, catalog, ownership, State, decisions, reviews, commits, and pushes.
 Its only future implementation paths are the narrow decoded-event amendment of
 `apps/web/src/lib/ats/factory-deploy-bond.ts` and
-`apps/web/tests/factory-deploy-bond.test.mjs`. Only that test is active for
-durable RED; source remains prohibited pending a separate independent RED
-review. The selected
+`apps/web/tests/factory-deploy-bond.test.mjs`. The independent RED review of
+`8053346d9aa25e666bf0fe14a12a767d9be3cdb7` now authorizes only that test and
+`apps/web/src/lib/ats/factory-deploy-bond.ts` for matching local GREEN:
+validate a decoded non-zero EVM address before lowercase normalization while
+leaving trusted configuration parsing strict. The selected
 official Factory artifact and viem seam, every package/lockfile, SDK/browser
 compatibility, M47 path, provider, wallet, RPC, transaction, candidate,
 deployment, and live path are excluded.
