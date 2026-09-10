@@ -75,6 +75,21 @@ function m47AtsCreateInput() {
   return args;
 }
 
+function withM47Payload(changes) {
+  const args = m47AtsCreateInput();
+  args.payload = { ...args.payload, ...changes };
+  args.payloadHash = hashPayload(args.payload);
+  args.expiresAt = args.payload.expiresAt;
+  return args;
+}
+
+function withM47Context(changes) {
+  const args = m47AtsCreateInput();
+  Object.assign(args, changes);
+  args.replayIdentity = `tool402:wallet-command:v1:296:${args.canonicalSignerAddress}:${args.nonce}`;
+  return args;
+}
+
 function authority(args = input()) {
   return {
     _id: "commandAuthorities:current", _creationTime: now - 1000,
@@ -563,13 +578,49 @@ atomicTest("requires the M47 real-issuer binding after M32 authority revalidatio
   assert.ok(binding < durableInsert, "the binding must fail before a durable write");
 });
 
-atomicTest("keeps the atomic mutation behind the existing zero-enabled M33 authority gate before replay or durable access", async (t) => {
+atomicTest("admits the fixed M42/M47 tuple through M33 to replay lookup without external activity", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now });
   const { admitAtsCreateAndMarkAssetPending: atomic } = await import(moduleUrl);
   const args = m47AtsCreateInput();
-  const db = database({ authorities: [authority(args)] });
-  await assert.rejects(() => atomic._handler(db.ctx, args), TypeError);
-  assert.deepEqual(db.reads, lookups(args).slice(0, 1));
+  const db = database({
+    authorities: [authority(args)],
+    claims: [claim({ replayIdentity: args.replayIdentity })],
+  });
+  assert.deepEqual(
+    await atomic._handler(db.ctx, args),
+    { status: "COMMAND_REPLAYED" },
+  );
+  assert.deepEqual(db.reads, lookups(args).slice(0, 2));
   assert.deepEqual(db.writes, []);
-  assert.deepEqual(db.accesses, ["commandAuthorities"]);
+  assert.deepEqual(db.accesses, [
+    "commandAuthorities",
+    "externalPrepareCommandReplayClaims",
+  ]);
+});
+
+atomicTest("rejects M42/M47 payload and authority-context drift before replay or durable activity", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now });
+  const { admitAtsCreateAndMarkAssetPending: atomic } = await import(moduleUrl);
+  const cases = [
+    ["target", withM47Payload({
+      expectedTarget: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    })],
+    ["canonical parameters hash", withM47Payload({
+      canonicalParametersHash: "0".repeat(64),
+    })],
+    ["subject", withM47Payload({ subjectPublicId: "riskscan_revenue_note_other" })],
+    ["signer", withM47Context({
+      canonicalSignerAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    })],
+    ["principal", withM47Context({ principalPublicId: "tool402_ats_issuer_other" })],
+    ["authority version", withM47Context({ authorityVersion: "ats_issuer_testnet_v2" })],
+  ];
+
+  for (const [name, args] of cases) {
+    const db = database({ authorities: [authority(args)] });
+    await assert.rejects(() => atomic._handler(db.ctx, args), TypeError, name);
+    assert.deepEqual(db.reads, lookups(args).slice(0, 1), name);
+    assert.deepEqual(db.writes, [], name);
+    assert.deepEqual(db.accesses, ["commandAuthorities"], name);
+  }
 });
