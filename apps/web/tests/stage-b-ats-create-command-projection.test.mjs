@@ -38,10 +38,23 @@ const requireModuleLoader = new RegExp(
 let moduleExports;
 let stageBAtsCreateCommandProjection;
 
+function maskNonCodeLexemes(source) {
+  return source.replace(
+    /\/\/[^\r\n]*|\/\*[\s\S]*?\*\/|(["'])(?:\\[\s\S]|(?!\1)[^\\])*\1/gu,
+    (lexeme) => {
+      const isQuotedLiteral = lexeme.startsWith('"') || lexeme.startsWith("'");
+      const openingQuote = isQuotedLiteral ? lexeme[0] : "";
+      const body = isQuotedLiteral ? lexeme.slice(1, -1) : lexeme;
+      return `${openingQuote}${body.replace(/[^\r\n]/gu, " ")}${openingQuote}`;
+    },
+  );
+}
+
 function assertNoPrivateModuleLoader(source) {
-  assert.doesNotMatch(source, staticModuleLoader);
-  assert.doesNotMatch(source, dynamicModuleLoader);
-  assert.doesNotMatch(source, requireModuleLoader);
+  const code = maskNonCodeLexemes(source);
+  assert.doesNotMatch(code, staticModuleLoader);
+  assert.doesNotMatch(code, dynamicModuleLoader);
+  assert.doesNotMatch(code, requireModuleLoader);
 }
 
 test("requires the declared public M47 Stage-B command projection source module", () => {
@@ -108,6 +121,7 @@ test("private-loader guard rejects static, dynamic, and require mutations across
       'const inert = 1; import { value } from "private";',
     ],
     ["normal static import", 'import { value } from "private";'],
+    ["side-effect static import", 'import "private";'],
     ["block-comment static import", 'import /* private loader */ { value } from "private";'],
     [
       "line-comment static import",
@@ -129,5 +143,19 @@ test("private-loader guard rejects static, dynamic, and require mutations across
 
   for (const [name, mutatedSource] of mutations) {
     assert.throws(() => assertNoPrivateModuleLoader(mutatedSource), undefined, name);
+  }
+});
+
+test("private-loader guard ignores loader-looking documentation and string literals", () => {
+  const benignSources = [
+    ["line-comment documentation", "// import harmless documentation\nexport const value = 1;"],
+    ["block-comment documentation", "/* import harmless documentation */\nexport const value = 1;"],
+    ["quoted import documentation", 'const note = "import harmless documentation";'],
+    ["quoted require documentation", 'const note = "require(\'private\')";'],
+    ["quoted dynamic-import documentation", 'const note = "import(\'private\')";'],
+  ];
+
+  for (const [name, benignSource] of benignSources) {
+    assert.doesNotThrow(() => assertNoPrivateModuleLoader(benignSource), name);
   }
 });
