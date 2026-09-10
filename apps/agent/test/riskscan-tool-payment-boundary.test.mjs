@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
+const { encodePaymentRequiredHeader } = require("@x402/core/http");
 const paymentSource = new URL("../src/riskscan-tool-payment.ts", import.meta.url);
 const cliSource = new URL("../src/riskscan-pay-cli.ts", import.meta.url);
 const paymentModuleSpecifier = "../src/riskscan-tool-payment.ts";
@@ -171,6 +172,59 @@ function runCliWithoutConfiguration() {
   });
 }
 
+function runCliPreflight() {
+  const paymentRequired = {
+    x402Version: 2,
+    resource: { url: new URL("/api/riskscan", base).href },
+    accepts: [requirements()],
+  };
+  const loader = [
+    `const directory = ${JSON.stringify(directory())};`,
+    `const paymentRequiredHeader = ${JSON.stringify(encodePaymentRequiredHeader(paymentRequired))};`,
+    "const originalProcess = process;",
+    "globalThis.process = new Proxy(originalProcess, { get(target, key) {",
+    "  if (key !== 'env') return Reflect.get(target, key, target);",
+    "  return new Proxy(target.env, { get(environment, name) {",
+    "    if (name === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || name === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY') throw new Error('B03_TEST_PAYER_READ');",
+    "    return Reflect.get(environment, name);",
+    "  } });",
+    "} });",
+    "const requests = [];",
+    "globalThis.fetch = async (target, init = {}) => {",
+    "  const url = new URL(String(target));",
+    "  const headers = new Headers(init.headers);",
+    "  requests.push({ method: init.method ?? 'GET', path: url.pathname, body: init.body ?? null, authorization: headers.get('authorization'), paymentSignature: headers.get('payment-signature') });",
+    "  if (url.pathname === '/api/tools' && (init.method ?? 'GET') === 'GET') return Response.json(directory);",
+    "  if (url.pathname === '/api/riskscan' && init.method === 'POST') {",
+    "    const response = new Response(null, { status: 402, headers: { 'payment-required': paymentRequiredHeader } });",
+    "    response.json = async () => { throw new Error('B03_TEST_RESULT_PARSE'); };",
+    "    return response;",
+    "  }",
+    "  throw new Error('B03_TEST_UNEXPECTED_REQUEST');",
+    "};",
+    "originalProcess.on('beforeExit', () => originalProcess.stdout.write(`B03_TEST_FETCHES ${JSON.stringify(requests)}\\n`));",
+  ].join("\n");
+
+  return new Promise((resolve) => {
+    execFile(
+      process.execPath,
+      ["--import", `data:text/javascript,${encodeURIComponent(loader)}`, "--experimental-strip-types", fileURLToPath(cliSource), "--preflight"],
+      {
+        cwd: fileURLToPath(new URL("../", import.meta.url)),
+        env: {
+          B03_SECRET_SENTINEL: "SECRET_SENTINEL_B03",
+          NODE_NO_WARNINGS: "1",
+          RISKSCAN_PAY_SERVICE_BASE_URL: base.href,
+          RISKSCAN_PAY_INPUT_JSON: JSON.stringify(input),
+          RISKSCAN_PAY_POLICY_JSON: JSON.stringify(policy),
+        },
+        timeout: 2_000,
+      },
+      (error, stdout, stderr) => resolve({ error, stdout, stderr }),
+    );
+  });
+}
+
 boundaryTest("keeps the B03 library to injected capabilities and the single approved Agent/Core composition", async () => {
   const text = await readFile(paymentSource, "utf8");
 
@@ -293,10 +347,18 @@ boundaryTest("keeps the CLI as the only runtime configuration edge and redacts a
   assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03/u);
 });
 
-boundaryTest("reserves the opt-in preflight as a CLI edge before payment construction", async () => {
-  const text = await readFile(cliSource, "utf8");
+boundaryTest("runs the opt-in preflight through one unsigned Directory and initial request before the guard", async () => {
+  const { error, stdout, stderr } = await runCliPreflight();
 
-  assert.match(text, /riskscan-pay-observability/u);
-  assert.match(text, /--preflight/u);
-  assert.match(text, /PREFLIGHT_GUARD_REACHED/u);
+  assert.equal(error, null);
+  assert.equal(stderr, "");
+  assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_PAYER_READ|B03_TEST_RESULT_PARSE/u);
+  const lines = stdout.trimEnd().split("\n");
+  assert.deepEqual(lines.slice(0, 1), ["RISKSCAN_PAY_DIAGNOSTIC PREFLIGHT_GUARD_REACHED"]);
+  assert.equal(lines.length, 2);
+  const requests = JSON.parse(lines[1].replace(/^B03_TEST_FETCHES /u, ""));
+  assert.deepEqual(requests, [
+    { method: "GET", path: "/api/tools", body: null, authorization: null, paymentSignature: null },
+    { method: "POST", path: "/api/riskscan", body: JSON.stringify(input), authorization: null, paymentSignature: null },
+  ]);
 });
