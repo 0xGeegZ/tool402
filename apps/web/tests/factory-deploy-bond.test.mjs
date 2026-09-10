@@ -194,9 +194,12 @@ implementedTest("rejects every fixed routing, issuer, and zero-address compatibi
     createConfiguration({ chainId: 295 }),
     createConfiguration({ operationKind: "ATS_ISSUE" }),
     createConfiguration({ expectedTarget: zeroAddress }),
+    createConfiguration({ expectedTarget: "0x1111111111111111111111111111111111111111" }),
     createConfiguration({ resolverEvmAddress: zeroAddress }),
+    createConfiguration({ resolverEvmAddress: "0x1111111111111111111111111111111111111111" }),
     createConfiguration({ operationDescriptor: { ...createConfiguration().operationDescriptor, factoryHederaId: "0.0.1" } }),
     createConfiguration({ parameters: { ...createConfiguration().parameters, diamondOwnerAccount: zeroAddress } }),
+    createConfiguration({ parameters: { ...createConfiguration().parameters, diamondOwnerAccount: "0x1111111111111111111111111111111111111111" } }),
     createConfiguration({ parameters: { ...createConfiguration().parameters, configVersion: 2 } }),
   ];
 
@@ -204,6 +207,7 @@ implementedTest("rejects every fixed routing, issuer, and zero-address compatibi
     assert.throws(() => api.buildFactoryDeployBondRequest(configuration, { issuerEvmAddress: issuer }));
   }
   assert.throws(() => api.buildFactoryDeployBondRequest(createConfiguration(), { issuerEvmAddress: zeroAddress }));
+  assert.throws(() => api.buildFactoryDeployBondRequest(createConfiguration(), { issuerEvmAddress: "0x1111111111111111111111111111111111111111" }));
 });
 
 implementedTest("decodes the official BondDeployed event from artifact-derived topics and data", () => {
