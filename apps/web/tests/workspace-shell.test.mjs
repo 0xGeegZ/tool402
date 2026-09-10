@@ -24,7 +24,7 @@ test("presents the guest workspace as a dashboard rather than a preview", async 
   assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
   assert.match(page, /<h1\b[^>]*>\s*Dashboard\s*<\/h1>/);
   assert.doesNotMatch(page, /Workspace preview/);
-  assert.match(shell, /aria-label="Guest workspace"/);
+  assert.match(shell, /aria-label="Guest dashboard"/);
   assert.match(shell, /guest/i);
   assert.match(shell, /<Badge\b/);
   assert.match(overview, /<Card\b/);

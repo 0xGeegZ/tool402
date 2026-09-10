@@ -74,7 +74,7 @@ test("offers only the specified current local CTA destinations", async () => {
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
     ["/", "Home"],
-    ["/dashboard", "Workspace"],
+    ["/dashboard", "Dashboard"],
   ]);
   assert.match(landing, /href=\{campaign\.href\}/);
   assert.match(landing, /route: "\/explore\/riskscan"/);
@@ -95,8 +95,9 @@ test("keeps the fuller footer limited to existing local routes", async () => {
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
     ["/", "Home"],
-    ["/dashboard", "Workspace"],
+    ["/dashboard", "Dashboard"],
   ]);
+  assert.match(footer, /aria-label="Dashboard links"/);
   assert.match(footer, /Hedera testnet prototype/);
   assert.doesNotMatch(footer, /new Date\s*\(/);
   assert.doesNotMatch(footer, /(?:https?:\/\/|\/api\/)/i);
