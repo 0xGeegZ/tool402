@@ -189,3 +189,9 @@ dependency, and reads no environment value outside the reader and its handler.
 - The responsive amendment's focused structural assertion preserves the exact
   five-link list and forbids an overflow mask; fresh browser evidence at 390px
   proves the shared shell does not scroll horizontally.
+
+The committed responsive RED contract at `c1953f4e0de02b0435f5a7d209278254d37c2bf3`
+has a clear independent review in
+[`S17-T010-responsive-red-review`](../work-queue/evidence/S17-T010-responsive-red-review.md).
+It permits only the exact bare `flex-wrap` insertion described above before the
+required focused, browser, and final independent checks.

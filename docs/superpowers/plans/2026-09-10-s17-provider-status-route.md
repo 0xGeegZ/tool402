@@ -69,3 +69,8 @@ attribute; do not touch the root layout, global CSS, landmarks, focus seams,
 link labels/order, runtime behavior, or external boundaries. Re-run the
 unconfigured `/provider` browser check at 390px and obtain fresh final reviews
 before acceptance.
+
+The committed test-only RED contract at `c1953f4e0de02b0435f5a7d209278254d37c2bf3`
+is independently clear in
+[`S17-T010-responsive-red-review`](../../work-queue/evidence/S17-T010-responsive-red-review.md).
+Only the one approved source-token insertion may proceed.

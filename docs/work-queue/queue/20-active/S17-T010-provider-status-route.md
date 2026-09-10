@@ -146,8 +146,12 @@ Fresh browser evidence at 390px is required before this card can be accepted.
 
 The independent controls-only scope review is clear in
 [`S17-T010-responsive-scope-review`](../../evidence/S17-T010-responsive-scope-review.md).
-It authorizes no test or source change; fresh responsive RED acceptance remains
-required before the listed assertion or class literal may change.
+The committed test-only RED contract at `c1953f4e0de02b0435f5a7d209278254d37c2bf3`
+has a clear independent review in
+[`S17-T010-responsive-red-review`](../../evidence/S17-T010-responsive-red-review.md):
+its focused Node 22.21.1 run has exactly one failure, the missing `flex-wrap`
+token. Only the listed bare-token insertion is now authorized; final focused,
+390px browser, and independent reviews remain required before acceptance.
 
 ## Verification
 

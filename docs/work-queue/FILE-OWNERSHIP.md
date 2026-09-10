@@ -676,7 +676,10 @@ added, removed, reordered, or made conditional. `layout.tsx`, global CSS, all
 other navigation assertions, and every semantic/runtime boundary remain outside
 this reservation. The controls-only review at
 `docs/work-queue/evidence/S17-T010-responsive-scope-review.md` is clear; it
-authorizes no test or source change before fresh responsive RED acceptance.
+authorized no test or source change before fresh responsive RED acceptance. The
+committed `c1953f4e0de02b0435f5a7d209278254d37c2bf3` RED contract is now clear
+in `docs/work-queue/evidence/S17-T010-responsive-red-review.md`, so only the
+specified bare `flex-wrap` source insertion is authorized before final checks.
 `apps/web/tests/shell-accessibility.test.mjs` is not amendable. The independent
 RED review recorded at `docs/work-queue/evidence/S17-T010-red-review.md` is
 clear, so only the five declared source paths and the root-reserved `/provider`
