@@ -27,7 +27,7 @@ export default function RootLayout({
               </svg>
               Hedera testnet · campaign previews are not live offers.
             </p>
-            <p className="flex min-h-7 items-center justify-center gap-1.5 border-t border-border bg-[#f0ede5] px-4 py-1.5 text-[11px] text-muted-foreground">
+            <p className="flex min-h-7 items-center justify-center gap-1.5 border-t border-border bg-[#f0ede5] px-4 py-1.5 text-[11px] text-foreground/80">
               <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-3.5">
                 <path d="M6 2h4M8 2v4l3.5 5.25A1.7 1.7 0 0 1 10.1 14H5.9a1.7 1.7 0 0 1-1.4-2.75L8 6V2Z" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M6.2 10h3.6" strokeLinecap="round" />
