@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M05-T020 accepted, M05-T030 accepted, M06-T010 accepted,
   M12-T020 accepted, and B02-T010 accepted. B03-T010 is local-GREEN context
   only; its separate human exercise remains blocked and is not a dependency.
@@ -57,6 +57,20 @@ the two durable test-only RED paths
 `apps/agent/test/riskscan-pay-observability.test.mjs` and
 `apps/agent/test/riskscan-tool-payment-boundary.test.mjs`. Every source path
 and every external boundary remains prohibited pending fresh RED acceptance.
+
+## Activation review
+
+The fresh independent activation review at
+[B03-T020 activation review](../../evidence/B03-T020-activation-review.md) is
+clear. This card is `20-active` only to create the durable RED contract in
+exactly these paths:
+
+- `apps/agent/test/riskscan-pay-observability.test.mjs`
+- `apps/agent/test/riskscan-tool-payment-boundary.test.mjs`
+
+Every source path, key/signer/provider boundary, request, retry, settlement,
+preflight execution, replacement attempt, deployment, and live action remains
+prohibited pending fresh independent RED acceptance.
 
 ## Verification
 
