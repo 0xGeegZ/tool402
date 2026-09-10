@@ -19,7 +19,7 @@ test("declares the strict Next workspace boundary", async () => {
   assert.deepEqual(manifest.dependencies, {
     "@tool402/agent": "file:../agent",
     "@tool402/core": "file:../../packages/core",
-    "@hashgraph/asset-tokenization-sdk": "8.0.0",
+    "@hashgraph/asset-tokenization-contracts": "8.0.0",
     "@x402/core": "2.25.0",
     "@x402/evm": "2.25.0",
     "@x402/hedera": "2.25.0",

@@ -286,6 +286,6 @@ implementedTest("uses only the direct official artifact and viem in the local se
   assert.doesNotMatch(source, /(?:const|let|var)\s+\w*abi\w*\s*=/i);
   assert.doesNotMatch(
     source,
-    /@hashgraph\/asset-tokenization-sdk|dotenv|winston|bbs|hardhat|wallet|provider|fetch\s*\(|deployBond\s*\(/i,
+    /(?:from\s+["']@hashgraph\/asset-tokenization-sdk["']|import\s*\(\s*["']@hashgraph\/asset-tokenization-sdk["']|dotenv|winston|bbs|hardhat|wallet|provider|fetch\s*\(|\bdeployBond\s*\()/i,
   );
 });

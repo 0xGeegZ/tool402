@@ -1,20 +1,20 @@
 "use client";
 
-import { Bond } from "@hashgraph/asset-tokenization-sdk";
+import factoryArtifact from "@hashgraph/asset-tokenization-contracts/artifacts/contracts/factory/Factory.sol/Factory.json" with { type: "json" };
+import { encodeFunctionData } from "viem";
 
 import { Button } from "../../ui/button";
 
-const sdkAvailable =
-  typeof Bond === "object" &&
-  Bond !== null &&
-  typeof Bond.create === "function";
+const contractsAvailable =
+  factoryArtifact.abi.some((entry) => entry.type === "function" && entry.name === "deployBond") &&
+  typeof encodeFunctionData === "function";
 
 export function AtsCreateAction() {
   return (
     <Button
       type="button"
       disabled
-      data-sdk-bundle={sdkAvailable ? "loaded" : "missing"}
+      data-ats-contracts-bundle={contractsAvailable ? "loaded" : "missing"}
       variant="outline"
     >
       Create revenue note — unavailable
