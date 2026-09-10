@@ -138,8 +138,8 @@ test("keeps the marketplace thesis local while discovery remains read-only", asy
   ]);
   const [page, hero, discoveryCard] = sources;
 
-  assert.match(hero, /Back the tools agents pay to use\./);
-  assert.match(hero, /text-brand-purple/);
+  assert.match(hero, /Back the tools\s*<span[^>]*>agents pay<\/span>\s*to use\./);
+  assert.match(hero, /<span className=["'][^"']*\btext-brand-purple\b[^"']*["']>agents pay<\/span>/);
   assert.match(hero, /<Link\b[^>]*href=["']\/demo["'][^>]*>\s*Open guided demo\s*<\/Link>/);
   assert.match(discoveryCard, /read-only/i);
   assert.match(page, /<LandingHero\s*\/>/);
