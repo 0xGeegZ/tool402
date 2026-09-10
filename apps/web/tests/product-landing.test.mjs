@@ -46,7 +46,9 @@ test("translates the selected marketplace composition through current local orie
   assert.match(landing, /Explore a current tool/i);
   assert.match(landing, /Inspect its boundary/i);
   assert.match(landing, /Choose a local next step/i);
+  assert.match(sections, /id=["']how-it-works["'][^>]*className=["'][^"']*\bbg-muted\/40\b[^"']*/);
   assert.match(sections, /<ol\b[^>]*className=["'][^"']*\bgrid\b[^"']*\blg:grid-cols-3\b[^"']*["']/);
+  assert.match(sections, /border-t border-dashed border-border/);
   assert.match(sections, /<Card className=["'][^"']*rounded-\[calc\(var\(--radius\)\*2\)\][^"']*\bbg-card\b[^"']*["']/);
   assert.match(landing, /Prepare a tool offering/i);
 });

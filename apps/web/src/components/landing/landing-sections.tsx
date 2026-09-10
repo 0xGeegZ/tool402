@@ -27,7 +27,11 @@ const steps = [
 export function LandingSections() {
   return (
     <div className="space-y-20 sm:space-y-28">
-      <section id="how-it-works" aria-labelledby="how-it-works-title" className="space-y-10 scroll-mt-24">
+      <section
+        id="how-it-works"
+        aria-labelledby="how-it-works-title"
+        className="-mx-4 space-y-10 border-y border-border bg-muted/40 px-4 py-16 scroll-mt-24 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 lg:py-20"
+      >
         <div className="mx-auto max-w-2xl space-y-3 text-center">
           <Badge variant="outline" className="border-brand-purple/30 text-brand-purple">How it works</Badge>
           <h2 id="how-it-works-title" className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
@@ -38,26 +42,29 @@ export function LandingSections() {
             route is ready to take you.
           </p>
         </div>
-        <ol className="relative grid gap-5 lg:grid-cols-3">
-          {steps.map((step, index) => (
-            <li key={step.title}>
-              <Card className="h-full rounded-[calc(var(--radius)*2)] border border-border bg-card shadow-[0_1rem_2rem_color-mix(in_oklab,var(--foreground)_6%,transparent)]">
-                <CardHeader className="gap-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className={`flex size-11 items-center justify-center rounded-2xl text-sm font-semibold ${step.tone}`}>
-                      {index + 1}
-                    </span>
-                    <span className="font-mono text-xs text-muted-foreground">{step.number}</span>
-                  </div>
-                  <h3 className="text-xl font-semibold tracking-tight">{step.title}</h3>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm leading-6 text-muted-foreground">{step.description}</p>
-                </CardContent>
-              </Card>
-            </li>
-          ))}
-        </ol>
+        <div className="relative">
+          <div aria-hidden="true" className="absolute left-[16.5%] right-[16.5%] top-[2.4rem] hidden border-t border-dashed border-border sm:block" />
+          <ol className="relative grid gap-5 lg:grid-cols-3">
+            {steps.map((step, index) => (
+              <li key={step.title}>
+                <Card className="relative h-full rounded-[calc(var(--radius)*2)] border border-border bg-card shadow-[0_1rem_2rem_color-mix(in_oklab,var(--foreground)_6%,transparent)] transition-shadow hover:shadow-[0_1.25rem_2.5rem_color-mix(in_oklab,var(--foreground)_9%,transparent)] motion-reduce:transition-none">
+                  <CardHeader className="gap-5">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className={`flex size-11 items-center justify-center rounded-2xl text-sm font-semibold ${step.tone}`}>
+                        {index + 1}
+                      </span>
+                      <span className="font-mono text-xs text-muted-foreground">{step.number}</span>
+                    </div>
+                    <h3 className="text-xl font-semibold tracking-tight">{step.title}</h3>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm leading-6 text-muted-foreground">{step.description}</p>
+                  </CardContent>
+                </Card>
+              </li>
+            ))}
+          </ol>
+        </div>
       </section>
 
       <section
