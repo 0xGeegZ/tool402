@@ -664,11 +664,16 @@ allows only its declared presentation amendments to
 and UI-S05 mount-record amendments. It must not modify the Directory island's
 source or state, the guest workbench, the RiskScan detail route, or navigation.
 
-S23-T010 is a root-owned `10-ready` presentation intake comprising its moved
+S23-T010 is a root-owned `20-active` presentation intake comprising its moved
 card, `docs/ui/UI-S23.md`, the UI-S23 ledger row, the ready-review evidence,
 queue state, catalog, this ownership record, and D-S23-010-001. No S23 source
-or test change is authorized at this state. Once a fresh independent activation
-has accepted durable RED, its only candidate source/test paths are the existing
+or test change is authorized at this state except its durable RED test paths.
+D-S23-010-002 authorizes only
+`apps/web/tests/explore-catalog.test.mjs`,
+`apps/web/tests/route-loading-skeletons.test.mjs`, and new
+`apps/web/tests/entitycheck-detail.test.mjs` to define the absent S23
+composition. All S23 source paths remain prohibited until independent RED
+acceptance. Its future candidate source/test paths are the existing
 `apps/web/src/components/discovery/explore-catalog.tsx`,
 `apps/web/tests/explore-catalog.test.mjs`, and
 `apps/web/tests/route-loading-skeletons.test.mjs`; the five new paths

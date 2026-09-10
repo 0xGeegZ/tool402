@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: S20-T010 accepted, M02-T070 accepted, M14-T010 accepted,
   M46-T040 accepted, and B03-T020 accepted. M46-T040 is the implementation
   boundary that makes the detail page's route/descriptor copy truthful; B03
@@ -20,7 +20,7 @@
   `apps/web/src/components/discovery/explore-catalog.tsx`,
   `apps/web/tests/explore-catalog.test.mjs`,
   `apps/web/tests/route-loading-skeletons.test.mjs`. The shared
-  `apps/web/tests/landing-explore.test.mjs` is deliberately excluded: S22/S27
+  `apps/web/tests/landing-explore.test.mjs` is deliberately excluded: S22/S31
   currently own its active shared assertions and S23 needs no amendment.
 - Human actions: none. This presentation change creates no wallet, payment,
   provider, configuration, account, transaction, deployment, or live
@@ -53,7 +53,7 @@ accepted slices it builds on are the
   amendment needs an explicit root integration reservation before source
   changes, and the root sequences this card's amendments after any sibling
   amendment to the same file. `landing-explore.test.mjs` remains outside S23
-  because its active shared assertions belong to S22/S27.
+  because its active shared assertions belong to S22/S31.
 - The catalog entry, rail rows, card copy, and detail regions are fixed in
   the manifest before code, so no entry, figure, or control can be added while
   the slice is built.
@@ -66,8 +66,18 @@ and ownership records are committed by the root: every dependency is accepted,
 the existing EntityCheck descriptor/API supports the fixed descriptive copy,
 the five new targets are absent/disjoint, and the focused Explore/loading/
 navigation baseline passes 10/10 alongside Web typecheck and queue validation.
-This card is `10-ready` only. A fresh independent activation must authorize a
-durable test-only RED before any source or test path may change.
+That review moved the card to `10-ready`; the subsequent independent activation
+below controls the only test paths that may now change.
+
+## RED authorization
+
+The independent activation review at pushed
+`32f11eedc30e5d2ba06ac5cde6ff66a1f8a4d4e1` is clear. D-S23-010-002 permits
+only `apps/web/tests/explore-catalog.test.mjs`,
+`apps/web/tests/route-loading-skeletons.test.mjs`, and new
+`apps/web/tests/entitycheck-detail.test.mjs` to define durable RED. Every
+source path remains prohibited until a fresh independent RED review accepts
+exact minimal GREEN.
 
 ## Verification
 
