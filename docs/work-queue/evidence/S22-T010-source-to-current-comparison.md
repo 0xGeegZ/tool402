@@ -27,11 +27,20 @@ behavior.
 
 ## Candidate implementation scope
 
-The independent readiness review may assess only the public root, its three
-landing components, focused landing tests, and at most two landing-only
-decorative brand assets. Global layout, navigation, CSS, backend/API,
-provider/ATS, configuration, packages, README, and submission documentation
-are excluded.
+The independent readiness review may assess only:
+
+- `apps/web/src/app/page.tsx`;
+- `apps/web/src/components/landing/landing-hero.tsx`;
+- `apps/web/src/components/landing/landing-sections.tsx`;
+- `apps/web/src/components/landing/landing-footer.tsx`;
+- `apps/web/tests/product-landing.test.mjs`;
+- `apps/web/tests/landing-explore.test.mjs`;
+- `apps/web/tests/public-landing-reconciliation.test.mjs`; and
+- at most `apps/web/public/brand/hero-trio.png` and
+  `apps/web/public/brand/mascot-coin-stack.png`.
+
+Global layout, navigation, CSS, backend/API, provider/ATS, configuration,
+packages, README, and submission documentation are excluded.
 
 ## Omitted material
 

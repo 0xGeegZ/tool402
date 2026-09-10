@@ -852,13 +852,16 @@ S22-T010 is a root-owned early truth-first POLISH intake comprising only its
 card, `docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, comparison/control
 evidence, plan, queue state, catalog, decisions, this ownership record,
 reviews, commits, and pushes. It owns no active implementation path today. The
-early local comparison may name an exact disjoint landing source/test set for
-an independent readiness review. The comparison may use only the neutral
-`PREP-UI-001` landing alias already recorded locally; it may not commit
-external source identifiers, URLs, archives, or an extracted tree. No route
-outside `/`, global layout/navigation/CSS, provider/wallet/payment/transaction
-behavior, deployment, recording, README, submission documentation, or external
-action is authorized by this intake.
+early local comparison reserves only `apps/web/src/app/page.tsx`, the three
+files under `apps/web/src/components/landing/`,
+`apps/web/tests/product-landing.test.mjs`,
+`apps/web/tests/landing-explore.test.mjs`, one new focused landing test, and
+at most two landing-only brand assets for an independent readiness review. The
+comparison may use only the neutral `PREP-UI-001` landing alias already
+recorded locally; it may not commit external source identifiers, URLs, archives,
+or an extracted tree. No route outside `/`, global layout/navigation/CSS,
+provider/wallet/payment/transaction behavior, deployment, recording, README,
+submission documentation, or external action is authorized by this intake.
 
 S24-T010 is a root-owned `00-inbox` POLISH intake comprising its card,
 `docs/ui/UI-S24.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog, this
