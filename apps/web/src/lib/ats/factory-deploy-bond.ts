@@ -1,5 +1,5 @@
 import factoryArtifact from "@hashgraph/asset-tokenization-contracts/artifacts/contracts/factory/Factory.sol/Factory.json" with { type: "json" };
-import { decodeEventLog, encodeFunctionData, type Address, type Hex } from "viem";
+import { decodeEventLog, encodeFunctionData, isAddress, type Address, type Hex } from "viem";
 
 const factoryAddress = "0xd1f118a40f3b02883d35909ef2517e7edd78379d" as Address;
 const resolverAddress = "0xba2d5fc2083a0b8f164c50e65d782087fba18e0a" as Address;
@@ -51,6 +51,14 @@ function readCanonicalAddress(value: unknown): Address {
     throw new TypeError("invalid ATS address");
   }
   return value as Address;
+}
+
+function readDecodedEventAddress(value: unknown): Address {
+  if (typeof value !== "string" || !isAddress(value)) {
+    throw new TypeError("invalid ATS address");
+  }
+  if (value === zeroAddress) throw new TypeError("invalid deployed bond address");
+  return value.toLowerCase() as Address;
 }
 
 function readExactArray(value: unknown, expected: readonly string[]): readonly string[] {
@@ -194,9 +202,7 @@ export function decodeBondDeployed(log: { readonly data: Hex; readonly topics: r
   if (!decoded.args || Array.isArray(decoded.args) || !("bondAddress" in decoded.args)) {
     throw new TypeError("invalid deployed bond event");
   }
-  const evmAddress = readCanonicalAddress(decoded.args.bondAddress);
-  if (evmAddress === zeroAddress) throw new TypeError("invalid deployed bond address");
-  return Object.freeze({ evmAddress });
+  return Object.freeze({ evmAddress: readDecodedEventAddress(decoded.args.bondAddress) });
 }
 
 export function normalizeHederaCandidateTransactionId(value: unknown): string {
