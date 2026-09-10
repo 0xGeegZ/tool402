@@ -695,6 +695,40 @@ recorded final reports. No package,
 lockfile, configuration value, live facilitator/source read, payment, wallet,
 provider, transaction, deployment, or live path is authorized.
 
+M46-T040 is a root-controlled `00-inbox` CORE_P0 record comprising its card,
+`docs/specs/m46-entity-check-tool-directory.md`, the compatibility amendment
+at `docs/work-queue/evidence/M46-T040-directory-v2-compatibility-amendment.md`,
+its future reviews, its new Web descriptor source/test
+`apps/web/src/lib/entity-check-tool-descriptor.ts` and
+`apps/web/tests/entity-check-tool-descriptor.test.mjs`, and only the following
+root-reserved migration paths:
+`apps/web/src/lib/tool-directory.ts`,
+`apps/agent/src/riskscan-tool-directory.ts`,
+`apps/web/tests/tool-directory-api.test.mjs`,
+`apps/agent/test/riskscan-tool-directory.test.mjs`,
+`apps/agent/test/riskscan-tool-flow.test.mjs`,
+`apps/agent/test/riskscan-tool-native-quote-evaluation.test.mjs`,
+`apps/agent/test/riskscan-tool-native-quote-evaluation-package.test.mjs`,
+`apps/agent/test/riskscan-tool-payment.test.mjs`,
+`apps/agent/test/riskscan-tool-payment-boundary.test.mjs`,
+`apps/web/tests/riskscan-directory-discovery.test.mjs`,
+`apps/web/tests/riskscan-native-quote-compatibility.test.mjs`, and
+`apps/web/tests/riskscan-tool-loop.test.mjs`. M05-T010, M05-T020, M06-T010,
+M45-T010, and M46-T030 are accepted. The migration may replace only the
+canonical default `/api/tools` body with the fixed v2 ordered pair and extend
+only the RiskScan decoder to accept that closed pair plus the exact legacy v1
+one-tool input. This narrowly supersedes only M05/M45's default one-tool-v1
+body requirement; the current route, M45 active-directory reader/view, all Web
+UI source, all other Agent source, package metadata, and lockfile are not
+amendable. No second Directory endpoint, content negotiation, retry, source
+read, payment, wallet/provider, account, transaction, deployment, or live
+capability is authorized. EntityCheck remains inert to the RiskScan consumer;
+a later dedicated consumer card is required before any Agent selects it.
+The `tool-directory-api.test.mjs` reservation includes only the exact v2 tuple
+assertions and the M45 builder-import-vector change from its existing two
+imports to the three imports declared in the M46 specification; its route,
+active-directory-view, and no-I/O assertions remain frozen.
+
 S17-T010 is a root-controlled `60-done` CORE_P0 record comprising its card,
 `docs/ui/UI-S17.md`, the UI-S17 ledger row, its local execution plan, its ready
 and activation review evidence, and only

@@ -1,68 +1,86 @@
-# M46-T040 — EntityCheck Tool Directory descriptor
+# M46-T040 — EntityCheck canonical Tool Directory v2
 
 ## State
 
 - Tier: CORE_P0
 - Queue state: 00-inbox
-- Dependencies: M05-T010 accepted, M06-T010 accepted; M46-T030 (this batch)
-  must be accepted before activation, and M45-T010 (in inbox at intake) must
-  be accepted before this card's amendments because M45 holds reservations
-  over the same directory source and test
+- Dependencies: M05-T010 accepted, M05-T020 accepted, M06-T010 accepted,
+  M45-T010 accepted, and M46-T030 accepted. The canonical-directory migration
+  correction recorded in [D-M46-040-001](../../DECISIONS.md) is a required
+  local control before a ready review.
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
   commits, and pushes. Proposed implementation paths are exactly
   `apps/web/src/lib/entity-check-tool-descriptor.ts`,
-  `apps/web/tests/entity-check-tool-descriptor.test.mjs`, and constrained
-  amendments under a root integration reservation to
-  `apps/web/src/lib/tool-directory.ts` (one import and one array entry) and
-  `apps/web/tests/tool-directory-api.test.mjs` (descriptor count and exact
-  tool list assertions only). No package manifest, lockfile, or dependency
-  change is proposed.
+  `apps/web/src/lib/tool-directory.ts`, and
+  `apps/agent/src/riskscan-tool-directory.ts` under root migration
+  reservations; plus only the focused test paths
+  `apps/web/tests/entity-check-tool-descriptor.test.mjs`, and
+  `apps/web/tests/tool-directory-api.test.mjs`,
+  `apps/agent/test/riskscan-tool-directory.test.mjs`,
+  `apps/agent/test/riskscan-tool-flow.test.mjs`,
+  `apps/agent/test/riskscan-tool-native-quote-evaluation.test.mjs`,
+  `apps/agent/test/riskscan-tool-native-quote-evaluation-package.test.mjs`,
+  `apps/agent/test/riskscan-tool-payment.test.mjs`,
+  `apps/agent/test/riskscan-tool-payment-boundary.test.mjs`,
+  `apps/web/tests/riskscan-directory-discovery.test.mjs`,
+  `apps/web/tests/riskscan-native-quote-compatibility.test.mjs`, and
+  `apps/web/tests/riskscan-tool-loop.test.mjs`. No route, active-directory
+  reader, UI component, package manifest, lockfile, or dependency path is
+  amendable. The `tool-directory-api.test.mjs` reservation includes only the
+  canonical tuple assertions and the exact M45 builder-import-vector update
+  declared by the local M46 specification; its route, active-view, and no-I/O
+  assertions remain unchanged.
 - Human actions: none. Discovery is static metadata plus a fail-closed
   configuration summary; it authorises no publication, payment, provider,
   wallet, account, transaction, deployment, or live claim.
 
 ## Scope
 
-An agent finds tools through `GET /api/tools`. Once `POST /api/entitycheck`
-exists it must be discoverable the same way RiskScan is, with the same input
-schema, limitation, and configuration summary conventions, or agents cannot
-call it without out-of-band knowledge.
+Tool402 has one canonical Tool Directory at `GET /api/tools`, not two parallel
+directories. This card atomically migrates its default response from the
+closed one-tool `v1` form to a closed ordered two-tool `v2` form. It migrates
+the current RiskScan decoder and every local consumer fixture in the same
+reviewed delivery, so no ToolLoop, native quote, payment, or browser inspection
+is left expecting the obsolete server form.
 
-This card adds one descriptor module for `entitycheck.fr` and mounts it as
-the second entry of the accepted directory. The RiskScan descriptor, the
-version literal, the route, and the M45 active view are unchanged.
+The canonical v2 body contains the unchanged RiskScan descriptor first and the
+EntityCheck descriptor second. The route remains `GET /api/tools`; no
+`/api/tools/v2` route, content negotiation, fallback endpoint, or duplicate
+catalog is created. The M45 active-directory view remains its explicitly
+separate `?view=active-directory-version` response and is not merged into the
+v2 tool list.
 
 The local authority is the
-[M46 EntityCheck Tool Directory descriptor contract](../../../specs/m46-entity-check-tool-directory.md).
+[M46 EntityCheck canonical Tool Directory v2 contract](../../../specs/m46-entity-check-tool-directory.md).
 The accepted shape it extends is the
 [M05 Tool Directory contract](../../../specs/m05-riskscan-tool-directory.md),
-as amended by the [M45 active directory version](../../../specs/m45-active-directory-version.md).
+with the [M45 active-directory view](../../../specs/m45-active-directory-version.md)
+remaining separate under the scoped M46 amendment.
 
 ## Candidate ready requirements
 
 - The specification, card, catalog, ownership, and state records are
   committed before any RED test or source change.
-- The two new paths are disjoint from every accepted card's owned paths and
-  from every sibling card in the inbox.
-- `apps/web/src/lib/tool-directory.ts` and
-  `apps/web/tests/tool-directory-api.test.mjs` belong to the accepted
-  M05-T010 and M06-T010 records and carry M45-T010 reservations at intake,
-  so this card's amendments need their own explicit root integration
-  reservation, sequenced after M45-T010 is accepted, and apply to the files as
-  M45 leaves them.
-- M46-T030 is accepted so the `ENTITYCHECK_X402` parser exists.
+- The new descriptor source/test paths are absent. Every existing source/test
+  amendment is exactly reserved above, has no active collision, and is
+  disjoint from M44-T010's SDK-bundle scope.
+- M46-T030 is accepted so the shared `ENTITYCHECK_X402` parser exists; M05,
+  M05-T020, and M45 are accepted so the one-tool producer/consumer contract
+  being superseded is known exactly.
 
 ## Verification
 
 - A durable test-only RED commit precedes every source change and fails only
-  because the descriptor module does not exist and the directory still lists
-  one tool.
+  because the EntityCheck descriptor is absent and the canonical directory and
+  decoder still implement the one-tool v1 form.
 - Focused tests prove the exact EntityCheck descriptor, its fail-closed
   configuration summary for missing or malformed `ENTITYCHECK_X402` values,
   and that no private value is serialised.
-- The amended directory tests prove two descriptors in fixed order, an
-  unchanged RiskScan descriptor, an unchanged M45 view, and a build without
-  network, clock, or random calls.
+- Focused tests prove the canonical v2 order, unchanged RiskScan descriptor,
+  strict rejection of malformed/reordered/extra v2 entries, retained strict
+  legacy-v1 decoding only for a valid one-tool legacy response, the unchanged
+  M45 view, the exact approved three-import builder vector, and construction
+  without network, clock, or random calls.
 - Web typecheck, test, and production build; root typecheck, test, lint,
   `npm run queue:check`, and the enabled local-reference guard pass.
 - Independent task review and a fresh module-review generation report no
