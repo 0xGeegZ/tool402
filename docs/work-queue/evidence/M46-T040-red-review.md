@@ -1,48 +1,38 @@
-# M46-T040 RED review
+# M46-T040 RED acceptance review
 
 ## Scope
 
-Independent root review of the delegated RED-only commit
-`bc1ab6c12fd3b54ade03989898699c49a9489356` in the human-requested
-`.worktrees/entitycheck` worktree, against its parent
-`9b650f53bfdefc681f8f19a7c1e58defeba0a6c9`, the M46-T040 card, the local
-EntityCheck Tool Directory v2 specification, the compatibility amendment, and
-the root FILE-OWNERSHIP reservation.
+Independent re-review of the durable RED commits
+`d8a96a888d58b6a0048e125fd298cc2ad411542b` and
+`ca1d1bfee99fc53e1844dd52237b73fefd8088f3`, against the activated M46-T040
+card, the local EntityCheck Tool Directory v2 specification, the compatibility
+amendment, and the root FILE-OWNERSHIP reservation.
 
 ## Reviewed boundary
 
-- The diff changes exactly the eleven activated M46-T040 test paths. It adds
-  no source, route, queue, catalog, ownership, evidence, manifest, lockfile,
-  product, or judge-facing documentation change.
-- `git diff --check` is clear. The delegated worktree is clean at the reviewed
-  commit.
-- The focused RED suite reports 86 tests: 43 pass, 37 fail as intended, and
-  6 skip. The unchanged RiskScan API/challenge assertions pass 41/41.
+- The aggregate diff changes exactly the eleven activated M46-T040 test paths.
+  It adds no source, route, queue, catalog, ownership, evidence, manifest,
+  lockfile, product, or judge-facing documentation change.
+- `git diff --check` is clear. The corrected RED worktree is clean.
+- The focused Node 22.21.1 RED suite reports 87 tests: 43 pass, 37 fail as
+  intended, and 7 skip. The unchanged RiskScan API/challenge assertions remain
+  covered by the focused suite.
 - The failing assertions are limited to the absent EntityCheck descriptor and
   the still-v1 canonical Directory/decoder. No unrelated RiskScan regression
   surfaced.
-
-## Required RED contract correction
-
-The descriptor test proves valid native-Hedera metadata, but does not yet prove
-the required fail-closed behavior for each of these native configuration
-failures:
+- The correction explicitly covers each required native configuration failure:
 
 - missing `ENTITYCHECK_X402_HEDERA_ASSET`;
 - malformed `ENTITYCHECK_X402_HEDERA_ASSET`;
 - missing `ENTITYCHECK_X402_HEDERA_AMOUNT`; and
 - malformed `ENTITYCHECK_X402_HEDERA_AMOUNT`.
 
-The existing `apps/web/tests/entity-check-tool-descriptor.test.mjs` is the
-only path authorized for this RED-contract amendment. The amendment must stay
-test-only and must not add a descriptor source file, Directory source change,
-Agent source change, route, manifest, configuration value, source read,
-payment, wallet/provider, transaction, deployment, or live behavior.
-
 ## Verdict
 
-BLOCKED — M46-T040 remains `20-active` for the exact test-only correction
-above. The reviewed RED commit is not accepted for GREEN, and no GREEN source
-path is authorized. After the delegated lane records the additional RED cases,
-root must rerun the focused RED review before deciding whether to authorize the
-three already-reserved source paths.
+CLEAR — M46-T040 remains `20-active` and may implement minimal local GREEN
+only in `apps/web/src/lib/entity-check-tool-descriptor.ts`,
+`apps/web/src/lib/tool-directory.ts`, and
+`apps/agent/src/riskscan-tool-directory.ts`. The eleven declared test paths
+remain reserved for matching test-to-GREEN amendments. The route, active view,
+UI, package, lockfile, configuration/environment reads, source reads, payment,
+wallet/provider, transaction, deployment, and live behavior remain prohibited.

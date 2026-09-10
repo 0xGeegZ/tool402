@@ -96,6 +96,27 @@ package, lockfile, configuration, source-read, payment, wallet/provider,
 transaction, deployment, or live path is authorized. A fresh independent RED
 review remains required before any GREEN authorization.
 
+## RED acceptance and GREEN scope
+
+The corrected durable RED contract at
+`ca1d1bfee99fc53e1844dd52237b73fefd8088f3` is independently clear. It adds
+the four required missing/malformed native-Hedera asset and amount cases while
+remaining limited to the eleven declared test paths. The focused Node 22.21.1
+suite has 43 passes, 37 intended RED failures, and 7 skips; failures are
+limited to the absent descriptor source and the unchanged canonical v1
+producer/decoder.
+
+This card remains `20-active` and authorizes minimal local GREEN only in:
+
+- `apps/web/src/lib/entity-check-tool-descriptor.ts`;
+- `apps/web/src/lib/tool-directory.ts`; and
+- `apps/agent/src/riskscan-tool-directory.ts`.
+
+The same eleven declared test paths remain reserved for the corresponding
+test-to-GREEN amendments. The route, M45 active-directory view, UI, package
+metadata, lockfile, configuration/environment reads, source reads, payment,
+wallet/provider, transaction, deployment, and live behavior remain prohibited.
+
 ## Verification
 
 - A durable test-only RED commit precedes every source change and fails only

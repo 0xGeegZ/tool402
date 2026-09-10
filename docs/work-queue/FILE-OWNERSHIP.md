@@ -716,7 +716,7 @@ at `docs/work-queue/evidence/M46-T040-directory-v2-compatibility-amendment.md`,
 its clear ready review at
 `docs/work-queue/evidence/M46-T040-ready-review.md`, its clear activation
 review at `docs/work-queue/evidence/M46-T040-activation-review.md`, its
-blocked RED review at `docs/work-queue/evidence/M46-T040-red-review.md`, its
+clear RED acceptance review at `docs/work-queue/evidence/M46-T040-red-review.md`, its
 future reviews, its
 new Web descriptor source/test
 `apps/web/src/lib/entity-check-tool-descriptor.ts` and
@@ -749,13 +749,14 @@ assertions and the M45 builder-import-vector change from its existing two
 imports to the three imports declared in the M46 specification; its route,
 active-directory-view, and no-I/O assertions remain frozen.
 
-The delegated RED review is not a GREEN acceptance. Until a fresh review,
-only `apps/web/tests/entity-check-tool-descriptor.test.mjs` may be amended to
-cover missing and malformed native `ENTITYCHECK_X402_HEDERA_ASSET` and
-`ENTITYCHECK_X402_HEDERA_AMOUNT`; all three source paths, every other test
-path, route, active view, UI, package, lockfile, configuration, source read,
-payment, wallet/provider, transaction, deployment, and live path remain
-prohibited.
+The corrected RED contract is accepted at
+`ca1d1bfee99fc53e1844dd52237b73fefd8088f3`. GREEN is authorized only for
+`apps/web/src/lib/entity-check-tool-descriptor.ts`,
+`apps/web/src/lib/tool-directory.ts`, and
+`apps/agent/src/riskscan-tool-directory.ts`; the eleven declared test paths
+remain reserved for matching updates. The route, active view, UI, package,
+lockfile, configuration/environment read, source read, payment,
+wallet/provider, transaction, deployment, and live path remain prohibited.
 
 S17-T010 is a root-controlled `60-done` CORE_P0 record comprising its card,
 `docs/ui/UI-S17.md`, the UI-S17 ledger row, its local execution plan, its ready
