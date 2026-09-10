@@ -106,7 +106,7 @@ export function DeployStageSigning({
     <div className="space-y-8">
       <ProviderDeployStages states={visibleStates} projection={atsCreateConfiguration} enabledStage={enabledStage} onActivate={activate} session={session} candidate={candidate} onCandidate={receiveCandidate} />
       {constructionError ? <p role="status" aria-live="polite" className="rounded-[calc(var(--radius)*0.75)] border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null}
-      <section aria-labelledby="deploy-stage-signing-title" className="space-y-4 rounded-[calc(var(--radius)*0.75)] border bg-muted/30 p-4">
+      <section aria-labelledby="deploy-stage-signing-title" data-ui="provider-deploy-signing" className="space-y-4 rounded-[calc(var(--radius)*0.75)] border bg-muted/30 p-4 shadow-none">
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Session-only signing</p>
           <h2 id="deploy-stage-signing-title" className="text-lg font-semibold">Sign the deployment stages</h2>

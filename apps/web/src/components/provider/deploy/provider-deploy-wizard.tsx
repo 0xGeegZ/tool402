@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import Link from "next/link";
 
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
@@ -37,7 +38,7 @@ type WizardValues = {
   acknowledgement: boolean;
 };
 
-const inputClassName = "min-h-11 w-full rounded-[calc(var(--radius)*0.75)] border bg-background px-3 py-2 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus:border-ring";
+const inputClassName = "min-h-11 w-full rounded-[calc(var(--radius)*0.75)] border bg-background px-3 py-2 text-sm text-foreground shadow-none transition-colors placeholder:text-muted-foreground focus:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const fieldLabelClassName = "space-y-2 text-sm font-medium text-foreground";
 const fieldHintClassName = "text-sm leading-6 text-muted-foreground";
 const fieldErrorClassName = "text-sm leading-6 text-destructive";
@@ -76,8 +77,8 @@ function StepProgress({
   onStepSelect: (step: number) => void;
 }) {
   return (
-    <nav aria-label="Provider deploy progress">
-      <ol className="grid grid-cols-5 gap-1 sm:gap-2">
+    <nav aria-label="Provider deploy progress" data-ui="provider-deploy-progress" className="rounded-[calc(var(--radius)*0.75)] border bg-muted/40 p-1">
+      <ol className="grid grid-cols-5 gap-1">
         {providerDeploySteps.map((step, index) => {
           const isCurrent = index === currentStep;
           const isComplete = index < currentStep;
@@ -90,12 +91,12 @@ function StepProgress({
                 disabled={index >= currentStep}
                 onClick={() => onStepSelect(index)}
                 title={step.label}
-                className={`grid w-full min-w-0 gap-1 rounded-[calc(var(--radius)*0.75)] border px-1 py-2 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 ${isCurrent ? "border-primary bg-primary text-primary-foreground" : isComplete ? "border-border bg-secondary text-secondary-foreground hover:border-primary" : "border-border bg-background text-muted-foreground"}`}
+                className={`grid w-full min-w-0 gap-1 rounded-[calc(var(--radius)*0.6)] border px-1 py-2 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 ${isCurrent ? "border-primary bg-primary text-primary-foreground" : isComplete ? "border-border bg-secondary text-secondary-foreground hover:border-primary" : "border-border bg-background text-muted-foreground"}`}
               >
                 <span className="mx-auto flex size-7 items-center justify-center rounded-full border border-current text-xs font-semibold">
                   {index + 1}
                 </span>
-                <span className="truncate text-xs font-medium">{step.label}</span>
+                <span className="hidden truncate text-xs font-medium sm:block">{step.label}</span>
               </button>
             </li>
           );
@@ -362,25 +363,34 @@ export function ProviderDeployWizard() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 pb-8 sm:pb-12">
-      <header className="space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="secondary">{campaignFixture.label}</Badge>
-          <Badge variant="outline">Provider workspace</Badge>
+    <main className="mx-auto max-w-5xl space-y-8 pb-10 sm:pb-14" data-ui="provider-deploy-surface">
+      <header className="space-y-5 border-b border-border pb-7">
+        <Link href="/provider" className="inline-flex w-fit items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+          Back to provider workspace
+        </Link>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-4">
+            <div aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-sm font-semibold text-primary">RS</div>
+            <div className="max-w-2xl space-y-2">
+              <p className="text-sm font-semibold text-foreground">RiskScan</p>
+              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Prepare a local offering</h1>
+              <p className="text-lg leading-8 text-muted-foreground">
+                Configure the existing RiskScan context before any separate signing or provider action is considered.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 sm:justify-end">
+            <Badge variant="secondary">Local editable preview</Badge>
+            <Badge variant="outline">Testnet only</Badge>
+          </div>
         </div>
-        <div className="max-w-3xl space-y-3">
-          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Prepare a tool offering</h1>
-          <p className="text-lg leading-8 text-muted-foreground">
-            Shape a clear local preview before any separate signing or provider action is considered.
-          </p>
-        </div>
-        <p className="border-l-2 border-border pl-4 text-sm leading-6 text-muted-foreground">
-          Demo values are editable and local to this browser view. They do not create, publish, or verify anything; a signature is requested only from the wallet section on the review step.
+        <p className="max-w-3xl border-l-2 border-primary/60 pl-4 text-sm leading-6 text-muted-foreground">
+          These values stay editable in this browser. They do not create, publish, or verify an offering; a signature is requested only from the wallet section on the review step.
         </p>
       </header>
 
-      <Card>
-        <CardHeader className="space-y-5">
+      <Card className="overflow-hidden shadow-none">
+        <CardHeader className="space-y-5 border-b bg-muted/20 p-5 sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{stepCaption(currentStep)}</p>
