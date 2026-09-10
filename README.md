@@ -1,178 +1,193 @@
 # Tool402
 
-Tool402 is a testnet marketplace for verifiable machine-paid tools. An agent
-discovers a tool, receives an explicit x402 payment challenge instead of a
-fabricated result, pays on Hedera testnet, gets one bounded result, and keeps
-a receipt that ties request, payment, and result together. A provider can
-prepare a tool offering, sign a small set of EIP-712 commands from MetaMask,
-and, under a separate human gate, issue a revenue note through the official
-Asset Tokenization Studio contracts.
+> **Back the tools agents pay to use.**
 
-The first tool is RiskScan: a bounded, explainable risk assessment for a
-request context. Everything in this repository is built for ETHOnline on
-Hedera testnet and makes no production, mainnet, or financial claim.
+Tool402 is a marketplace for verifiable, machine-paid tools. A Consumer Agent
+can discover a bounded capability, meet an explicit `402 Payment Required`
+challenge, and receive a result only after verified x402 settlement. Providers
+can prepare a campaign without giving the application custody of their wallet
+or keys.
 
-## What is verified, what is not
+The judged/demo path is Hedera testnet. The source retains a generic EVM x402
+configuration branch, but no mainnet use is configured, rehearsed, or
+evidenced. Tool402 is not a custody or investment product and makes no promise
+of yield, principal, users, revenue, or returns.
 
-Local behaviour is proven by tests, typecheck, and browser checks on every
-accepted card. Live behaviour is proven only by human-recorded evidence. The
-current split is recorded in `docs/work-queue/STATE.md` and
-`docs/work-queue/HUMAN-ACTIONS.md`; the short version:
+## Judge summary
 
-- Verified locally: the RiskScan x402 route, the Agent payment client, the
-  tool directory, the public web routes, the wallet island and command relay,
-  the provider deploy wizard with its signing bridge, the Convex admission
-  and ingress boundaries, and the ATS_CREATE configuration projection.
-- Verified live, as redacted human evidence: one x402 Hedera testnet paid
-  request, one named Convex development deployment with its ingress key pair,
-  and the funded testnet issuer account.
-- Pending human actions: public deployment, the Agent payment exercise on the
-  public host, the ATS Stage B live execution, the demo video, and the
-  submission.
+**Flow:** Agent → Tool Directory → unpaid tool request → x402 `402` →
+spend-policy check → payment proof to the same tool service →
+service/facilitator verification → bounded result.
 
-Nothing below claims a public URL, a live revenue note, or a payment that the
-evidence records do not name.
+- **RiskScan Quick** is the first listed tool: an explainable, caller-context
+  assessment, not financial, legal, insurance, security, or identity advice.
+- **EntityCheck** exists at `POST /api/entitycheck` for a source-bounded
+  French-entity assessment. It is not yet in the canonical directory and its
+  live sources and payment configuration are intentionally absent.
+- **Providers** can review EIP-712 campaign commands. A local Factory-artifact
+  + viem seam tests ATS revenue-note encoding/decoding, but is not wired to a
+  provider transaction flow.
 
-## Quick start
+For RiskScan, the Agent reads the directory, evaluates a Hedera-asset quote,
+then posts its payment proof back to the tool service. The service—not the
+Agent—uses its configured facilitator to validate settlement before releasing
+the result. Blocky402 is not hard-coded or evidenced here; name it in a final
+demo only if its configured-facilitator `402 → payment → protected 200` path
+is independently recorded.
 
-Requires Node 22 and npm 10. `nvm use` selects the pinned Node.
+No funding, payout, HCS event, allocation, or mainnet payment is implemented
+or claimed for the Hedera-testnet demo.
+
+## Architecture
+
+### Consumer Agent
+
+`apps/agent` contains the consumer boundary. It discovers RiskScan from
+`GET /api/tools`, rejects malformed directory or challenge data, applies an
+explicit native-Hedera spending policy, and performs at most one signed retry
+after the initial unsigned request. Its CLI is a human-run testnet exercise;
+the payer account and private key stay in ignored runtime configuration.
+
+### Marketplace roles
+
+| Actor | Responsibility | What it never proves alone |
+| --- | --- | --- |
+| Consumer Agent | Discovers a descriptor, evaluates policy, submits payment proof to the tool service, and validates the returned result shape. | A wallet, unsigned request, or `402` response is not payment. |
+| Tool service | Publishes bounded metadata, challenges unpaid requests, obtains facilitator validation, and returns the bounded result. | Configuration is not public deployment or payment completion. |
+| Provider | Prepares campaign commands for review. | A signature or relay outcome is not an ATS event. |
+| Human operator | Owns wallet access, funding, live configuration, deployment, narration, and submission. | No agent receives those authorities by default. |
+
+### Provider campaign
+
+The provider flow in `apps/web` is a preparation and signing boundary:
+
+`Provider wizard → MetaMask EIP-712 signature → POST /api/commands → HMAC-protected Convex ingress`
+
+The ingress checks the authenticated envelope, expiry, command authority,
+canonical payload, idempotency, and replay identity before durable admission.
+It returns an admission outcome such as `ACCEPTED`, `REPLAYED`, `CONFLICT`, or
+`REJECTED`; none of these means that an on-chain action happened.
+
+### Hedera ATS revenue note
+
+Tool402 includes a tested local revenue-note encode/decode seam using the
+official `@hashgraph/asset-tokenization-contracts@8.0.0` Factory artifact and
+existing `viem@2.56.1`. It validates the accepted configuration, encodes
+`deployBond`, and can decode `BondDeployed`; it does **not** prompt a wallet,
+call an RPC, simulate, send a transaction, or deploy an asset.
+
+This direct Artifact + viem path is the selected local implementation decision;
+the earlier SDK browser-bundle work is historical fallback evidence. It is not
+currently wired into the provider campaign: the live UI exposes only a disabled
+“Create revenue note — unavailable” control. `HA-ATS-STAGE-B-001` remains the
+sole authority for any later provider interaction, signing, transaction,
+candidate attachment, Mirror Node verification, or lifecycle action. There is
+no live ATS deployment or successful Stage B claim.
+
+## Security and authority model
+
+- Runtime secrets, private keys, signed payment headers, and funded-account
+  values are never committed. Documentation names variables but never gives
+  values.
+- The web relay authenticates browser command bodies to Convex with an HMAC;
+  the command itself is EIP-712 signed, canonicalized, expiry-bound, and
+  replay/idempotency checked.
+- Payment, command admission, receipt verification, and directory publication
+  are separate states. A `402`, wallet signature, relay `ACCEPTED`, or pending
+  receipt cannot be presented as final settlement or issuance.
+- ATS verification fails closed: current ATS paths are `NOT_CONFIGURED` until
+  the separate human Stage B authority and its successor verification work
+  exist.
+
+## Run locally
+
+Requires Node 22 and npm 10. Use the repository pin before installing or
+testing:
 
 ```sh
 nvm use
 npm ci
+```
+
+Run quality checks:
+
+```sh
 npm run typecheck
-npm test
 npm run lint
+npm run test
 npm run queue:check
 ```
 
-Run the web app locally:
+Run the web app:
 
 ```sh
-npm run dev --workspace=apps/web
+npm run dev --workspace=@tool402/web
 ```
 
-With no runtime configuration the app runs in its unconfigured state: the
-RiskScan route answers that no payment configuration exists, the directory
-lists RiskScan without a live endpoint, and the command relay answers
-`not_configured`. Every screen renders that state truthfully instead of
-mocking success.
-
-## Architecture
-
-npm workspaces, one repository:
-
-| Workspace          | Role                                                                                                                                                                                                                           |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `packages/core`    | Pure TypeScript domain: RiskScan assessment, x402 challenge and evidence types, offering terms and revenue math, EIP-712 command payload parsers with RFC 8785 canonical bytes, ATS configuration and authority rules. No I/O. |
-| `packages/backend` | Convex backend: durable RiskScan request and settlement records, offering and Tool Directory admission, the HMAC-protected HTTP command ingress, wallet-command normalization, the fail-closed ATS prepare-authority gate.     |
-| `apps/web`         | Next.js app: public landing, Explore, RiskScan detail and Try flows, guest workspace, the x402-protected RiskScan API, the tool directory API, the command relay, the provider deploy wizard with the MetaMask signing bridge. |
-| `apps/agent`       | The consumer agent: discovers RiskScan through the directory, handles the `402` challenge, pays through the x402 Hedera scheme, and verifies the result and evidence. Ships a CLI for the human-run testnet exercise.          |
-
-Web routes:
-
-| Route                                 | Purpose                                                                     |
-| ------------------------------------- | --------------------------------------------------------------------------- |
-| `/`                                   | Public landing                                                              |
-| `/explore`, `/explore/riskscan`       | Tool catalogue and RiskScan detail                                          |
-| `/explore/riskscan/try`               | Bounded browser request against the RiskScan route                          |
-| `/explore/riskscan/tool-loop`         | Browser view of the agent discovery, challenge, payment, and result loop    |
-| `/dashboard`, `/dashboard/riskscan/*` | Guest workspace: request state, quick preflight, native-quote compatibility |
-| `/demo`                               | Guided narration of the loop                                                |
-| `/provider/deploy`                    | Provider campaign wizard and stage signing                                  |
-| `POST /api/riskscan`                  | x402-protected RiskScan Quick assessment                                    |
-| `GET /api/tools`                      | Tool directory                                                              |
-| `POST /api/commands`                  | Relay from the browser wallet to the Convex ingress                         |
-
-Convex HTTP actions: `POST /internal/commands` (HMAC-authenticated command
-ingress), `GET /public/offerings/*` and `GET /public/directory/*` (public
-projections that expose no hash, nonce, or signature).
-
-## Payment flow
-
-1. The agent reads `GET /api/tools` and finds RiskScan, its capability,
-   advertised tiers, and payment network.
-2. The agent posts a request to `POST /api/riskscan`. With no payment the
-   route answers `402` with a `PAYMENT-REQUIRED` header carrying the x402 v2
-   challenge; the assessment does not run.
-3. The agent evaluates the challenge against its own policy, then pays through
-   the x402 Hedera scheme with its own signer. Two closed configuration
-   families exist: an EVM CAIP-2 family and a native Hedera testnet family
-   that quotes an exact HBAR amount through the facilitator.
-4. The facilitator settles; the route runs the bounded assessment only after a
-   verified settlement and returns a structured result or an explicit failure.
-5. The route records the settlement attempt and evidence durably in Convex.
-   The response carries a receipt reference; the workspace pages render
-   request state, pending settlement, and finality without inferring success.
-
-No key, funded account, or signed payload lives in this repository. The agent
-CLI reads its signer only from the environment of the human who runs it:
+Run the consumer Agent exercise only after Human Ops has provided approved,
+ignored testnet configuration:
 
 ```sh
-RISKSCAN_PAY_SERVICE_BASE_URL=https://<host> \
-RISKSCAN_PAY_INPUT_JSON='{...}' \
-RISKSCAN_PAY_POLICY_JSON='{...}' \
-RISKSCAN_PAY_PAYER_ACCOUNT_ID=0.0.<id> \
-RISKSCAN_PAY_PAYER_PRIVATE_KEY=<never committed> \
-npm run riskscan:pay --workspace=apps/agent
+npm run riskscan:pay --workspace=@tool402/agent
 ```
 
-## Provider campaign and tokenization flow
+### Runtime-variable names only
 
-The provider path is a hybrid: every wallet-signed intent is admitted by
-Convex first, Hedera receipts stay authoritative for anything on-chain, and an
-offering reaches a state only through a verified record, never a wallet
-callback.
+Do not commit, paste, or log the values for any of these variables.
 
-1. The provider fills the deploy wizard: tool details, capability, prices,
-   funding and revenue-note terms (v1: 1,000 HBAR target, 1 HBAR notes, 80 /
-   20 / 0 routing, 1,500 HBAR payout cap).
-2. On the review step the provider connects MetaMask on Hedera Testnet
-   (`0x128`). The signing bridge builds one EIP-712 `Tool402Command` per
-   stage over the canonical payload bytes: `offering.create`,
-   `external.prepare` (ATS_CREATE), `external.attachCandidate`, and
-   `directory.publish`. Each request uses one clock reading and a fresh
-   idempotency key; nothing is retried.
-3. The browser posts `{ command, payload }` to `/api/commands`. The relay
-   signs the body with the ingress HMAC key and forwards it to the Convex
-   ingress, which verifies the envelope, claims the replay identity, normalizes
-   the wallet command against the command authority, and admits it durably.
-   The relay returns only the backend outcome: `ACCEPTED`, `REPLAYED`,
-   `CONFLICT`, `REJECTED`, or `UNSUPPORTED_TYPE`.
-4. The revenue note itself is created by the provider's own MetaMask through
-   the official Factory artifact from
-   `@hashgraph/asset-tokenization-contracts@8.0.0` and `viem@2.56.1` against
-   the testnet factory. The backend never holds a key. Receipt verification against
-   Mirror Node moves the offering from `ASSET_PENDING` to `READY`; only then
-   can the directory publish. Live execution sits behind a separate human
-   gate (`HA-ATS-STAGE-B-001`).
+| Scope | Variable names |
+| --- | --- |
+| RiskScan x402 | `RISKSCAN_X402_PAY_TO`, `RISKSCAN_X402_FACILITATOR_URL`, `RISKSCAN_X402_NETWORK`, plus either `RISKSCAN_X402_PRICE` for the EVM family or `RISKSCAN_X402_HEDERA_ASSET` and `RISKSCAN_X402_HEDERA_AMOUNT` for native Hedera. |
+| EntityCheck x402 and sources | `ENTITYCHECK_X402_PAY_TO`, `ENTITYCHECK_X402_FACILITATOR_URL`, `ENTITYCHECK_X402_NETWORK`, plus either `ENTITYCHECK_X402_PRICE` or `ENTITYCHECK_X402_HEDERA_ASSET` and `ENTITYCHECK_X402_HEDERA_AMOUNT`; also `ENTITYCHECK_REGISTRY_BASE_URL`, `ENTITYCHECK_SANCTIONS_URL`. |
+| Provider command relay | `TOOL402_INGRESS_KEY_ID`, `TOOL402_INGRESS_SECRET`, `TOOL402_CONVEX_SITE_URL`. |
+| Agent CLI | `RISKSCAN_PAY_SERVICE_BASE_URL`, `RISKSCAN_PAY_INPUT_JSON`, `RISKSCAN_PAY_POLICY_JSON`, `RISKSCAN_PAY_PAYER_ACCOUNT_ID`, `RISKSCAN_PAY_PAYER_PRIVATE_KEY`. |
 
-## Runtime configuration
+Without configuration, routes remain explicitly unavailable rather than
+inventing a payment, source read, or deployment result.
 
-All values are read from the host environment at request time. None is
-tracked. Names only:
+## Expected demo journey
 
-| Variable                                                                                                | Read by                                                                             |
-| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `RISKSCAN_X402_PAY_TO`, `RISKSCAN_X402_FACILITATOR_URL`, `RISKSCAN_X402_NETWORK`, `RISKSCAN_X402_PRICE` | `POST /api/riskscan`, EVM family                                                    |
-| `RISKSCAN_X402_HEDERA_ASSET`, `RISKSCAN_X402_HEDERA_AMOUNT`                                             | `POST /api/riskscan`, native Hedera family (mutually exclusive with the EVM family) |
-| `TOOL402_INGRESS_KEY_ID`, `TOOL402_INGRESS_SECRET`, `TOOL402_CONVEX_SITE_URL`                           | `POST /api/commands` relay; the same key pair is set on the Convex deployment       |
-| `RISKSCAN_PAY_*`                                                                                        | Agent CLI only                                                                      |
+Use the following only with evidence from the recorded commit:
 
-## How this repository is run
+1. Open Explore or the Tool Loop and explain the thesis: agents discover a
+   useful tool before they pay.
+2. Inspect RiskScan's scope and limitations, then send one valid request to
+   show the explicit `402` boundary.
+3. On an approved public testnet host, run the Consumer Agent once with its
+   bounded spend policy and show the protected result only after verified
+   payment evidence. Do not simulate a successful payment.
+4. Open the provider campaign page and show the signed-command boundary and
+   disabled Factory-artifact control. Before Stage B, state that it is not
+   wired for execution—do not imply a deployed revenue note.
+5. If Stage B later completes, replace the centralized evidence placeholders
+   in the submission pack and show only the independently checkable testnet
+   transaction and receipt outcome.
 
-The repository is operated as a work queue. `AGENTS.md` is the runtime
-authority; `docs/work-queue/` holds the queue, the task catalogue, the
-decisions and human-action ledgers, and review evidence; `docs/specs/` and
-`docs/ui/` hold the per-card contracts. Each card lands as a test-only RED
-contract, a minimal GREEN, and independent reviews before acceptance. Humans
-add work through inbox cards and pull requests; only the root integrator
-advances queue state.
+The under-four-minute narration, evidence checklist, prize copy, and the
+single replacement table live in [the submission pack](docs/submission/README.md).
 
-## Boundaries
+## Repository structure
 
-Testnet only. Experimental terms. No yield, principal, or return is promised.
-Credentials, keys, funded accounts, and signed payloads never enter tracked
-files. A connected wallet is not an authority, a signature is not an accepted
-command, and a relayed `ACCEPTED` is a backend admission, not an on-chain
-fact.
+```text
+apps/agent       Consumer Agent, x402 policy/payment boundary, CLI
+apps/web         Next.js marketplace, provider flow, protected API routes
+packages/core    Pure domain models, parsers, lifecycle and security rules
+packages/backend Convex admission, replay, directory, and receipt boundaries
+docs/specs       Committed implementation contracts
+docs/submission  Draft judge-facing submission material; not a submission
+docs/work-queue  Local control-plane records and human-action gates
+```
+
+## Current limitations
+
+- No public deployment URL or public Agent CLI exercise is currently recorded.
+- EntityCheck is implemented as a protected endpoint but is not yet in the
+  canonical Tool Directory; its live source configuration is pending.
+- Stage B is pending: no live revenue note, ATS asset, provider transaction,
+  candidate attachment, or positive ATS receipt verification is claimed.
+- Funding, clearing, payouts, HCS publication, allocation, and holder
+  distribution are outside the implemented demo.
+- The final video and event submission remain human-owned actions.
+
+See [the submission pack](docs/submission/README.md) for the deliberate final
+evidence placeholders and the items that must be refreshed after rehearsal.
