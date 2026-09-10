@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T040 accepted, M02-T050 accepted; M46-T010 (this batch)
   must be accepted before activation because this card maps into its types
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -107,6 +107,23 @@ configuration. A `read` outcome asserts only what those responses contained
 at that moment. It holds no key, initiates no payment, records nothing
 durably, and proves no live availability, ownership, solvency, or compliance
 fact.
+
+## Acceptance record
+
+Accepted at 2026-09-10T05:38:30Z at source commit
+`b8843b03fa0cd5452445ae7b90aaa496757a8bd4` after fresh independent task,
+module/security, and test reviews. The focused M46 contract passed 13/13; the
+complete Core and Backend suites passed 152/152 and 275/275. Root typecheck,
+lint, queue validation, whitespace validation, and the enabled local-reference
+guard passed under Node 22.21.1. The equivalent Webpack production build
+completed; it retains the known optional dependency warning in the existing
+RiskScan x402 import trace. The complete Web/root suite has only the two
+separately blocked M44 source-absence RED failures (222 passed, 2 failed, 19
+skipped); no M46 assertion failed. The final correction rejects an
+extended-year injected clock before any fetch so a Core-invalid source
+descriptor cannot be returned. This acceptance adds no configuration value,
+live source read, payment, wallet, provider, transaction, deployment, or
+other external authority.
 
 ## Human worktree lane request
 
