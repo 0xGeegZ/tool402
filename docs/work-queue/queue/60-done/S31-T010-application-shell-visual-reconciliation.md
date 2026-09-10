@@ -3,9 +3,8 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
-- Dependencies: M02-T020 accepted, S17-T010 accepted, S22-T010 and S24-T010
-  remain active with disjoint landing/dashboard paths.
+- Queue state: 60-done
+- Dependencies: M02-T020, S17-T010, S22-T010, and S24-T010 accepted.
 - Owner: The root owns queue state, catalog, ownership, UI ledger, decisions,
   reviews, commits, and pushes. The proposed source/test paths are exactly
   those listed in UI-S31.
@@ -54,6 +53,16 @@ and the fresh independent RED review at
 proves only the absent compact mobile menu/right-side sheet. D-S31-010-004
 therefore permits the two declared shell source paths and the three matching
 focused tests for minimal presentational GREEN.
+
+## Acceptance
+
+S31-T010 is accepted at final shell refinement `fb706f1`. The independent
+current-head review at `a4833329fbd72531980283ff269afe6ba8882765` confirms
+that later changes are S23-only and disjoint. The combined S22/S31 focused
+suite passes 27/27; Web typecheck, queue validation, and whitespace checks are
+clear. The reviewed shell preserves both truthful notices, the exact local
+href map, clickable home logo, provider-deploy CTA, keyboard-operable mobile
+menu, focus return, Escape handling, and no-external-link boundary.
 
 ## Boundary
 

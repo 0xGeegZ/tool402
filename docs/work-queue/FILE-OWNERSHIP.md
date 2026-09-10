@@ -957,8 +957,9 @@ and only the named label/caption/progress assertions in
 amendment and remains disjoint from M49. S27 adds no provider, wallet,
 transaction, deployment, or live authority.
 
-S22-T010 is a root-owned early truth-first POLISH lane. Its first independently
-accepted GREEN scope comprised only `apps/web/src/app/page.tsx`,
+S22-T010 is an accepted root-owned early truth-first POLISH lane at final
+refinement `c210a5a`. Its independently accepted source/test scope comprises
+only `apps/web/src/app/page.tsx`,
 `apps/web/src/components/landing/landing-hero.tsx`,
 `apps/web/src/components/landing/landing-sections.tsx`,
 `apps/web/src/components/landing/landing-footer.tsx`,
@@ -974,7 +975,8 @@ S31-T010 holds the sole root integration reservation to amend only the
 `LocalNavigation` entry assertions in `apps/web/tests/landing-explore.test.mjs`;
 all other S22 assertions and every S22 source path remain unchanged.
 
-S24-T010 is a root-owned early truth-first POLISH lane. It is `20-active` for
+S24-T010 is an accepted root-owned early truth-first POLISH lane at final
+refinement `27fb244`, limited to
 `apps/web/src/app/dashboard/page.tsx`,
 `apps/web/src/components/workspace/workspace-shell.tsx`,
 `apps/web/src/components/workspace/workspace-overview.tsx`,
@@ -983,8 +985,8 @@ S24-T010 is a root-owned early truth-first POLISH lane. It is `20-active` for
 `apps/web/tests/dashboard-workspace-reconciliation.test.mjs`. Global
 layout/navigation/CSS, child route/island, API/Agent, Provider/Demo, asset,
 configuration, package, README, submission, deployment, and video paths remain
-prohibited. Independent task and module review remain required before
-acceptance.
+prohibited. Independent final review is recorded in
+`docs/work-queue/evidence/S24-T010-final-review.md`.
 S31-T010 holds the sole root integration reservation to amend only the
 `LocalNavigation` entry and responsive-list assertions in
 `apps/web/tests/workspace-shell.test.mjs`; all other S24 assertions and every
@@ -1014,7 +1016,8 @@ D-S30-010-005 accepts this exact source/test set at `4382af2` after focused
 validation, Web typecheck, responsive browser verification, and independent
 review. Its request semantics and every no-mock exclusion remain fixed.
 
-S31-T010 is a root-owned truth-first POLISH source scope comprising its card,
+S31-T010 is an accepted root-owned truth-first POLISH source scope at final
+refinement `fb706f1`, comprising its card,
 `docs/ui/UI-S31.md`, the local UI ledger, decision, state, catalog, this
 ownership record, reviews, commits, and pushes. Its accepted source/test set
 is exactly `apps/web/src/app/layout.tsx`,

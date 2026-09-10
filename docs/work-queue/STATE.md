@@ -47,6 +47,14 @@
   shared-navigation entry/list assertions in landing-explore.test.mjs and
   workspace-shell.test.mjs to S31-T010. S22/S24 retain every other assertion
   and source path. This reservation itself grants no test or source change.
+- S22_S24_S31_FINAL_ACCEPTANCE: At exact head
+  `a4833329fbd72531980283ff269afe6ba8882765`, independent final reviews are
+  clear for S22's landing refinement `c210a5a`, S24's dashboard refinement
+  `27fb244`, and S31's shell refinement `fb706f1`. Their focused tests,
+  typecheck, queue validation, whitespace, and desktop/390px browser evidence
+  are recorded on the respective accepted cards. All three move to `60-done`;
+  their truth-first exclusions and the pending Stage B/public deployment/demo
+  boundaries remain unchanged.
 - S28_PROVIDER_OVERVIEW_INTAKE: S28-T010 is a root-owned truth-first Provider
   overview visual reconciliation. Its only candidate source paths are the
   Provider page, its existing status component, and one new focused
