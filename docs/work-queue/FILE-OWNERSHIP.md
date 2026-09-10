@@ -1120,6 +1120,13 @@ RiskScan-detail Try-href assertion in
 PageHeader action-object pair. The test's other assertions and every source
 path remain governed by their existing scopes.
 
+D-S25-010-008 accepts S25-T010 at
+`886987ab8854d7f90bf734e84ad31cdfcb0720f1` after independent GREEN review.
+Its completed delivery is the fourteen named presentation paths and the one
+accepted RiskScan Try assertion correction in UI-S25; all reservations are
+released. No data, reader, request/form/workflow, wallet, payment, ATS,
+transaction, deployment, or live path is granted by this acceptance.
+
 S28-T010 is a root-owned 00-inbox truth-first POLISH intake comprising its
 card, `docs/ui/UI-S28.md`, the local UI ledger, decision, state, catalog, this
 ownership record, reviews, commits, and pushes. Its only candidate source/test

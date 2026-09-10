@@ -163,3 +163,16 @@ canvas tiles UI-S17 declined.
 - Desktop and 390px browser checks on `/provider` and `/explore` show one
   `h1`, the eyebrow, the action buttons wrapping without overflow, visible
   keyboard focus on each action, and no horizontal scroll.
+
+## Acceptance
+
+UI-S25 is accepted at source commit `886987ab8854d7f90bf734e84ad31cdfcb0720f1`.
+The independent exact-head GREEN review is clear: the delivery stays within
+the fourteen named presentation paths and the one accepted RiskScan Try
+assertion correction; it changes no route, reader, form, workflow, wallet,
+payment, ATS, deployment, or live behaviour. Node 22.21.1 Web tests pass
+`300/300`; Web typecheck, root lint, `queue:check`, and whitespace validation
+are clear. Browser checks on `/provider`, `/explore`, RiskScan detail, and
+Provider deploy at 1440px and the required Provider/Explore checks at 390px
+show the header hierarchy, usable local CTAs, responsive wrapping, and no
+visible horizontal overflow.

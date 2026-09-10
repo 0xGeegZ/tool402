@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T010 accepted, M02-T070 accepted, M02-T080 accepted,
   M08-T010 accepted, M11-T020 accepted, M13-T010 accepted, M14-T010 accepted,
   M15-T010 accepted, S11-T010 accepted, S16-T010 accepted, S17-T010 accepted;
@@ -102,6 +102,17 @@ activated tests. Independent scope review at `c98edcc` accepts the one
 reader and `Suspense`, all existing page body content, deploy wizard
 fields/state/signing flow, route hrefs, and every data, wallet, payment, ATS,
 transaction, deployment, and live boundary stay fixed.
+
+## Acceptance
+
+S25-T010 is accepted at source commit
+`886987ab8854d7f90bf734e84ad31cdfcb0720f1`. Independent GREEN review is
+clear: its source/test delivery is within the fourteen named presentation
+paths and the one accepted RiskScan Try assertion correction. Node 22.21.1
+Web tests pass `300/300`; Web typecheck, root lint, `queue:check`, whitespace,
+and desktop/390px browser verification are clear. The card releases every
+source/test reservation and grants no data, reader, workflow, wallet, payment,
+ATS, transaction, deployment, or live authority.
 
 ## Human worktree lane request
 
