@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T040 accepted, M02-T020 accepted, M42-T010 accepted,
   S15-T010 accepted, S16-T010 accepted, HA-ATS-CONTRACTS-VIEM-001 accepted
 - Owner: root owns queue state and integration. Future source paths are
@@ -85,3 +85,18 @@ focused tests fail only for the absent direct Factory source and skip ten
 GREEN assertions. Minimal GREEN may now use only this card's exact ownership
 reservation to add the direct source and replace/remove the historical SDK
 graph. The Stage-B execution exclusion remains unchanged.
+
+## GREEN acceptance
+
+The independent GREEN review at `d091be93c07807df990975b553352b04df6b4b56` is
+clear in [M44-T020-green-review](../../evidence/M44-T020-green-review.md).
+The accepted local seam uses only the official Factory artifact and existing
+viem, covers every fixed tuple field, zero-address compatibility mapping,
+official selector/event decoding, and HI-007 normalization, and removes the
+SDK compatibility graph. The focused contract, Web typecheck, complete Web
+suite, lint, install dry-run, queue validation, whitespace, fresh Turbopack
+development client-graph inspection, and isolated browser review are recorded
+there. The local standalone Turbopack production build remains host-blocked
+before application compilation by the known CSS-helper port bind restriction;
+it is not deployment evidence. No wallet, provider, RPC, simulation,
+transaction, candidate attachment, deployment, or live behavior was invoked.
