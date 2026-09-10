@@ -611,7 +611,7 @@ export-only addition; the test fixtures are already committed. No I/O, source ad
 Directory, UI, package, lockfile, configuration, payment, wallet, provider,
 transaction, deployment, or live path is authorized.
 
-M46-T020 is a root-controlled `00-inbox` CORE_P0 record comprising its card,
+M46-T020 is a root-controlled `10-ready` CORE_P0 record comprising its card,
 `docs/specs/m46-entity-check-sources.md`, and only the future Web paths
 `apps/web/src/lib/entity-check-sources.ts` and
 `apps/web/tests/entity-check-sources.test.mjs`. M01-T040, M02-T050, and
@@ -619,7 +619,7 @@ M46-T010 are accepted; the two declared paths are absent and disjoint from the
 current active Web paths. `HA-ENTITYCHECK-LIVE-001` is pending but does not
 block local injected-fetch delivery. No package, lockfile, browser, source
 read, configuration, payment, wallet, provider, transaction, deployment, or
-live path is authorized until this card completes its own readiness and RED
+live path is authorized until this card completes its fresh activation and RED
 reviews.
 
 S22-T010 is a root-owned post-rehearsal POLISH intake comprising only its card,

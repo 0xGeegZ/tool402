@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M01-T040 accepted, M02-T050 accepted; M46-T010 (this batch)
   must be accepted before activation because this card maps into its types
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -46,6 +46,17 @@ clock, and no upstream detail in a failure outcome.
   recorded fixtures in the durable RED contract rather than asserted from
   memory; the fixtures are redacted excerpts of public responses observed on
   2026-09-09.
+
+## Ready record
+
+Ready at 2026-09-10T00:41:00Z after an independent current-head review at
+`1ce6bb4030ad36c55cb28d87466e98f30f622e3c` found M01-T040, M02-T050, and
+M46-T010 accepted; the committed card, specification, catalog, ownership,
+State, and human-action records resolvable; and the two declared Web paths
+absent and disjoint. `HA-ENTITYCHECK-LIVE-001` is explicitly optional future
+evidence and does not block the injected-fetch local delivery. A separate
+activation may authorize only the durable test-only RED contract; the source
+adapter and every source read remain prohibited pending RED acceptance.
 
 ## Verification
 
