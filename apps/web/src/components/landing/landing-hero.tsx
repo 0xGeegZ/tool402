@@ -9,9 +9,7 @@ export function LandingHero() {
       aria-labelledby="landing-title"
       className="relative isolate overflow-hidden border-b border-border bg-card/30 py-14 sm:py-16 lg:py-24 [background-image:radial-gradient(color-mix(in_oklab,var(--border)_70%,transparent)_1px,transparent_1px)] [background-size:1.35rem_1.35rem]"
     >
-      <div aria-hidden="true" className="absolute -right-28 top-0 size-96 rounded-full bg-[#e9e1ff]/80 blur-3xl" />
-      <div aria-hidden="true" className="absolute bottom-8 left-[48%] size-32 rounded-full border border-brand-purple/15" />
-      <div className="relative grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(25rem,0.9fr)] lg:gap-16">
+      <div className="relative grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-20">
         <div className="max-w-2xl space-y-6">
           <Badge variant="secondary">Agent tool marketplace</Badge>
           <h1 id="landing-title" className="max-w-xl text-5xl font-extrabold leading-[1.04] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
@@ -50,10 +48,17 @@ export function LandingHero() {
             </div>
           </dl>
         </div>
-        <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
-          <div className="absolute inset-x-5 bottom-2 top-8 rounded-[2.75rem] border border-border bg-card/75 shadow-[0_1.5rem_3rem_color-mix(in_oklab,var(--foreground)_10%,transparent)]" />
-          <div aria-hidden="true" className="absolute left-0 top-8 z-20 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium shadow-sm">Current catalogue</div>
-          <div aria-hidden="true" className="absolute bottom-12 right-0 z-20 rounded-full bg-brand-purple px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-sm">RiskScan</div>
+        <div className="relative mx-auto w-full max-w-sm">
+          <div className="absolute inset-0 rounded-[2rem] border border-border bg-muted shadow-[0_1.5rem_5rem_-1.75rem_color-mix(in_oklab,var(--brand-purple)_45%,transparent)]" />
+          <div className="absolute -left-2 top-5 z-20 rounded-2xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur sm:-left-6 sm:top-8">
+            <span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">RiskScan</span>
+            <span className="mt-1 block text-base font-bold">Current entry</span>
+            <span className="mt-1 block text-[11px] text-muted-foreground">Explore the detail route</span>
+          </div>
+          <div className="absolute -right-2 bottom-5 z-20 rounded-2xl border border-border bg-card p-3 shadow-md sm:-right-5 sm:bottom-8">
+            <span className="block text-[10px] font-semibold uppercase tracking-wide text-brand-purple">Guided demo</span>
+            <span className="mt-1 block text-[11px] text-muted-foreground">Current local route</span>
+          </div>
           <Image
             src="/brand/hero-trio.png"
             alt=""
@@ -62,7 +67,7 @@ export function LandingHero() {
             priority
             unoptimized
             sizes="(min-width: 1024px) 34rem, (min-width: 640px) 30rem, calc(100vw - 3rem)"
-            className="relative z-10 h-auto w-full scale-[1.06] object-contain sm:scale-110"
+            className="relative z-10 h-auto w-full scale-110 object-cover"
           />
         </div>
       </div>
