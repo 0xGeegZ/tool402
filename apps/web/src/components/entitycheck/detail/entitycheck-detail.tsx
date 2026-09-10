@@ -219,8 +219,7 @@ export function EntityCheckDetail() {
           Configuration boundary
         </h2>
         <p className={noteClass}>
-          The API returns unavailable until its host supplies both x402 and
-          source configuration.
+          The API returns unavailable until its host supplies both x402 and source configuration.
         </p>
       </section>
     </article>
