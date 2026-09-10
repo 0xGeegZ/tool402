@@ -121,6 +121,21 @@ implementedTest("serializes only the parsed native Hedera configuration summary"
   );
 });
 
+implementedTest("fails closed for missing or malformed native Hedera payment configuration", () => {
+  for (const [description, overrides] of [
+    ["missing asset", { ENTITYCHECK_X402_HEDERA_ASSET: undefined }],
+    ["malformed asset", { ENTITYCHECK_X402_HEDERA_ASSET: "not-an-asset" }],
+    ["missing amount", { ENTITYCHECK_X402_HEDERA_AMOUNT: undefined }],
+    ["malformed amount", { ENTITYCHECK_X402_HEDERA_AMOUNT: "not-an-amount" }],
+  ]) {
+    assert.deepEqual(
+      buildEntityCheckToolDescriptor({ ...configuredHederaEnvironment, ...overrides }),
+      expectedDescriptor({ state: "configuration_required" }),
+      description,
+    );
+  }
+});
+
 implementedTest("never serializes controlled private EntityCheck environment values", () => {
   const privateValues = {
     CREDENTIAL: "controlled-credential-secret",
