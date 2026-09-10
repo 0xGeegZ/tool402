@@ -81,6 +81,17 @@ non-payable preflight stop boundary. This card remains `20-active` only for the
 two already-authorized test paths while that RED contract is strengthened.
 Source remains prohibited.
 
+## RED re-review
+
+The independent re-review at
+[B03-T020 RED re-review](../../evidence/B03-T020-red-rereview.md) remains
+blocked for delegated test-only `6c19a2dde4b1a594cac6fe9a8f572e9bc28d5fe4`.
+The strengthened harness now observes one Directory GET, one unsigned request,
+and two payer-environment reads, but it does not executablely bind challenge
+validation to the CLI guard or trap every forbidden signer, payment-construction,
+retry, settlement, and result-parsing boundary. The card remains `20-active`
+only for the same two tests; source remains prohibited.
+
 ## Verification
 
 - A durable test-only RED commit precedes every B03-T020 source change.
