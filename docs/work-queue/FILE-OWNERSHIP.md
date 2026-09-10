@@ -1032,6 +1032,21 @@ dependency, data/runtime/configuration, wallet/provider/payment/transaction,
 deployment, and live path remains prohibited until a separate accepted scope
 says otherwise.
 
+S25-T010 is a root-owned `00-inbox` presentation intake. Its only candidate
+new paths are `apps/web/src/components/ui/page-header.tsx` and
+`apps/web/tests/page-header.test.mjs`. Its only candidate amendments are the
+header blocks of the nine routed pages and the two components listed in
+`docs/ui/UI-S25.md`, the `/provider` display label in
+`apps/web/src/components/discovery/local-navigation.tsx`, the four closed
+outcome sentences in `apps/web/src/components/provider/status/provider-status.tsx`,
+and only their header/label/copy assertions in the manifest's accepted tests.
+Those candidate paths were released by accepted S20/S22/S23/S24/S28/S29/S30/
+S31 slices and are root integration reservations only; S25 owns no source or
+test path until a separate independent readiness review and durable RED
+activation. No route, body/card/shell redesign, data/state/reader/action
+change, wallet/provider/payment/transaction/deployment, external link, metric,
+account, funding, return, or live claim is in scope.
+
 S28-T010 is a root-owned 00-inbox truth-first POLISH intake comprising its
 card, `docs/ui/UI-S28.md`, the local UI ledger, decision, state, catalog, this
 ownership record, reviews, commits, and pushes. Its only candidate source/test
