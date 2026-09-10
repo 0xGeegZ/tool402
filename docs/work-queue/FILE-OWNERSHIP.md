@@ -993,9 +993,9 @@ D-S30-010-002 reserves only the `/dashboard` expected-row assertion in
 `apps/web/tests/guided-demo-route.test.mjs` for S30-T010. S31-T010 retains
 every navigation assertion in that file, including its four local navigation
 entries; neither slice may change the other's assertion or source path.
-S30-T010's test-only RED activation permits only that reserved assertion and
-`apps/web/tests/riskscan-tool-loop.test.mjs`; every S30 source path remains
-prohibited until fresh independent RED acceptance.
+D-S30-010-004 permits S30-T010's two ToolLoop sources, the one named Guided
+Demo wording source, and its two matching focused tests; all request semantics
+and every non-S30 path remain prohibited.
 
 S31-T010 is a root-owned truth-first POLISH source scope comprising its card,
 `docs/ui/UI-S31.md`, the local UI ledger, decision, state, catalog, this

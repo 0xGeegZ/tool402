@@ -48,14 +48,14 @@ source tree is tracked here.
   focus, semantic landmarks, reduced motion, and no horizontal overflow.
 - Independent task and module review report no Critical finding.
 
-## RED activation
+## GREEN authorization
 
 The fresh independent readiness re-review at
-`73859377cb91565a35207e6ad15a612fd18887d3` is clear. D-S30-010-003 permits
-only `apps/web/tests/riskscan-tool-loop.test.mjs` and the separately reserved
-`/dashboard` expected-row assertion in `apps/web/tests/guided-demo-route.test.mjs`
-to define durable visual/terminology RED. Every S30 source path remains
-prohibited until a fresh independent RED review accepts its exact GREEN scope.
+`73859377cb91565a35207e6ad15a612fd18887d3` and the independent RED review at
+`21902b4c864cdbd07b329a775b6a3844232142ba` are clear. D-S30-010-004 permits
+only the five source/test paths named in UI-S30 for minimal truth-first GREEN.
+The exact real request contract and all mock/external/runtime exclusions remain
+fixed.
 
 ## Boundary
 
