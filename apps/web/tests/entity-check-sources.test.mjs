@@ -135,6 +135,16 @@ async function settlesBefore(promise, milliseconds = 100) {
   }
 }
 
+async function waitsFor(condition, message) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    if (condition()) {
+      return;
+    }
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+  assert.fail(message);
+}
+
 test("requires the declared M46 EntityCheck source module before GREEN", () => {
   assert.equal(sourceExists, true, `missing declared M46 source module: ${sourcePath}`);
 });
@@ -352,6 +362,14 @@ implementedTest("uses the query when SIREN is absent and returns only closed tra
     "https://registry.example.test/search?q=Example+et+Cie&per_page=5",
   );
 
+  const rejectedRegistry = await api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/rejected-registry.csv",
+  }), {
+    fetch: async () => { throw new Error("untrusted upstream detail"); },
+    now: () => initialNow,
+  });
+  assert.deepEqual(rejectedRegistry, { kind: "registry_unavailable" });
+
   const sanctionsCalls = [];
   const sanctionsFailure = await api.readEntityCheckSources(request(), readConfiguration({
     ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/sanctions-failure.csv",
@@ -405,7 +423,7 @@ implementedTest("uses the exact bounded deadlines and does not retry stalled rea
     },
     now: () => initialNow,
   });
-  await Promise.resolve();
+  await waitsFor(() => deadlines.length === 1, "registry deadline was not created");
   assert.equal(deadlines.length, 1);
   assert.equal(deadlines[0].milliseconds, 5_000);
   deadlines[0].controller.abort();
@@ -425,7 +443,7 @@ implementedTest("uses the exact bounded deadlines and does not retry stalled rea
     },
     now: () => initialNow,
   });
-  await Promise.resolve();
+  await waitsFor(() => deadlines.length === 3, "sanctions deadline was not created");
   assert.equal(deadlines.length, 3);
   assert.equal(deadlines[1].milliseconds, 5_000);
   assert.equal(deadlines[2].milliseconds, 20_000);
@@ -537,6 +555,16 @@ implementedTest("fails closed for malformed sanctions metadata or CSV and uses t
   });
   assert.equal(fallback.kind, "read");
   assert.equal(fallback.sanctionsDataset.lastModified, new Date(initialNow).toISOString());
+
+  const blankRows = await api.readEntityCheckSources(request(), readConfiguration({
+    ENTITYCHECK_SANCTIONS_URL: "https://sanctions.example.test/blank-rows.csv",
+  }), {
+    fetch: async (input) => input.hostname === "registry.example.test"
+      ? registryResponse()
+      : sanctionsResponse(`\n${sanctionsCsv([sanctionsRow()], "\n")}\n`),
+    now: () => initialNow,
+  });
+  assert.equal(blankRows.kind, "read");
 });
 
 implementedTest("fails closed before a request when the injected clock is not finite and safe", async () => {
