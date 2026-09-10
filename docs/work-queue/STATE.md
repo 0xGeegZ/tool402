@@ -97,6 +97,16 @@
   the existing local fields, validation, workflow, wallet/signature island,
   Stage-B projection, disabled ATS action, and all live boundaries remain
   unchanged.
+- S23_ENTITYCHECK_READY: The independent review at clean
+  `f742e5e583021dad42dbed478fa3399ccc93fcd4` confirms S20, M02-T070,
+  M14, M46-T040, and B03-T020 accepted; the static UI-S23 contract matches
+  the existing EntityCheck descriptor/API boundary; five new targets are
+  absent; and the focused Explore/loading/navigation baseline, Web typecheck,
+  and queue check are clear. The local ledger and exact future ownership
+  reservation are now committed. S23-T010 moves to `10-ready` only: source and
+  test changes remain prohibited until a fresh independent activation permits
+  its durable RED contract. `landing-explore.test.mjs` is intentionally outside
+  S23 to avoid S22/S27's active shared assertion scope.
 
 - PRODUCT_OVERVIEW: accepted as P00-T010
 - CURRENT_MODULE: S13 outcome-feedback treatment is accepted at source commit `ece66c2fd7b2278ed0f801ad1febd478d9ddc39f`; S15 wallet-island/relay is accepted at `506f038fffb87739cc5fd302a30033b5c56d36ee`; S16 provider deploy wizard is accepted at `ed46ae18a08c859d5f2c94722ab84453ef674835`; M38 offering command payloads and M40 durable offering/Directory admission are accepted at `60-done`. HA-COMMAND-AUTHORITY-002, HA-ATS-RETARGET-001, HA-ATS-RUNTIME-BINDING-001, HA-ISSUER-ACCOUNT-001, and HA-CAMPAIGN-CONVEX-001 are accepted only as bounded local authority or human evidence. B03 Agent payment remains locally green and awaits its separate human-owned testnet exercise.

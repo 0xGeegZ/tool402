@@ -3,10 +3,11 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
-- Dependencies: S20-T010 accepted, M02-T070 accepted, M14-T010 accepted;
-  M46-T040 (this batch) must be accepted before activation so the detail
-  page describes an existing route and descriptor
+- Queue state: 10-ready
+- Dependencies: S20-T010 accepted, M02-T070 accepted, M14-T010 accepted,
+  M46-T040 accepted, and B03-T020 accepted. M46-T040 is the implementation
+  boundary that makes the detail page's route/descriptor copy truthful; B03
+  acceptance satisfies the recorded EntityCheck sequencing request.
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
   exactly the UI-S23 local targets:
@@ -18,9 +19,9 @@
   under a root integration reservation to
   `apps/web/src/components/discovery/explore-catalog.tsx`,
   `apps/web/tests/explore-catalog.test.mjs`,
-  `apps/web/tests/route-loading-skeletons.test.mjs`, and, only if its
-  Explore href assertions constrain the page,
-  `apps/web/tests/landing-explore.test.mjs`.
+  `apps/web/tests/route-loading-skeletons.test.mjs`. The shared
+  `apps/web/tests/landing-explore.test.mjs` is deliberately excluded: S22/S27
+  currently own its active shared assertions and S23 needs no amendment.
 - Human actions: none. This presentation change creates no wallet, payment,
   provider, configuration, account, transaction, deployment, or live
   behaviour.
@@ -48,14 +49,25 @@ accepted slices it builds on are the
 - The five new paths are disjoint from every accepted card's owned paths and
   from every sibling card in the inbox.
 - `explore-catalog.tsx` and `explore-catalog.test.mjs` belong to the accepted
-  S20-T010 record, `route-loading-skeletons.test.mjs` to M14-T010, and
-  `landing-explore.test.mjs` to M02-T040 with S17-T010 declaring a
-  navigation-assertion amendment at intake; each amendment needs an explicit
-  root integration reservation before source changes, and the root sequences
-  this card's amendments after any sibling amendment to the same file.
+  S20-T010 record and `route-loading-skeletons.test.mjs` to M14-T010; each
+  amendment needs an explicit root integration reservation before source
+  changes, and the root sequences this card's amendments after any sibling
+  amendment to the same file. `landing-explore.test.mjs` remains outside S23
+  because its active shared assertions belong to S22/S27.
 - The catalog entry, rail rows, card copy, and detail regions are fixed in
   the manifest before code, so no entry, figure, or control can be added while
   the slice is built.
+
+## Ready authority
+
+The independent review at clean
+`f742e5e583021dad42dbed478fa3399ccc93fcd4` is clear once its missing ledger
+and ownership records are committed by the root: every dependency is accepted,
+the existing EntityCheck descriptor/API supports the fixed descriptive copy,
+the five new targets are absent/disjoint, and the focused Explore/loading/
+navigation baseline passes 10/10 alongside Web typecheck and queue validation.
+This card is `10-ready` only. A fresh independent activation must authorize a
+durable test-only RED before any source or test path may change.
 
 ## Verification
 
@@ -86,24 +98,11 @@ or economic claim, and it does not alter the Directory island, the guest
 workbench, the RiskScan detail route, navigation, or the API routes. The
 manifest's exclusions govern; this card does not restate them.
 
-## Human worktree lane request
+## Execution-lane boundary
 
-- Requested at `2026-09-09T17:20:00Z` by the human operator (repository
-  owner) through the operator's delegated session, under the explicit-request
-  rule of the [runtime worktree policy](../../WORKTREE-POLICY.md). The card's
-  tier, dependencies, declared paths, verification list, and boundary are
-  unchanged.
-- Worktree `.worktrees/entitycheck`, branch `work/entitycheck`, shared by the
-  five EntityCheck batch cards as sequential commits in card order.
-  Implementer: the operator's delegated session. Reviewer: the root's
-  independent task review and module review, unchanged.
-- The lane delivers, per card and in this order on that branch: one test-only
-  RED commit at the declared test paths, failing only because the declared
-  source does not exist or the declared amendment has not been made; then the
-  minimal GREEN commits limited to the declared source paths.
-- The branch changes no queue state, ledger, catalog, ownership, STATE,
-  decision, human-action, evidence, spec, or manifest file. The root keeps the
-  ready review, the activation decision, the independent reviews, the
-  integration decision, and every queue record. The branch is mirrored as a
-  pull request for human visibility only; nothing from it reaches `main`
-  outside the root's integration decision.
+- The historic remote `work/entitycheck` branch is stale and unreviewed; it is
+  not authority for S23. This ready control record creates no new worktree or
+  branch. A later activation records the approved implementation lane.
+- Any later lane delivers a test-only RED commit first, failing only because
+  the declared source is absent or the declared amendment has not been made;
+  only a subsequent independent RED acceptance may permit minimal GREEN.
