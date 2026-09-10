@@ -99,7 +99,7 @@ test("keeps RiskScan copy readable on its section background", async () => {
 
   assert.match(
     sections,
-    /<p className=["'][^"']*\btext-secondary-foreground\b[^"']*["']>\s*Read what RiskScan considers/,
+    /<p className=["'][^"']*\btext-muted-foreground\b[^"']*["']>\s*A bounded assessment route/,
   );
 });
 

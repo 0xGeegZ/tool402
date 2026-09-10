@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { Badge } from "../ui/badge";
@@ -7,24 +8,30 @@ const steps = [
   {
     title: "Explore a current tool",
     description: "Read the current capability and its boundaries before you choose a route.",
+    number: "01",
+    tone: "bg-[#eeebff] text-brand-purple",
   },
   {
     title: "Inspect its boundary",
     description: "See what the local route can show before you continue through the journey.",
+    number: "02",
+    tone: "bg-success text-success-foreground",
   },
   {
     title: "Choose a local next step",
     description: "Move from an overview to its guided route at your own pace.",
+    number: "03",
+    tone: "bg-destructive text-destructive-foreground",
   },
 ] as const;
 
 export function LandingSections() {
   return (
-    <div className="space-y-16 sm:space-y-24">
-      <section id="how-it-works" aria-labelledby="how-it-works-title" className="space-y-8 scroll-mt-24">
-        <div className="max-w-2xl space-y-3">
-          <Badge variant="outline">How it works</Badge>
-          <h2 id="how-it-works-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
+    <div className="space-y-20 sm:space-y-28">
+      <section id="how-it-works" aria-labelledby="how-it-works-title" className="space-y-10 scroll-mt-24">
+        <div className="mx-auto max-w-2xl space-y-3 text-center">
+          <Badge variant="outline" className="border-brand-purple/30 text-brand-purple">How it works</Badge>
+          <h2 id="how-it-works-title" className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
             From a tool to a clearer next step
           </h2>
           <p className="leading-7 text-muted-foreground">
@@ -32,15 +39,18 @@ export function LandingSections() {
             route is ready to take you.
           </p>
         </div>
-        <ol className="grid gap-4 md:grid-cols-3">
+        <ol className="relative grid gap-5 lg:grid-cols-3">
           {steps.map((step, index) => (
             <li key={step.title}>
-              <Card className="h-full border-dashed bg-card shadow-none">
-                <CardHeader className="gap-4">
-                  <span className="flex size-9 items-center justify-center rounded-full bg-secondary text-sm font-semibold">
-                    {index + 1}
-                  </span>
-                  <h3 className="text-lg font-semibold">{step.title}</h3>
+              <Card className="h-full rounded-[calc(var(--radius)*2)] border border-border bg-card shadow-[0_1rem_2rem_color-mix(in_oklab,var(--foreground)_6%,transparent)]">
+                <CardHeader className="gap-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className={`flex size-11 items-center justify-center rounded-2xl text-sm font-semibold ${step.tone}`}>
+                      {index + 1}
+                    </span>
+                    <span className="font-mono text-xs text-muted-foreground">{step.number}</span>
+                  </div>
+                  <h3 className="text-xl font-semibold tracking-tight">{step.title}</h3>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm leading-6 text-muted-foreground">{step.description}</p>
@@ -52,48 +62,104 @@ export function LandingSections() {
       </section>
 
       <section
-        aria-labelledby="riskscan-introduction-title"
-        className="grid gap-8 rounded-[calc(var(--radius)*1.5)] border border-border bg-secondary p-6 sm:p-10 lg:grid-cols-[1fr_auto] lg:items-end"
+        aria-labelledby="riskscan-feature-title"
+        className="grid gap-8 lg:grid-cols-[minmax(0,0.75fr)_minmax(20rem,1.25fr)] lg:items-end"
       >
-        <div className="max-w-2xl space-y-4">
-          <Badge>RiskScan</Badge>
-          <h2 id="riskscan-introduction-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
+        <div className="max-w-xl space-y-4">
+          <Badge variant="outline">Marketplace</Badge>
+          <h2 id="riskscan-feature-title" className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
             Start with RiskScan
           </h2>
-          <p className="leading-7 text-secondary-foreground">
-            Read what RiskScan considers in a current read-only overview. Inspect its detail, then follow its local
-            flow when you are ready.
+          <p className="leading-7 text-muted-foreground">
+            RiskScan is the current catalogue entry. Its detail route explains the local request shape and the boundary
+            before a route continues.
           </p>
         </div>
-        <div className="flex flex-col items-start gap-3 sm:flex-row">
-          <Link
-            href="/explore/riskscan"
-            className="inline-flex min-h-11 items-center rounded-full border border-border bg-card px-5 py-2.5 text-sm font-medium shadow-sm transition-colors hover:bg-background motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            Inspect RiskScan
-          </Link>
-          <Link
-            href="/explore/riskscan/try"
-            className="inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-brand-purple motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            Try RiskScan
-          </Link>
+        <div className="relative isolate overflow-hidden rounded-[calc(var(--radius)*2)] border border-border bg-card p-6 shadow-[0_1rem_2rem_color-mix(in_oklab,var(--foreground)_6%,transparent)] sm:p-8">
+          <div aria-hidden="true" className="absolute inset-x-0 top-0 h-24 bg-[linear-gradient(115deg,#ede8ff_0%,#f9f4e9_48%,#dff7ed_100%)]" />
+          <div aria-hidden="true" className="absolute right-8 top-5 size-14 rounded-full border-[0.65rem] border-brand-purple/20" />
+          <div className="relative flex flex-wrap items-start justify-between gap-4 pt-10">
+            <div className="space-y-2">
+              <Badge className="bg-brand-purple text-primary-foreground">RiskScan</Badge>
+              <h3 className="text-2xl font-semibold tracking-tight">RiskScan</h3>
+              <p className="max-w-md leading-7 text-muted-foreground">
+                A bounded assessment route for reviewing caller-supplied context before choosing the next local step.
+              </p>
+            </div>
+            <span aria-hidden="true" className="flex size-12 items-center justify-center rounded-2xl bg-secondary text-xl text-brand-purple">↗</span>
+          </div>
+          <div className="relative mt-8 flex flex-col items-start gap-3 border-t border-border pt-6 sm:flex-row">
+            <Link
+              href="/explore/riskscan"
+              className="inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-brand-purple motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              View RiskScan
+            </Link>
+            <Link
+              href="/explore/riskscan/try"
+              className="inline-flex min-h-11 items-center rounded-full border border-border bg-background px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              Try RiskScan
+            </Link>
+          </div>
         </div>
       </section>
 
       <section
         aria-labelledby="inspectable-scope-title"
-        className="grid gap-6 rounded-[calc(var(--radius)*1.5)] border border-border bg-card p-6 sm:p-10 lg:grid-cols-[auto_1fr] lg:items-start"
+        className="relative isolate overflow-hidden rounded-[calc(var(--radius)*2)] border border-border bg-secondary p-6 sm:p-10"
       >
-        <Badge variant="outline">Inspectable scope</Badge>
-        <div className="max-w-2xl space-y-3">
-          <h2 id="inspectable-scope-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
-            Know what you can inspect
+        <div aria-hidden="true" className="absolute -bottom-24 -left-20 size-72 rounded-full bg-card/60" />
+        <div className="relative grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(20rem,1.2fr)]">
+          <div className="space-y-3">
+            <Badge variant="outline">Inspectable scope</Badge>
+            <h2 id="inspectable-scope-title" className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
+              Know what you can inspect
+            </h2>
+            <p className="leading-7 text-secondary-foreground">
+              Tool402 labels the current catalogue, guided demo, and local route boundaries directly. A clear screen is
+              an orientation surface, not proof of an action beyond that route.
+            </p>
+          </div>
+          <ul className="grid gap-4 sm:grid-cols-3">
+            <li className="rounded-[var(--radius)] border border-border bg-card p-4">
+              <h3 className="font-semibold">Catalogue</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">Begin with the current tool entry.</p>
+            </li>
+            <li className="rounded-[var(--radius)] border border-border bg-card p-4">
+              <h3 className="font-semibold">Guided demo</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">Follow the local route map at your pace.</p>
+            </li>
+            <li className="rounded-[var(--radius)] border border-border bg-card p-4">
+              <h3 className="font-semibold">Provider path</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">Prepare an offering preview without an automatic action.</p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section
+        aria-labelledby="provider-path-title"
+        className="relative isolate overflow-hidden rounded-[calc(var(--radius)*2)] border border-brand-purple/20 bg-[#e9e1ff] p-6 sm:p-10 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-center lg:gap-10"
+      >
+        <div aria-hidden="true" className="absolute -right-20 -top-20 size-72 rounded-full bg-card/70" />
+        <div className="relative max-w-2xl space-y-4">
+          <Badge variant="outline" className="border-brand-purple/30 text-brand-purple">For providers</Badge>
+          <h2 id="provider-path-title" className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
+            Give a tool a clear provider path
           </h2>
           <p className="leading-7 text-muted-foreground">
-            Tool402 labels the current catalogue, guided demo, and local route boundaries directly. A clear screen is
-            an orientation surface, not proof of an action beyond that route.
+            The provider journey keeps the offering preview editable and clear about what has not run.
           </p>
+          <Link
+            href="/provider/deploy"
+            className="inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-brand-purple motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            Prepare a tool offering
+          </Link>
+        </div>
+        <div className="relative mx-auto mt-8 aspect-square w-56 rotate-[-5deg] rounded-[2rem] bg-[#f8f2e8] p-3 shadow-[0_1.25rem_2.5rem_color-mix(in_oklab,var(--foreground)_12%,transparent)] lg:mt-0 lg:w-64">
+          <Image src="/brand/mascot-wave.png" alt="" fill sizes="16rem" className="object-contain p-3" />
         </div>
       </section>
     </div>
