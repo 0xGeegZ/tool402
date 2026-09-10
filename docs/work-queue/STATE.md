@@ -63,6 +63,12 @@
   it must retain no-runtime coverage while replacing the stale lexical
   conflation. No source or UI route is active; a fresh independent readiness
   review and explicit activation are required before the test can change.
+- S32_STATIC_SHELL_TEST_READY: Independent readiness at `8256d62` is clear:
+  M02/S31 are accepted, S26 has no active claim on this future shared test,
+  and the Node 22.21.1 Web runner has exactly the stale lexical assertion
+  failure (297/298 passing). S32-T010 is `10-ready`; only a separate activation
+  can reserve `apps/web/tests/static-shell.test.mjs` for its exact assertion
+  correction. No app source path is active.
 - S28_PROVIDER_OVERVIEW_INTAKE: S28-T010 is a root-owned truth-first Provider
   overview visual reconciliation. Its only candidate source paths are the
   Provider page, its existing status component, and one new focused

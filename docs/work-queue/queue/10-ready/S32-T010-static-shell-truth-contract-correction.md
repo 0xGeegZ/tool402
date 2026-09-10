@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M02-T020 and S31-T010 accepted.
 - Owner: The root owns queue state, catalog, ownership, UI ledger, decisions,
   reviews, commits, and pushes. The sole candidate implementation path is
@@ -53,3 +53,13 @@ The [UI-S32 manifest](../../../ui/UI-S32.md) is the complete local boundary.
 This is a test-contract repair for already accepted static source. It does not
 authorize a RED/GREEN product implementation, source change, visual change,
 or any live behaviour.
+
+## Readiness acceptance
+
+Independent readiness review at `8256d62` is clear. M02-T020 and S31-T010 are
+accepted; S31's former compact-strip test correction is closed; S26 only names
+this file as a future inbox candidate and has no active reservation. The
+repository Web script under Node 22.21.1 reproduces exactly one failure at
+`static-shell.test.mjs:69`, the stale lexical deny-list, with 297/298 passing
+and no unrelated failure. This card may enter `10-ready`; a separate explicit
+activation must still reserve only the declared assertion correction.
