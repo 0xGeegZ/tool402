@@ -12,7 +12,7 @@ function readAppFile(path) {
 
 const fabricatedWorkspaceState = /\bsigner\b|\b(?:authenticated|active)\s+session\b|\bsession\s+is\s+(?:active|authenticated)\b/i;
 
-test("renders the guest workspace route without a fabricated session", async () => {
+test("presents the guest workspace as a dashboard rather than a preview", async () => {
   const [page, shell, navigation, overview] = await Promise.all([
     readAppFile("src/app/dashboard/page.tsx"),
     readAppFile("src/components/workspace/workspace-shell.tsx"),
@@ -22,22 +22,13 @@ test("renders the guest workspace route without a fabricated session", async () 
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
   assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
-  assert.match(page, /Workspace preview/);
-  assert.match(shell, /no session is connected/i);
+  assert.match(page, /<h1\b[^>]*>\s*Dashboard\s*<\/h1>/);
+  assert.doesNotMatch(page, /Workspace preview/);
+  assert.match(shell, /aria-label="Guest workspace"/);
   assert.match(shell, /guest/i);
-  assert.match(shell, /unconfigured/i);
   assert.match(shell, /<Badge\b/);
   assert.match(overview, /<Card\b/);
-
-  const hrefs = [...navigation.matchAll(/\{ href: "([^"]+)", label: "[^"]+" \}/g)].map(([, href]) => href);
-  assert.deepEqual(hrefs, [
-    "/explore",
-    "/explore/riskscan",
-    "/explore/riskscan/tool-loop",
-    "/dashboard/riskscan/compatibility",
-    "/dashboard/riskscan",
-    "/dashboard/riskscan/preflight",
-  ]);
+  assert.match(navigation, /<nav\b[^>]*aria-label="Dashboard journeys"/);
   assert.match(navigation, /<Link\b[^>]*href=\{link\.href\}/);
   assert.doesNotMatch(navigation, /<(?:a|button)\b/i);
 });
