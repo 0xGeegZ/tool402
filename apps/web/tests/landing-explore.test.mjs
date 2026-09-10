@@ -130,15 +130,19 @@ test("keeps the Explore eyebrow readable against the local background", async ()
   assert.doesNotMatch(page, /\btext-brand-purple\b/);
 });
 
-test("keeps landing and discovery copy within the UI-S01 truthfulness boundary", async () => {
+test("keeps the marketplace thesis local while discovery remains read-only", async () => {
   const sources = await Promise.all([
     readAppFile("src/app/page.tsx"),
     readAppFile("src/components/landing/landing-hero.tsx"),
     readAppFile("src/components/discovery/riskscan-discovery-card.tsx"),
   ]);
+  const [page, hero, discoveryCard] = sources;
 
+  assert.match(hero, /Back the tools agents pay to use\./);
+  assert.match(hero, /<Link\b[^>]*href=["']\/demo["'][^>]*>\s*Open guided demo\s*<\/Link>/);
+  assert.match(discoveryCard, /read-only/i);
   assert.doesNotMatch(
-    sources.join("\n"),
+    [page, hero, discoveryCard].join("\n"),
     /\b(?:price|wallet|payment|provider|account|metric|evidence|external|request|paid|mock|live availability|available now)\b/i,
   );
 });

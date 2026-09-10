@@ -31,19 +31,20 @@ test("composes one static product landing with one main landmark and heading", a
   assert.doesNotMatch(landing, /["']use client["']/);
 });
 
-test("explains Tool402 and the three-stage bounded RiskScan journey", async () => {
+test("explains Tool402 through a platform thesis and three local orientation steps", async () => {
   const sources = await readLandingSources();
   const landing = sources.join("\n");
 
   assert.match(landing, /Tool402/);
   assert.match(landing, /RiskScan/);
+  assert.match(landing, /Back the tools agents pay to use\./);
   assert.match(landing, /id=["']how-it-works["']/);
-  assert.match(landing, /Explore a bounded tool/i);
-  assert.match(landing, /Understand the request boundary/i);
-  assert.match(landing, /Follow the local RiskScan journey/i);
+  assert.match(landing, /Explore a current tool/i);
+  assert.match(landing, /Inspect its boundary/i);
+  assert.match(landing, /Choose a local next step/i);
 });
 
-test("offers exactly the three specified local CTA destinations", async () => {
+test("offers exactly the four specified local CTA destinations", async () => {
   const sources = await readLandingSources();
   const landing = sources.join("\n");
   const ctas = [...landing.matchAll(/<Link\b[^>]*href=["']([^"']+)["'][^>]*>\s*([^<]+?)\s*<\/Link>/g)].map(
@@ -52,8 +53,9 @@ test("offers exactly the three specified local CTA destinations", async () => {
 
   assert.deepEqual(ctas, [
     ["/explore", "Explore tools"],
-    ["/explore/riskscan", "See RiskScan"],
-    ["/explore/riskscan/try", "Try local flow"],
+    ["/demo", "Open guided demo"],
+    ["/explore/riskscan", "Inspect RiskScan"],
+    ["/explore/riskscan/try", "Try RiskScan"],
   ]);
   assert.doesNotMatch(landing, /<Link\b[^>]*>\s*<Button\b/);
 });
