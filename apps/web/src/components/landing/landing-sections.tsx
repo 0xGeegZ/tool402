@@ -175,7 +175,7 @@ export function LandingSections() {
       >
         <div aria-hidden="true" className="absolute -right-12 -top-12 size-48 rounded-full border-4 border-card/70" />
         <div aria-hidden="true" className="absolute -right-4 -top-5 hidden size-28 overflow-hidden rounded-full border-4 border-card bg-[#f8f2e8] shadow-lg sm:block">
-          <Image src="/brand/mascot-wave.png" alt="" width={160} height={160} className="size-full scale-125 object-cover" />
+          <Image src="/brand/mascot-wave.png" alt="" width={160} height={160} unoptimized className="size-full scale-125 object-cover" />
         </div>
         <div className="relative mx-auto max-w-2xl space-y-4">
           <Badge variant="outline" className="border-brand-purple/30 text-brand-purple">For providers</Badge>
