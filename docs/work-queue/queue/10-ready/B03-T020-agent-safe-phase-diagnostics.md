@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M05-T020 accepted, M05-T030 accepted, M06-T010 accepted,
   M12-T020 accepted, and B02-T010 accepted. B03-T010 is local-GREEN context
   only; its separate human exercise remains blocked and is not a dependency.
@@ -47,6 +47,16 @@ or signed-retry boundary.
   the explicit sequential successor reservation. No active lane owns them.
 - The contract fixes the closed code set, redaction rule, phase mapping, and
   non-payable preflight stop before an implementation begins.
+
+## Readiness review
+
+The independent current-head review at
+[B03-T020 readiness review](../../evidence/B03-T020-ready-review.md) is
+clear. This card is `10-ready`; a separate fresh activation may authorize only
+the two durable test-only RED paths
+`apps/agent/test/riskscan-pay-observability.test.mjs` and
+`apps/agent/test/riskscan-tool-payment-boundary.test.mjs`. Every source path
+and every external boundary remains prohibited pending fresh RED acceptance.
 
 ## Verification
 

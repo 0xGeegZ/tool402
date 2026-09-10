@@ -252,10 +252,10 @@ Core, backend, Web and UI paths, S12-T010's boundary routes and assets, runtime
 configuration, key material, accounts, wallets, deployment, and live evidence
 are excluded.
 
-B03-T020 is a root-controlled `00-inbox` CORE_P0 successor comprising its
+B03-T020 is a root-controlled `10-ready` CORE_P0 successor comprising its
 card, `docs/specs/b03-agent-safe-phase-diagnostics.md`, its local plan and
 intake review, catalog, ownership, State, decisions, reviews, commits, and
-pushes. After independent readiness and activation, it may own only
+pushes. After a separate fresh activation, it may own only
 `apps/agent/src/riskscan-pay-observability.ts`, the narrow CLI-edge amendment
 of `apps/agent/src/riskscan-pay-cli.ts`,
 `apps/agent/test/riskscan-pay-observability.test.mjs`, and the narrow secrecy/

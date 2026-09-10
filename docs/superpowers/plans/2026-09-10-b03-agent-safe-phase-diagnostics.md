@@ -7,7 +7,8 @@ or requiring another payable exercise.
 
 ## Steps
 
-1. Obtain independent readiness and activate only the four declared RED paths.
+1. Obtain independent readiness and activate only the two declared test RED
+   paths; both source paths remain prohibited.
 2. Add failing focused contracts for the closed diagnostic mapping, redaction,
    and one-GET/one-unsigned-request preflight guard.
 3. Review RED; authorize only the two source paths if failures are confined to
