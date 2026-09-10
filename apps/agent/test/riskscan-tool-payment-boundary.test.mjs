@@ -222,6 +222,7 @@ function runCliPreflight({
   const moduleLoader = [
     "export async function resolve(specifier, context, nextResolve) {",
     `  if (specifier === '@x402/core/client') return { shortCircuit: true, url: ${JSON.stringify(coreClientStubUrl)} };`,
+    "  if (['node:http', 'http', 'node:https', 'https', 'node:net', 'net', 'node:tls', 'tls', 'undici', 'node:undici'].includes(specifier)) throw new Error(`B03_TEST_BLOCKED_TRANSPORT_IMPORT:${specifier}`);",
     "  return nextResolve(specifier, context);",
     "}",
   ].join("\n");
@@ -238,9 +239,14 @@ function runCliPreflight({
     "const originalProcess = process;",
     "const originalLoad = Module._load;",
     "const boundaries = [];",
+    "const transportAttempts = [];",
     "globalThis.__B03_TEST_PAYMENT_BOUNDARIES = boundaries;",
     "globalThis.__B03_TEST_PAYMENT_REQUIRED = paymentRequired;",
     "Module._load = function(request, parent, isMain) {",
+    "  if (['node:http', 'http', 'node:https', 'https', 'node:net', 'net', 'node:tls', 'tls', 'undici', 'node:undici'].includes(request)) {",
+    "    transportAttempts.push(request);",
+    "    throw new Error(`B03_TEST_BLOCKED_TRANSPORT_REQUIRE:${request}`);",
+    "  }",
     "  if (request !== '@x402/hedera') return originalLoad.call(this, request, parent, isMain);",
     "  return {",
     "    ExactHederaScheme: class { constructor() { boundaries.push('scheme'); } },",
@@ -257,20 +263,25 @@ function runCliPreflight({
     "} });",
     "const requests = [];",
     "let riskScanRequests = 0;",
+    `const configuredOrigin = ${JSON.stringify(base.origin)};`,
+    `const directoryUrl = ${JSON.stringify(new URL("/api/tools", base).href)};`,
+    `const riskScanUrl = ${JSON.stringify(new URL("/api/riskscan", base).href)};`,
     "globalThis.fetch = async (target, init = {}) => {",
     "  const url = new URL(String(target));",
     "  const headers = new Headers(init.headers);",
-    "  requests.push({ method: init.method ?? 'GET', path: url.pathname, body: init.body ?? null, authorization: headers.get('authorization'), paymentSignature: headers.get('payment-signature') });",
-    "  if (url.pathname === '/api/tools' && (init.method ?? 'GET') === 'GET') {",
+    "  const method = init.method ?? 'GET';",
+    "  requests.push({ method, origin: url.origin, url: url.href, body: init.body ?? null, authorization: headers.get('authorization'), paymentSignature: headers.get('payment-signature') });",
+    "  if (url.origin !== configuredOrigin) throw new Error('B03_TEST_UNEXPECTED_ORIGIN');",
+    "  if (url.href === directoryUrl && method === 'GET') {",
     "    if (directoryFails) throw new Error('SECRET_SENTINEL_B03');",
     "    return Response.json(directory);",
     "  }",
-    "  if (url.pathname === '/api/riskscan' && init.method === 'POST' && ++riskScanRequests === 1) {",
+    "  if (url.href === riskScanUrl && method === 'POST' && ++riskScanRequests === 1) {",
     "    const response = new Response(null, { status: 402, headers: omitPaymentRequiredHeader ? {} : { 'payment-required': paymentRequiredHeader } });",
     "    response.json = async () => { throw new Error('B03_TEST_RESULT_PARSE'); };",
     "    return response;",
     "  }",
-    "  if (url.pathname === '/api/riskscan' && init.method === 'POST' && riskScanRequests === 2) {",
+    "  if (url.href === riskScanUrl && method === 'POST' && riskScanRequests === 2) {",
     "    const response = new Response(null, { status: 200 });",
     "    response.json = async () => paymentResult;",
     "    return response;",
@@ -280,6 +291,7 @@ function runCliPreflight({
     "originalProcess.on('beforeExit', () => {",
     "  originalProcess.stdout.write(`B03_TEST_FETCHES ${JSON.stringify(requests)}\\n`);",
     "  originalProcess.stdout.write(`B03_TEST_PAYMENT_BOUNDARIES ${JSON.stringify(boundaries)}\\n`);",
+    "  originalProcess.stdout.write(`B03_TEST_TRANSPORT_ATTEMPTS ${JSON.stringify(transportAttempts)}\\n`);",
     "});",
   ].join("\n");
 
@@ -309,19 +321,22 @@ function runCliPreflight({
 
 function preflightTrace(stdout) {
   const lines = stdout.trimEnd().split("\n");
-  const fetchesLine = lines.at(-2);
-  const boundariesLine = lines.at(-1);
+  const fetchesLine = lines.at(-3);
+  const boundariesLine = lines.at(-2);
+  const transportAttemptsLine = lines.at(-1);
   assert.match(fetchesLine, /^B03_TEST_FETCHES /u);
   assert.match(boundariesLine, /^B03_TEST_PAYMENT_BOUNDARIES /u);
+  assert.match(transportAttemptsLine, /^B03_TEST_TRANSPORT_ATTEMPTS /u);
   const requests = JSON.parse(fetchesLine.slice("B03_TEST_FETCHES ".length));
   const boundaries = JSON.parse(boundariesLine.slice("B03_TEST_PAYMENT_BOUNDARIES ".length));
-  return { diagnostic: lines.slice(0, -2), requests, boundaries };
+  const transportAttempts = JSON.parse(transportAttemptsLine.slice("B03_TEST_TRANSPORT_ATTEMPTS ".length));
+  return { diagnostic: lines.slice(0, -3), requests, boundaries, transportAttempts };
 }
 
 function assertUnsignedPreflightRequests(requests) {
   assert.deepEqual(requests, [
-    { method: "GET", path: "/api/tools", body: null, authorization: null, paymentSignature: null },
-    { method: "POST", path: "/api/riskscan", body: JSON.stringify(input), authorization: null, paymentSignature: null },
+    { method: "GET", origin: base.origin, url: new URL("/api/tools", base).href, body: null, authorization: null, paymentSignature: null },
+    { method: "POST", origin: base.origin, url: new URL("/api/riskscan", base).href, body: JSON.stringify(input), authorization: null, paymentSignature: null },
   ]);
 }
 
@@ -330,10 +345,11 @@ async function assertPreflightChallengeRejected(options) {
   assert.notEqual(error, null);
   assert.equal(stderr, "");
   assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_PAYER_READ|B03_TEST_RESULT_PARSE/u);
-  const { diagnostic, requests, boundaries } = preflightTrace(stdout);
+  const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
   assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC INITIAL_REQUEST_OR_CHALLENGE_FAILED"]);
   assertUnsignedPreflightRequests(requests);
   assert.deepEqual(boundaries, []);
+  assert.deepEqual(transportAttempts, []);
 }
 
 boundaryTest("keeps the B03 library to injected capabilities and the single approved Agent/Core composition", async () => {
@@ -473,12 +489,13 @@ boundaryTest("maps a preflight directory failure before every payment boundary",
   assert.notEqual(error, null);
   assert.equal(stderr, "");
   assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_PAYER_READ/u);
-  const { diagnostic, requests, boundaries } = preflightTrace(stdout);
+  const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
   assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC DIRECTORY_FAILED"]);
   assert.deepEqual(requests, [
-    { method: "GET", path: "/api/tools", body: null, authorization: null, paymentSignature: null },
+    { method: "GET", origin: base.origin, url: new URL("/api/tools", base).href, body: null, authorization: null, paymentSignature: null },
   ]);
   assert.deepEqual(boundaries, []);
+  assert.deepEqual(transportAttempts, []);
 });
 
 boundaryTest("maps a policy-declined preflight quote before every payment boundary", async () => {
@@ -489,12 +506,13 @@ boundaryTest("maps a policy-declined preflight quote before every payment bounda
   assert.notEqual(error, null);
   assert.equal(stderr, "");
   assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_PAYER_READ/u);
-  const { diagnostic, requests, boundaries } = preflightTrace(stdout);
+  const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
   assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC QUOTE_DECLINED"]);
   assert.deepEqual(requests, [
-    { method: "GET", path: "/api/tools", body: null, authorization: null, paymentSignature: null },
+    { method: "GET", origin: base.origin, url: new URL("/api/tools", base).href, body: null, authorization: null, paymentSignature: null },
   ]);
   assert.deepEqual(boundaries, []);
+  assert.deepEqual(transportAttempts, []);
 });
 
 boundaryTest("runs the opt-in preflight through one unsigned Directory and initial request before the guard", async () => {
@@ -503,10 +521,11 @@ boundaryTest("runs the opt-in preflight through one unsigned Directory and initi
   assert.equal(error, null);
   assert.equal(stderr, "");
   assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_PAYER_READ|B03_TEST_RESULT_PARSE/u);
-  const { diagnostic, requests, boundaries } = preflightTrace(stdout);
+  const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
   assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC PREFLIGHT_GUARD_REACHED"]);
   assertUnsignedPreflightRequests(requests);
   assert.deepEqual(boundaries, []);
+  assert.deepEqual(transportAttempts, []);
 });
 
 boundaryTest("rejects a malformed challenge during preflight before every payment boundary", async () => {
@@ -515,10 +534,11 @@ boundaryTest("rejects a malformed challenge during preflight before every paymen
   assert.notEqual(error, null);
   assert.equal(stderr, "");
   assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_PAYER_READ|B03_TEST_RESULT_PARSE/u);
-  const { diagnostic, requests, boundaries } = preflightTrace(stdout);
+  const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
   assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC INITIAL_REQUEST_OR_CHALLENGE_FAILED"]);
   assertUnsignedPreflightRequests(requests);
   assert.deepEqual(boundaries, []);
+  assert.deepEqual(transportAttempts, []);
 });
 
 boundaryTest("rejects an exact-quote mismatch during preflight before every payment boundary", async () => {
@@ -534,15 +554,27 @@ boundaryTest("rejects an exact-quote mismatch during preflight before every paym
   assert.notEqual(error, null);
   assert.equal(stderr, "");
   assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_PAYER_READ|B03_TEST_RESULT_PARSE/u);
-  const { diagnostic, requests, boundaries } = preflightTrace(stdout);
+  const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
   assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC INITIAL_REQUEST_OR_CHALLENGE_FAILED"]);
   assertUnsignedPreflightRequests(requests);
   assert.deepEqual(boundaries, []);
+  assert.deepEqual(transportAttempts, []);
 });
 
 boundaryTest("rejects a missing preflight challenge before every payment boundary", async () => {
   await assertPreflightChallengeRejected({ omitPaymentRequiredHeader: true });
 });
+
+for (const [label, challenge] of [
+  ["a non-v2 x402Version", { x402Version: 1, resource: { url: new URL("/api/riskscan", base).href }, accepts: [requirements()] }],
+  ["multiple accepts entries", { x402Version: 2, resource: { url: new URL("/api/riskscan", base).href }, accepts: [requirements(), requirements()] }],
+]) {
+  boundaryTest(`rejects a preflight challenge with ${label} before every payment boundary`, async () => {
+    await assertPreflightChallengeRejected({
+      paymentRequiredHeader: encodePaymentRequiredHeader(challenge),
+    });
+  });
+}
 
 for (const [field, value] of [
   ["scheme", "upto"],
@@ -567,7 +599,7 @@ boundaryTest("preserves normal payment output and exit behavior while adding onl
   assert.equal(error, null);
   assert.equal(stderr, "");
   assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_RESULT_PARSE/u);
-  const { diagnostic, requests, boundaries } = preflightTrace(stdout);
+  const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
   assert.deepEqual(diagnostic, [
     "RISKSCAN_PAY_OUTCOME paid",
     "RISKSCAN_PAY_SETTLEMENT 0.0.1@1.2",
@@ -575,12 +607,14 @@ boundaryTest("preserves normal payment output and exit behavior while adding onl
   ]);
   assert.equal(requests.length, 3);
   assert.deepEqual(requests.slice(0, 2), [
-    { method: "GET", path: "/api/tools", body: null, authorization: null, paymentSignature: null },
-    { method: "POST", path: "/api/riskscan", body: JSON.stringify(input), authorization: null, paymentSignature: null },
+    { method: "GET", origin: base.origin, url: new URL("/api/tools", base).href, body: null, authorization: null, paymentSignature: null },
+    { method: "POST", origin: base.origin, url: new URL("/api/riskscan", base).href, body: JSON.stringify(input), authorization: null, paymentSignature: null },
   ]);
   assert.equal(requests[2].method, "POST");
-  assert.equal(requests[2].path, "/api/riskscan");
+  assert.equal(requests[2].origin, base.origin);
+  assert.equal(requests[2].url, new URL("/api/riskscan", base).href);
   assert.match(String(requests[2].paymentSignature), /test/u);
+  assert.deepEqual(transportAttempts, []);
   assert.deepEqual(boundaries, [
     "private_key",
     "signer",

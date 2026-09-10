@@ -48,6 +48,7 @@ observabilityTest("maps CLI boundaries to the closed redacted diagnostic allowli
     [{ phase: "signed_retry" }, "SIGNED_RETRY_FAILED"],
     [{ phase: "settlement" }, "SETTLEMENT_OR_RESULT_FAILED"],
     [{ phase: "result", outcome: { kind: "paid" } }, "PAID"],
+    [{ phase: "preflight_guard" }, "PREFLIGHT_GUARD_REACHED"],
     [{ phase: "terminal" }, "TERMINAL_UNEXPECTED_FAILURE"],
   ];
 
@@ -63,6 +64,8 @@ observabilityTest("accepts only the exact initial challenge before the preflight
   const { matchesRiskScanPayPreflightChallenge } = observabilityModule;
 
   assert.equal(matchesRiskScanPayPreflightChallenge(paymentRequired, quote), true);
+  assert.equal(matchesRiskScanPayPreflightChallenge({ ...paymentRequired, x402Version: 1 }, quote), false);
   assert.equal(matchesRiskScanPayPreflightChallenge({ ...paymentRequired, accepts: [{ ...paymentRequired.accepts[0], amount: "10001" }] }, quote), false);
   assert.equal(matchesRiskScanPayPreflightChallenge({ ...paymentRequired, accepts: [] }, quote), false);
+  assert.equal(matchesRiskScanPayPreflightChallenge({ ...paymentRequired, accepts: [paymentRequired.accepts[0], paymentRequired.accepts[0]] }, quote), false);
 });
