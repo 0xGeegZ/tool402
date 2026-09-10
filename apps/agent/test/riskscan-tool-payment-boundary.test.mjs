@@ -158,16 +158,14 @@ function safeFailureHarness(failureSource) {
 function runCliWithoutConfiguration() {
   const transportIsolationLoader = [
     "import Module, { register, syncBuiltinESMExports } from 'node:module';",
-    "const blocked = ['node:http', 'http', 'node:https', 'https', 'node:http2', 'http2', 'node:net', 'net', 'node:tls', 'tls', 'node:dgram', 'dgram', 'undici', 'node:undici', 'node:process', 'process'];",
     "const originalProcess = process; const originalLoad = Module._load; const originalGetBuiltinModule = originalProcess.getBuiltinModule.bind(originalProcess);",
     "const attempts = []; const fail = (name) => () => { attempts.push(name); throw new Error(`B03_TEST_BLOCKED_TRANSPORT:${name}`); };",
     "for (const [name, members] of [['node:http', ['request', 'get']], ['node:https', ['request', 'get']], ['node:http2', ['connect']], ['node:net', ['connect', 'createConnection']], ['node:tls', ['connect']], ['node:dgram', ['createSocket']]]) { const builtin = originalGetBuiltinModule(name); for (const member of members) builtin[member] = fail(`${name}.${member}`); } syncBuiltinESMExports();",
     "const protectedEnv = new Proxy(originalProcess.env, { get(target, key) { if (key === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || key === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY') throw new Error('B03_TEST_PAYER_READ'); return Reflect.get(target, key, target); }, getOwnPropertyDescriptor(target, key) { if (key === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || key === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY') throw new Error('B03_TEST_PAYER_READ'); return Reflect.getOwnPropertyDescriptor(target, key); } });",
     "Object.defineProperty(originalProcess, 'env', { configurable: true, enumerable: true, get: () => protectedEnv });",
-    "Object.defineProperty(originalProcess, 'getBuiltinModule', { configurable: true, writable: true, value(name) { if (blocked.includes(name)) { attempts.push(name); throw new Error(`B03_TEST_BLOCKED_BUILTIN:${name}`); } return originalGetBuiltinModule(name); } });",
+    "Object.defineProperty(originalProcess, 'getBuiltinModule', { configurable: true, writable: true, value(name) { return originalGetBuiltinModule(name); } });",
     "globalThis.fetch = fail('global.fetch');",
-    "Module._load = function(request, parent, isMain) { if (request === 'undici' || request === 'node:undici') return new Proxy({}, { get(_target, key) { return fail(`undici.${String(key)}`); } }); return originalLoad.call(this, request, parent, isMain); };",
-    `register(${JSON.stringify(`data:text/javascript,${encodeURIComponent("export async function resolve(specifier, context, nextResolve) { if (specifier === 'undici' || specifier === 'node:undici') return { shortCircuit: true, url: 'data:text/javascript,export const request=()=>{throw new Error(\\\"B03_TEST_BLOCKED_TRANSPORT:undici.request\\\")};export const fetch=request;export const connect=request;export default {request,fetch,connect}' }; return nextResolve(specifier, context); }")}`)});`,
+    "Module._load = originalLoad;",
   ].join("\n");
   return new Promise((resolve) => {
     execFile(
@@ -189,16 +187,14 @@ function runCliWithoutConfiguration() {
 function runCliPreflightWithoutConfiguration() {
   const transportIsolationLoader = [
     "import Module, { register, syncBuiltinESMExports } from 'node:module';",
-    "const blocked = ['node:http', 'http', 'node:https', 'https', 'node:http2', 'http2', 'node:net', 'net', 'node:tls', 'tls', 'node:dgram', 'dgram', 'undici', 'node:undici', 'node:process', 'process'];",
     "const originalProcess = process; const originalLoad = Module._load; const originalGetBuiltinModule = originalProcess.getBuiltinModule.bind(originalProcess);",
     "const attempts = []; const fail = (name) => () => { attempts.push(name); throw new Error(`B03_TEST_BLOCKED_TRANSPORT:${name}`); };",
     "for (const [name, members] of [['node:http', ['request', 'get']], ['node:https', ['request', 'get']], ['node:http2', ['connect']], ['node:net', ['connect', 'createConnection']], ['node:tls', ['connect']], ['node:dgram', ['createSocket']]]) { const builtin = originalGetBuiltinModule(name); for (const member of members) builtin[member] = fail(`${name}.${member}`); } syncBuiltinESMExports();",
     "const protectedEnv = new Proxy(originalProcess.env, { get(target, key) { if (key === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || key === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY') throw new Error('B03_TEST_PAYER_READ'); return Reflect.get(target, key, target); }, getOwnPropertyDescriptor(target, key) { if (key === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || key === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY') throw new Error('B03_TEST_PAYER_READ'); return Reflect.getOwnPropertyDescriptor(target, key); } });",
     "Object.defineProperty(originalProcess, 'env', { configurable: true, enumerable: true, get: () => protectedEnv });",
-    "Object.defineProperty(originalProcess, 'getBuiltinModule', { configurable: true, writable: true, value(name) { if (blocked.includes(name)) { attempts.push(name); throw new Error(`B03_TEST_BLOCKED_BUILTIN:${name}`); } return originalGetBuiltinModule(name); } });",
+    "Object.defineProperty(originalProcess, 'getBuiltinModule', { configurable: true, writable: true, value(name) { return originalGetBuiltinModule(name); } });",
     "globalThis.fetch = fail('global.fetch');",
-    "Module._load = function(request, parent, isMain) { if (request === 'undici' || request === 'node:undici') return new Proxy({}, { get(_target, key) { return fail(`undici.${String(key)}`); } }); return originalLoad.call(this, request, parent, isMain); };",
-    `register(${JSON.stringify(`data:text/javascript,${encodeURIComponent("export async function resolve(specifier, context, nextResolve) { if (specifier === 'undici' || specifier === 'node:undici') return { shortCircuit: true, url: 'data:text/javascript,export const request=()=>{throw new Error(\\\"B03_TEST_BLOCKED_TRANSPORT:undici.request\\\")};export const fetch=request;export const connect=request;export default {request,fetch,connect}' }; return nextResolve(specifier, context); }")}`)});`,
+    "Module._load = originalLoad;",
   ].join("\n");
   return new Promise((resolve) => {
     execFile(
@@ -249,12 +245,11 @@ function runCliPreflight({
   const moduleLoader = [
     "export async function resolve(specifier, context, nextResolve) {",
     `  if (specifier === '@x402/core/client') return { shortCircuit: true, url: ${JSON.stringify(coreClientStubUrl)} };`,
-    "  if (specifier === 'undici' || specifier === 'node:undici') return { shortCircuit: true, url: 'data:text/javascript,export const request=()=>{throw new Error(\\\"B03_TEST_BLOCKED_TRANSPORT:undici.request\\\")};export const fetch=request;export const connect=request;export default {request,fetch,connect}' };",
     "  return nextResolve(specifier, context);",
     "}",
   ].join("\n");
   const loader = [
-    "import Module, { register } from 'node:module';",
+    "import Module, { register, syncBuiltinESMExports } from 'node:module';",
     `register(${JSON.stringify(`data:text/javascript,${encodeURIComponent(moduleLoader)}`)});`,
     `const directory = ${JSON.stringify(directory())};`,
     `const paymentRequired = ${JSON.stringify(paymentRequired)};`,
@@ -275,7 +270,6 @@ function runCliPreflight({
     "globalThis.__B03_TEST_PAYMENT_BOUNDARIES = boundaries;",
     "globalThis.__B03_TEST_PAYMENT_REQUIRED = paymentRequired;",
     "Module._load = function(request, parent, isMain) {",
-    "  if (request === 'undici' || request === 'node:undici') return new Proxy({}, { get(_target, key) { return failTransport(`undici.${String(key)}`); } });",
     "  if (request !== '@x402/hedera') return originalLoad.call(this, request, parent, isMain);",
     "  return {",
     "    ExactHederaScheme: class { constructor() { boundaries.push('scheme'); } },",
