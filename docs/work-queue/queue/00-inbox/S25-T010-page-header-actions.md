@@ -7,9 +7,7 @@
 - Dependencies: M02-T010 accepted, M02-T070 accepted, M02-T080 accepted,
   M08-T010 accepted, M11-T020 accepted, M13-T010 accepted, M14-T010 accepted,
   M15-T010 accepted, S11-T010 accepted, S16-T010 accepted, S17-T010 accepted;
-  S22-T010 and S24-T010 (active) must be accepted before this card's
-  landing-adjacent and dashboard amendments, and the root sequences them
-  after those cards.
+  S22-T010, S24-T010, S31-T010, and S32-T010 accepted.
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
   exactly the UI-S25 local targets: new
@@ -60,9 +58,8 @@ builds on are the [UI-S00 manifest](../../../ui/UI-S00.md) and the
 - Every amended path belongs to an accepted record named in the manifest;
   each amendment needs an explicit root integration reservation before source
   changes, limited to the header block, the one navigation label, the outcome
-  sentences, or the one test assertion, and the root sequences this card's
-  amendments after any sibling amendment to the same file, including the
-  active S22-T010 and S24-T010.
+  sentences, or one named test assertion. The reconciled manifest names every
+  exact test path and declares all other tests verification-only.
 - The primitive's anatomy, the per-page eyebrow and action lists, the
   navigation label, and the four outcome sentences are fixed in the manifest
   before code, so no figure, control, or link can be added while the slice is

@@ -198,11 +198,16 @@
 - UI_FOLLOW_UP_SEQUENCING: The historical S22/S24 eligibility wording above is superseded by their accepted `60-done` records. S31 is accepted after its narrow test correction. S25-T010 remains the next proposed cross-route presentation slice: its source remains prohibited until its own fresh independent readiness, durable RED, and independent RED acceptance authorize the exact manifest paths. Any later Explore/RiskScan/ToolLoop body fidelity work needs its own truthful, path-specific card.
 - S25_HEADER_INTAKE: UI-S25, its card, ledger row, catalog dependencies, and
   exact root integration reservations are recorded after S22/S24/S31
-  acceptance
   acceptance. S25-T010 remains `00-inbox`: no page header, page/source/test,
   navigation, Provider-status, route, data, wallet/payment, or behavior path
   is authorized until an independent readiness review first moves it to
   `10-ready`, then a separate activation authorizes durable RED.
+- S25_SCOPE_RECONCILIATION: At `266c786`, the root corrected the stale S22/S24
+  active wording, named every candidate focused assertion path, fixed the
+  current `For providers` and `Guest dashboard` facts, and recorded a
+  per-target header/action/sibling-content matrix. S25 still owns no active
+  path; source and tests remain prohibited until a fresh independent readiness
+  review and a separate RED activation.
 - M46_NEXT: M46-T010, M46-T020, M46-T030, and M46-T040 are accepted at `60-done`; M46-T030's final source is `7ebfa172bd45178724d2ccf90bc6333ed4fe8391` and M46-T040's is `3ab20483452174931bae0575d2331fa42c999dce`. No duplicate Directory endpoint is permitted; the explicit M45 active-directory view remains unchanged. The existing remote `work/entitycheck` branch is unreviewed and stale relative to the current control plane; it is not authority for any successor. Each EntityCheck sibling remains subject to its own readiness, activation, RED, implementation, and review cycle.
 - M46_T040_READY: 2026-09-10T10:39:29Z. Independent readiness review at clean pushed `e1efb1524305e746a336550aff73d8df3a3ba1c0` found M05-T010, M05-T020, M06-T010, M45-T010, and M46-T030 accepted; the M46 records resolvable; two new paths absent, twelve declared migration paths present, and no M44 or active-lane collision. Focused Web Directory tests (23), focused Agent Directory tests (54), root typecheck, queue validation, and guard passed under Node 22.21.1. M46-T040 moves to `10-ready`; a separate activation may authorize only its durable test-only RED contract.
 - M46_T040_ACTIVATION: 2026-09-10T11:04:57Z. Independent current-head activation review at clean pushed `48ca520c4904b1fe01c88cd6ea3d0d9d15d55078` found the ready authority intact: all five dependencies remain accepted; the card/specification/catalog/ownership/compatibility amendment/decision resolve; the new descriptor source/test remain absent; all ten declared existing consumer fixtures remain present; no M46 ownership or worktree collision exists; and focused Directory baseline, root typecheck, queue validation, enabled guard, and whitespace are clear under Node 22.21.1. M46-T040 moves to `20-active` only for its eleven declared test paths to create durable RED. Every source, route, active-view, UI, package, lockfile, configuration, source-read, payment, wallet/provider, transaction, deployment, and live path remains prohibited pending fresh independent RED acceptance.

@@ -1073,6 +1073,25 @@ activation. No route, body/card/shell redesign, data/state/reader/action
 change, wallet/provider/payment/transaction/deployment, external link, metric,
 account, funding, return, or live claim is in scope.
 
+D-S25-010-002 reconciles S25-T010's future scope at `266c786`: S22, S24,
+S31, and S32 are accepted and release their former reservations. If a fresh
+independent readiness review later accepts durable RED, S25's exact test scope
+is `apps/web/tests/page-header.test.mjs`,
+`apps/web/tests/workspace-shell.test.mjs`,
+`apps/web/tests/guided-demo-route.test.mjs`,
+`apps/web/tests/landing-explore.test.mjs`,
+`apps/web/tests/provider-status.test.mjs`,
+`apps/web/tests/riskscan-detail.test.mjs`,
+`apps/web/tests/dashboard-workspace-reconciliation.test.mjs`,
+`apps/web/tests/guest-riskscan-workbench.test.mjs`,
+`apps/web/tests/riskscan-native-quote-compatibility.test.mjs`,
+`apps/web/tests/riskscan-quick-preflight.test.mjs`,
+`apps/web/tests/riskscan-tool-loop.test.mjs`, and
+`apps/web/tests/provider-visual-reconciliation.test.mjs`, limited to the
+declared header/label/outcome assertions. No S25 source or test path is active
+until that separate review and activation; all other tests are
+verification-only.
+
 S28-T010 is a root-owned 00-inbox truth-first POLISH intake comprising its
 card, `docs/ui/UI-S28.md`, the local UI ledger, decision, state, catalog, this
 ownership record, reviews, commits, and pushes. Its only candidate source/test
