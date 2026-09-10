@@ -29,8 +29,13 @@ source tree is tracked here.
 
 - UI-S29, this card, ledger, catalog, ownership, state, and decision records
   are committed before test or source changes.
-- S16 field/state/configuration/wallet/ATS sources and tests remain accepted
-  and unmodified.
+- The listed components may change only presentational markup/classes/copy/local
+  links. Their existing imports, fields, initial values, validation, state
+  transitions, handlers, wallet/signature, and ATS boundaries remain fixed.
+  `provider-deploy-state.ts`, `campaign-fixture.ts`,
+  `ats-create-configuration.ts`, `ats-create-action.tsx`,
+  `directory-record-literal.ts`, the command bridge, and their behavior tests
+  remain accepted and unmodified.
 - No active lane owns the page, wizard, stages, signing component, or the new
   focused visual test.
 - A fresh independent readiness review, durable focused RED, and independent

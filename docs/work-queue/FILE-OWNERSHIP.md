@@ -1050,7 +1050,13 @@ paths are `apps/web/src/app/provider/deploy/page.tsx`,
 `apps/web/src/components/provider/deploy/provider-deploy-wizard.tsx`,
 `apps/web/src/components/provider/deploy/provider-deploy-stages.tsx`,
 `apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, and the
-new `apps/web/tests/provider-deploy-visual-reconciliation.test.mjs`. Every S16
-field/state/configuration/wallet/ATS path and test remains expressly excluded.
-No implementation path is reserved until independent readiness, durable RED,
-and independent RED review accept exact GREEN.
+new `apps/web/tests/provider-deploy-visual-reconciliation.test.mjs`. The four
+listed components may change only presentation markup, classes, heading/copy,
+and local return/footer links while preserving their existing imports, fields,
+initial values, validation, state transitions, calls, and handlers. The exact
+immutable S16/M47 paths are `provider-deploy-state.ts`, `campaign-fixture.ts`,
+`ats-create-configuration.ts`, `ats-create-action.tsx`,
+`directory-record-literal.ts`, `apps/web/src/lib/wallet/command-bridge.ts`, and
+their current behavior tests. No implementation path is reserved until
+independent readiness, durable RED, and independent RED review accept exact
+GREEN.
