@@ -596,7 +596,7 @@ allows only its declared presentation amendments to
 and UI-S05 mount-record amendments. It must not modify the Directory island's
 source or state, the guest workbench, the RiskScan detail route, or navigation.
 
-M46-T010 is a root-controlled `20-active` CORE_P0 record comprising its card,
+M46-T010 is a root-controlled `60-done` CORE_P0 record comprising its card,
 `docs/specs/m46-entity-check-core.md`, the new Core module
 `packages/core/src/entity-check.ts`, and the focused runtime/type fixtures
 `packages/core/test/entity-check.test.mjs` and
@@ -604,9 +604,10 @@ M46-T010 is a root-controlled `20-active` CORE_P0 record comprising its card,
 permits one export-only addition of the EntityCheck values and types to
 `packages/core/src/index.ts`; it must preserve every existing export and
 source order. M46-T010's independently reviewed RED contract is accepted at
-`f8a42e7`. Its root-integrated GREEN scope is limited to
-`packages/core/src/entity-check.ts` and that declared export-only addition;
-the test fixtures are already committed. No I/O, source adapter, API,
+`f8a42e7`. Its accepted source is
+`2482a9bc5f8937afefe2416cae5d7c6fb7fcf898`; the root-integrated GREEN scope
+was limited to `packages/core/src/entity-check.ts` and that declared
+export-only addition; the test fixtures are already committed. No I/O, source adapter, API,
 Directory, UI, package, lockfile, configuration, payment, wallet, provider,
 transaction, deployment, or live path is authorized.
 

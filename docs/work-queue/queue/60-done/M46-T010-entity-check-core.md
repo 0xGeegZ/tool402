@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T050 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
   commits, and pushes. Proposed implementation paths are exactly
@@ -143,3 +143,15 @@ Only `packages/core/src/entity-check.ts` and the declared export-only
 EntityCheck amendment to `packages/core/src/index.ts` are now authorized. No
 I/O, source adapter, API, Directory, UI, package, configuration, payment,
 wallet, provider, transaction, deployment, or live behavior is authorized.
+
+## Final acceptance record
+
+Accepted at source `2482a9bc5f8937afefe2416cae5d7c6fb7fcf898` after an
+independent task review and two fresh clean module reviews found no Critical,
+Important, or Minor finding. Under Node 22.21.1, the focused M46 contract
+passed 16/16 and the complete Core suite passed 152/152; Core/root typecheck
+and lint, queue validation, whitespace validation, and the enabled
+local-reference guard passed. The aggregate root test remains nonzero only for
+the separately active M44 source-absence RED assertions; this acceptance
+neither changes nor waives that independent block. M46 moves to `60-done` as a
+pure local EntityCheck core boundary only.
