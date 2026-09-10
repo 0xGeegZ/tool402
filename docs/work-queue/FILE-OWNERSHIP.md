@@ -1022,3 +1022,10 @@ projection reader/state, existing provider-status reader test, and provider
 deploy wizard are expressly excluded. No implementation path is reserved until
 an independent readiness review, durable focused RED, and independent RED
 review accept exact GREEN.
+
+D-S28-010-002 reserves only the new
+`apps/web/tests/provider-visual-reconciliation.test.mjs` for S28-T010's
+durable RED. The Provider page and status component remain source-prohibited;
+the S17 reader/state and test, deploy wizard, every live/financial claim, and
+all other paths remain outside S28 until a fresh independent RED review grants
+an exact GREEN scope.

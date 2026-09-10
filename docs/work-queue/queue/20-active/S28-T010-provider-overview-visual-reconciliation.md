@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 20-active (test-only RED)
 - Dependencies: S17-T010 accepted; S30-T010 accepted. S31-T010 retains its
   disjoint shared-shell source scope.
 - Owner: The root owns queue state, catalog, ownership, UI ledger, decisions,
@@ -34,6 +34,14 @@ source tree is tracked here.
   focused visual-reconciliation test.
 - A fresh independent readiness review, durable focused RED, and independent
   RED review accept the exact GREEN scope before source is amended.
+
+## RED authorization
+
+The independent readiness review at
+`7314962c1a25d5584e46705d6f50193d99c73375` is clear. D-S28-010-002 permits
+only the new `apps/web/tests/provider-visual-reconciliation.test.mjs` to define
+the absent visual hierarchy. The Provider page and status component remain
+prohibited until a fresh independent RED review accepts exact GREEN.
 
 ## Verification
 
