@@ -82,6 +82,20 @@ active-directory view, UI, package metadata, lockfile, configuration,
 source read, payment, wallet/provider, transaction, deployment, and live
 paths remain prohibited pending a fresh independent RED acceptance.
 
+## RED review correction
+
+The independent review at
+[M46-T040 RED review](../../evidence/M46-T040-red-review.md) found the
+delegated `bc1ab6c12fd3b54ade03989898699c49a9489356` test-only diff otherwise
+within the declared eleven paths, but incomplete for native-Hedera
+configuration failure coverage. This card remains `20-active` only so the
+delegated lane may amend
+`apps/web/tests/entity-check-tool-descriptor.test.mjs` with missing and
+malformed native asset and amount RED cases. No source, route, active view, UI,
+package, lockfile, configuration, source-read, payment, wallet/provider,
+transaction, deployment, or live path is authorized. A fresh independent RED
+review remains required before any GREEN authorization.
+
 ## Verification
 
 - A durable test-only RED commit precedes every source change and fails only
