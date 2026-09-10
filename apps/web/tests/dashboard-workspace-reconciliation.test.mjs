@@ -66,15 +66,30 @@ test("adapts the reference dashboard hierarchy to the current guest workspace", 
   assert.match(dashboard, /Guest dashboard/);
   assert.match(dashboard, /Current local journeys/);
   assert.match(shell, /space-y-8/);
-  assert.match(overview, /Current access/);
+  assert.match(overview, /Access/);
   assert.match(overview, /Current tool/);
-  assert.match(overview, /Current limits/);
-  assert.match(navigation, /Current tool path/);
+  assert.match(overview, /Available journeys/);
+  assert.match(navigation, /Start with RiskScan/);
   assert.match(navigation, /Continue a local journey/);
   assert.match(navigation, /one guest dashboard/);
   assert.match(overview, /aria-label="Dashboard overview"/);
   assert.match(navigation, /rounded-2xl/);
   assert.match(navigation, /shadow-none/);
+});
+
+test("gives the guest dashboard a compact factual summary and one featured starting path", async () => {
+  const [, overview, navigation] = await readWorkspaceSources();
+
+  assert.match(overview, /Available journeys/);
+  assert.match(overview, />\s*6 local routes\s*</);
+  assert.match(navigation, /Start with RiskScan/);
+  assert.match(navigation, /Inspect the current tool before choosing another local journey\./);
+});
+
+test("keeps the featured RiskScan marker readable on its lavender surface", async () => {
+  const [, , navigation] = await readWorkspaceSources();
+
+  assert.doesNotMatch(navigation, /bg-\[\#e9e1ff\] text-brand-purple/);
 });
 
 test("reuses the truthful local footer below the guest workspace", async () => {
