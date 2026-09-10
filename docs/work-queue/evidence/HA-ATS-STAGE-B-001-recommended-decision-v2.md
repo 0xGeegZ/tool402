@@ -2,10 +2,11 @@
 
 ## Status
 
-**DRAFT — no authority is active until the human declaration below is accepted
-and recorded on canonical main.** This is deliberately a Phase-A local
-enablement decision, not a Stage-B live GO. The earlier draft must not be used
-as a GO because it mixed an `ATS_CREATE` mapping with unsupported
+**ACCEPTED — the exact Phase-A local authority below is recorded in
+[`HA-ATS-M33-ENABLEMENT-001-decision.md`](HA-ATS-M33-ENABLEMENT-001-decision.md).
+No live authority is active.** This is deliberately a Phase-A local enablement
+decision, not a Stage-B live GO. The earlier draft must not be used as a GO
+because it mixed an `ATS_CREATE` mapping with unsupported
 `ATS_CONTROL_LIST` and `ATS_ISSUE` actions and assumed execution paths that do
 not yet exist. Acceptance creates a distinct
 `HA-ATS-M33-ENABLEMENT-001` decision/intake record and leaves the existing
@@ -126,4 +127,4 @@ complete mappings and verification rules.
 
 Decision owner: `0xGeegZ`
 
-Decision timestamp: `<fill at acceptance>`
+Decision timestamp: `2026-09-10T19:25:33Z`
