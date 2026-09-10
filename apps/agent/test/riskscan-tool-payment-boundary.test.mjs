@@ -173,7 +173,31 @@ function runCliWithoutConfiguration() {
   });
 }
 
-function runCliPreflight({ paymentRequiredHeader, defaultPayment = false } = {}) {
+function runCliPreflightWithoutConfiguration() {
+  return new Promise((resolve) => {
+    execFile(
+      process.execPath,
+      ["--experimental-strip-types", fileURLToPath(cliSource), "--preflight"],
+      {
+        cwd: fileURLToPath(new URL("../", import.meta.url)),
+        env: {
+          B03_SECRET_SENTINEL: "SECRET_SENTINEL_B03",
+          NODE_NO_WARNINGS: "1",
+        },
+        timeout: 2_000,
+      },
+      (error, stdout, stderr) => resolve({ error, stdout, stderr }),
+    );
+  });
+}
+
+function runCliPreflight({
+  paymentRequiredHeader,
+  omitPaymentRequiredHeader = false,
+  directoryFails = false,
+  preflightPolicy = policy,
+  defaultPayment = false,
+} = {}) {
   const paymentRequired = {
     x402Version: 2,
     resource: { url: new URL("/api/riskscan", base).href },
@@ -182,8 +206,9 @@ function runCliPreflight({ paymentRequiredHeader, defaultPayment = false } = {})
   const coreClientStub = [
     "const boundaries = globalThis.__B03_TEST_PAYMENT_BOUNDARIES;",
     "export class x402Client {",
-    "  register() { return this; }",
-    "  setSpendControls() { return this; }",
+    "  constructor() { boundaries.push('payment_client'); }",
+    "  register() { boundaries.push('payment_register'); return this; }",
+    "  setSpendControls() { boundaries.push('payment_spend_controls'); return this; }",
     "}",
     "export class x402HTTPClient {",
     "  constructor() { boundaries.push('factory'); }",
@@ -206,6 +231,8 @@ function runCliPreflight({ paymentRequiredHeader, defaultPayment = false } = {})
     `const directory = ${JSON.stringify(directory())};`,
     `const paymentRequired = ${JSON.stringify(paymentRequired)};`,
     `const paymentRequiredHeader = ${JSON.stringify(paymentRequiredHeader ?? encodePaymentRequiredHeader(paymentRequired))};`,
+    `const omitPaymentRequiredHeader = ${JSON.stringify(omitPaymentRequiredHeader)};`,
+    `const directoryFails = ${JSON.stringify(directoryFails)};`,
     `const paymentResult = ${JSON.stringify(assessRiskScanQuick(input))};`,
     `const payerAccessAllowed = ${JSON.stringify(defaultPayment)};`,
     "const originalProcess = process;",
@@ -234,9 +261,12 @@ function runCliPreflight({ paymentRequiredHeader, defaultPayment = false } = {})
     "  const url = new URL(String(target));",
     "  const headers = new Headers(init.headers);",
     "  requests.push({ method: init.method ?? 'GET', path: url.pathname, body: init.body ?? null, authorization: headers.get('authorization'), paymentSignature: headers.get('payment-signature') });",
-    "  if (url.pathname === '/api/tools' && (init.method ?? 'GET') === 'GET') return Response.json(directory);",
+    "  if (url.pathname === '/api/tools' && (init.method ?? 'GET') === 'GET') {",
+    "    if (directoryFails) throw new Error('SECRET_SENTINEL_B03');",
+    "    return Response.json(directory);",
+    "  }",
     "  if (url.pathname === '/api/riskscan' && init.method === 'POST' && ++riskScanRequests === 1) {",
-    "    const response = new Response(null, { status: 402, headers: { 'payment-required': paymentRequiredHeader } });",
+    "    const response = new Response(null, { status: 402, headers: omitPaymentRequiredHeader ? {} : { 'payment-required': paymentRequiredHeader } });",
     "    response.json = async () => { throw new Error('B03_TEST_RESULT_PARSE'); };",
     "    return response;",
     "  }",
@@ -264,7 +294,7 @@ function runCliPreflight({ paymentRequiredHeader, defaultPayment = false } = {})
           NODE_NO_WARNINGS: "1",
           RISKSCAN_PAY_SERVICE_BASE_URL: base.href,
           RISKSCAN_PAY_INPUT_JSON: JSON.stringify(input),
-          RISKSCAN_PAY_POLICY_JSON: JSON.stringify(policy),
+          RISKSCAN_PAY_POLICY_JSON: JSON.stringify(preflightPolicy),
           ...(defaultPayment ? {
             RISKSCAN_PAY_PAYER_ACCOUNT_ID: "0.0.1001",
             RISKSCAN_PAY_PAYER_PRIVATE_KEY: "test-private-key",
@@ -279,8 +309,12 @@ function runCliPreflight({ paymentRequiredHeader, defaultPayment = false } = {})
 
 function preflightTrace(stdout) {
   const lines = stdout.trimEnd().split("\n");
-  const requests = JSON.parse(lines.at(-2).replace(/^B03_TEST_FETCHES /u, ""));
-  const boundaries = JSON.parse(lines.at(-1).replace(/^B03_TEST_PAYMENT_BOUNDARIES /u, ""));
+  const fetchesLine = lines.at(-2);
+  const boundariesLine = lines.at(-1);
+  assert.match(fetchesLine, /^B03_TEST_FETCHES /u);
+  assert.match(boundariesLine, /^B03_TEST_PAYMENT_BOUNDARIES /u);
+  const requests = JSON.parse(fetchesLine.slice("B03_TEST_FETCHES ".length));
+  const boundaries = JSON.parse(boundariesLine.slice("B03_TEST_PAYMENT_BOUNDARIES ".length));
   return { diagnostic: lines.slice(0, -2), requests, boundaries };
 }
 
@@ -289,6 +323,17 @@ function assertUnsignedPreflightRequests(requests) {
     { method: "GET", path: "/api/tools", body: null, authorization: null, paymentSignature: null },
     { method: "POST", path: "/api/riskscan", body: JSON.stringify(input), authorization: null, paymentSignature: null },
   ]);
+}
+
+async function assertPreflightChallengeRejected(options) {
+  const { error, stdout, stderr } = await runCliPreflight(options);
+  assert.notEqual(error, null);
+  assert.equal(stderr, "");
+  assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_PAYER_READ|B03_TEST_RESULT_PARSE/u);
+  const { diagnostic, requests, boundaries } = preflightTrace(stdout);
+  assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC INITIAL_REQUEST_OR_CHALLENGE_FAILED"]);
+  assertUnsignedPreflightRequests(requests);
+  assert.deepEqual(boundaries, []);
 }
 
 boundaryTest("keeps the B03 library to injected capabilities and the single approved Agent/Core composition", async () => {
@@ -413,6 +458,45 @@ boundaryTest("keeps the CLI as the only runtime configuration edge and redacts a
   assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03/u);
 });
 
+boundaryTest("maps a missing preflight configuration to a closed nonzero diagnostic", async () => {
+  const { error, stdout, stderr } = await runCliPreflightWithoutConfiguration();
+
+  assert.notEqual(error, null);
+  assert.equal(stderr, "");
+  assert.equal(stdout, "RISKSCAN_PAY_DIAGNOSTIC CONFIGURATION_INVALID\n");
+  assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03/u);
+});
+
+boundaryTest("maps a preflight directory failure before every payment boundary", async () => {
+  const { error, stdout, stderr } = await runCliPreflight({ directoryFails: true });
+
+  assert.notEqual(error, null);
+  assert.equal(stderr, "");
+  assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_PAYER_READ/u);
+  const { diagnostic, requests, boundaries } = preflightTrace(stdout);
+  assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC DIRECTORY_FAILED"]);
+  assert.deepEqual(requests, [
+    { method: "GET", path: "/api/tools", body: null, authorization: null, paymentSignature: null },
+  ]);
+  assert.deepEqual(boundaries, []);
+});
+
+boundaryTest("maps a policy-declined preflight quote before every payment boundary", async () => {
+  const { error, stdout, stderr } = await runCliPreflight({
+    preflightPolicy: { ...policy, maximumAmount: "9999" },
+  });
+
+  assert.notEqual(error, null);
+  assert.equal(stderr, "");
+  assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_PAYER_READ/u);
+  const { diagnostic, requests, boundaries } = preflightTrace(stdout);
+  assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC QUOTE_DECLINED"]);
+  assert.deepEqual(requests, [
+    { method: "GET", path: "/api/tools", body: null, authorization: null, paymentSignature: null },
+  ]);
+  assert.deepEqual(boundaries, []);
+});
+
 boundaryTest("runs the opt-in preflight through one unsigned Directory and initial request before the guard", async () => {
   const { error, stdout, stderr } = await runCliPreflight();
 
@@ -456,6 +540,27 @@ boundaryTest("rejects an exact-quote mismatch during preflight before every paym
   assert.deepEqual(boundaries, []);
 });
 
+boundaryTest("rejects a missing preflight challenge before every payment boundary", async () => {
+  await assertPreflightChallengeRejected({ omitPaymentRequiredHeader: true });
+});
+
+for (const [field, value] of [
+  ["scheme", "upto"],
+  ["network", "hedera:mainnet"],
+  ["asset", "0.0.429275"],
+]) {
+  boundaryTest(`rejects a preflight challenge with a mismatched ${field} before every payment boundary`, async () => {
+    const mismatch = {
+      x402Version: 2,
+      resource: { url: new URL("/api/riskscan", base).href },
+      accepts: [{ ...requirements(), [field]: value }],
+    };
+    await assertPreflightChallengeRejected({
+      paymentRequiredHeader: encodePaymentRequiredHeader(mismatch),
+    });
+  });
+}
+
 boundaryTest("preserves normal payment output and exit behavior while adding only the paid diagnostic", async () => {
   const { error, stdout, stderr } = await runCliPreflight({ defaultPayment: true });
 
@@ -480,6 +585,9 @@ boundaryTest("preserves normal payment output and exit behavior while adding onl
     "private_key",
     "signer",
     "scheme",
+    "payment_client",
+    "payment_register",
+    "payment_spend_controls",
     "factory",
     "challenge_decode",
     "payment_payload",
