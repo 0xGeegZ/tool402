@@ -48,7 +48,10 @@ test("mounts one non-executing client SDK probe at the stage 3 first sub-step", 
 
   assert.match(stages, /import\s+\{\s*AtsCreateAction\s*\}\s+from\s+"\.\/ats-create-action";/);
   assert.equal((stages.match(/<AtsCreateAction\b/g) ?? []).length, 1);
-  assert.match(stages, /index === 2 && substepIndex === 0 && "returnsCandidate" in substep/);
+  assert.match(
+    stages,
+    /"returnsCandidate" in substep\s*\?\s*\(\s*<>\s*\{index === 2 && substepIndex === 0 \? <AtsCreateAction\b/s,
+  );
 });
 
 test("uses the ATS browser aliases and the BBS package's own WASM fallback in Turbopack", async () => {
@@ -65,7 +68,11 @@ test("uses the ATS browser aliases and the BBS package's own WASM fallback in Tu
   assert.match(config, /turbopack:\s*\{\s*resolveAlias:/);
   assert.match(
     config,
-    /"@mattrglobal\/node-bbs-signatures":\s*"@mattrglobal\/bbs-signatures\/lib\/wasm_module\.js"/,
+    /serverExternalPackages:\s*\[\s*"@mattrglobal\/node-bbs-signatures"\s*\]/,
+  );
+  assert.match(
+    config,
+    /"@mattrglobal\/node-bbs-signatures":\s*\{\s*browser:\s*"@mattrglobal\/bbs-signatures\/lib\/wasm_module\.js",?\s*\}/,
   );
   assert.doesNotMatch(config, /(?:nodePolyfills|resolveAlias:\s*\{[^}]*\bfs\b)/s);
 

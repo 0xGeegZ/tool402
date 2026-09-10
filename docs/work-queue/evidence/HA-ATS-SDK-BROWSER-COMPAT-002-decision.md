@@ -46,5 +46,18 @@ provided WebAssembly fallback. It adds no local BBS implementation, mock,
 polyfill, or execution. This amendment is recorded as
 `HA-ATS-SDK-BROWSER-COMPAT-003` and `D-M44-010-008`.
 
+## Server graph amendment
+
+Review found that resolving the BBS alias globally would also replace the
+server graph's native module, while the authorized WASM fallback is
+browser-only. When the alias is conditional as required, the Next server graph
+must preserve its native resolution without Turbopack statically resolving the
+binding. The human directed the root to complete this Turbopack path. It may
+therefore list only `@mattrglobal/node-bbs-signatures` in Next
+`serverExternalPackages`, alongside the existing browser-only WASM alias. This
+does not create local BBS code, mock or polyfill, change the official SDK, read
+configuration, or execute any BBS/SDK action. This amendment is recorded as
+`D-M44-010-009`.
+
 The reviewed upstream revision and its exact compatibility surface are recorded
 above; this local decision intentionally carries no external document reference.

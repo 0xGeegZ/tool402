@@ -237,4 +237,7 @@ record it exactly before expanding the scope.
 The logger aliases removed all `fs` diagnostics. `D-M44-010-008` now permits
 only the conditional browser mapping from the optional Node BBS binding to the
 BBS package's own WASM fallback. It is not a mock, SDK patch, or BBS execution.
-A fresh Turbopack production build remains the gate.
+A fresh Turbopack production build exposed the native BBS package again only
+in the server graph. `D-M44-010-009` permits exactly that package as a Next
+server external while retaining the browser-only WASM alias. A fresh Turbopack
+production build remains the gate.

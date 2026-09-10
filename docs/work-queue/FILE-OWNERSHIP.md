@@ -612,6 +612,12 @@ adaptation can be considered.
 package-provided WebAssembly fallback. It creates no source path and may not
 introduce a BBS mock, generic Node polyfill, or executable BBS/SDK behavior.
 
+`D-M44-010-009` permits exactly one companion Next
+`serverExternalPackages` entry for that same optional Node BBS package. It
+keeps native BBS resolution out of Turbopack's server graph while the existing
+conditional alias remains browser-only; it may not externalize another package
+or introduce any executable BBS/SDK behavior.
+
 S20-T010 owns the new `apps/web/src/components/discovery/explore-catalog.tsx`
 and `apps/web/tests/explore-catalog.test.mjs`. The root integration reservation
 allows only its declared presentation amendments to

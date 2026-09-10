@@ -56,13 +56,11 @@ function StageCommand({ index }: { index: number }) {
         {definition.substeps.map((substep, substepIndex) => (
           <li key={substep.label} className="space-y-1">
             <p className="font-medium text-foreground">{substepIndex + 1}. {substep.label}</p>
-            {index === 2 && substepIndex === 0 && "returnsCandidate" in substep ? (
+            {"returnsCandidate" in substep ? (
               <>
-                <AtsCreateAction />
+                {index === 2 && substepIndex === 0 ? <AtsCreateAction /> : null}
                 <p>The separately carded human action returns the candidate details required by the next sub-step.</p>
               </>
-            ) : "returnsCandidate" in substep ? (
-              <p>The separately carded human action returns the candidate details required by the next sub-step.</p>
             ) : (
               <p>
                 A later command bridge would bind the returned candidate&apos;s <code className="font-mono text-xs">transactionId</code> and <code className="font-mono text-xs">evmAddress</code> after it is separately accepted.
