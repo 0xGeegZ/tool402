@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M05-T010 accepted, M05-T020 accepted, M06-T010 accepted,
   M45-T010 accepted, and M46-T030 accepted. The canonical-directory migration
   correction recorded in [D-M46-040-001](../../DECISIONS.md) is a required
@@ -71,6 +71,16 @@ remaining separate under the scoped M46 amendment.
 - M46-T030 is accepted so the shared `ENTITYCHECK_X402` parser exists; M05,
   M05-T020, and M45 are accepted so the one-tool producer/consumer contract
   being superseded is known exactly.
+
+## Activation review
+
+The independent current-head review at
+[M46-T040 activation review](../../evidence/M46-T040-activation-review.md)
+is clear. This card is active only to create its durable test-only RED
+contract at the eleven declared test paths. The three source paths, route,
+active-directory view, UI, package metadata, lockfile, configuration,
+source read, payment, wallet/provider, transaction, deployment, and live
+paths remain prohibited pending a fresh independent RED acceptance.
 
 ## Verification
 

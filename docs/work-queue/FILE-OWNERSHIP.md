@@ -695,11 +695,13 @@ recorded final reports. No package,
 lockfile, configuration value, live facilitator/source read, payment, wallet,
 provider, transaction, deployment, or live path is authorized.
 
-M46-T040 is a root-controlled `10-ready` CORE_P0 record comprising its card,
+M46-T040 is a root-controlled `20-active` CORE_P0 record comprising its card,
 `docs/specs/m46-entity-check-tool-directory.md`, the compatibility amendment
 at `docs/work-queue/evidence/M46-T040-directory-v2-compatibility-amendment.md`,
 its clear ready review at
-`docs/work-queue/evidence/M46-T040-ready-review.md`, its future reviews, its
+`docs/work-queue/evidence/M46-T040-ready-review.md`, its clear activation
+review at `docs/work-queue/evidence/M46-T040-activation-review.md`, its future
+reviews, its
 new Web descriptor source/test
 `apps/web/src/lib/entity-check-tool-descriptor.ts` and
 `apps/web/tests/entity-check-tool-descriptor.test.mjs`, and only the following
