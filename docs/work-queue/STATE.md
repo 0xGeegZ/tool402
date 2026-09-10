@@ -57,6 +57,12 @@
   removed by independently accepted correction `20125ac`. Their truth-first
   exclusions and the pending Stage B/public deployment/demo boundaries remain
   unchanged.
+- S32_STATIC_SHELL_TEST_INTAKE: The accepted S31 shell's exact internal
+  /provider/deploy CTA is truthful static route copy, not an enabled provider
+  runtime. S32-T010 owns an 00-inbox one-file test-contract correction only:
+  it must retain no-runtime coverage while replacing the stale lexical
+  conflation. No source or UI route is active; a fresh independent readiness
+  review and explicit activation are required before the test can change.
 - S28_PROVIDER_OVERVIEW_INTAKE: S28-T010 is a root-owned truth-first Provider
   overview visual reconciliation. Its only candidate source paths are the
   Provider page, its existing status component, and one new focused
