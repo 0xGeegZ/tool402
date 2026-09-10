@@ -36,13 +36,13 @@ export default function RootLayout({
             </p>
           </div>
           <header aria-label="Tool402" className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-            <div className="mx-auto flex min-h-18 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+            <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:min-h-18 sm:px-6 lg:px-8">
               <Link href="/" aria-label="Tool402 home" className="shrink-0">
                 <Logo />
               </Link>
-              <div className="flex flex-wrap items-center justify-end gap-2">
+              <div className="flex items-center justify-end gap-2">
                 <LocalNavigation />
-                <Link href="/provider/deploy" className="inline-flex min-h-10 items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                <Link href="/provider/deploy" className="hidden min-h-10 items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:inline-flex">
                   Prepare a tool
                 </Link>
               </div>
