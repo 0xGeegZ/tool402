@@ -673,7 +673,7 @@ branch is unreviewed and has no ownership or implementation authority. No client
 state, timer, command, write, Mirror/chain read, wallet, provider, payment,
 transaction, deployment, or live path is authorized.
 
-S21-T010 is a root-controlled `10-ready` CORE_P0 record. Its historical
+S21-T010 is a root-controlled `20-active` CORE_P0 record. Its historical
 source was integrated at `48421352607a00c1a73f593dcc48160fac771e6a`; that is
 not acceptance evidence. The corrective record
 `docs/work-queue/evidence/S21-T010-corrective-review.md` reserves only a
@@ -691,8 +691,10 @@ amendable. The stage 4 literal keeps `clearingAccount` absent under
 `D-S21-010-001`; no request is built and the stage stays unavailable. No
 wallet, provider, SDK, configuration, durable write, transaction, deployment,
 or live path is authorized by the corrective scope. The independent ready
-review is recorded at `docs/work-queue/evidence/S21-T010-ready-review.md`.
-Only a fresh activation review may authorize the named test-only RED paths.
+review is recorded at `docs/work-queue/evidence/S21-T010-ready-review.md` and
+the activation at `docs/work-queue/evidence/S21-T010-activation-review.md`.
+Only the named test-only RED paths are now authorized; every source path stays
+prohibited pending independent RED acceptance.
 
 S22-T010 is a root-owned post-rehearsal POLISH intake comprising only its card,
 `docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog,
