@@ -74,6 +74,10 @@ test("renders labeled navigation between the committed local routes", async () =
   assert.match(navigation, /\{ href: "\/provider", label: "For providers" \}/);
   assert.match(navigation, /<Link href=\{link\.href\}/);
   assert.doesNotMatch(navigation, /\{ href: "(?!\/explore"|\/#how-it-works"|\/demo"|\/provider")[^"]+/);
+  assert.match(navigation, /["']use client["']/);
+  assert.match(navigation, /aria-label="Open menu"/);
+  assert.match(navigation, /<SheetContent side="right"/);
+  assert.match(navigation, /\blg:hidden\b/);
   assert.match(layout, /<Link href="\/" aria-label="Tool402 home"/);
   assert.match(layout, /<Link href="\/provider\/deploy"/);
   assert.match(layout, />\s*Prepare a tool\s*</);

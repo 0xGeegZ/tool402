@@ -45,15 +45,12 @@ test("preserves the current four-entry local navigation", async () => {
   ]);
 });
 
-test("keeps the shared local navigation list responsive without a width workaround", async () => {
+test("uses a compact mobile menu instead of wrapping the desktop navigation", async () => {
   const navigation = await readAppFile("src/components/discovery/local-navigation.tsx");
-  const listOpenings = [...navigation.matchAll(/<ul\b([^>]*)>/gu)];
 
-  assert.equal(listOpenings.length, 1);
-  assert.equal(
-    listOpenings[0][1],
-    ' className="flex flex-wrap items-center justify-end gap-1 text-[13px] font-semibold"',
-  );
+  assert.match(navigation, /<ul className="hidden items-center gap-1 lg:flex">/);
+  assert.match(navigation, /<SheetContent side="right"/);
+  assert.doesNotMatch(navigation, /flex-wrap/);
 });
 
 test("keeps the workspace shell static and local", async () => {
