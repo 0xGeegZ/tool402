@@ -11,8 +11,9 @@
 - Owner: The root owns queue state, catalog, ownership, the local UI ledger,
   decisions, reviews, commits, and pushes. This intake owns only this card,
   `docs/ui/UI-S24.md`, `docs/ui/IMPORT-LEDGER.md`, and the root control
-  records. The early source-to-current comparison and root-directed activation
-  reserve only the focused test RED paths named in the activation record.
+  records. The early source-to-current comparison, test RED activation, and
+  human-directed GREEN scope reserve only the exact dashboard paths named in
+  the scope authorization.
 - Human actions: this card creates no wallet/provider/ATS authority. The
   existing Stage B action, public deployment, and demo recording remain
   distinct human-owned downstream actions.
@@ -47,11 +48,11 @@ The root commits a narrow UI-S24 ledger amendment that names:
 3. the current route target for every CTA and clear unavailable state; and
 4. each omitted prepared element and the truthful reason for omitting it.
 
-The root-directed activation authorizes only the focused test RED paths in the
-activation record. The comparison cannot reopen unrelated routes, import a
+The human-directed scope authorizes the exact dashboard paths recorded in the
+scope authorization. The comparison cannot reopen unrelated routes, import a
 general archive, or invent account, session, wallet, provider, balance,
-payment, transaction, evidence, or live state. Independent RED review remains
-required before any source path can be authorized.
+payment, transaction, evidence, or live state. Independent task and module
+review remain required before acceptance.
 
 ## Acceptance criteria
 

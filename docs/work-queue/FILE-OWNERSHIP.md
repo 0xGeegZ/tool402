@@ -857,10 +857,14 @@ provider/ATS, configuration, package, README, submission, deployment, and
 video path remains prohibited until independent RED review authorizes exact
 GREEN paths.
 
-S24-T010 is a root-owned early truth-first POLISH lane. It is `20-active` only
-for `apps/web/tests/workspace-shell.test.mjs` and the new
-`apps/web/tests/dashboard-workspace-reconciliation.test.mjs` RED contract.
-Every dashboard source, global layout/navigation/CSS, child route/island,
-API/Agent, Provider/Demo, configuration, package, README, submission,
-deployment, and video path remains prohibited until independent RED review
-authorizes exact GREEN paths.
+S24-T010 is a root-owned early truth-first POLISH lane. It is `20-active` for
+`apps/web/src/app/dashboard/page.tsx`,
+`apps/web/src/components/workspace/workspace-shell.tsx`,
+`apps/web/src/components/workspace/workspace-overview.tsx`,
+`apps/web/src/components/workspace/workspace-navigation.tsx`,
+`apps/web/tests/workspace-shell.test.mjs`, and the new
+`apps/web/tests/dashboard-workspace-reconciliation.test.mjs`. Global
+layout/navigation/CSS, child route/island, API/Agent, Provider/Demo, asset,
+configuration, package, README, submission, deployment, and video paths remain
+prohibited. Independent task and module review remain required before
+acceptance.
