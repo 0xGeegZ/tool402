@@ -252,6 +252,21 @@ Core, backend, Web and UI paths, S12-T010's boundary routes and assets, runtime
 configuration, key material, accounts, wallets, deployment, and live evidence
 are excluded.
 
+B03-T020 is a root-controlled `00-inbox` CORE_P0 successor comprising its
+card, `docs/specs/b03-agent-safe-phase-diagnostics.md`, its local plan and
+intake review, catalog, ownership, State, decisions, reviews, commits, and
+pushes. After independent readiness and activation, it may own only
+`apps/agent/src/riskscan-pay-observability.ts`, the narrow CLI-edge amendment
+of `apps/agent/src/riskscan-pay-cli.ts`,
+`apps/agent/test/riskscan-pay-observability.test.mjs`, and the narrow secrecy/
+preflight amendment of `apps/agent/test/riskscan-tool-payment-boundary.test.mjs`.
+This is an explicit sequential successor reservation: B03-T010 is `50-blocked`
+with no active source lane and is not reopened. B03-T020 may not change the
+payment library, manifest, lockfile, public export, configuration, key,
+account, signer, wallet, provider, request payload/header, signed retry,
+settlement, deployment, or live-evidence path. No agent executes a preflight
+or replacement payment.
+
 S12-T010 is an accepted record comprising its card, `docs/ui/UI-S12.md`,
 `docs/superpowers/plans/2026-09-08-s12-deploy-readiness.md`, move-only input
 paths `apps/web/public/brand/icon.svg` and
