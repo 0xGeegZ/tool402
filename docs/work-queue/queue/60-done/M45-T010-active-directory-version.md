@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M05-T010 accepted, M28-T010 accepted, M09-T010 accepted,
   M40-T010 accepted, M41-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -150,3 +150,17 @@ exact RED targets absent. This activation authorizes only
 `apps/web/tests/active-directory-version.test.mjs` and the constrained
 `apps/web/tests/tool-directory-api.test.mjs` amendment; all source and external
 boundaries remain prohibited pending a fresh RED review.
+
+## Acceptance record
+
+Accepted at 2026-09-10T04:46:54Z at source commit
+`f2275ab15fcde4eb0893c187167ded7e4779c90c` after independent task review
+and two fresh clean module reviews. The focused M45/Tool Directory contract
+passed 18/18, including a never-settling pre-response fetch and valid JSON at
+the exact 16,384-byte cap. Web/root typecheck and lint, queue/reference and
+whitespace checks passed under Node 22.21.1. The full Web suite has only the
+two separately blocked M44 source-absence RED failures; no M45 test failed.
+The equivalent Webpack production build passed before the final test-only
+amendment, whose source and route blobs are unchanged. This acceptance adds no
+publication, activation, payment, provider, wallet, SDK, transaction,
+deployment, or live authority.

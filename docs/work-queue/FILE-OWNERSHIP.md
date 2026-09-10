@@ -475,6 +475,11 @@ The accepted default discovery response, Agent reader/tests, every payment or
 provider boundary, and all configuration, wallet, SDK, transaction, deployment,
 and live paths remain excluded.
 
+M45-T010 is accepted at `f2275ab15fcde4eb0893c187167ded7e4779c90c` after
+independent task review and two fresh clean module reviews. Its final
+test-only amendment proves both the pre-response deadline and exact byte-cap
+boundary; it does not widen the declared source, route, or integration scope.
+
 M41-T010's scoped atomic-handoff correction is root-integrated only. It may
 amend `packages/backend/convex/external_prepare_command_admission.ts`,
 `packages/backend/convex/offerings.ts`, and `packages/backend/convex/schema.ts`
