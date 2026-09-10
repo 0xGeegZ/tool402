@@ -71,7 +71,7 @@ test("renders labeled navigation between the committed local routes", async () =
   assert.match(navigation, /\{ href: "\/explore", label: "Explore" \}/);
   assert.match(navigation, /\{ href: "\/dashboard", label: "Workspace" \}/);
   assert.match(navigation, /\{ href: "\/demo", label: "Demo" \}/);
-  assert.match(navigation, /\{ href: "\/provider", label: "Provider" \}/);
+  assert.match(navigation, /\{ href: "\/provider", label: "Campaign" \}/);
   assert.match(navigation, /<Link href=\{link\.href\}/);
   assert.doesNotMatch(navigation, /\{ href: "(?!\/"|\/explore"|\/dashboard"|\/demo"|\/provider")[^"]+/);
 });
@@ -104,12 +104,12 @@ test("renders a single read-only Explore marketplace catalog", async () => {
 
   assert.match(page, /<main\b/);
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
+  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
   assert.match(page, /<ExploreCatalog\s*\/>/);
   assert.doesNotMatch(page, /\bRiskScanDirectoryDiscovery\b/);
   assert.doesNotMatch(page, /<RiskScanDiscoveryCard\s*\/>/);
-  assert.match(page, />\s*Marketplace\s*</);
-  assert.match(page, />\s*Explore tools\s*</);
+  assert.match(page, /eyebrow="Marketplace"/);
+  assert.match(page, /title="Explore tools"/);
   assert.match(page, /Bounded, machine-payable tools with an inspectable journey\. Start with what each one covers\./);
   assert.deepEqual(directPageLinkViolations(page), []);
   assert.match(card, /RiskScan/);

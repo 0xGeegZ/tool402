@@ -266,7 +266,7 @@ implementedTest("renders only the fixed status regions, actions, evidence rows, 
   const presentation = `${page}\n${status}\n${state}`;
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
+  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
   assert.equal((page.match(/<Suspense\b/g) ?? []).length, 1);
   assert.doesNotMatch(page, /["']use client["']|\bfetch\s*\(|set(?:Timeout|Interval)\s*\(/);
   for (const text of [

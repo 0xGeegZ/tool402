@@ -21,8 +21,8 @@ test("presents the guest workspace as a dashboard rather than a preview", async 
   ]);
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
-  assert.match(page, /<h1\b[^>]*>\s*Dashboard\s*<\/h1>/);
+  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
+  assert.match(page, /title="Dashboard"/);
   assert.doesNotMatch(page, /Workspace preview/);
   assert.match(shell, /aria-label="Guest workspace"/);
   assert.match(shell, /guest/i);
@@ -43,7 +43,7 @@ test("preserves the exact five-entry local navigation", async () => {
     { href: "/explore", label: "Explore" },
     { href: "/dashboard", label: "Workspace" },
     { href: "/demo", label: "Demo" },
-    { href: "/provider", label: "Provider" },
+    { href: "/provider", label: "Campaign" },
   ]);
 });
 

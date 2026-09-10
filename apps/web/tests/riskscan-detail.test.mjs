@@ -22,7 +22,7 @@ test("locks the read-only RiskScan detail boundary", async () => {
   const sourcesWithoutRequiredLimitation = [page, detail.replace(requiredLimitation, ""), discoveryCard].join("\n");
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((detail.match(/<h1\b/g) ?? []).length, 1);
+  assert.equal((detail.match(/<PageHeader\b/g) ?? []).length, 1);
   assert.match(page, /<RiskScanDetail\s*\/>/);
 
   for (const input of ["requestRef", "subjectRef", "context", "identity", "pricing", "limitations", "evidence"]) {

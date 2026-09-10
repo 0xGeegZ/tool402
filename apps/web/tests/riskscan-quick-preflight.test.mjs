@@ -159,7 +159,7 @@ test("keeps the guest preflight to one static route, one local Core island, and 
 
   assert.doesNotMatch(page, /["']use client["']/);
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
+  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
   assert.equal((page.match(/<RiskScanQuickPreflight\s*\/>/g) ?? []).length, 1);
 
   assert.match(island, /^["']use client["'];/);
