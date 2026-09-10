@@ -981,3 +981,18 @@ source, test, state module, Agent/API/Core/Backend, global layout/navigation/
 CSS, asset, configuration, wallet/provider, payment, transaction, deployment,
 and live path remains prohibited until a separate accepted scope says
 otherwise.
+
+S29-T010 is a root-owned truth-first POLISH intake comprising its card,
+`docs/ui/UI-S29.md`, the local UI ledger, decision, state, catalog, this
+ownership record, reviews, commits, and pushes. Its proposed source/test set
+is exactly `apps/web/src/app/layout.tsx`,
+`apps/web/src/components/discovery/local-navigation.tsx`,
+`apps/web/tests/landing-explore.test.mjs`,
+`apps/web/tests/workspace-shell.test.mjs`, and the navigation assertion in
+`apps/web/tests/guided-demo-route.test.mjs`. It may migrate only the full
+shared shell presentation into the selected reference direction while
+retaining the two truthful strips, current home/desktop/menu/CTA hrefs, and
+their behavior. Every non-shell route/component/test, global CSS, asset,
+dependency, data/runtime/configuration, wallet/provider/payment/transaction,
+deployment, and live path remains prohibited until a separate accepted scope
+says otherwise.

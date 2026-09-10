@@ -32,6 +32,15 @@
   step. S28-T010 is `00-inbox`; no test or source path is authorized until its
   independent readiness review and separate RED activation are accepted.
 
+- S29_APPLICATION_SHELL_INTAKE: The human explicitly directs the shared shell,
+  menu, banners, logo, and CTA to match the selected visual direction with
+  current truthful routes. S29-T010 is 00-inbox; no test or source path is
+  authorized until its independent readiness review and separate RED
+  activation are accepted.
+- S29_UI_RECORD: docs/ui/UI-S29.md is the local visual manifest for the
+  S29-T010 intake and is subject to its separate readiness and activation
+  controls.
+
 - PRODUCT_OVERVIEW: accepted as P00-T010
 - CURRENT_MODULE: S13 outcome-feedback treatment is accepted at source commit `ece66c2fd7b2278ed0f801ad1febd478d9ddc39f`; S15 wallet-island/relay is accepted at `506f038fffb87739cc5fd302a30033b5c56d36ee`; S16 provider deploy wizard is accepted at `ed46ae18a08c859d5f2c94722ab84453ef674835`; M38 offering command payloads and M40 durable offering/Directory admission are accepted at `60-done`. HA-COMMAND-AUTHORITY-002, HA-ATS-RETARGET-001, HA-ATS-RUNTIME-BINDING-001, HA-ISSUER-ACCOUNT-001, and HA-CAMPAIGN-CONVEX-001 are accepted only as bounded local authority or human evidence. B03 Agent payment remains locally green and awaits its separate human-owned testnet exercise.
 - M41_DELIVERY: accepted at `20983649632f4812d9ee045637eb183b3158cc38` as a local HTTP ingress, transport replay, atomic ATS_CREATE admission, and public-projection boundary only; it adds no configuration, key, publication, wallet, provider, SDK, transaction, deployment, or live authority.
