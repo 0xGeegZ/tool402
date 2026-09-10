@@ -42,3 +42,22 @@ metrics, funding/progress/price/paid-event overlays, mock tool rows, evidence
 claims, unavailable routes, and all capability claims remain excluded. A
 fresh independent exact-head RED review is required before the asset or source
 scope is renewed for GREEN.
+
+## D-S22-010-006 renewed RED acceptance and GREEN scope
+
+The independent exact-head review accepted `7e78bfb` after the follow-up
+contracts bound the dotted hero, purple thesis span, trio illustration,
+reference-shaped process cards, and exact local-only footer routes to their
+respective landing components. Node 22.21.1 reported seven passes and only
+seven intended source-absence failures. The cumulative S22 range remains
+disjoint from the active dashboard/workspace lane.
+
+The renewed GREEN scope is exactly the original root page and three landing
+components, the three focused S22 tests, and
+`apps/web/public/brand/hero-trio.png`. The asset is the individually selected
+text-free PREP-UI-001 visual only; no source tree or other asset may be
+copied. All prior truth-first exclusions remain in force, including every
+prototype metric, funding/progress/price/paid-event overlay, mock tool row,
+evidence claim, unavailable route, global navigation/CSS/layout change, and
+runtime behavior. Independent task and module review remain required before
+the branch may be proposed for integration.

@@ -864,12 +864,11 @@ accepted GREEN scope comprised only `apps/web/src/app/page.tsx`,
 `apps/web/tests/product-landing.test.mjs`,
 `apps/web/tests/landing-explore.test.mjs`, and
 `apps/web/tests/public-landing-reconciliation.test.mjs`. It selected no new
-asset. D-S22-010-005 now authorizes only renewed RED in those three test paths;
-the individually selected future asset `apps/web/public/brand/hero-trio.png`
-and the existing root/three component paths require a fresh independent RED
-acceptance before GREEN. Every global layout/navigation/CSS, non-root route,
-provider/ATS, configuration, package, README, submission, deployment, video,
-and all other path remains prohibited.
+asset. D-S22-010-006 accepts the renewed RED and authorizes only the existing
+root/three component paths, their three focused tests, and the individually
+selected `apps/web/public/brand/hero-trio.png` asset for GREEN. Every global
+layout/navigation/CSS, non-root route, provider/ATS, configuration, package,
+README, submission, deployment, video, and all other path remains prohibited.
 
 S24-T010 is a root-owned early truth-first POLISH lane. It is `20-active` for
 `apps/web/src/app/dashboard/page.tsx`,
