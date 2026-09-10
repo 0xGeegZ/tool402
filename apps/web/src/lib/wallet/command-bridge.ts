@@ -9,7 +9,6 @@ import {
   parseOfferingCreatePayload,
 } from "@tool402/core";
 
-import { atsCreateConfiguration } from "../../components/provider/deploy/ats-create-configuration.ts";
 import {
   isDirectoryRecordComplete,
   type CompleteDirectoryRecordLiteral,
@@ -22,7 +21,6 @@ import {
   stageKindForRelayOutcome,
   termsV1Economics,
   type AtsCreateCandidate,
-  type AtsCreateConfigurationProjection,
   type ProviderDeployStageState,
 } from "../../components/provider/deploy/provider-deploy-state.ts";
 import type {
@@ -37,6 +35,7 @@ import {
   type RandomBytes,
   type Tool402CommandType,
 } from "./tool402-command.ts";
+import { stageBAtsCreateCommandProjection } from "../ats/stage-b-ats-create-command-projection.ts";
 
 export const CAMPAIGN_COMMAND_TYPES = TOOL402_COMMAND_TYPES;
 export type CampaignCommandType = Tool402CommandType;
@@ -45,6 +44,8 @@ export const isCampaignCommandType = isTool402CommandType;
 export const OFFERING_VERSION = 1;
 export const DIRECTORY_VERSION = 1;
 export const TERMS_VERSION = "v1";
+
+const neutralCampaignSubject = "riskscan_revenue_note_demo";
 
 export type DeployStageIndex = 0 | 1 | 2 | 3;
 
@@ -63,7 +64,6 @@ export interface StageRequestInput {
   readonly stage: number;
   readonly states: readonly ProviderDeployStageState[];
   readonly values: CampaignReviewValues;
-  readonly projection: AtsCreateConfigurationProjection | undefined;
   readonly attemptPublicId: string | null;
   readonly candidate: AtsCreateCandidate | null;
   readonly record: DirectoryRecordLiteral;
@@ -138,17 +138,17 @@ function offeringCreateBytes(
 }
 
 function externalPrepareBytes(
-  projection: AtsCreateConfigurationProjection,
+  stageBCommand: typeof stageBAtsCreateCommandProjection,
   idempotencyKey: string,
   expiresAt: string,
 ): Uint8Array {
   const payload = parseExternalPreparePayload({
-    operationKind: projection.operationKind,
-    subjectPublicId: projection.subjectPublicId,
-    network: projection.network,
-    chainId: projection.chainId,
-    expectedTarget: projection.expectedTarget,
-    canonicalParametersHash: projection.canonicalParametersHash,
+    operationKind: stageBCommand.operationKind,
+    subjectPublicId: stageBCommand.subjectPublicId,
+    network: stageBCommand.network,
+    chainId: stageBCommand.chainId,
+    expectedTarget: stageBCommand.expectedTarget,
+    canonicalParametersHash: stageBCommand.canonicalParametersHash,
     idempotencyKey,
     expiresAt,
   });
@@ -223,21 +223,17 @@ export function buildStageSignatureRequest(
 
   const { issuedAt, expiresAt } = createCommandTimestamps(input.nowMilliseconds);
   const idempotencyKey = createCommandNonce(input.randomBytes);
-  const { subjectPublicId } = atsCreateConfiguration;
   let type: CampaignCommandType;
   let canonicalPayloadBytes: Uint8Array;
 
   switch (stage) {
     case 0:
       type = "offering.create";
-      canonicalPayloadBytes = offeringCreateBytes(input.values, subjectPublicId, idempotencyKey, expiresAt);
+      canonicalPayloadBytes = offeringCreateBytes(input.values, neutralCampaignSubject, idempotencyKey, expiresAt);
       break;
     case 1:
-      if (input.projection === undefined) {
-        throw new TypeError("stage 2 needs the frozen local ATS_CREATE projection");
-      }
       type = "external.prepare";
-      canonicalPayloadBytes = externalPrepareBytes(input.projection, idempotencyKey, expiresAt);
+      canonicalPayloadBytes = externalPrepareBytes(stageBAtsCreateCommandProjection, idempotencyKey, expiresAt);
       break;
     case 2:
       if (input.candidate === null) {
@@ -254,7 +250,7 @@ export function buildStageSignatureRequest(
         throw new TypeError("stage 4 needs a complete directory record literal");
       }
       type = "directory.publish";
-      canonicalPayloadBytes = directoryPublishBytes(input.record, subjectPublicId, issuedAt, idempotencyKey, expiresAt);
+      canonicalPayloadBytes = directoryPublishBytes(input.record, neutralCampaignSubject, issuedAt, idempotencyKey, expiresAt);
       break;
   }
 

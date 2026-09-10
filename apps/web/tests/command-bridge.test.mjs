@@ -301,7 +301,8 @@ implementedTest("keeps caller and S16 display projections out of stage 2 while c
     "the bridge must import the public M47 command projection",
   );
   assert.doesNotMatch(source, /ats-create-configuration/u);
-  assert.doesNotMatch(source, /\bprojection\b/u);
+  assert.doesNotMatch(source, /\bprojection\s*\??\s*:/u);
+  assert.doesNotMatch(source, /\binput\s*\.\s*projection\b/u);
   assert.match(
     source,
     /const\s+neutralCampaignSubject\s*=\s*["']riskscan_revenue_note_demo["']/u,

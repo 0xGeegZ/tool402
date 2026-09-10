@@ -70,7 +70,6 @@ export function DeployStageSigning({
         stage,
         states,
         values,
-        projection: atsCreateConfiguration,
         attemptPublicId,
         candidate,
         record: directoryRecordLiteral,
