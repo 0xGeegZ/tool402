@@ -684,7 +684,7 @@ acceptance. Its future candidate source/test paths are the existing
 `apps/web/tests/entitycheck-detail.test.mjs`. This is a constrained root
 integration reservation over the completed S20/M14 files, not an amendment to
 their accepted behavior. `apps/web/tests/landing-explore.test.mjs` is expressly
-excluded because S22/S27 retain its active shared assertions. The Directory
+excluded because S22/S31 retain its active shared assertions. The Directory
 island, guest workbench, RiskScan detail route, navigation, all API/data
 behavior, and every wallet/provider/payment/transaction/deployment/live path
 remain excluded.

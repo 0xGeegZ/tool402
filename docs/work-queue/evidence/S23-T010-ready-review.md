@@ -17,7 +17,7 @@
   clear under Node 22.21.1.
 - Before this record, the UI-S23 ledger row and S23 ownership/integration
   reservation were missing. They are added by D-S23-010-001. The shared
-  `landing-explore.test.mjs` is intentionally omitted because S22/S27 own its
+  `landing-explore.test.mjs` is intentionally omitted because S22/S31 own its
   active assertions.
 - The manifest prohibits forms, fetches, payment/wallet/provider UI, pricing,
   metrics, mock results, external links, and live claims. A future activation
