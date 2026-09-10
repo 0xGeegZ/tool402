@@ -157,12 +157,17 @@ function safeFailureHarness(failureSource) {
 
 function runCliWithoutConfiguration() {
   const transportIsolationLoader = [
-    "import Module, { register } from 'node:module';",
+    "import Module, { register, syncBuiltinESMExports } from 'node:module';",
     "const blocked = ['node:http', 'http', 'node:https', 'https', 'node:http2', 'http2', 'node:net', 'net', 'node:tls', 'tls', 'node:dgram', 'dgram', 'undici', 'node:undici', 'node:process', 'process'];",
     "const originalProcess = process; const originalLoad = Module._load; const originalGetBuiltinModule = originalProcess.getBuiltinModule.bind(originalProcess);",
-    "Module._load = function(request, parent, isMain) { if (blocked.includes(request)) throw new Error(`B03_TEST_BLOCKED_TRANSPORT_REQUIRE:${request}`); return originalLoad.call(this, request, parent, isMain); };",
-    "globalThis.process = new Proxy(originalProcess, { get(target, key) { if (key === 'getBuiltinModule') return (name) => { if (blocked.includes(name)) throw new Error(`B03_TEST_BLOCKED_BUILTIN:${name}`); return originalGetBuiltinModule(name); }; if (key !== 'env') return Reflect.get(target, key, target); return new Proxy(target.env, { get(environment, name) { if (name === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || name === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY') throw new Error('B03_TEST_PAYER_READ'); return Reflect.get(environment, name); } }); } });",
-    `register(${JSON.stringify(`data:text/javascript,${encodeURIComponent("export async function resolve(specifier, context, nextResolve) { if (['node:http', 'http', 'node:https', 'https', 'node:http2', 'http2', 'node:net', 'net', 'node:tls', 'tls', 'node:dgram', 'dgram', 'undici', 'node:undici', 'node:process', 'process'].includes(specifier)) throw new Error(\`B03_TEST_BLOCKED_TRANSPORT_IMPORT:\${specifier}\`); return nextResolve(specifier, context); }")}`)});`,
+    "const attempts = []; const fail = (name) => () => { attempts.push(name); throw new Error(`B03_TEST_BLOCKED_TRANSPORT:${name}`); };",
+    "for (const [name, members] of [['node:http', ['request', 'get']], ['node:https', ['request', 'get']], ['node:http2', ['connect']], ['node:net', ['connect', 'createConnection']], ['node:tls', ['connect']], ['node:dgram', ['createSocket']]]) { const builtin = originalGetBuiltinModule(name); for (const member of members) builtin[member] = fail(`${name}.${member}`); } syncBuiltinESMExports();",
+    "const protectedEnv = new Proxy(originalProcess.env, { get(target, key) { if (key === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || key === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY') throw new Error('B03_TEST_PAYER_READ'); return Reflect.get(target, key, target); }, getOwnPropertyDescriptor(target, key) { if (key === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || key === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY') throw new Error('B03_TEST_PAYER_READ'); return Reflect.getOwnPropertyDescriptor(target, key); } });",
+    "Object.defineProperty(originalProcess, 'env', { configurable: true, enumerable: true, get: () => protectedEnv });",
+    "Object.defineProperty(originalProcess, 'getBuiltinModule', { configurable: true, writable: true, value(name) { if (blocked.includes(name)) { attempts.push(name); throw new Error(`B03_TEST_BLOCKED_BUILTIN:${name}`); } return originalGetBuiltinModule(name); } });",
+    "globalThis.fetch = fail('global.fetch');",
+    "Module._load = function(request, parent, isMain) { if (request === 'undici' || request === 'node:undici') return new Proxy({}, { get(_target, key) { return fail(`undici.${String(key)}`); } }); return originalLoad.call(this, request, parent, isMain); };",
+    `register(${JSON.stringify(`data:text/javascript,${encodeURIComponent("export async function resolve(specifier, context, nextResolve) { if (specifier === 'undici' || specifier === 'node:undici') return { shortCircuit: true, url: 'data:text/javascript,export const request=()=>{throw new Error(\\\"B03_TEST_BLOCKED_TRANSPORT:undici.request\\\")};export const fetch=request;export const connect=request;export default {request,fetch,connect}' }; return nextResolve(specifier, context); }")}`)});`,
   ].join("\n");
   return new Promise((resolve) => {
     execFile(
@@ -183,15 +188,17 @@ function runCliWithoutConfiguration() {
 
 function runCliPreflightWithoutConfiguration() {
   const transportIsolationLoader = [
-    "import Module, { register } from 'node:module';",
+    "import Module, { register, syncBuiltinESMExports } from 'node:module';",
     "const blocked = ['node:http', 'http', 'node:https', 'https', 'node:http2', 'http2', 'node:net', 'net', 'node:tls', 'tls', 'node:dgram', 'dgram', 'undici', 'node:undici', 'node:process', 'process'];",
-    "const originalProcess = process;",
-    "const originalLoad = Module._load;",
-    "const transportAttempts = [];",
-    "const originalGetBuiltinModule = originalProcess.getBuiltinModule.bind(originalProcess);",
-    "Module._load = function(request, parent, isMain) { if (blocked.includes(request)) { transportAttempts.push(request); throw new Error(`B03_TEST_BLOCKED_TRANSPORT_REQUIRE:${request}`); } return originalLoad.call(this, request, parent, isMain); };",
-    "globalThis.process = new Proxy(originalProcess, { get(target, key) { if (key === 'getBuiltinModule') return (name) => { if (blocked.includes(name)) { transportAttempts.push(name); throw new Error(`B03_TEST_BLOCKED_BUILTIN:${name}`); } return originalGetBuiltinModule(name); }; if (key !== 'env') return Reflect.get(target, key, target); return new Proxy(target.env, { get(environment, name) { if (name === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || name === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY') throw new Error('B03_TEST_PAYER_READ'); return Reflect.get(environment, name); } }); } });",
-    `register(${JSON.stringify(`data:text/javascript,${encodeURIComponent("export async function resolve(specifier, context, nextResolve) { if (['node:http', 'http', 'node:https', 'https', 'node:http2', 'http2', 'node:net', 'net', 'node:tls', 'tls', 'node:dgram', 'dgram', 'undici', 'node:undici', 'node:process', 'process'].includes(specifier)) throw new Error(\`B03_TEST_BLOCKED_TRANSPORT_IMPORT:\${specifier}\`); return nextResolve(specifier, context); }")}`)});`,
+    "const originalProcess = process; const originalLoad = Module._load; const originalGetBuiltinModule = originalProcess.getBuiltinModule.bind(originalProcess);",
+    "const attempts = []; const fail = (name) => () => { attempts.push(name); throw new Error(`B03_TEST_BLOCKED_TRANSPORT:${name}`); };",
+    "for (const [name, members] of [['node:http', ['request', 'get']], ['node:https', ['request', 'get']], ['node:http2', ['connect']], ['node:net', ['connect', 'createConnection']], ['node:tls', ['connect']], ['node:dgram', ['createSocket']]]) { const builtin = originalGetBuiltinModule(name); for (const member of members) builtin[member] = fail(`${name}.${member}`); } syncBuiltinESMExports();",
+    "const protectedEnv = new Proxy(originalProcess.env, { get(target, key) { if (key === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || key === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY') throw new Error('B03_TEST_PAYER_READ'); return Reflect.get(target, key, target); }, getOwnPropertyDescriptor(target, key) { if (key === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || key === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY') throw new Error('B03_TEST_PAYER_READ'); return Reflect.getOwnPropertyDescriptor(target, key); } });",
+    "Object.defineProperty(originalProcess, 'env', { configurable: true, enumerable: true, get: () => protectedEnv });",
+    "Object.defineProperty(originalProcess, 'getBuiltinModule', { configurable: true, writable: true, value(name) { if (blocked.includes(name)) { attempts.push(name); throw new Error(`B03_TEST_BLOCKED_BUILTIN:${name}`); } return originalGetBuiltinModule(name); } });",
+    "globalThis.fetch = fail('global.fetch');",
+    "Module._load = function(request, parent, isMain) { if (request === 'undici' || request === 'node:undici') return new Proxy({}, { get(_target, key) { return fail(`undici.${String(key)}`); } }); return originalLoad.call(this, request, parent, isMain); };",
+    `register(${JSON.stringify(`data:text/javascript,${encodeURIComponent("export async function resolve(specifier, context, nextResolve) { if (specifier === 'undici' || specifier === 'node:undici') return { shortCircuit: true, url: 'data:text/javascript,export const request=()=>{throw new Error(\\\"B03_TEST_BLOCKED_TRANSPORT:undici.request\\\")};export const fetch=request;export const connect=request;export default {request,fetch,connect}' }; return nextResolve(specifier, context); }")}`)});`,
   ].join("\n");
   return new Promise((resolve) => {
     execFile(
@@ -242,7 +249,7 @@ function runCliPreflight({
   const moduleLoader = [
     "export async function resolve(specifier, context, nextResolve) {",
     `  if (specifier === '@x402/core/client') return { shortCircuit: true, url: ${JSON.stringify(coreClientStubUrl)} };`,
-    "  if (['node:http', 'http', 'node:https', 'https', 'node:http2', 'http2', 'node:net', 'net', 'node:tls', 'tls', 'node:dgram', 'dgram', 'undici', 'node:undici', 'node:process', 'process'].includes(specifier)) throw new Error(`B03_TEST_BLOCKED_TRANSPORT_IMPORT:${specifier}`);",
+    "  if (specifier === 'undici' || specifier === 'node:undici') return { shortCircuit: true, url: 'data:text/javascript,export const request=()=>{throw new Error(\\\"B03_TEST_BLOCKED_TRANSPORT:undici.request\\\")};export const fetch=request;export const connect=request;export default {request,fetch,connect}' };",
     "  return nextResolve(specifier, context);",
     "}",
   ].join("\n");
@@ -262,28 +269,26 @@ function runCliPreflight({
     "const transportAttempts = [];",
     "const blockedBuiltinModules = ['node:http', 'http', 'node:https', 'https', 'node:http2', 'http2', 'node:net', 'net', 'node:tls', 'tls', 'node:dgram', 'dgram', 'undici', 'node:undici', 'node:process', 'process'];",
     "const originalGetBuiltinModule = originalProcess.getBuiltinModule.bind(originalProcess);",
+    "const failTransport = (name) => () => { transportAttempts.push(name); throw new Error(`B03_TEST_BLOCKED_TRANSPORT:${name}`); };",
+    "for (const [name, members] of [['node:http', ['request', 'get']], ['node:https', ['request', 'get']], ['node:http2', ['connect']], ['node:net', ['connect', 'createConnection']], ['node:tls', ['connect']], ['node:dgram', ['createSocket']]]) { const builtin = originalGetBuiltinModule(name); for (const member of members) builtin[member] = failTransport(`${name}.${member}`); }",
+    "syncBuiltinESMExports();",
     "globalThis.__B03_TEST_PAYMENT_BOUNDARIES = boundaries;",
     "globalThis.__B03_TEST_PAYMENT_REQUIRED = paymentRequired;",
     "Module._load = function(request, parent, isMain) {",
-    "  if (blockedBuiltinModules.includes(request)) {",
-    "    transportAttempts.push(request);",
-    "    throw new Error(`B03_TEST_BLOCKED_TRANSPORT_REQUIRE:${request}`);",
-    "  }",
+    "  if (request === 'undici' || request === 'node:undici') return new Proxy({}, { get(_target, key) { return failTransport(`undici.${String(key)}`); } });",
     "  if (request !== '@x402/hedera') return originalLoad.call(this, request, parent, isMain);",
     "  return {",
     "    ExactHederaScheme: class { constructor() { boundaries.push('scheme'); } },",
     "    PrivateKey: { fromString() { boundaries.push('private_key'); return {}; } },",
-    "    createClientHederaSigner() { boundaries.push('signer'); return { accountId: '0.0.1001', async createPartiallySignedTransferTransaction() { boundaries.push('sign'); return 'test'; } }; },",
+    `    createClientHederaSigner() { boundaries.push('signer'); return { accountId: '0.0.1001', async createPartiallySignedTransferTransaction() { boundaries.push('sign'); if (${JSON.stringify(failurePhase)} === 'signer') throw new Error('SECRET_SENTINEL_B03'); return 'test'; } }; },`,
     "  };",
     "};",
-    "globalThis.process = new Proxy(originalProcess, { get(target, key) {",
-    "  if (key === 'getBuiltinModule') return (name) => { if (blockedBuiltinModules.includes(name)) { transportAttempts.push(name); throw new Error(`B03_TEST_BLOCKED_BUILTIN:${name}`); } return originalGetBuiltinModule(name); };",
-    "  if (key !== 'env') return Reflect.get(target, key, target);",
-    "  return new Proxy(target.env, { get(environment, name) {",
+    "const protectedEnv = new Proxy(originalProcess.env, { get(target, name) {",
     "    if (!payerAccessAllowed && (name === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || name === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY')) throw new Error('B03_TEST_PAYER_READ');",
-    "    return Reflect.get(environment, name);",
-    "  } });",
-    "} });",
+    "    return Reflect.get(target, name, target);",
+    "  }, getOwnPropertyDescriptor(target, name) { if (!payerAccessAllowed && (name === 'RISKSCAN_PAY_PAYER_ACCOUNT_ID' || name === 'RISKSCAN_PAY_PAYER_PRIVATE_KEY')) throw new Error('B03_TEST_PAYER_READ'); return Reflect.getOwnPropertyDescriptor(target, name); } });",
+    "Object.defineProperty(originalProcess, 'env', { configurable: true, enumerable: true, get: () => protectedEnv });",
+    "Object.defineProperty(originalProcess, 'getBuiltinModule', { configurable: true, writable: true, value(name) { if (blockedBuiltinModules.includes(name)) { transportAttempts.push(name); throw new Error(`B03_TEST_BLOCKED_BUILTIN:${name}`); } return originalGetBuiltinModule(name); } });",
     "const requests = [];",
     "let riskScanRequests = 0;",
     `const configuredOrigin = ${JSON.stringify(base.origin)};`,
@@ -307,7 +312,7 @@ function runCliPreflight({
     "  if (url.href === riskScanUrl && method === 'POST' && riskScanRequests === 2) {",
     `    if (${JSON.stringify(failurePhase)} === 'signed_retry') throw new Error('SECRET_SENTINEL_B03');`,
     "    const response = new Response(null, { status: 200 });",
-    "    response.json = async () => paymentResult;",
+    `    response.json = async () => { if (${JSON.stringify(failurePhase)} === 'result') throw new Error('SECRET_SENTINEL_B03'); return paymentResult; };`,
     "    return response;",
     "  }",
     "  throw new Error('B03_TEST_UNEXPECTED_REQUEST');",
@@ -538,6 +543,15 @@ boundaryTest("maps a payment payload or signing failure at the CLI edge without 
   );
 });
 
+boundaryTest("maps a signer failure at the CLI edge without leaking the cause", async () => {
+  await assertCliPhaseFailure(
+    "signer",
+    "PAYMENT_PAYLOAD_OR_SIGNING_FAILED",
+    unsignedRequests,
+    [...paymentSetupBoundaries, "payment_payload", "sign"],
+  );
+});
+
 boundaryTest("maps a signed retry failure at the CLI edge without leaking the cause", async () => {
   await assertCliPhaseFailure(
     "signed_retry",
@@ -550,6 +564,15 @@ boundaryTest("maps a signed retry failure at the CLI edge without leaking the ca
 boundaryTest("maps a settlement or result failure at the CLI edge without leaking the cause", async () => {
   await assertCliPhaseFailure(
     "settlement",
+    "SETTLEMENT_OR_RESULT_FAILED",
+    [...unsignedRequests, signedRetryRequest],
+    [...paymentSetupBoundaries, "payment_payload", "payment_header", "settlement_decode"],
+  );
+});
+
+boundaryTest("maps a result parsing failure at the CLI edge without leaking the cause", async () => {
+  await assertCliPhaseFailure(
+    "result",
     "SETTLEMENT_OR_RESULT_FAILED",
     [...unsignedRequests, signedRetryRequest],
     [...paymentSetupBoundaries, "payment_payload", "payment_header", "settlement_decode"],
