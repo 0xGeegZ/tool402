@@ -69,6 +69,19 @@ contract. The source adapter, configuration, every source read, and every
 payment, wallet, provider, transaction, deployment, or live path remain
 prohibited pending RED acceptance.
 
+## RED acceptance record
+
+The independent RED review at clean pushed
+`860eab43e2a1c5e6487b86c24b1d823565d8ca76` is clear. Under Node 22.21.1,
+the focused contract fails exactly once because the declared adapter is absent,
+with twelve source-dependent assertions skipped and no incidental failure. The
+fixture covers configuration, injected dependencies, bounded public-response
+parsing, source mappings, closed failures, RFC 4180 parsing, clock validity,
+and the exact cache boundary without a live request. Only
+`apps/web/src/lib/entity-check-sources.ts` may now enter local GREEN. No
+provider, wallet, payment, transaction, deployment, or live source action is
+authorized.
+
 ## Verification
 
 - A durable test-only RED commit precedes every source change and fails only
