@@ -96,6 +96,7 @@ function bindingWithAuthority(authority) {
   });
   const module = { exports: {} };
   runInNewContext(outputText, {
+    TypeError,
     exports: module.exports,
     module,
     require(specifier) {

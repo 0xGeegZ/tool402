@@ -547,7 +547,7 @@ atomicTest("requires the M47 real-issuer binding after M32 authority revalidatio
   const m33 = atomic.indexOf("assertCurrentAtsPrepareAuthority(bound.payload)");
   const replay = atomic.indexOf('ctx.db.query("externalPrepareCommandReplayClaims")');
   const idempotency = atomic.indexOf('ctx.db.query("externalPrepareCommandAttempts")');
-  const durableInsert = atomic.indexOf('ctx.db.insert("externalPrepareCommandAttempts")');
+  const durableInsert = atomic.indexOf('ctx.db.insert("externalPrepareCommandAttempts",');
   for (const [name, position] of [
     ["M32 authority revalidation", revalidated],
     ["M47 runtime binding", binding],
