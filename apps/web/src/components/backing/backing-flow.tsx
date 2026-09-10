@@ -3,6 +3,7 @@
 import { useEffect, useState, type ChangeEvent, type ReactNode } from "react";
 
 import { isUserRejection } from "../../lib/wallet/metamask-provider.ts";
+import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -44,10 +45,10 @@ function SessionReporter({
   return <>{children}</>;
 }
 
-function describeView(view: BackingView, validationMessage: string | null): string {
+function describeView(view: BackingView): string {
   switch (view.kind) {
     case "choosing":
-      return view.message ?? validationMessage ?? "Choose units, read the disclosure, and connect MetaMask. Nothing is requested until you sign.";
+      return view.message ?? "Choose units, read the disclosure, and connect MetaMask. Nothing is requested until you sign.";
     case "prepared":
       return `The funding command was accepted. Send exactly ${formatHbar(view.intent.tinybars)} from MetaMask. A signature is not a payment.`;
     case "payment_submitted":
@@ -71,9 +72,12 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
   const [view, setView] = useState<BackingView>({ kind: "choosing" });
   const [request, setRequest] = useState<BackingIntent | null>(null);
   const [transferring, setTransferring] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const validation = validateUnits(offering, unitsInput);
   const label = backingLifecycleLabels[view.kind];
-  const canPrepare = validation.ok && acknowledged && session !== null && view.kind === "choosing" && request === null;
+  const committed = request ?? ("intent" in view ? view.intent : null);
+  const locked = view.kind !== "choosing" || request !== null;
+  const canPrepare = validation.ok && acknowledged && session !== null && !locked;
 
   function prepare() {
     if (!validation.ok || !canPrepare) return;
@@ -93,6 +97,13 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
   async function send() {
     if (session === null || view.kind !== "prepared" || transferring) return;
     setTransferring(true);
+    setNotice(null);
+    const current = await readCurrentSession(session.provider);
+    if (current.state.kind !== "connected" || current.state.address !== session.address) {
+      setNotice("MetaMask's account or network changed after connecting. Reconnect on Hedera Testnet before sending; nothing was sent.");
+      setTransferring(false);
+      return;
+    }
     let result: TransferResult;
     try {
       const response = await session.provider.request(transferRequest(view, session.address));
@@ -122,7 +133,7 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
             <div><dt className="text-muted-foreground">Payout cap</dt><dd>{formatHbar(offering.terms.payoutCapTinybars)}</dd></div>
             <div><dt className="text-muted-foreground">Terms version</dt><dd>{offering.terms.version}</dd></div>
             <div><dt className="text-muted-foreground">Maturity</dt><dd>{offering.maturityAt}</dd></div>
-            <div><dt className="text-muted-foreground">Units requested</dt><dd>{validation.ok ? validation.units.toString() : "—"}</dd></div>
+            <div><dt className="text-muted-foreground">Units requested</dt><dd>{committed !== null ? committed.units.toString() : validation.ok ? validation.units.toString() : "—"}</dd></div>
           </dl>
           <p className="mt-4 text-sm text-muted-foreground">
             A disclosed {formatShare(offering.terms.reserveShareBps)}% of qualifying usage revenue funds capped distributions under the offering terms. This is not a projected return. No payout amount or timeline is promised.
@@ -138,11 +149,12 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
         <CardContent className="space-y-4">
           <label className="block space-y-2 text-sm">
             <span className="font-medium">Units</span>
-            <input name="units" inputMode="numeric" value={unitsInput} disabled={view.kind !== "choosing"} onChange={(event: ChangeEvent<HTMLInputElement>) => setUnitsInput(event.target.value)} className="block w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2" />
+            <input name="units" inputMode="numeric" value={unitsInput} disabled={locked} aria-invalid={!validation.ok} aria-describedby="backing-units-message" onChange={(event: ChangeEvent<HTMLInputElement>) => setUnitsInput(event.target.value)} className="block w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2" />
           </label>
-          <p className="text-sm">Amount: {validation.ok ? formatHbar(validation.units * offering.terms.noteUnitPriceTinybars) : "—"}</p>
+          <p id="backing-units-message" className="text-sm text-muted-foreground">{validation.ok ? "Whole units within the offering bounds." : validation.message}</p>
+          <p className="text-sm">Amount: {committed !== null ? formatHbar(committed.tinybars) : validation.ok ? formatHbar(validation.units * offering.terms.noteUnitPriceTinybars) : "—"}</p>
           <label className="flex items-start gap-3 text-sm">
-            <input name="acknowledgement" type="checkbox" checked={acknowledged} disabled={view.kind !== "choosing"} onChange={(event: ChangeEvent<HTMLInputElement>) => setAcknowledged(event.target.checked)} className="mt-1" />
+            <input name="acknowledgement" type="checkbox" checked={acknowledged} disabled={locked} onChange={(event: ChangeEvent<HTMLInputElement>) => setAcknowledged(event.target.checked)} className="mt-1" />
             <span>I understand this is a testnet experiment with no real funds, that units are allocated only after the issuer signs, and that the payout cap is {formatHbar(offering.terms.payoutCapTinybars)}.</span>
           </label>
         </CardContent>
@@ -157,7 +169,7 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
           <h2 id="backing-status" className="text-lg font-semibold">Funding</h2>
           {label === null ? null : <Badge variant="outline">{label}</Badge>}
         </div>
-        <p aria-live="polite" className="text-sm text-muted-foreground">{describeView(view, validation.ok ? null : validation.message)}</p>
+        <p aria-live="polite" className="text-sm text-muted-foreground">{notice ?? describeView(view)}</p>
         {view.kind === "choosing" ? (
           <div className="space-y-2">
             <Button disabled={!canPrepare} aria-disabled={!canPrepare} onClick={prepare}>Prepare and fund</Button>

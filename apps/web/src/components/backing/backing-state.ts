@@ -236,7 +236,7 @@ export function viewAfterSignature(result: SignatureResult, intent: BackingInten
   }
   if (result.outcome === null) {
     return result.phase === "failed"
-      ? Object.freeze({ kind: "choosing", message: "MetaMask did not produce a signature. Nothing was relayed or sent." })
+      ? Object.freeze({ kind: "choosing", message: "Signing did not complete: the request expired, MetaMask was on another network or had no account, or MetaMask reported an error. Nothing was relayed or sent." })
       : Object.freeze({ kind: "payment_outcome_unknown", intent, message: unknownMessage });
   }
   return viewForRelayOutcome(result.outcome, result.phase, intent);
