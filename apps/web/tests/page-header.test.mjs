@@ -18,7 +18,6 @@ const migratedHeaders = {
   "src/app/explore/page.tsx": { eyebrow: "Marketplace", title: "Explore tools" },
   "src/app/explore/riskscan/try/page.tsx": { title: "Try RiskScan" },
   "src/app/explore/riskscan/tool-loop/page.tsx": { title: "RiskScan ToolLoop" },
-  "src/app/dashboard/page.tsx": { eyebrow: "Guest workspace", title: "Dashboard" },
   "src/app/dashboard/riskscan/page.tsx": { title: "RiskScan workbench" },
   "src/app/dashboard/riskscan/preflight/page.tsx": { title: "RiskScan Quick preflight" },
   "src/app/dashboard/riskscan/compatibility/page.tsx": { title: "Native quote compatibility" },
