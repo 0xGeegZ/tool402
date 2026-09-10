@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T020 and S31-T010 accepted.
 - Owner: The root owns queue state, catalog, ownership, UI ledger, decisions,
   reviews, commits, and pushes. The sole candidate implementation path is
@@ -73,3 +73,13 @@ every existing static shell/home assertion, add exact checks for the internal
 and `deploy` from the no-runtime vocabulary deny-list. It must retain
 `wallet`, `payment`, `credential`, `auth`, `onboarding`, `analytics`,
 `evidence`, and `metric`. No app source or other test path is authorized.
+
+## Acceptance
+
+Independent final review accepts `5ab83af`. The exact activation-head diff
+changes only `apps/web/tests/static-shell.test.mjs` (three insertions, one
+deletion): it adds the exact local href and CTA label checks, removes only
+`provider|deploy` from the deny-list, and retains every static/no-runtime
+constraint. The Node 22.21.1 Web suite passes 298/298; queue and whitespace
+checks are clear. S32 returns to `60-done` and grants no further test or source
+reservation.
