@@ -861,15 +861,15 @@ public Backend exports, routes, and submission documents are not amendable. No
 authority provision, SDK, provider, wallet, network, transaction, candidate,
 or live path is authorized.
 
-M48-T010 is a root-controlled `00-inbox` CORE_P0 successor. Its committed
+M48-T010 is a root-controlled `10-ready` CORE_P0 successor. Its committed
 control surface is its card, specification, plan, accepted human decision,
 intake review, import-ledger row, catalog, State, decisions, reviews, commits,
 and pushes. Its candidate implementation surface is exactly
 `packages/backend/convex/ats_prepare_authority.ts`,
 `packages/backend/tests/ats-prepare-authority.test.mjs`, and the narrowly
 amended `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`.
-Those paths have no active source or test authorization until a fresh readiness
-review, separate activation, and independent RED acceptance are recorded.
+Those paths have no active source or test authorization until a separate
+activation and independent RED acceptance are recorded.
 M42, M47, M32 source, schema, public exports, packages, lockfiles, Web, Agent,
 environment, `commandAuthorities` provisioning, and every SDK/provider/wallet/
 network/transaction/candidate/live path are excluded.

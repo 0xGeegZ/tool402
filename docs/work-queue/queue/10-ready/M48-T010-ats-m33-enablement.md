@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M32-T010 accepted, M33-T010 accepted, M42-T010 accepted, and
   M47-T010 accepted
 - Owner: Root owns queue state, catalog, ownership, decisions, reviews,
@@ -52,3 +52,11 @@ attempt/asset/candidate, send a request, build or submit calldata, make a
 transaction, or claim receipt/finality/live evidence. No other ATS operation
 is enabled. M42, M47, M32 source, schema, exports, packages, lockfiles, Web,
 Agent, and submission documentation remain outside this card.
+
+## Readiness review
+
+The independent [M48 readiness review](../../evidence/M48-T010-ready-review.md)
+is clear at canonical `816947e1529a49a87026db39aabf5549a6008c07`. M48 is
+`10-ready`; a separate fresh activation may authorize only durable test-only
+RED in the two declared Backend test paths. Production source and every live
+boundary remain prohibited.
