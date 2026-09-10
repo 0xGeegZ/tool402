@@ -22,9 +22,9 @@ test("locks the read-only RiskScan detail boundary", async () => {
   const sourcesWithoutRequiredLimitation = [page, detail.replace(requiredLimitation, ""), discoveryCard].join("\n");
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((detail.match(/<h1\b/g) ?? []).length, 1);
+  assert.equal((detail.match(/<PageHeader\b/g) ?? []).length, 1);
   assert.match(page, /<RiskScanDetail\s*\/>/);
-  assert.match(detail, /<header className="border-b border-border pb-10">/);
+  assert.match(detail, /<PageHeader\b[^>]*title="RiskScan"/);
   assert.match(detail, /lg:grid-cols-\[minmax\(0,1fr\)_22rem\]/);
   assert.match(detail, />\s*Current boundary\s*</);
 

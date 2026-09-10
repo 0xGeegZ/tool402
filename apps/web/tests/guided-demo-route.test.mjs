@@ -76,7 +76,7 @@ test("composes one server page with the named guided step component", async (t) 
   const { page } = sources;
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
+  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
   assert.match(page, /import\s*\{\s*GuidedDemoSteps\s*\}\s+from\s+["'][^"']*guided-demo-steps["']/);
   assert.match(page, /<GuidedDemoSteps\s*\/>/);
 });
@@ -141,7 +141,7 @@ test("preserves the four exact local navigation entries", async (t) => {
     ["/explore", "Explore tools"],
     ["/#how-it-works", "How it works"],
     ["/demo", "Guided demo"],
-    ["/provider", "For providers"],
+    ["/provider", "Campaign"],
   ]);
   const hrefGuardLines = landingTest
     .split("\n")

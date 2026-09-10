@@ -179,7 +179,7 @@ test("keeps the native compatibility page to one guest route, one client island,
 
   assert.doesNotMatch(page, /["']use client["']/);
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
+  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
   assert.match(page, /<RiskScanNativeQuoteCompatibility\s*\/>/);
 
   assert.match(island, /["']use client["']/);

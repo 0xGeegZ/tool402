@@ -191,6 +191,7 @@ test("locks the static ToolLoop page, bounded client form, and non-payment prese
 
   assert.doesNotMatch(page, /["']use client["']/);
   assert.match(page, /<RiskScanToolLoop\s*\/>/);
+  assert.match(page, /<PageHeader\b[^>]*title="Run RiskScan through ToolLoop"/);
   assert.match(page, /<Link href=["']\/explore\/riskscan["']/);
   assert.match(page, />\s*Back to RiskScan\s*</);
   assert.match(page, />\s*Testnet request boundary · no payment is made from this form\.\s*</);

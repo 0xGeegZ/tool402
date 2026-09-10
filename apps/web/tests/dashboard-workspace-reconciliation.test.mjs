@@ -85,7 +85,7 @@ test("gives the guest dashboard a compact factual summary and one featured start
   assert.match(overview, />\s*6 local routes\s*</);
   assert.match(overview, /min-h-24/);
   assert.doesNotMatch(overview, /min-h-28/);
-  assert.match(dashboard, /<h1 className="text-3xl font-bold tracking-\[-0\.04em\]">Dashboard<\/h1>/);
+  assert.match(dashboard, /<PageHeader\b[^>]*title="Dashboard"/);
   assert.match(shell, /space-y-8/);
   assert.match(navigation, /Start with RiskScan/);
   assert.match(navigation, /Inspect the current tool before choosing another local journey\./);

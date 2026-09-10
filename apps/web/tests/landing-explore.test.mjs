@@ -71,7 +71,7 @@ test("renders labeled navigation between the committed local routes", async () =
   assert.match(navigation, /\{ href: "\/explore", label: "Explore tools" \}/);
   assert.match(navigation, /\{ href: "\/#how-it-works", label: "How it works" \}/);
   assert.match(navigation, /\{ href: "\/demo", label: "Guided demo" \}/);
-  assert.match(navigation, /\{ href: "\/provider", label: "For providers" \}/);
+  assert.match(navigation, /\{ href: "\/provider", label: "Campaign" \}/);
   assert.match(navigation, /<Link\s+href=\{link\.href\}/);
   assert.doesNotMatch(navigation, /\{ href: "(?!\/explore"|\/#how-it-works"|\/demo"|\/provider")[^"]+/);
   assert.match(navigation, /["']use client["']/);
@@ -112,7 +112,7 @@ test("renders a single read-only Explore marketplace catalog", async () => {
 
   assert.match(page, /<main\b/);
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
+  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
   assert.match(page, /<ExploreCatalog\s*\/>/);
   assert.doesNotMatch(page, /\bRiskScanDirectoryDiscovery\b/);
   assert.doesNotMatch(page, /<RiskScanDiscoveryCard\s*\/>/);
