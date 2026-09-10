@@ -39,9 +39,12 @@ drift, duplicate candidate, malformed record, or disabled candidate rejects
 before replay/idempotency lookup or durable write. `HEDERA_FUNDING` keeps its
 existing M33 bypass unchanged.
 
-The change is limited to the compiled M33 manifest and its two focused Backend
-test files. It does not change M42, M47, M32 ordering, schema, public exports,
-package files, configuration, or UI.
+The change is limited to the compiled M33 manifest, its two focused Backend
+test files, and the GREEN-only retirement of M42's historical assertion that
+the downstream M33 manifest is empty. That narrow test amendment preserves
+every M42 source, preimage, digest, privacy, no-SDK-dependency, and
+no-M42-import invariant. It does not change M42, M47, M32 ordering, schema,
+public exports, package files, configuration, or UI.
 
 ## Boundary
 

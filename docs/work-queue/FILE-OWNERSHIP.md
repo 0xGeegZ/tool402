@@ -863,15 +863,19 @@ or live path is authorized.
 
 M48-T010 is a root-controlled `20-active` CORE_P0 successor. Its committed
 control surface is its card, specification, plan, accepted human decision,
-intake review, import-ledger row, catalog, State, decisions, reviews, commits,
-and pushes. Its candidate implementation surface is exactly
+intake review, GREEN scope amendment, import-ledger row, catalog, State,
+decisions, reviews, commits, and pushes. Its candidate implementation surface is exactly
 `packages/backend/convex/ats_prepare_authority.ts`,
 `packages/backend/tests/ats-prepare-authority.test.mjs`, and the narrowly
 amended `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`.
 Only `packages/backend/tests/ats-prepare-authority.test.mjs` and the narrowly
 amended `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`
 are active for durable RED. The manifest source remains prohibited until
-independent RED acceptance.
+independent RED acceptance. After that acceptance only,
+`packages/backend/tests/stage-b-issuer-ats-create-authority.test.mjs` is a
+GREEN-only historical assertion amendment under
+`M48-T010-green-scope-amendment.md`; M42 source and every M42 preimage/hash
+field remain excluded.
 M42, M47, M32 source, schema, public exports, packages, lockfiles, Web, Agent,
 environment, `commandAuthorities` provisioning, and every SDK/provider/wallet/
 network/transaction/candidate/live path are excluded.

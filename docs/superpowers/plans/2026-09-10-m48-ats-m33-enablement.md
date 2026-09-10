@@ -42,10 +42,13 @@ boundary.
 
 - `packages/backend/convex/ats_prepare_authority.ts`
 - the two Task 1 tests
+- `packages/backend/tests/stage-b-issuer-ats-create-authority.test.mjs`
 
 - [ ] Replace only the frozen empty `currentManifest` with one immutable
   descriptor-safe literal containing the accepted record.
 - [ ] Keep `HEDERA_FUNDING` bypass and all existing direct-test semantics.
+- [ ] Retire only M42's historical empty-manifest assertion; preserve its
+  preimage, digest, privacy, no-SDK-dependency, and no-M42-import checks.
 - [ ] Run focused tests and Backend typecheck. Confirm no new imports,
   external capability, or runtime configuration appear. Commit GREEN.
 

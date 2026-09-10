@@ -11,6 +11,10 @@
   `packages/backend/convex/ats_prepare_authority.ts`,
   `packages/backend/tests/ats-prepare-authority.test.mjs`, and the narrowly
   amended `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`.
+  After independent RED acceptance, the narrowly scoped historical assertion
+  amendment in `packages/backend/tests/stage-b-issuer-ats-create-authority.test.mjs`
+  is also permitted only as recorded in
+  [the GREEN scope amendment](../../evidence/M48-T010-green-scope-amendment.md).
   Those paths are not active until separate readiness, activation, and RED
   acceptance records exist.
 - Human actions: HA-ATS-M33-ENABLEMENT-001 is accepted as the limited local
@@ -71,3 +75,12 @@ is clear at canonical `1c35f4c614d71ef27bdc9785c2ed3003e7fcb458`. M48 is
 - `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`
 
 The source mapping remains prohibited until independent RED acceptance.
+
+## GREEN scope amendment
+
+The independent
+[M48 GREEN scope amendment](../../evidence/M48-T010-green-scope-amendment.md)
+records one required GREEN-only test change: retire M42's historical assertion
+that the downstream M33 manifest is empty. It preserves every M42 source,
+preimage, digest, privacy, and no-import invariant; it authorizes neither an
+M42 source change nor a broader M48 path.
