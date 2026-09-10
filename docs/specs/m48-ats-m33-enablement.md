@@ -40,11 +40,12 @@ before replay/idempotency lookup or durable write. `HEDERA_FUNDING` keeps its
 existing M33 bypass unchanged.
 
 The change is limited to the compiled M33 manifest, its two focused Backend
-test files, and the GREEN-only retirement of M42's historical assertion that
-the downstream M33 manifest is empty. That narrow test amendment preserves
-every M42 source, preimage, digest, privacy, no-SDK-dependency, and
-no-M42-import invariant. It does not change M42, M47, M32 ordering, schema,
-public exports, package files, configuration, or UI.
+test files, and the GREEN-only retirement of M37/M42/M43 historical assertions
+that the downstream M33 manifest is empty. Those narrow test amendments
+preserve every M37/M42 source, M42 preimage/digest, privacy, no-SDK-dependency,
+and no-import invariant, plus M43's existing `NOT_CONFIGURED`-before-Mirror
+behavior. It does not change M37, M42, M43, M47, M32 ordering, schema, public
+exports, package files, configuration, or UI.
 
 ## Boundary
 

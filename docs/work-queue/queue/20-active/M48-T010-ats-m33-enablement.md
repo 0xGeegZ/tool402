@@ -12,8 +12,10 @@
   `packages/backend/tests/ats-prepare-authority.test.mjs`, and the narrowly
   amended `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`.
   After independent RED acceptance, the narrowly scoped historical assertion
-  amendment in `packages/backend/tests/stage-b-issuer-ats-create-authority.test.mjs`
-  is also permitted only as recorded in
+  amendments in `packages/backend/tests/stage-b-issuer-ats-create-authority.test.mjs`,
+  `packages/backend/tests/stage-a-real-issuer-ats-create-authority.test.mjs`, and
+  `packages/backend/tests/ats-receipt-verification.test.mjs` are also permitted
+  only as recorded in
   [the GREEN scope amendment](../../evidence/M48-T010-green-scope-amendment.md).
   Those paths are not active until separate readiness, activation, and RED
   acceptance records exist.
@@ -80,7 +82,8 @@ The source mapping remains prohibited until independent RED acceptance.
 
 The independent
 [M48 GREEN scope amendment](../../evidence/M48-T010-green-scope-amendment.md)
-records one required GREEN-only test change: retire M42's historical assertion
-that the downstream M33 manifest is empty. It preserves every M42 source,
-preimage, digest, privacy, and no-import invariant; it authorizes neither an
-M42 source change nor a broader M48 path.
+records three required GREEN-only test changes: retire the historical M37/M42/M43
+assertions that the downstream M33 manifest is empty. It preserves every M37/M42
+source, M42 preimage/digest, privacy, and no-import invariant, and M43's
+`NOT_CONFIGURED`-before-Mirror behavior; it authorizes neither a source change
+nor a broader M48 path.

@@ -871,11 +871,12 @@ amended `packages/backend/tests/external-prepare-command-durable-admission.test.
 Only `packages/backend/tests/ats-prepare-authority.test.mjs` and the narrowly
 amended `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`
 are active for durable RED. The manifest source remains prohibited until
-independent RED acceptance. After that acceptance only,
-`packages/backend/tests/stage-b-issuer-ats-create-authority.test.mjs` is a
-GREEN-only historical assertion amendment under
-`M48-T010-green-scope-amendment.md`; M42 source and every M42 preimage/hash
-field remain excluded.
+independent RED acceptance. After that acceptance only, the three historical
+tests `packages/backend/tests/stage-b-issuer-ats-create-authority.test.mjs`,
+`packages/backend/tests/stage-a-real-issuer-ats-create-authority.test.mjs`, and
+`packages/backend/tests/ats-receipt-verification.test.mjs` are GREEN-only
+assertion amendments under `M48-T010-green-scope-amendment.md`; M37/M42/M43
+sources and every M42 preimage/hash field remain excluded.
 M42, M47, M32 source, schema, public exports, packages, lockfiles, Web, Agent,
 environment, `commandAuthorities` provisioning, and every SDK/provider/wallet/
 network/transaction/candidate/live path are excluded.
