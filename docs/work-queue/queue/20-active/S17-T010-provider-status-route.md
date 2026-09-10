@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T020 accepted, M11-T020 accepted, M29-T010 accepted,
   M41-T010 accepted, S16-T010 accepted, and S11-T010 accepted. S11's
   accepted navigation assertions remain a constrained root integration
@@ -93,6 +93,20 @@ focused navigation/a11y checks and Web/root typechecks are clear. A separate
 activation may authorize only the durable test-only RED contract; no source,
 environment read, live request, command, write, wallet/provider, payment,
 transaction, deployment, or other external capability is authorized.
+
+## Activation record
+
+Activated at 2026-09-10T06:32:00Z after an independent activation review at
+clean pushed `2252545e4ea1183c45ea45ba8423ff05a8d5e412`. Every declared
+predecessor remains accepted, the ready authority remains intact, and no
+active-path collision exists. The authorized RED scope is limited to new
+`apps/web/tests/provider-status.test.mjs` and
+`apps/web/tests/offerings-api.test.mjs`, plus the frozen navigation-list
+assertion amendments in `apps/web/tests/workspace-shell.test.mjs`,
+`apps/web/tests/landing-explore.test.mjs`, and
+`apps/web/tests/guided-demo-route.test.mjs`. Every source path, the navigation
+source, `apps/web/tests/shell-accessibility.test.mjs`, environment read, and
+external behavior remain prohibited pending fresh independent RED acceptance.
 
 ## Verification
 

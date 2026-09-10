@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T060 accepted, M06-T010 accepted, M46-T010 accepted, and
   M46-T020 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -70,6 +70,17 @@ focused RiskScan/EntityCheck verification and Web typecheck are clear. A
 separate activation may authorize only the durable test-only RED contract; no
 production source, configuration, facilitator/source read, payment,
 wallet/provider, transaction, deployment, or live behavior is authorized.
+
+## Activation record
+
+Activated at 2026-09-10T06:32:00Z after an independent activation review at
+clean pushed `2252545e4ea1183c45ea45ba8423ff05a8d5e412`. Every declared
+predecessor remains accepted, the ready authority remains intact, and no
+active-path collision exists. The sole authorized change is the durable
+test-only RED contract at `apps/web/tests/entitycheck-api.test.mjs`.
+`apps/web/tests/riskscan-api.test.mjs` remains unchanged. Every production
+source path, including the root-reserved RiskScan extraction, remains
+prohibited pending fresh independent RED acceptance.
 
 ## Verification
 
