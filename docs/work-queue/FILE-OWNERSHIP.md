@@ -989,6 +989,11 @@ CSS, asset, configuration, wallet/provider, payment, transaction, deployment,
 and live path remains prohibited until a separate accepted scope says
 otherwise.
 
+D-S28-010-002 reserves only the `/dashboard` expected-row assertion in
+`apps/web/tests/guided-demo-route.test.mjs` for S28-T010. S29-T010 retains
+every navigation assertion in that file, including its four local navigation
+entries; neither slice may change the other's assertion or source path.
+
 S29-T010 is a root-owned truth-first POLISH source scope comprising its card,
 `docs/ui/UI-S29.md`, the local UI ledger, decision, state, catalog, this
 ownership record, reviews, commits, and pushes. Its accepted source/test set

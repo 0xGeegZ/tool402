@@ -32,6 +32,10 @@
   step. S28-T010 is `00-inbox`; no test or source path is authorized until its
   independent readiness review and separate RED activation are accepted.
 
+- S28_DASHBOARD_ASSERTION_RESERVATION: D-S28-010-002 resolves the sole
+  S28/S29 test-path overlap: S28 may amend only the Guided Demo /dashboard
+  expected-row assertion, while S29 retains its navigation assertions. This
+  reservation grants no test or source change and S28 remains 00-inbox.
 - S29_APPLICATION_SHELL_GREEN: The fresh independent RED review at b5d3c9e
   is clear: its two failures prove only the absent compact mobile menu. S29-T010
   is 20-active for the two exact shell source paths and its three focused

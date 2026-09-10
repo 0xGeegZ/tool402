@@ -17,14 +17,16 @@ The slice may amend only:
 - `apps/web/src/app/explore/riskscan/tool-loop/page.tsx`;
 - `apps/web/src/components/riskscan/tool-loop/riskscan-tool-loop.tsx`;
 - `apps/web/src/components/demo/guided-demo-steps.tsx` only at the existing
-  ToolLoop step's user-facing title and observation; and
+  `/dashboard` step's user-facing title and observation; and
 - `apps/web/tests/riskscan-tool-loop.test.mjs` and
   `apps/web/tests/guided-demo-route.test.mjs` only at assertions constrained
   by the above presentational changes.
 
 The active S22 and S24 scopes separately own their landing-footer and
-dashboard wording amendments. Internal component and file names remain
-unchanged.
+dashboard wording amendments. S29 owns the frozen navigation assertion in
+`guided-demo-route.test.mjs`; S28 may amend only that file's separate
+`/dashboard` expected-row assertion under D-S28-010-002. Internal component
+and file names remain unchanged.
 
 ## Visual and copy contract
 

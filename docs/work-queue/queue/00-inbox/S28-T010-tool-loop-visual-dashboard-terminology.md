@@ -5,8 +5,8 @@
 - Tier: POLISH
 - Queue state: 00-inbox
 - Dependencies: M08-T010 accepted, S11-T010 accepted, S19-T010 accepted,
-  M46-T040 accepted; S22-T010 and S24-T010 retain their disjoint active
-  landing/dashboard paths.
+  M46-T040 accepted; S22-T010, S24-T010, and S29-T010 retain their disjoint
+  active landing/dashboard/shell paths.
 - Owner: The root owns queue state, catalog, ownership, UI ledger, decisions,
   reviews, commits, and pushes. The proposed source/test paths are exactly
   those listed in UI-S28.
@@ -35,7 +35,9 @@ source tree is tracked here.
   Guided Demo component and test are accepted S11/S19 paths. The root records
   the exact limited presentation reservation before RED.
 - No active lane owns the same source paths. The S22 and S24 Dashboard
-  wording changes remain constrained to their already authorized paths.
+  wording changes remain constrained to their already authorized paths. S29
+  retains the navigation assertion in `guided-demo-route.test.mjs`; D-S28-010-002
+  reserves only that test's separate `/dashboard` expected-row assertion.
 
 ## Verification
 
