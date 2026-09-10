@@ -48,11 +48,44 @@ const expectedDescriptor = {
   limitations: ["quick_assessment_only", "caller_declarations_are_not_external_verification"],
 };
 
-test("describes exactly one Quick tool with the accepted bounded input and limitations", () => {
-  assert.deepEqual(buildToolDirectory({}), {
-    version: "v1",
-    tools: [{ ...expectedDescriptor, payment: { state: "configuration_required" } }],
-  });
+const expectedEntityCheckDescriptor = {
+  id: "entitycheck.fr",
+  name: "EntityCheck France",
+  request: { method: "POST", path: "/api/entitycheck", contentType: "application/json" },
+  input: {
+    type: "object",
+    required: ["requestRef", "jurisdiction", "query"],
+    properties: {
+      requestRef: { type: "string", minLength: 1, maxLength: 96 },
+      jurisdiction: { type: "string", enum: ["FR"] },
+      query: { type: "string", minLength: 1, maxLength: 160 },
+      registrationNumber: { type: "string", pattern: "^[0-9]{9}$" },
+    },
+    additionalProperties: false,
+  },
+  result: {
+    dispositions: ["found", "ambiguous", "not_found"],
+    sanctionsScreen: ["clear", "hit", "not_screened"],
+  },
+  sources: ["FR_RECHERCHE_ENTREPRISES", "OFAC_SDN"],
+  limitations: [
+    "EntityCheck reflects two public sources at the time they were read and does not verify ownership, solvency, or compliance; a clear screen is not a compliance opinion.",
+  ],
+  configuration: { state: "configuration_required" },
+};
+
+function expectedDirectory(payment) {
+  return {
+    version: "v2",
+    tools: [{ ...expectedDescriptor, payment }, expectedEntityCheckDescriptor],
+  };
+}
+
+test("describes the canonical v2 tuple with the unchanged RiskScan descriptor first", () => {
+  assert.deepEqual(
+    buildToolDirectory({}),
+    expectedDirectory({ state: "configuration_required" }),
+  );
 });
 
 test("fails closed when any configuration field is missing or malformed", () => {
@@ -65,10 +98,7 @@ test("fails closed when any configuration field is missing or malformed", () => 
   for (const [key, values] of Object.entries(malformed)) {
     for (const value of [undefined, ...values]) {
       const directory = buildToolDirectory({ ...configuredEnvironment, [key]: value });
-      assert.deepEqual(directory, {
-        version: "v1",
-        tools: [{ ...expectedDescriptor, payment: { state: "configuration_required" } }],
-      });
+      assert.deepEqual(directory, expectedDirectory({ state: "configuration_required" }));
     }
   }
 });
@@ -79,13 +109,10 @@ test("exposes only parsed local protocol, network and price for valid configurat
     RISKSCAN_X402_NETWORK: " eip155:11155111 ",
     RISKSCAN_X402_PRICE: " $1.25 ",
   });
-  assert.deepEqual(directory, {
-    version: "v1",
-    tools: [{
-      ...expectedDescriptor,
-      payment: { state: "locally_configured", protocol: "x402", network: "eip155:11155111", price: "$1.25" },
-    }],
-  });
+  assert.deepEqual(
+    directory,
+    expectedDirectory({ state: "locally_configured", protocol: "x402", network: "eip155:11155111", price: "$1.25" }),
+  );
 });
 
 test("exposes only the native Hedera summary for valid local configuration", async () => {
@@ -107,10 +134,7 @@ test("exposes only the native Hedera summary for valid local configuration", asy
     RESULT: "controlled-result-content",
   };
 
-  assert.deepEqual(buildToolDirectory(environment), {
-    version: "v1",
-    tools: [{ ...expectedDescriptor, payment: expectedPayment }],
-  });
+  assert.deepEqual(buildToolDirectory(environment), expectedDirectory(expectedPayment));
 
   const body = await toolDirectoryResponse(environment).text();
   assert.deepEqual(JSON.parse(body).tools[0].payment, expectedPayment);
@@ -158,9 +182,16 @@ test("returns JSON with no-store and never serializes controlled private environ
   }
 });
 
-test("uses one parser pass and keeps separate directory builds independent", () => {
+test("uses one parser pass per descriptor and keeps separate directory builds independent", () => {
   const reads = [];
-  const environment = new Proxy(Object.freeze({ ...configuredEnvironment }), {
+  const environmentValues = {
+    ...configuredEnvironment,
+    ENTITYCHECK_X402_PAY_TO: `0x${"2".repeat(40)}`,
+    ENTITYCHECK_X402_FACILITATOR_URL: "https://entitycheck-facilitator.invalid/controlled-private-path",
+    ENTITYCHECK_X402_NETWORK: "eip155:84532",
+    ENTITYCHECK_X402_PRICE: "$0.02",
+  };
+  const environment = new Proxy(Object.freeze(environmentValues), {
     get(target, key) {
       assert.ok(Object.hasOwn(target, key), `unexpected environment read: ${String(key)}`);
       reads.push(key);
@@ -169,13 +200,10 @@ test("uses one parser pass and keeps separate directory builds independent", () 
     set() { throw new Error("environment mutation is forbidden"); },
   });
   const directory = buildToolDirectory(environment);
-  assert.deepEqual(reads, Object.keys(configuredEnvironment));
+  assert.deepEqual(reads, Object.keys(environmentValues));
   directory.tools[0].input.required.push("unexpected");
   directory.tools[0].input.properties.declarations.required.length = 0;
-  assert.deepEqual(buildToolDirectory({}), {
-    version: "v1",
-    tools: [{ ...expectedDescriptor, payment: { state: "configuration_required" } }],
-  });
+  assert.deepEqual(buildToolDirectory({}), expectedDirectory({ state: "configuration_required" }));
 });
 
 test("constructs directory responses without network, tool, payment, backend, clock or random calls", (t) => {
@@ -187,7 +215,7 @@ test("constructs directory responses without network, tool, payment, backend, cl
   }
   t.mock.method(Math, "random", forbidden);
   for (const environment of [{}, configuredEnvironment]) {
-    assert.equal(buildToolDirectory(Object.freeze(environment)).tools.length, 1);
+    assert.equal(buildToolDirectory(Object.freeze(environment)).tools.length, 2);
     assert.equal(toolDirectoryResponse(environment).status, 200);
   }
 });
@@ -206,6 +234,7 @@ test("registers the bounded opt-in active-directory view without changing the de
   const imports = builder.match(/^import .+;$/gmu);
   assert.deepEqual(imports, [
     'import type { ActiveDirectoryView } from "./active-directory-version.ts";',
+    'import { buildEntityCheckToolDescriptor } from "./entity-check-tool-descriptor.ts";',
     'import { readRiskScanX402Configuration } from "./riskscan-x402.ts";',
   ]);
   assert.equal((builder.match(/readRiskScanX402Configuration\(/gu) ?? []).length, 1);

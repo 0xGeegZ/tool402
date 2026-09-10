@@ -5,9 +5,37 @@ import test from "node:test";
 const require = createRequire(import.meta.url);
 const { discoverRiskScanQuick } = require("../src/riskscan-tool-directory.ts");
 
+function entityCheckDescriptor(configuration = { state: "configuration_required" }) {
+  return {
+    id: "entitycheck.fr",
+    name: "EntityCheck France",
+    request: { method: "POST", path: "/api/entitycheck", contentType: "application/json" },
+    input: {
+      type: "object",
+      required: ["requestRef", "jurisdiction", "query"],
+      properties: {
+        requestRef: { type: "string", minLength: 1, maxLength: 96 },
+        jurisdiction: { type: "string", enum: ["FR"] },
+        query: { type: "string", minLength: 1, maxLength: 160 },
+        registrationNumber: { type: "string", pattern: "^[0-9]{9}$" },
+      },
+      additionalProperties: false,
+    },
+    result: {
+      dispositions: ["found", "ambiguous", "not_found"],
+      sanctionsScreen: ["clear", "hit", "not_screened"],
+    },
+    sources: ["FR_RECHERCHE_ENTREPRISES", "OFAC_SDN"],
+    limitations: [
+      "EntityCheck reflects two public sources at the time they were read and does not verify ownership, solvency, or compliance; a clear screen is not a compliance opinion.",
+    ],
+    configuration,
+  };
+}
+
 function directory(payment = { state: "configuration_required" }) {
   return {
-    version: "v1",
+    version: "v2",
     tools: [{
       id: "riskscan.quick",
       name: "RiskScan Quick",
@@ -32,8 +60,13 @@ function directory(payment = { state: "configuration_required" }) {
       },
       limitations: ["quick_assessment_only", "caller_declarations_are_not_external_verification"],
       payment,
-    }],
+    }, entityCheckDescriptor()],
   };
+}
+
+function legacyDirectory(payment = { state: "configuration_required" }) {
+  const { tools: [riskScan] } = directory(payment);
+  return { version: "v1", tools: [riskScan] };
 }
 
 const base = new URL("http://service.test/example");
@@ -47,12 +80,37 @@ async function select(value = directory()) {
   return { result, calls };
 }
 
-test("selects the canonical descriptor", async () => {
+test("selects the RiskScan descriptor from the canonical v2 tuple", async () => {
   const { result } = await select();
   assert.deepEqual(result, {
     kind: "tool_selected",
     tool: directory().tools[0],
   });
+});
+
+test("retains the closed legacy-v1 input branch for a valid one-tool response", async () => {
+  const { result } = await select(legacyDirectory());
+
+  assert.equal(result.kind, "tool_selected");
+  assert.equal(result.tool.id, "riskscan.quick");
+});
+
+test("rejects missing, reordered, extra, and malformed EntityCheck entries in v2", async () => {
+  const value = directory();
+  const [riskScan, entityCheck] = value.tools;
+  const invalid = [
+    { version: "v2", tools: [riskScan] },
+    { version: "v2", tools: [entityCheck, riskScan] },
+    { version: "v2", tools: [riskScan, entityCheck, entityCheck] },
+    { version: "v2", tools: [riskScan, { ...entityCheck, sources: ["OFAC_SDN"] }] },
+    { version: "v2", tools: [riskScan, { ...entityCheck, configuration: { state: "locally_configured", protocol: "x402", network: "eip155:0", price: "$0.01" } }] },
+  ];
+
+  for (const directoryValue of invalid) {
+    const { result, calls } = await select(directoryValue);
+    assert.deepEqual(result, { kind: "directory_invalid" });
+    assert.equal(calls, 1);
+  }
 });
 
 test("makes exactly one credential-free GET request to the directory", async () => {
@@ -113,6 +171,7 @@ test("accepts and clones the native Hedera payment summary", async () => {
   }));
   const decodedPayment = value.tools[0].payment;
 
+  assert.equal(result.kind, "tool_selected");
   assert.deepEqual(result.tool.payment, payment);
   assert.notEqual(result.tool.payment, decodedPayment);
   decodedPayment.amount = "99999";
@@ -412,6 +471,7 @@ test("uses captured payment descriptor values rather than proxy property reads",
     headers: new Headers({ "content-type": "application/json" }),
     json: async () => value,
   }));
+  assert.equal(result.kind, "tool_selected");
   assert.deepEqual(result.tool.payment, { state: "locally_configured", protocol: "x402", network: "eip155:1", price: "$1" });
 });
 
@@ -428,6 +488,7 @@ test("fails closed without throwing when a payment proxy throws on property acce
       json: async () => value,
     }));
   });
+  assert.equal(result.kind, "tool_selected");
   assert.deepEqual(result.tool.payment, { state: "locally_configured", protocol: "x402", network: "eip155:1", price: "$1" });
 });
 
@@ -435,5 +496,6 @@ test("returns a cloned selection rather than retaining decoded directory data", 
   const value = directory({ state: "locally_configured", protocol: "x402", network: "eip155:1", price: "$1" });
   const { result } = await select(value);
   value.tools[0].payment.price = "$999";
+  assert.equal(result.kind, "tool_selected");
   assert.deepEqual(result.tool.payment, { state: "locally_configured", protocol: "x402", network: "eip155:1", price: "$1" });
 });

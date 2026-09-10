@@ -56,9 +56,22 @@ const nativePayment = {
   amount: "10000",
 };
 
+function entityCheckDescriptor() {
+  return {
+    id: "entitycheck.fr",
+    name: "EntityCheck France",
+    request: { method: "POST", path: "/api/entitycheck", contentType: "application/json" },
+    input: { type: "object", required: ["requestRef", "jurisdiction", "query"], properties: { requestRef: { type: "string", minLength: 1, maxLength: 96 }, jurisdiction: { type: "string", enum: ["FR"] }, query: { type: "string", minLength: 1, maxLength: 160 }, registrationNumber: { type: "string", pattern: "^[0-9]{9}$" } }, additionalProperties: false },
+    result: { dispositions: ["found", "ambiguous", "not_found"], sanctionsScreen: ["clear", "hit", "not_screened"] },
+    sources: ["FR_RECHERCHE_ENTREPRISES", "OFAC_SDN"],
+    limitations: ["EntityCheck reflects two public sources at the time they were read and does not verify ownership, solvency, or compliance; a clear screen is not a compliance opinion."],
+    configuration: { state: "configuration_required" },
+  };
+}
+
 function directory(payment = nativePayment) {
   return {
-    version: "v1",
+    version: "v2",
     tools: [{
       id: "riskscan.quick",
       name: "RiskScan Quick",
@@ -85,7 +98,7 @@ function directory(payment = nativePayment) {
       },
       limitations: ["quick_assessment_only", "caller_declarations_are_not_external_verification"],
       payment,
-    }],
+    }, entityCheckDescriptor()],
   };
 }
 
