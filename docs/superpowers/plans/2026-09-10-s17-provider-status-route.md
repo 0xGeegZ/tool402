@@ -1,6 +1,6 @@
 # S17-T010 implementation plan — provider campaign status route
 
-Execute [S17-T010](../../work-queue/queue/20-active/S17-T010-provider-status-route.md)
+Execute [S17-T010](../../work-queue/queue/60-done/S17-T010-provider-status-route.md)
 against the committed [UI-S17 manifest](../../ui/UI-S17.md) and accepted
 M40/M41 projections. The route is a truthful read-only status surface; it
 never signs, writes, reads a chain, invokes a provider, or turns an absent
@@ -54,3 +54,23 @@ Run focused S17 and navigation tests, then the full Web suite/typecheck/build,
 root quality, queue/reference/whitespace/local guard, and browser checks with
 the Convex site URL absent. Review the diff for the declared surface only, then
 obtain independent task and two fresh module reviews before acceptance.
+
+## Responsive correction sequence
+
+The original S17 browser check discovered that the fifth `Provider` entry makes
+the existing shared navigation list overflow at 390px. Before any source change,
+amend only the existing `workspace-shell.test.mjs` navigation assertion to
+require the exact `flex flex-wrap items-center gap-1 text-sm font-medium`
+literal while preserving its exact five-link list and rejecting an overflow mask
+or minimum-width escape. After fresh independent RED acceptance, insert only
+the bare `flex-wrap` token after `flex` in the existing `local-navigation.tsx`
+list literal. Do not add, remove, reorder, or condition any other token or
+attribute; do not touch the root layout, global CSS, landmarks, focus seams,
+link labels/order, runtime behavior, or external boundaries. Re-run the
+unconfigured `/provider` browser check at 390px and obtain fresh final reviews
+before acceptance.
+
+The committed test-only RED contract at `c1953f4e0de02b0435f5a7d209278254d37c2bf3`
+is independently clear in
+[`S17-T010-responsive-red-review`](../../work-queue/evidence/S17-T010-responsive-red-review.md).
+Only the one approved source-token insertion may proceed.

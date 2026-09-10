@@ -39,9 +39,33 @@ expectation and preserves its nine narrated demo steps, links, and all other
 assertions. This slice's entry is applied after S11-T010 and is added to the
 list as S11 leaves it.
 `apps/web/tests/shell-accessibility.test.mjs` asserts only the navigation label,
-which a fourth entry does not change, and is not amended. The slice reuses the
+which an additional entry does not change, and is not amended. The slice reuses the
 accepted tokens and the `button`, `card`, and `badge` primitives, changes no
 stylesheet, adds no dependency, and does not depend on the carded UI-S13 tones.
+
+## Responsive correction amendment
+
+After the fifth local navigation entry landed, a 390px browser check measured
+408px document and header widths. The overflow comes from the shared navigation
+list, not the Provider route: its list remains a non-wrapping flex row even
+though the outer shell already wraps. This amendment permits exactly one
+test-first structural correction:
+
+- `apps/web/tests/workspace-shell.test.mjs` may add one assertion that the
+  existing local navigation list has exactly
+  `flex flex-wrap items-center gap-1 text-sm font-medium`, while retaining the
+  exact five-link order and labels; and
+- `apps/web/src/components/discovery/local-navigation.tsx` may add only the
+  bare `flex-wrap` token to the exact existing
+  `flex items-center gap-1 text-sm font-medium` list class literal.
+
+The correction must not change `layout.tsx`, global CSS, focus treatment,
+landmarks, links, link order, labels, padding, typography, client behavior, or
+any external boundary. It must not mask overflow with an overflow rule or add a
+minimum-width escape. No other class token or attribute may be added, removed,
+reordered, or made conditional. A fresh responsive RED review is required
+before the class change; browser evidence must then show the unconfigured
+`/provider` route with a 390px document width equal to its viewport width.
 
 ## Required read behavior
 
@@ -162,3 +186,18 @@ dependency, and reads no environment value outside the reader and its handler.
   widths, and no loaded-record claim. Web typecheck/test, production build with
   Cache Components, root quality, queue/reference checks, the local guard, and
   independent review pass before acceptance.
+- The responsive amendment's focused structural assertion preserves the exact
+  five-link list and forbids an overflow mask; fresh browser evidence at 390px
+  proves the shared shell does not scroll horizontally.
+
+The committed responsive RED contract at `c1953f4e0de02b0435f5a7d209278254d37c2bf3`
+has a clear independent review in
+[`S17-T010-responsive-red-review`](../work-queue/evidence/S17-T010-responsive-red-review.md).
+It permits only the exact bare `flex-wrap` insertion described above before the
+required focused, browser, and final independent checks.
+
+That insertion is accepted at `e7a015565a0579b26c1af439410823e533712043`.
+The focused navigation/accessibility contract passes 20/20; the unconfigured
+`/provider` browser evidence records no horizontal overflow at 390px, visible
+keyboard focus, and no provider or wallet action. See
+[`S17-T010-responsive-browser-evidence`](../work-queue/evidence/S17-T010-responsive-browser-evidence.md).

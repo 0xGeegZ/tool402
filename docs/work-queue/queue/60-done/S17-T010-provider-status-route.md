@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T020 accepted, M11-T020 accepted, M29-T010 accepted,
   M41-T010 accepted, S16-T010 accepted, and S11-T010 accepted. S11's
   accepted navigation assertions remain a constrained root integration
@@ -121,6 +121,57 @@ now authorized for minimal local GREEN. `shell-accessibility.test.mjs` remains
 unchanged. No client state, timer, command, write, environment read outside
 the declared reader/route boundary, live request, wallet/provider, payment,
 transaction, deployment, or live behavior is authorized.
+
+## Responsive correction amendment
+
+After the original local GREEN, the required 390px browser check measured a
+408px document width because the fifth root-reserved `/provider` navigation
+entry leaves the shared navigation list non-wrapping. The Provider status route
+does not cause the overflow, and `layout.tsx` remains owned by accepted M02;
+this card therefore receives a same-card, test-first amendment rather than a
+shell rewrite.
+
+Before fresh responsive RED acceptance, only the existing
+`apps/web/tests/workspace-shell.test.mjs` navigation assertion may change. It
+must preserve the exact five links and add a structural assertion that the
+existing list literal is exactly `flex flex-wrap items-center gap-1 text-sm
+font-medium`, without an overflow mask or a minimum-width escape. After a clear
+independent RED review, only the bare `flex-wrap` token may be inserted after
+`flex` in that exact existing list literal in
+`apps/web/src/components/discovery/local-navigation.tsx`; no other token or
+attribute may be added, removed, reordered, or made conditional. `layout.tsx`,
+global CSS, the other navigation tests, landmarks, focus treatment, link
+order/labels, client behavior, and every live boundary remain outside scope.
+Fresh browser evidence at 390px is required before this card can be accepted.
+
+The independent controls-only scope review is clear in
+[`S17-T010-responsive-scope-review`](../../evidence/S17-T010-responsive-scope-review.md).
+The committed test-only RED contract at `c1953f4e0de02b0435f5a7d209278254d37c2bf3`
+has a clear independent review in
+[`S17-T010-responsive-red-review`](../../evidence/S17-T010-responsive-red-review.md):
+its focused Node 22.21.1 run has exactly one failure, the missing `flex-wrap`
+token. Only the listed bare-token insertion is now authorized; final focused,
+390px browser, and independent reviews remain required before acceptance.
+
+## Responsive acceptance record
+
+Accepted at source commit `e7a015565a0579b26c1af439410823e533712043`.
+The exact source correction inserts only bare `flex-wrap` after `flex` in the
+shared list literal. The focused navigation/accessibility contract passes
+20/20 under Node 22.21.1. Independent task, specification, and standards
+reviews are clear in the three responsive final-review records. Local Next
+diagnostics report no compilation or session errors, and the unconfigured
+`/provider` browser check at a 390px viewport records document, body, and
+header widths of 390px; keyboard Tab reaches the `Home` link. Root typecheck,
+root lint, and the Webpack production build pass. The full root suite remains
+nonzero only for M44's two separately blocked absent-source assertions; this
+card changes no M44 path. No provider, wallet, payment, transaction,
+deployment, or live behavior is added.
+
+See the [browser evidence](../../evidence/S17-T010-responsive-browser-evidence.md),
+[task review](../../evidence/S17-T010-responsive-task-review.md),
+[specification review](../../evidence/S17-T010-responsive-module-review-spec.md),
+and [standards review](../../evidence/S17-T010-responsive-module-review-standards.md).
 
 ## Verification
 

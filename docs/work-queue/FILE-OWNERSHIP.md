@@ -695,7 +695,7 @@ recorded final reports. No package,
 lockfile, configuration value, live facilitator/source read, payment, wallet,
 provider, transaction, deployment, or live path is authorized.
 
-S17-T010 is a root-controlled `20-active` CORE_P0 record comprising its card,
+S17-T010 is a root-controlled `60-done` CORE_P0 record comprising its card,
 `docs/ui/UI-S17.md`, the UI-S17 ledger row, its local execution plan, its ready
 and activation review evidence, and only
 the future Web paths
@@ -707,13 +707,30 @@ the future Web paths
 `apps/web/tests/provider-status.test.mjs`, and
 `apps/web/tests/offerings-api.test.mjs`. M02-T020, M11-T020, M29-T010,
 M41-T010, S16-T010, and S11-T010 are accepted. The root integration reservation
-permits only the one `{ href: "/provider", label: "Provider" }` navigation
+permits the one `{ href: "/provider", label: "Provider" }` navigation
 entry and its exact-list assertion amendments in
 `apps/web/src/components/discovery/local-navigation.tsx`,
 `apps/web/tests/workspace-shell.test.mjs`,
 `apps/web/tests/landing-explore.test.mjs`, and
 `apps/web/tests/guided-demo-route.test.mjs`; the guided-demo amendment preserves
-its nine steps, route links, and every non-navigation assertion.
+its nine steps, route links, and every non-navigation assertion. The same-card
+responsive amendment additionally reserves only the existing navigation-list
+class tokens and the existing workspace-shell navigation assertion: the test
+must preserve the exact five-link list and require exactly `flex flex-wrap
+items-center gap-1 text-sm font-medium` without an overflow mask or
+minimum-width escape, and the source may insert only the bare `flex-wrap` token
+after `flex` in its existing literal. No other class token or attribute may be
+added, removed, reordered, or made conditional. `layout.tsx`, global CSS, all
+other navigation assertions, and every semantic/runtime boundary remain outside
+this reservation. The controls-only review at
+`docs/work-queue/evidence/S17-T010-responsive-scope-review.md` is clear; it
+authorized no test or source change before fresh responsive RED acceptance. The
+committed `c1953f4e0de02b0435f5a7d209278254d37c2bf3` RED contract is now clear
+in `docs/work-queue/evidence/S17-T010-responsive-red-review.md`, so only the
+specified bare `flex-wrap` source insertion is authorized before final checks.
+That insertion is accepted at `e7a015565a0579b26c1af439410823e533712043` after
+focused 20/20, browser, and independent task/specification/standards evidence
+recorded under `docs/work-queue/evidence/S17-T010-responsive-`.
 `apps/web/tests/shell-accessibility.test.mjs` is not amendable. The independent
 RED review recorded at `docs/work-queue/evidence/S17-T010-red-review.md` is
 clear, so only the five declared source paths and the root-reserved `/provider`

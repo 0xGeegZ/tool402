@@ -56,6 +56,17 @@ test("preserves the exact five-entry local navigation", async () => {
   ]);
 });
 
+test("keeps the shared local navigation list responsive without a width workaround", async () => {
+  const navigation = await readAppFile("src/components/discovery/local-navigation.tsx");
+  const listOpenings = [...navigation.matchAll(/<ul\b([^>]*)>/gu)];
+
+  assert.equal(listOpenings.length, 1);
+  assert.equal(
+    listOpenings[0][1],
+    ' className="flex flex-wrap items-center gap-1 text-sm font-medium"',
+  );
+});
+
 test("keeps the workspace shell static and local", async () => {
   const sources = await Promise.all([
     readAppFile("src/app/dashboard/page.tsx"),
