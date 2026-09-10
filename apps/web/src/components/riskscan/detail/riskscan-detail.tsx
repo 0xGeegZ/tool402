@@ -59,8 +59,8 @@ function FieldGroup({
 
 export function RiskScanDetail() {
   return (
-    <article className="mx-auto max-w-3xl space-y-8">
-      <div className="space-y-6">
+    <article className="space-y-10">
+      <div className="space-y-5">
         <Link
           href="/explore"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -69,11 +69,24 @@ export function RiskScanDetail() {
           Back to Explore
         </Link>
 
-        <header className="space-y-3">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div className="space-y-3">
-              <Badge variant="secondary">Read-only detail</Badge>
-              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">RiskScan</h1>
+        <header className="border-b border-border pb-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-4">
+              <span aria-hidden="true" className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-brand-purple/15 text-brand-purple">
+                <svg viewBox="0 0 24 24" className="size-7" fill="none" stroke="currentColor" strokeWidth={1.75}>
+                  <path d="M12 3 5 6v5c0 4.5 3 7.8 7 10 4-2.2 7-5.5 7-10V6l-7-3Z" strokeLinejoin="round" />
+                </svg>
+              </span>
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-4xl font-extrabold tracking-[-0.045em] sm:text-5xl">RiskScan</h1>
+                  <Badge variant="secondary">Read-only detail</Badge>
+                </div>
+                <p className="text-lg leading-8 text-muted-foreground">
+                  A bounded Quick assessment that makes caller-reported disclosure gaps visible.
+                </p>
+                <p className="text-sm text-muted-foreground">Current local route · Risk assessment</p>
+              </div>
             </div>
             <div className="flex flex-wrap gap-3">
               <Link href="/explore/riskscan/try" className={buttonVariants({ className: "gap-1.5" })}>
@@ -85,64 +98,81 @@ export function RiskScanDetail() {
               </Link>
             </div>
           </div>
-          <p className="text-lg leading-8 text-muted-foreground">
-            A bounded Quick assessment that makes caller-reported disclosure gaps visible.
-          </p>
         </header>
       </div>
 
-      <section aria-labelledby="riskscan-inputs" className="space-y-4">
-        <div className="space-y-2">
-          <h2 id="riskscan-inputs" className="text-2xl font-semibold tracking-tight">
-            Inputs
-          </h2>
-          <p className="leading-7 text-muted-foreground">Quick accepts the following request fields and declarations.</p>
-        </div>
-        <Card>
-          <CardContent className="divide-y pb-0">
-            <FieldGroup label="Request fields" fields={requestFields} />
-            <FieldGroup label="Declarations" fields={declarationFields} tag="boolean" />
-          </CardContent>
-        </Card>
-      </section>
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+        <div className="space-y-10">
+          <section aria-labelledby="riskscan-inputs" className="space-y-4">
+            <div className="space-y-2">
+              <h2 id="riskscan-inputs" className="text-2xl font-semibold tracking-tight">
+                Inputs
+              </h2>
+              <p className="leading-7 text-muted-foreground">Quick accepts the following request fields and declarations.</p>
+            </div>
+            <Card className="rounded-[calc(var(--radius)*2)]">
+              <CardContent className="divide-y pb-0">
+                <FieldGroup label="Request fields" fields={requestFields} />
+                <FieldGroup label="Declarations" fields={declarationFields} tag="boolean" />
+              </CardContent>
+            </Card>
+          </section>
 
-      <section aria-labelledby="riskscan-results" className="space-y-4">
-        <div className="space-y-2">
-          <h2 id="riskscan-results" className="text-2xl font-semibold tracking-tight">
-            Result boundary
-          </h2>
-          <p className="leading-7 text-muted-foreground">
-            Quick reports caller-supplied declarations without assigning a score.
-          </p>
+          <section aria-labelledby="riskscan-results" className="space-y-4">
+            <div className="space-y-2">
+              <h2 id="riskscan-results" className="text-2xl font-semibold tracking-tight">
+                Result boundary
+              </h2>
+              <p className="leading-7 text-muted-foreground">
+                Quick reports caller-supplied declarations without assigning a score.
+              </p>
+            </div>
+            <ul className="grid gap-4 sm:grid-cols-2">
+              {dispositions.map(([disposition, description]) => (
+                <li key={disposition}>
+                  <Card className="h-full rounded-[calc(var(--radius)*2)]">
+                    <CardHeader className="space-y-2">
+                      <Badge variant="secondary" className="w-fit">
+                        Disposition
+                      </Badge>
+                      <CardTitle className="font-mono text-base">{disposition}</CardTitle>
+                      <CardDescription>{description}</CardDescription>
+                    </CardHeader>
+                  </Card>
+                </li>
+              ))}
+            </ul>
+            <p className={noteClass}>
+              Quick reflects caller-supplied declarations and does not verify a service, payment, or evidence record.
+            </p>
+          </section>
         </div>
-        <ul className="grid gap-4 sm:grid-cols-2">
-          {dispositions.map(([disposition, description]) => (
-            <li key={disposition}>
-              <Card className="h-full">
-                <CardHeader className="space-y-2">
-                  <Badge variant="secondary" className="w-fit">
-                    Disposition
-                  </Badge>
-                  <CardTitle className="font-mono text-base">{disposition}</CardTitle>
-                  <CardDescription>{description}</CardDescription>
-                </CardHeader>
-              </Card>
-            </li>
-          ))}
-        </ul>
-        <p className={noteClass}>
-          Quick reflects caller-supplied declarations and does not verify a service, payment, or evidence record.
-        </p>
-      </section>
 
-      <section aria-labelledby="riskscan-availability" className="space-y-3">
-        <h2 id="riskscan-availability" className="text-2xl font-semibold tracking-tight">
-          Configuration boundary
-        </h2>
-        <p className={noteClass}>
-          The endpoint remains unavailable until its host supplies valid supported configuration.
-        </p>
-      </section>
+        <aside className="space-y-4 lg:sticky lg:top-28">
+          <Card className="rounded-[calc(var(--radius)*2)]">
+            <CardHeader className="space-y-2">
+              <CardTitle>Current boundary</CardTitle>
+              <CardDescription>What this local detail can show today.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li className="rounded-[var(--radius)] bg-secondary/45 px-3 py-2"><span className="font-medium text-foreground">Read-only detail</span><br />No request is submitted from this page.</li>
+                <li className="rounded-[var(--radius)] bg-secondary/45 px-3 py-2"><span className="font-medium text-foreground">Caller-reported inputs</span><br />The result describes declarations, not a score.</li>
+              </ul>
+            </CardContent>
+          </Card>
+          <section aria-labelledby="riskscan-availability">
+            <Card className="rounded-[calc(var(--radius)*2)] border-dashed bg-transparent shadow-none">
+              <CardHeader className="space-y-2">
+                <CardTitle id="riskscan-availability">Configuration boundary</CardTitle>
+                <CardDescription>
+                  The endpoint remains unavailable until its host supplies valid supported configuration.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </section>
+        </aside>
+      </div>
     </article>
   );
 }
