@@ -144,17 +144,26 @@ export function LandingSections() {
             </p>
           </div>
           <ul className="space-y-4">
-            <li className="rounded-[calc(var(--radius)*1.5)] border border-border bg-card p-5 shadow-sm">
-              <h3 className="font-semibold">Catalogue</h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">Begin with the current tool entry and its local boundary.</p>
+            <li className="flex gap-4 rounded-[calc(var(--radius)*1.5)] border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md motion-reduce:transition-none">
+              <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-green/15 text-xs font-bold text-brand-green">01</span>
+              <div>
+                <h3 className="font-semibold">Catalogue</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Begin with the current tool entry and its local boundary.</p>
+              </div>
             </li>
-            <li className="rounded-[calc(var(--radius)*1.5)] border border-border bg-card p-5 shadow-sm">
-              <h3 className="font-semibold">Guided demo</h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">Follow the local route map at your pace.</p>
+            <li className="flex gap-4 rounded-[calc(var(--radius)*1.5)] border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md motion-reduce:transition-none">
+              <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-purple/15 text-xs font-bold text-brand-purple">02</span>
+              <div>
+                <h3 className="font-semibold">Guided demo</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Follow the local route map at your pace.</p>
+              </div>
             </li>
-            <li className="rounded-[calc(var(--radius)*1.5)] border border-border bg-card p-5 shadow-sm">
-              <h3 className="font-semibold">Provider path</h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">Prepare an offering preview without an automatic action.</p>
+            <li className="flex gap-4 rounded-[calc(var(--radius)*1.5)] border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md motion-reduce:transition-none">
+              <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-coral/15 text-xs font-bold text-brand-coral">03</span>
+              <div>
+                <h3 className="font-semibold">Provider path</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Prepare an offering preview without an automatic action.</p>
+              </div>
             </li>
           </ul>
       </section>
