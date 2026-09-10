@@ -860,6 +860,17 @@ public Backend exports, routes, and submission documents are not amendable. No
 authority provision, SDK, provider, wallet, network, transaction, candidate,
 or live path is authorized.
 
+M44-T030 is a root-controlled `00-inbox` CORE_P0 corrective successor to
+accepted M44-T020. It comprises its card, specification, local plan, intake
+review, catalog, ownership, State, decisions, reviews, commits, and pushes.
+Its only future implementation paths are the narrow decoded-event amendment of
+`apps/web/src/lib/ats/factory-deploy-bond.ts` and
+`apps/web/tests/factory-deploy-bond.test.mjs`. No test or source is active
+until separate independent readiness and activation reviews. The selected
+official Factory artifact and viem seam, every package/lockfile, SDK/browser
+compatibility, M47 path, provider, wallet, RPC, transaction, candidate,
+deployment, and live path are excluded.
+
 S22-T010 is a root-owned early truth-first POLISH lane. Its first independently
 accepted GREEN scope comprised only `apps/web/src/app/page.tsx`,
 `apps/web/src/components/landing/landing-hero.tsx`,
