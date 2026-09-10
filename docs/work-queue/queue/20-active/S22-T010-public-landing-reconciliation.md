@@ -11,9 +11,11 @@
 - Owner: The root owns queue state, catalog, ownership, the local UI ledger,
   decisions, reviews, commits, and pushes. This intake owns only this card,
   `docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, and the root control
-  records. The independently accepted GREEN scope names the root page, its
-  three landing components, and three focused landing tests; it selects no new
-  asset.
+  records. The first accepted GREEN scope named the root page, its three
+  landing components, and three focused landing tests. D-S22-010-005 renews
+  only the three focused tests for a visual-fidelity RED contract; its one
+  selected future asset and all revised source remain blocked pending a fresh
+  independent RED review.
 - Human actions: this card creates no wallet/provider/ATS authority. The
   existing Stage B action, public deployment, and demo recording remain
   distinct human-owned downstream actions.

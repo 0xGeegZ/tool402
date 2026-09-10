@@ -15,12 +15,13 @@
   accepted source scope is recorded in `D-S22-010-004`; S24-T010 is
   `20-active` for its dashboard source scope. Both retain Stage B as a truth
   filter and public deployment/video prerequisite.
-- S22_GREEN_SCOPE: The independent exact-head RED review accepted
-  `fdf2d1c464ae373b7800a14562747efd993f6590` over canonical `8a26bec6f0b46315374c6cb9f77fffffc14f927f`.
-  S22 may amend only the root page, its three landing components, and its three
-  focused landing tests named in
-  `docs/work-queue/evidence/S22-T010-green-scope-authorization.md`; no asset
-  or other path is authorized.
+- S22_VISUAL_FIDELITY_RENEWAL: The human directly rejected the first visual
+  interpretation and approved a faithful PREP-UI-001 correction. The root may
+  create only revised RED contracts in the three existing focused landing
+  tests. The selected `hero-trio.png` asset and the existing root/three landing
+  component paths remain blocked until a fresh independent exact-head RED
+  review accepts the renewed scope recorded in
+  `docs/work-queue/evidence/S22-T010-green-scope-authorization.md`.
 - S24_GREEN_SCOPE: The human explicitly directed the S24 dashboard lane to
   continue beyond test-only RED. Its exact active scope is the dashboard page,
   workspace shell/overview/navigation, and the two focused dashboard tests
