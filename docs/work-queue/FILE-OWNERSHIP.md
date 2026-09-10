@@ -673,7 +673,7 @@ branch is unreviewed and has no ownership or implementation authority. No client
 state, timer, command, write, Mirror/chain read, wallet, provider, payment,
 transaction, deployment, or live path is authorized.
 
-S21-T010 is a root-controlled `20-active` CORE_P0 record. Its historical
+S21-T010 is a root-controlled `60-done` CORE_P0 record. Its historical
 source was integrated at `48421352607a00c1a73f593dcc48160fac771e6a`; that is
 not acceptance evidence. The corrective record
 `docs/work-queue/evidence/S21-T010-corrective-review.md` reserves only a
@@ -694,9 +694,13 @@ or live path is authorized by the corrective scope. The independent ready
 review is recorded at `docs/work-queue/evidence/S21-T010-ready-review.md`, the
 activation at `docs/work-queue/evidence/S21-T010-activation-review.md`, and
 the RED acceptance at `docs/work-queue/evidence/S21-T010-red-review.md`.
-Only `provider-deploy-state.ts`, `provider-deploy-wizard.tsx`, and
-`deploy-stage-signing.tsx` may now receive the minimal GREEN correction; every
-other source path stays prohibited pending fresh task and module reviews.
+The accepted corrective source is `09899fdf269bc78493e39e067fdc57ad867c6564`;
+its independent task and two module reviews are recorded at
+`docs/work-queue/evidence/S21-T010-task-review.md`,
+`docs/work-queue/evidence/S21-T010-module-review-spec.md`, and
+`docs/work-queue/evidence/S21-T010-module-review-standards.md`. A future
+change to any S21 source requires its own scoped authority; no active source
+path remains authorized by this completed corrective cycle.
 
 S22-T010 is a root-owned post-rehearsal POLISH intake comprising only its card,
 `docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog,

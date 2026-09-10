@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active — corrective test-only RED contract
+- Queue state: 60-done — corrective delivery accepted
 - Dependencies: M26-T010 accepted, M30-T010 accepted, M38-T010 accepted,
   S15-T010 accepted, S16-T010 accepted
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
@@ -177,6 +177,20 @@ The corrective RED contract is accepted at `1b1eea8f8a77b9b626c0230dc88fba226f21
 and its independent review is recorded at
 `docs/work-queue/evidence/S21-T010-red-review.md`. Only the three named GREEN
 paths above are authorized until fresh task and module reviews complete.
+
+## Acceptance
+
+At source `09899fdf269bc78493e39e067fdc57ad867c6564`, the corrective cycle is
+accepted. The independent task review and both fresh module reviews are clear;
+the focused S15/S16/S21 contract passed 68/68 under Node 22.21.1, Web and root
+typechecks plus root lint passed, and the equivalent Webpack build passed.
+Desktop and narrow browser exercises confirmed linked invalid-resource feedback
+and the truthful local review state without a wallet or external request. The
+full root suite remains nonzero only for M44's separately blocked absent
+source modules; that block is neither waived nor changed here. The narrow
+exercise also records pre-existing shared-header overflow outside this card's
+three-file corrective scope. S21 grants no additional wallet, provider, SDK,
+durable, transaction, deployment, or live authority.
 
 ## Human worktree lane request
 
