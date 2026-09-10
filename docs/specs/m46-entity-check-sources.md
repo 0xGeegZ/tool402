@@ -23,6 +23,17 @@ values or returns `null`:
 No default URL is committed. With `null` configuration the reader returns the
 `not_configured` outcome and sends nothing.
 
+The registry base is an HTTPS origin only: its pathname is `/` and it has no
+userinfo, query, or fragment. The reader builds the fixed `search` child path
+from that origin. A configured URL is never assembled from request-controlled
+text other than the URL-encoded lookup value.
+
+Every source request uses `GET`, `credentials: "omit"`, `redirect: "error"`,
+and `cache: "no-store"`. The injected `now` dependency is a function returning
+a finite, safe Unix-millisecond value. Descriptors generated from that clock
+use `new Date(now()).toISOString()`; an invalid clock value makes the relevant
+read unavailable rather than producing an unparseable descriptor.
+
 ## Registry read
 
 One `GET {base}/search?q={query}&per_page=5` with the request's
@@ -36,6 +47,12 @@ absent), `dirigeants.length` → `officerCount`, `date_mise_a_jour` →
 digit `siren`, or a blank `nom_complet` is dropped, and the dropped count is
 reported. The registry descriptor is `{ source: "FR_RECHERCHE_ENTREPRISES",
 readAt }` with `readAt` from the injected clock.
+
+The reader receives an already-parsed M46 request and does not introduce a
+new request-validation outcome. A record that cannot be mapped into the local
+Core candidate shape (including malformed date/timestamp values or a malformed
+`dirigeants` array) is also dropped and counted; it does not turn a valid
+response into an implicit partial candidate.
 
 ## Sanctions read
 
@@ -52,6 +69,15 @@ A parsed dataset is cached in module memory by URL for at most 24 hours and
 reused for later reads. The cache stores only parsed entries and the
 descriptor, never the raw body, and every result cites the descriptor of the
 dataset actually used.
+
+The CSV parser accepts RFC 4180 quoting, escaped quotes, and CRLF or LF row
+endings. Every nonempty row must have exactly twelve columns and produce a
+nonblank `entryId` and `name`; malformed rows or a dataset without any valid
+row make the sanctions read unavailable. An absent `Last-Modified` falls back
+to the injected-clock timestamp. A present but invalid `Last-Modified` makes
+the read unavailable; it is never silently replaced. A cache entry is reusable
+only when `0 <= now - cachedAt < 86_400_000` for the same canonical configured
+URL. At exactly 24 hours it is re-read.
 
 ## Outcomes
 
