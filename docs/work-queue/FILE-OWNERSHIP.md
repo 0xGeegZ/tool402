@@ -1042,3 +1042,15 @@ exactly the Provider page, Provider status component, and focused S28 visual
 test named above. This is a completed presentation-only scope: it grants no
 further reservation, no reader/state/deploy-wizard amendment, and no data,
 wallet/provider/payment/transaction/deployment/live path.
+
+S29-T010 is a root-owned 00-inbox truth-first POLISH intake comprising its
+card, `docs/ui/UI-S29.md`, the local UI ledger, decision, state, catalog, this
+ownership record, reviews, commits, and pushes. Its only candidate source/test
+paths are `apps/web/src/app/provider/deploy/page.tsx`,
+`apps/web/src/components/provider/deploy/provider-deploy-wizard.tsx`,
+`apps/web/src/components/provider/deploy/provider-deploy-stages.tsx`,
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, and the
+new `apps/web/tests/provider-deploy-visual-reconciliation.test.mjs`. Every S16
+field/state/configuration/wallet/ATS path and test remains expressly excluded.
+No implementation path is reserved until independent readiness, durable RED,
+and independent RED review accept exact GREEN.
