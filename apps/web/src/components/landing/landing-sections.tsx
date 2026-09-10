@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { Badge } from "../ui/badge";
@@ -173,6 +174,9 @@ export function LandingSections() {
         className="relative isolate overflow-hidden rounded-[calc(var(--radius)*2)] border border-brand-purple/20 bg-[#e9e1ff] px-6 py-14 text-center sm:px-10 sm:py-18"
       >
         <div aria-hidden="true" className="absolute -right-12 -top-12 size-48 rounded-full border-4 border-card/70" />
+        <div aria-hidden="true" className="absolute -right-4 -top-5 hidden size-28 overflow-hidden rounded-full border-4 border-card bg-[#f8f2e8] shadow-lg sm:block">
+          <Image src="/brand/mascot-wave.png" alt="" width={160} height={160} className="size-full scale-125 object-cover" />
+        </div>
         <div className="relative mx-auto max-w-2xl space-y-4">
           <Badge variant="outline" className="border-brand-purple/30 text-brand-purple">For providers</Badge>
           <h2 id="provider-path-title" className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
