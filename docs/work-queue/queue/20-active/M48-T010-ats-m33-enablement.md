@@ -87,3 +87,24 @@ assertions that the downstream M33 manifest is empty. It preserves every M37/M42
 source, M42 preimage/digest, privacy, and no-import invariant, and M43's
 `NOT_CONFIGURED`-before-Mirror behavior; it authorizes neither a source change
 nor a broader M48 path.
+
+## RED acceptance and GREEN authorization
+
+The independent [M48 RED review](../../evidence/M48-T010-red-review.md) is
+clear. Integrated durable RED commit `7106d01` changes only the two authorized
+test paths and reports 33 passes plus two intended empty-manifest failures.
+M48 remains `20-active` and authorizes GREEN only for:
+
+- `packages/backend/convex/ats_prepare_authority.ts`
+- `packages/backend/tests/ats-prepare-authority.test.mjs`
+- `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`
+- `packages/backend/tests/stage-b-issuer-ats-create-authority.test.mjs`
+- `packages/backend/tests/stage-a-real-issuer-ats-create-authority.test.mjs`
+- `packages/backend/tests/ats-receipt-verification.test.mjs`
+
+The manifest must be one private deeply frozen M42/M47-aligned literal. The
+three historical-test amendments may remove only their stale empty-manifest
+assertions, preserving M43's `NOT_CONFIGURED`-before-Mirror behavior. Every
+other source path and every authority provision, publication, configuration,
+SDK/provider/wallet/RPC/network/request/transaction/candidate/live path remain
+prohibited.
