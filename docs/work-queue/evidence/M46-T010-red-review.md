@@ -24,6 +24,11 @@ The follow-up test correction at `f893759` explicitly serves that virtual
 fixture through the TypeScript compiler host. It preserves the same
 source-absence-only RED outcome and adds no source behavior.
 
+At pushed `ff27d7e`, a further focused fixture correction replaced a
+near-equivalent sanctions name with a candidate name that is exactly equal
+after the specified normalisation. It does not permit suffix-token equivalence
+or symbol stripping and adds no source behavior.
+
 ## Verdict
 
 CLEAR. Only these local GREEN targets are authorized:

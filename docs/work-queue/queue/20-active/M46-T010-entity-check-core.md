@@ -134,6 +134,11 @@ The follow-up test correction at `f893759` explicitly serves that virtual
 fixture through the TypeScript compiler host. It preserves the same
 source-absence-only RED outcome and does not alter the GREEN scope.
 
+The further test correction at `ff27d7e` replaces the sanctions-hit fixture's
+near-equivalent legal name with one that is exactly equal after the specified
+normalisation. It preserves the contract's prohibition on fuzzy or token-based
+matching and adds no GREEN path.
+
 Only `packages/core/src/entity-check.ts` and the declared export-only
 EntityCheck amendment to `packages/core/src/index.ts` are now authorized. No
 I/O, source adapter, API, Directory, UI, package, configuration, payment,
