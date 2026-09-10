@@ -91,9 +91,9 @@ test("renders a single landing main landmark and page heading", async () => {
 test("gives the decorative landing artwork an explicit responsive width", async () => {
   const hero = await readAppFile("src/components/landing/landing-hero.tsx");
 
-  assert.match(hero, /\bw-58\b/);
-  assert.match(hero, /\bsm:w-72\b/);
-  assert.doesNotMatch(hero, /\bw-full\s+max-w-58\b/);
+  assert.match(hero, /\/brand\/hero-trio\.png/);
+  assert.match(hero, /\bw-full\s+max-w-xl\b/);
+  assert.match(hero, /\blg:max-w-none\b/);
 });
 
 test("renders a single read-only Explore marketplace catalog", async () => {
@@ -139,6 +139,7 @@ test("keeps the marketplace thesis local while discovery remains read-only", asy
   const [page, hero, discoveryCard] = sources;
 
   assert.match(hero, /Back the tools agents pay to use\./);
+  assert.match(hero, /text-brand-purple/);
   assert.match(hero, /<Link\b[^>]*href=["']\/demo["'][^>]*>\s*Open guided demo\s*<\/Link>/);
   assert.match(discoveryCard, /read-only/i);
   assert.match(page, /<LandingHero\s*\/>/);
