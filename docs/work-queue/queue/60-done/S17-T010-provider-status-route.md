@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T020 accepted, M11-T020 accepted, M29-T010 accepted,
   M41-T010 accepted, S16-T010 accepted, and S11-T010 accepted. S11's
   accepted navigation assertions remain a constrained root integration
@@ -152,6 +152,26 @@ has a clear independent review in
 its focused Node 22.21.1 run has exactly one failure, the missing `flex-wrap`
 token. Only the listed bare-token insertion is now authorized; final focused,
 390px browser, and independent reviews remain required before acceptance.
+
+## Responsive acceptance record
+
+Accepted at source commit `e7a015565a0579b26c1af439410823e533712043`.
+The exact source correction inserts only bare `flex-wrap` after `flex` in the
+shared list literal. The focused navigation/accessibility contract passes
+20/20 under Node 22.21.1. Independent task, specification, and standards
+reviews are clear in the three responsive final-review records. Local Next
+diagnostics report no compilation or session errors, and the unconfigured
+`/provider` browser check at a 390px viewport records document, body, and
+header widths of 390px; keyboard Tab reaches the `Home` link. Root typecheck,
+root lint, and the Webpack production build pass. The full root suite remains
+nonzero only for M44's two separately blocked absent-source assertions; this
+card changes no M44 path. No provider, wallet, payment, transaction,
+deployment, or live behavior is added.
+
+See the [browser evidence](../../evidence/S17-T010-responsive-browser-evidence.md),
+[task review](../../evidence/S17-T010-responsive-task-review.md),
+[specification review](../../evidence/S17-T010-responsive-module-review-spec.md),
+and [standards review](../../evidence/S17-T010-responsive-module-review-standards.md).
 
 ## Verification
 

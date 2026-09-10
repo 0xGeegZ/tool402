@@ -195,3 +195,9 @@ has a clear independent review in
 [`S17-T010-responsive-red-review`](../work-queue/evidence/S17-T010-responsive-red-review.md).
 It permits only the exact bare `flex-wrap` insertion described above before the
 required focused, browser, and final independent checks.
+
+That insertion is accepted at `e7a015565a0579b26c1af439410823e533712043`.
+The focused navigation/accessibility contract passes 20/20; the unconfigured
+`/provider` browser evidence records no horizontal overflow at 390px, visible
+keyboard focus, and no provider or wallet action. See
+[`S17-T010-responsive-browser-evidence`](../work-queue/evidence/S17-T010-responsive-browser-evidence.md).

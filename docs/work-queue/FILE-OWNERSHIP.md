@@ -647,7 +647,7 @@ recorded final reports. No package,
 lockfile, configuration value, live facilitator/source read, payment, wallet,
 provider, transaction, deployment, or live path is authorized.
 
-S17-T010 is a root-controlled `20-active` CORE_P0 record comprising its card,
+S17-T010 is a root-controlled `60-done` CORE_P0 record comprising its card,
 `docs/ui/UI-S17.md`, the UI-S17 ledger row, its local execution plan, its ready
 and activation review evidence, and only
 the future Web paths
@@ -680,6 +680,9 @@ authorized no test or source change before fresh responsive RED acceptance. The
 committed `c1953f4e0de02b0435f5a7d209278254d37c2bf3` RED contract is now clear
 in `docs/work-queue/evidence/S17-T010-responsive-red-review.md`, so only the
 specified bare `flex-wrap` source insertion is authorized before final checks.
+That insertion is accepted at `e7a015565a0579b26c1af439410823e533712043` after
+focused 20/20, browser, and independent task/specification/standards evidence
+recorded under `docs/work-queue/evidence/S17-T010-responsive-`.
 `apps/web/tests/shell-accessibility.test.mjs` is not amendable. The independent
 RED review recorded at `docs/work-queue/evidence/S17-T010-red-review.md` is
 clear, so only the five declared source paths and the root-reserved `/provider`

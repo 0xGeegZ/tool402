@@ -1,6 +1,6 @@
 # S17-T010 implementation plan — provider campaign status route
 
-Execute [S17-T010](../../work-queue/queue/20-active/S17-T010-provider-status-route.md)
+Execute [S17-T010](../../work-queue/queue/60-done/S17-T010-provider-status-route.md)
 against the committed [UI-S17 manifest](../../ui/UI-S17.md) and accepted
 M40/M41 projections. The route is a truthful read-only status surface; it
 never signs, writes, reads a chain, invokes a provider, or turns an absent
