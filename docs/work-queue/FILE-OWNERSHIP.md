@@ -876,7 +876,7 @@ M42, M47, M32 source, schema, public exports, packages, lockfiles, Web, Agent,
 environment, `commandAuthorities` provisioning, and every SDK/provider/wallet/
 network/transaction/candidate/live path are excluded.
 
-M49-T010 is a root-controlled `00-inbox` CORE_P0 successor catalogued from
+M49-T010 is a root-controlled `10-ready` CORE_P0 successor catalogued from
 HI-009. Its committed control surface is its card, specification, plan, intake
 review, ledger row, catalog, State, decisions, reviews, commits, and pushes.
 Its future implementation surface is exactly new
@@ -887,8 +887,9 @@ reserved amendments of `apps/web/src/components/provider/deploy/ats-create-actio
 `apps/web/src/components/provider/deploy/provider-deploy-stages.tsx`,
 `apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`,
 `apps/web/tests/ats-contracts-bundle-gate.test.mjs`, and
-`apps/web/tests/deploy-stage-signing.test.mjs`. No path is active until fresh
-readiness, activation, and RED acceptance. The public execution projection must
+`apps/web/tests/deploy-stage-signing.test.mjs`. No path is active at
+`10-ready`; a separate activation and RED acceptance are required. The public
+execution projection must
 be a frozen, rehashed transcription of the exact M42 real configuration passed
 only to M44; M47's six-field command projection and S16's display projection
 remain separate. The fixed Mirror resolver may use only the M42 public testnet

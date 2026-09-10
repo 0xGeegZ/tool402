@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M42-T010 accepted, M44-T020 accepted, M44-T030 accepted, M47-T010 accepted, M48-T010 accepted, S15-T010 accepted, S16-T010 accepted, S21-T010 accepted
 - Consumer/evidence context: M41-T010 and M43-T010 are accepted consumers of
   the resulting candidate. HI-004 supplies fixed public issuer-account
@@ -55,7 +55,7 @@ construct calldata.
 
 ## Candidate implementation surface
 
-After separate readiness, activation, and RED acceptance, the exact scope is:
+After a separate activation and RED acceptance, the exact scope is:
 
 - `apps/web/src/lib/ats/stage-b-ats-create-execution-projection.ts` (new)
 - `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts` (new)
@@ -79,6 +79,18 @@ outside the card.
 M49 has CORE_P0 precedence over the still-inbox S26 reservation of
 `deploy-stage-signing.tsx` and its test. S26 must rebase its later header-only
 work on the accepted M49 interface.
+
+## Readiness review
+
+The independent current-head review at
+[M49-T010 readiness review](../../evidence/M49-T010-ready-review.md) is clear
+at clean canonical `0f117ee1ce2d087af6c8e3810c017c51b97618d0`. This card is
+`10-ready`. A separate fresh activation may authorize durable test-only RED
+only in the five focused test paths recorded there. Every production source,
+existing UI component, provider/wallet/RPC/network request, transaction,
+Mirror observation, candidate attachment, verification, lifecycle, package,
+environment, deployment, and live path remains prohibited pending that
+activation and a fresh independent RED review.
 
 ## Fixed one-shot execution contract
 
