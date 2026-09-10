@@ -4,7 +4,7 @@ import { WorkspaceOverview } from "./workspace-overview";
 
 export function WorkspaceShell() {
   return (
-    <section className="max-w-7xl space-y-8" aria-label="Guest workspace">
+    <section className="max-w-7xl space-y-8" aria-label="Guest dashboard">
       <div className="flex flex-wrap items-center gap-3">
         <Badge variant="secondary" className="gap-1.5 bg-[#e9e1ff] px-2.5 py-1 text-secondary-foreground">
           <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-3.5">

@@ -32,11 +32,11 @@ export function LandingFooter() {
               <li><Link href="/provider/deploy" className="transition-colors hover:text-foreground">Prepare a tool offering</Link></li>
             </ul>
           </nav>
-          <nav aria-label="Workspace links">
-            <p className="text-sm font-semibold">Workspace</p>
+          <nav aria-label="Dashboard links">
+            <p className="text-sm font-semibold">Dashboard</p>
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
               <li><Link href="/" className="transition-colors hover:text-foreground">Home</Link></li>
-              <li><Link href="/dashboard" className="transition-colors hover:text-foreground">Workspace</Link></li>
+              <li><Link href="/dashboard" className="transition-colors hover:text-foreground">Dashboard</Link></li>
             </ul>
           </nav>
           <aside>

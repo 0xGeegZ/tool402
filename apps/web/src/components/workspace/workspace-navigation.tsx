@@ -35,8 +35,8 @@ const journeyDetails: Record<(typeof links)[number]["href"], { title: string; de
   },
   "/dashboard/riskscan": {
     title: "Open RiskScan workbench",
-    description: "Inspect the directory, compatibility, and ToolLoop in one guest workspace.",
-    status: "Guest workspace",
+    description: "Inspect the directory, compatibility, and ToolLoop in one guest dashboard.",
+    status: "Guest dashboard",
   },
   "/dashboard/riskscan/preflight": {
     title: "Review disclosures",
