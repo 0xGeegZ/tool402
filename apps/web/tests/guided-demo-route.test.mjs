@@ -16,7 +16,7 @@ const expectedRows = [
   ["/explore/riskscan", "Read RiskScan", "Review the Quick input, result, and configuration boundaries."],
   ["/explore/riskscan/try", "Try the local request", "Inspect the bounded Quick request surface."],
   ["/explore/riskscan/tool-loop?demo=tool-loop", "Follow ToolLoop", "Inspect the local ToolLoop request boundary."],
-  ["/dashboard", "Open the workspace", "See the guest workspace shell."],
+  ["/dashboard", "Open the dashboard", "See the guest dashboard shell."],
   ["/dashboard/riskscan", "Review the workbench", "Follow the guest RiskScan workbench sequence."],
   [
     "/dashboard/riskscan/compatibility",

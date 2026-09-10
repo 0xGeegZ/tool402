@@ -191,8 +191,18 @@ test("locks the static ToolLoop page, bounded client form, and non-payment prese
 
   assert.doesNotMatch(page, /["']use client["']/);
   assert.match(page, /<RiskScanToolLoop\s*\/>/);
+  assert.match(page, /<Link href=["']\/explore\/riskscan["']/);
+  assert.match(page, />\s*Back to RiskScan\s*</);
+  assert.match(page, />\s*Testnet request boundary · no payment is made from this form\.\s*</);
+  assert.match(page, />\s*Run RiskScan through ToolLoop\s*</);
+  assert.match(page, /<LandingFooter\s*\/>/);
   assert.match(flow, /["']use client["']/);
   assert.match(flow, /<form\b[^>]*>/);
+  assert.match(flow, /data-ui=["']tool-loop-request-surface["']/);
+  assert.match(flow, /\bsm:grid-cols-2\b/);
+  assert.match(flow, /aria-labelledby=["']tool-loop-disclosures["']/);
+  assert.match(flow, /A payment challenge does not mean a payment, result, or verification has occurred\./);
+  assert.match(flow, /focus-visible:outline/);
 
   for (const field of ["requestRef", "subjectRef", "context", "identity", "pricing", "limitations", "evidence"]) {
     assert.match(flow, new RegExp(`name=["']${field}["']`));
@@ -221,4 +231,5 @@ test("locks the static ToolLoop page, bounded client form, and non-payment prese
   assert.doesNotMatch(flow, /\b(?:localStorage|sessionStorage|setTimeout|setInterval|retry)\b/i);
   assert.doesNotMatch(flow, /https?:\/\/|mailto:|target=/i);
   assert.doesNotMatch(flow, /\b(?:paid|settled|completed)\b/i);
+  assert.doesNotMatch(page, /\bsimulat(?:e|ed|ion)\b/i);
 });
