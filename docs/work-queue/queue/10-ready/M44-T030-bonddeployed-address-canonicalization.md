@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M44-T020 accepted and M42-T010 accepted.
 - Owner: root owns queue state, catalog, ownership, decisions, reviews,
   commits, and pushes. The only future paths are the narrow amendment of
@@ -41,6 +41,14 @@ The local authority is the
 - A separate independent readiness review must authorize only
   `apps/web/tests/factory-deploy-bond.test.mjs` for durable RED. Source remains
   prohibited pending a separate independent RED review.
+
+## Readiness review
+
+The independent refreshed readiness review at
+[M44-T030 readiness review](../../evidence/M44-T030-ready-review.md) is clear
+at canonical `5a67a64f8d557b47361e3ab3c24588b136d55a44`. This card is
+`10-ready`; a fresh activation may authorize only the durable test-only RED
+path `apps/web/tests/factory-deploy-bond.test.mjs`. Source remains prohibited.
 
 ## Verification
 
