@@ -39,11 +39,12 @@ Its accepted digest remains exactly:
 ```
 
 The real projection's `parameters.diamondOwnerAccount` and planned command
-signer remain the same canonical issuer. M42's SDK identity/integrity fields
-remain immutable historical provenance within that accepted preimage; M44's
-selection of the Factory artifact plus viem is a separate pure consumer seam
-and does not enter the preimage. Therefore no new human configuration or hash
-decision is required.
+signer remain the same canonical issuer. M42's SDK identity remains fixed in
+the accepted operation descriptor, while its SDK integrity is fixed historical
+provenance in the accepted configuration record; neither is changed here.
+M44's selection of the Factory artifact plus viem is a separate pure consumer
+seam and does not enter the preimage. Therefore no new human configuration or
+hash decision is required.
 
 The S16 display literal retains its synthetic digest and remains a
 presentation-only projection. It is not complete configuration, it is not a
