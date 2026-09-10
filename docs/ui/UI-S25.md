@@ -135,8 +135,8 @@ The complete Web run after the authorised detail-header GREEN found that
 single assertion is therefore part of this migration, not verification-only:
 it must assert the same fixed `Try RiskScan` action object as the detail
 contract. No request-flow, form, response, or client-boundary assertion may
-change. The path becomes active only after a fresh independent scope review;
-until then this expanded thirteen-test wording is a candidate, not authority.
+change. Independent scope review at `c98edcc` accepts this assertion-only
+amendment; the expanded thirteen-test set is now fixed for matching GREEN.
 
 ## Explicit exclusions
 

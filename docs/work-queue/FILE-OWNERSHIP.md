@@ -1114,6 +1114,12 @@ fixed PageHeader action object. The candidate amendment is limited to that
 one assertion; it changes no request-flow/form/response/client assertion. The
 path remains prohibited pending a fresh independent scope review.
 
+D-S25-010-007 accepts that correction at `c98edcc`: S25 owns only the raw
+RiskScan-detail Try-href assertion in
+`apps/web/tests/riskscan-try.test.mjs`, which may change to the fixed
+PageHeader action-object pair. The test's other assertions and every source
+path remain governed by their existing scopes.
+
 S28-T010 is a root-owned 00-inbox truth-first POLISH intake comprising its
 card, `docs/ui/UI-S28.md`, the local UI ledger, decision, state, catalog, this
 ownership record, reviews, commits, and pushes. Its only candidate source/test
