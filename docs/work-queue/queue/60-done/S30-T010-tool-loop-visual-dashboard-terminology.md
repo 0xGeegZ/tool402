@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active (test-only RED)
+- Queue state: 60-done
 - Dependencies: M08-T010 accepted, S11-T010 accepted, S19-T010 accepted,
   M46-T040 accepted; S22-T010, S24-T010, and S31-T010 retain their disjoint
   active landing/dashboard/shell paths.
@@ -57,8 +57,17 @@ only the five source/test paths named in UI-S30 for minimal truth-first GREEN.
 The exact real request contract and all mock/external/runtime exclusions remain
 fixed.
 
+## Acceptance
+
+S30-T010 is accepted at source `4382af2` after durable RED/GREEN, focused
+Node 22.21.1 10/10, Web typecheck, whitespace and queue checks, desktop and
+390px browser verification, and clear independent task/module review. It
+changes presentation and wording only; the form's request contract remains
+unchanged.
+
 ## Boundary
 
 This is a visual and terminology slice only. It neither changes nor asserts
 the Agent request behavior, payment state, result, wallet, provider,
 configuration, transaction, deployment, or live availability.
+

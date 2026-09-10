@@ -26,17 +26,18 @@
   continue beyond test-only RED. Its exact active scope is the dashboard page,
   workspace shell/overview/navigation, and the two focused dashboard tests
   recorded in `D-S24-010-003`; all other paths remain prohibited.
-- S30_TOOLLOOP_TERMINOLOGY_RED: The human explicitly directs the existing
+- S30_TOOLLOOP_TERMINOLOGY_ACCEPTANCE: The human explicitly directs the existing
   ToolLoop route to match the selected visual direction without mock behavior
   and to use Dashboard terminology for the existing Guided Demo dashboard
-  step. The independent RED review at `21902b4` is clear; S30-T010 is
-  `20-active` for its two exact ToolLoop sources, one Guided Demo wording
-  source, and two matching focused tests under D-S30-010-004. The form
-  contract and no-mock exclusions remain fixed.
+  step. S30-T010 is accepted at source `4382af2` after durable RED/GREEN,
+  focused 10/10, Web typecheck, desktop/390px browser verification, and clear
+  independent review. The ToolLoop form's Agent/origin/lock/outcome contract
+  and no-mock exclusions remain unchanged.
 - S30_DASHBOARD_ASSERTION_RESERVATION: D-S30-010-002 resolves the sole
   S30/S31 test-path overlap: S30 may amend only the Guided Demo `/dashboard`
   expected-row assertion, while S31 retains its navigation assertions. This
-  reservation grants no source beyond S30's exact presentational GREEN scope.
+  reservation was consumed by accepted S30 source `4382af2` and grants no
+  further path authority.
 - S31_APPLICATION_SHELL_GREEN: The fresh independent RED review at `b5d3c9e`
   is clear: its two failures prove only the absent compact mobile menu. S31-T010
   is 20-active for the two exact shell source paths and its three focused

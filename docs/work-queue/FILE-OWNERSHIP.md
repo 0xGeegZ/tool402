@@ -973,9 +973,9 @@ S31-T010 holds the sole root integration reservation to amend only the
 `apps/web/tests/workspace-shell.test.mjs`; all other S24 assertions and every
 S24 source path remain unchanged.
 
-S30-T010 is a root-owned truth-first POLISH intake comprising its card,
+S30-T010 is an accepted root-owned truth-first POLISH slice comprising its card,
 `docs/ui/UI-S30.md`, the local UI ledger, decision, state, catalog, this
-ownership record, reviews, commits, and pushes. Its proposed source/test set
+ownership record, reviews, commits, and pushes. Its accepted source/test set
 is exactly `apps/web/src/app/explore/riskscan/tool-loop/page.tsx`,
 `apps/web/src/components/riskscan/tool-loop/riskscan-tool-loop.tsx`,
 `apps/web/src/components/demo/guided-demo-steps.tsx`,
@@ -993,9 +993,9 @@ D-S30-010-002 reserves only the `/dashboard` expected-row assertion in
 `apps/web/tests/guided-demo-route.test.mjs` for S30-T010. S31-T010 retains
 every navigation assertion in that file, including its four local navigation
 entries; neither slice may change the other's assertion or source path.
-D-S30-010-004 permits S30-T010's two ToolLoop sources, the one named Guided
-Demo wording source, and its two matching focused tests; all request semantics
-and every non-S30 path remain prohibited.
+D-S30-010-005 accepts this exact source/test set at `4382af2` after focused
+validation, Web typecheck, responsive browser verification, and independent
+review. Its request semantics and every no-mock exclusion remain fixed.
 
 S31-T010 is a root-owned truth-first POLISH source scope comprising its card,
 `docs/ui/UI-S31.md`, the local UI ledger, decision, state, catalog, this
