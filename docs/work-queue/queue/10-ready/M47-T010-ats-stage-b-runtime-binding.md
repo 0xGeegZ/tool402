@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: B01-T010 accepted, M32-T010 accepted, M33-T010 accepted, M41-T010 accepted,
   M42-T010 accepted, M43-T010 accepted, M44-T020 accepted, S21-T010 accepted,
   and HA-ATS-RUNTIME-BINDING-001 accepted
@@ -74,6 +74,15 @@ attach a candidate, or inspect a chain/Mirror response.
 - The accepted real M42 canonical preimage and digest remain byte-identical.
   Any proposed change to a preimage field, target, signer/owner, descriptor,
   parameters, or digest stops this card for a new explicit human decision.
+
+## Readiness review
+
+The independent current-head review at
+[M47-T010 readiness review](../../evidence/M47-T010-ready-review.md) is clear.
+This card is `10-ready`; a separate fresh activation may authorize only its
+durable test-only RED contract at the five focused test paths recorded in that
+review. Every production source and live boundary remains prohibited pending
+that activation and a fresh independent RED review.
 
 ## Verification
 
