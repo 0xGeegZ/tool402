@@ -96,7 +96,8 @@ card does not restate them.
 
 After independent RED acceptance at `ea19691`, minimal GREEN may amend only
 the fourteen presentation paths named in UI-S25 and the matching twelve
-activated tests. The Provider reader and `Suspense`, all existing page body
+activated tests. The proposed `riskscan-try.test.mjs` correction is not active
+until its separate scope review accepts it. The Provider reader and `Suspense`, all existing page body
 content, deploy wizard fields/state/signing flow, route hrefs, and every data,
 wallet, payment, ATS, transaction, deployment, and live boundary stay fixed.
 

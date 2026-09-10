@@ -1107,6 +1107,13 @@ blocks named by UI-S25; `apps/web/src/components/riskscan/detail/riskscan-detail
 updates only to the twelve activated tests. Every other source/test path and
 all non-presentation behavior remain prohibited.
 
+D-S25-010-006 records one proposed scope correction after the full Web suite:
+`apps/web/tests/riskscan-try.test.mjs` statically asserts the RiskScan-detail
+Try action, which the authorised header migration now supplies through the
+fixed PageHeader action object. The candidate amendment is limited to that
+one assertion; it changes no request-flow/form/response/client assertion. The
+path remains prohibited pending a fresh independent scope review.
+
 S28-T010 is a root-owned 00-inbox truth-first POLISH intake comprising its
 card, `docs/ui/UI-S28.md`, the local UI ledger, decision, state, catalog, this
 ownership record, reviews, commits, and pushes. Its only candidate source/test

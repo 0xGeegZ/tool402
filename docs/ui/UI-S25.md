@@ -36,6 +36,7 @@ The slice may add or amend only:
   `apps/web/tests/landing-explore.test.mjs`,
   `apps/web/tests/provider-status.test.mjs`,
   `apps/web/tests/riskscan-detail.test.mjs`,
+  `apps/web/tests/riskscan-try.test.mjs`,
   `apps/web/tests/dashboard-workspace-reconciliation.test.mjs`,
   `apps/web/tests/guest-riskscan-workbench.test.mjs`,
   `apps/web/tests/riskscan-native-quote-compatibility.test.mjs`,
@@ -105,8 +106,8 @@ This amendment supersedes only the earlier generic test-path and active-slice
 wording. S22-T010, S24-T010, S31-T010, and S32-T010 are accepted and release
 their source/test reservations. S25 owns no path while it is in `00-inbox`.
 When independently activated, its RED and later GREEN scope is exactly the
-local targets above; `riskscan-try.test.mjs`, Provider deploy behaviour/state
-tests, and all tests not named above are verification-only.
+local targets above. Provider deploy behaviour/state tests and all tests not
+named above are verification-only.
 
 | Target | Eyebrow | Title | Description/actions | Preserved sibling content |
 | --- | --- | --- | --- | --- |
@@ -126,6 +127,16 @@ The migrated component renders only this header anatomy. Existing complex
 route elements named in the final column remain sibling content and are never
 nested in a second `header`. No source change may proceed until a fresh
 independent readiness review accepts this reconciled matrix.
+
+## Focused-test scope correction
+
+The complete Web run after the authorised detail-header GREEN found that
+`riskscan-try.test.mjs` statically reads the RiskScan-detail Try href. Its
+single assertion is therefore part of this migration, not verification-only:
+it must assert the same fixed `Try RiskScan` action object as the detail
+contract. No request-flow, form, response, or client-boundary assertion may
+change. The path becomes active only after a fresh independent scope review;
+until then this expanded thirteen-test wording is a candidate, not authority.
 
 ## Explicit exclusions
 
