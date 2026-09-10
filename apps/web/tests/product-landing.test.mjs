@@ -63,15 +63,21 @@ test("offers only the specified current local CTA destinations", async () => {
   assert.deepEqual(ctas, [
     ["/explore", "Explore tools"],
     ["/demo", "Open guided demo"],
-    ["/explore/riskscan", "View RiskScan"],
-    ["/explore/riskscan/try", "Try RiskScan"],
+    ["/explore", "Browse all tools →"],
     ["/provider/deploy", "Prepare a tool offering"],
     ["/explore", "Explore tools"],
     ["/explore/riskscan", "RiskScan"],
     ["/demo", "Guided demo"],
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
+    ["/", "Home"],
+    ["/dashboard", "Workspace"],
   ]);
+  assert.match(landing, /const marketplaceCards = \[/);
+  assert.match(landing, /href=\{card\.href\}/);
+  assert.match(landing, /route: "\/explore\/riskscan"/);
+  assert.match(landing, /route: "\/explore"/);
+  assert.match(landing, /route: "\/provider\/deploy"/);
   assert.doesNotMatch(landing, /<Link\b[^>]*>\s*<Button\b/);
 });
 
@@ -87,6 +93,8 @@ test("keeps the fuller footer limited to existing local routes", async () => {
     ["/demo", "Guided demo"],
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
+    ["/", "Home"],
+    ["/dashboard", "Workspace"],
   ]);
   assert.doesNotMatch(footer, /(?:https?:\/\/|\/api\/)/i);
 });
@@ -98,13 +106,12 @@ test("keeps each repeated step heading subordinate to the how-it-works heading",
   assert.doesNotMatch(sections, /<CardTitle>\{step\.title\}<\/CardTitle>/);
 });
 
-test("keeps RiskScan copy readable on its section background", async () => {
+test("keeps the three catalogue cards readable and route-backed", async () => {
   const sections = await readAppFile("src/components/landing/landing-sections.tsx");
 
-  assert.match(
-    sections,
-    /<p className=["'][^"']*\btext-muted-foreground\b[^"']*["']>\s*A bounded assessment route/,
-  );
+  assert.match(sections, /description: "A bounded assessment route/);
+  assert.match(sections, /className="min-h-16 text-sm leading-6 text-muted-foreground">\{card\.description\}/);
+  assert.match(sections, /grid grid-cols-2 gap-4 rounded-\[var\(--radius\)\] border border-dashed/);
 });
 
 test("keeps the selected visual asset decorative, local, and free of unsupported claims", async () => {

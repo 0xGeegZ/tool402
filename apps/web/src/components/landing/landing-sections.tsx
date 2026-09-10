@@ -25,6 +25,51 @@ const steps = [
   },
 ] as const;
 
+const marketplaceCards = [
+  {
+    name: "RiskScan",
+    description: "A bounded assessment route for reviewing caller-supplied context before choosing the next local step.",
+    status: "Current tool",
+    mode: "Local detail",
+    route: "/explore/riskscan",
+    scope: "RiskScan detail",
+    owner: "Tool402 catalogue",
+    action: "View tool",
+    href: "/explore/riskscan",
+    tone: "bg-brand-purple/15 text-brand-purple",
+    icon: "◇",
+    line: "bg-brand-purple",
+  },
+  {
+    name: "Explore tools",
+    description: "Browse the current catalogue from the route already available in Tool402.",
+    status: "Current route",
+    mode: "Read-only",
+    route: "/explore",
+    scope: "Catalogue route",
+    owner: "Tool402 catalogue",
+    action: "Browse tools",
+    href: "/explore",
+    tone: "bg-brand-green/15 text-brand-green",
+    icon: "↗",
+    line: "bg-brand-green",
+  },
+  {
+    name: "Provider path",
+    description: "Prepare an offering preview through the current local provider route.",
+    status: "Current route",
+    mode: "Editable preview",
+    route: "/provider/deploy",
+    scope: "Provider route",
+    owner: "Tool402 provider path",
+    action: "Open route",
+    href: "/provider/deploy",
+    tone: "bg-brand-coral/15 text-brand-coral",
+    icon: "→",
+    line: "bg-brand-coral",
+  },
+] as const;
+
 export function LandingSections() {
   return (
     <div className="space-y-20 sm:space-y-28">
@@ -73,78 +118,55 @@ export function LandingSections() {
         className="space-y-8 border-y border-border py-16 sm:py-20"
       >
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-3xl space-y-3">
+          <div className="space-y-3">
             <Badge variant="outline" className="border-brand-purple/30 text-brand-purple">Marketplace</Badge>
-            <h2 id="riskscan-feature-title" className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
+            <h2 id="riskscan-feature-title" className="text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
               Agent-native tools in the current catalogue
             </h2>
-            <p className="leading-7 text-muted-foreground">
-              RiskScan is the current catalogue entry. Its detail route explains the local request shape and the boundary
-              before a route continues.
-            </p>
           </div>
-          <span className="text-sm font-medium text-muted-foreground">Current entry</span>
+          <Link
+            href="/explore"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-border bg-background px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            Browse all tools →
+          </Link>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="relative isolate overflow-hidden rounded-[calc(var(--radius)*2)] border border-border bg-card p-6 shadow-[0_1rem_2rem_color-mix(in_oklab,var(--foreground)_6%,transparent)] sm:p-8">
-          <div aria-hidden="true" className="absolute inset-x-0 top-0 h-24 bg-[linear-gradient(115deg,#ede8ff_0%,#f9f4e9_48%,#dff7ed_100%)]" />
-          <div aria-hidden="true" className="absolute right-8 top-5 size-14 rounded-full border-[0.65rem] border-brand-purple/20" />
-          <div className="relative grid gap-8 pt-10 sm:grid-cols-[minmax(0,1fr)_12rem] sm:items-start">
-            <div className="space-y-2">
-              <Badge className="bg-brand-purple text-primary-foreground">RiskScan</Badge>
-              <h3 className="text-2xl font-semibold tracking-tight">RiskScan</h3>
-              <p className="max-w-md leading-7 text-muted-foreground">
-                A bounded assessment route for reviewing caller-supplied context before choosing the next local step.
-              </p>
-            </div>
-            <dl className="grid gap-3 rounded-[var(--radius)] border border-border bg-card/80 p-4 text-sm shadow-sm">
-              <div>
-                <dt className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Catalogue</dt>
-                <dd className="mt-1 font-semibold">Current entry</dd>
+          {marketplaceCards.map((card) => (
+            <article key={card.name} className="flex min-h-[25rem] flex-col rounded-[calc(var(--radius)*2)] border border-border bg-card p-5 shadow-[0_0.75rem_1.5rem_color-mix(in_oklab,var(--foreground)_7%,transparent)]">
+              <div className="flex items-start justify-between gap-3">
+                <span aria-hidden="true" className={`flex size-11 items-center justify-center rounded-2xl text-lg font-bold ${card.tone}`}>{card.icon}</span>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[0.625rem] font-medium text-muted-foreground">{card.status}</span>
+                  <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[0.625rem] font-medium text-muted-foreground">{card.mode}</span>
+                </div>
               </div>
-              <div>
-                <dt className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Explore</dt>
-                <dd className="mt-1 font-semibold">Detail route</dd>
+              <div className="mt-6 space-y-2">
+                <h3 className="text-xl font-semibold tracking-tight">{card.name}</h3>
+                <p className="min-h-16 text-sm leading-6 text-muted-foreground">{card.description}</p>
               </div>
-              <div>
-                <dt className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Try</dt>
-                <dd className="mt-1 font-semibold">Guided route</dd>
+              <div className="mt-5 space-y-2">
+                <div aria-hidden="true" className="h-1 rounded-full bg-secondary"><div className={`h-full w-full rounded-full ${card.line}`} /></div>
+                <p className="text-xs text-muted-foreground">Current local route</p>
               </div>
-            </dl>
-          </div>
-          <div className="relative mt-8 flex flex-col items-start gap-3 border-t border-border pt-6 sm:flex-row">
-            <Link
-              href="/explore/riskscan"
-              className="inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-brand-purple motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            >
-              View RiskScan
-            </Link>
-            <Link
-              href="/explore/riskscan/try"
-              className="inline-flex min-h-11 items-center rounded-full border border-border bg-background px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            >
-              Try RiskScan
-            </Link>
-          </div>
-          </div>
-          <article className="flex min-h-72 flex-col rounded-[calc(var(--radius)*2)] border border-border bg-card p-6 shadow-sm sm:p-8">
-            <span className="flex size-11 items-center justify-center rounded-xl bg-brand-green/15 text-sm font-bold text-brand-green">↗</span>
-            <div className="mt-6 space-y-3">
-              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Current route</span>
-              <h3 className="text-2xl font-semibold tracking-tight">Explore tools</h3>
-              <p className="leading-7 text-muted-foreground">Browse the current catalogue from the route already available in Tool402.</p>
-            </div>
-            <span className="mt-auto border-t border-border pt-5 text-sm font-medium text-muted-foreground">Catalogue route</span>
-          </article>
-          <article className="flex min-h-72 flex-col rounded-[calc(var(--radius)*2)] border border-border bg-card p-6 shadow-sm sm:p-8">
-            <span className="flex size-11 items-center justify-center rounded-xl bg-brand-coral/15 text-sm font-bold text-brand-coral">→</span>
-            <div className="mt-6 space-y-3">
-              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Current route</span>
-              <h3 className="text-2xl font-semibold tracking-tight">Provider path</h3>
-              <p className="leading-7 text-muted-foreground">Prepare an offering preview through the current local provider route.</p>
-            </div>
-            <span className="mt-auto border-t border-border pt-5 text-sm font-medium text-muted-foreground">Provider route</span>
-          </article>
+              <dl className="mt-5 grid grid-cols-2 gap-4 rounded-[var(--radius)] border border-dashed border-border bg-secondary/30 p-3 text-xs">
+                <div className="min-w-0">
+                  <dt className="uppercase tracking-wide text-muted-foreground">Route</dt>
+                  <dd className="mt-1 truncate font-medium text-foreground">{card.route}</dd>
+                </div>
+                <div className="min-w-0">
+                  <dt className="uppercase tracking-wide text-muted-foreground">Scope</dt>
+                  <dd className="mt-1 font-medium text-foreground">{card.scope}</dd>
+                </div>
+              </dl>
+              <div className="mt-auto flex items-center justify-between gap-4 pt-5">
+                <span className="text-xs text-muted-foreground">by {card.owner}</span>
+                <Link href={card.href} className="inline-flex min-h-8 items-center rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-brand-purple motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                  {card.action}
+                </Link>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
