@@ -286,6 +286,20 @@ implementedTest("renders only the fixed status regions, actions, evidence rows, 
   assert.doesNotMatch(presentation, /funding raised|units issued|paid task|balance|Live testnet|Connected|New offering version/i);
 });
 
+implementedTest("presents unavailable provider data as an actionable workspace without inventing records", async () => {
+  const sources = await readSources();
+  const page = sources["src/app/provider/page.tsx"];
+  const status = sources["src/components/provider/status/provider-status.tsx"];
+
+  assert.match(page, /Provider workspace/);
+  assert.match(status, /bg-\[#e9e1ff\]/);
+  assert.match(status, /Offering record/);
+  assert.match(status, /Directory record/);
+  assert.match(status, /Provider action/);
+  assert.match(status, /Open the deploy wizard/);
+  assert.doesNotMatch(status, /funding raised|units issued|paid task|balance|Live testnet|Connected/i);
+});
+
 implementedTest("derives the fixed region order, next actions, evidence cells, and Hashscan gate from admitted projection data", async () => {
   const state = await import(new URL("../src/components/provider/status/provider-status-state.ts", import.meta.url).href);
   assert.deepEqual(state.providerStatusRegionOrder, [
