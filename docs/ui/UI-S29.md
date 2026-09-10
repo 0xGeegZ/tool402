@@ -3,7 +3,7 @@
 ## Purpose
 
 UI-S29 is a truth-first POLISH slice for the existing `/provider/deploy`
-wizard. It adapts the selected Provider RiskScan reference's route hierarchy,
+wizard. It adapts the selected `PREP-UI-001` Provider RiskScan reference's route hierarchy,
 tool identity, flat panels, progress rhythm, and footer to the current local,
 editable S16 provider flow without importing prototype metrics, account data,
 tabs, or unavailable routes.

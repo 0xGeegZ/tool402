@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 20-active (test-only RED)
 - Dependencies: S16-T010 accepted; S30-T010 and S28-T010 accepted. S31-T010
   retains its disjoint shared-shell source scope.
 - Owner: The root owns queue state, catalog, ownership, UI ledger, decisions,
@@ -22,8 +22,8 @@ and are omitted.
 
 The local [UI-S29 manifest](../../../ui/UI-S29.md) fixes the exact visual,
 copy, target, and truthfulness boundary. The existing selected reference alias
-in the local ledger is the only visual authority; no source archive, URL, or
-source tree is tracked here.
+`PREP-UI-001` in the local ledger is the only visual authority; no source
+archive, URL, or source tree is tracked here.
 
 ## Candidate ready requirements
 
@@ -40,6 +40,14 @@ source tree is tracked here.
   focused visual test.
 - A fresh independent readiness review, durable focused RED, and independent
   RED review accept exact GREEN before source is amended.
+
+## Test-only RED activation
+
+The independent readiness review at `7e2b294` is clear. D-S29-010-003 permits
+only the new `apps/web/tests/provider-deploy-visual-reconciliation.test.mjs`
+to establish the visual contract. The page, wizard, stages, and signing
+components remain source-prohibited until a separate independent RED review
+accepts an exact GREEN scope.
 
 ## Verification
 

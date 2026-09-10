@@ -1043,7 +1043,8 @@ test named above. This is a completed presentation-only scope: it grants no
 further reservation, no reader/state/deploy-wizard amendment, and no data,
 wallet/provider/payment/transaction/deployment/live path.
 
-S29-T010 is a root-owned 00-inbox truth-first POLISH intake comprising its
+S29-T010 is a root-owned `20-active` test-only RED truth-first POLISH slice
+comprising its
 card, `docs/ui/UI-S29.md`, the local UI ledger, decision, state, catalog, this
 ownership record, reviews, commits, and pushes. Its only candidate source/test
 paths are `apps/web/src/app/provider/deploy/page.tsx`,
@@ -1060,3 +1061,10 @@ immutable S16/M47 paths are `provider-deploy-state.ts`, `campaign-fixture.ts`,
 their current behavior tests. No implementation path is reserved until
 independent readiness, durable RED, and independent RED review accept exact
 GREEN.
+
+D-S29-010-003 reserves only the new
+`apps/web/tests/provider-deploy-visual-reconciliation.test.mjs` for S29's
+durable RED. Its four candidate components remain source-prohibited. The
+S16/M47 logic modules and all existing behavior tests remain outside S29;
+no other source or test path is granted until independent RED acceptance names
+an exact GREEN scope.

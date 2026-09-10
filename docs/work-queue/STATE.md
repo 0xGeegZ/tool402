@@ -64,7 +64,7 @@
   deploy wizard remain unchanged, and the RiskScan card asserts only its local
   provider route.
 
-- S29_PROVIDER_DEPLOY_INTAKE: S29-T010 is a root-owned 00-inbox truth-first
+- S29_PROVIDER_DEPLOY_INTAKE: S29-T010 is a root-owned truth-first
   Provider deploy visual reconciliation. It may not amend source or tests
   until fresh readiness and RED acceptance. Its candidate source paths are the
   deploy page, wizard, stages, signing component, and one new focused visual
@@ -75,6 +75,14 @@
 - S29_SCOPE_CORRECTION: D-S29-010-002 reconciles the stale M47 ownership row
   with the accepted `60-done` M47 record and narrows S29 exclusions to exact
   logic paths. It creates no source authority; fresh readiness remains required.
+- S29_PROVIDER_DEPLOY_RED: The fresh independent readiness review at `7e2b294`
+  is clear. S29-T010 is `20-active` only for the new
+  `apps/web/tests/provider-deploy-visual-reconciliation.test.mjs` under
+  D-S29-010-003. The Provider deploy page, wizard, stages, and signing
+  component remain source-prohibited until a separate independent RED review
+  accepts exact GREEN. The selected `PREP-UI-001` Provider RiskScan visual
+  slice is the sole visual authority; every S16/M47 behavior boundary stays
+  immutable.
 
 - PRODUCT_OVERVIEW: accepted as P00-T010
 - CURRENT_MODULE: S13 outcome-feedback treatment is accepted at source commit `ece66c2fd7b2278ed0f801ad1febd478d9ddc39f`; S15 wallet-island/relay is accepted at `506f038fffb87739cc5fd302a30033b5c56d36ee`; S16 provider deploy wizard is accepted at `ed46ae18a08c859d5f2c94722ab84453ef674835`; M38 offering command payloads and M40 durable offering/Directory admission are accepted at `60-done`. HA-COMMAND-AUTHORITY-002, HA-ATS-RETARGET-001, HA-ATS-RUNTIME-BINDING-001, HA-ISSUER-ACCOUNT-001, and HA-CAMPAIGN-CONVEX-001 are accepted only as bounded local authority or human evidence. B03 Agent payment remains locally green and awaits its separate human-owned testnet exercise.
