@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T020, S17-T010, S22-T010, and S24-T010 accepted.
 - Owner: The root owns queue state, catalog, ownership, UI ledger, decisions,
   reviews, commits, and pushes. The proposed source/test paths are exactly
@@ -74,6 +74,15 @@ remove that named test from the shared file. Its two shell source paths and
 all other tests are closed; no route, shell behavior, CTA, or claim may change.
 A fresh independent correction review is required before S31 returns to
 `60-done`.
+
+## Correction acceptance
+
+The independent exact-diff review accepted `20125ac`: it removes only the
+fourteen-line unreserved compact-strip test from
+`apps/web/tests/landing-explore.test.mjs`, retains the reserved
+`LocalNavigation` route/menu assertions, passes the focused Node 22 suite
+6/6, and is whitespace-clean. S31 returns to `60-done`; it grants no further
+source or test reservation.
 
 ## Boundary
 

@@ -16,3 +16,10 @@ This acceptance is provisional. A follow-up scope review found that the
 compact-strip assertion in `landing-explore.test.mjs` exceeded the exact
 assertion reservation. D-S31-010-006 reopens S31 only to remove that test;
 the reviewed shell source remains closed pending a fresh correction review.
+
+## Correction acceptance
+
+The exact-diff follow-up review accepts `20125ac`: only the unreserved
+compact-strip test is removed, the reserved navigation assertions remain, and
+the focused Node 22 run passes 6/6. S31 returns to `60-done` with no new source
+or test reservation.

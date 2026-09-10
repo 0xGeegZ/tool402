@@ -1039,6 +1039,9 @@ that exact test. Its layout, navigation source, and every other test assertion
 are closed; this remedial reservation grants no new behavior, presentation, or
 CTA authority.
 
+D-S31-010-007 accepts correction `20125ac`; S31 is again `60-done` and grants
+no further source or test reservation.
+
 S25-T010 is a root-owned `00-inbox` presentation intake. Its only candidate
 new paths are `apps/web/src/components/ui/page-header.tsx` and
 `apps/web/tests/page-header.test.mjs`. Its only candidate amendments are the

@@ -53,10 +53,10 @@
   `27fb244`, and S31's shell refinement `fb706f1`. Their focused tests,
   typecheck, queue validation, whitespace, and desktop/390px browser evidence
   are recorded on the respective cards. S22/S24 move to `60-done`; S31's
-  source presentation is clear but a later scope review found one unreserved
-  compact-strip test assertion. D-S31-010-006 returns only that test deletion
-  to `20-active`; its truth-first exclusions and the pending Stage B/public
-  deployment/demo boundaries remain unchanged.
+  source presentation is clear and its one unreserved compact-strip test was
+  removed by independently accepted correction `20125ac`. Their truth-first
+  exclusions and the pending Stage B/public deployment/demo boundaries remain
+  unchanged.
 - S28_PROVIDER_OVERVIEW_INTAKE: S28-T010 is a root-owned truth-first Provider
   overview visual reconciliation. Its only candidate source paths are the
   Provider page, its existing status component, and one new focused
