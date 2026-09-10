@@ -1042,18 +1042,19 @@ CTA authority.
 D-S31-010-007 accepts correction `20125ac`; S31 is again `60-done` and grants
 no further source or test reservation.
 
-S32-T010 is a root-owned `10-ready` test-contract intake. Its only candidate
-path is `apps/web/tests/static-shell.test.mjs`; the test remains unreserved
-until its accepted activation. S32 may never
+S32-T010 is a root-owned `20-active` test-contract correction. Its only
+reserved path is `apps/web/tests/static-shell.test.mjs`. S32 may never
 amend `layout.tsx`, `page.tsx`, or any other source/test path. Its source
 inputs are accepted S31 shell copy and the exact existing internal
 `/provider/deploy` CTA. The correction must retain the static no-runtime
 vocabulary boundary and grants no visual, route, product, wallet, payment,
 provider runtime, or live authority.
 
-Independent readiness accepted at `8256d62` moves S32-T010 to `10-ready` but
-does not reserve the test; its one declared assertion correction remains
-prohibited pending a separate activation.
+Independent readiness at `8256d62` and activation at `106c61a` permit only
+the existing assertion correction: retain static shell/home checks, add the
+exact local provider-deploy href and CTA label checks, remove only
+`provider|deploy` from the deny-list, and retain the remaining no-runtime
+terms. No other path or authority is granted.
 
 S25-T010 is a root-owned `00-inbox` presentation intake. Its only candidate
 new paths are `apps/web/src/components/ui/page-header.tsx` and

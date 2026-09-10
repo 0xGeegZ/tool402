@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T020 and S31-T010 accepted.
 - Owner: The root owns queue state, catalog, ownership, UI ledger, decisions,
   reviews, commits, and pushes. The sole candidate implementation path is
@@ -63,3 +63,13 @@ repository Web script under Node 22.21.1 reproduces exactly one failure at
 `static-shell.test.mjs:69`, the stale lexical deny-list, with 297/298 passing
 and no unrelated failure. This card may enter `10-ready`; a separate explicit
 activation must still reserve only the declared assertion correction.
+
+## Activation
+
+Independent activation review at `106c61a` is clear. S32-T010 is `20-active`
+only to amend `apps/web/tests/static-shell.test.mjs`. The correction must retain
+every existing static shell/home assertion, add exact checks for the internal
+`/provider/deploy` href and `Prepare a tool` label, and remove only `provider`
+and `deploy` from the no-runtime vocabulary deny-list. It must retain
+`wallet`, `payment`, `credential`, `auth`, `onboarding`, `analytics`,
+`evidence`, and `metric`. No app source or other test path is authorized.
