@@ -70,6 +70,17 @@ function oversizedJsonResponse(onCancel) {
   });
 }
 
+function sizedJsonResponse(body, byteLength) {
+  const json = JSON.stringify(body);
+  const jsonByteLength = new TextEncoder().encode(json).byteLength;
+  assert.ok(jsonByteLength <= byteLength);
+
+  return new Response(`${json}${" ".repeat(byteLength - jsonByteLength)}`, {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+}
+
 async function settlesBefore(promise, milliseconds = 100) {
   let timeout;
   const deadline = new Promise((_, reject) => {
@@ -216,6 +227,29 @@ implementedTest("does not await a non-settling response cancellation", async () 
   assert.equal(cancellations, 1);
 });
 
+implementedTest("fails closed when a fetcher never resolves before a response", async (t) => {
+  const environment = { TOOL402_CONVEX_SITE_URL: "https://convex.example.test/" };
+  const timeoutControllers = [];
+  t.mock.method(AbortSignal, "timeout", (milliseconds) => {
+    const controller = new AbortController();
+    timeoutControllers.push({ milliseconds, controller });
+    return controller.signal;
+  });
+
+  let calls = 0;
+  const pendingRead = api.readActiveDirectoryVersion(environment, async () => {
+    calls += 1;
+    return new Promise(() => {});
+  });
+  await Promise.resolve();
+
+  assert.equal(timeoutControllers.length, 1);
+  assert.equal(timeoutControllers[0].milliseconds, 2_000);
+  timeoutControllers[0].controller.abort();
+  assert.deepEqual(await settlesBefore(pendingRead), { state: "no_active_version" });
+  assert.equal(calls, 1);
+});
+
 implementedTest("uses one 2-second abort signal to cancel stalling and over-cap streams", async (t) => {
   const environment = { TOOL402_CONVEX_SITE_URL: "https://convex.example.test/" };
   const timeoutControllers = [];
@@ -242,6 +276,22 @@ implementedTest("uses one 2-second abort signal to cancel stalling and over-cap 
   assert.equal(stallingCalls, 1);
   assert.equal(stallingCancelled, true);
 
+  let exactCapCalls = 0;
+  const exactCap = await settlesBefore(
+    api.readActiveDirectoryVersion(environment, async () => {
+      exactCapCalls += 1;
+      return sizedJsonResponse(foundProjection(), 16_384);
+    }),
+  );
+  assert.deepEqual(exactCap, {
+    state: "active_version",
+    directoryVersion: 1,
+    record: candidate(),
+  });
+  assert.equal(exactCapCalls, 1);
+  assert.equal(timeoutControllers.length, 2);
+  assert.equal(timeoutControllers[1].milliseconds, 2_000);
+
   let overCapCalls = 0;
   let overCapCancelled = false;
   const overCap = await settlesBefore(
@@ -253,8 +303,8 @@ implementedTest("uses one 2-second abort signal to cancel stalling and over-cap 
   assert.deepEqual(overCap, { state: "no_active_version" });
   assert.equal(overCapCalls, 1);
   assert.equal(overCapCancelled, true);
-  assert.equal(timeoutControllers.length, 2);
-  assert.equal(timeoutControllers[1].milliseconds, 2_000);
+  assert.equal(timeoutControllers.length, 3);
+  assert.equal(timeoutControllers[2].milliseconds, 2_000);
 });
 
 implementedTest("rejects closed or accessor-backed projections without invoking an accessor and detaches a frozen accepted view", () => {
