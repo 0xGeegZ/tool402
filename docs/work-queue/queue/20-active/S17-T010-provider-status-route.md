@@ -108,6 +108,20 @@ assertion amendments in `apps/web/tests/workspace-shell.test.mjs`,
 source, `apps/web/tests/shell-accessibility.test.mjs`, environment read, and
 external behavior remain prohibited pending fresh independent RED acceptance.
 
+## RED acceptance record
+
+Accepted at 2026-09-10T06:59:35Z after independent review of the durable
+contracts at the clean pushed baseline
+`133901baa3b1cfa066c924fc0c708999e88a7f11`. Under Node 22.21.1, the focused
+combined check has only the two absent S17 source-boundary failures and the
+three absent `/provider` navigation-entry failures; all source-dependent
+assertions skip until their paths exist. The review is clear. Only the five
+declared source paths and the root-reserved `/provider` navigation entry are
+now authorized for minimal local GREEN. `shell-accessibility.test.mjs` remains
+unchanged. No client state, timer, command, write, environment read outside
+the declared reader/route boundary, live request, wallet/provider, payment,
+transaction, deployment, or live behavior is authorized.
+
 ## Verification
 
 - A durable test-only RED commit precedes every source change and fails

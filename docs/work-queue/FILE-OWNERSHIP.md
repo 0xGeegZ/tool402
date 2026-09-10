@@ -639,11 +639,12 @@ M46-T020 are accepted. The root integration reservation permits only a
 behaviour-preserving extraction of `apps/web/src/lib/riskscan-x402.ts`: every
 existing export, accepted RiskScan response, cache boundary, configuration rule,
 Hedera capability check, and B02 settlement-observer semantic remains intact;
-`apps/web/tests/riskscan-api.test.mjs` is not amendable. Until a fresh
-independent RED review is clear, only the new durable test contract at
-`apps/web/tests/entitycheck-api.test.mjs` is authorized. No package, lockfile,
-production source, configuration value, live facilitator/source read, payment,
-wallet, provider, transaction, deployment, or live path is authorized.
+`apps/web/tests/riskscan-api.test.mjs` is not amendable. The independent RED
+review recorded at `docs/work-queue/evidence/M46-T030-red-review.md` is clear,
+so only the three declared source paths and the root-reserved behavior-preserving
+RiskScan extraction are authorized for minimal local GREEN. No package,
+lockfile, configuration value, live facilitator/source read, payment, wallet,
+provider, transaction, deployment, or live path is authorized.
 
 S17-T010 is a root-controlled `20-active` CORE_P0 record comprising its card,
 `docs/ui/UI-S17.md`, the UI-S17 ledger row, its local execution plan, its ready
@@ -664,14 +665,13 @@ entry and its exact-list assertion amendments in
 `apps/web/tests/landing-explore.test.mjs`, and
 `apps/web/tests/guided-demo-route.test.mjs`; the guided-demo amendment preserves
 its nine steps, route links, and every non-navigation assertion.
-`apps/web/tests/shell-accessibility.test.mjs` is not amendable. Until a fresh
-independent RED review is clear, only new durable contracts at
-`apps/web/tests/provider-status.test.mjs` and
-`apps/web/tests/offerings-api.test.mjs`, plus the three frozen navigation-list
-assertion amendments, are authorized. The stale remote S17 branch is unreviewed
-and has no ownership or implementation authority. No production source,
-client state, timer, command, write, Mirror/chain read, wallet, provider,
-payment, transaction, deployment, or live path is authorized.
+`apps/web/tests/shell-accessibility.test.mjs` is not amendable. The independent
+RED review recorded at `docs/work-queue/evidence/S17-T010-red-review.md` is
+clear, so only the five declared source paths and the root-reserved `/provider`
+navigation entry are authorized for minimal local GREEN. The stale remote S17
+branch is unreviewed and has no ownership or implementation authority. No client
+state, timer, command, write, Mirror/chain read, wallet, provider, payment,
+transaction, deployment, or live path is authorized.
 
 S22-T010 is a root-owned post-rehearsal POLISH intake comprising only its card,
 `docs/ui/UI-S22.md`, `docs/ui/IMPORT-LEDGER.md`, queue state, catalog,

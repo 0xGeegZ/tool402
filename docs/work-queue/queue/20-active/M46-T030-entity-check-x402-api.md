@@ -82,6 +82,20 @@ test-only RED contract at `apps/web/tests/entitycheck-api.test.mjs`.
 source path, including the root-reserved RiskScan extraction, remains
 prohibited pending fresh independent RED acceptance.
 
+## RED acceptance record
+
+Accepted at 2026-09-10T06:59:35Z after independent review of the durable
+contract at the clean pushed baseline
+`133901baa3b1cfa066c924fc0c708999e88a7f11`. Under Node 22.21.1, its focused
+check has one intended source-absence failure naming only the declared shared
+factory, EntityCheck handler, and POST route; the nine behavior checks skip
+until those paths exist. The review is clear. Only the three declared source
+paths and the root-reserved behavior-preserving `riskscan-x402.ts` extraction
+are now authorized for minimal local GREEN. `riskscan-api.test.mjs` remains
+unchanged. No package, lockfile, configuration value, live facilitator/source
+read, payment, wallet/provider, transaction, deployment, or live behavior is
+authorized.
+
 ## Verification
 
 - A durable test-only RED commit precedes every source change and fails only

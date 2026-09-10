@@ -129,7 +129,7 @@ test("keeps the demo route local, static, and outside excluded authority claims"
   assert.ok([...sources.matchAll(/href\s*=\s*\{?(["'])(\/[^"']*)\1\}?/g)].every(([, , href]) => !href.startsWith("//")));
 });
 
-test("preserves the four exact local navigation entries", async (t) => {
+test("preserves the five exact local navigation entries", async (t) => {
   const sources = await readGuidedSources(t);
   if (!sources) return;
   const { navigation, landingTest } = sources;
@@ -142,6 +142,7 @@ test("preserves the four exact local navigation entries", async (t) => {
     ["/explore", "Explore"],
     ["/dashboard", "Workspace"],
     ["/demo", "Demo"],
+    ["/provider", "Provider"],
   ]);
   const hrefGuardLines = landingTest
     .split("\n")
@@ -149,7 +150,7 @@ test("preserves the four exact local navigation entries", async (t) => {
   assert.equal(hrefGuardLines.length, 1);
   assert.match(
     hrefGuardLines[0],
-    /href: "\(\?!\\?\/"\|\\?\/explore"\|\\?\/dashboard"\|\\?\/demo"\)/,
+    /href: "\(\?!\\?\/"\|\\?\/explore"\|\\?\/dashboard"\|\\?\/demo"\|\\?\/provider"\)/,
   );
-  assert.equal((hrefGuardLines[0].match(/\|/g) ?? []).length, 3);
+  assert.equal((hrefGuardLines[0].match(/\|/g) ?? []).length, 4);
 });
