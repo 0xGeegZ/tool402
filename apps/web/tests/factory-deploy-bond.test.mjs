@@ -143,6 +143,20 @@ function expectedRequest(configuration = createConfiguration()) {
   };
 }
 
+const configurationRequiredPaths = Object.freeze([
+  ...Object.keys(createConfiguration()),
+  ...Object.keys(createConfiguration().operationDescriptor).map((key) => `operationDescriptor.${key}`),
+  ...Object.keys(createConfiguration().parameters).map((key) => `parameters.${key}`),
+]);
+
+function deleteRequiredPath(configuration, path) {
+  const keys = path.split(".");
+  const lastKey = keys.pop();
+  let target = configuration;
+  for (const key of keys) target = target[key];
+  delete target[lastKey];
+}
+
 function artifactParameter(parameter) {
   return {
     name: parameter.name,
@@ -210,6 +224,28 @@ implementedTest("rejects every fixed routing, issuer, and zero-address compatibi
   assert.throws(() => api.buildFactoryDeployBondRequest(createConfiguration(), { issuerEvmAddress: "0x1111111111111111111111111111111111111111" }));
 });
 
+implementedTest("rejects every missing or surplus accepted configuration field before encoding", () => {
+  for (const path of configurationRequiredPaths) {
+    const configuration = structuredClone(createConfiguration());
+    deleteRequiredPath(configuration, path);
+    assert.throws(
+      () => api.buildFactoryDeployBondRequest(configuration, { issuerEvmAddress: issuer }),
+      undefined,
+      `must reject a missing ${path}`,
+    );
+  }
+
+  for (const mutate of [
+    (configuration) => { configuration.unapproved = true; },
+    (configuration) => { configuration.operationDescriptor.unapproved = true; },
+    (configuration) => { configuration.parameters.unapproved = true; },
+  ]) {
+    const configuration = structuredClone(createConfiguration());
+    mutate(configuration);
+    assert.throws(() => api.buildFactoryDeployBondRequest(configuration, { issuerEvmAddress: issuer }));
+  }
+});
+
 implementedTest("decodes the official BondDeployed event from artifact-derived topics and data", () => {
   const request = api.buildFactoryDeployBondRequest(createConfiguration(), { issuerEvmAddress: issuer });
   const event = factoryArtifact.abi.find((entry) => entry.type === "event" && entry.name === "BondDeployed");
@@ -244,6 +280,10 @@ implementedTest("uses only the direct official artifact and viem in the local se
     /@hashgraph\/asset-tokenization-contracts\/artifacts\/contracts\/factory\/Factory\.sol\/Factory\.json/,
   );
   assert.match(source, /from "viem"/);
+  assert.match(source, /with\s*\{\s*type:\s*"json"\s*\}/);
+  assert.match(source, /encodeFunctionData\(\{\s*abi:\s*factoryArtifact\.abi/s);
+  assert.match(source, /decodeEventLog\(\{\s*abi:\s*factoryArtifact\.abi/s);
+  assert.doesNotMatch(source, /(?:const|let|var)\s+\w*abi\w*\s*=/i);
   assert.doesNotMatch(
     source,
     /@hashgraph\/asset-tokenization-sdk|dotenv|winston|bbs|hardhat|wallet|provider|fetch\s*\(|deployBond\s*\(/i,
