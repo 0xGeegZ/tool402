@@ -29,6 +29,66 @@ function json(body, status = 200) {
   });
 }
 
+function directoryRecord(overrides = {}) {
+  return {
+    schemaVersion: 1,
+    serviceId: "riskscan_service_v1",
+    serviceSlug: "riskscan",
+    offeringPublicId: "riskscan_offering_demo",
+    offeringVersion: 1,
+    capabilities: ["evm-contract-risk-signals"],
+    x402Endpoint: "https://tool402.example.test/api/riskscan",
+    paymentProtocol: "x402",
+    paymentNetwork: "hedera-testnet",
+    asset: "HBAR",
+    advertisedTiers: ["quick", "standard"],
+    issuerRevenueAccount: "0.0.123",
+    clearingAccount: "0.0.456",
+    status: "active",
+    publishedAt: "2026-09-10T01:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function offeringRecord(overrides = {}) {
+  return {
+    offeringPublicId: "riskscan_offering_demo",
+    version: 1,
+    subjectPublicId: "riskscan_offering_demo",
+    state: "READY",
+    definition: {
+      schemaVersion: 1,
+      terms: {
+        version: "riskscan-revenue-note-v1",
+        fundingTargetTinybars: "1000",
+        noteUnitPriceTinybars: "10",
+        maximumNoteUnits: "100",
+        minimumPurchaseUnits: "1",
+        reserveShareBps: "2000",
+        issuerShareBps: "8000",
+        platformFeeBps: "0",
+        payoutCapTinybars: "1500",
+      },
+      maturityAt: "2026-12-31T00:00:00.000Z",
+      qualifyingResource: "riskscan.quick",
+    },
+    narrative: {
+      title: "RiskScan Revenue Note",
+      customerProblem: "Bounded contract-risk signals.",
+      customerUseCases: ["Inspect a contract"],
+      useOfFunds: ["Maintain the service"],
+      risks: ["Testnet-only demonstration"],
+    },
+    advertisedQuickPriceTinybars: "10",
+    advertisedStandardPriceTinybars: "25",
+    canonicalSignerAddress: "0x1111111111111111111111111111111111111111",
+    atsAssetEvmAddress: "0x2222222222222222222222222222222222222222",
+    acceptedAt: "1",
+    updatedAt: "2",
+    ...overrides,
+  };
+}
+
 function oversizedJson() {
   return new Response("x".repeat(16_385), {
     headers: { "content-type": "application/json" },
@@ -67,6 +127,75 @@ implementedTest("keeps the two projection outcome unions closed and independent"
     assert.equal(init.cache, "no-store");
     assert.equal(init.redirect, "error");
     assert.ok(init.signal instanceof AbortSignal);
+  }
+});
+
+implementedTest("loads only a complete valid directory projection", async () => {
+  const record = directoryRecord();
+  const environment = { TOOL402_CONVEX_SITE_URL: "https://convex.example.test/" };
+  const result = await projection.readProviderProjections(environment, async (input) => (
+    input.pathname.startsWith("/public/offerings/")
+      ? json(null, 404)
+      : json({ outcome: "FOUND", record, directoryVersion: 2 })
+  ), "riskscan_offering_demo");
+  assert.deepEqual(result, {
+    offering: { outcome: "absent" },
+    directory: { outcome: "loaded", record, directoryVersion: 2 },
+  });
+
+  for (const malformed of [
+    directoryRecord({ schemaVersion: 999 }),
+    directoryRecord({ offeringPublicId: null }),
+    directoryRecord({ paymentProtocol: null }),
+    directoryRecord({ x402Endpoint: "not a URL" }),
+    directoryRecord({ clearingAccount: "not-an-account" }),
+    directoryRecord({ status: "pending" }),
+    directoryRecord({ publishedAt: "not a timestamp" }),
+  ]) {
+    const malformedResult = await projection.readProviderProjections(environment, async (input) => (
+      input.pathname.startsWith("/public/offerings/")
+        ? json(null, 404)
+        : json({ outcome: "FOUND", record: malformed, directoryVersion: 2 })
+    ), "riskscan_offering_demo");
+    assert.deepEqual(malformedResult, {
+      offering: { outcome: "absent" },
+      directory: { outcome: "unexpected_response" },
+    });
+  }
+});
+
+implementedTest("loads only an offering with canonical admitted values", async () => {
+  const record = offeringRecord();
+  const { schemaVersion: _schemaVersion, ...definition } = record.definition;
+  const environment = { TOOL402_CONVEX_SITE_URL: "https://convex.example.test/" };
+  const result = await projection.readProviderProjections(environment, async (input) => (
+    input.pathname.startsWith("/public/offerings/")
+      ? json({ outcome: "FOUND", record })
+      : json(null, 404)
+  ), "riskscan_offering_demo");
+  assert.deepEqual(result, {
+    offering: { outcome: "loaded", record: { ...record, definition } },
+    directory: { outcome: "absent" },
+  });
+
+  for (const malformed of [
+    offeringRecord({ canonicalSignerAddress: "0x111111111111111111111111111111111111111A" }),
+    offeringRecord({ atsAssetEvmAddress: "not-an-address" }),
+    offeringRecord({ acceptedAt: "01" }),
+    offeringRecord({ updatedAt: "9223372036854775808" }),
+    offeringRecord({ advertisedQuickPriceTinybars: "01" }),
+    offeringRecord({ definition: { ...record.definition, maturityAt: "not a timestamp" } }),
+    offeringRecord({ definition: { ...record.definition, terms: { ...record.definition.terms, fundingTargetTinybars: "not-an-amount" } } }),
+  ]) {
+    const malformedResult = await projection.readProviderProjections(environment, async (input) => (
+      input.pathname.startsWith("/public/offerings/")
+        ? json({ outcome: "FOUND", record: malformed })
+        : json(null, 404)
+    ), "riskscan_offering_demo");
+    assert.deepEqual(malformedResult, {
+      offering: { outcome: "unexpected_response" },
+      directory: { outcome: "absent" },
+    });
   }
 });
 
@@ -194,6 +323,15 @@ implementedTest("derives the fixed region order, next actions, evidence cells, a
     ["revenue note", "0x1111111111111111111111111111111111111111", "address recorded", "not recorded"],
     ["directory.publish", "riskscan v2", "a published directory version exists", "2026-09-10T01:00:00.000Z"],
   ]);
+  assert.deepEqual(
+    state.providerEvidenceRows({
+      offeringPublicId: "riskscan_offering_demo",
+      version: 1,
+      state: "DRAFT",
+      acceptedAt: "2026-09-10T00:00:00.000Z",
+    }, undefined)[1],
+    ["external.prepare", "not recorded", "not recorded", "not recorded"],
+  );
   for (const stateValue of ["DRAFT", "ASSET_PENDING"]) {
     assert.equal(state.hashscanContractUrl(stateValue, "0x1111111111111111111111111111111111111111"), null);
   }

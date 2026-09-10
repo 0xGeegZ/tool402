@@ -5,6 +5,7 @@ const links = [
   { href: "/explore", label: "Explore" },
   { href: "/dashboard", label: "Workspace" },
   { href: "/demo", label: "Demo" },
+  { href: "/provider", label: "Provider" },
 ] as const;
 
 export function LocalNavigation() {
