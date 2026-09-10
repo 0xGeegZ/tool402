@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T060 accepted, M06-T010 accepted, M46-T010 accepted, and
   M46-T020 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
@@ -124,6 +124,28 @@ recipient, facilitator, price, key, or payload; fabricates no payment,
 receipt, evidence, or transaction; and makes no configuration or source error
 look paid. A `200` result asserts only the core assessment of one bounded
 read.
+
+## Acceptance
+
+Accepted at `7ebfa172bd45178724d2ccf90bc6333ed4fe8391` after the final
+test-first correction removed an undocumented Base Sepolia-only configuration
+guard. The EntityCheck handler now follows the inherited M02/M06 EVM family,
+and its non-default EVM regression proves an unsigned `402` challenge without
+a source read, verification, or settlement. Focused EntityCheck source/API and
+unchanged RiskScan API tests passed 54/54 under Node 22.21.1; Web/root
+typechecks, root lint, queue validation, the local-reference guard, whitespace,
+and the equivalent Webpack build are clear. Fresh independent task,
+specification, and standards reviews are clear in
+[`M46-T030-task-review`](../../evidence/M46-T030-task-review.md),
+[`M46-T030-module-review-spec`](../../evidence/M46-T030-module-review-spec.md),
+and
+[`M46-T030-module-review-standards`](../../evidence/M46-T030-module-review-standards.md).
+
+The complete root suite remains nonzero only for M44's separately blocked
+absent-source RED assertions; no M46 assertion failed and this card neither
+waives nor changes M44. This local acceptance creates no configuration,
+facilitator/source read, payment, wallet/provider, transaction, deployment, or
+live authority.
 
 ## Human worktree lane request
 

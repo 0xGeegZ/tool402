@@ -1,6 +1,6 @@
 # M46-T030 implementation plan — x402-protected EntityCheck API
 
-Execute [M46-T030](../../work-queue/queue/20-active/M46-T030-entity-check-x402-api.md)
+Execute [M46-T030](../../work-queue/queue/60-done/M46-T030-entity-check-x402-api.md)
 against the committed [EntityCheck API contract](../../specs/m46-entity-check-x402-api.md),
 the accepted [RiskScan API contract](../../specs/m02-riskscan-x402-api.md),
 and the accepted [Hedera compatibility contract](../../specs/m06-riskscan-hedera-x402.md).

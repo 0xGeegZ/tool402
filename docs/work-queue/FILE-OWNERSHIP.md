@@ -627,9 +627,9 @@ nor exercised. No package, lockfile, browser, live source read, configuration
 value, payment, wallet, provider, transaction, deployment, or other live path
 is authorized.
 
-M46-T030 is a root-controlled `20-active` CORE_P0 record comprising its card,
+M46-T030 is a root-controlled `60-done` CORE_P0 record comprising its card,
 `docs/specs/m46-entity-check-x402-api.md`, its local execution plan, its ready
-and activation review evidence, and only
+and activation/final review evidence, and only
 the future Web paths
 `apps/web/src/lib/x402-protected-route.ts`,
 `apps/web/src/lib/entity-check-x402.ts`,
@@ -640,9 +640,10 @@ behaviour-preserving extraction of `apps/web/src/lib/riskscan-x402.ts`: every
 existing export, accepted RiskScan response, cache boundary, configuration rule,
 Hedera capability check, and B02 settlement-observer semantic remains intact;
 `apps/web/tests/riskscan-api.test.mjs` is not amendable. The independent RED
-review recorded at `docs/work-queue/evidence/M46-T030-red-review.md` is clear,
-so only the three declared source paths and the root-reserved behavior-preserving
-RiskScan extraction are authorized for minimal local GREEN. No package,
+review recorded at `docs/work-queue/evidence/M46-T030-red-review.md` is clear.
+The final correction at `7ebfa172bd45178724d2ccf90bc6333ed4fe8391` restores the
+inherited generic EVM CAIP-2 family and is independently reviewed in the three
+recorded final reports. No package,
 lockfile, configuration value, live facilitator/source read, payment, wallet,
 provider, transaction, deployment, or live path is authorized.
 
