@@ -36,19 +36,25 @@ implementedTest("pins only the official contracts artifact package and retains t
   assert.doesNotMatch(staticShell, /@hashgraph\/asset-tokenization-sdk/);
 });
 
-implementedTest("mounts one disabled Factory artifact plus viem client graph at the stage-three review step", async () => {
-  const [action, stages] = await Promise.all([
+implementedTest("mounts one M49 action through the accepted Factory artifact and viem seam at the stage-three review step", async () => {
+  const bridgePath = join(appRoot, "src/lib/ats/stage-b-browser-provider-bridge.ts");
+  assert.equal(existsSync(bridgePath), true, `missing declared M49 bridge source: ${bridgePath}`);
+  if (!existsSync(bridgePath)) return;
+  const [action, stages, bridge] = await Promise.all([
     readFile(join(appRoot, "src/components/provider/deploy/ats-create-action.tsx"), "utf8"),
     readFile(join(appRoot, "src/components/provider/deploy/provider-deploy-stages.tsx"), "utf8"),
+    readFile(bridgePath, "utf8"),
   ]);
 
   assert.match(action, /^"use client";/);
-  assert.match(action, /@hashgraph\/asset-tokenization-contracts\/artifacts\/contracts\/factory\/Factory\.sol\/Factory\.json/);
-  assert.match(action, /from "viem"/);
-  assert.match(action, /<Button\b[^>]*\bdisabled\b[^>]*\bdata-ats-contracts-bundle=/);
+  assert.match(action, /stage-b-browser-provider-bridge/u);
+  assert.match(action, /<Button\b[^>]*\bdata-ats-contracts-bundle=/);
   assert.equal((stages.match(/<AtsCreateAction\b/g) ?? []).length, 1);
   assert.match(stages, /index === 2 && substepIndex === 0 \? <AtsCreateAction\b/);
-  assert.doesNotMatch(action, /(?:onClick|encodeFunctionData\s*\(|wallet|provider|configuration|transaction|deployBond\s*\()/i);
+  assert.match(bridge, /factory-deploy-bond/u);
+  assert.doesNotMatch(action, /(?:encodeFunctionData\s*\(|eth_sendTransaction|deployBond\s*\()/u);
+  assert.doesNotMatch(action, /@hashgraph\/asset-tokenization-sdk/u);
+  assert.doesNotMatch(action, /(?:WalletConnect|createWalletClient|createPublicClient|process\.env|import\.meta\.env)/u);
 });
 
 implementedTest("removes the SDK compatibility implementation instead of carrying it into Turbopack", async () => {

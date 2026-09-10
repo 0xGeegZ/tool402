@@ -887,9 +887,10 @@ reserved amendments of `apps/web/src/components/provider/deploy/ats-create-actio
 `apps/web/src/components/provider/deploy/provider-deploy-stages.tsx`,
 `apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`,
 `apps/web/tests/ats-contracts-bundle-gate.test.mjs`, and
-`apps/web/tests/deploy-stage-signing.test.mjs`. Only those five tests are active
-for durable RED; every source path remains prohibited pending independent RED
-acceptance. The public execution projection must
+`apps/web/tests/deploy-stage-signing.test.mjs`. Durable RED was independently
+accepted at clean canonical `dcd60d8d37a3491a900bc007ee882fc83858554c`; only
+this exact implementation surface is now source-authorized for GREEN and the
+five matching tests may change only with it. The public execution projection must
 be a frozen, rehashed transcription of the exact M42 real configuration passed
 only to M44; M47's six-field command projection and S16's display projection
 remain separate. The fixed Mirror resolver may use only the M42 public testnet

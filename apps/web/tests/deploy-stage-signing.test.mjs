@@ -125,6 +125,15 @@ implementedTest("keeps stage state session-only and truthful with no persistence
   assert.doesNotMatch(island, /\b(?:href|<a\b)/u);
 });
 
+implementedTest("holds the M49 candidate in this session and passes one stable action controller through the stage view", async () => {
+  const island = await readIsland();
+
+  assert.match(island, /\buseRef\b/u, "the action controller must survive rerenders");
+  assert.match(island, /\bsetCandidate\b/u, "a verified candidate belongs only to this browser session");
+  assert.match(island, /useState<AtsCreateCandidate \| null>/u);
+  assert.doesNotMatch(island, /(?:external\.attachCandidate|eth_signTypedData_v4)/u);
+});
+
 implementedTest("keeps a rejected local request out of the dialog and stage results with actionable feedback", async () => {
   const { campaignFixture } = await import("../src/components/provider/deploy/campaign-fixture.ts");
   const values = {

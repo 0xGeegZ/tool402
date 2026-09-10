@@ -109,6 +109,25 @@ independent RED review. RED uses injected fakes only and cannot make a provider,
 wallet, RPC, network, transaction, Mirror, candidate, verification, lifecycle,
 deployment, or other live action.
 
+## RED acceptance and GREEN authorization
+
+The two independent current-head reviews recorded in
+[M49-T010 RED review](../../evidence/M49-T010-red-review.md) are clear at
+clean canonical `dcd60d8d37a3491a900bc007ee882fc83858554c`. The durable RED
+diff changes exactly the five test paths declared in the activation review;
+`git diff --check` is clear. Under Node 22.21.1, the focused command reports
+eight passing tests, six intended absent-source/UI-wiring failures, and fourteen
+skips. No source, configuration, environment, provider, wallet, RPC, network,
+transaction, Mirror, candidate, verification, lifecycle, deployment, or other
+live path changed.
+
+Ruling: M49 remains `20-active` and only the exact GREEN surface declared in
+the Candidate implementation surface above is now source-authorized. The five
+RED test paths may change only to complete that source work. Every other path
+and every real provider request, public Mirror observation, transaction, or
+candidate attachment remains prohibited pending later independent acceptance
+and the separate human action `HA-ATS-STAGE-B-001`.
+
 ## Fixed one-shot execution contract
 
 When and only when a human has separately approved HA-ATS-STAGE-B-001 and
