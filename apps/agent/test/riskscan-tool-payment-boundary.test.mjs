@@ -220,6 +220,8 @@ function runCliPreflight({
   preflightPolicy = policy,
   defaultPayment = false,
   failurePhase,
+  initialStatus = 402,
+  signedRetryStatus = 200,
 } = {}) {
   const paymentRequired = {
     x402Version: 2,
@@ -256,6 +258,8 @@ function runCliPreflight({
     `const paymentRequiredHeader = ${JSON.stringify(paymentRequiredHeader ?? encodePaymentRequiredHeader(paymentRequired))};`,
     `const omitPaymentRequiredHeader = ${JSON.stringify(omitPaymentRequiredHeader)};`,
     `const directoryFails = ${JSON.stringify(directoryFails)};`,
+    `const initialStatus = ${JSON.stringify(initialStatus)};`,
+    `const signedRetryStatus = ${JSON.stringify(signedRetryStatus)};`,
     `const paymentResult = ${JSON.stringify(assessRiskScanQuick(input))};`,
     `const payerAccessAllowed = ${JSON.stringify(defaultPayment)};`,
     "const originalProcess = process;",
@@ -299,13 +303,13 @@ function runCliPreflight({
     "    return Response.json(directory);",
     "  }",
     "  if (url.href === riskScanUrl && method === 'POST' && ++riskScanRequests === 1) {",
-    "    const response = new Response(null, { status: 402, headers: omitPaymentRequiredHeader ? {} : { 'payment-required': paymentRequiredHeader } });",
+    "    const response = new Response(null, { status: initialStatus, headers: omitPaymentRequiredHeader ? {} : { 'payment-required': paymentRequiredHeader } });",
     "    response.json = async () => { throw new Error('B03_TEST_RESULT_PARSE'); };",
     "    return response;",
     "  }",
     "  if (url.href === riskScanUrl && method === 'POST' && riskScanRequests === 2) {",
     `    if (${JSON.stringify(failurePhase)} === 'signed_retry') throw new Error('SECRET_SENTINEL_B03');`,
-    "    const response = new Response(null, { status: 200 });",
+    "    const response = new Response(null, { status: signedRetryStatus });",
     `    response.json = async () => { if (${JSON.stringify(failurePhase)} === 'result') throw new Error('SECRET_SENTINEL_B03'); return paymentResult; };`,
     "    return response;",
     "  }",
@@ -508,14 +512,17 @@ boundaryTest("maps a missing preflight configuration to a closed nonzero diagnos
   assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03/u);
 });
 
-async function assertCliPhaseFailure(failurePhase, expectedDiagnostic, expectedRequests, expectedBoundaries) {
+async function assertCliPhaseFailure(failurePhase, expectedDiagnostic, expectedOutcome, expectedRequests, expectedBoundaries) {
   const { error, stdout, stderr } = await runCliPreflight({ defaultPayment: true, failurePhase });
 
   assert.notEqual(error, null);
   assert.equal(stderr, "");
   assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_PAYER_READ|B03_TEST_RESULT_PARSE/u);
   const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
-  assert.deepEqual(diagnostic, [`RISKSCAN_PAY_DIAGNOSTIC ${expectedDiagnostic}`]);
+  assert.deepEqual(diagnostic, [
+    ...(expectedOutcome === undefined ? [] : [`RISKSCAN_PAY_OUTCOME ${expectedOutcome}`]),
+    `RISKSCAN_PAY_DIAGNOSTIC ${expectedDiagnostic}`,
+  ]);
   assert.deepEqual(requests, expectedRequests);
   assert.deepEqual(boundaries, expectedBoundaries);
   assert.deepEqual(transportAttempts, []);
@@ -532,6 +539,7 @@ boundaryTest("maps a payment payload or signing failure at the CLI edge without 
   await assertCliPhaseFailure(
     "payment_payload",
     "PAYMENT_PAYLOAD_OR_SIGNING_FAILED",
+    "payment_failed",
     unsignedRequests,
     [...paymentSetupBoundaries, "payment_payload"],
   );
@@ -541,6 +549,7 @@ boundaryTest("maps a signer failure at the CLI edge without leaking the cause", 
   await assertCliPhaseFailure(
     "signer",
     "PAYMENT_PAYLOAD_OR_SIGNING_FAILED",
+    "payment_failed",
     unsignedRequests,
     [...paymentSetupBoundaries, "payment_payload", "sign"],
   );
@@ -550,6 +559,7 @@ boundaryTest("maps a signed retry failure at the CLI edge without leaking the ca
   await assertCliPhaseFailure(
     "signed_retry",
     "SIGNED_RETRY_FAILED",
+    "transport_failure",
     [...unsignedRequests, signedRetryRequest],
     [...paymentSetupBoundaries, "payment_payload", "payment_header"],
   );
@@ -559,6 +569,7 @@ boundaryTest("maps a settlement or result failure at the CLI edge without leakin
   await assertCliPhaseFailure(
     "settlement",
     "SETTLEMENT_OR_RESULT_FAILED",
+    "payment_failed",
     [...unsignedRequests, signedRetryRequest],
     [...paymentSetupBoundaries, "payment_payload", "payment_header", "settlement_decode"],
   );
@@ -568,18 +579,55 @@ boundaryTest("maps a result parsing failure at the CLI edge without leaking the 
   await assertCliPhaseFailure(
     "result",
     "SETTLEMENT_OR_RESULT_FAILED",
+    "payment_failed",
     [...unsignedRequests, signedRetryRequest],
     [...paymentSetupBoundaries, "payment_payload", "payment_header", "settlement_decode"],
   );
 });
 
-boundaryTest("maps an uncategorized terminal failure at the CLI edge without leaking the cause", async () => {
+boundaryTest("constructs the payment client only after Directory, quote, and the initial 402", async () => {
   await assertCliPhaseFailure(
     "terminal",
     "TERMINAL_UNEXPECTED_FAILURE",
-    [],
+    "payment_failed",
+    unsignedRequests,
     ["private_key", "signer", "scheme", "payment_client"],
   );
+});
+
+boundaryTest("preserves the legacy non-paid outcome and maps an unavailable initial request", async () => {
+  const { error, stdout, stderr } = await runCliPreflight({ defaultPayment: true, initialStatus: 503 });
+
+  assert.notEqual(error, null);
+  assert.equal(stderr, "");
+  assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_PAYER_READ|B03_TEST_RESULT_PARSE/u);
+  const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
+  assert.deepEqual(diagnostic, [
+    "RISKSCAN_PAY_OUTCOME unavailable",
+    "RISKSCAN_PAY_DIAGNOSTIC INITIAL_REQUEST_OR_CHALLENGE_FAILED",
+  ]);
+  assert.deepEqual(requests, unsignedRequests);
+  assert.deepEqual(boundaries, [
+    "private_key",
+    "signer",
+  ]);
+  assert.deepEqual(transportAttempts, []);
+});
+
+boundaryTest("maps a non-transport unavailable signed retry after preserving its legacy outcome", async () => {
+  const { error, stdout, stderr } = await runCliPreflight({ defaultPayment: true, signedRetryStatus: 503 });
+
+  assert.notEqual(error, null);
+  assert.equal(stderr, "");
+  assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03|B03_TEST_PAYER_READ|B03_TEST_RESULT_PARSE/u);
+  const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
+  assert.deepEqual(diagnostic, [
+    "RISKSCAN_PAY_OUTCOME unavailable",
+    "RISKSCAN_PAY_DIAGNOSTIC SIGNED_RETRY_FAILED",
+  ]);
+  assert.deepEqual(requests, [...unsignedRequests, signedRetryRequest]);
+  assert.deepEqual(boundaries, [...paymentSetupBoundaries, "payment_payload", "payment_header"]);
+  assert.deepEqual(transportAttempts, []);
 });
 
 boundaryTest("maps a preflight directory failure before every payment boundary", async () => {
