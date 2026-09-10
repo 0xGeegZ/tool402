@@ -292,3 +292,11 @@ boundaryTest("keeps the CLI as the only runtime configuration edge and redacts a
   assert.notEqual(error, null);
   assert.doesNotMatch(`${stdout}${stderr}`, /SECRET_SENTINEL_B03/u);
 });
+
+boundaryTest("reserves the opt-in preflight as a CLI edge before payment construction", async () => {
+  const text = await readFile(cliSource, "utf8");
+
+  assert.match(text, /riskscan-pay-observability/u);
+  assert.match(text, /--preflight/u);
+  assert.match(text, /PREFLIGHT_GUARD_REACHED/u);
+});
