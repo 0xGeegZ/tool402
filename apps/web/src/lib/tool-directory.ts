@@ -1,4 +1,5 @@
 import type { ActiveDirectoryView } from "./active-directory-version.ts";
+import { buildEntityCheckToolDescriptor } from "./entity-check-tool-descriptor.ts";
 import { readRiskScanX402Configuration } from "./riskscan-x402.ts";
 
 export function buildToolDirectory(environment: NodeJS.ProcessEnv) {
@@ -21,7 +22,7 @@ export function buildToolDirectory(environment: NodeJS.ProcessEnv) {
       } as const;
 
   return {
-    version: "v1",
+    version: "v2",
     tools: [{
       id: "riskscan.quick",
       name: "RiskScan Quick",
@@ -55,7 +56,7 @@ export function buildToolDirectory(environment: NodeJS.ProcessEnv) {
         "caller_declarations_are_not_external_verification",
       ],
       payment,
-    }],
+    }, buildEntityCheckToolDescriptor(environment)],
   } as const;
 }
 
