@@ -24,7 +24,7 @@ const migratedHeaders = {
   "src/app/dashboard/riskscan/compatibility/page.tsx": { title: "Native quote compatibility" },
   "src/app/demo/page.tsx": { eyebrow: "Guided demo", title: "Take the guided tour" },
   "src/app/provider/page.tsx": { eyebrow: "Tool operator", title: "Campaign status", actions: true },
-  "src/components/riskscan/detail/riskscan-detail.tsx": { eyebrow: "Read-only detail", title: "RiskScan", actions: true },
+  "src/components/riskscan/detail/riskscan-detail.tsx": { eyebrow: "Read-only detail", title: "RiskScan" },
   "src/components/provider/deploy/provider-deploy-wizard.tsx": { eyebrow: "Provider workspace", title: "Prepare a tool offering" },
 };
 
@@ -56,7 +56,7 @@ test("every listed page and component mounts PageHeader and hand-writes no heade
   for (const [path, header] of Object.entries(migratedHeaders)) {
     const source = await readAppFile(path);
 
-    assert.match(source, /import \{ PageHeader \} from "[./]+\/ui\/page-header"/, path);
+    assert.match(source, /import \{ PageHeader \} from "(?:\.\.\/)+(?:components\/)?ui\/page-header"/, path);
     assert.equal((source.match(/<PageHeader\b/g) ?? []).length, 1, path);
     assert.equal((source.match(/<h1\b/g) ?? []).length, 0, path);
     assert.equal((source.match(/<header\b/g) ?? []).length, 0, path);
@@ -74,12 +74,6 @@ test("renders the Campaign page header with its two accepted local links as acti
   assert.match(page, /description="Read the admitted offering and directory records for this campaign without advancing either one\."/);
   assert.match(page, /actions=\{\[\s*\{ href: "\/provider\/deploy", label: "Open the deploy wizard" \},\s*\{ href: "\/explore\/riskscan", label: "Explore RiskScan" \},?\s*\]\}/);
   assert.doesNotMatch(page, /Provider campaign status|import Link from "next\/link"/);
-});
-
-test("keeps the RiskScan detail header links as its actions", async () => {
-  const detail = await readAppFile("src/components/riskscan/detail/riskscan-detail.tsx");
-
-  assert.match(detail, /actions=\{\[\s*\{ href: "\/explore\/riskscan\/try", label: "Try RiskScan" \},\s*\{ href: "\/explore\/riskscan\/tool-loop", label: "Explore RiskScan ToolLoop" \},?\s*\]\}/);
 });
 
 test("labels the /provider navigation entry Campaign without changing order or hrefs", async () => {

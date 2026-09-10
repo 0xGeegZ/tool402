@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { campaignFixture } from "./campaign-fixture";
 import { DeployStageSigning } from "./deploy-stage-signing";
+import { PageHeader } from "../../ui/page-header";
 import {
   acknowledgementCopy,
   canAdvance,
@@ -363,21 +364,13 @@ export function ProviderDeployWizard() {
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 pb-8 sm:pb-12">
-      <header className="space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="secondary">{campaignFixture.label}</Badge>
-          <Badge variant="outline">Provider workspace</Badge>
-        </div>
-        <div className="max-w-3xl space-y-3">
-          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Prepare a tool offering</h1>
-          <p className="text-lg leading-8 text-muted-foreground">
-            Shape a clear local preview before any separate signing or provider action is considered.
-          </p>
-        </div>
+      <div className="space-y-4">
+        <Badge variant="secondary">{campaignFixture.label}</Badge>
+        <PageHeader eyebrow="Provider workspace" title="Prepare a tool offering" description="Shape a clear local preview before any separate signing or provider action is considered." />
         <p className="border-l-2 border-border pl-4 text-sm leading-6 text-muted-foreground">
           Demo values are editable and local to this browser view. They do not create, publish, or verify anything; a signature is requested only from the wallet section on the review step.
         </p>
-      </header>
+      </div>
 
       <Card>
         <CardHeader className="space-y-5">

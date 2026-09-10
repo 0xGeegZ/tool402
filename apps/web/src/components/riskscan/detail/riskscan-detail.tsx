@@ -8,6 +8,7 @@ import type {
 import { Badge } from "../../ui/badge";
 import { buttonVariants } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
+import { PageHeader } from "../../ui/page-header";
 
 const requestFields = [
   ["requestRef", "A nonblank reference for the assessment."],
@@ -69,26 +70,16 @@ export function RiskScanDetail() {
           Back to Explore
         </Link>
 
-        <header className="space-y-3">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div className="space-y-3">
-              <Badge variant="secondary">Read-only detail</Badge>
-              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">RiskScan</h1>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Link href="/explore/riskscan/try" className={buttonVariants({ className: "gap-1.5" })}>
-                Try RiskScan
-                <ArrowRight />
-              </Link>
-              <Link href="/explore/riskscan/tool-loop" className={buttonVariants({ variant: "outline" })}>
-                Explore RiskScan ToolLoop
-              </Link>
-            </div>
-          </div>
-          <p className="text-lg leading-8 text-muted-foreground">
-            A bounded Quick assessment that makes caller-reported disclosure gaps visible.
-          </p>
-        </header>
+        <PageHeader eyebrow="Read-only detail" title="RiskScan" description="A bounded Quick assessment that makes caller-reported disclosure gaps visible." />
+        <div className="flex flex-wrap gap-3">
+          <Link href="/explore/riskscan/try" className={buttonVariants({ className: "gap-1.5" })}>
+            Try RiskScan
+            <ArrowRight />
+          </Link>
+          <Link href="/explore/riskscan/tool-loop" className={buttonVariants({ variant: "outline" })}>
+            Explore RiskScan ToolLoop
+          </Link>
+        </div>
       </div>
 
       <section aria-labelledby="riskscan-inputs" className="space-y-4">
