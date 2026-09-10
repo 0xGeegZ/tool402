@@ -79,6 +79,15 @@ only `apps/web/tests/explore-catalog.test.mjs`,
 source path remains prohibited until a fresh independent RED review accepts
 exact minimal GREEN.
 
+## GREEN authorization
+
+The independent exact-head RED review at
+`ce217576051dec17a63aac5b973f1a04a3a59a34` is clear: it observed exactly the
+three declared absent-source failures and two source-dependent skips, with no
+S23 source change, no S22/S31 shared-test collision, and M48 disjoint. Only
+the UI-S23 local targets and their three matching RED test paths may now enter
+minimal GREEN. All exclusions remain unchanged.
+
 ## Verification
 
 - A durable test-only RED commit precedes every source change and fails

@@ -115,6 +115,15 @@
   `20-active` only for durable RED in `explore-catalog.test.mjs`,
   `route-loading-skeletons.test.mjs`, and new `entitycheck-detail.test.mjs`.
   Every source path remains prohibited pending fresh independent RED acceptance.
+- S23_ENTITYCHECK_RED_ACCEPTANCE: The independent exact-head review at
+  `ce217576051dec17a63aac5b973f1a04a3a59a34` is clear. The focused RED has
+  exactly three source-absence failures and two source-dependent skips; no
+  source path changed before review, `landing-explore.test.mjs` remains
+  excluded by S22/S31, and M48 is disjoint. S23-T010 may now amend only its
+  two reserved existing source/test paths, its five declared new source/test
+  paths, and no other path. All API/data, configuration, payment,
+  wallet/provider, transaction, deployment, and live boundaries remain
+  prohibited.
 
 - PRODUCT_OVERVIEW: accepted as P00-T010
 - CURRENT_MODULE: S13 outcome-feedback treatment is accepted at source commit `ece66c2fd7b2278ed0f801ad1febd478d9ddc39f`; S15 wallet-island/relay is accepted at `506f038fffb87739cc5fd302a30033b5c56d36ee`; S16 provider deploy wizard is accepted at `ed46ae18a08c859d5f2c94722ab84453ef674835`; M38 offering command payloads and M40 durable offering/Directory admission are accepted at `60-done`. HA-COMMAND-AUTHORITY-002, HA-ATS-RETARGET-001, HA-ATS-RUNTIME-BINDING-001, HA-ISSUER-ACCOUNT-001, and HA-CAMPAIGN-CONVEX-001 are accepted only as bounded local authority or human evidence. B03 Agent payment remains locally green and awaits its separate human-owned testnet exercise.

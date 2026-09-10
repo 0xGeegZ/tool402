@@ -672,8 +672,8 @@ D-S23-010-002 authorizes only
 `apps/web/tests/explore-catalog.test.mjs`,
 `apps/web/tests/route-loading-skeletons.test.mjs`, and new
 `apps/web/tests/entitycheck-detail.test.mjs` to define the absent S23
-composition. All S23 source paths remain prohibited until independent RED
-acceptance. Its future candidate source/test paths are the existing
+composition. The independent RED review at `ce21757` authorizes only the
+following minimal GREEN paths alongside those three tests: the existing
 `apps/web/src/components/discovery/explore-catalog.tsx`,
 `apps/web/tests/explore-catalog.test.mjs`, and
 `apps/web/tests/route-loading-skeletons.test.mjs`; the five new paths
