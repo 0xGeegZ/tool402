@@ -92,6 +92,22 @@ validation to the CLI guard or trap every forbidden signer, payment-construction
 retry, settlement, and result-parsing boundary. The card remains `20-active`
 only for the same two tests; source remains prohibited.
 
+## Second RED re-review
+
+The independent [second RED re-review](../../evidence/B03-T020-red-rereview-02.md)
+is blocked for delegated test-only
+`01c99e9592aa5aee25de8e1d32e984d4353c0b49`. The four-commit series changes
+only the two already-authorized test paths and remains durable RED, but its
+child-process trace records only request paths rather than the configured
+origin and it does not deny alternate outbound transports. The diagnostic
+contract also lacks a `PREFLIGHT_GUARD_REACHED` vector, while the exact
+challenge contract lacks explicit non-v2 and multi-accept rejection vectors.
+
+The card remains `20-active` only for a further test-only correction in the
+same two paths. Every source, configuration, key, signer, provider, payment,
+preflight execution, replacement attempt, deployment, and live path remains
+prohibited.
+
 ## Verification
 
 - A durable test-only RED commit precedes every B03-T020 source change.

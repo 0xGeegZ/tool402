@@ -3,10 +3,10 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M44-T020 accepted and M42-T010 accepted.
 - Owner: root owns queue state, catalog, ownership, decisions, reviews,
-  commits, and pushes. The only future paths are the narrow amendment of
+  commits, and pushes. The accepted delivery is the narrow amendment of
   `apps/web/src/lib/ats/factory-deploy-bond.ts` and
   `apps/web/tests/factory-deploy-bond.test.mjs`. No package, lockfile, SDK,
   browser-compatibility, provider, wallet, RPC, transaction, or live path is
@@ -69,6 +69,20 @@ passes and 2 intended current-helper failures. This card may now amend only
 `apps/web/tests/factory-deploy-bond.test.mjs` for validate-then-lowercase
 handling of a valid, decoded, non-zero event address. Trusted configuration
 address parsing remains strict.
+
+## GREEN acceptance
+
+The independent [task review](../../evidence/M44-T030-task-review.md) and
+[standards review](../../evidence/M44-T030-module-review-standards.md) are
+clear. The minimal green source is merged at
+`8d019e599c320d951197d3a405d5fa3969958380`; it validates a decoded address,
+rejects zero, and only then lowercases the valid event value. The trusted
+configuration parser remains unchanged.
+
+Focused Factory tests, Web typecheck, the complete Web suite, root lint,
+queue/reference/whitespace checks, and the enabled local-reference guard are
+clear under Node 22.21.1. This card is accepted at `60-done`; it grants no
+provider, wallet, RPC, transaction, deployment, or live authority.
 
 ## Verification
 

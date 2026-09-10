@@ -3,12 +3,12 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: B01-T010 accepted, M32-T010 accepted, M33-T010 accepted, M41-T010 accepted,
   M42-T010 accepted, M43-T010 accepted, M44-T020 accepted, S21-T010 accepted,
   and HA-ATS-RUNTIME-BINDING-001 accepted
 - Owner: The root owns queue state, catalog, ownership, decisions, reviews,
-  commits, and pushes. Proposed implementation paths are exactly
+  commits, and pushes. The accepted implementation paths are exactly
   `packages/backend/convex/stage_b_ats_create_runtime_binding.ts`, the
   narrowly amended
   `packages/backend/convex/external_prepare_command_admission.ts`,
@@ -113,6 +113,22 @@ the six fixed M26 fields. The accepted real M42 preimage/digest stays
 byte-identical and M33 remains zero-enabled. Every other source path and every
 provider, wallet, SDK, network, transaction, candidate, verification, or live
 action remains prohibited.
+
+## GREEN acceptance
+
+The independent [task review](../../evidence/M47-T010-task-review.md),
+[specification review](../../evidence/M47-T010-module-review-spec.md), and
+[standards review](../../evidence/M47-T010-module-review-standards.md) are
+clear. The final test-only lexical guard correction is also independently
+clear: it ignores comments and ordinary quoted literals while continuing to
+reject a real private-projection loader.
+
+Focused M47 tests, Backend and Web typechecks, complete Backend and Web suites,
+root lint, queue/reference/whitespace checks, and the enabled local-reference
+guard are clear under Node 22.21.1. The complete real M42 projection and its
+accepted digest remain byte-identical; M33 remains zero-enabled. This card is
+accepted at `60-done`. HA-ATS-STAGE-B-001 is now the separate next human gate;
+this acceptance authorizes no execution.
 
 ## Verification
 
