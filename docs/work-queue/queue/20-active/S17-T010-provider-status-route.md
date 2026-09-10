@@ -122,6 +122,33 @@ unchanged. No client state, timer, command, write, environment read outside
 the declared reader/route boundary, live request, wallet/provider, payment,
 transaction, deployment, or live behavior is authorized.
 
+## Responsive correction amendment
+
+After the original local GREEN, the required 390px browser check measured a
+408px document width because the fifth root-reserved `/provider` navigation
+entry leaves the shared navigation list non-wrapping. The Provider status route
+does not cause the overflow, and `layout.tsx` remains owned by accepted M02;
+this card therefore receives a same-card, test-first amendment rather than a
+shell rewrite.
+
+Before fresh responsive RED acceptance, only the existing
+`apps/web/tests/workspace-shell.test.mjs` navigation assertion may change. It
+must preserve the exact five links and add a structural assertion that the
+existing list literal is exactly `flex flex-wrap items-center gap-1 text-sm
+font-medium`, without an overflow mask or a minimum-width escape. After a clear
+independent RED review, only the bare `flex-wrap` token may be inserted after
+`flex` in that exact existing list literal in
+`apps/web/src/components/discovery/local-navigation.tsx`; no other token or
+attribute may be added, removed, reordered, or made conditional. `layout.tsx`,
+global CSS, the other navigation tests, landmarks, focus treatment, link
+order/labels, client behavior, and every live boundary remain outside scope.
+Fresh browser evidence at 390px is required before this card can be accepted.
+
+The independent controls-only scope review is clear in
+[`S17-T010-responsive-scope-review`](../../evidence/S17-T010-responsive-scope-review.md).
+It authorizes no test or source change; fresh responsive RED acceptance remains
+required before the listed assertion or class literal may change.
+
 ## Verification
 
 - A durable test-only RED commit precedes every source change and fails

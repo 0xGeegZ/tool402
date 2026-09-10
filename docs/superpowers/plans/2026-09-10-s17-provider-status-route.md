@@ -54,3 +54,18 @@ Run focused S17 and navigation tests, then the full Web suite/typecheck/build,
 root quality, queue/reference/whitespace/local guard, and browser checks with
 the Convex site URL absent. Review the diff for the declared surface only, then
 obtain independent task and two fresh module reviews before acceptance.
+
+## Responsive correction sequence
+
+The original S17 browser check discovered that the fifth `Provider` entry makes
+the existing shared navigation list overflow at 390px. Before any source change,
+amend only the existing `workspace-shell.test.mjs` navigation assertion to
+require the exact `flex flex-wrap items-center gap-1 text-sm font-medium`
+literal while preserving its exact five-link list and rejecting an overflow mask
+or minimum-width escape. After fresh independent RED acceptance, insert only
+the bare `flex-wrap` token after `flex` in the existing `local-navigation.tsx`
+list literal. Do not add, remove, reorder, or condition any other token or
+attribute; do not touch the root layout, global CSS, landmarks, focus seams,
+link labels/order, runtime behavior, or external boundaries. Re-run the
+unconfigured `/provider` browser check at 390px and obtain fresh final reviews
+before acceptance.

@@ -659,13 +659,24 @@ the future Web paths
 `apps/web/tests/provider-status.test.mjs`, and
 `apps/web/tests/offerings-api.test.mjs`. M02-T020, M11-T020, M29-T010,
 M41-T010, S16-T010, and S11-T010 are accepted. The root integration reservation
-permits only the one `{ href: "/provider", label: "Provider" }` navigation
+permits the one `{ href: "/provider", label: "Provider" }` navigation
 entry and its exact-list assertion amendments in
 `apps/web/src/components/discovery/local-navigation.tsx`,
 `apps/web/tests/workspace-shell.test.mjs`,
 `apps/web/tests/landing-explore.test.mjs`, and
 `apps/web/tests/guided-demo-route.test.mjs`; the guided-demo amendment preserves
-its nine steps, route links, and every non-navigation assertion.
+its nine steps, route links, and every non-navigation assertion. The same-card
+responsive amendment additionally reserves only the existing navigation-list
+class tokens and the existing workspace-shell navigation assertion: the test
+must preserve the exact five-link list and require exactly `flex flex-wrap
+items-center gap-1 text-sm font-medium` without an overflow mask or
+minimum-width escape, and the source may insert only the bare `flex-wrap` token
+after `flex` in its existing literal. No other class token or attribute may be
+added, removed, reordered, or made conditional. `layout.tsx`, global CSS, all
+other navigation assertions, and every semantic/runtime boundary remain outside
+this reservation. The controls-only review at
+`docs/work-queue/evidence/S17-T010-responsive-scope-review.md` is clear; it
+authorizes no test or source change before fresh responsive RED acceptance.
 `apps/web/tests/shell-accessibility.test.mjs` is not amendable. The independent
 RED review recorded at `docs/work-queue/evidence/S17-T010-red-review.md` is
 clear, so only the five declared source paths and the root-reserved `/provider`
