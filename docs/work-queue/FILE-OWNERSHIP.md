@@ -965,3 +965,19 @@ layout/navigation/CSS, child route/island, API/Agent, Provider/Demo, asset,
 configuration, package, README, submission, deployment, and video paths remain
 prohibited. Independent task and module review remain required before
 acceptance.
+
+S28-T010 is a root-owned truth-first POLISH intake comprising its card,
+`docs/ui/UI-S28.md`, the local UI ledger, decision, state, catalog, this
+ownership record, reviews, commits, and pushes. Its proposed source/test set
+is exactly `apps/web/src/app/explore/riskscan/tool-loop/page.tsx`,
+`apps/web/src/components/riskscan/tool-loop/riskscan-tool-loop.tsx`,
+`apps/web/src/components/demo/guided-demo-steps.tsx`,
+`apps/web/tests/riskscan-tool-loop.test.mjs`, and
+`apps/web/tests/guided-demo-route.test.mjs`. It may change only the full
+ToolLoop page/form composition and the existing Guided Demo Dashboard-step
+wording. The current fields, declarations, defaults, submit lock, Agent
+composition, and closed outcome mapping remain fixed. Every other route,
+source, test, state module, Agent/API/Core/Backend, global layout/navigation/
+CSS, asset, configuration, wallet/provider, payment, transaction, deployment,
+and live path remains prohibited until a separate accepted scope says
+otherwise.
