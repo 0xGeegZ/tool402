@@ -36,10 +36,12 @@ provider, authority row, transaction, deployment, or live action.
   `verifyAtsCandidateReceipt` returns `NOT_CONFIGURED` for every operation
   kind other than `HEDERA_FUNDING` and is never scheduled; and
   `ATS_CONTROL_LIST` / `ATS_ISSUE` exist only as payload vocabulary.
-- The root's v2 packet records the same facts, declares the earlier draft
-  unusable as a GO, scopes Phase A to one enabled `ATS_CREATE` manifest
-  record under a new M48-T010, and names three successors before a live
-  Stage B decision may be requested.
+- The root's v2 packet, as reconciled at `d6341ce`, records the same facts,
+  declares the earlier draft unusable as a GO, scopes Phase A to one enabled
+  `ATS_CREATE` manifest record under a new M48-T010, and requires only the
+  browser/provider transaction-execution boundary and the rehearsal commit
+  with a named host or runtime proof before a live Stage B decision may be
+  requested. Positive `ATS_CREATE` receipt verification is post-Stage-B work.
 - B03-T020's GREEN candidate is merged as `b81b039`, so HI-008 step 3 is
   complete and step 4 (the three delivered lanes) is next in the root's
   order.
@@ -47,15 +49,21 @@ provider, authority row, transaction, deployment, or live action.
 ## Human acceptance
 
 At `2026-09-10T19:15:51Z`, through the operator's delegated session and with
-the packet presented in full, the human operator declared:
+the packet presented in full, the human operator accepted the packet as
+recorded at `d6341ce` and declared, in the packet's own words:
 
 > I approve HA-ATS-M33-ENABLEMENT-001 exactly as recorded in
 > `docs/work-queue/evidence/HA-ATS-STAGE-B-001-recommended-decision-v2.md`.
 > I approve only the Phase-A local source-only M33 ATS_CREATE enablement work
-> described here. I reject every live, provider, wallet, authority-row,
-> deployment, host, transaction, candidate, receipt, finality, funding, and
-> lifecycle action. HA-ATS-STAGE-B-001 remains PENDING and untouched. I reject
-> all implicit defaults and all operations not expressly listed.
+> described here. This supersedes only the earlier allocation of that reviewed
+> static source mapping to HA-ATS-STAGE-B-001, including only the named M42,
+> M47, and human-action sequencing clauses. I reject every live, provider,
+> wallet, authority-row, deployment, host, transaction, candidate, receipt
+> verifier, funding, and lifecycle action. HA-ATS-STAGE-B-001 remains PENDING
+> and is the only execution gate; its transaction/finality evidence requirement
+> remains in force. Positive ATS_CREATE verification and M40 readiness remain
+> separately reviewed post-Stage-B work. I reject all implicit defaults and all
+> operations not expressly listed.
 
 Decision owner: `0xGeegZ`. Decision timestamp: as above. Nothing is inferred
 beyond the packet's own text.
@@ -75,13 +83,14 @@ beyond the packet's own text.
    the stage-3 candidate as `{ transactionId (mirror form), evmAddress }`.
    Tests inject the browser proof and send nothing. Its ready state waits for
    M48-T010 acceptance.
-3. Rule whether a trimmed live Stage B may be requested once M48-T010 and
-   that successor are accepted: exactly one Factory `deployBond`, terminal
-   state a `SUBMITTED` attempt with the candidate attached and the offering at
-   `ASSET_PENDING`, no verification action invoked, no lifecycle operation,
-   the packet's other two successors reduced to a named local host and the
-   operator's redacted Mirror Node evidence. If the root declines, the demo
-   keeps the truthful pending gate and makes no Stage B claim.
+3. Rule that the live Stage B packet may be requested once M48-T010 and
+   that successor are accepted, with the rehearsal commit named and a local
+   host accepted as the runtime proof, scoped to exactly one Factory
+   `deployBond`, a terminal `SUBMITTED` attempt with the candidate attached
+   and the offering at `ASSET_PENDING`, redacted transaction and Mirror Node
+   finality evidence, no verification action invoked, and no lifecycle
+   operation. If the root declines, the demo keeps the truthful pending gate
+   and makes no Stage B claim.
 4. Position in the working order is the root's call. The human's preference
    is after HI-008 step 3, now complete, and before its step 4, because the
    delivered lanes are polish and Stage B is the tokenization-track evidence.
