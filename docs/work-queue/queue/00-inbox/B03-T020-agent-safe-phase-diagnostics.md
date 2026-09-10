@@ -69,3 +69,24 @@ This is a source-only observability/preflight correction. It authorizes no
 payment, wallet, provider, payer/key access, account, funding, recipient or
 facilitator selection, transaction, deployment, finality claim, or submission.
 No agent runs the later non-payable preflight or any replacement attempt.
+
+## Human worktree lane request
+
+- Requested at `2026-09-10T14:30:00Z` by the human operator (repository
+  owner) through the operator's delegated session, under the explicit-request
+  rule of the [runtime worktree policy](../../WORKTREE-POLICY.md). The card's
+  tier, dependencies, declared paths, verification list, and boundary are
+  unchanged.
+- Worktree `.worktrees/b03-diagnostics`, branch `work/b03-diagnostics`. Implementer: the
+  operator's delegated session. Reviewer: the root's independent task review
+  and module review, unchanged.
+- The lane delivers, in this order on that branch: one test-only RED commit at
+  the declared test paths, failing only because the declared source does not
+  exist or the declared amendment has not been made; then the minimal GREEN
+  commits limited to the declared source paths.
+- The branch changes no queue state, ledger, catalog, ownership, STATE,
+  decision, human-action, evidence, spec, or manifest file. The root keeps the
+  ready review, the activation decision, the independent reviews, the
+  integration decision, and every queue record. The branch is mirrored as a
+  pull request for human visibility only; nothing from it reaches `main`
+  outside the root's integration decision.
