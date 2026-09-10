@@ -84,11 +84,11 @@ export function LandingSections() {
           </div>
           <span className="text-sm font-medium text-muted-foreground">Current entry</span>
         </div>
-        <div className="max-w-md">
+        <div className="max-w-4xl">
           <div className="relative isolate overflow-hidden rounded-[calc(var(--radius)*2)] border border-border bg-card p-6 shadow-[0_1rem_2rem_color-mix(in_oklab,var(--foreground)_6%,transparent)] sm:p-8">
           <div aria-hidden="true" className="absolute inset-x-0 top-0 h-24 bg-[linear-gradient(115deg,#ede8ff_0%,#f9f4e9_48%,#dff7ed_100%)]" />
           <div aria-hidden="true" className="absolute right-8 top-5 size-14 rounded-full border-[0.65rem] border-brand-purple/20" />
-          <div className="relative flex flex-wrap items-start justify-between gap-4 pt-10">
+          <div className="relative grid gap-8 pt-10 sm:grid-cols-[minmax(0,1fr)_12rem] sm:items-start">
             <div className="space-y-2">
               <Badge className="bg-brand-purple text-primary-foreground">RiskScan</Badge>
               <h3 className="text-2xl font-semibold tracking-tight">RiskScan</h3>
@@ -96,7 +96,20 @@ export function LandingSections() {
                 A bounded assessment route for reviewing caller-supplied context before choosing the next local step.
               </p>
             </div>
-            <span aria-hidden="true" className="flex size-12 items-center justify-center rounded-2xl bg-secondary text-xl text-brand-purple">↗</span>
+            <dl className="grid gap-3 rounded-[var(--radius)] border border-border bg-card/80 p-4 text-sm shadow-sm">
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Catalogue</dt>
+                <dd className="mt-1 font-semibold">Current entry</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Explore</dt>
+                <dd className="mt-1 font-semibold">Detail route</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Try</dt>
+                <dd className="mt-1 font-semibold">Guided route</dd>
+              </div>
+            </dl>
           </div>
           <div className="relative mt-8 flex flex-col items-start gap-3 border-t border-border pt-6 sm:flex-row">
             <Link
