@@ -69,7 +69,7 @@ builds on are the [UI-S00 manifest](../../../ui/UI-S00.md) and the
 
 - A durable test-only RED commit precedes every source change and fails
   because the primitive does not exist, every page still hand-writes its
-  header, the navigation label is `Provider`, and `/provider` still renders
+  header, the navigation label is `For providers`, and `/provider` still renders
   bare tokens.
 - Focused tests prove the primitive's fixed anatomy, primary-then-outline
   action styling, three-action cap, and that every listed page and component

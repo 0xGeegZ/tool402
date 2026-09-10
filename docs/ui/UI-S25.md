@@ -119,7 +119,7 @@ tests, and all tests not named above are verification-only.
 | `/dashboard/riskscan/compatibility` | none | Native quote compatibility | Current sentence; no action | Compatibility island |
 | `/demo` | Guided demo | Take the guided tour | Current sentence; no action | Demo steps |
 | `/provider` | Tool operator | Campaign status | `Read the current local campaign records without advancing either one.`; deploy then Explore actions | Suspense, server reader, regions, footer |
-| RiskScan detail | Read-only detail | RiskScan | Current sentence; existing Try/ToolLoop actions | Back link, shield, route copy, body |
+| RiskScan detail | Read-only detail | RiskScan | Current sentence; `Try RiskScan` → `/explore/riskscan/try`, then `Explore RiskScan ToolLoop` → `/explore/riskscan/tool-loop` | Back link, shield, route copy, body |
 | Provider deploy wizard | RiskScan | Prepare a local offering | Current sentence; no action | Back link, badges, warning, immutable form state |
 
 The migrated component renders only this header anatomy. Existing complex
@@ -139,7 +139,8 @@ canvas tiles UI-S17 declined.
 
 - A durable test-only RED commit precedes source changes and fails because
   the primitive does not exist, every page still hand-writes its header, the
-  navigation label is `Provider`, and `/provider` still renders bare tokens.
+  navigation label is `For providers`, and `/provider` still renders bare
+  tokens.
 - `page-header.test.mjs` proves the primitive's fixed anatomy, the
   primary-then-outline action styling, the three-action cap, and that every
   listed page and component mounts `PageHeader` and contains no raw `h1`

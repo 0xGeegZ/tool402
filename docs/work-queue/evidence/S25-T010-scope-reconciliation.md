@@ -33,6 +33,17 @@ behaviour/state tests, and every test not explicitly listed by UI-S25.
 The `PageHeader` primitive must import only `Badge`, `buttonVariants`, and
 `next/link`; it has no client directive, state, effect, icon, or external
 link. Complex route content remains a sibling of the single migrated header.
+The RiskScan-detail actions remain fixed as `Try RiskScan` to
+`/explore/riskscan/try` and `Explore RiskScan ToolLoop` to
+`/explore/riskscan/tool-loop`.
+
+## Readiness follow-up
+
+The first independent readiness review at `3033493` required only two
+documentation corrections: the actual current navigation baseline is
+`For providers`, and the RiskScan-detail action labels/hrefs must be explicit.
+This follow-up records both corrections. It creates no source/test authority;
+the required next control remains a fresh independent readiness re-review.
 
 ## Required next control
 
