@@ -177,6 +177,16 @@ implementedTest("builds the stage 1 offering.create request through the accepted
   assert.deepEqual(request.canonicalPayloadBytes, core.canonicalOfferingCreatePayloadBytes(parsed));
 });
 
+implementedTest("preserves the Core rejection of blank and noncanonical offering resources before signing", () => {
+  for (const qualifyingResource of ["", " ", " riskscan", "riskscan ", "a".repeat(257)]) {
+    assert.throws(
+      () => build(0, { values: { ...values, qualifyingResource } }),
+      /qualifyingResource/u,
+      JSON.stringify(qualifyingResource),
+    );
+  }
+});
+
 implementedTest("builds the stage 2 external.prepare request from the frozen ATS_CREATE literal as the bytes the normalizer hashes", () => {
   const request = build(1, { states: [done, actionable, { kind: "unavailable" }, { kind: "unavailable" }] });
   const payload = payloadOf(request);

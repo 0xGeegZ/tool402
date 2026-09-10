@@ -103,6 +103,22 @@ implementedTest("uses the accepted Directory capability and identifies every inv
   });
 });
 
+implementedTest("keeps blank and noncanonical qualifying resources on step two with a field error", async () => {
+  const state = await import("../src/components/provider/deploy/provider-deploy-state.ts");
+  const { campaignFixture } = await import("../src/components/provider/deploy/campaign-fixture.ts");
+
+  for (const qualifyingResource of ["", " ", " riskscan", "riskscan ", "a".repeat(257)]) {
+    const errors = state.providerDeployFieldErrors({ ...campaignFixture, qualifyingResource }, 1);
+    assert.deepEqual(Object.keys(errors), ["qualifyingResource"], JSON.stringify(qualifyingResource));
+    assert.equal(typeof errors.qualifyingResource, "string");
+    assert.match(errors.qualifyingResource, /resource/i);
+    assert.ok(errors.qualifyingResource.trim().length > 0);
+  }
+  for (const qualifyingResource of ["riskscan-local-assessment", "a".repeat(256)]) {
+    assert.deepEqual(state.providerDeployFieldErrors({ ...campaignFixture, qualifyingResource }, 1), {});
+  }
+});
+
 implementedTest("maps only declared relay outcomes into the closed stage lifecycle", async () => {
   const state = await import("../src/components/provider/deploy/provider-deploy-state.ts");
 
@@ -259,12 +275,12 @@ implementedTest("enables only an actionable control the bridge reports and deriv
     state.providerDeployStageStates(atsCreateConfiguration, { ...connected, connected: false }),
     state.providerDeployStageStates(atsCreateConfiguration),
   );
-  assert.equal(state.stageFourUnavailableDetail, "No accepted clearing account or public x402 endpoint is recorded.");
+  assert.equal(state.stageFourUnavailableDetail, "No accepted clearing account is recorded.");
   assert.deepEqual(state.providerDeployStageStates(atsCreateConfiguration, connected), [
     { kind: "actionable" },
     { kind: "blocked" },
     { kind: "unavailable" },
-    { kind: "unavailable", detail: state.stageFourUnavailableDetail },
+    { kind: "unavailable", detail: "No accepted clearing account is recorded." },
   ]);
   assert.deepEqual(state.providerDeployStageStates(undefined, connected)[1], { kind: "unavailable" });
   assert.deepEqual(state.providerDeployStageStates(atsCreateConfiguration, { ...connected, results: [done] }).slice(0, 3), [
