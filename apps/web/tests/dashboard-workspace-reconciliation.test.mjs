@@ -44,9 +44,15 @@ test("maps dashboard journeys to the six committed local routes", async () => {
 });
 
 test("keeps the dashboard guest-only and free of unsupported state", async () => {
-  const workspace = (await readWorkspaceSources()).join("\n");
+  const [shell, overview, navigation] = await readWorkspaceSources();
+  const workspace = [shell, overview, navigation].join("\n");
 
   assert.match(workspace, /Guest workspace/);
+  assert.match(
+    overview,
+    /These guest routes stay local\. Nothing is sent until you explicitly submit a journey that supports it\./,
+  );
+  assert.doesNotMatch(overview, /local and descriptive/i);
   assert.doesNotMatch(
     workspace,
     /\b(?:account|wallet|provider|balance|payment|transaction|receipt|evidence|funding|live)\b/i,

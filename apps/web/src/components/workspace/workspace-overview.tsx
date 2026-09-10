@@ -18,7 +18,7 @@ export function WorkspaceOverview() {
         <CardHeader className="space-y-3">
           <CardTitle>What to expect</CardTitle>
           <CardDescription className="leading-6">
-            These guest routes are local and descriptive. Nothing starts until you choose a journey.
+            These guest routes stay local. Nothing is sent until you explicitly submit a journey that supports it.
           </CardDescription>
         </CardHeader>
       </Card>
