@@ -159,7 +159,9 @@ test("defines the two-entry static Explore catalog without interactive controls"
   assert.match(source, /New tools appear here once their journey is accepted\./);
   assert.match(source, /<RiskScanDiscoveryCard\s*\/>/);
   assert.match(source, /<EntityCheckDiscoveryCard\s*\/>/);
-  assert.match(source, /lg:grid-cols-\[19\.5rem_minmax\(0,1fr\)\]/);
+  assert.match(source, /<aside className="rounded-\[calc\(var\(--radius\)\*2\)\] border bg-card px-5 py-4 shadow-none">/);
+  assert.match(source, /lg:flex-row lg:items-center lg:justify-between/);
+  assert.match(source, /flex flex-wrap gap-x-5 gap-y-4 lg:justify-end/);
   assert.match(source, /\bmin-w-0\b/);
   assert.match(source, /\bsm:grid-cols-2\b/);
   assert.deepEqual(jsxViolations(sourceFile), []);
