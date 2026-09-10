@@ -72,6 +72,15 @@ Every source path, key/signer/provider boundary, request, retry, settlement,
 preflight execution, replacement attempt, deployment, and live action remains
 prohibited pending fresh independent RED acceptance.
 
+## RED review
+
+The independent review at
+[B03-T020 RED review](../../evidence/B03-T020-red-review.md) found the
+delegated test-only commit correctly scoped but insufficient to prove the
+non-payable preflight stop boundary. This card remains `20-active` only for the
+two already-authorized test paths while that RED contract is strengthened.
+Source remains prohibited.
+
 ## Verification
 
 - A durable test-only RED commit precedes every B03-T020 source change.
