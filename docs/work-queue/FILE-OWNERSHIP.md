@@ -1078,6 +1078,32 @@ precedence over the shared signing-island path: S26 may not activate or amend
 it until M49 is accepted and S26 is freshly rebased. S26 adds no current wallet
 permission, provider request, signature, transaction, or live authority.
 
+S38-T010 is an `00-inbox` CORE_P0 authentication card with no active source or
+test reservation. Its eight proposed new source paths are
+`apps/web/src/lib/dashboard-auth/dashboard-auth.ts`,
+`apps/web/src/lib/dashboard-auth/dashboard-auth-routes.ts`,
+`apps/web/src/app/api/auth/metamask/challenge/route.ts`,
+`apps/web/src/app/api/auth/metamask/verify/route.ts`,
+`apps/web/src/app/api/auth/logout/route.ts`,
+`apps/web/src/components/auth/metamask-dashboard-sign-in.tsx`,
+`apps/web/src/app/sign-in/page.tsx`, and
+`apps/web/src/app/dashboard/layout.tsx`; its two new focused tests are
+`apps/web/tests/dashboard-auth.test.mjs` and
+`apps/web/tests/dashboard-auth-routes.test.mjs`. The root-only integration
+reservation is limited to the `Guest dashboard` eyebrow in
+`apps/web/src/app/dashboard/page.tsx` and its two matching wording assertions
+in `apps/web/tests/dashboard-workspace-reconciliation.test.mjs`.
+
+S38 consumes UI-S15 and M50 without changing their wallet selection,
+chain-gate, passive session, command, relay, or provider-event paths. S26 is
+not a dependency: S38 must not amend `apps/web/src/app/layout.tsx`,
+`apps/web/src/components/wallet/wallet-connect.tsx`, or
+`apps/web/src/components/wallet/wallet-session.tsx`. Nested dashboard pages,
+workspace components, public APIs, packages, lockfile, configuration files,
+and every account/profile/balance/role/allowlist/payment/transaction/deployment
+path are excluded. No S38 source or test path is active until fresh independent
+readiness and test-only RED activation are recorded.
+
 S27-T010 is an `00-inbox` POLISH card with no active source reservation. Its
 proposed new test is `apps/web/tests/deploy-wizard-stepper.test.mjs`; its
 root-only integration reservations are the `StepProgress` function, caption,

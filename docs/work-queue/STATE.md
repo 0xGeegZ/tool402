@@ -26,6 +26,15 @@
   six declared Backend/Web GREEN paths are active, and no wallet,
   authority, signature, relay, Stage-B, transaction, candidate, or live action
   is authorized.
+- S38_METAMASK_DASHBOARD_AUTH_INTAKE: User-directed CORE_P0 intake. S38-T010
+  owns only the UI-S38 sealed MetaMask challenge/session proposal and has no
+  active source or test reservation. S15/M50/S24 are accepted, S26 remains an
+  independent inbox card, and the exact canonical Web baseline is green at
+  362/362. A fresh independent readiness review and a separate test-only RED
+  activation are required before any auth test or source path changes. No
+  origin/secret configuration, wallet account request, signature, provider
+  command, relay, transaction, payment, role, profile, balance, protected API,
+  deployment, or live action is authorized by this intake.
 
 - S36_PROVIDER_SIGNATURE_HANDOFF_INTAKE: User-directed local POLISH intake.
   S36-T010 may make the existing actionable signature request discoverable
