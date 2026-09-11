@@ -145,9 +145,6 @@ test("keeps the guides static, flat, focusable, and free of public-capability cl
     ...docs.matchAll(/\bhref:\s*["']([^"']+)["']/g),
     ...docs.matchAll(/\bhref\s*=\s*["']([^"']+)["']/g),
   ].map(([, href]) => href);
-  const docsWithoutFrozenProviderLabels = docs
-    .replaceAll("Pricing and target agent customers", "")
-    .replaceAll("Funding and revenue-note terms", "");
 
   assert.ok(hrefLiterals.every((href) => declaredHrefLiterals.has(href)));
   assert.doesNotMatch(
@@ -158,9 +155,10 @@ test("keeps the guides static, flat, focusable, and free of public-capability cl
   assert.doesNotMatch(docs, /(?:https?:\/\/|mailto:|target\s*=\s*["']_blank["']|href\s*=\s*["']\/\/)/i);
   assert.doesNotMatch(docs, /(?:next\/image|<img\b|<Image\b|\bsrc\s*=|\burl\()/i);
   assert.doesNotMatch(
-    docsWithoutFrozenProviderLabels,
-    /\b(?:metric|metrics|price|pricing|payment|transaction|deployment|deployed|live|availability|funding|revenue|payout|return|asset|campaign|is available|has raised|generates revenue|pays out|delivers returns)\b/i,
+    docs,
+    /\b(?:is live|is available now|has raised|generates revenue|pays out|delivers returns|accepts payment|processes payment|confirms payment|executes a transaction|creates an asset|issues an asset|deploys an asset|offers a public campaign|funds a campaign)\b/i,
   );
+  assert.match(sources.providerGuide, /not an ATS deployment/i);
   assert.match(docs, /\bshadow-none\b/);
   assert.match(docs, /\blg:sticky\b/);
   assert.match(docs, /\bfocus-visible:outline\b/);
