@@ -196,7 +196,7 @@ test("keeps the native compatibility page to one guest route, one client island,
   assert.match(island, /await runExclusive\(inFlight, async \(\) =>/);
   assert.match(island, /disabled=\{state\.kind === ["']evaluating["']\}/);
   assert.match(island, /nativeQuoteCompatibilityOutcomeMessage\(state\)/);
-  assert.match(island, /aria-live=["']polite["']/);
+  assert.match(island, /<StatusRegion\b/);
   assert.equal((island.match(/\bevaluateDiscoveredRiskScanNativeQuote\b/g) ?? []).length, 2);
 
   assert.match(navigation, /\{ href: "\/dashboard\/riskscan\/compatibility", label: "Native compatibility" \}/);

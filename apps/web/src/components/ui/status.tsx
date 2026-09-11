@@ -53,16 +53,25 @@ export function statusToneForOutcome(outcome: string): StatusTone {
   }
 }
 
+export function StatusRegion({ className, children, ...props }: React.ComponentPropsWithoutRef<"section">) {
+  return (
+    <section data-slot="status-region" aria-live="polite" className={cn("mt-6 empty:mt-0", className)} {...props}>
+      {children}
+    </section>
+  );
+}
+
 export type StatusProps = React.ComponentPropsWithoutRef<"p"> & {
   tone: StatusTone;
+  live?: boolean;
 };
 
-export function Status({ className, children, tone, ...props }: StatusProps) {
+export function Status({ className, children, tone, live = true, ...props }: StatusProps) {
   return (
     <p
       data-slot="status"
       data-tone={tone}
-      role={tone === "error" ? "alert" : "status"}
+      role={live ? (tone === "error" ? "alert" : "status") : undefined}
       className={cn("flex items-start gap-2 rounded-control border px-3 py-2 text-sm", toneClassNames[tone], className)}
       {...props}
     >

@@ -178,7 +178,7 @@ test("keeps the guest preflight to one static route, one local Core island, and 
   assert.match(island, /readRiskScanQuickPreflightInput\(new FormData\(event\.currentTarget\)\)/);
   assert.match(island, /evaluateRiskScanQuickPreflight\(/);
   assert.match(island, /riskScanQuickPreflightOutcomeMessage\(state\)/);
-  assert.match(island, /aria-live=["']polite["']/);
+  assert.match(island, /<StatusRegion\b/);
 
   assert.match(state, /from ["']@tool402\/core["']/);
   assert.equal((state.match(/\bassessRiskScanQuick\b/g) ?? []).length, 2);

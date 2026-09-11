@@ -9,6 +9,7 @@ import {
   type StageBEip1193Provider,
 } from "../../../lib/ats/stage-b-browser-provider-bridge.ts";
 import { Button } from "../../ui/button";
+import { StatusRegion } from "../../ui/status";
 
 type WalletSession = Readonly<{
   provider: StageBEip1193Provider;
@@ -78,8 +79,7 @@ export function AtsCreateAction({
       >
         Create revenue note in MetaMask
       </Button>
-      {feedback ? <p role="status" aria-live="polite" className="text-sm text-muted-foreground">{feedback}</p> : null}
-      {!feedback && sessionChanged.current ? <p role="status" aria-live="polite" className="text-sm text-muted-foreground">The wallet session changed. Reload before choosing any new action.</p> : null}
+      <StatusRegion className="mt-2 text-sm text-muted-foreground">{feedback ?? (sessionChanged.current ? "The wallet session changed. Reload before choosing any new action." : null)}</StatusRegion>
     </div>
   );
 }

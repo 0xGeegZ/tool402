@@ -5,7 +5,7 @@ import { useState, type FormEvent } from "react";
 import { Button } from "../../ui/button";
 import { CheckboxRow, Field, textAreaClass, textInputClass } from "../../ui/field";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
-import { Status, statusToneForOutcome } from "../../ui/status";
+import { Status, StatusRegion, statusToneForOutcome } from "../../ui/status";
 import {
   evaluateRiskScanQuickPreflight,
   readRiskScanQuickPreflightInput,
@@ -15,17 +15,19 @@ import {
 
 function RiskScanQuickPreflightOutcome({ state }: { state: RiskScanQuickPreflightViewState }) {
   const message = riskScanQuickPreflightOutcomeMessage(state);
-  if (message === null) return null;
 
   return (
-    <section aria-live="polite" className="space-y-4 text-sm text-muted-foreground">
-      <Status
-        tone={statusToneForOutcome(
-          state.kind === "assessment" ? state.assessment.disposition : state.kind,
-        )}
-      >
-        {message}
-      </Status>
+    <StatusRegion className="space-y-4 text-sm text-muted-foreground">
+      {message === null ? null : (
+        <Status
+          live={false}
+          tone={statusToneForOutcome(
+            state.kind === "assessment" ? state.assessment.disposition : state.kind,
+          )}
+        >
+          {message}
+        </Status>
+      )}
       {state.kind === "assessment" ? (
         <>
           <p className="font-medium text-foreground">{state.assessment.disposition}</p>
@@ -43,7 +45,7 @@ function RiskScanQuickPreflightOutcome({ state }: { state: RiskScanQuickPrefligh
           </div>
         </>
       ) : null}
-    </section>
+    </StatusRegion>
   );
 }
 
@@ -106,8 +108,8 @@ export function RiskScanQuickPreflight() {
             </CheckboxRow>
           </fieldset>
           <Button type="submit">Assess local preflight</Button>
-          <RiskScanQuickPreflightOutcome state={state} />
         </form>
+        <RiskScanQuickPreflightOutcome state={state} />
       </CardContent>
     </Card>
   );

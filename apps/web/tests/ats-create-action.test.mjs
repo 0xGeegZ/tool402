@@ -44,6 +44,7 @@ async function actionHarness() {
     "react/jsx-runtime": jsxRuntime,
     "../../../lib/ats/stage-b-browser-provider-bridge.ts": bridge,
     "../../ui/button": { Button: "Button" },
+    "../../ui/status": { StatusRegion: "StatusRegion" },
   };
   const { outputText } = typescript.transpileModule(await readFile(actionPath, "utf8"), {
     fileName: actionPath,
@@ -92,7 +93,8 @@ test("keeps Stage-B UI interaction local, manual, and free of persistence or aut
 
   assert.doesNotMatch(combined, /(?:localStorage|sessionStorage|indexedDB|document\.cookie|fetch\s*\(|XMLHttpRequest|WebSocket|EventSource|sendBeacon|setInterval|setTimeout|requestAnimationFrame|process\.env|import\.meta\.env)/u);
   assert.doesNotMatch(action, /(?:external\.attachCandidate|eth_signTypedData_v4|eth_sendTransaction)/u);
-  assert.match(action, /(?:role="status"|aria-live="polite")/u, "safe feedback must be accessible");
+  assert.match(action, /<StatusRegion\b[^>]*>\{feedback \?\?/u, "safe feedback must land in a live region that exists before the first click");
+  assert.doesNotMatch(action, /\{feedback \? <p/u);
 });
 
 test("does not recreate a page-session controller after a returned hash when the provider changes", async () => {

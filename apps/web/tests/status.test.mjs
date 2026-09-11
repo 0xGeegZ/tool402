@@ -49,6 +49,12 @@ test("defines the closed, labelled Status treatment without client or runtime be
   assert.match(source, /warning:\s*["']Attention["']/);
   assert.match(source, /error:\s*["']Error["']/);
   assert.match(source, /export function Status\(/);
+  assert.match(source, /export function StatusRegion\(/);
+  assert.match(source, /data-slot=["']status-region["']/);
+  assert.match(source, /<section\b(?=[^>]*\bdata-slot=["']status-region["'])(?=[^>]*\baria-live=["']polite["'])[^>]*>/);
+  assert.match(source, /empty:mt-0/);
+  assert.match(source, /live = true/);
+  assert.match(source, /role=\{live \? \(tone === ["']error["'] \? ["']alert["'] : ["']status["']\) : undefined\}/);
   assert.match(source, /data-slot=["']status["']/);
   assert.match(source, /data-tone=\{tone\}/);
   assert.match(source, /data-slot=["']status-label["']/);
@@ -142,16 +148,16 @@ test("declares the exact feedback tokens and routes only existing outcomes throu
     assert.match(source, /<Status\b[\s\S]*?<\/Status>/);
   }
 
-  for (const source of [request, nativeQuote, preflight]) {
-    assert.match(source, /<section\b(?=[^>]*\baria-live=["']polite["'])[^>]*>/);
+  for (const source of [request, toolLoop, nativeQuote, preflight, directory]) {
+    assert.match(source, /\bStatusRegion\b[^;]*from ["'][./]+\/ui\/status["']/);
+    assert.match(source, /<StatusRegion\b[^>]*>/);
+    assert.doesNotMatch(source, /<Status\b[^>]*\baria-live=/);
+    assert.equal((source.match(/<Status\b/g) ?? []).length, (source.match(/<Status\b[\s\S]{0,40}?\blive=\{false\}/g) ?? []).length, "every Status inside a StatusRegion must not be its own live node");
+    assert.doesNotMatch(source, /<section\b[^>]*\baria-live=/);
+    assert.doesNotMatch(source, /return message === null \? null/);
   }
 
-  for (const source of [toolLoop, directory]) {
-    assert.match(
-      source,
-      /<Status\b(?=[^>]*\btone=\{[^}]*statusToneForOutcome\()(?=[^>]*\baria-live=["']polite["'])[^>]*>/,
-    );
-  }
+  assert.match(request, /function RequestOutcome\([^)]*\) \{\s*return \(\s*<StatusRegion\b/);
 
   assert.match(request, /<h2 className=["']text-xl font-semibold["']>Quick endpoint response<\/h2>/);
 
