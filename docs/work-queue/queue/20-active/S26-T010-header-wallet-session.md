@@ -155,3 +155,13 @@ exclusions govern; this card does not restate them.
   provider, requests an account, switches a chain, signs, or grants authority
   during render. Connected and other non-connected states retain the existing
   shared-session behavior.
+
+## User-directed deploy-form copy correction
+
+- The repository owner found the inherited passive aside sentence `Connect
+  MetaMask to sign.` alongside the actionable disconnected-wallet section.
+  The existing reserved deploy-signing block and focused test may remove that
+  redundant sentence only. The actionable `provider-deploy-connect` section
+  remains the sole disconnected-wallet instruction and control; the signing
+  explanation card, wallet behavior, authority boundaries, and layout stay
+  unchanged.
