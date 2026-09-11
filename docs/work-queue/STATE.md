@@ -1,5 +1,14 @@
 # Runtime queue state
 
+- S42_DASHBOARD_CAMPAIGN_CONTINUATION_INTAKE: The repository owner explicitly
+  authorizes S42-T010 as a new local dashboard continuation card. It replaces
+  S24's historical guest-only dashboard restriction only for S42's later
+  declared read-only server card: the one current RiskScan projection may be
+  rendered only after exact canonical signer equality with the sealed dashboard
+  session. S42 begins in `00-inbox`; it has no active source/test reservation,
+  creates no generic listing, and grants no wallet, signature, command, relay,
+  transaction, deployment, or live authority.
+
 - M53_STAGE_B_FACTORY_RECEIPT_LOG_SELECTION_ACTIVATION: The confirmed first
   ATS_CREATE receipt has one valid fixed-Factory `BondDeployed` event alongside
   98 unrelated receipt logs. M53-T010 records the narrow local decoder
