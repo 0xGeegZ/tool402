@@ -77,21 +77,30 @@ function StepProgress({
 }) {
   return (
     <nav aria-label="Provider deploy progress" data-ui="provider-deploy-progress" className="space-y-3">
-      <ol className="grid grid-cols-5 gap-2 sm:gap-3">
+      <ol className="grid grid-cols-5 gap-1 sm:gap-3">
         {providerDeploySteps.map((step, index) => {
           const isCurrent = index === currentStep;
           const isComplete = index < currentStep;
           return (
-            <li key={step.label} className="min-w-0">
+            <li key={step.label} className="relative min-w-0">
+              {index < providerDeploySteps.length - 1 ? (
+                <span
+                  aria-hidden="true"
+                  data-ui="provider-deploy-step-connector"
+                  className={`absolute left-[calc(50%+1.25rem)] right-[calc(-50%+1.25rem)] top-5 h-0.5 ${isComplete ? "bg-primary" : "bg-secondary"}`}
+                />
+              ) : null}
               <button
                 type="button"
                 aria-label={`Return to step ${index + 1}: ${step.label}`}
                 aria-current={isCurrent ? "step" : undefined}
                 disabled={index >= currentStep}
                 onClick={() => onStepSelect(index)}
-                className={`flex w-full flex-col gap-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 ${isCurrent ? "text-foreground" : isComplete ? "text-foreground" : "text-muted-foreground"}`}
+                className={`relative z-10 flex w-full flex-col items-center gap-2 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 ${isCurrent ? "text-primary" : isComplete ? "text-foreground" : "text-muted-foreground"}`}
               >
-                <span aria-hidden="true" className={`h-1.5 w-full rounded-full ${isCurrent || isComplete ? "bg-primary" : "bg-secondary"}`} />
+                <span aria-hidden="true" className={`flex size-10 items-center justify-center rounded-full border-2 bg-card text-sm font-semibold ${isCurrent ? "border-primary bg-primary text-primary-foreground" : isComplete ? "border-primary text-primary" : "border-secondary text-muted-foreground"}`}>
+                  {index + 1}
+                </span>
                 <span className="text-[10px] font-medium leading-4 sm:text-[11px]">{step.label}</span>
               </button>
             </li>

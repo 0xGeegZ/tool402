@@ -25,7 +25,9 @@ test("defines the truthful Provider RiskScan preparation hierarchy", async () =>
   assert.match(wizard, /Deploy the RiskScan campaign/);
   assert.match(wizard, /Prepared \/ demo data fixture/);
   assert.match(wizard, /data-ui=["']provider-deploy-progress["']/);
-  assert.match(wizard, /h-1\.5/);
+  assert.match(wizard, /provider-deploy-step-connector/);
+  assert.match(wizard, /rounded-full border-2/);
+  assert.doesNotMatch(wizard, /h-1\.5 w-full rounded-full/);
   assert.match(wizard, /data-ui=["']provider-deploy-workspace["']/);
   assert.match(wizard, /data-ui=["']provider-deploy-form["']/);
   assert.doesNotMatch(wizard, /provider-deploy-sidebar/);
