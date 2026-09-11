@@ -73,6 +73,7 @@ test("offers only the specified current local CTA destinations", async () => {
     ["/demo", "Guided demo"],
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
+    ["/docs/providers", "Provider documentation"],
     ["/", "Home"],
     ["/dashboard", "Dashboard"],
   ]);
@@ -94,6 +95,7 @@ test("keeps the fuller footer limited to existing local routes", async () => {
     ["/demo", "Guided demo"],
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
+    ["/docs/providers", "Provider documentation"],
     ["/", "Home"],
     ["/dashboard", "Dashboard"],
   ]);
