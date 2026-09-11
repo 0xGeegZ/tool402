@@ -20,17 +20,20 @@ test("defines the truthful Provider RiskScan preparation hierarchy", async () =>
   const presentation = [page, wizard, stages, signing].join("\n");
 
   assert.match(page, /<LandingFooter\s*\/>/);
-  assert.match(wizard, /Link href=["']\/provider["']/);
-  assert.match(wizard, />\s*Back to provider workspace\s*</);
   assert.match(wizard, /data-ui=["']provider-deploy-surface["']/);
-  assert.match(wizard, /RiskScan/);
-  assert.match(wizard, /Local editable preview/);
+  assert.match(wizard, /data-ui=["']provider-deploy-identity["']/);
+  assert.match(wizard, /Deploy the RiskScan campaign/);
+  assert.match(wizard, /Prepared \/ demo data fixture/);
   assert.match(wizard, /data-ui=["']provider-deploy-progress["']/);
-  assert.match(wizard, /\bgrid-cols-5\b/);
+  assert.match(wizard, /h-1\.5/);
+  assert.match(wizard, /data-ui=["']provider-deploy-workspace["']/);
+  assert.match(wizard, /data-ui=["']provider-deploy-form["']/);
+  assert.match(wizard, /data-ui=["']provider-deploy-sidebar["']/);
+  assert.match(wizard, /Issuer wallet/);
+  assert.match(wizard, /What signing does/);
   assert.match(signing, /data-ui=["']provider-deploy-signing["']/);
 
   const wizardCards = wizard.match(/<Card\b[^>]*>/g) ?? [];
-  assert.equal(wizardCards.length, 1);
   for (const card of wizardCards) assert.match(card, /\bshadow-none\b/);
 
   const stageCards = stages.match(/<Card\b[^>]*>/g) ?? [];

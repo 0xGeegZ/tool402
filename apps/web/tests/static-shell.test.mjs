@@ -62,8 +62,7 @@ test("renders the static Tool402 shell and home composition", async () => {
   assert.match(layout, /import\s+["']\.\/globals\.css["'];/);
   assert.match(layout, /data-ui-shell=["']s00["']/);
   assert.match(layout, /<Logo\b/);
-  assert.match(layout, /href=["']\/provider\/deploy["']/);
-  assert.match(layout, />\s*Prepare a tool\s*</);
+  assert.doesNotMatch(layout, /href=["']\/provider\/deploy["']/);
   assert.match(layout, /<html\s+lang=["']en["']>/);
   assert.match(layout, /<body\b/);
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);

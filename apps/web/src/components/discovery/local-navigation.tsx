@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -10,6 +11,10 @@ const links = [
   { href: "/demo", label: "Guided demo" },
   { href: "/provider", label: "Providers" },
 ] as const;
+
+function isActiveLink(pathname: string, href: (typeof links)[number]["href"]) {
+  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+}
 
 type SheetContentProps = {
   readonly children: ReactNode;
@@ -33,6 +38,7 @@ function SheetContent({ children, side }: SheetContentProps) {
 }
 
 export function LocalNavigation() {
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const menuCloseRef = useRef<HTMLButtonElement>(null);
@@ -98,7 +104,7 @@ export function LocalNavigation() {
           <li key={link.href}>
             <Link
               href={link.href}
-              className="touch-target rounded-full px-3 py-1.5 text-[12px] font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className={`touch-target rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isActiveLink(pathname, link.href) ? "bg-secondary text-foreground" : "text-muted-foreground"}`}
             >
               {link.label}
             </Link>
@@ -160,22 +166,13 @@ export function LocalNavigation() {
                       <Link
                         href={link.href}
                         onClick={() => closeMenu()}
-                        className="flex min-h-11 items-center rounded-control px-3 text-base font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                        className={`flex min-h-11 items-center rounded-control px-3 text-base font-semibold transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isActiveLink(pathname, link.href) ? "bg-muted text-foreground" : "text-foreground"}`}
                       >
                         {link.label}
                       </Link>
                     </li>
                   ))}
                 </ul>
-                <div className="mt-auto border-t border-border pt-5">
-                  <Link
-                    href="/provider/deploy"
-                    onClick={() => closeMenu()}
-                    className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                  >
-                    Prepare a tool
-                  </Link>
-                </div>
               </SheetContent>
             </div>,
             document.body,

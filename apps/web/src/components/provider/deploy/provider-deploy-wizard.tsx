@@ -37,7 +37,7 @@ type WizardValues = {
   acknowledgement: boolean;
 };
 
-const inputClassName = "min-h-11 w-full rounded-[calc(var(--radius)*0.75)] border bg-background px-3 py-2 text-sm text-foreground shadow-none transition-colors placeholder:text-muted-foreground focus:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+const inputClassName = "min-h-11 w-full rounded-xl border border-border bg-[#fbf7ef] px-3 py-2 text-sm text-foreground shadow-none transition-colors placeholder:text-muted-foreground hover:border-foreground/20 focus:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const fieldLabelClassName = "space-y-2 text-sm font-medium text-foreground";
 const fieldHintClassName = "text-sm leading-6 text-muted-foreground";
 const fieldErrorClassName = "text-sm leading-6 text-destructive";
@@ -76,8 +76,8 @@ function StepProgress({
   onStepSelect: (step: number) => void;
 }) {
   return (
-    <nav aria-label="Provider deploy progress" data-ui="provider-deploy-progress">
-      <ol className="grid gap-2 sm:grid-cols-5 sm:gap-3">
+    <nav aria-label="Provider deploy progress" data-ui="provider-deploy-progress" className="space-y-3">
+      <ol className="grid grid-cols-5 gap-2 sm:gap-3">
         {providerDeploySteps.map((step, index) => {
           const isCurrent = index === currentStep;
           const isComplete = index < currentStep;
@@ -89,19 +89,44 @@ function StepProgress({
                 aria-current={isCurrent ? "step" : undefined}
                 disabled={index >= currentStep}
                 onClick={() => onStepSelect(index)}
-                title={step.label}
-                className={`flex w-full items-center gap-3 border-t-4 border-b-0 px-1 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 sm:grid sm:gap-1 sm:text-left ${isCurrent ? "border-primary text-foreground" : isComplete ? "border-primary/40 text-foreground" : "border-muted text-muted-foreground"}`}
+                className={`flex w-full flex-col gap-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 ${isCurrent ? "text-foreground" : isComplete ? "text-foreground" : "text-muted-foreground"}`}
               >
-                <span className="hidden text-[11px] font-medium sm:block">{index + 1}</span>
-                <span className="truncate text-xs font-medium">{step.label}</span>
+                <span aria-hidden="true" className={`h-1.5 w-full rounded-full ${isCurrent || isComplete ? "bg-primary" : "bg-secondary"}`} />
+                <span className="text-[10px] font-medium leading-4 sm:text-[11px]">{step.label}</span>
               </button>
             </li>
           );
         })}
       </ol>
+      <p className="text-xs font-medium text-muted-foreground">{stepCaption(currentStep)}</p>
     </nav>
   );
-} 
+}
+
+function ProviderDeploySidebar() {
+  return (
+    <aside data-ui="provider-deploy-sidebar" className="space-y-4">
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-none">
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-base font-semibold tracking-tight">Issuer wallet</h2>
+          <Badge variant="outline" className="rounded-full border-border bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+            Connect at review
+          </Badge>
+        </div>
+        <p className="mt-4 text-xs leading-5 text-muted-foreground">
+          The issuer wallet is only requested on the final review step, after the prepared details have been checked.
+        </p>
+      </section>
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-none">
+        <h2 className="text-base font-semibold tracking-tight">What signing does</h2>
+        <div className="mt-3 space-y-3 text-xs leading-5 text-muted-foreground">
+          <p>Every signature is tied to the bounded local command and the exact prepared fields shown in this wizard.</p>
+          <p>Nothing is created, funded, or published until the named signature and receipt exist.</p>
+        </div>
+      </section>
+    </aside>
+  );
+}
 
 function Field({
   label,
@@ -360,36 +385,58 @@ export function ProviderDeployWizard() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-5 pb-10 sm:px-6 sm:pb-14" data-ui="provider-deploy-surface">
-      <Card className="overflow-hidden rounded-[calc(var(--radius)*1.25)] border shadow-sm">
-        <CardHeader className="space-y-6 border-b bg-card px-7 py-7 sm:px-8 sm:py-8">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex flex-col gap-3">
-              <p className="text-sm font-medium uppercase tracking-[0.24em] text-muted-foreground">Step {currentStep + 1} of {providerDeploySteps.length} · {currentDefinition?.label}</p>
-              <CardTitle className="text-3xl tracking-tight sm:text-4xl">{currentDefinition?.label}</CardTitle>
-              <CardDescription className="text-base">Complete this local preview, then review the next bounded step.</CardDescription>
-            </div>
-            <Badge variant="outline" className="shrink-0 rounded-full px-3 py-1 text-sm">{currentStep + 1} / {providerDeploySteps.length}</Badge>
-          </div>
-          <StepProgress currentStep={currentStep} onStepSelect={returnToStep} />
-        </CardHeader>
-        <form onSubmit={onSubmit}>
-          <CardContent className="px-7 py-8 sm:px-8 sm:py-9">
-            {renderCurrentStep()}
-            {validationMessage ? <p aria-live="polite" className="mt-6 rounded-[calc(var(--radius)*0.75)] border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
-          </CardContent>
-          <CardFooter className="flex flex-col-reverse gap-3 border-t px-7 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-            <Button type="button" variant="ghost" className="justify-start px-2 text-base" disabled={!canGoBack(currentStep)} onClick={() => returnToStep(Math.max(0, currentStep - 1))}>
-              Back
-            </Button>
-            {currentStep < providerDeploySteps.length - 1 ? (
-              <Button type="submit" className="h-12 rounded-xl px-5 text-base" disabled={!canAdvance(currentStep, values)}>
-                Continue to {providerDeploySteps[currentStep + 1]?.label}
-              </Button>
-            ) : <Badge variant="outline">Review complete locally</Badge>}
-          </CardFooter>
-        </form>
-      </Card>
+    <main className="mx-auto max-w-5xl px-1 pb-10 sm:px-2 sm:pb-14" data-ui="provider-deploy-surface">
+      <header data-ui="provider-deploy-identity" className="max-w-3xl">
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline" className="rounded-full border-warning/40 bg-warning/10 px-2 py-0.5 text-[10px] font-medium text-warning-foreground">
+            Prepared / demo data fixture
+          </Badge>
+          <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-foreground">
+            Hedera testnet · chain 296
+          </Badge>
+          <Badge variant="outline" className="rounded-full border-border bg-secondary px-2 py-0.5 text-[10px] font-medium text-foreground">
+            Terms v1 · fixed
+          </Badge>
+        </div>
+        <h1 className="mt-4 text-3xl font-bold tracking-[-0.04em] text-foreground sm:text-4xl">Deploy the RiskScan campaign</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+          Review every field of the prepared offering, then authorize each step with your issuer wallet. Nothing is created, funded, or published until the named signature and receipt exist.
+        </p>
+      </header>
+
+      <div className="mt-7">
+        <StepProgress currentStep={currentStep} onStepSelect={returnToStep} />
+      </div>
+
+      <div data-ui="provider-deploy-workspace" className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1.62fr)_minmax(17rem,0.9fr)] lg:items-start">
+        <section data-ui="provider-deploy-form">
+          <Card className="overflow-hidden rounded-2xl border border-border bg-card shadow-none">
+            <CardHeader className="space-y-1 px-5 pb-2 pt-5 sm:px-6 sm:pt-6">
+              <CardTitle className="text-xl tracking-tight sm:text-2xl">{currentDefinition?.label}</CardTitle>
+              <CardDescription className="text-xs leading-5">
+                Complete the prepared fields for this step. Every value remains editable until review.
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={onSubmit}>
+              <CardContent className="px-5 py-5 sm:px-6 sm:py-6">
+                {renderCurrentStep()}
+                {validationMessage ? <p aria-live="polite" className="mt-6 rounded-xl border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
+              </CardContent>
+              <CardFooter className="flex flex-col-reverse gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                <Button type="button" variant="ghost" className="justify-start px-2 text-sm" disabled={!canGoBack(currentStep)} onClick={() => returnToStep(Math.max(0, currentStep - 1))}>
+                  Back
+                </Button>
+                {currentStep < providerDeploySteps.length - 1 ? (
+                  <Button type="submit" className="h-10 rounded-xl px-4 text-sm" disabled={!canAdvance(currentStep, values)}>
+                    Continue
+                  </Button>
+                ) : <Badge variant="outline">Review complete locally</Badge>}
+              </CardFooter>
+            </form>
+          </Card>
+        </section>
+        <ProviderDeploySidebar />
+      </div>
     </main>
   );
 }
