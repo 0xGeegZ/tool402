@@ -40,6 +40,11 @@ Candidate paths after readiness are exactly:
 - `apps/web/tests/provider-campaign-resume.test.mjs` (new); and
 - `apps/web/tests/deploy-stage-signing.test.mjs` (wiring amendment only).
 
+The existing HTTP adapter is a required continuation seam for this projection.
+Its correction is separately limited to durable RED in
+`packages/backend/tests/command-dispatch.test.mjs`; its source remains
+prohibited until this RED contract is accepted.
+
 ## Contract
 
 - The public offering projection may include `atsAttemptPublicId` only for a
@@ -57,6 +62,9 @@ Candidate paths after readiness are exactly:
 - A resumed Stage 2 does not authorize Stage B. `HA-ATS-STAGE-B-001` remains
   the separate human gate for any `eth_sendTransaction`, receipt/Mirror
   observation, candidate, or attachment.
+- The existing public HTTP adapter must preserve the validated optional
+  `atsAttemptPublicId` unchanged; it must reject malformed attempt references
+  and expose no internal ID or authority field.
 
 ## Candidate-ready requirements
 
