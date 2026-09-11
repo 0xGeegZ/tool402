@@ -72,8 +72,9 @@ test("renders labeled navigation between the committed local routes", async () =
   assert.match(navigation, /\{ href: "\/docs", label: "Docs" \}/);
   assert.match(navigation, /\{ href: "\/demo", label: "Guided demo" \}/);
   assert.match(navigation, /\{ href: "\/provider", label: "Campaign" \}/);
+  assert.match(navigation, /\{ href: "\/dashboard", label: "Dashboard" \}/);
   assert.match(navigation, /<Link\s+href=\{link\.href\}/);
-  assert.doesNotMatch(navigation, /\{ href: "(?!\/explore"|\/docs"|\/demo"|\/provider")[^"]+/);
+  assert.doesNotMatch(navigation, /\{ href: "(?!\/explore"|\/docs"|\/demo"|\/provider"|\/dashboard")[^"]+/);
   assert.match(navigation, /["']use client["']/);
   assert.match(navigation, /aria-label="Open menu"/);
   assert.match(navigation, /<SheetContent side="right"/);
