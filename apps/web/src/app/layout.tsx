@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import "./globals.css";
+import { DashboardNavigation } from "../components/auth/dashboard-navigation";
 import { DemoTourBar } from "../components/demo/demo-tour-bar";
 import { LocalNavigation } from "../components/discovery/local-navigation";
 import { Logo } from "../components/tool402/logo";
@@ -43,7 +44,9 @@ export default function RootLayout({
                 <Logo />
               </Link>
               <div className="flex items-center justify-end gap-2">
-                <LocalNavigation />
+                <Suspense fallback={<LocalNavigation />}>
+                  <DashboardNavigation />
+                </Suspense>
                 <Link href="/provider/deploy" className="hidden min-h-9 touch-target items-center rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:inline-flex">
                   Prepare a tool
                 </Link>

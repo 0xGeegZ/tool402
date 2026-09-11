@@ -7,14 +7,18 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-const links = [
+const publicLinks = [
   { href: "/explore", label: "Explore tools" },
   { href: "/docs", label: "Docs" },
   { href: "/demo", label: "Guided demo" },
   { href: "/provider", label: "Campaign" },
 ] as const;
 
-function isActiveLink(pathname: string, href: (typeof links)[number]["href"]) {
+const dashboardLink = { href: "/dashboard", label: "Dashboard" } as const;
+
+type NavigationLink = (typeof publicLinks)[number] | typeof dashboardLink;
+
+function isActiveLink(pathname: string, href: NavigationLink["href"]) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -39,11 +43,14 @@ function SheetContent({ children, side }: SheetContentProps) {
   );
 }
 
-export function LocalNavigation() {
+export function LocalNavigation({ showDashboard = false }: Readonly<{ showDashboard?: boolean }>) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const menuCloseRef = useRef<HTMLButtonElement>(null);
+  const links: readonly NavigationLink[] = showDashboard
+    ? [...publicLinks, dashboardLink]
+    : publicLinks;
 
   function closeMenu({ restoreFocus = false }: { restoreFocus?: boolean } = {}) {
     setMenuOpen(false);

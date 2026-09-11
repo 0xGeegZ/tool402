@@ -6,8 +6,11 @@ import { fileURLToPath } from "node:url";
 
 const coreUrl = new URL("../src/lib/dashboard-auth/dashboard-auth.ts", import.meta.url);
 const clientUrl = new URL("../src/components/auth/metamask-dashboard-sign-in.tsx", import.meta.url);
+const dashboardNavigationUrl = new URL("../src/components/auth/dashboard-navigation.tsx", import.meta.url);
 const signInUrl = new URL("../src/app/sign-in/page.tsx", import.meta.url);
 const dashboardLayoutUrl = new URL("../src/app/dashboard/layout.tsx", import.meta.url);
+const rootLayoutUrl = new URL("../src/app/layout.tsx", import.meta.url);
+const localNavigationUrl = new URL("../src/components/discovery/local-navigation.tsx", import.meta.url);
 const allS38Sources = [
   coreUrl,
   new URL("../src/lib/dashboard-auth/dashboard-auth-routes.ts", import.meta.url),
@@ -20,6 +23,7 @@ const allS38Sources = [
 ];
 const coreTest = existsSync(fileURLToPath(coreUrl)) ? test : test.skip;
 const clientTest = existsSync(fileURLToPath(clientUrl)) ? test : test.skip;
+const dashboardNavigationTest = existsSync(fileURLToPath(dashboardNavigationUrl)) ? test : test.skip;
 const signInTest = existsSync(fileURLToPath(signInUrl)) ? test : test.skip;
 const dashboardLayoutTest = existsSync(fileURLToPath(dashboardLayoutUrl)) ? test : test.skip;
 const allS38AbsentTest = allS38Sources.every((url) => !existsSync(fileURLToPath(url))) ? test : test.skip;
@@ -344,6 +348,35 @@ test("declares every Task 5 sign-in and dashboard-gate source module", () => {
   for (const url of [clientUrl, signInUrl, dashboardLayoutUrl]) {
     assert.equal(existsSync(fileURLToPath(url)), true, `missing Task 5 module: ${fileURLToPath(url)}`);
   }
+});
+
+test("declares the owner-authorized server dashboard-navigation boundary", () => {
+  assert.equal(existsSync(fileURLToPath(dashboardNavigationUrl)), true, `missing Task 5b module: ${fileURLToPath(dashboardNavigationUrl)}`);
+});
+
+dashboardNavigationTest("shows Dashboard only after server-side session validation and keeps the root fallback public", async () => {
+  const [dashboardNavigation, rootLayout, localNavigation] = await Promise.all([
+    readFile(dashboardNavigationUrl, "utf8"),
+    readFile(rootLayoutUrl, "utf8"),
+    readFile(localNavigationUrl, "utf8"),
+  ]);
+
+  assert.match(dashboardNavigation, /\bcookies\(\)/u);
+  assert.match(dashboardNavigation, /\breadDashboardSession\b/u);
+  assert.match(dashboardNavigation, /\bLocalNavigation\b/u);
+  assert.match(dashboardNavigation, /showDashboard\s*=\s*\{\s*session\s*!==\s*null\s*\}/u);
+  assert.doesNotMatch(dashboardNavigation, /\b(?:WalletIsland|useWalletSession|wallet-connect|wallet-session|address)\b/u);
+
+  assert.match(rootLayout, /\bDashboardNavigation\b/u);
+  assert.match(rootLayout, /<Suspense\s+fallback=\{\s*<LocalNavigation\s*\/>\s*\}>\s*<DashboardNavigation\s*\/>\s*<\/Suspense>/u);
+  assert.doesNotMatch(rootLayout, /\bcookies\(\)/u);
+
+  assert.match(localNavigation, /showDashboard\s*=\s*false/u);
+  assert.match(localNavigation, /showDashboard\s*\?/u);
+  assert.match(localNavigation, /href:\s*["']\/dashboard["']/u);
+  assert.match(localNavigation, /label:\s*["']Dashboard["']/u);
+  assert.match(localNavigation, /links\.map\(/gu);
+  assert.equal((localNavigation.match(/links\.map\(/gu) ?? []).length, 2, "desktop and mobile menus must share the same authenticated link list");
 });
 
 clientTest("keeps sign-in limited to the accepted local authentication boundary", async () => {
