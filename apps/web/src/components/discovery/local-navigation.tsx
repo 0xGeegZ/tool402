@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 const links = [
   { href: "/explore", label: "Explore tools" },
   { href: "/#how-it-works", label: "How it works" },
+  { href: "/docs", label: "Docs" },
   { href: "/demo", label: "Guided demo" },
   { href: "/provider", label: "Campaign" },
 ] as const;

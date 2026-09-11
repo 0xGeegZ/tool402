@@ -2,6 +2,61 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
+S34-T010 is accepted. Its five RED tests and eight Green source paths are
+released; D-S34-010-005 records the static public documentation acceptance.
+All API/Agent/Core/Backend,
+configuration, data, wallet, provider, payment, command, transaction,
+deployment, and live paths remain excluded.
+
+S35-T010 is a root-owned documentation-expansion intake. It owns only its
+card, specification, UI manifest, plan, catalog, state, ledger, decisions,
+and future evidence records until fresh independent readiness. Candidate Web
+paths are `apps/web/src/app/docs/api/page.tsx`,
+`apps/web/src/app/docs/faq/page.tsx`,
+`apps/web/src/components/docs/api-reference.tsx`,
+`apps/web/src/components/docs/documentation-faq.tsx`,
+`apps/web/src/components/docs/documentation-home.tsx`,
+`apps/web/src/components/landing/landing-footer.tsx`,
+`apps/web/tests/documentation-expansion.test.mjs`, and
+`apps/web/tests/public-documentation.test.mjs`. No source or test path is
+reserved or authorized before separate activation; all runtime, data, API,
+MCP, wallet, provider, payment, command, transaction, deployment, and live
+paths remain excluded.
+
+Independent readiness accepts S35-T010 at 10-ready under D-S35-010-002. Its
+candidate paths remain unreserved: only a later fresh activation may reserve
+the two declared test paths for durable RED.
+
+D-S35-010-003 activates S35-T010 and reserves only
+`apps/web/tests/documentation-expansion.test.mjs` and
+`apps/web/tests/public-documentation.test.mjs` for durable RED. Every S35
+source path remains prohibited until independent RED acceptance; the existing
+Docs source, footer, and every runtime/product path remain frozen.
+
+D-S35-010-004 freezes both S35 test paths and reserves only
+`apps/web/src/app/docs/api/page.tsx`,
+`apps/web/src/app/docs/faq/page.tsx`,
+`apps/web/src/components/docs/api-reference.tsx`,
+`apps/web/src/components/docs/documentation-faq.tsx`,
+`apps/web/src/components/docs/documentation-home.tsx`, and
+`apps/web/src/components/landing/landing-footer.tsx` for minimal GREEN. Every
+other source/test path, route behavior, API/Agent/Core/Backend, configuration,
+MCP, wallet/provider/payment, command, transaction, deployment, and
+live-capability path remains prohibited.
+
+D-S35-010-005 records `apps/web/tests/product-landing.test.mjs` only as a
+candidate for an exact footer-link expectation correction. It is unreserved
+and prohibited pending fresh independent scope acceptance; all source and
+other test paths remain as D-S35-010-004 declares.
+
+D-S35-010-006 reserves only `apps/web/tests/product-landing.test.mjs` for its
+two exact Docs-link expected-array additions and direct API-endpoint denial
+refinement. All source and other test paths remain frozen.
+
+S35-T010 is accepted. D-S35-010-007 releases its two Docs routes, two Docs
+components, Docs home, footer, and all S35 test reservations. The completed
+surface remains static and local; all runtime/product paths remain excluded.
+
 M00-T070 reserves its card, qualification matrix, STATE.md, HUMAN-ACTIONS.md, DECISIONS.md, TASK-CATALOG.md, and AI_USAGE.md to the root integrator. M00-T080 reserves its card, STATE.md, FILE-OWNERSHIP.md, TASK-CATALOG.md, DECISIONS.md, HUMAN-ACTIONS.md, AI_USAGE.md, ORCHESTRATOR-RUNBOOK.md, and WORKTREE-POLICY.md to the root integrator.
 
 P00-T010 reserves its card, docs/product/OVERVIEW.md, STATE.md, TASK-CATALOG.md, FILE-OWNERSHIP.md, DECISIONS.md, and AI_USAGE.md to the root integrator.

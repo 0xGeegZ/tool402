@@ -174,6 +174,68 @@
 - CURRENT_MODULE: S13 outcome-feedback treatment is accepted at source commit `ece66c2fd7b2278ed0f801ad1febd478d9ddc39f`; S15 wallet-island/relay is accepted at `506f038fffb87739cc5fd302a30033b5c56d36ee`; S16 provider deploy wizard is accepted at `ed46ae18a08c859d5f2c94722ab84453ef674835`; M38 offering command payloads and M40 durable offering/Directory admission are accepted at `60-done`. HA-COMMAND-AUTHORITY-002, HA-ATS-RETARGET-001, HA-ATS-RUNTIME-BINDING-001, HA-ISSUER-ACCOUNT-001, and HA-CAMPAIGN-CONVEX-001 are accepted only as bounded local authority or human evidence. B03 Agent payment remains locally green and awaits its separate human-owned testnet exercise.
 - M41_DELIVERY: accepted at `20983649632f4812d9ee045637eb183b3158cc38` as a local HTTP ingress, transport replay, atomic ATS_CREATE admission, and public-projection boundary only; it adds no configuration, key, publication, wallet, provider, SDK, transaction, deployment, or live authority.
 - CURRENT_TASK: S33-T010 (60-done) is the truth-first Explore catalogue visual reconciliation, including its accepted truthful-copy correction. It has no continuing source reservation. S22, S23, S24, S25, S28, S29, S30, S31, and S32 are accepted presentation slices at 60-done; their scopes grant no continuing source reservation. B03-T020, M44-T030, M46-T040, M47-T010, M48-T010, and M49-T010 are also accepted at 60-done. HA-ATS-STAGE-B-001 remains human-owned; no live capability is authorized by any record.
+- S34_PUBLIC_DOCUMENTATION_READY: Independent readiness at
+  `3f52a4941354321ed5d5dd57a0f44b93f72bce48` accepts the root-owned static
+  documentation candidate. D-S34-010-001/002, UI-S34, the S34 specification,
+  plan, catalog, and exact future-path declaration are committed; no S34
+  source or test reservation exists until fresh independent activation. The
+  documentation may describe only current local RiskScan and Provider
+  boundaries and must not create a payment, campaign, ATS, or live claim.
+- S34_PUBLIC_DOCUMENTATION_RED: Independent activation at
+  `6420f088ab2306e8aa8e34c2d67c38f3f221dfa1` reserves only the five exact
+  S34 test paths for durable RED. Every Docs source, shared presentation, and
+  product/runtime path remains prohibited pending a fresh independent RED
+  review.
+- S34_PUBLIC_DOCUMENTATION_GREEN: Independent RED acceptance at
+  `621e062a5e5e6d0bac7b5268cd74450786d82e27` freezes the five test paths and
+  authorizes only the three Docs pages, three Docs components, shared local
+  navigation, and footer for minimal static Green. Every runtime/product path
+  remains excluded pending a fresh independent Green review.
+- S34_PUBLIC_DOCUMENTATION_ACCEPTED: Independent GREEN/module/UI review at
+  `2cca71b26953c0b3019906bf3985368cee94add6` accepts S34-T010 at 60-done.
+  Its source/test reservations are released; the public Docs surface remains
+  static, local, and outside runtime/product authority.
+- S35_PUBLIC_DOCUMENTATION_EXPANSION_INTAKE: The user requested real API and
+  FAQ documentation plus a Docs footer column. S35-T010 records only a
+  static, truth-first candidate: `/docs/api` may describe the existing local
+  HTTP boundaries without claiming MCP, configuration, payment, or success;
+  `/docs/faq` may explain the current testnet and Provider boundaries. No
+  source or test path is authorized until independent readiness and a separate
+  RED activation are accepted.
+- S35_PUBLIC_DOCUMENTATION_EXPANSION_READY: Independent readiness at
+  `4c5770c8a5cefc9fa1a1c31cbe8fac7b9e9fd62d` is clear. S31/S34 are accepted,
+  all four future sources and the new test are absent, existing Docs home,
+  footer, and static test are present, the current Docs baseline passes 5/5,
+  and no active ownership collision exists. S35-T010 is 10-ready only; a
+  separate activation may reserve its two declared test paths for RED.
+- S35_PUBLIC_DOCUMENTATION_EXPANSION_RED: Independent activation at
+  `77a10dd1708887fc766c20709bf7137ec59f6ad6` is clear. S35-T010 is 20-active
+  only for durable RED in `documentation-expansion.test.mjs` and
+  `public-documentation.test.mjs`; every Docs source, footer source, and
+  runtime/product path remains prohibited pending an independent RED review.
+- S35_PUBLIC_DOCUMENTATION_EXPANSION_GREEN: Independent RED review at
+  `00b3a3423eddd5691d5a11da5bbf3cd931577e4a` is clear. Both S35 tests are
+  frozen; S35-T010 may amend only its two new static Docs routes, two new Docs
+  components, Docs home, and footer under D-S35-010-004. Every route behavior,
+  API/Agent/Core/Backend, configuration, MCP, wallet/provider/payment,
+  command, transaction, deployment, and live-capability path remains
+  prohibited.
+- S35_PUBLIC_DOCUMENTATION_FOOTER_TEST_INTAKE: The first complete Web suite
+  reveals two obsolete exhaustive-footer expectations in
+  `product-landing.test.mjs`: they omit the three authorized Docs links and
+  lexically reject the real `/docs/api` route. D-S35-010-005 records only a
+  candidate assertion correction; no source or test change is authorized until
+  a fresh independent scope review accepts the exact correction.
+- S35_PUBLIC_DOCUMENTATION_FOOTER_TEST_CORRECTION: Independent scope review at
+  `ad0cffd49b0c9e5fce66fc7c83fa419d9dc98fc2` is clear. D-S35-010-006 reserves
+  only `product-landing.test.mjs` for the two exact Docs-link array additions
+  and direct API-endpoint denial refinement; every source and other test path
+  remains fixed.
+- S35_PUBLIC_DOCUMENTATION_EXPANSION_ACCEPTED: Independent task/module/UI
+  review at `9be748891b25749782b8b3c52706ec7e9ce1ea5c` accepts S35-T010 at
+  60-done under D-S35-010-007. Its Docs source and test reservations are
+  released; the expanded Docs surface remains static, local, and outside
+  runtime/product authority.
 - S33_EXPLORE_CATALOGUE_INTAKE: UI-S33 and its card record one static visual reconciliation of /explore over exactly its page, catalogue, two existing cards, and focused tests. The selected PREP-UI-001 Explore composition is visual authority only. A fresh independent readiness review and separate RED activation are required before any test or source path changes; mock listings, search/filter state, prices, funding, metrics, data/API, wallet/provider/payment, transactions, deployment, and live claims remain prohibited.
 - S33_EXPLORE_CATALOGUE_READY: Independent review at dec98bb22fc8a3e2403a426fa5639130bb053cf4 is clear: the dependency/control records resolve, the five existing targets are disjoint and present, the new visual test is absent, and the static Explore baseline passes 1/1 under Node 22.21.1. S33-T010 is 10-ready only; a separate activation may authorize only its two focused RED test paths.
 - S33_EXPLORE_CATALOGUE_RED_ACTIVATION: Independent activation at c541039d6d7a0cc98cdc1ced8d3e9f4ff997db08 is clear. S33-T010 is 20-active only for apps/web/tests/explore-catalog.test.mjs and the new apps/web/tests/explore-visual-reconciliation.test.mjs. All page, catalogue, card, behavior, data, wallet, provider, payment, transaction, deployment, and live paths remain prohibited until an independent RED review accepts their minimal Green scope.

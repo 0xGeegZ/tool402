@@ -73,6 +73,10 @@ test("offers only the specified current local CTA destinations", async () => {
     ["/demo", "Guided demo"],
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
+    ["/docs/providers", "Provider documentation"],
+    ["/docs", "Documentation"],
+    ["/docs/api", "API reference"],
+    ["/docs/faq", "FAQ"],
     ["/", "Home"],
     ["/dashboard", "Dashboard"],
   ]);
@@ -94,13 +98,17 @@ test("keeps the fuller footer limited to existing local routes", async () => {
     ["/demo", "Guided demo"],
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
+    ["/docs/providers", "Provider documentation"],
+    ["/docs", "Documentation"],
+    ["/docs/api", "API reference"],
+    ["/docs/faq", "FAQ"],
     ["/", "Home"],
     ["/dashboard", "Dashboard"],
   ]);
   assert.match(footer, /aria-label="Dashboard links"/);
   assert.match(footer, /Hedera testnet prototype/);
   assert.doesNotMatch(footer, /new Date\s*\(/);
-  assert.doesNotMatch(footer, /(?:https?:\/\/|\/api\/)/i);
+  assert.doesNotMatch(footer, /https?:\/\/|href=["']\/api\//i);
 });
 
 test("keeps each repeated step heading subordinate to the how-it-works heading", async () => {
