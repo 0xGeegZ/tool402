@@ -97,6 +97,7 @@ const projectionValidator = v.object({
   advertisedStandardPriceTinybars: v.string(),
   canonicalSignerAddress: v.string(),
   atsAssetEvmAddress: v.optional(v.string()),
+  atsAttemptPublicId: v.optional(v.string()),
   acceptedAt: v.int64(),
   updatedAt: v.int64(),
 });
@@ -370,6 +371,10 @@ function readSafePreparedAtsCreateAttempt(input: unknown) {
   return Object.freeze({
     attemptId: opaqueId<"externalPrepareCommandAttempts">(record._id),
     subjectPublicId: record.subjectPublicId,
+    canonicalSignerAddress: record.canonicalSignerAddress,
+    principalPublicId: record.principalPublicId,
+    authorityVersion: record.authorityVersion,
+    idempotencyKey: record.idempotencyKey,
   });
 }
 
@@ -688,6 +693,23 @@ export const getPublicProjection = publicQuery({
     ) {
       return reject();
     }
+    let atsAttemptPublicId: string | undefined;
+    if (highest.state === "ASSET_PENDING") {
+      if (highest.atsAttemptId === undefined) {
+        return reject();
+      }
+      const attempt = readSafePreparedAtsCreateAttempt(await ctx.db.get(highest.atsAttemptId));
+      if (
+        attempt.attemptId !== highest.atsAttemptId
+        || attempt.subjectPublicId !== highest.subjectPublicId
+        || attempt.canonicalSignerAddress !== highest.canonicalSignerAddress
+        || attempt.principalPublicId !== highest.principalPublicId
+        || attempt.authorityVersion !== highest.authorityVersion
+      ) {
+        return reject();
+      }
+      atsAttemptPublicId = attempt.idempotencyKey;
+    }
     return {
       offeringPublicId: highest.offeringPublicId,
       version: highest.version,
@@ -701,6 +723,7 @@ export const getPublicProjection = publicQuery({
       ...(highest.atsAssetEvmAddress === undefined
         ? {}
         : { atsAssetEvmAddress: highest.atsAssetEvmAddress }),
+      ...(atsAttemptPublicId === undefined ? {} : { atsAttemptPublicId }),
       acceptedAt: highest.acceptedAt,
       updatedAt: highest.updatedAt,
     };
