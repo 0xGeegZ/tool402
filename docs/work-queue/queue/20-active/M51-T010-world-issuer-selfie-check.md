@@ -21,16 +21,16 @@ command. The local [M51 specification](../../../specs/m51-world-issuer-selfie-ch
 fixes the server-only configuration, proof request/verification boundary,
 short-lived cookie gate, current publication-only scope, UI, and demo evidence.
 
-## Active RED requirements
+## Active GREEN requirements
 
-- The card, specification, catalog, ownership, state, and activation decision
-  are committed before the RED contract.
-- Only the listed World and narrow established-test paths may change for RED;
-  all application and package source remains prohibited until a subsequent
-  independent RED-acceptance decision.
-- The RED contract must fail because the declared World source and integration
-  are absent, while preserving established command-relay and signing-island
-  behavior tests.
+- D-M51-010-002 accepts durable RED `676cf507fad6d7c3ed7e726b38c7851aaea81324`
+  and authorizes only the declared World source, package pin, submission
+  feedback, and matching tests.
+- The implementation must reject any non-staging/action-drift configuration,
+  bind the verified browser session to the current wallet, and keep stage four
+  unavailable until verification.
+- No World Sandbox proof, production action, KYC/identity claim, wallet
+  permission, transaction, deployment, or live authority is part of GREEN.
 
 ## Proposed paths
 
