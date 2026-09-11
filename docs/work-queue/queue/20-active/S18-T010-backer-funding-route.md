@@ -3,7 +3,7 @@
 ## State
 
 - Tier: PRIZE_OPTIONAL
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T020 accepted, M11-T020 accepted, M16-T010 accepted, M18-T010 accepted, M29-T010 accepted, S15-T010 (this batch), M40-T010 (this batch), M43-T010 (this batch)
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
@@ -176,3 +176,13 @@ is clear at canonical `e54ed962d7cb381208bf5006ffd26039aa20a1d6`.
 S18-T010 is ready only for a separate root activation of the two declared
 test paths. No source, wallet, signature, relay, payment, transaction, or live
 authority is active.
+
+## RED activation
+
+The independent [S18 activation review](../../evidence/S18-T010-activation-review.md)
+is clear at canonical `b5431a8cc85198ba2259e7478c36a50ff3ccd874`.
+Only `apps/web/tests/backing-state.test.mjs` and
+`apps/web/tests/backing-route.test.mjs` may change for a durable RED contract.
+The route, flow, state source, and every wallet, relay, payment, transaction,
+allocation, configuration, and live path remain prohibited pending independent
+RED acceptance.

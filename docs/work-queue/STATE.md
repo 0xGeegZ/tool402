@@ -194,6 +194,16 @@
   `apps/web/tests/backing-route.test.mjs` for durable RED. All source,
   configuration/environment, wallet/signature/relay, payment, transaction,
   allocation, deployment, and live paths remain prohibited.
+- S18_BACKER_FUNDING_RED_ACTIVATION: Independent activation at canonical
+  `b5431a8cc85198ba2259e7478c36a50ff3ccd874` is clear after the PR #56 merge.
+  S18-T010 is `20-active` only for durable RED in
+  `apps/web/tests/backing-state.test.mjs` and
+  `apps/web/tests/backing-route.test.mjs`; all route, flow, state,
+  configuration/environment, wallet/signature/relay, payment, transaction,
+  allocation, deployment, and live paths remain prohibited pending independent
+  RED acceptance. The current complete Web suite has eleven non-S18 baseline
+  assertion failures from #56; they are recorded as unrelated and do not
+  grant an S18 exception.
 - S34_PUBLIC_DOCUMENTATION_READY: Independent readiness at
   `3f52a4941354321ed5d5dd57a0f44b93f72bce48` accepts the root-owned static
   documentation candidate. D-S34-010-001/002, UI-S34, the S34 specification,

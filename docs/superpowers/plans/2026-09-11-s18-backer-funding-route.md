@@ -8,7 +8,7 @@
 
 **Tech Stack:** Next.js App Router, React, TypeScript, `@tool402/core`, viem, existing Tool402 WalletIsland/SignatureDialog/command relay, Node 22.21.1 test runner.
 
-**Spec:** `docs/ui/UI-S18.md` and `docs/work-queue/queue/10-ready/S18-T010-backer-funding-route.md`.
+**Spec:** `docs/ui/UI-S18.md` and `docs/work-queue/queue/20-active/S18-T010-backer-funding-route.md`.
 
 ## Global Constraints
 
