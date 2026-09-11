@@ -1200,3 +1200,16 @@ focused S29 visual test named above. This completed presentation-only slice
 grants no further reservation and no amendment to any existing S16/S21/M47/M44
 behavior test, state, fixture, configuration, wallet/signature, ATS, data,
 payment, transaction, deployment, or live path.
+
+S33-T010 is a root-owned 00-inbox presentation intake. Its candidate paths
+are exactly apps/web/src/app/explore/page.tsx,
+apps/web/src/components/discovery/explore-catalog.tsx,
+apps/web/src/components/discovery/riskscan-discovery-card.tsx,
+apps/web/src/components/discovery/entitycheck-discovery-card.tsx,
+apps/web/tests/explore-catalog.test.mjs, and one new
+apps/web/tests/explore-visual-reconciliation.test.mjs. S20/S23 accepted
+ownership is historical only and grants no continuing source reservation.
+No target is active until a fresh independent readiness review and separate
+RED activation. The Directory island, navigation, shared/global CSS, route
+behavior, API/data, client state, wallet/provider/payment, transaction,
+deployment, and every live boundary remain excluded.
