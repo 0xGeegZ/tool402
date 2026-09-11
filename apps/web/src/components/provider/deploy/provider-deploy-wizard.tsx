@@ -90,7 +90,7 @@ function StepProgress({
                 disabled={index >= currentStep}
                 onClick={() => onStepSelect(index)}
                 title={step.label}
-                className={`flex w-full items-center gap-3 border-t-4 border-b-0 px-1 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 sm:grid sm:gap-1 sm:text-left ${isCurrent ? "border-[var(--brand-purple)] text-foreground" : isComplete ? "border-[color-mix(in_oklab,var(--brand-purple)_45%,transparent)] text-foreground" : "border-muted text-muted-foreground"}`}
+                className={`flex w-full items-center gap-3 border-t-4 border-b-0 px-1 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 sm:grid sm:gap-1 sm:text-left ${isCurrent ? "border-primary text-foreground" : isComplete ? "border-primary/40 text-foreground" : "border-muted text-muted-foreground"}`}
               >
                 <span className="hidden text-[11px] font-medium sm:block">{index + 1}</span>
                 <span className="truncate text-xs font-medium">{step.label}</span>
