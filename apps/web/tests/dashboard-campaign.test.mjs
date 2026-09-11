@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const sourceUrl = new URL("../src/lib/dashboard-campaign.ts", import.meta.url);
 const sourcePath = fileURLToPath(sourceUrl);
+const componentUrl = new URL("../src/components/dashboard/dashboard-campaign.tsx", import.meta.url);
 const implementedTest = existsSync(sourcePath) ? test : test.skip;
 
 // This fails if the dashboard loses the ownership adapter that keeps another
@@ -52,4 +54,10 @@ implementedTest("fails closed when the session signer is malformed or the projec
   assert.equal(readDashboardCampaign(record, "0xC89f87052c3e080b4a9b021d4930055031ef378e"), null);
   assert.equal(readDashboardCampaign(null, record.canonicalSignerAddress), null);
   assert.equal(readDashboardCampaign({ outcome: "unavailable" }, record.canonicalSignerAddress), null);
+});
+
+implementedTest("uses the campaign ownership allowlist as the dashboard projection key", async () => {
+  const source = await readFile(componentUrl, "utf8");
+  assert.match(source, /import\s*\{\s*readDashboardCampaign\s*,\s*riskScanOfferingPublicId\s*\}/u);
+  assert.doesNotMatch(source, /const\s+riskScanOfferingPublicId\s*=/u);
 });
