@@ -1141,6 +1141,23 @@ Suspense; it may not read, mount, modify, or infer state from S26/UI-S15 wallet
 code. This narrowly supersedes the earlier S38 exclusion of the root header,
 not any other S26 reservation.
 
+S39-T010 is an `00-inbox` CORE_P0 follow-up with no active source or test
+reservation. S38 acceptance is an explicit activation gate while the card is
+still speculative. After that gate and its own independent readiness/activation
+cycle, it may reserve only the exact closed-path Core ingress envelope and
+focused Core test, Backend expected-path verifier and focused Backend test,
+capability-aware `commandAuthorities` schema/normalizer/admission seams, a
+dedicated HMAC-private Convex provisioning handler, the shared Web HMAC relay
+and its test, the server-only S38 verification handoff, and the narrowly
+necessary `/provider/deploy` route/command-bridge/signing-state paths for a
+server-derived personal sandbox subject. It must add matching focused
+Core/Backend/Web contracts. The shared `riskscan_revenue_note_demo` subject,
+ATS configuration and Stage-B modules, manual issuer authority, wallet session
+and header controls, packages, lockfiles, payment/transaction code, public
+APIs, and all unlisted paths remain excluded. S39's only capability is a
+durable `offering.create` result in `DRAFT`; it may not authorize any on-chain
+action.
+
 S27-T010 is an `00-inbox` POLISH card with no active source reservation. Its
 proposed new test is `apps/web/tests/deploy-wizard-stepper.test.mjs`; its
 root-only integration reservations are the `StepProgress` function, caption,

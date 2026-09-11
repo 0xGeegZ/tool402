@@ -26,6 +26,16 @@
   six declared Backend/Web GREEN paths are active, and no wallet,
   authority, signature, relay, Stage-B, transaction, candidate, or live action
   is authorized.
+- S39_SANDBOX_ISSUER_ONBOARDING_INTAKE: User-directed CORE_P0 follow-up to
+  S38. It is `00-inbox` and has no active source or test reservation. Its
+  fixed outcome is a deterministic wallet-isolated sandbox `ISSUER`, with one
+  personal subject and explicit `offering.create` capability, provisioned only
+  after a successful S38 signature and before the dashboard session is issued.
+  S39 cannot begin until S38 is accepted and a fresh independent readiness/
+  activation/RED cycle records exact paths. It grants no shared ATS subject,
+  ATS preparation, candidate attachment, directory publication, payment,
+  transaction, asset, deployment, or live authority.
+
 - S38_METAMASK_DASHBOARD_AUTH_INTAKE: User-directed CORE_P0 intake. S38-T010
   owns only the UI-S38 sealed MetaMask challenge/session proposal and has no
   active source or test reservation. S15/M50/S24 are accepted, S26 is an

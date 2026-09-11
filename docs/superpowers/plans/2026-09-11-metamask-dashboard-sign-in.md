@@ -19,6 +19,13 @@ existing `viem` 2.56.1, Node 22.21.1 injected-fake tests.
 
 **Spec:** `docs/specs/metamask-dashboard-sign-in.md`
 
+**Follow-up:** The user-directed sandbox authority that is created after a
+successful S38 signature is specified and planned separately in
+`docs/specs/s39-sandbox-issuer-onboarding.md` and
+`docs/superpowers/plans/2026-09-11-sandbox-issuer-onboarding.md`. It must not
+be folded into S38 source work: S39 starts only after S38 acceptance and gives
+the wallet only `offering.create` on its own `DRAFT` subject.
+
 ## Global Constraints
 
 - Before source work, the human creates `S38-T010` in `00-inbox` and the root
