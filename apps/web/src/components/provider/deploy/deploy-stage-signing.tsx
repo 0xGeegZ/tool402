@@ -9,9 +9,8 @@ import {
   type StageSignatureRequest,
 } from "../../../lib/wallet/command-bridge.ts";
 import { SignatureDialog, type SignatureResult } from "../../wallet/signature-dialog";
-import { WalletIsland, type WalletSession } from "../../wallet/wallet-connect";
-import { createStageBAtsCreateExecutionProjection } from "../../../lib/ats/stage-b-ats-create-execution-projection.ts";
 import { loadProviderCampaignResume } from "../../../lib/provider-campaign-resume.ts";
+import { useWalletSession, type WalletSession } from "../../wallet/wallet-session";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { directoryRecordLiteral, isDirectoryRecordComplete } from "./directory-record-literal";
 import { ProviderDeployStages } from "./provider-deploy-stages";
@@ -51,6 +50,11 @@ export function DeployStageSigning({
   footer?: ReactNode;
   reviewing?: boolean;
 }) {
+  const wallet = useWalletSession();
+  const walletSession: WalletSession | null =
+    wallet.state.kind === "connected" && wallet.provider !== null
+      ? { provider: wallet.provider, address: wallet.state.address }
+      : null;
   const [session, setSession] = useState<WalletSession | null>(null);
   const [candidate, setCandidate] = useState<AtsCreateCandidate | null>(null);
   const candidateRef = useRef<AtsCreateCandidate | null>(null);
@@ -59,7 +63,6 @@ export function DeployStageSigning({
   const [request, setRequest] = useState<StageSignatureRequest | null>(null);
   const [constructionError, setConstructionError] = useState<string | null>(null);
   const [resumePending, setResumePending] = useState(false);
-  const executionProjection = createStageBAtsCreateExecutionProjection();
   const states = providerDeployStageStates(atsCreateConfiguration, {
     connected: session !== null,
     results,
@@ -142,13 +145,14 @@ export function DeployStageSigning({
   return (
     <div className="grid gap-5 sm:gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-start">
       <aside data-ui="provider-review-wallet-context" className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1">
-        <WalletIsland approvedIssuerAddress={executionProjection.issuerEvmAddress} heading="Issuer wallet" className="flex flex-col gap-4 rounded-control border border-border bg-card p-4 shadow-none sm:p-5">
-          {(walletSession) => (
-            <SessionReporter session={walletSession} onSession={setSession}>
-              {null}
-            </SessionReporter>
-          )}
-        </WalletIsland>
+        <section className="flex flex-col gap-2 rounded-control border border-border bg-card p-4 shadow-none sm:p-5">
+          <h2 className="text-sm font-semibold">Issuer wallet</h2>
+          <p className="text-[13px] leading-5 text-muted-foreground">
+            {walletSession === null
+              ? "Connect MetaMask from the header to enable the next local signature request."
+              : "The shared header session enables only the next local signature request. Authority remains server-side."}
+          </p>
+        </section>
         <WhatSigningDoes />
       </aside>
       <div data-ui="provider-deploy-signing" className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-1">
@@ -156,7 +160,11 @@ export function DeployStageSigning({
         {session !== null && resumePending ? <p role="status" aria-live="polite" className="text-[13px] leading-5 text-muted-foreground">Checking the existing durable campaign before enabling any signature.</p> : null}
         {reviewing && constructionError ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null}
         {reviewing ? <ProviderDeployStages states={visibleStates} projection={atsCreateConfiguration} enabledStage={enabledStage} onActivate={activate} session={session} candidate={candidate} onCandidate={receiveCandidate} /> : null}
-        {reviewing && request && session ? <SignatureDialog provider={session.provider} request={request} onResult={finish} onCancel={() => finish({ phase: "rejected", outcome: null })} /> : null}
+        {walletSession !== null ? (
+          <SessionReporter session={walletSession} onSession={setSession}>
+            {reviewing && request ? <SignatureDialog provider={walletSession.provider} request={request} onResult={finish} onCancel={() => finish({ phase: "rejected", outcome: null })} /> : null}
+          </SessionReporter>
+        ) : null}
         {footer}
       </div>
     </div>
