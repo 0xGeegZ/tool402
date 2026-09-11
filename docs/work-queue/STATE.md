@@ -213,6 +213,13 @@
   only for durable RED in `documentation-expansion.test.mjs` and
   `public-documentation.test.mjs`; every Docs source, footer source, and
   runtime/product path remains prohibited pending an independent RED review.
+- S35_PUBLIC_DOCUMENTATION_EXPANSION_GREEN: Independent RED review at
+  `00b3a3423eddd5691d5a11da5bbf3cd931577e4a` is clear. Both S35 tests are
+  frozen; S35-T010 may amend only its two new static Docs routes, two new Docs
+  components, Docs home, and footer under D-S35-010-004. Every route behavior,
+  API/Agent/Core/Backend, configuration, MCP, wallet/provider/payment,
+  command, transaction, deployment, and live-capability path remains
+  prohibited.
 - S33_EXPLORE_CATALOGUE_INTAKE: UI-S33 and its card record one static visual reconciliation of /explore over exactly its page, catalogue, two existing cards, and focused tests. The selected PREP-UI-001 Explore composition is visual authority only. A fresh independent readiness review and separate RED activation are required before any test or source path changes; mock listings, search/filter state, prices, funding, metrics, data/API, wallet/provider/payment, transactions, deployment, and live claims remain prohibited.
 - S33_EXPLORE_CATALOGUE_READY: Independent review at dec98bb22fc8a3e2403a426fa5639130bb053cf4 is clear: the dependency/control records resolve, the five existing targets are disjoint and present, the new visual test is absent, and the static Explore baseline passes 1/1 under Node 22.21.1. S33-T010 is 10-ready only; a separate activation may authorize only its two focused RED test paths.
 - S33_EXPLORE_CATALOGUE_RED_ACTIVATION: Independent activation at c541039d6d7a0cc98cdc1ced8d3e9f4ff997db08 is clear. S33-T010 is 20-active only for apps/web/tests/explore-catalog.test.mjs and the new apps/web/tests/explore-visual-reconciliation.test.mjs. All page, catalogue, card, behavior, data, wallet, provider, payment, transaction, deployment, and live paths remain prohibited until an independent RED review accepts their minimal Green scope.

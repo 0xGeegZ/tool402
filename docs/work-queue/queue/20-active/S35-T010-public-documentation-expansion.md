@@ -6,8 +6,8 @@
 - Queue state: 20-active
 - Dependencies: S34-T010 and S31-T010 accepted.
 - Owner: The root owns the queue, specification, UI manifest, plan, decisions,
-  evidence, commits, and integration. The only current implementation
-  reservation is the two declared test paths below.
+  evidence, commits, and integration. D-S35-010-004 freezes the two declared
+  test paths and reserves the six declared static source paths below.
 - Human actions: none. This work creates no API request, MCP server, wallet,
   signer, payment, command, transaction, campaign, deployment, or live action.
 
@@ -30,8 +30,9 @@ until a fresh independent RED review accepts exact minimal Green paths.
 
 ## Green boundary
 
-The later minimal Green may touch only UI-S35's two pages, two components,
-Docs home, and footer. No route behavior, API/Agent/Core/Backend,
+D-S35-010-004 accepts RED, freezes both test paths, and reserves only
+UI-S35's two pages, two components, Docs home, and footer. No route behavior,
+API/Agent/Core/Backend,
 configuration, MCP, wallet, provider, payment, command, transaction,
 deployment, or live-capability path is in scope.
 
