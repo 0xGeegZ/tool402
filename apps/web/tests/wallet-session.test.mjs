@@ -207,6 +207,7 @@ implementedTest("renders the compact header control per session kind from the sh
       const dashboardLinks = elements(tree).filter((element) => element.type === "Link");
       assert.equal(dashboardLinks.length, 1, `${state.kind} renders one dashboard link`);
       assert.equal(dashboardLinks[0].props.href, "/dashboard");
+      assert.match(dashboardLinks[0].props.className, /\btouch-target\b/u);
       continue;
     }
 
