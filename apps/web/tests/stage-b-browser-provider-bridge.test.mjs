@@ -237,6 +237,12 @@ async function loadBridgeWithM44Spy(decodeBondDeployed, { parse = JSON.parse } =
   };
   const actualViem = await import("viem");
   const imports = {
+    "./stage-b-ats-create-canonical-identity": {
+      STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH: "1880065c5ae64b3fc6279cfdd8c85a6880d43e98ce129ed697c72372204296f9",
+    },
+    "./stage-b-ats-create-canonical-identity.ts": {
+      STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH: "1880065c5ae64b3fc6279cfdd8c85a6880d43e98ce129ed697c72372204296f9",
+    },
     "./stage-b-ats-create-execution-projection": {
       createStageBAtsCreateExecutionProjection() { return projection; },
     },

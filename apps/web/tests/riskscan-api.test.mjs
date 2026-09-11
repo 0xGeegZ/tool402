@@ -846,6 +846,15 @@ test("rejects malformed JSON without a settlement response", async () => {
   assert.equal(response.headers.get("payment-response"), null);
 });
 
+test("rejects an over-limit Quick body before parsing", async () => {
+  const response = await runRiskScanQuick(
+    createRawRequest(JSON.stringify({ ...validQuickInput(), context: "x".repeat(65_536) })),
+  );
+
+  assert.equal(response.status, 413);
+  assert.equal(response.headers.get("payment-response"), null);
+});
+
 test("does not classify a Quick module fault as invalid client input", async () => {
   const originalLoad = Module._load;
 

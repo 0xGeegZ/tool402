@@ -377,7 +377,6 @@ implementedTest("keeps fixed ATS routing values inside the sole configuration li
   const fixedRoutingValues = [
     "ats_sdk_8_0_0_testnet_v2",
     "0xd1f118a40f3b02883d35909ef2517e7edd78379d",
-    "39a4d53db2aa60dd40b50c97738f53a888fdadcb350e1e85984fbd4dd76abc9a",
   ];
 
   for (const value of fixedRoutingValues) {
@@ -387,6 +386,10 @@ implementedTest("keeps fixed ATS routing values inside the sole configuration li
       assert.doesNotMatch(source, new RegExp(value), `${path} must not carry fixed ATS routing value ${value}`);
     }
   }
+  assert.match(
+    sources[configurationPath],
+    /STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH/u,
+  );
 });
 
 implementedTest("connects each local validation error to its editable control", async () => {

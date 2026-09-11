@@ -288,6 +288,25 @@ implementedTest("rejects an authorised malformed EntityCheck request without set
   assert.equal(reads.length, 0);
 });
 
+implementedTest("rejects an authorised over-limit EntityCheck request before source read or settlement", async () => {
+  const reads = [];
+  const facilitator = createLocalFacilitator();
+  const handler = await createProtectedHandler({
+    facilitator,
+    readSources: createSourceReader(sourceResult(), reads),
+  });
+  const signedRequest = await createSignedRequest(
+    handler,
+    validRequest({ query: "x".repeat(65_536) }),
+  );
+  const response = await handler(signedRequest);
+
+  assert.equal(response.status, 413);
+  assert.equal(response.headers.get("payment-response"), null);
+  assert.equal(facilitator.calls.settle, 0);
+  assert.equal(reads.length, 0);
+});
+
 implementedTest("returns each source-unavailable outcome without settling", async () => {
   for (const kind of ["registry_unavailable", "sanctions_unavailable"]) {
     const reads = [];
