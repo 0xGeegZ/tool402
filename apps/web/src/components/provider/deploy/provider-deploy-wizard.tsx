@@ -77,18 +77,20 @@ function StepProgress({
   onStepSelect: (step: number) => void;
 }) {
   return (
-    <nav aria-label="Provider deploy progress" data-ui="provider-deploy-progress" className="overflow-x-auto pb-1">
-      <ol className="flex min-w-[720px] items-start">
+    <nav aria-label="Provider deploy progress" data-ui="provider-deploy-progress" className="pb-1">
+      <ol className="grid grid-cols-5 gap-0">
         {providerDeploySteps.map((step, index) => {
           const isCurrent = index === currentStep;
           const isComplete = index < currentStep;
+          const stateClass = isCurrent || isComplete ? "bg-primary text-primary-foreground" : "border-2 border-primary/35 bg-card text-primary";
           return (
-            <li key={step.label} className="flex min-w-0 flex-1 items-start">
-              <button type="button" aria-label={`Return to step ${index + 1}: ${step.label}`} aria-current={isCurrent ? "step" : undefined} disabled={index >= currentStep} onClick={() => onStepSelect(index)} className="group flex min-w-0 flex-col items-center gap-2 text-center disabled:cursor-default">
-                <span aria-hidden="true" className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ring-4 ring-background transition-colors ${isCurrent || isComplete ? "bg-primary text-primary-foreground" : "border-2 border-primary/40 bg-card text-primary"}`}>{isComplete ? "✓" : index + 1}</span>
-                <span className={`text-[11px] font-medium leading-4 ${isCurrent || isComplete ? "text-foreground" : "text-muted-foreground"}`}>{step.label}</span>
+            <li key={step.label} className="relative flex min-w-0 flex-col items-center text-center">
+              {index > 0 ? <span aria-hidden="true" className={`absolute left-0 right-1/2 top-3 h-0.5 -translate-y-1/2 ${index <= currentStep ? "bg-primary" : "bg-primary/20"}`} /> : null}
+              {index < providerDeploySteps.length - 1 ? <span aria-hidden="true" className={`absolute left-1/2 right-0 top-3 h-0.5 -translate-y-1/2 ${index < currentStep ? "bg-primary" : "bg-primary/20"}`} /> : null}
+              <button type="button" aria-label={`Return to step ${index + 1}: ${step.label}`} aria-current={isCurrent ? "step" : undefined} disabled={index >= currentStep} onClick={() => onStepSelect(index)} className="relative z-10 flex min-w-0 flex-col items-center gap-2 rounded-md px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default">
+                <span aria-hidden="true" className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ring-4 ring-background transition-colors ${stateClass}`}>{isComplete ? "✓" : index + 1}</span>
+                <span className={`max-w-36 text-[11px] font-medium leading-[1.35] ${isCurrent || isComplete ? "text-foreground" : "text-muted-foreground"}`}>{step.label}</span>
               </button>
-              {index < providerDeploySteps.length - 1 ? <span aria-hidden="true" className={`mt-3 h-0.5 flex-1 ${index < currentStep ? "bg-primary" : "bg-primary/25"}`} /> : null}
             </li>
           );
         })}
