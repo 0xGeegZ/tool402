@@ -4,10 +4,12 @@ import { cn } from "./cn";
 
 type ButtonVariant = "primary" | "secondary" | "outline" | "ghost";
 type ButtonSize = "sm" | "md" | "lg";
+type ButtonShape = "control" | "pill";
 
 export type ButtonProps = React.ComponentPropsWithoutRef<"button"> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  shape?: ButtonShape;
 };
 
 const variants: Record<ButtonVariant, string> = {
@@ -23,26 +25,33 @@ const sizes: Record<ButtonSize, string> = {
   lg: "min-h-11 px-5 text-base",
 };
 
+const shapes: Record<ButtonShape, string> = {
+  control: "rounded-control",
+  pill: "rounded-full",
+};
+
 export function buttonVariants({
   variant = "primary",
   size = "md",
+  shape = "control",
   className,
-}: { variant?: ButtonVariant; size?: ButtonSize; className?: string } = {}): string {
+}: { variant?: ButtonVariant; size?: ButtonSize; shape?: ButtonShape; className?: string } = {}): string {
   return cn(
-    "inline-flex items-center justify-center rounded-control font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
+    "inline-flex items-center justify-center font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
     variants[variant],
     sizes[size],
+    shapes[shape],
     className,
   );
 }
 
-export function Button({ className, variant = "primary", size = "md", type = "button", ...props }: ButtonProps) {
+export function Button({ className, variant = "primary", size = "md", shape = "control", type = "button", ...props }: ButtonProps) {
   return (
     <button
       data-slot="button"
       data-variant={variant}
       type={type}
-      className={buttonVariants({ variant, size, className })}
+      className={buttonVariants({ variant, size, shape, className })}
       {...props}
     />
   );

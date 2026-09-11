@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { buttonVariants } from "../ui/button";
+
 export function LandingHero() {
   return (
     <section
@@ -28,13 +30,13 @@ export function LandingHero() {
           <div className="flex flex-col items-start gap-3 sm:flex-row">
             <Link
               href="/demo"
-              className="inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-[0_8px_20px_-10px_color-mix(in_oklab,var(--primary)_70%,transparent)] transition-[background-color,box-shadow,transform] hover:-translate-y-0.5 hover:bg-brand-purple hover:shadow-[0_12px_24px_-12px_color-mix(in_oklab,var(--primary)_75%,transparent)] motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className={buttonVariants({ size: "lg", shape: "pill", className: "font-semibold" })}
             >
               Follow the hackathon demo
             </Link>
             <Link
               href="/explore"
-              className="inline-flex min-h-11 items-center rounded-full border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className={buttonVariants({ variant: "outline", size: "lg", shape: "pill", className: "bg-card shadow-sm" })}
             >
               Explore tools
             </Link>

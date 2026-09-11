@@ -5,6 +5,7 @@ import { useRef, useState, type FormEvent } from "react";
 
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
+import { Field, textInputClass } from "../../ui/field";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Status, statusToneForOutcome } from "../../ui/status";
 import {
@@ -69,33 +70,30 @@ export function RiskScanNativeQuoteCompatibility() {
         </p>
         <form onSubmit={onSubmit} className="space-y-5">
           <div className="space-y-4">
-            <label className="block space-y-2">
-              <span className="font-medium">Network</span>
+            <Field label="Network">
               <input
                 name="network"
                 type="text"
                 required
-                className="min-h-10 w-full rounded-control border bg-background px-3"
+                className={textInputClass}
               />
-            </label>
-            <label className="block space-y-2">
-              <span className="font-medium">Asset</span>
+            </Field>
+            <Field label="Asset">
               <input
                 name="asset"
                 type="text"
                 required
-                className="min-h-10 w-full rounded-control border bg-background px-3"
+                className={textInputClass}
               />
-            </label>
-            <label className="block space-y-2">
-              <span className="font-medium">Maximum atomic amount</span>
+            </Field>
+            <Field label="Maximum atomic amount">
               <input
                 name="maximumAmount"
                 type="text"
                 required
-                className="min-h-10 w-full rounded-control border bg-background px-3"
+                className={textInputClass}
               />
-            </label>
+            </Field>
           </div>
           <Button type="submit" disabled={state.kind === "evaluating"}>
             Evaluate local compatibility

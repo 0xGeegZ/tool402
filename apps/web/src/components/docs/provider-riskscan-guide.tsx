@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { buttonVariants } from "../ui/button";
+
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import { PageHeader } from "../ui/page-header";
@@ -26,7 +28,6 @@ const localRoutes = [
   { href: "/demo", label: "Open guided demo", description: "Continue through the local product tour." },
 ] as const;
 
-const linkClass = "inline-flex min-h-11 items-center rounded-full border border-border bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 export function ProviderRiskScanGuide() {
   return (
@@ -106,7 +107,7 @@ export function ProviderRiskScanGuide() {
                 <Card key={route.href} className="rounded-panel shadow-none">
                   <CardContent className="space-y-4 pt-5">
                     <p className="max-w-prose text-sm leading-6 text-muted-foreground">{route.description}</p>
-                    <Link href={route.href} className={linkClass}>{route.label}</Link>
+                    <Link href={route.href} className={buttonVariants({ variant: "outline", size: "lg", shape: "pill" })}>{route.label}</Link>
                   </CardContent>
                 </Card>
               ))}

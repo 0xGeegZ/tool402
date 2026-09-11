@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { Button } from "../ui/button";
+import { Button, buttonVariants } from "../ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
 
 type ErrorBoundaryProps = {
@@ -28,7 +28,7 @@ export function ErrorBoundary({ reset }: ErrorBoundaryProps) {
           <Button onClick={reset}>Try again</Button>
           <Link
             href="/"
-            className="inline-flex min-h-10 touch-target items-center rounded-control border border-border px-4 text-sm font-medium transition-colors hover:bg-muted"
+            className={buttonVariants({ variant: "outline" })}
           >
             Return home
           </Link>

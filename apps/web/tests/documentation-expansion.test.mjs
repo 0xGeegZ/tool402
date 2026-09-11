@@ -109,5 +109,5 @@ test("keeps the API reference and FAQ factual, static, and local", async (t) => 
   assert.doesNotMatch(docs, /(?:https?:\/\/|mailto:|target\s*=\s*["']_blank["']|href\s*=\s*["']\/\/)/i);
   assert.doesNotMatch(docs, /\b(?:is live|is available now|has raised|generates revenue|pays out|delivers returns|accepts payment|processes payment|confirms payment|executes a transaction|creates an asset|issues an asset|deploys an asset|offers a public campaign|funds a campaign|MCP endpoint is available|MCP server supports requests|payment succeeded|successful payment)\b/i);
   assert.match(docs, /\bshadow-none\b/);
-  assert.match(docs, /\bfocus-visible:outline\b/);
+  assert.match(docs, /\bfocus-visible:outline\b|\bbuttonVariants\(/);
 });

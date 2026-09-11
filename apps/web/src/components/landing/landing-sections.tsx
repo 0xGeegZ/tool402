@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { buttonVariants } from "../ui/button";
 import { Card } from "../ui/card";
 
 const steps = [
@@ -104,7 +105,7 @@ export function LandingSections() {
             </div>
             <Link
               href="/explore"
-              className="inline-flex min-h-8 touch-target shrink-0 items-center justify-center rounded-tile border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className={buttonVariants({ variant: "outline", size: "sm", className: "shrink-0" })}
             >
               Browse all tools →
             </Link>
@@ -139,7 +140,7 @@ export function LandingSections() {
                 </dl>
                 <div className="mt-auto flex items-center justify-between gap-4 pt-5">
                   <span className="text-xs text-muted-foreground">by Tool402</span>
-                  <Link href={campaign.href} className="inline-flex min-h-8 touch-target items-center rounded-tile bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-brand-purple motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                  <Link href={campaign.href} className={buttonVariants({ size: "sm" })}>
                     {campaign.action}
                   </Link>
                 </div>
@@ -164,10 +165,10 @@ export function LandingSections() {
                 an orientation surface, not proof of an action beyond that route.
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
-                <Link href="/explore" className="inline-flex min-h-8 touch-target items-center rounded-tile bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-brand-purple motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                <Link href="/explore" className={buttonVariants({ size: "sm" })}>
                   Explore tools
                 </Link>
-                <Link href="/demo" className="inline-flex min-h-8 touch-target items-center rounded-tile border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                <Link href="/demo" className={buttonVariants({ variant: "outline", size: "sm" })}>
                   Open guided demo
                 </Link>
               </div>
@@ -224,13 +225,13 @@ export function LandingSections() {
               <div className="flex flex-wrap justify-center gap-3 pt-2">
                 <Link
                   href="/provider/deploy"
-                  className="inline-flex min-h-9 touch-target items-center rounded-tile bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-brand-purple motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  className={buttonVariants({ size: "sm" })}
                 >
                   Prepare a tool offering
                 </Link>
                 <Link
                   href="/provider"
-                  className="inline-flex min-h-9 touch-target items-center rounded-tile border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
                 >
                   Provider overview
                 </Link>

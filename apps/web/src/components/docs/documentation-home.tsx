@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { buttonVariants } from "../ui/button";
+
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import { PageHeader } from "../ui/page-header";
@@ -35,7 +37,6 @@ const guides = [
   },
 ] as const;
 
-const guideLinkClass = "inline-flex min-h-11 items-center rounded-full border border-border bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 export function DocumentationHome() {
   return (
@@ -68,7 +69,7 @@ export function DocumentationHome() {
                 </div>
               </CardHeader>
               <CardContent className="mt-auto pt-2">
-                <Link href={guide.href} className={guideLinkClass}>{guide.action}</Link>
+                <Link href={guide.href} className={buttonVariants({ variant: "outline", size: "lg", shape: "pill" })}>{guide.action}</Link>
               </CardContent>
             </Card>
           ))}
