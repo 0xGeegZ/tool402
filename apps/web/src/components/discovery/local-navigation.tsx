@@ -173,6 +173,15 @@ export function LocalNavigation() {
                     </li>
                   ))}
                 </ul>
+                <div className="mt-auto border-t border-border pt-5">
+                  <Link
+                    href="/provider/deploy"
+                    onClick={() => closeMenu()}
+                    className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  >
+                    Prepare a tool
+                  </Link>
+                </div>
               </SheetContent>
             </div>,
             document.body,

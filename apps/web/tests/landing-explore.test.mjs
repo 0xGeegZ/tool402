@@ -77,6 +77,8 @@ test("renders labeled navigation between the committed local routes", async () =
   assert.match(navigation, /["']use client["']/);
   assert.match(navigation, /aria-label="Open menu"/);
   assert.match(navigation, /<SheetContent side="right"/);
+  assert.match(navigation, /href="\/provider\/deploy"/);
+  assert.match(navigation, />\s*Prepare a tool\s*</);
   assert.match(navigation, /\blg:hidden\b/);
   assert.match(navigation, /matchMedia\("\(min-width: 1024px\)"\)/);
   assert.match(layout, /<Link href="\/" aria-label="Tool402 home"/);
