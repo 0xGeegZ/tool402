@@ -503,3 +503,14 @@ No secrets, account keys, or private evidence belong in this file.
   and the two matching M50 tests. `wallet-state.ts`, deploy signing,
   command/relay, configuration, packages, wallet/provider/live actions, and
   every other path remain prohibited.
+- M50_WALLET_SESSION_SYNC_ACCEPTANCE: The accepted source set `20ac68f`,
+  `f10551d`, and `03c5f36` implements native cleanup-capable invalidation and
+  passive re-evaluation only. Independent task, specification, and standards
+  reviews are clear. Under Node 22.21.1, focused wallet/session/deploy tests
+  pass 22/22; the complete Web suite passes 346/346; Web typecheck, root lint,
+  queue/reference/whitespace validation, and the enabled local-reference guard
+  are clear. A fresh Next 16.3.4 Turbopack instance reports no compilation
+  issues and an isolated non-signing browser renders `/` and `/provider/deploy`
+  without invoking Connect, signature, relay, or transaction behavior.
+  M50-T010 moves to `60-done`; its source/test reservations are released and
+  all wallet/live gates remain unchanged.

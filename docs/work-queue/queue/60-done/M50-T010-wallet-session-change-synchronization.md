@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: S15-T010 accepted, S16-T010 accepted.
 - Compatibility context: M49-T010 is accepted with no active reservation on
   this card's paths. M50 preserves its existing Stage-B revalidation behavior
@@ -122,6 +122,27 @@ The exact GREEN surface is now limited to:
 configuration, packages, lockfiles, and all wallet/provider/live actions
 remain prohibited. GREEN must preserve event payload as an untrusted hint and
 use only the existing passive current-session reader.
+
+## GREEN acceptance
+
+The independent [task review](../../evidence/M50-T010-task-review.md),
+[specification review](../../evidence/M50-T010-module-review-spec.md), and
+[standards review](../../evidence/M50-T010-module-review-standards.md) are
+clear. The accepted source set is the native event seam at `20ac68f`, passive
+island wiring at `f10551d`, and stale-read correction at `03c5f36`.
+
+The event seam is cleanup-capable, subscribes only to the two declared native
+events, ignores their payloads, and does not itself request the provider. The
+island enters `connecting` before its passive read. A monotonic read generation
+prevents an older same-provider read from restoring actionable content after a
+newer event or cleanup. No event path requests accounts, switches chains,
+signs, relays, fetches, or submits a transaction.
+
+Focused wallet/session/deploy tests, the complete Web suite, Web typecheck,
+root lint, queue/reference/whitespace checks, the enabled local-reference
+guard, and a non-signing local Next/Turbopack browser confirmation are clear
+under Node 22.21.1. This card is accepted at `60-done`; it grants no wallet
+permission, account selection, signature, relay, transaction, or live action.
 
 ## Verification
 
