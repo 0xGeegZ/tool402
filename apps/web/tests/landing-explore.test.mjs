@@ -163,6 +163,7 @@ test("renders factual campaign context around the landing hero", async () => {
   assert.match(hero, /Campaign preparation/);
   assert.match(hero, /Testnet · not live/);
   assert.match(hero, /x402 boundary/);
+  assert.doesNotMatch(hero, /text-\[11px\][^"']*\btext-brand-purple\b/, "an 11px label in brand purple is 4.42:1 on cream; use text-primary");
   assert.match(hero, /Provider campaign preparation/);
   assert.doesNotMatch(hero, /\$68,200|68% funded|12,561/);
 });

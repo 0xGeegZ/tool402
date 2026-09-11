@@ -61,7 +61,7 @@ export function LandingHero() {
             <span className="mt-2 block text-[11px] text-muted-foreground">Testnet · not live</span>
           </div>
           <div className="absolute -right-2 bottom-2 z-20 rounded-card border border-border bg-card p-3 shadow-md sm:-right-4 sm:bottom-8 sm:p-3.5">
-            <span className="block text-[11px] font-semibold uppercase tracking-wide text-brand-purple">402 boundary</span>
+            <span className="block text-[11px] font-semibold uppercase tracking-wide text-primary">402 boundary</span>
             <span className="mt-1 flex items-center gap-2 text-sm font-semibold"><svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="size-4"><rect x="3.5" y="7" width="9" height="6.5" rx="1.25" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" strokeLinecap="round" /></svg>Payment Required</span>
           </div>
         </div>
