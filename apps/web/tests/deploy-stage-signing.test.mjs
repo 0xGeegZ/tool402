@@ -44,6 +44,7 @@ async function signingIslandHarness(values) {
     "./ats-create-configuration": await import("../src/components/provider/deploy/ats-create-configuration.ts"),
     "./directory-record-literal": await import("../src/components/provider/deploy/directory-record-literal.ts"),
     "./provider-deploy-stages": { ProviderDeployStages: "ProviderDeployStages" },
+    "./world-issuer-verification": { WorldIssuerVerification: "WorldIssuerVerification" },
     "./provider-deploy-state": await import("../src/components/provider/deploy/provider-deploy-state.ts"),
   };
   const { outputText } = typescript.transpileModule(await readIsland(), {
