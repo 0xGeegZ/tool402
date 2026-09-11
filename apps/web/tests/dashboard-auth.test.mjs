@@ -327,12 +327,25 @@ coreTest("issues sessions for verified challenges and rejects them after eight h
   assert.equal(await api.readDashboardSession(verified.sessionCookie, challengeInput().env, nowMilliseconds + 28_800_001), null);
 });
 
+test("declares every Task 5 sign-in and dashboard-gate source module", () => {
+  for (const url of [clientUrl, signInUrl, dashboardLayoutUrl]) {
+    assert.equal(existsSync(fileURLToPath(url)), true, `missing Task 5 module: ${fileURLToPath(url)}`);
+  }
+});
+
 clientTest("keeps sign-in limited to the accepted local authentication boundary", async () => {
   const client = await readFile(clientUrl, "utf8");
+  assert.match(client, /["']use client["']/u);
+  assert.match(client, /\bWalletIsland\b/u);
+  assert.match(client, /heading\s*=\s*["']Sign in with MetaMask["']/u);
   assert.match(client, /\breadCurrentSession\b/u);
   assert.match(client, /\bpersonal_sign\b/u);
   assert.match(client, /\/api\/auth\/metamask\/challenge/u);
   assert.match(client, /\/api\/auth\/metamask\/verify/u);
+  assert.match(client, /credentials\s*:\s*["']same-origin["']/u);
+  assert.match(client, /params\s*:\s*\[\s*message\s*,\s*address\s*\]/u);
+  assert.match(client, /disabled\s*=\s*\{\s*pending\s*\}/u);
+  assert.match(client, /aria-live\s*=\s*["']polite["']/u);
   assert.match(client, /window\.location\.assign\(\s*["']\/dashboard["']\s*\)/u);
   assert.doesNotMatch(client, /\b(?:eth_send(?:Raw)?Transaction|send(?:Raw)?Transaction|transaction|relay|localStorage|sessionStorage|indexedDB|setTimeout|setInterval|discover(?:y)?|requestProvider)\b/u);
 });
@@ -340,15 +353,18 @@ clientTest("keeps sign-in limited to the accepted local authentication boundary"
 signInTest("redirects valid sessions and otherwise renders the public sign-in boundary", async () => {
   const signIn = await readFile(signInUrl, "utf8");
   assert.match(signIn, /\breadDashboardSession\b/u);
+  assert.match(signIn, /\bcookies\(\)/u);
+  assert.match(signIn, /__Host-tool402-dashboard-session/u);
   assert.match(signIn, /redirect\(\s*["']\/dashboard["']\s*\)/u);
-  assert.match(signIn, /\bWalletIsland\b/u);
-  assert.match(signIn, /heading\s*=\s*["']Sign in with MetaMask["']/u);
+  assert.match(signIn, /\bMetaMaskDashboardSignIn\b/u);
 });
 
 dashboardLayoutTest("guards dashboard descendants on the server before rendering them", async () => {
   const layout = await readFile(dashboardLayoutUrl, "utf8");
   assert.match(layout, /\breadDashboardSession\b/u);
   assert.match(layout, /\bcookies\(\)/u);
+  assert.match(layout, /__Host-tool402-dashboard-session/u);
   assert.match(layout, /redirect\(\s*["']\/sign-in["']\s*\)/u);
+  assert.match(layout, /return\s+children/u);
   assert.doesNotMatch(layout, /["']use client["']/u);
 });

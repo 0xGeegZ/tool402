@@ -63,7 +63,7 @@ test("adapts the reference dashboard hierarchy to the current guest workspace", 
   const [shell, overview, navigation] = await readWorkspaceSources();
   const dashboard = await readAppFile("src/app/dashboard/page.tsx");
 
-  assert.match(dashboard, /Guest dashboard/);
+  assert.match(dashboard, /eyebrow="Dashboard"/);
   assert.match(dashboard, /Current local journeys/);
   assert.match(shell, /space-y-8/);
   assert.match(overview, /Access/);
