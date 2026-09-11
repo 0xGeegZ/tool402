@@ -8,28 +8,28 @@ const guides = [
   {
     eyebrow: "RiskScan Quick",
     title: "Understand a bounded request",
-    description: "See the current request shape, result boundary, and local routes for RiskScan Quick.",
+    description: "What RiskScan Quick answers, the request it expects, and the shape of its reply.",
     href: "/docs/riskscan",
     action: "Read the RiskScan guide",
   },
   {
     eyebrow: "For providers",
     title: "Follow the local Provider path",
-    description: "Review the five-step RiskScan preview and the boundaries of the current provider route.",
+    description: "How a provider prepares an offering in the five-step wizard, and what stays local until a human approves the next stage.",
     href: "/docs/providers",
     action: "Read the Provider guide",
   },
   {
     eyebrow: "HTTP API",
     title: "API reference",
-    description: "Read the current descriptor and request boundaries without running a request.",
+    description: "The current tool descriptor and request shapes, readable without sending a request.",
     href: "/docs/api",
     action: "Read the API reference",
   },
   {
     eyebrow: "Current scope",
     title: "FAQ",
-    description: "Read the current testnet, RiskScan, and Provider boundaries.",
+    description: "Short answers on the testnet, RiskScan, and the provider path, including what is not built yet.",
     href: "/docs/faq",
     action: "Read the FAQ",
   },
@@ -44,7 +44,7 @@ export function DocumentationHome() {
         <PageHeader
           eyebrow="Documentation"
           title="Tool402, explained clearly"
-          description="Tool402 helps agents discover verifiable tools, meet explicit payment requirements, and receive bounded results. Use these guides to understand the product flow and its current boundaries."
+          description="Tool402 lets an agent find a tool, receive its 402 challenge, and get a bounded answer once that challenge is met on Hedera testnet. These guides explain each step and where the current build stops."
         />
       </section>
 

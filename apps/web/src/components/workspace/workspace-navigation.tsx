@@ -15,32 +15,32 @@ const links = [
 const journeyDetails: Record<(typeof links)[number]["href"], { title: string; description: string; status: string }> = {
   "/explore": {
     title: "Explore tools",
-    description: "Browse the local tool catalog and read the RiskScan overview.",
+    description: "Browse both tools, their categories, and where each one can be inspected.",
     status: "Read-only",
   },
   "/explore/riskscan": {
     title: "Read RiskScan",
-    description: "Understand the bounded RiskScan journey before opening a local path.",
+    description: "Read what RiskScan Quick answers, the inputs it needs, and where its answer stops.",
     status: "Read-only",
   },
   "/explore/riskscan/tool-loop": {
     title: "Open ToolLoop boundary",
-    description: "Inspect the local ToolLoop boundary with an explicit user action.",
+    description: "Send a bounded ToolLoop request and read the 402 challenge it returns.",
     status: "Local boundary",
   },
   "/dashboard/riskscan/compatibility": {
     title: "Check native compatibility",
-    description: "Compare a policy with the locally advertised native criteria.",
+    description: "Check whether a spend policy fits the advertised native quote criteria.",
     status: "Local check",
   },
   "/dashboard/riskscan": {
     title: "Open RiskScan workbench",
-    description: "Inspect the directory, compatibility, and ToolLoop in one guest dashboard.",
+    description: "Work through the directory, compatibility, and ToolLoop from one guest dashboard.",
     status: "Guest dashboard",
   },
   "/dashboard/riskscan/preflight": {
     title: "Review disclosures",
-    description: "Review caller-reported disclosures before the request boundary.",
+    description: "Record the caller's disclosures so the Quick request can be prepared.",
     status: "Local check",
   },
 };

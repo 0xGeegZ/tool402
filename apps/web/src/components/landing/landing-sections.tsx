@@ -6,19 +6,19 @@ import { Card } from "../ui/card";
 const steps = [
   {
     title: "Explore a current tool",
-    description: "Read the current capability and its boundaries before you choose a route.",
+    description: "Open RiskScan or EntityCheck and read what each one answers, the inputs it needs, and where it stops.",
     number: "01",
     tone: "bg-secondary text-primary",
   },
   {
     title: "Inspect its boundary",
-    description: "See what the local route can show before you continue through the journey.",
+    description: "Send a bounded request and read the 402 challenge the tool returns before anything is released.",
     number: "02",
     tone: "bg-success text-success-foreground",
   },
   {
     title: "Choose a local next step",
-    description: "Move from an overview to its guided route at your own pace.",
+    description: "Continue to the guided demo, the guest dashboard, or the provider wizard; each names what it can show today.",
     number: "03",
     tone: "bg-destructive text-destructive-foreground",
   },
