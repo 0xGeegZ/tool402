@@ -1214,6 +1214,9 @@ RED activation. The Directory island, navigation, shared/global CSS, route
 behavior, API/data, client state, wallet/provider/payment, transaction,
 deployment, and every live boundary remain excluded.
 
-Independent readiness at dec98bb22fc8a3e2403a426fa5639130bb053cf4 is clear.
-S33-T010 is 10-ready with no active source or test reservation; a separate
-activation may grant only its two named focused tests for durable RED.
+Independent readiness at dec98bb22fc8a3e2403a426fa5639130bb053cf4 and
+activation at c541039d6d7a0cc98cdc1ced8d3e9f4ff997db08 are clear. S33-T010
+is 20-active only for apps/web/tests/explore-catalog.test.mjs and the new
+apps/web/tests/explore-visual-reconciliation.test.mjs to create durable RED.
+Every source path remains prohibited until independent RED acceptance grants
+the minimal Green scope.

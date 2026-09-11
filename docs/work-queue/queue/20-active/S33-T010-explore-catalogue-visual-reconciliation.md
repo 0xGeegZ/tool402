@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: S20-T010, S23-T010, S25-T010, and S31-T010 accepted.
 - Owner: The root owns queue records, the UI ledger, decisions, reviews,
   commits, and pushes. Candidate implementation paths are exactly those
@@ -29,12 +29,21 @@ and exclusions.
 - A fresh independent readiness review must accept the candidate scope before
   a separate activation can permit durable RED.
 
+## RED activation authority
+
+Independent activation at c541039d6d7a0cc98cdc1ced8d3e9f4ff997db08 is clear:
+the ready records are intact, former visual owners are historical and
+disjoint, the static baseline passes under Node 22.21.1, and no source
+collision exists. S33-T010 is active only for durable RED in:
+
+- apps/web/tests/explore-catalog.test.mjs
+- apps/web/tests/explore-visual-reconciliation.test.mjs (new)
+
 ## RED and GREEN boundary
 
-No test or source path is authorized by this intake. A later activation may
-authorize only the two focused test paths for durable RED. Only a fresh
-independent RED review may authorize minimal presentation GREEN in the exact
-UI-S33 path set.
+Only the two named focused test paths are authorized to create durable RED.
+No source path is authorized. Only a fresh independent RED review may
+authorize minimal presentation Green in the exact UI-S33 path set.
 
 ## Ready authority
 
