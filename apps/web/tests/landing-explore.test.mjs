@@ -162,7 +162,7 @@ test("renders factual campaign context around the landing hero", async () => {
   assert.match(hero, /402 · Payment Required/);
   assert.match(hero, /Campaign preparation/);
   assert.match(hero, /Testnet · not live/);
-  assert.match(hero, /x402 payment boundary/);
+  assert.match(hero, /x402 boundary/);
   assert.match(hero, /Provider campaign preparation/);
   assert.doesNotMatch(hero, /\$68,200|68% funded|12,561/);
 });

@@ -154,8 +154,7 @@ implementedTest("keeps a rejected local request out of the dialog and stage resu
   validStages.props.onActivate(0);
   const validTree = validHarness.render();
   assert.equal(elements(validTree).find((element) => element.type === "ProviderDeployStages").props.states[0].kind, "in_progress");
-  const validWallet = elements(validTree).find((element) => element.type === "WalletIsland");
-  assert.equal(elements(validWallet.props.children({ provider: {}, address: "unused" })).some((element) => element.type === "SignatureDialog"), true);
+  assert.equal(elements(validTree).some((element) => element.type === "SignatureDialog"), true);
 
   for (const invalidValue of [{ qualifyingResource: "" }, { quickPrice: "0" }]) {
     const harness = await signingIslandHarness({ ...values, ...invalidValue });
@@ -170,9 +169,7 @@ implementedTest("keeps a rejected local request out of the dialog and stage resu
     const nextStages = elements(after).find((element) => element.type === "ProviderDeployStages");
     assert.deepEqual(nextStages.props.states, stages.props.states, "a local construction failure must not record a stage result");
     assert.equal(nextStages.props.enabledStage, 0);
-    const wallet = elements(after).find((element) => element.type === "WalletIsland");
-    const walletContent = wallet.props.children({ provider: {}, address: "unused" });
-    assert.equal(elements(walletContent).some((element) => element.type === "SignatureDialog"), false);
+    assert.equal(elements(after).some((element) => element.type === "SignatureDialog"), false);
     const feedback = elements(after).find((element) =>
       ["alert", "status"].includes(element.props.role) || element.props["aria-live"] === "polite",
     );

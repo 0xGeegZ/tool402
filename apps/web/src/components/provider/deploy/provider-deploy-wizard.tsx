@@ -37,7 +37,7 @@ type WizardValues = {
   acknowledgement: boolean;
 };
 
-const inputClassName = "min-h-11 w-full rounded-xl border border-border bg-[#fbf7ef] px-3 py-2 text-sm text-foreground shadow-none transition-colors placeholder:text-muted-foreground hover:border-foreground/20 focus:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+const inputClassName = "min-h-11 w-full rounded-field border border-border bg-background px-3 py-2 text-sm text-foreground shadow-none transition-colors placeholder:text-muted-foreground hover:border-foreground/20 focus:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const fieldLabelClassName = "space-y-2 text-sm font-medium text-foreground";
 const fieldHintClassName = "text-sm leading-6 text-muted-foreground";
 const fieldErrorClassName = "text-sm leading-6 text-destructive";
@@ -168,7 +168,7 @@ function InterfaceStep({ values, fieldErrors, onTextChange }: {
       <Field label="Capability summary" hint="Describe the bounded capability in clear terms.">
         <textarea className={`${inputClassName} min-h-32 resize-y`} value={values.capabilitySummary} onChange={onTextChange("capabilitySummary")} />
       </Field>
-      <div className="rounded-[calc(var(--radius)*0.75)] border bg-muted/50 p-4">
+      <div className="rounded-field border bg-muted/50 p-4">
         <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Fixed capability</p>
         <p className="mt-2 font-mono text-sm text-foreground">{campaignFixture.capability}</p>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">This directory capability is read-only in the prepared fixture.</p>
@@ -230,7 +230,7 @@ function TermsStep({
           <textarea aria-invalid={fieldErrors.risks ? true : undefined} aria-describedby={fieldErrors.risks ? fieldErrorId("risks") : undefined} className={`${fieldClassName(fieldErrors.risks)} min-h-32 resize-y`} value={values.risks} onChange={onTextChange("risks")} />
         </Field>
       </div>
-      <section aria-labelledby="provider-deploy-terms" className="rounded-[calc(var(--radius)*0.75)] border bg-muted/40 p-4">
+      <section aria-labelledby="provider-deploy-terms" className="rounded-field border bg-muted/40 p-4">
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Read-only terms v1</p>
           <h2 id="provider-deploy-terms" className="text-lg font-semibold">Funding and revenue-note terms</h2>
@@ -244,7 +244,7 @@ function TermsStep({
           ))}
         </dl>
       </section>
-      <section aria-labelledby="provider-deploy-configuration" className="rounded-[calc(var(--radius)*0.75)] border bg-background p-4">
+      <section aria-labelledby="provider-deploy-configuration" className="rounded-field border bg-background p-4">
         <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Local configuration projection</p>
         <h2 id="provider-deploy-configuration" className="mt-1 text-lg font-semibold">Revenue note context</h2>
         {configurationRows.length > 0 ? (
@@ -258,7 +258,7 @@ function TermsStep({
           </dl>
         ) : <p className="mt-3 text-sm text-muted-foreground">Not configured. No projection is available to display.</p>}
       </section>
-      <label className="flex items-start gap-3 rounded-[calc(var(--radius)*0.75)] border bg-background p-4 text-sm leading-6">
+      <label className="flex items-start gap-3 rounded-field border bg-background p-4 text-sm leading-6">
         <input className="mt-1 size-4 shrink-0 accent-[var(--primary)]" type="checkbox" checked={values.acknowledgement} onChange={onAcknowledgementChange} />
         <span>{acknowledgementCopy}</span>
       </label>
@@ -283,7 +283,7 @@ function ReviewStep({ values }: { values: WizardValues }) {
           <h2 id="provider-deploy-review" className="text-2xl font-semibold tracking-tight">Check the prepared details</h2>
           <p className="text-sm leading-6 text-muted-foreground">Nothing is sent until you request and confirm a signature below. The values above remain a local, editable preview.</p>
         </div>
-        <dl className="grid gap-3 rounded-[calc(var(--radius)*0.75)] border bg-muted/30 p-4 text-sm sm:grid-cols-2">
+        <dl className="grid gap-3 rounded-field border bg-muted/30 p-4 text-sm sm:grid-cols-2">
           {reviewRows.map(([label, value]) => (
             <div key={label} className="space-y-1">
               <dt className="text-muted-foreground">{label}</dt>
@@ -384,7 +384,7 @@ export function ProviderDeployWizard() {
 
       <div data-ui="provider-deploy-workspace" className="mt-7 space-y-5">
         <section data-ui="provider-deploy-form">
-          <Card className="overflow-hidden rounded-2xl border border-border bg-card shadow-none">
+          <Card className="overflow-hidden rounded-card border border-border bg-card shadow-none">
             <CardHeader className="space-y-1 px-5 pb-2 pt-5 sm:px-6 sm:pt-6">
               <CardTitle className="text-xl tracking-tight sm:text-2xl">{currentDefinition?.label}</CardTitle>
               <CardDescription className="text-xs leading-5">
@@ -394,14 +394,14 @@ export function ProviderDeployWizard() {
             <form onSubmit={onSubmit}>
               <CardContent className="px-5 py-5 sm:px-6 sm:py-6">
                 {renderCurrentStep()}
-                {validationMessage ? <p aria-live="polite" className="mt-6 rounded-xl border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
+                {validationMessage ? <p aria-live="polite" className="mt-6 rounded-field border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
               </CardContent>
               <CardFooter className="flex flex-col-reverse gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <Button type="button" variant="ghost" className="justify-start px-2 text-sm" disabled={!canGoBack(currentStep)} onClick={() => returnToStep(Math.max(0, currentStep - 1))}>
                   Back
                 </Button>
                 {currentStep < providerDeploySteps.length - 1 ? (
-                  <Button type="submit" className="h-10 rounded-xl px-4 text-sm" disabled={!canAdvance(currentStep, values)}>
+                  <Button type="submit" className="h-10 rounded-control px-4 text-sm" disabled={!canAdvance(currentStep, values)}>
                     Continue
                   </Button>
                 ) : <Badge variant="outline">Review complete locally</Badge>}

@@ -23,7 +23,7 @@ export function LandingHero() {
             Back the tools <span className="text-brand-purple">agents pay</span> to use.
           </h1>
           <p className="max-w-xl text-lg leading-relaxed text-muted-foreground">
-            A marketplace for verifiable tools that agents can discover, pay for, and use. Tool402 makes the payment boundary visible before a bounded result is released.
+            A marketplace for verifiable tools that agents can discover, pay for, and use. Tool402 makes the 402 boundary visible before a bounded answer is released.
           </p>
           <div className="flex flex-col items-start gap-3 sm:flex-row">
             <Link
@@ -41,7 +41,7 @@ export function LandingHero() {
           </div>
         </div>
         <div className="relative mx-auto w-full max-w-md lg:translate-y-[0.5625rem]">
-          <div className="aspect-square overflow-hidden rounded-[2rem] border border-border bg-muted shadow-[0_1.5rem_5rem_-1.75rem_color-mix(in_oklab,var(--brand-purple)_45%,transparent)]">
+          <div className="aspect-square overflow-hidden rounded-frame border border-border bg-muted shadow-[0_1.5rem_5rem_-1.75rem_color-mix(in_oklab,var(--brand-purple)_45%,transparent)]">
             <Image
               src="/brand/hero-trio.png"
               alt=""
@@ -53,13 +53,13 @@ export function LandingHero() {
               className="size-full scale-110 object-cover"
             />
           </div>
-          <div className="absolute -left-2 top-2 z-20 w-52 rounded-2xl border border-border/80 bg-card/95 p-3.5 shadow-lg backdrop-blur sm:-left-6 sm:top-6 sm:w-60 sm:p-4">
+          <div className="absolute -left-2 top-2 z-20 w-52 rounded-card border border-border/80 bg-card/95 p-3.5 shadow-lg backdrop-blur sm:-left-6 sm:top-6 sm:w-60 sm:p-4">
             <span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">RiskScan</span>
             <span className="mt-1 block text-lg font-bold tracking-tight">Campaign preparation</span>
             <span aria-hidden="true" className="mt-3 block h-1.5 overflow-hidden rounded-full bg-secondary"><span className="block h-full w-1/4 rounded-full bg-brand-purple" /></span>
             <span className="mt-2 block text-[11px] text-muted-foreground">Testnet · not live</span>
           </div>
-          <div className="absolute -right-2 bottom-2 z-20 rounded-2xl border border-border bg-card p-3 shadow-md sm:-right-4 sm:bottom-8 sm:p-3.5">
+          <div className="absolute -right-2 bottom-2 z-20 rounded-card border border-border bg-card p-3 shadow-md sm:-right-4 sm:bottom-8 sm:p-3.5">
             <span className="block text-[10px] font-semibold uppercase tracking-wide text-brand-purple">402 boundary</span>
             <span className="mt-1 flex items-center gap-2 text-sm font-semibold"><svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="size-4"><rect x="3.5" y="7" width="9" height="6.5" rx="1.25" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" strokeLinecap="round" /></svg>Payment Required</span>
           </div>
@@ -67,9 +67,9 @@ export function LandingHero() {
       </div>
       <div aria-label="Tool402 capabilities" className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8 lg:pb-12">
         <ul className="grid gap-3 border-t border-border pt-5 sm:grid-cols-3 sm:gap-0 sm:pt-6">
-          <li className="flex items-center gap-3 sm:border-r sm:border-border sm:pr-6"><span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-purple/15 text-brand-purple"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" className="size-5"><path d="m11.5 1.75-6 9h4l-1 7.5 6-9h-4z" strokeLinecap="round" strokeLinejoin="round" /></svg></span><span className="text-sm font-medium text-muted-foreground">x402 payment boundary</span></li>
-          <li className="flex items-center gap-3 sm:border-r sm:border-border sm:px-6"><span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-purple/15 text-brand-purple"><span className="text-xs font-bold">H</span></span><span className="text-sm font-medium text-muted-foreground">Hedera testnet</span></li>
-          <li className="flex items-center gap-3 sm:pl-6"><span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-purple/15 text-brand-purple"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-5"><path d="M5 2.5h7l3 3V17.5H5z" /><path d="M12 2.5v3h3M7.5 10h5M7.5 13h5" strokeLinecap="round" /></svg></span><span className="text-sm font-medium text-muted-foreground">Provider campaign preparation</span></li>
+          <li className="flex items-center gap-3 sm:border-r sm:border-border sm:pr-6"><span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-field bg-brand-purple/15 text-brand-purple"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" className="size-5"><path d="m11.5 1.75-6 9h4l-1 7.5 6-9h-4z" strokeLinecap="round" strokeLinejoin="round" /></svg></span><span className="text-sm font-medium text-muted-foreground">x402 boundary</span></li>
+          <li className="flex items-center gap-3 sm:border-r sm:border-border sm:px-6"><span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-field bg-brand-purple/15 text-brand-purple"><span className="text-xs font-bold">H</span></span><span className="text-sm font-medium text-muted-foreground">Hedera testnet</span></li>
+          <li className="flex items-center gap-3 sm:pl-6"><span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-field bg-brand-purple/15 text-brand-purple"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-5"><path d="M5 2.5h7l3 3V17.5H5z" /><path d="M12 2.5v3h3M7.5 10h5M7.5 13h5" strokeLinecap="round" /></svg></span><span className="text-sm font-medium text-muted-foreground">Provider campaign preparation</span></li>
         </ul>
       </div>
     </section>

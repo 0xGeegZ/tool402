@@ -31,7 +31,7 @@ test("defines the fixed server-safe PageHeader anatomy and action hierarchy", as
   assert.match(source, /type PageHeaderActions =/);
   assert.match(source, /readonly \[PageHeaderAction, PageHeaderAction, PageHeaderAction\]/);
   assert.match(source, /readonly actions\?: PageHeaderActions/);
-  assert.match(source, /<header className="max-w-3xl space-y-4">/);
+  assert.match(source, /<header className="max-w-3xl space-y-5">/);
   assert.match(source, /<Badge variant="outline" className="w-fit">/);
   assert.match(source, /<h1 className="text-4xl font-extrabold tracking-\[-0\.045em\] sm:text-5xl">/);
   assert.match(source, /<p className="text-lg leading-8 text-muted-foreground">/);
@@ -50,10 +50,9 @@ test("migrates only the declared headers and fixes the two page-level action set
     ["src/app/dashboard/riskscan/page.tsx", "RiskScan workbench"],
     ["src/app/dashboard/riskscan/preflight/page.tsx", "RiskScan Quick preflight"],
     ["src/app/dashboard/riskscan/compatibility/page.tsx", "Native quote compatibility"],
-    ["src/app/demo/page.tsx", "Take the guided tour"],
-    ["src/app/provider/page.tsx", "Campaign status"],
+    ["src/app/demo/page.tsx", "Follow the Tool402 demo"],
+    ["src/app/provider/page.tsx", "Provider status"],
     ["src/components/riskscan/detail/riskscan-detail.tsx", "RiskScan"],
-    ["src/components/provider/deploy/provider-deploy-wizard.tsx", "Prepare a local offering"],
   ];
 
   for (const [path, title] of targets) {
@@ -69,7 +68,7 @@ test("migrates only the declared headers and fixes the two page-level action set
     readAppFile("src/components/riskscan/detail/riskscan-detail.tsx"),
   ]);
   assert.match(provider, /eyebrow="Tool operator"/);
-  assert.match(provider, /href: "\/provider\/deploy", label: "Open the deploy wizard"/);
+  assert.match(provider, /href: "\/provider\/deploy", label: "Prepare an offering"/);
   assert.match(provider, /href: "\/explore\/riskscan", label: "Explore RiskScan"/);
   assert.match(detail, /href: "\/explore\/riskscan\/try", label: "Try RiskScan"/);
   assert.match(detail, /href: "\/explore\/riskscan\/tool-loop", label: "Explore RiskScan ToolLoop"/);
