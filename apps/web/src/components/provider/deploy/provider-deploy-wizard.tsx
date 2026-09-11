@@ -285,7 +285,7 @@ function TermsStep({
 }
 
 function ReviewStep({ values }: { values: WizardValues }) {
-  const reviewRows = [["Tool name", values.toolName], ["Category", values.category], ["Qualifying resource", values.qualifyingResource], ["Quick display price", `${values.quickPrice} HBAR`], ["Standard price (HBAR)", `${values.standardPrice} HBAR`], ["Target agent customers", values.targetCustomers], ["Capability summary", values.capabilitySummary], ["Funding terms", values.useOfFunds]] as const;
+  const reviewRows = [["Tool name", values.toolName], ["Category", values.category], ["Qualifying resource", values.qualifyingResource], ["Quick display price", `${values.quickPrice} HBAR`], ["Standard price (HBAR)", `${values.standardPrice} HBAR`], ["Target agent customers", values.targetAgentCustomers], ["Capability summary", values.capabilitySummary], ["Funding terms", values.useOfFunds]] as const;
   const stageStates = [{ kind: "done" as const, detail: "Create and record the tool offering in a local projection." }, { kind: "blocked" as const, detail: "Generate the asset and metadata for the revenue note." }, { kind: "unavailable" as const, detail: "Create the revenue note in MetaMask and attach the returned candidate." }, { kind: "blocked" as const, detail: "Submit the tool and revenue note to the Tool402 directory." }];
 
   return (
