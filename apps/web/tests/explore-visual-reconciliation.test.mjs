@@ -49,13 +49,13 @@ test("uses the compact Explore presentation without changing its static catalogu
   for (const source of presentationSources) {
     assert.doesNotMatch(
       source,
-      /^\s*["']use client["'];|\buse(?:State|Effect|Memo|Callback|Ref)\b|\bfetch\s*\(|\bon[A-Z][A-Za-z]*\s*=|<(?:button|input|select|textarea|form)\b|\brole=["']button["']|\baria-(?:pressed|expanded|checked)=/m,
+      /^\s*["']use client["']\s*;?\s*(?:\r?\n|$)|\buse[A-Z][A-Za-z0-9_]*\s*\(|\bfetch\s*\(|\bon[A-Z][A-Za-z]*\s*=|<(?:button|input|select|textarea|form)\b|\brole=["']button["']|\baria-(?:pressed|expanded|checked|controls|selected)=/m,
     );
   }
 
   assert.doesNotMatch(
     presentationSource,
-    /\b(?:payable|provider|wallet|payment|price|funding|revenue|transaction|deploy(?:ment)?|live availability)\b/i,
+    /\b(?:account|activity|payable|provider|wallet|payment|price|funding|revenue|testimonial|transaction|deploy(?:ment)?|live availability)\b/i,
   );
-  assert.doesNotMatch(presentationSource, /https?:\/\//i);
+  assert.doesNotMatch(presentationSource, /\b(?:[a-z][a-z\d+.-]*:|\/\/)/i);
 });
