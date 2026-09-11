@@ -11,6 +11,7 @@ import {
 import { SignatureDialog, type SignatureResult } from "../../wallet/signature-dialog";
 import { WalletIsland, type WalletSession } from "../../wallet/wallet-connect";
 import { createStageBAtsCreateExecutionProjection } from "../../../lib/ats/stage-b-ats-create-execution-projection.ts";
+import { loadProviderCampaignResume } from "../../../lib/provider-campaign-resume.ts";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { directoryRecordLiteral, isDirectoryRecordComplete } from "./directory-record-literal";
 import { Status, type StatusTone } from "../../ui/status";
@@ -54,6 +55,7 @@ export function DeployStageSigning({
   const [attemptPublicId, setAttemptPublicId] = useState<string | null>(null);
   const [request, setRequest] = useState<StageSignatureRequest | null>(null);
   const [constructionError, setConstructionError] = useState<string | null>(null);
+  const [resumePending, setResumePending] = useState(false);
   const executionProjection = createStageBAtsCreateExecutionProjection();
   const states = providerDeployStageStates(atsCreateConfiguration, {
     connected: session !== null,
@@ -64,9 +66,38 @@ export function DeployStageSigning({
   const visibleStates = request
     ? states.map((stage, index) => (index === request.stage ? { kind: "in_progress" as const } : stage))
     : states;
-  const enabledStage = session !== null && request === null
+  const enabledStage = session !== null && request === null && !resumePending
     ? states.findIndex((stage) => stage.kind === "actionable")
     : -1;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (session === null) {
+      setResults([]);
+      setAttemptPublicId(null);
+      setCandidate(null);
+      candidateRef.current = null;
+      setResumePending(false);
+      return () => { cancelled = true; };
+    }
+    setResults([]);
+    setAttemptPublicId(null);
+    setCandidate(null);
+    candidateRef.current = null;
+    setResumePending(true);
+    void loadProviderCampaignResume(session.address).then((resume) => {
+      if (cancelled) return;
+      if (resume !== null) {
+        setResults([
+          { kind: "done", detail: "Recovered from the durable offering record." },
+          { kind: "done", detail: "Recovered from the durable prepared attempt." },
+        ]);
+        setAttemptPublicId(resume.attemptPublicId);
+      }
+      setResumePending(false);
+    });
+    return () => { cancelled = true; };
+  }, [session?.address]);
 
   function activate(stage: number) {
     if (request !== null || stage !== enabledStage) return;
@@ -124,6 +155,7 @@ export function DeployStageSigning({
               ? "Connect MetaMask on Hedera Testnet to request the first signature. Nothing is recorded until the relay reports acceptance."
               : "Request each signature in order. Results live only in this browser session and reset on reload; a signature is not an authority, and a relayed ACCEPTED is not an on-chain fact."}
           </p>
+          {session !== null && resumePending ? <p role="status" aria-live="polite" className="text-sm text-muted-foreground">Checking the existing durable campaign before enabling any signature.</p> : null}
         </div>
         {constructionError ? <p role="status" aria-live="polite" className="rounded-field border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null}
         <Status tone={progressTone}>{doneCount} of {visibleStates.length} stages reported done in this session.</Status>

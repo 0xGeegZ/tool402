@@ -551,6 +551,7 @@ const offeringProjectionValidator = object({
   advertisedStandardPriceTinybars: string,
   canonicalSignerAddress: string,
   atsAssetEvmAddress: optional(string),
+  atsAttemptPublicId: optional(string),
   acceptedAt: bigint,
   updatedAt: bigint,
 });
