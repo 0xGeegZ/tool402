@@ -21,6 +21,7 @@ async function signingIslandHarness(values) {
   const slots = [];
   let cursor = 0;
   let session = { state: { kind: "disconnected" }, provider: null };
+  const executionProjection = await import("../src/lib/ats/stage-b-ats-create-execution-projection.ts");
   const imports = {
     react: {
       useState(initial) {
@@ -39,7 +40,8 @@ async function signingIslandHarness(values) {
     },
     "react/jsx-runtime": jsxRuntime,
     "../../../lib/wallet/command-bridge.ts": await import("../src/lib/wallet/command-bridge.ts"),
-    "../../../lib/ats/stage-b-ats-create-execution-projection.ts": await import("../src/lib/ats/stage-b-ats-create-execution-projection.ts"),
+    "../../../lib/wallet/wallet-state.ts": await import("../src/lib/wallet/wallet-state.ts"),
+    "../../../lib/ats/stage-b-ats-create-execution-projection.ts": executionProjection,
     "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
     "../../wallet/wallet-session": { useWalletSession: () => session },
     "./ats-create-configuration": await import("../src/components/provider/deploy/ats-create-configuration.ts"),
@@ -70,7 +72,7 @@ async function signingIslandHarness(values) {
     },
     connect() {
       session = {
-        state: { kind: "connected", address: "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf" },
+        state: { kind: "connected", address: executionProjection.createStageBAtsCreateExecutionProjection().issuerEvmAddress },
         provider: { request() { assert.fail("local construction failure must not request the wallet"); } },
       };
       const reporter = elements(this.render()).find(

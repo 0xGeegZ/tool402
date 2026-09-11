@@ -32,7 +32,7 @@ test("defines the truthful Provider RiskScan preparation hierarchy", async () =>
   assert.doesNotMatch(wizard, /lg:grid-cols-\[minmax\(0,1\.62fr\)_minmax\(17rem,0\.9fr\)\]/);
   assert.match(signing, /data-ui=["']provider-deploy-signing["']/);
   assert.match(signing, /data-ui=["']provider-review-wallet-context["']/);
-  assert.match(signing, /heading="Issuer wallet"/);
+  assert.match(signing, />Issuer wallet</);
   assert.match(signing, /What signing does/);
   assert.match(signing, /Connect MetaMask/);
   assert.match(signing, /session === null \? "grid gap-4 sm:grid-cols-2" : "hidden"/);

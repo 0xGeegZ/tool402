@@ -8,7 +8,7 @@ import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { SignatureDialog, type SignatureResult } from "../wallet/signature-dialog";
-import { WalletIsland, type WalletSession } from "../wallet/wallet-connect";
+import { useWalletSession, type WalletSession } from "../wallet/wallet-session";
 import {
   backingLifecycleLabels,
   createBackingIntent,
@@ -69,6 +69,11 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
   const [unitsInput, setUnitsInput] = useState(offering.terms.minimumPurchaseUnits.toString());
   const [acknowledged, setAcknowledged] = useState(false);
   const [session, setSession] = useState<WalletSession | null>(null);
+  const wallet = useWalletSession();
+  const walletSession: WalletSession | null =
+    wallet.state.kind === "connected" && wallet.provider !== null
+      ? { provider: wallet.provider, address: wallet.state.address }
+      : null;
   const [view, setView] = useState<BackingView>({ kind: "choosing" });
   const [request, setRequest] = useState<BackingIntent | null>(null);
   const [transferring, setTransferring] = useState(false);
@@ -160,9 +165,7 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
         </CardContent>
       </Card>
 
-      <WalletIsland>
-        {(walletSession: WalletSession) => <SessionReporter session={walletSession} onSession={setSession} />}
-      </WalletIsland>
+      {walletSession !== null ? <SessionReporter session={walletSession} onSession={setSession} /> : null}
 
       <section aria-labelledby="backing-status" className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">

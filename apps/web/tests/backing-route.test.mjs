@@ -35,9 +35,10 @@ test("composes the sibling wallet island, signature dialog, and relay without a 
   const flow = await readAppFile("src/components/backing/backing-flow.tsx");
 
   assert.match(flow, /^["']use client["'];/);
-  assert.match(flow, /import \{ WalletIsland, type WalletSession \} from "\.\.\/wallet\/wallet-connect"/);
+  assert.match(flow, /import \{ useWalletSession, type WalletSession \} from "\.\.\/wallet\/wallet-session"/);
   assert.match(flow, /import \{ SignatureDialog, type SignatureResult \} from "\.\.\/wallet\/signature-dialog"/);
-  assert.equal((flow.match(/<WalletIsland\b/g) ?? []).length, 1);
+  assert.equal((flow.match(/useWalletSession\(\)/g) ?? []).length, 1);
+  assert.doesNotMatch(flow, /WalletIsland/);
   assert.equal((flow.match(/<SignatureDialog\b/g) ?? []).length, 1);
   assert.doesNotMatch(flow, /approvedIssuerAddress|canonicalSignerAddress/);
   assert.doesNotMatch(flow, /discoverMetaMaskProvider|eth_requestAccounts|wallet_switchEthereumChain|eth_signTypedData|signCommand|createUnsignedCommand|relayCommandBody|\/api\/commands|createCommandNonce|keccak/);
