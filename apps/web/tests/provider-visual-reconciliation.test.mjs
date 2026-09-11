@@ -20,9 +20,9 @@ test("defines the prepared Provider overview hierarchy without prototype metrics
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
   assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
   assert.match(page, /<LandingFooter\s*\/>/);
-  assert.match(page, /title="Campaign status"/);
+  assert.match(page, /title="Provider status"/);
   assert.match(page, /eyebrow="Tool operator"/);
-  assert.match(page, /Open the deploy wizard/);
+  assert.match(page, /Prepare an offering/);
   assert.match(page, /href: "\/provider\/deploy"/);
   assert.match(page, /href: "\/explore\/riskscan"/);
 

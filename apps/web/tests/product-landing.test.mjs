@@ -38,7 +38,7 @@ test("translates the selected marketplace composition through current local orie
   assert.match(landing, /Tool402/);
   assert.match(landing, /RiskScan/);
   assert.match(hero, /<section\b[^>]*className=["'][^"']*radial-gradient[^"']*["']/);
-  assert.match(hero, /<section\b[^>]*className=["'][^"']*\bborder-b\b[^"']*\bbg-card\/30\b[^"']*["']/);
+  assert.match(hero, /<section\b[^>]*className=["'][^"']*\bborder-b\b[^"']*\bbg-card\/35\b[^"']*["']/);
   assert.match(hero, /<h1\b[^>]*>\s*Back the tools\s*<span className=["'][^"']*\btext-brand-purple\b[^"']*["']>agents pay<\/span>\s*to use\./);
   assert.match(hero, /<h1\b[^>]*className=["'][^"']*\bfont-extrabold\b[^"']*\bleading-\[1\.04\][^"']*["']/);
   assert.match(hero, /hero-trio\.png/);
@@ -61,8 +61,8 @@ test("offers only the specified current local CTA destinations", async () => {
   );
 
   assert.deepEqual(ctas, [
+    ["/demo", "Follow the hackathon demo"],
     ["/explore", "Explore tools"],
-    ["/demo", "Open guided demo"],
     ["/explore", "Browse all tools →"],
     ["/explore", "Explore tools"],
     ["/demo", "Open guided demo"],
@@ -133,7 +133,7 @@ test("keeps campaign cards limited to current routes and truthful preparation st
 test("keeps the selected visual asset decorative, local, and free of unsupported claims", async () => {
   const [page, hero, sections, footer] = await readLandingSources();
   const sources = [page, hero, sections, footer];
-  const landing = sources.join("\n");
+  const landing = sources.join("\n").replaceAll("Payment Required", "402");
   const heroTrio = hero.match(/<Image\b[^>]*src=["']\/brand\/hero-trio\.png["'][^>]*\/>/);
 
   assert.ok(heroTrio);

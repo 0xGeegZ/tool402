@@ -267,7 +267,7 @@ implementedTest("renders only the fixed status regions, actions, evidence rows, 
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
   assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
-  assert.match(page, /<PageHeader\b[^>]*title="Campaign status"/);
+  assert.match(page, /<PageHeader\b[^>]*title="Provider status"/);
   assert.equal((page.match(/<Suspense\b/g) ?? []).length, 1);
   assert.doesNotMatch(page, /["']use client["']|\bfetch\s*\(|set(?:Timeout|Interval)\s*\(/);
   for (const text of [
@@ -299,13 +299,13 @@ implementedTest("presents unavailable provider data as an actionable workspace w
   const page = sources["src/app/provider/page.tsx"];
   const status = sources["src/components/provider/status/provider-status.tsx"];
 
-  assert.match(page, /Campaign status/);
+  assert.match(page, /Provider status/);
   assert.match(page, /Tool operator/);
   assert.match(status, /bg-secondary/);
   assert.match(status, /Offering record/);
   assert.match(status, /Directory record/);
   assert.match(status, /Provider action/);
-  assert.match(status, /Open the deploy wizard/);
+  assert.match(status, /Prepare an offering/);
   assert.doesNotMatch(status, /funding raised|units issued|paid task|balance|Live testnet|Connected/i);
 });
 

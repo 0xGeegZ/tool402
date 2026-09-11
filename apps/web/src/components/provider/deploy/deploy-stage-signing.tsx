@@ -107,14 +107,14 @@ export function DeployStageSigning({
   return (
     <div className="space-y-8">
       <div data-ui="provider-review-wallet-context" className={session === null ? "ml-auto grid max-w-3xl gap-4 sm:grid-cols-2" : "hidden"}>
-        <WalletIsland approvedIssuerAddress={executionProjection.issuerEvmAddress} heading="Issuer wallet" className="space-y-3 rounded-2xl border border-border bg-card p-5 shadow-none">
+        <WalletIsland approvedIssuerAddress={executionProjection.issuerEvmAddress} heading="Issuer wallet" className="space-y-3 rounded-card border border-border bg-card p-5 shadow-none">
           {(walletSession) => (
             <SessionReporter session={walletSession} onSession={setSession}>
               {null}
             </SessionReporter>
           )}
         </WalletIsland>
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-none">
+        <section className="rounded-card border border-border bg-card p-5 shadow-none">
           <h2 className="text-base font-semibold tracking-tight">What signing does</h2>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
             A connected wallet only enables the next local signature request. It does not create, fund, or publish anything by itself.
@@ -129,7 +129,7 @@ export function DeployStageSigning({
           <p className="text-sm leading-6 text-muted-foreground">
             {session === null
               ? "Connect MetaMask above on Hedera Testnet to enable the first stage that needs a signature."
-              : "The connected wallet enables the next local signature request. Stage results live only in this browser session and return to their resting state on reload."}
+              : "The connected wallet enables the next local signature request. Stage results live only in this browser session and return to their resting state on reload. A connected wallet is not an authority, a signature is not an accepted command, and a relayed ACCEPTED is a backend admission and not an on-chain fact."}
           </p>
         </div>
         {request && session ? <SignatureDialog provider={session.provider} request={request} onResult={finish} /> : null}
