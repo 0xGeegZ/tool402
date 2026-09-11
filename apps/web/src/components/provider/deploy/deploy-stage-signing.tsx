@@ -130,10 +130,17 @@ export function DeployStageSigning({
   }
 
   const connect = wallet.state.kind === "disconnected" ? (
-    <section data-ui="provider-deploy-connect" aria-labelledby="provider-deploy-connect-title" className="rounded-control border border-border bg-card p-4 shadow-none sm:p-5">
-      <h2 id="provider-deploy-connect-title" className="text-sm font-semibold">Connect MetaMask</h2>
-      <p className="mt-2 text-[13px] leading-5 text-muted-foreground">Connect MetaMask on Hedera Testnet to enable the first signing step.</p>
-      <Button className="mt-3" onClick={() => { void wallet.connect(); }}>Connect MetaMask</Button>
+    <section data-ui="provider-deploy-connect" aria-labelledby="provider-deploy-connect-title" className="h-full rounded-card border border-primary/15 bg-primary/[0.03] p-5 shadow-none sm:p-6">
+      <div className="flex items-start gap-3">
+        <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H19v14H6.5A2.5 2.5 0 0 1 4 16.5v-9Z" /><path d="M4 8h15" /><path d="M15 13h2" /></svg>
+        </span>
+        <div>
+          <h2 id="provider-deploy-connect-title" className="text-lg font-bold tracking-tight">Connect MetaMask</h2>
+          <p className="mt-1.5 text-sm leading-6 text-muted-foreground">Connect MetaMask on Hedera Testnet to enable the first signing step.</p>
+        </div>
+      </div>
+      <Button size="lg" shape="pill" className="mt-5 w-full sm:w-auto" onClick={() => { void wallet.connect(); }}>Connect MetaMask</Button>
     </section>
   ) : null;
   const resumeNotice = session !== null && resumePending ? <p role="status" aria-live="polite" className="text-[13px] leading-5 text-muted-foreground">Checking the existing durable campaign before enabling any signature.</p> : null;

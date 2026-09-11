@@ -361,8 +361,8 @@ function ReviewStep({
   const reviewRows = [["Tool name", values.toolName], ["Category", values.category], ["Qualifying resource", values.qualifyingResource], ["Quick display price", `${values.quickPrice} HBAR`], ["Standard price (HBAR)", `${values.standardPrice} HBAR`], ["Target agent customers", values.targetAgentCustomers], ["Capability summary", values.capabilitySummary], ["Funding terms", values.useOfFunds]] as const;
 
   return (
-    <div className="space-y-4">
-      {connect ? <section className="rounded-card border border-primary/10 bg-card p-5 shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_6%,transparent)] sm:p-6" aria-label="Wallet connection"><div className="grid gap-5 lg:grid-cols-[1fr_0.8fr] lg:items-center"><div className="flex gap-4"><ProviderIcon kind="wallet" /><div className="min-w-0 flex-1">{connect}</div></div><div className="rounded-field border border-success/15 bg-success/10 p-4"><div className="flex items-center gap-2"><ProviderIcon kind="shield" compact /><p className="font-semibold">Your keys, your control</p></div><p className="mt-2 text-sm leading-5 text-muted-foreground">You authorize each step. Nothing is submitted to the network until you sign and confirm.</p></div></div></section> : null}
+    <div className="space-y-5">
+      {connect ? <section aria-label="Wallet connection" data-ui="provider-deploy-wallet-pair" className="grid gap-4 lg:grid-cols-2 lg:items-stretch"><div className="min-w-0">{connect}</div><section className="flex h-full flex-col rounded-card border border-primary/15 bg-primary/[0.06] p-5 shadow-none sm:p-6"><div className="flex items-start gap-3"><ProviderIcon kind="shield" /><div><h2 className="text-lg font-bold tracking-tight">Your keys, your control</h2><p className="mt-1.5 text-sm leading-6 text-muted-foreground">You authorize each step. Nothing is submitted to the network until you sign and confirm.</p></div></div><p className="mt-5 border-t border-primary/15 pt-3 text-xs leading-5 text-muted-foreground">Connecting a wallet only enables the next local signature request.</p></section></section> : null}
       <section className="rounded-card border border-primary/10 bg-card p-5 shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_6%,transparent)] sm:p-6" aria-labelledby="prepared-title"><div className="flex items-start justify-between gap-4"><div className="flex gap-4"><ProviderIcon kind="document" /><div><h2 id="prepared-title" className="text-lg font-bold">Prepared details</h2><p className="mt-1 text-sm leading-5 text-muted-foreground">Review the key details of your offering. These values remain editable until you sign.</p></div></div><Button type="button" variant="outline" className="hidden shrink-0 sm:inline-flex">Edit details</Button></div><dl className="mt-4 grid gap-x-8 gap-y-3 rounded-field border border-primary/10 bg-primary/[0.03] p-3 text-sm sm:grid-cols-2">{reviewRows.map(([label, value]) => <div key={label} className="grid grid-cols-[minmax(7rem,0.8fr)_1.2fr] gap-2"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium text-foreground">{value}</dd></div>)}</dl></section>
       {resumeNotice}
       {constructionNotice}
@@ -501,7 +501,7 @@ export function ProviderDeployWizard() {
                   </Card>
                 </section>
                 <aside className="flex min-w-0 flex-col gap-5">
-                  {layout.connect ? <section className="rounded-card border border-border bg-card p-5 shadow-none sm:p-6" aria-label="Wallet connection">{layout.connect}</section> : null}
+                  {layout.connect}
                   {layout.resumeNotice}
                   <CampaignSummary values={values} />
                 </aside>
