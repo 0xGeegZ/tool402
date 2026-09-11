@@ -99,7 +99,7 @@ export function LocalNavigation() {
           <li key={link.href}>
             <Link
               href={link.href}
-              className="rounded-full px-3 py-1.5 text-[12px] font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="touch-target rounded-full px-3 py-1.5 text-[12px] font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               {link.label}
             </Link>
@@ -110,7 +110,7 @@ export function LocalNavigation() {
       <div className="flex items-center gap-2 lg:hidden">
         <Link
           href="/explore"
-          className="inline-flex min-h-10 items-center rounded-full border border-border bg-secondary px-3.5 text-[13px] font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="inline-flex min-h-10 touch-target items-center rounded-full border border-border bg-secondary px-3.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           Explore
         </Link>
@@ -121,7 +121,7 @@ export function LocalNavigation() {
           aria-controls="mobile-navigation-panel"
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen(true)}
-          className="inline-flex size-10 items-center justify-center rounded-full border border-border bg-background text-foreground transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="inline-flex size-10 touch-target items-center justify-center rounded-full border border-border bg-background text-foreground transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75" className="size-5">
             <path d="M3.5 6.25h13M3.5 10h13M3.5 13.75h13" strokeLinecap="round" />
@@ -161,7 +161,7 @@ export function LocalNavigation() {
                       <Link
                         href={link.href}
                         onClick={() => closeMenu()}
-                        className="flex min-h-11 items-center rounded-[var(--radius)] px-3 text-base font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                        className="flex min-h-11 items-center rounded-control px-3 text-base font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                       >
                         {link.label}
                       </Link>

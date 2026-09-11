@@ -45,13 +45,13 @@ export function ProviderRiskScanGuide() {
         <div className="min-w-0 space-y-8">
           <section id="provider-preview" aria-labelledby="provider-preview-title" className="space-y-4 scroll-mt-24">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-brand-purple">01 · Provider preview</p>
+              <p className="text-sm font-semibold text-primary">01 · Provider preview</p>
               <h2 id="provider-preview-title" className="text-2xl font-bold tracking-tight">Read the current local surface</h2>
               <p className="max-w-2xl text-base leading-7 text-muted-foreground">
                 The Provider overview is read-only. It reflects the current local projection and does not publish a public campaign.
               </p>
             </div>
-            <Card className="rounded-[calc(var(--radius)*2)] bg-card shadow-none">
+            <Card className="rounded-panel bg-card shadow-none">
               <CardContent className="pt-5 text-sm leading-6 text-muted-foreground">
                 The local preview keeps its existing route and fields. This guide only explains where each step belongs.
               </CardContent>
@@ -60,7 +60,7 @@ export function ProviderRiskScanGuide() {
 
           <section id="five-steps" aria-labelledby="five-steps-title" className="space-y-4 scroll-mt-24">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-brand-purple">02 · Five steps</p>
+              <p className="text-sm font-semibold text-primary">02 · Five steps</p>
               <h2 id="five-steps-title" className="text-2xl font-bold tracking-tight">Follow the local preview</h2>
               <p className="max-w-2xl text-base leading-7 text-muted-foreground">
                 The first four steps contain the documented local editable fields. Review and sign is a non-editable review and sign surface.
@@ -69,7 +69,7 @@ export function ProviderRiskScanGuide() {
             <ol className="grid gap-4 sm:grid-cols-2">
               {providerSteps.map((step) => (
                 <li key={step.number}>
-                  <Card className="h-full rounded-[calc(var(--radius)*2)] shadow-none">
+                  <Card className="h-full rounded-panel shadow-none">
                     <CardHeader className="space-y-3">
                       <Badge variant="outline" className="w-fit border-border bg-secondary/50">Step {step.number}</Badge>
                       <div className="space-y-2">
@@ -85,10 +85,10 @@ export function ProviderRiskScanGuide() {
 
           <section id="control-boundary" aria-labelledby="control-boundary-title" className="space-y-4 scroll-mt-24">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-brand-purple">03 · Control boundary</p>
+              <p className="text-sm font-semibold text-primary">03 · Control boundary</p>
               <h2 id="control-boundary-title" className="text-2xl font-bold tracking-tight">Keep the current boundary clear</h2>
             </div>
-            <Card className="rounded-[calc(var(--radius)*2)] bg-secondary/35 shadow-none">
+            <Card className="rounded-panel bg-secondary/35 shadow-none">
               <CardContent className="space-y-3 pt-5 text-sm leading-6 text-muted-foreground">
                 <p>A review or signature is not an ATS deployment.</p>
                 <p>The current control is conditionally gated. It does not create a deployed asset or publish a public campaign.</p>
@@ -98,12 +98,12 @@ export function ProviderRiskScanGuide() {
 
           <section id="local-next-steps" aria-labelledby="local-next-steps-title" className="space-y-4 scroll-mt-24">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-brand-purple">04 · Continue locally</p>
+              <p className="text-sm font-semibold text-primary">04 · Continue locally</p>
               <h2 id="local-next-steps-title" className="text-2xl font-bold tracking-tight">Choose a local next step</h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               {localRoutes.map((route) => (
-                <Card key={route.href} className="rounded-[calc(var(--radius)*2)] shadow-none">
+                <Card key={route.href} className="rounded-panel shadow-none">
                   <CardContent className="space-y-4 pt-5">
                     <p className="text-sm leading-6 text-muted-foreground">{route.description}</p>
                     <Link href={route.href} className={linkClass}>{route.label}</Link>
@@ -114,13 +114,13 @@ export function ProviderRiskScanGuide() {
           </section>
         </div>
 
-        <aside className="order-first h-fit rounded-[calc(var(--radius)*2)] border bg-card p-4 shadow-none lg:sticky lg:top-24 lg:order-none">
+        <aside className="order-first h-fit rounded-panel border bg-card p-4 shadow-none lg:sticky lg:top-24 lg:order-none">
           <p className="text-sm font-semibold">On this page</p>
           <nav aria-label="Provider guide topics" className="mt-3">
             <ul className="space-y-1">
               {topics.map((topic) => (
                 <li key={topic.href}>
-                  <Link href={topic.href} className="block rounded-[var(--radius)] px-3 py-2 text-sm leading-5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                  <Link href={topic.href} className="block rounded-control px-3 py-2 text-sm leading-5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
                     {topic.label}
                   </Link>
                 </li>

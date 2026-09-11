@@ -44,7 +44,7 @@ export function DocumentationFaq() {
 
       <section aria-labelledby="faq-title" className="space-y-6 px-5 py-10 sm:px-8 sm:py-14">
         <div className="max-w-2xl space-y-2">
-          <p className="text-sm font-semibold text-brand-purple">Current local facts</p>
+          <p className="text-sm font-semibold text-primary">Current local facts</p>
           <h2 id="faq-title" className="text-2xl font-bold tracking-tight">Read the boundary before the route</h2>
           <p className="text-base leading-7 text-muted-foreground">
             These answers describe the present prototype without adding a product claim or a new action.
@@ -53,7 +53,7 @@ export function DocumentationFaq() {
 
         <div className="grid gap-5 md:grid-cols-2">
           {questions.map((item) => (
-            <Card key={item.question} className="rounded-[calc(var(--radius)*2)] shadow-none">
+            <Card key={item.question} className="rounded-panel shadow-none">
               <CardHeader className="space-y-2">
                 <h3 className="text-lg font-bold tracking-tight">{item.question}</h3>
               </CardHeader>

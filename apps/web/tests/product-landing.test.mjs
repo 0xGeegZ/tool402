@@ -49,7 +49,7 @@ test("translates the selected marketplace composition through current local orie
   assert.match(sections, /id=["']how-it-works["'][^>]*className=["'][^"']*\bbg-muted\/40\b[^"']*/);
   assert.match(sections, /<ol\b[^>]*className=["'][^"']*\bgrid\b[^"']*\blg:grid-cols-3\b[^"']*["']/);
   assert.match(sections, /border-t border-dashed border-border/);
-  assert.match(sections, /<Card className=["'][^"']*\brounded-2xl\b[^"']*\bbg-card\b[^"']*["']/);
+  assert.match(sections, /<Card className=["'][^"']*\brounded-card[^"']*\bbg-card\b[^"']*["']/);
   assert.match(landing, /Prepare a tool offering/i);
 });
 
@@ -126,7 +126,7 @@ test("keeps campaign cards limited to current routes and truthful preparation st
   assert.match(sections, /name: "EntityCheck France"/);
   assert.match(sections, /status: "Campaign preview"/);
   assert.match(sections, /Campaign preparation/);
-  assert.match(sections, /grid grid-cols-2 gap-4 rounded-\[var\(--radius\)\] border border-dashed/);
+  assert.match(sections, /grid grid-cols-2 gap-4 rounded-control border border-dashed/);
   assert.doesNotMatch(sections, /RiskScan Quick|No public route/);
 });
 

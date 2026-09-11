@@ -46,9 +46,9 @@ export function ExploreCatalog() {
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           <RiskScanDiscoveryCard />
           <EntityCheckDiscoveryCard />
-          <Card className="flex min-h-[20rem] flex-col rounded-[calc(var(--radius)*2)] border-dashed bg-transparent shadow-none">
+          <Card className="flex min-h-[20rem] flex-col rounded-panel border-dashed bg-transparent shadow-none">
             <CardHeader className="gap-4">
-              <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-[var(--radius)] bg-secondary text-secondary-foreground">
+              <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-control bg-secondary text-secondary-foreground">
                 <svg viewBox="0 0 16 16" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.75}>
                   <path d="M8 3v10M3 8h10" strokeLinecap="round" />
                 </svg>

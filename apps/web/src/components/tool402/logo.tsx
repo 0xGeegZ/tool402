@@ -13,7 +13,7 @@ export function Logo({ className }: LogoProps) {
       alt="Tool402"
       width={180}
       height={60}
-      priority
+      loading="eager"
       className={cn("h-8 w-auto object-contain", className)}
     />
   );

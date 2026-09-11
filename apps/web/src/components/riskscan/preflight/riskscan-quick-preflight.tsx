@@ -69,7 +69,7 @@ export function RiskScanQuickPreflight() {
                 type="text"
                 required
                 maxLength={96}
-                className="min-h-10 w-full rounded-[var(--radius)] border bg-background px-3"
+                className="min-h-10 w-full rounded-control border bg-background px-3"
               />
             </label>
             <label className="block space-y-2">
@@ -79,7 +79,7 @@ export function RiskScanQuickPreflight() {
                 type="text"
                 required
                 maxLength={160}
-                className="min-h-10 w-full rounded-[var(--radius)] border bg-background px-3"
+                className="min-h-10 w-full rounded-control border bg-background px-3"
               />
             </label>
             <label className="block space-y-2">
@@ -88,7 +88,7 @@ export function RiskScanQuickPreflight() {
                 name="context"
                 required
                 maxLength={280}
-                className="min-h-24 w-full rounded-[var(--radius)] border bg-background px-3 py-2"
+                className="min-h-24 w-full rounded-control border bg-background px-3 py-2"
               />
             </label>
           </div>

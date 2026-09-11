@@ -20,7 +20,7 @@ export function StatePanel({
   return (
     <section
       data-slot="state-panel"
-      className={cn("space-y-4 rounded-[var(--radius)] border border-border bg-card p-5 text-center", className)}
+      className={cn("space-y-4 rounded-control border border-border bg-card p-5 text-center", className)}
       {...props}
     >
       {illustration ? <img {...illustration} alt="" aria-hidden="true" /> : null}

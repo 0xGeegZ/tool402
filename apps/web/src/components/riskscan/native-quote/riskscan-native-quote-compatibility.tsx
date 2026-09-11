@@ -75,7 +75,7 @@ export function RiskScanNativeQuoteCompatibility() {
                 name="network"
                 type="text"
                 required
-                className="min-h-10 w-full rounded-[var(--radius)] border bg-background px-3"
+                className="min-h-10 w-full rounded-control border bg-background px-3"
               />
             </label>
             <label className="block space-y-2">
@@ -84,7 +84,7 @@ export function RiskScanNativeQuoteCompatibility() {
                 name="asset"
                 type="text"
                 required
-                className="min-h-10 w-full rounded-[var(--radius)] border bg-background px-3"
+                className="min-h-10 w-full rounded-control border bg-background px-3"
               />
             </label>
             <label className="block space-y-2">
@@ -93,7 +93,7 @@ export function RiskScanNativeQuoteCompatibility() {
                 name="maximumAmount"
                 type="text"
                 required
-                className="min-h-10 w-full rounded-[var(--radius)] border bg-background px-3"
+                className="min-h-10 w-full rounded-control border bg-background px-3"
               />
             </label>
           </div>

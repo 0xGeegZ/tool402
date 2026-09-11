@@ -29,7 +29,7 @@ export function EntityCheckDetail() {
       <header className="border-b border-border pb-10">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-4">
-            <span aria-hidden="true" className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-brand-green/15 text-brand-green">
+            <span aria-hidden="true" className="flex size-14 shrink-0 items-center justify-center rounded-card bg-brand-green/15 text-brand-green">
               <BuildingIcon />
             </span>
             <div className="space-y-2">
@@ -49,7 +49,7 @@ export function EntityCheckDetail() {
           <h2 id="entitycheck-capability" className="text-2xl font-semibold tracking-tight">Counterparty verification</h2>
           <p className="leading-7 text-muted-foreground">Review the bounded inputs, outcomes, sources, and limitations before choosing another local route.</p>
         </div>
-        <Card className="rounded-[calc(var(--radius)*2)] shadow-none">
+        <Card className="rounded-panel shadow-none">
           <CardHeader className="space-y-2">
             <CardTitle>Descriptive detail</CardTitle>
             <CardDescription>No request is made from this page.</CardDescription>
@@ -62,7 +62,7 @@ export function EntityCheckDetail() {
           <h2 id="entitycheck-inputs" className="text-2xl font-semibold tracking-tight">Input contract</h2>
           <p className="leading-7 text-muted-foreground">The local boundary describes these caller-supplied fields.</p>
         </div>
-        <Card className="rounded-[calc(var(--radius)*2)] shadow-none">
+        <Card className="rounded-panel shadow-none">
           <CardContent className="pb-0">
             <dl className="divide-y">
               {inputContract.map(([field, description]) => (
@@ -84,7 +84,7 @@ export function EntityCheckDetail() {
         <ul className="grid gap-4 sm:grid-cols-3">
           {resultBoundary.map(([disposition, description, screen]) => (
             <li key={disposition}>
-              <Card className="h-full rounded-[calc(var(--radius)*2)] shadow-none">
+              <Card className="h-full rounded-panel shadow-none">
                 <CardHeader className="space-y-3">
                   <Badge variant="secondary" className="w-fit">Disposition</Badge>
                   <CardTitle className="font-mono text-base">{disposition}</CardTitle>
@@ -98,7 +98,7 @@ export function EntityCheckDetail() {
       </section>
 
       <section aria-labelledby="entitycheck-sources" className="grid gap-5 lg:grid-cols-2">
-        <Card className="rounded-[calc(var(--radius)*2)] shadow-none">
+        <Card className="rounded-panel shadow-none">
           <CardHeader className="space-y-3">
             <CardTitle id="entitycheck-sources">Sources</CardTitle>
             <ul className="space-y-2 text-sm leading-6 text-muted-foreground">
@@ -107,7 +107,7 @@ export function EntityCheckDetail() {
             </ul>
           </CardHeader>
         </Card>
-        <Card className="rounded-[calc(var(--radius)*2)] border-dashed bg-transparent shadow-none">
+        <Card className="rounded-panel border-dashed bg-transparent shadow-none">
           <CardHeader className="space-y-3">
             <CardTitle>Configuration boundary</CardTitle>
             <CardDescription>The API returns unavailable until its host supplies both x402 and source configuration.</CardDescription>

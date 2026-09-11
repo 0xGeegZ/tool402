@@ -19,7 +19,7 @@ function Outcome({ outcome }: { outcome: ProviderProjections["offering"] | Provi
 
 function StatusSummary({ title, outcome }: { title: string; outcome: ProviderProjections["offering"] | ProviderProjections["directory"] }) {
   return (
-    <section className="min-h-32 rounded-2xl border border-border bg-card p-5 shadow-none">
+    <section className="min-h-32 rounded-card border border-border bg-card p-5 shadow-none">
       <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">{title}</p>
       <div className="mt-3 text-lg font-semibold tracking-tight"><Outcome outcome={outcome} /></div>
     </section>
@@ -43,7 +43,7 @@ export function ProviderStatus({ projections }: { projections: ProviderProjectio
         </>}
       </section>
 
-      <section data-ui="provider-next-action" aria-labelledby="provider-next-action" className="flex flex-col gap-5 rounded-[calc(var(--radius)*2)] border border-brand-purple/30 bg-[#e9e1ff] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-7">
+      <section data-ui="provider-next-action" aria-labelledby="provider-next-action" className="flex flex-col gap-5 rounded-panel border border-brand-purple/30 bg-secondary p-6 sm:flex-row sm:items-center sm:justify-between sm:p-7">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-foreground">Next action</p>
           <h2 id="provider-next-action" className="text-xl font-semibold tracking-tight">{action?.message ?? "Prepare a provider offering"}</h2>
@@ -65,21 +65,21 @@ export function ProviderStatus({ projections }: { projections: ProviderProjectio
         <div data-ui="provider-overview-state-grid" className="grid gap-4 md:grid-cols-3">
           <StatusSummary title="Offering record" outcome={projections.offering} />
           <StatusSummary title="Directory record" outcome={projections.directory} />
-          <section className="min-h-32 rounded-2xl border border-border bg-card p-5 shadow-none">
+          <section className="min-h-32 rounded-card border border-border bg-card p-5 shadow-none">
             <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Provider action</p>
             <p className="mt-3 text-lg font-semibold tracking-tight">{action?.href === null ? "No further action" : "Open the local wizard"}</p>
           </section>
         </div>
       </section>
 
-      <section data-ui="provider-riskscan-offering-card" aria-labelledby="provider-riskscan-offering" className="grid gap-5 rounded-[calc(var(--radius)*2)] border border-border bg-card p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+      <section data-ui="provider-riskscan-offering-card" aria-labelledby="provider-riskscan-offering" className="grid gap-5 rounded-panel border border-border bg-card p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">Local RiskScan offering path</p>
           <h2 id="provider-riskscan-offering" className="text-2xl font-semibold tracking-[-0.03em]">RiskScan</h2>
           <p className="max-w-2xl text-sm leading-6 text-muted-foreground">Prepare the existing RiskScan offering in the local provider wizard. A preview is not a public offer.</p>
         </div>
         <div className="flex flex-col items-start gap-3 lg:items-end">
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-1 rounded-xl border border-dashed border-border bg-secondary/30 px-4 py-3 text-sm">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-1 rounded-field border border-dashed border-border bg-secondary/30 px-4 py-3 text-sm">
             <div><dt className="text-xs text-muted-foreground">Route</dt><dd className="font-medium">/provider/deploy</dd></div>
             <div><dt className="text-xs text-muted-foreground">Scope</dt><dd className="font-medium">Local wizard</dd></div>
           </dl>
@@ -87,18 +87,18 @@ export function ProviderStatus({ projections }: { projections: ProviderProjectio
         </div>
       </section>
 
-      <section aria-labelledby="provider-evidence" className="rounded-[calc(var(--radius)*2)] border border-border bg-card p-5 shadow-none sm:p-6">
+      <section aria-labelledby="provider-evidence" className="rounded-panel border border-border bg-card p-5 shadow-none sm:p-6">
         <h2 id="provider-evidence" className="text-2xl font-semibold tracking-[-0.03em]">Deployment evidence</h2>
-        <div className="mt-4 overflow-x-auto rounded-xl border border-dashed border-border bg-secondary/20 p-1">
+        <div className="mt-4 overflow-x-auto rounded-field border border-dashed border-border bg-secondary/20 p-1">
           {rows === undefined ? <div className="p-4"><Outcome outcome={projections.offering} /></div> : <table className="w-full min-w-[42rem] text-left text-sm"><thead className="text-xs uppercase tracking-[0.12em] text-muted-foreground"><tr><th className="px-3 py-3 font-medium">Record</th><th className="px-3 py-3 font-medium">Reference</th><th className="px-3 py-3 font-medium">Verification</th><th className="px-3 py-3 font-medium">Time</th></tr></thead><tbody>{rows.map((row) => <tr key={row[0]} className="border-t border-border"><td className="px-3 py-3 font-medium">{row[0]}</td><td className="px-3 py-3">{row[0] === "revenue note" && hashscanUrl !== null ? <a className="underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={hashscanUrl} rel="noreferrer">{row[1]} (leaving the site)</a> : row[1]}</td><td className="px-3 py-3">{row[2]}</td><td className="px-3 py-3">{row[3]}</td></tr>)}</tbody></table>}
         </div>
       </section>
 
-      <Card className="rounded-[calc(var(--radius)*2)] border-border shadow-none"><CardHeader><CardTitle>Active terms</CardTitle></CardHeader><CardContent>{offering === undefined ? <Outcome outcome={projections.offering} /> : <dl className="grid gap-x-6 gap-y-4 text-sm sm:grid-cols-2"><div><dt className="text-muted-foreground">Funding target</dt><dd className="mt-1 font-medium">{offering.definition.terms.fundingTargetTinybars}</dd></div><div><dt className="text-muted-foreground">Unit price and maximum units</dt><dd className="mt-1 font-medium">{offering.definition.terms.noteUnitPriceTinybars} · {offering.definition.terms.maximumNoteUnits}</dd></div><div><dt className="text-muted-foreground">Minimum units</dt><dd className="mt-1 font-medium">{offering.definition.terms.minimumPurchaseUnits}</dd></div><div><dt className="text-muted-foreground">Shares</dt><dd className="mt-1 font-medium">{offering.definition.terms.reserveShareBps} · {offering.definition.terms.issuerShareBps} · {offering.definition.terms.platformFeeBps}</dd></div><div><dt className="text-muted-foreground">Payout cap</dt><dd className="mt-1 font-medium">{offering.definition.terms.payoutCapTinybars}</dd></div><div><dt className="text-muted-foreground">Maturity</dt><dd className="mt-1 font-medium">{offering.definition.maturityAt}</dd></div><div><dt className="text-muted-foreground">Qualifying resource</dt><dd className="mt-1 font-medium">{offering.definition.qualifyingResource}</dd></div><div><dt className="text-muted-foreground">Advertised prices</dt><dd className="mt-1 font-medium">{offering.advertisedQuickPriceTinybars} · {offering.advertisedStandardPriceTinybars}</dd></div></dl>}<p className="mt-5 border-t border-border pt-4 text-sm leading-6 text-muted-foreground">A material change needs a separately signed offering and directory version.</p></CardContent></Card>
+      <Card className="rounded-panel border-border shadow-none"><CardHeader><CardTitle>Active terms</CardTitle></CardHeader><CardContent>{offering === undefined ? <Outcome outcome={projections.offering} /> : <dl className="grid gap-x-6 gap-y-4 text-sm sm:grid-cols-2"><div><dt className="text-muted-foreground">Funding target</dt><dd className="mt-1 font-medium">{offering.definition.terms.fundingTargetTinybars}</dd></div><div><dt className="text-muted-foreground">Unit price and maximum units</dt><dd className="mt-1 font-medium">{offering.definition.terms.noteUnitPriceTinybars} · {offering.definition.terms.maximumNoteUnits}</dd></div><div><dt className="text-muted-foreground">Minimum units</dt><dd className="mt-1 font-medium">{offering.definition.terms.minimumPurchaseUnits}</dd></div><div><dt className="text-muted-foreground">Shares</dt><dd className="mt-1 font-medium">{offering.definition.terms.reserveShareBps} · {offering.definition.terms.issuerShareBps} · {offering.definition.terms.platformFeeBps}</dd></div><div><dt className="text-muted-foreground">Payout cap</dt><dd className="mt-1 font-medium">{offering.definition.terms.payoutCapTinybars}</dd></div><div><dt className="text-muted-foreground">Maturity</dt><dd className="mt-1 font-medium">{offering.definition.maturityAt}</dd></div><div><dt className="text-muted-foreground">Qualifying resource</dt><dd className="mt-1 font-medium">{offering.definition.qualifyingResource}</dd></div><div><dt className="text-muted-foreground">Advertised prices</dt><dd className="mt-1 font-medium">{offering.advertisedQuickPriceTinybars} · {offering.advertisedStandardPriceTinybars}</dd></div></dl>}<p className="mt-5 border-t border-border pt-4 text-sm leading-6 text-muted-foreground">A material change needs a separately signed offering and directory version.</p></CardContent></Card>
 
-      <Card className="rounded-[calc(var(--radius)*2)] border-border shadow-none"><CardHeader><CardTitle>Active directory</CardTitle></CardHeader><CardContent>{directory === undefined ? <Outcome outcome={projections.directory} /> : <dl className="grid gap-x-6 gap-y-4 text-sm sm:grid-cols-2"><div><dt className="text-muted-foreground">Service</dt><dd className="mt-1 font-medium">{directory.record.serviceSlug}</dd></div><div><dt className="text-muted-foreground">Version</dt><dd className="mt-1 font-medium">{directory.directoryVersion}</dd></div><div><dt className="text-muted-foreground">Status</dt><dd className="mt-1 font-medium">{directory.record.status}</dd></div><div><dt className="text-muted-foreground">Endpoint</dt><dd className="mt-1 break-all font-medium">{directory.record.x402Endpoint}</dd></div><div><dt className="text-muted-foreground">Clearing account</dt><dd className="mt-1 font-medium">{directory.record.clearingAccount}</dd></div></dl>}</CardContent></Card>
+      <Card className="rounded-panel border-border shadow-none"><CardHeader><CardTitle>Active directory</CardTitle></CardHeader><CardContent>{directory === undefined ? <Outcome outcome={projections.directory} /> : <dl className="grid gap-x-6 gap-y-4 text-sm sm:grid-cols-2"><div><dt className="text-muted-foreground">Service</dt><dd className="mt-1 font-medium">{directory.record.serviceSlug}</dd></div><div><dt className="text-muted-foreground">Version</dt><dd className="mt-1 font-medium">{directory.directoryVersion}</dd></div><div><dt className="text-muted-foreground">Status</dt><dd className="mt-1 font-medium">{directory.record.status}</dd></div><div><dt className="text-muted-foreground">Endpoint</dt><dd className="mt-1 break-all font-medium">{directory.record.x402Endpoint}</dd></div><div><dt className="text-muted-foreground">Clearing account</dt><dd className="mt-1 font-medium">{directory.record.clearingAccount}</dd></div></dl>}</CardContent></Card>
 
-      <Card className="rounded-[calc(var(--radius)*2)] border-border shadow-none"><CardHeader><CardTitle>Signer</CardTitle></CardHeader><CardContent>{offering === undefined ? <Outcome outcome={projections.offering} /> : <p className="break-all text-sm leading-6">Signer of the admitted command: {offering.canonicalSignerAddress} · chain 296</p>}</CardContent></Card>
+      <Card className="rounded-panel border-border shadow-none"><CardHeader><CardTitle>Signer</CardTitle></CardHeader><CardContent>{offering === undefined ? <Outcome outcome={projections.offering} /> : <p className="break-all text-sm leading-6">Signer of the admitted command: {offering.canonicalSignerAddress} · chain 296</p>}</CardContent></Card>
     </div>
   );
 }

@@ -39,13 +39,13 @@ export function RiskScanGuide() {
         <div className="min-w-0 space-y-8">
           <section id="scope" aria-labelledby="scope-title" className="space-y-4 scroll-mt-24">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-brand-purple">01 · Scope</p>
+              <p className="text-sm font-semibold text-primary">01 · Scope</p>
               <h2 id="scope-title" className="text-2xl font-bold tracking-tight">What Quick covers</h2>
               <p className="max-w-2xl text-base leading-7 text-muted-foreground">
                 Quick is a bounded assessment of caller-supplied declarations. It does not verify an external service, payment, or evidence record.
               </p>
             </div>
-            <Card className="rounded-[calc(var(--radius)*2)] bg-card shadow-none">
+            <Card className="rounded-panel bg-card shadow-none">
               <CardHeader className="space-y-2">
                 <p className="text-sm font-semibold">Start from the descriptor</p>
                 <p className="text-sm leading-6 text-muted-foreground">
@@ -57,13 +57,13 @@ export function RiskScanGuide() {
 
           <section id="request-shape" aria-labelledby="request-shape-title" className="space-y-4 scroll-mt-24">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-brand-purple">02 · Input</p>
+              <p className="text-sm font-semibold text-primary">02 · Input</p>
               <h2 id="request-shape-title" className="text-2xl font-bold tracking-tight">Request shape</h2>
               <p className="max-w-2xl text-base leading-7 text-muted-foreground">
                 RiskScan Quick uses <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-foreground">POST /api/riskscan</code> with three top-level references and one required declarations object.
               </p>
             </div>
-            <Card className="rounded-[calc(var(--radius)*2)] shadow-none">
+            <Card className="rounded-panel shadow-none">
               <CardContent className="grid gap-5 pt-5 sm:grid-cols-2">
                 <div className="space-y-2">
                   <p className="text-sm font-semibold">Top-level fields</p>
@@ -83,13 +83,13 @@ export function RiskScanGuide() {
 
           <section id="result-boundary" aria-labelledby="result-boundary-title" className="space-y-4 scroll-mt-24">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-brand-purple">03 · Boundary</p>
+              <p className="text-sm font-semibold text-primary">03 · Boundary</p>
               <h2 id="result-boundary-title" className="text-2xl font-bold tracking-tight">Read the result boundary</h2>
               <p className="max-w-2xl text-base leading-7 text-muted-foreground">
                 The result can report <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-foreground">needs_disclosure</code> or <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-foreground">disclosures_reported</code>. Those dispositions describe the submitted declarations only.
               </p>
             </div>
-            <Card className="rounded-[calc(var(--radius)*2)] bg-secondary/35 shadow-none">
+            <Card className="rounded-panel bg-secondary/35 shadow-none">
               <CardContent className="pt-5 text-sm leading-6 text-muted-foreground">
                 x402 configuration is host-specific. When it is not configured, the current unavailable boundary is returned; this guide does not expose configuration values.
               </CardContent>
@@ -98,12 +98,12 @@ export function RiskScanGuide() {
 
           <section id="local-routes" aria-labelledby="local-routes-title" className="space-y-4 scroll-mt-24">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-brand-purple">04 · Continue locally</p>
+              <p className="text-sm font-semibold text-primary">04 · Continue locally</p>
               <h2 id="local-routes-title" className="text-2xl font-bold tracking-tight">Choose a local next step</h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
               {localRoutes.map((route) => (
-                <Card key={route.href} className="rounded-[calc(var(--radius)*2)] shadow-none">
+                <Card key={route.href} className="rounded-panel shadow-none">
                   <CardContent className="space-y-4 pt-5">
                     <p className="text-sm leading-6 text-muted-foreground">{route.description}</p>
                     <Link href={route.href} className={linkClass}>{route.label}</Link>
@@ -114,13 +114,13 @@ export function RiskScanGuide() {
           </section>
         </div>
 
-        <aside className="order-first h-fit rounded-[calc(var(--radius)*2)] border bg-card p-4 shadow-none lg:sticky lg:top-24 lg:order-none">
+        <aside className="order-first h-fit rounded-panel border bg-card p-4 shadow-none lg:sticky lg:top-24 lg:order-none">
           <p className="text-sm font-semibold">On this page</p>
           <nav aria-label="RiskScan guide topics" className="mt-3">
             <ul className="space-y-1">
               {topics.map((topic) => (
                 <li key={topic.href}>
-                  <Link href={topic.href} className="block rounded-[var(--radius)] px-3 py-2 text-sm leading-5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                  <Link href={topic.href} className="block rounded-control px-3 py-2 text-sm leading-5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
                     {topic.label}
                   </Link>
                 </li>

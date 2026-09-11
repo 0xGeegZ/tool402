@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-11T13:30:00Z",
+  "title": "Design System: Tool402",
+  "extensions": {
+    "colorMeta": {
+      "signature-indigo": { "role": "primary", "displayName": "Signature Indigo", "canonical": "oklch(52% 0.21 278)", "tonalRamp": ["oklch(15% 0.21 278)", "oklch(27% 0.21 278)", "oklch(39% 0.21 278)", "oklch(51% 0.21 278)", "oklch(63% 0.21 278)", "oklch(75% 0.16 278)", "oklch(87% 0.09 278)", "oklch(95% 0.04 278)"] },
+      "bright-indigo": { "role": "primary", "displayName": "Bright Indigo", "canonical": "oklch(57% 0.21 280)", "tonalRamp": ["oklch(15% 0.21 280)", "oklch(27% 0.21 280)", "oklch(39% 0.21 280)", "oklch(51% 0.21 280)", "oklch(63% 0.21 280)", "oklch(75% 0.16 280)", "oklch(87% 0.09 280)", "oklch(95% 0.04 280)"] },
+      "indigo-wash": { "role": "primary", "displayName": "Indigo Wash", "canonical": "oklch(93% 0.03 285)", "tonalRamp": ["oklch(15% 0.03 285)", "oklch(27% 0.03 285)", "oklch(39% 0.03 285)", "oklch(51% 0.03 285)", "oklch(63% 0.03 285)", "oklch(75% 0.03 285)", "oklch(87% 0.03 285)", "oklch(95% 0.03 285)"] },
+      "settled-green": { "role": "secondary", "displayName": "Settled Green", "canonical": "oklch(65% 0.15 160)", "tonalRamp": ["oklch(15% 0.15 160)", "oklch(27% 0.15 160)", "oklch(39% 0.15 160)", "oklch(51% 0.15 160)", "oklch(63% 0.15 160)", "oklch(75% 0.13 160)", "oklch(87% 0.08 160)", "oklch(95% 0.04 160)"] },
+      "clay-coral": { "role": "secondary", "displayName": "Clay Coral", "canonical": "oklch(68% 0.17 35)", "tonalRamp": ["oklch(15% 0.17 35)", "oklch(27% 0.17 35)", "oklch(39% 0.17 35)", "oklch(51% 0.17 35)", "oklch(63% 0.17 35)", "oklch(75% 0.14 35)", "oklch(87% 0.08 35)", "oklch(95% 0.04 35)"] },
+      "coin-yellow": { "role": "secondary", "displayName": "Coin Yellow", "canonical": "oklch(80% 0.16 80)", "tonalRamp": ["oklch(15% 0.12 80)", "oklch(27% 0.14 80)", "oklch(39% 0.16 80)", "oklch(51% 0.16 80)", "oklch(63% 0.16 80)", "oklch(75% 0.16 80)", "oklch(87% 0.12 80)", "oklch(95% 0.06 80)"] },
+      "success-ink": { "role": "tertiary", "displayName": "Success Ink", "canonical": "oklch(50% 0.13 160)" },
+      "success-wash": { "role": "tertiary", "displayName": "Success Wash", "canonical": "oklch(95% 0.03 160)" },
+      "warning-ink": { "role": "tertiary", "displayName": "Warning Ink", "canonical": "oklch(52% 0.13 60)" },
+      "warning-wash": { "role": "tertiary", "displayName": "Warning Wash", "canonical": "oklch(96% 0.04 80)" },
+      "destructive-ink": { "role": "tertiary", "displayName": "Destructive Ink", "canonical": "oklch(50% 0.17 35)" },
+      "destructive-wash": { "role": "tertiary", "displayName": "Destructive Wash", "canonical": "oklch(95% 0.03 35)" },
+      "ledger-cream": { "role": "neutral", "displayName": "Ledger Cream", "canonical": "oklch(97% 0.015 85)", "tonalRamp": ["oklch(15% 0.015 85)", "oklch(27% 0.015 85)", "oklch(39% 0.015 85)", "oklch(51% 0.015 85)", "oklch(63% 0.015 85)", "oklch(75% 0.015 85)", "oklch(87% 0.015 85)", "oklch(97% 0.015 85)"] },
+      "card-white": { "role": "neutral", "displayName": "Card White", "canonical": "#ffffff" },
+      "paper-muted": { "role": "neutral", "displayName": "Paper Muted", "canonical": "oklch(94% 0.02 85)" },
+      "paper-edge": { "role": "neutral", "displayName": "Paper Edge", "canonical": "oklch(90% 0.025 85)" },
+      "ink-navy": { "role": "neutral", "displayName": "Ink Navy", "canonical": "oklch(20% 0.03 285)", "tonalRamp": ["oklch(15% 0.03 285)", "oklch(27% 0.03 285)", "oklch(39% 0.03 285)", "oklch(51% 0.03 285)", "oklch(63% 0.03 285)", "oklch(75% 0.03 285)", "oklch(87% 0.03 285)", "oklch(95% 0.03 285)"] },
+      "muted-ink": { "role": "neutral", "displayName": "Muted Ink", "canonical": "oklch(48% 0.02 290)" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Landing hero and page-header H1. One per surface." },
+      "headline": { "displayName": "Headline", "purpose": "Section titles on landing and docs." },
+      "title": { "displayName": "Title", "purpose": "Card, panel, and step titles." },
+      "body": { "displayName": "Body", "purpose": "All read text; descriptions in Muted Ink." },
+      "label": { "displayName": "Label", "purpose": "Uppercase eyebrows and stat labels, wide tracking." },
+      "mono": { "displayName": "Mono", "purpose": "Identifiers, ids, hashes, routes, numerals." }
+    },
+    "shadows": [
+      { "name": "hero-glow", "value": "0 1.5rem 5rem -1.75rem color-mix(in oklab, #6a5cf0 45%, transparent)", "purpose": "Under the hero image frame only." },
+      { "name": "overlay-chip", "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)", "purpose": "Floating chips over the hero art." },
+      { "name": "resting-card", "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)", "purpose": "Card primitive default; most call sites override to none." }
+    ],
+    "motion": [
+      { "name": "transition-colors", "value": "color, background-color, border-color 150ms cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Every hover; disabled under prefers-reduced-motion." },
+      { "name": "card-lift", "value": "transform 200ms cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Landing tool cards lift 2px on hover; motion-reduce removes it." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one indigo action per view. Hover brightens, focus rings in indigo.",
+      "html": "<button class=\"ds-btn-primary\">Explore tools</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; min-height: 2.5rem; padding: 0 1rem; background: var(--primary, #5b4fe0); color: #ffffff; font: 500 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; border: 0; border-radius: var(--radius, 0.85rem); cursor: pointer; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { background: var(--brand-purple, #6a5cf0); } .ds-btn-primary:focus-visible { outline: 2px solid var(--ring, #5b4fe0); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.5; pointer-events: none; }"
+    },
+    {
+      "name": "CTA Pill",
+      "kind": "button",
+      "refersTo": "cta-pill",
+      "description": "Header and hero call to action: the primary button as a full pill.",
+      "html": "<a class=\"ds-cta-pill\" href=\"#\">Prepare a tool</a>",
+      "css": ".ds-cta-pill { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0.625rem 1.25rem; background: var(--primary, #5b4fe0); color: #ffffff; font: 500 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; text-decoration: none; border-radius: 9999px; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-cta-pill:hover { background: var(--brand-purple, #6a5cf0); } .ds-cta-pill:focus-visible { outline: 2px solid var(--ring, #5b4fe0); outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action beside a primary: bordered, transparent, muted hover.",
+      "html": "<button class=\"ds-btn-outline\">Open guided demo</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; min-height: 2.5rem; padding: 0 1rem; background: transparent; color: var(--foreground, #16162a); font: 500 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; border: 1px solid var(--border, #e7e0cd); border-radius: var(--radius, 0.85rem); cursor: pointer; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-outline:hover { background: var(--muted, #f0ebdd); } .ds-btn-outline:focus-visible { outline: 2px solid var(--ring, #5b4fe0); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Tertiary action with no border; muted fill on hover.",
+      "html": "<button class=\"ds-btn-ghost\">Reset</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; min-height: 2.5rem; padding: 0 1rem; background: transparent; color: var(--foreground, #16162a); font: 500 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; border: 0; border-radius: var(--radius, 0.85rem); cursor: pointer; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-ghost:hover { background: var(--muted, #f0ebdd); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--ring, #5b4fe0); outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Badge",
+      "kind": "chip",
+      "refersTo": "badge-outline",
+      "description": "Eyebrow above an H1 or a meta tag on a card.",
+      "html": "<span class=\"ds-badge-outline\">Campaign preview</span>",
+      "css": ".ds-badge-outline { display: inline-flex; align-items: center; padding: 0.125rem 0.5rem; background: transparent; color: var(--foreground, #16162a); font: 500 0.75rem/1rem ui-sans-serif, system-ui, sans-serif; border: 1px solid var(--border, #e7e0cd); border-radius: 9999px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "White bordered panel on cream; flat at rest, border darkens on hover.",
+      "html": "<section class=\"ds-card\"><div class=\"ds-card-header\"><h2 class=\"ds-card-title\">RiskScan</h2><p class=\"ds-card-desc\">A bounded assessment route for caller-supplied context.</p></div><div class=\"ds-card-content\">Body content</div><div class=\"ds-card-footer\">Footer</div></section>",
+      "css": ".ds-card { background: var(--card, #ffffff); color: var(--card-foreground, #16162a); border: 1px solid var(--border, #e7e0cd); border-radius: var(--radius, 0.85rem); font: 400 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; transition: border-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-card:hover { border-color: color-mix(in oklab, var(--foreground, #16162a) 15%, transparent); } .ds-card-header { padding: 1.25rem; display: grid; gap: 0.25rem; } .ds-card-title { margin: 0; font-size: 1.125rem; line-height: 1.75rem; font-weight: 600; } .ds-card-desc { margin: 0; color: var(--muted-foreground, #625f76); } .ds-card-content { padding: 0 1.25rem 1.25rem; } .ds-card-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border, #e7e0cd); }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Cream field with hairline border; indigo border and ring on focus, coral on error.",
+      "html": "<label class=\"ds-field\"><span>Tool name</span><input class=\"ds-input\" placeholder=\"RiskScan Quick\" /><span class=\"ds-hint\">Shown in the directory record.</span></label>",
+      "css": ".ds-field { display: grid; gap: 0.5rem; font: 500 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; color: var(--foreground, #16162a); } .ds-input { min-height: 2.75rem; width: 100%; padding: 0.5rem 0.75rem; background: var(--background, #faf6ec); color: var(--foreground, #16162a); font: 400 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; border: 1px solid var(--border, #e7e0cd); border-radius: calc(var(--radius, 0.85rem) * 0.75); transition: border-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-input::placeholder { color: var(--muted-foreground, #625f76); } .ds-input:focus { border-color: var(--primary, #5b4fe0); } .ds-input:focus-visible { outline: 2px solid var(--ring, #5b4fe0); outline-offset: 2px; } .ds-input[aria-invalid=\"true\"] { border-color: var(--destructive-foreground, #b03a1d); } .ds-hint { font-weight: 400; line-height: 1.5rem; color: var(--muted-foreground, #625f76); }"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Desktop pill links, muted at rest, indigo wash on hover, with the indigo CTA pill at the end.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#\">Explore tools</a><a href=\"#\">How it works</a><a href=\"#\">Docs</a><a href=\"#\">Guided demo</a><a href=\"#\">Campaign</a><a class=\"ds-nav-cta\" href=\"#\">Prepare a tool</a></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 0.25rem; } .ds-nav a { padding: 0.375rem 0.75rem; border-radius: 9999px; font: 600 12px/1rem ui-sans-serif, system-ui, sans-serif; color: var(--muted-foreground, #625f76); text-decoration: none; transition: background-color 150ms, color 150ms; } .ds-nav a:hover { background: var(--secondary, #ece7fa); color: var(--foreground, #16162a); } .ds-nav a:focus-visible { outline: 2px solid var(--ring, #5b4fe0); outline-offset: 2px; } .ds-nav .ds-nav-cta { margin-left: 0.5rem; min-height: 2.25rem; display: inline-flex; align-items: center; padding: 0.375rem 1rem; background: var(--primary, #5b4fe0); color: #ffffff; font-size: 13px; } .ds-nav .ds-nav-cta:hover { background: var(--brand-purple, #6a5cf0); color: #ffffff; }"
+    },
+    {
+      "name": "Status Row",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Signature component: a tinted bordered row whose fixed tone word precedes the message.",
+      "html": "<p class=\"ds-status\" data-tone=\"working\"><span class=\"ds-status-label\">Working</span><span>Submitting the request to the facilitator.</span></p><p class=\"ds-status\" data-tone=\"success\"><span class=\"ds-status-label\">Complete</span><span>Settlement verified.</span></p><p class=\"ds-status\" data-tone=\"warning\"><span class=\"ds-status-label\">Attention</span><span>Payment required before the result is returned.</span></p>",
+      "css": ".ds-status { display: flex; align-items: flex-start; gap: 0.5rem; margin: 0 0 0.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--border, #e7e0cd); border-radius: var(--radius, 0.85rem); background: var(--muted, #f0ebdd); color: var(--muted-foreground, #625f76); font: 400 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; } .ds-status-label { flex-shrink: 0; font-weight: 500; } .ds-status[data-tone=\"working\"] { background: var(--secondary, #ece7fa); color: var(--secondary-foreground, #16162a); border-color: color-mix(in oklab, var(--primary, #5b4fe0) 30%, transparent); } .ds-status[data-tone=\"success\"] { background: var(--success, #e6f4ec); color: var(--success-foreground, #1c7a4d); border-color: color-mix(in oklab, var(--success-foreground, #1c7a4d) 30%, transparent); } .ds-status[data-tone=\"warning\"] { background: var(--warning, #fdf1d8); color: var(--warning-foreground, #a05a12); border-color: color-mix(in oklab, var(--warning-foreground, #a05a12) 30%, transparent); } .ds-status[data-tone=\"error\"] { background: var(--destructive, #fdeae4); color: var(--destructive-foreground, #b03a1d); border-color: color-mix(in oklab, var(--destructive-foreground, #b03a1d) 30%, transparent); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Toy Ledger",
+    "overview": "Tool402 is a ledger first and a toy second. The ground is cream paper, the ink is a deep navy, and one indigo signature marks the action a visitor can take. Everything a judge reads on a surface is a factual entry: a route boundary, a testnet notice, an admission outcome. The clay-toy characters (the coin, the cube, the robot) are the only thing on the page that smiles, and they earn that by appearing rarely: one hero composition, one empty-state illustration, never a pattern.\n\nThe system is warm, candid, and precise. Warm because the paper is cream rather than white and corners are rounded rather than cut. Candid because status is always spelled out in a tone with an exact meaning, and previews are labelled as previews in the same voice as everything else. Precise because display type is tracked tight, identifiers are set in mono, and every state chip maps to a known outcome. It is deliberately not playful in its chrome: the toys carry the charm so the interface does not have to.\n\nConfirmed anti-references: the dark-mode crypto dashboard (black glass, neon gradients, glow borders), the generic SaaS template (white-on-white, blue-600 buttons, stock illustration, three-column feature grid), and the kids' app (mascots everywhere, bouncy motion, rainbow backgrounds).",
+    "keyCharacteristics": [
+      "Cream paper ground with white cards and a single hairline border colour.",
+      "One action colour (Signature Indigo) plus a four-colour brand quartet used as tints, never as fills.",
+      "System sans for everything, extrabold and tight for display, mono for identifiers.",
+      "Flat by default; the only real shadow is the hero art's indigo glow.",
+      "Pill CTAs and pill chips; panels use a scaled radius from one --radius token.",
+      "Status is a bordered tinted row with a fixed label, never a bare colour."
+    ],
+    "rules": [
+      { "name": "The One Signature Rule", "body": "Signature Indigo is the only colour allowed on a primary action. The brand quartet appears as 15% tints behind icons or inside brand assets; it never fills a button, a card, or a background.", "section": "colors" },
+      { "name": "The Tone Has a Word Rule", "body": "A state colour never appears without its label. Every tinted status row carries a fixed word (Status, Working, Complete, Attention, Error) in front of the message, so colour is confirmation, not the message.", "section": "colors" },
+      { "name": "The Machine Value Rule", "body": "Anything an agent or chain would treat as an identifier (route, id, hash, address, numeral) is set in mono. Prose never is.", "section": "typography" },
+      { "name": "The Tight Top Rule", "body": "Negative tracking belongs to display and headline sizes only. Body and label text keep normal or wide tracking.", "section": "typography" },
+      { "name": "The Flat Ledger Rule", "body": "Surfaces are flat at rest. A shadow is permitted only on an element that overlaps another (hero art, floating chip, sheet). A card in a grid never casts one.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use Signature Indigo (#5b4fe0) for exactly one primary action per view and Bright Indigo (#6a5cf0) for its hover.",
+      "Do keep the brand quartet (indigo, green, coral, yellow) at 15% tint behind icons or inside the logo and favicon.",
+      "Do set every identifier, id, hash, route, and numeral in mono.",
+      "Do use the named radius utilities (rounded-tile through rounded-frame) or a full pill; do not introduce ad-hoc pixel radii.",
+      "Do keep cards flat with a Paper Edge border and show hover as a border shift to 15% ink.",
+      "Do carry the two notice bars and the testnet banner copy on every route.",
+      "Do honour prefers-reduced-motion: the global rule already zeroes animation and transition durations.",
+      "Do keep a visible 2px Signature Indigo focus outline on every interactive element.",
+      "Do cap reading measure at max-w-2xl or max-w-3xl and keep display type to one H1 per surface."
+    ],
+    "donts": [
+      "Don't fill a button, card, or background with green, coral, or yellow; they are tints and brand assets only.",
+      "Don't show a state colour without its fixed tone word.",
+      "Don't add shadows to grid cards or panels; only overlapping elements may cast one.",
+      "Don't place a mascot anywhere except the hero composition or a State Panel illustration.",
+      "Don't use dark surfaces, glass, gradients, or glow borders; the page is cream and the cards are white.",
+      "Don't use pure white (#ffffff) as a page background; the ground is Ledger Cream.",
+      "Don't track body or label text negatively; tight tracking belongs to display and headline only.",
+      "Don't replace the system sans with a webfont without recording the change here first."
+    ]
+  }
+}
