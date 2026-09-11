@@ -292,14 +292,20 @@ function ReviewStep({ values }: { values: WizardValues }) {
           <h2 id="provider-deploy-review" className="text-2xl font-semibold tracking-tight">Check the prepared details</h2>
           <p className="text-sm leading-6 text-muted-foreground">Nothing is sent until you request and confirm a signature below. The values above remain a local, editable preview.</p>
         </div>
-        <dl className="grid gap-3 rounded-[calc(var(--radius)*0.75)] border bg-muted/30 p-4 text-sm sm:grid-cols-2">
-          {reviewRows.map(([label, value]) => (
-            <div key={label} className="space-y-1">
-              <dt className="text-muted-foreground">{label}</dt>
-              <dd className="font-medium text-foreground">{value}</dd>
-            </div>
-          ))}
-        </dl>
+        <section aria-labelledby="provider-deploy-review-details" className="rounded-2xl border bg-card p-5 shadow-none sm:p-6">
+          <div className="space-y-1">
+            <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Local review</p>
+            <h3 id="provider-deploy-review-details" className="text-lg font-semibold tracking-tight">Prepared campaign details</h3>
+          </div>
+          <dl className="mt-5 divide-y divide-border text-sm">
+            {reviewRows.map(([label, value]) => (
+              <div key={label} className="grid gap-1 py-3 first:pt-0 sm:grid-cols-[minmax(10rem,0.42fr)_1fr] sm:gap-6">
+                <dt className="text-muted-foreground">{label}</dt>
+                <dd className="font-medium text-foreground">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
       </section>
     </DeployStageSigning>
   );
