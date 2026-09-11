@@ -395,7 +395,10 @@ clientTest("keeps sign-in limited to the accepted local authentication boundary"
   assert.match(client, /params\s*:\s*\[\s*message\s*,\s*address\s*\]/u);
   assert.match(client, /disabled\s*=\s*\{\s*pending\s*\}/u);
   assert.match(client, /aria-live\s*=\s*["']polite["']/u);
-  assert.match(client, /window\.location\.assign\(\s*["']\/dashboard["']\s*\)/u);
+  assert.match(client, /import\s*\{\s*useRouter\s*\}\s+from\s+["']next\/navigation["']/u);
+  assert.match(client, /const router = useRouter\(\)/u);
+  assert.match(client, /router\.replace\(\s*["']\/dashboard["']\s*\)/u);
+  assert.doesNotMatch(client, /window\.location/u);
   assert.doesNotMatch(client, /\b(?:eth_send(?:Raw)?Transaction|send(?:Raw)?Transaction|transaction|relay|localStorage|sessionStorage|indexedDB|setTimeout|setInterval|discover(?:y)?|requestProvider)\b/u);
 });
 
