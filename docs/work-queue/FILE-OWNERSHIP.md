@@ -8,6 +8,21 @@ All API/Agent/Core/Backend,
 configuration, data, wallet, provider, payment, command, transaction,
 deployment, and live paths remain excluded.
 
+S35-T010 is a root-owned documentation-expansion intake. It owns only its
+card, specification, UI manifest, plan, catalog, state, ledger, decisions,
+and future evidence records until fresh independent readiness. Candidate Web
+paths are `apps/web/src/app/docs/api/page.tsx`,
+`apps/web/src/app/docs/faq/page.tsx`,
+`apps/web/src/components/docs/api-reference.tsx`,
+`apps/web/src/components/docs/documentation-faq.tsx`,
+`apps/web/src/components/docs/documentation-home.tsx`,
+`apps/web/src/components/landing/landing-footer.tsx`,
+`apps/web/tests/documentation-expansion.test.mjs`, and
+`apps/web/tests/public-documentation.test.mjs`. No source or test path is
+reserved or authorized before separate activation; all runtime, data, API,
+MCP, wallet, provider, payment, command, transaction, deployment, and live
+paths remain excluded.
+
 M00-T070 reserves its card, qualification matrix, STATE.md, HUMAN-ACTIONS.md, DECISIONS.md, TASK-CATALOG.md, and AI_USAGE.md to the root integrator. M00-T080 reserves its card, STATE.md, FILE-OWNERSHIP.md, TASK-CATALOG.md, DECISIONS.md, HUMAN-ACTIONS.md, AI_USAGE.md, ORCHESTRATOR-RUNBOOK.md, and WORKTREE-POLICY.md to the root integrator.
 
 P00-T010 reserves its card, docs/product/OVERVIEW.md, STATE.md, TASK-CATALOG.md, FILE-OWNERSHIP.md, DECISIONS.md, and AI_USAGE.md to the root integrator.
