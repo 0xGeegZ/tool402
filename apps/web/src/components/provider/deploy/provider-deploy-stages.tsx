@@ -212,7 +212,6 @@ export function ProviderDeployStages({
                 </div>
                 <span className="text-[13px] leading-5 text-muted-foreground">{copy.description}</span>
                 <StageCommand index={index} session={session} stageTwoDone={stageTwoDone} candidate={candidate} onCandidate={onCandidate} />
-                <ConfigurationContext projection={projection} stageIndex={index} />
                 {detail ? <span className="break-all font-mono text-xs text-foreground">{detail}</span> : null}
                 <p id={controlDescriptionId} className="sr-only">{describe(index, stage)} {control.description}</p>
               </div>
@@ -222,6 +221,11 @@ export function ProviderDeployStages({
                     {done ? copy.done : copy.label}
                     {control.disabled ? <span className="sr-only"> ({control.label})</span> : null}
                   </Button>
+                </div>
+              ) : null}
+              {projection && index === 1 ? (
+                <div className="col-span-2 sm:col-start-2 sm:col-span-2">
+                  <ConfigurationContext projection={projection} stageIndex={index} />
                 </div>
               ) : null}
             </li>
