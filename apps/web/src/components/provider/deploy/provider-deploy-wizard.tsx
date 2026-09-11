@@ -16,6 +16,7 @@ import {
   canGoBack,
   providerDeployCategories,
   providerDeployFieldErrors,
+  providerDeployStages,
   providerDeploySteps,
   revenueNoteConfigurationRows,
   stepCaption,
@@ -104,6 +105,49 @@ function StepProgress({
         })}
       </ol>
     </nav>
+  );
+}
+
+function PrepareFlowMap({ currentStep }: { currentStep: number }) {
+  const flowCards = [
+    { eyebrow: "1 · Provider · web", title: "Open the prepared offering", detail: "Edit the local fixture first. No command is sent from this step.", state: "browser draft only" },
+    { eyebrow: "2 · MetaMask", title: "Connect on Hedera Testnet", detail: "One EIP-6963 wallet provider is required before signature handoff.", state: "wallet island" },
+    { eyebrow: "3 · BFF · Convex", title: "Sign the offering command", detail: "The server verifies signer, nonce, expiry, and payload hash before admission.", state: "offering.create" },
+    { eyebrow: "4 · BFF · Convex", title: "Prepare the revenue note", detail: "The ATS_CREATE attempt remains pending until its candidate receipt exists.", state: "PREPARED · ASSET_PENDING" },
+    { eyebrow: "5 · Hedera", title: "Create the note asset", detail: "Human wallet action on testnet; the returned transaction and EVM address become the candidate.", state: "transaction receipt" },
+    { eyebrow: "6 · Convex", title: "Attach the candidate", detail: "The candidate is attached to the prepared attempt; no silent retry is inferred.", state: "attempt submitted" },
+    { eyebrow: "7 · Mirror Node", title: "Independent verification", detail: "Network, factory target, and resolver checks must agree before readiness.", state: "confirmed · ready" },
+    { eyebrow: "8 · BFF · Convex", title: "Publish the directory version", detail: "The directory version becomes active only after the preceding evidence is accepted.", state: "directory active" },
+    { eyebrow: "9 · Hedera", title: "Lifecycle: whitelist and issue", detail: "The provider status surface owns the post-publish allocation lifecycle.", state: "offering open" },
+  ] as const;
+
+  return (
+    <section aria-labelledby="prepare-flow-map-title" className="space-y-4 rounded-[calc(var(--radius)*1.25)] border bg-card/70 p-5 shadow-sm sm:p-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="space-y-2">
+          <Badge variant="secondary">Hybrid D · persist before sign</Badge>
+          <h2 id="prepare-flow-map-title" className="text-2xl font-semibold tracking-tight sm:text-3xl">Prepare the tool: who signs what, and where truth lives</h2>
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">Editable intent comes first. Wallet signatures are isolated to the review stage, while accepted records and verified receipts remain the authority for each transition.</p>
+        </div>
+        <div className="flex flex-wrap gap-2 text-xs"><Badge variant="outline">Provider · MetaMask</Badge><Badge variant="outline">BFF · Convex</Badge><Badge variant="outline">Hedera testnet</Badge></div>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 rounded-[calc(var(--radius)*0.9)] border bg-background px-4 py-3 text-xs">
+        <span className="font-medium text-muted-foreground">Offering state</span>
+        {(["DRAFT", "ASSET_PENDING", "READY", "OPEN"] as const).map((state, index) => <span key={state} className="flex items-center gap-2"><Badge variant={index === 0 && currentStep === 0 ? "default" : "secondary"}>{state}</Badge>{index < 3 ? <span aria-hidden="true" className="text-muted-foreground">›</span> : null}</span>)}
+        <span className="ml-auto text-muted-foreground">Directory: DRAFT → PUBLISH · attempt: PREPARED → SUBMITTED → CONFIRMED</span>
+      </div>
+      <div className="overflow-x-auto pb-1">
+        <ol className="grid min-w-[1060px] grid-cols-9 gap-3">
+          {flowCards.map((card, index) => <li key={card.title} className="relative min-w-0 rounded-[calc(var(--radius)*0.9)] border bg-background p-4 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{card.eyebrow}</p>
+            <p className="mt-3 text-sm font-semibold leading-5 text-foreground">{card.title}</p>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">{card.detail}</p>
+            <p className={`mt-4 font-mono text-[10px] font-semibold ${index === 0 && currentStep === 0 ? "text-primary" : "text-muted-foreground"}`}>{card.state}</p>
+            {index < flowCards.length - 1 ? <span aria-hidden="true" className="absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 text-lg text-muted-foreground lg:block">→</span> : null}
+          </li>)}
+        </ol>
+      </div>
+    </section>
   );
 }
 
@@ -364,31 +408,26 @@ export function ProviderDeployWizard() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 pb-10 sm:pb-14" data-ui="provider-deploy-surface">
+    <main className="mx-auto max-w-6xl space-y-8 pb-10 sm:pb-14" data-ui="provider-deploy-surface">
       <div className="space-y-5 border-b border-border pb-7">
         <Link href="/provider" className="inline-flex w-fit items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
           Back to provider workspace
         </Link>
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-start gap-4">
-            <div aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-sm font-semibold text-primary">RS</div>
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2"><Badge variant="secondary">Prepared / demo data fixture</Badge><Badge variant="outline">Hedera testnet · chain 296</Badge><Badge variant="outline">Terms v1 · fixed</Badge></div>
             <PageHeader
-              eyebrow="RiskScan"
-              title="Prepare a local offering"
-              description="Configure the existing RiskScan context before any separate signing or provider action is considered."
+              eyebrow="Provider preparation"
+              title="Deploy the RiskScan campaign"
+              description="Review every field of the prepared offering, then authorize each bounded step with the issuer wallet. Nothing is created, funded, or published until the named signature and receipt exist."
             />
           </div>
-          <div className="flex flex-wrap gap-2 sm:justify-end">
-            <Badge variant="secondary">Local editable preview</Badge>
-            <Badge variant="outline">Testnet only</Badge>
-          </div>
         </div>
-        <p className="max-w-3xl border-l-2 border-primary/60 pl-4 text-sm leading-6 text-muted-foreground">
-          These values stay editable in this browser. They do not create, publish, or verify an offering; a signature is requested only from the wallet section on the review step.
-        </p>
       </div>
 
-      <Card className="overflow-hidden shadow-none">
+      <PrepareFlowMap currentStep={currentStep} />
+
+      <Card className="overflow-hidden shadow-sm">
         <CardHeader className="space-y-5 border-b bg-muted/20 p-5 sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1">
