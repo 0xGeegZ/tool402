@@ -1,5 +1,13 @@
 # Runtime queue state
 
+- S29_POST_ACCEPTANCE_REVIEW_FIX: The repository owner explicitly directs the
+  two confirmed Provider deploy review corrections on PR #82. The root may
+  amend only `provider-deploy-wizard.tsx` and
+  `provider-deploy-visual-reconciliation.test.mjs`: split line-oriented text
+  on actual LF/CRLF delimiters and give the local Terms link an existing target.
+  No other S29 source/test path, shared icon extraction, wallet, session,
+  signature, command, ATS, transaction, or live boundary is authorized.
+
 - S42_DASHBOARD_CAMPAIGN_CONTINUATION_INTAKE: The repository owner explicitly
   authorizes S42-T010 as a new local dashboard continuation card. It replaces
   S24's historical guest-only dashboard restriction only for S42's later
