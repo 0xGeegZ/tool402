@@ -2,15 +2,9 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
-S34-T010 owns minimal Green in `apps/web/src/app/docs/page.tsx`,
-`apps/web/src/app/docs/riskscan/page.tsx`,
-`apps/web/src/app/docs/providers/page.tsx`,
-`apps/web/src/components/docs/documentation-home.tsx`,
-`apps/web/src/components/docs/riskscan-guide.tsx`,
-`apps/web/src/components/docs/provider-riskscan-guide.tsx`,
-`apps/web/src/components/discovery/local-navigation.tsx`, and
-`apps/web/src/components/landing/landing-footer.tsx`. The five exact S34 test
-paths are frozen as the accepted contract. All API/Agent/Core/Backend,
+S34-T010 is accepted. Its five RED tests and eight Green source paths are
+released; D-S34-010-005 records the static public documentation acceptance.
+All API/Agent/Core/Backend,
 configuration, data, wallet, provider, payment, command, transaction,
 deployment, and live paths remain excluded.
 

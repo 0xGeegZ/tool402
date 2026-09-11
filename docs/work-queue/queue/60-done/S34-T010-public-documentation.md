@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: S28-T010, S29-T010, S31-T010, and S33-T010 accepted.
 - Owner: The root owns queue records, the UI ledger, decisions, reviews,
   commits, and pushes. Candidate implementation paths are exactly those
@@ -37,14 +37,13 @@ route targets, product facts, and exclusions.
 - A fresh independent readiness review must accept the candidate scope before
   a separate activation can permit durable RED.
 
-## Green authority
+## Acceptance
 
-Fresh independent RED review at `621e062a5e5e6d0bac7b5268cd74450786d82e27`
-is clear. The five S34 test paths are frozen as the accepted contract.
-Minimal Green may touch only the eight source paths declared by D-S34-010-004:
-the three Docs pages, three Docs components, `local-navigation.tsx`, and
-`landing-footer.tsx`. A fresh independent Green review is required before
-acceptance; every route behavior and runtime/product path remains excluded.
+Fresh independent GREEN/module/UI review at
+`2cca71b26953c0b3019906bf3985368cee94add6` is clear. S34-T010 is accepted
+at 60-done. The five RED tests and eight Green source paths have no continuing
+reservation. The completed surface remains static and local; no route
+behavior or runtime/product authority was added.
 
 ## RED and Green boundary
 
