@@ -70,12 +70,15 @@ export function WalletSessionProvider({ children }: { readonly children: ReactNo
   }, [provider]);
 
   async function connect(approvedIssuerAddress?: string) {
+    const generation = sessionReadGenerationRef.current + 1;
+    sessionReadGenerationRef.current = generation;
     approvedIssuerRef.current = approvedIssuerAddress;
     setState({ kind: "connecting" });
     const connection = await connectWallet({
       discover: () => discoverMetaMaskProvider(window),
       approvedIssuerAddress,
     });
+    if (sessionReadGenerationRef.current !== generation) return;
     providerRef.current = connection.provider;
     setState(connection.state);
   }
@@ -85,8 +88,11 @@ export function WalletSessionProvider({ children }: { readonly children: ReactNo
     if (current === null) {
       return;
     }
+    const generation = sessionReadGenerationRef.current + 1;
+    sessionReadGenerationRef.current = generation;
     setState({ kind: "connecting" });
     const connection = await recheckAfterSwitch(current, approvedIssuerRef.current);
+    if (providerRef.current !== current || sessionReadGenerationRef.current !== generation) return;
     providerRef.current = connection.provider;
     setState(connection.state);
   }

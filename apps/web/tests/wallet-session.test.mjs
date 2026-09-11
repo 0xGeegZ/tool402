@@ -126,6 +126,21 @@ implementedTest("discovers MetaMask only inside connect and never at load, rende
   assert.doesNotMatch(source.slice(effectStart, effectEnd), /discoverMetaMaskProvider/u);
 });
 
+implementedTest("invalidates late connect and switch results after an explicit disconnect", async () => {
+  const source = await readAppFile(sessionPath);
+  const connectStart = source.indexOf("async function connect(");
+  const switchStart = source.indexOf("async function switchChain(");
+  const disconnectStart = source.indexOf("function disconnect()");
+  const connect = source.slice(connectStart, switchStart);
+  const switchChain = source.slice(switchStart, disconnectStart);
+
+  assert.match(connect, /const generation = sessionReadGenerationRef\.current \+ 1;/u);
+  assert.match(connect, /if \(sessionReadGenerationRef\.current !== generation\) return;/u);
+  assert.match(switchChain, /const generation = sessionReadGenerationRef\.current \+ 1;/u);
+  assert.match(switchChain, /providerRef\.current !== current \|\| sessionReadGenerationRef\.current !== generation/u);
+  assert.match(source.slice(disconnectStart), /sessionReadGenerationRef\.current \+= 1;/u);
+});
+
 implementedTest("wraps the shell in the session provider and renders the control after the navigation", async () => {
   const layout = await readAppFile(layoutPath);
 
