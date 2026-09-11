@@ -88,3 +88,11 @@ implementedTest("uses the configured session cookie name when it reads the dashb
   assert.match(source, /\breadDashboardSessionCookieName\b/u);
   assert.doesNotMatch(source, /const\s+sessionCookieName\s*=\s*["']__Host-tool402-dashboard-session/u);
 });
+
+implementedTest("labels deployed campaigns as a view instead of a resume action", async () => {
+  const source = await readFile(componentUrl, "utf8");
+  assert.match(source, /campaign\.state\s*===\s*["']OPEN["']\s*\|\|\s*campaign\.state\s*===\s*["']CLOSED["']/u);
+  assert.match(source, /View deployment/u);
+  assert.match(source, /Resume deployment/u);
+  assert.doesNotMatch(source, /Resume campaign/u);
+});
