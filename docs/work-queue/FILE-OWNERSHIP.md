@@ -1148,6 +1148,13 @@ running environment, and do not authorize TLS trust, wallet permission,
 signature, transaction, deployment, or any live action. This narrowly
 supersedes the configuration-file exclusion only for those templates.
 
+User-directed S38 Vercel Preview-origin amendment: the root additionally
+reserves the declared auth sources and focused auth tests to derive an origin
+only from the Vercel system `VERCEL_URL` when `VERCEL_ENV=preview` and the
+explicit dashboard-auth origin is absent. The same canonical validation still
+applies; no request host, production, development, secret, wallet, or live
+authority is added.
+
 S39-T010 is an `00-inbox` CORE_P0 follow-up with no active source or test
 reservation. S38 acceptance is an explicit activation gate while the card is
 still speculative. After that gate and its own independent readiness/activation

@@ -43,10 +43,17 @@ the browser, response body, log, or error message.
 
 | Name | Exact accepted form | Purpose |
 | --- | --- | --- |
-| `TOOL402_DASHBOARD_AUTH_ORIGIN` | one canonical absolute HTTPS URL, with no credentials, query, hash, or path other than `/` | fixes the EIP-4361 domain and URI, validates POST `Origin`, and sets host-only cookies |
+| `TOOL402_DASHBOARD_AUTH_ORIGIN` | one canonical absolute HTTPS URL, with no credentials, query, hash, or path other than `/` | fixes the EIP-4361 domain and URI, validates POST `Origin`, and sets host-only cookies outside Vercel Preview; it overrides the Preview derivation when present |
 | `TOOL402_DASHBOARD_AUTH_SECRET` | exactly 64 lower-case hexadecimal characters | HMAC-SHA-256 key for the challenge and session envelopes |
 
-Missing or malformed configuration produces only `503 {"outcome":"not_configured"}` and no cookie. Local real-wallet testing therefore requires a separately configured HTTPS origin. Configuration remains a human-owned deployment action.
+On Vercel Preview only, when the explicit origin is absent,
+`VERCEL_ENV=preview` and `VERCEL_URL` is a bare deployment hostname, the server
+uses `https://${VERCEL_URL}` only after it passes the identical canonical-origin
+validation. This preserves an exact origin binding for every ephemeral preview.
+It never applies in development or production, never accepts a request-derived
+host, and never replaces the required secret.
+
+Missing or malformed configuration produces only `503 {"outcome":"not_configured"}` and no cookie. Local real-wallet testing therefore requires a separately configured HTTPS origin; Preview requires the Vercel system variables plus the separately configured secret. Configuration remains a human-owned deployment action.
 
 ## Protocol
 
@@ -152,7 +159,8 @@ without inventing account-specific data or a claim of account authority.
 
 No automatic retry, provider discovery on render, storage API, timer,
 analytics, console logging, external fetch, payment, transaction, command
-relay, role decision, or configuration fallback is allowed.
+relay, role decision, or configuration fallback other than the fixed Vercel
+Preview origin derivation is allowed.
 
 ## Verification and authority boundary
 

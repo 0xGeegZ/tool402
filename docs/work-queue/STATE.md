@@ -82,6 +82,12 @@
   keys; they do not configure a runtime, contain a secret, or authorize TLS
   trust, wallet permission, signature, transaction, deployment, or live action.
 
+- S38_VERCEL_PREVIEW_ORIGIN_AMENDMENT: The repository owner explicitly
+  requires ephemeral Vercel previews to derive their exact canonical origin
+  from `VERCEL_URL` only when `VERCEL_ENV=preview` and the explicit origin is
+  absent. The configured secret remains required; development, production, and
+  request-derived hosts remain fail-closed.
+
 - S36_PROVIDER_SIGNATURE_HANDOFF_INTAKE: User-directed local POLISH intake.
   S36-T010 may make the existing actionable signature request discoverable
   after fresh readiness and durable RED activation. It has no active source

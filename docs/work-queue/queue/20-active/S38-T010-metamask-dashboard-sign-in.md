@@ -189,3 +189,14 @@ MetaMask authentication signature, it is not a transaction and costs no HBAR,
 and the primary action reads `Sign and open dashboard`. This does not change
 the route, protocol, shared wallet state, server guard, or post-success target
 (`/dashboard`), and authorizes no real signature.
+
+## User-directed Vercel Preview-origin amendment
+
+The repository owner explicitly requires working ephemeral Vercel previews
+without manually updating an origin for every deployment. The declared auth
+sources and focused auth tests may derive the canonical origin from
+`https://${VERCEL_URL}` only when `VERCEL_ENV` exactly equals `preview` and no
+explicit `TOOL402_DASHBOARD_AUTH_ORIGIN` is present. The derived value must
+pass the existing canonical HTTPS validation; production, development, and any
+request-derived host remain fail-closed. `TOOL402_DASHBOARD_AUTH_SECRET`
+remains required and human-configured for Preview.
