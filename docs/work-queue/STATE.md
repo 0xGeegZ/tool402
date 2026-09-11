@@ -83,7 +83,9 @@
   `f8f12637ce4554418a920b7816259a41ca3730bb`, S26-T010 moves to `20-active`
   for its manifest-declared shared-session/header/wizard/backer/test paths.
   M49 and S18 are accepted; no issuer-specific client-side authority gate or
-  display is in scope. S26 final acceptance still requires its declared
+  display is in scope. The reserved S18/M50/S15/S29 assertion-only amendments
+  move each accepted seam from a local island to the one shared session and do
+  not change its behavior. S26 final acceptance still requires its declared
   browser evidence and independent review; this records no wallet request,
   signature, transaction, deployment, or live authority.
 

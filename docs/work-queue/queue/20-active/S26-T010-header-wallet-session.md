@@ -121,6 +121,13 @@ exclusions govern; this card does not restate them.
   supplies an approved issuer address and a connected header session does not
   create authority. The deploy view must use the shared connected provider
   without an issuer-specific local gate or display.
+- The root also reserves only the shared-session composition assertions in
+  `apps/web/tests/backing-route.test.mjs` (accepted S18 flow),
+  `apps/web/tests/wallet-session-sync.test.mjs` (accepted M50 passive-event
+  harness), `apps/web/tests/wallet-state.test.mjs` (accepted UI-S15 state
+  contract), and `apps/web/tests/provider-deploy-visual-reconciliation.test.mjs`
+  (accepted S29 presentation). They may change only from a second local
+  island to the one shared session, and may not alter their owning behavior.
 - Final S26 acceptance remains separate: it requires the declared desktop and
   390px connected-header/wizard browser evidence plus fresh task and module
   review. No wallet request, signature, transaction, deployment, or live

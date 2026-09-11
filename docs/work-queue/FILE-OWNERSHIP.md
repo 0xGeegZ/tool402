@@ -1074,7 +1074,12 @@ accepted `apps/web/src/components/backing/backing-flow.tsx` island mount, and
 only the named assertions in
 `apps/web/tests/deploy-stage-signing.test.mjs`,
 `apps/web/tests/static-shell.test.mjs`, and
-`apps/web/tests/shell-accessibility.test.mjs`. M49-T010 is accepted and the
+`apps/web/tests/shell-accessibility.test.mjs`; plus shared-session-only
+assertions in `apps/web/tests/backing-route.test.mjs` (S18),
+`apps/web/tests/wallet-session-sync.test.mjs` (M50),
+`apps/web/tests/wallet-state.test.mjs` (S15), and
+`apps/web/tests/provider-deploy-visual-reconciliation.test.mjs` (S29).
+M49-T010 is accepted and the
 integration is rebased on its interface. S26 uses the shared connected provider
 without an issuer-specific local authority display or gate. S26 adds no current
 wallet permission, provider request, signature, transaction, or live authority.
