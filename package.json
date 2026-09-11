@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "build": "if [ -d apps ] || [ -d packages ]; then npm run --workspaces --if-present build; fi",
+    "dev": "node scripts/dev.mjs",
     "lint": "if [ -d apps ] || [ -d packages ]; then npm run --workspaces --if-present lint; fi",
     "queue:check": "node scripts/queue-check.mjs",
     "test": "if [ -d apps ] || [ -d packages ]; then npm run --workspaces --if-present test; fi",

@@ -118,11 +118,17 @@ npm run test
 npm run queue:check
 ```
 
-Run the web app:
+Run the full development environment (Next plus the configured Convex Dev
+deployment):
 
 ```sh
-npm run dev --workspace=@tool402/web
+npm run dev
 ```
+
+It reads only the development deployment declared in ignored `.env.local`,
+loads the development relay credentials directly from that deployment, and
+refuses a non-development Convex target. To run only the web app without its
+command relay, use `npm run dev --workspace=@tool402/web`.
 
 Run the consumer Agent exercise only after Human Ops has provided approved,
 ignored testnet configuration:
