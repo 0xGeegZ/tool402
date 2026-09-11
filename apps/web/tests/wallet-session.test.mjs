@@ -148,7 +148,7 @@ implementedTest("wraps the shell in the session provider and renders the control
   assert.match(layout, /import\s*\{\s*WalletIsland\s*\}\s+from\s+["']\.\.\/components\/wallet\/wallet-connect["']/u);
   assert.match(layout, /<WalletSessionProvider>\s*<div data-ui-shell=["']s00["']/u);
   assert.match(layout, /<\/div>\s*<\/WalletSessionProvider>\s*<\/body>/u);
-  assert.match(layout, /<LocalNavigation \/>\s*<WalletIsland \/>/u);
+  assert.match(layout, /<\/Suspense>\s*<WalletIsland \/>/u);
   assert.equal((layout.match(/<WalletIsland \/>/gu) ?? []).length, 1);
 });
 
