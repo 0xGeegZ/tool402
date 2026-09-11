@@ -219,7 +219,7 @@ test("orders the two confirmations and moves a returned hash only to payment_sub
   assert.throws(() => state.viewAfterTransfer({ kind: "choosing" }, { kind: "hash", hash }), TypeError);
   assert.equal(state.viewAfterTransfer(prepared, { kind: "declined" }).kind, "prepared");
 
-  for (const outcome of ["REJECTED", "CONFLICT", "UNSUPPORTED_TYPE", "not_configured", "REPLAYED"]) {
+  for (const outcome of ["REJECTED", "CONFLICT", "UNSUPPORTED_TYPE", "WORLD_VERIFICATION_REQUIRED", "not_configured", "REPLAYED"]) {
     const refused = state.viewAfterSignature({ phase: "failed", outcome }, intent);
     assert.equal(refused.kind, "refused", outcome);
     assert.equal(refused.outcome, outcome);
