@@ -74,6 +74,18 @@ test("renders the static Tool402 shell and home composition", async () => {
   );
 });
 
+test("renders the single Hedera testnet preview banner", async () => {
+  const layout = await readAppFile("src/app/layout.tsx");
+  const notice = layout.match(/<div className="border-b[^"']*text-center">([\s\S]*?)<\/div>\s*<header/);
+
+  assert.ok(notice, "the shell must contain the notice before its header");
+  assert.equal((notice[1].match(/<p\b/g) ?? []).length, 1);
+  assert.match(notice[1], /Hedera testnet preview/);
+  assert.match(notice[1], /Tool previews are not live offerings\./);
+  assert.doesNotMatch(notice[1], /Local routes are descriptive/);
+  assert.match(notice[0], /border-brand-purple\/20 bg-brand-purple\/\[0\.07\]/);
+});
+
 test("defines the S00 presentational primitives and local wordmark without runtime UI dependencies", async () => {
   const requiredPaths = [
     "src/app/globals.css",
