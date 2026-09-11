@@ -62,12 +62,23 @@ test("adds every new Docs destination to the home and footer", async (t) => {
   const sources = await readExpansionSources(t);
   if (!sources) return;
 
+  assert.match(sources.home, /title: "API reference"/);
+  assert.match(sources.home, /title: "FAQ"/);
   assert.match(sources.home, /href: "\/docs\/api"/);
   assert.match(sources.home, /href: "\/docs\/faq"/);
   assert.match(sources.footer, /<nav aria-label="Documentation links">/);
   assert.match(sources.footer, /<Link href="\/docs"[^>]*>Documentation<\/Link>/);
   assert.match(sources.footer, /<Link href="\/docs\/api"[^>]*>API reference<\/Link>/);
   assert.match(sources.footer, /<Link href="\/docs\/faq"[^>]*>FAQ<\/Link>/);
+
+  const documentationNav = sources.footer.match(
+    /<nav aria-label="Documentation links">([\s\S]*?)<\/nav>/,
+  )?.[1];
+  assert.ok(documentationNav);
+  assert.deepEqual(
+    [...documentationNav.matchAll(/<Link href="([^"]+)"/g)].map(([, href]) => href),
+    ["/docs", "/docs/api", "/docs/faq"],
+  );
 });
 
 test("keeps the API reference and FAQ factual, static, and local", async (t) => {
@@ -96,7 +107,7 @@ test("keeps the API reference and FAQ factual, static, and local", async (t) => 
   assert.doesNotMatch(docs, /["']use client["']|\bfetch\s*\(|process\.env|localStorage|sessionStorage|indexedDB|\b(?:useState|useEffect|useReducer|useRef|useMemo|useCallback)\b|\b(?:axios|ky|useSWR|useQuery|useMutation|trpc|convex)\b/i);
   assert.doesNotMatch(docs, /<(?:button|form|input|select|textarea)\b/i);
   assert.doesNotMatch(docs, /(?:https?:\/\/|mailto:|target\s*=\s*["']_blank["']|href\s*=\s*["']\/\/)/i);
-  assert.doesNotMatch(docs, /\b(?:is live|is available now|has raised|generates revenue|pays out|delivers returns|accepts payment|processes payment|confirms payment|executes a transaction|creates an asset|issues an asset|deploys an asset|offers a public campaign|funds a campaign)\b/i);
+  assert.doesNotMatch(docs, /\b(?:is live|is available now|has raised|generates revenue|pays out|delivers returns|accepts payment|processes payment|confirms payment|executes a transaction|creates an asset|issues an asset|deploys an asset|offers a public campaign|funds a campaign|MCP endpoint is available|MCP server supports requests|payment succeeded|successful payment)\b/i);
   assert.match(docs, /\bshadow-none\b/);
   assert.match(docs, /\bfocus-visible:outline\b/);
 });

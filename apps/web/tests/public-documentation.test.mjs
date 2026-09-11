@@ -139,6 +139,8 @@ test("keeps the guides static, flat, focusable, and free of public-capability cl
     sources.homePage,
     sources.riskScanPage,
     sources.providerPage,
+    sources.apiPage,
+    sources.faqPage,
     sources.home,
     sources.riskScanGuide,
     sources.providerGuide,
@@ -180,7 +182,7 @@ test("keeps the guides static, flat, focusable, and free of public-capability cl
   assert.doesNotMatch(docs, /(?:next\/image|<img\b|<Image\b|\bsrc\s*=|\burl\()/i);
   assert.doesNotMatch(
     docs,
-    /\b(?:is live|is available now|has raised|generates revenue|pays out|delivers returns|accepts payment|processes payment|confirms payment|executes a transaction|creates an asset|issues an asset|deploys an asset|offers a public campaign|funds a campaign)\b/i,
+    /\b(?:is live|is available now|has raised|generates revenue|pays out|delivers returns|accepts payment|processes payment|confirms payment|executes a transaction|creates an asset|issues an asset|deploys an asset|offers a public campaign|funds a campaign|MCP endpoint is available|MCP server supports requests|payment succeeded|successful payment)\b/i,
   );
   assert.match(sources.providerGuide, /not an ATS deployment/i);
   assert.match(docs, /\bshadow-none\b/);
