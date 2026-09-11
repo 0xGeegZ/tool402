@@ -73,6 +73,14 @@ at `88108b98fb9ef01b46146afcf2b13573c960c20e`. The root
 only the two declared test paths for durable RED. Every source path remains
 prohibited until the RED contract is reviewed.
 
+## RED acceptance and GREEN authorization
+
+The root [RED review](../../evidence/M51-T010-red-review.md) accepts
+`3aca764fb845d52912fee359323fdc6a72a4b71e`: its two intended failures prove
+the absent durable offering reference and absent pure Web resume helper. The
+exact GREEN paths are the six candidate paths declared in this card; every
+other source/test path and every live boundary remains prohibited.
+
 ## Verification
 
 - RED proves a valid durable pending offering resumes the exact stage facts,
