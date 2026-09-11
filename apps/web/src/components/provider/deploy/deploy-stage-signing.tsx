@@ -126,7 +126,7 @@ export function DeployStageSigning({
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Session-only signing</p>
           <h2 id="deploy-stage-signing-title" className="text-lg font-semibold">Sign the deployment stages</h2>
-          <p className="text-sm leading-6 text-muted-foreground">
+          <p className="max-w-prose text-sm leading-6 text-muted-foreground">
             {session === null
               ? "Connect MetaMask above on Hedera Testnet to enable the first stage that needs a signature."
               : "The connected wallet enables the next local signature request. Stage results live only in this browser session and return to their resting state on reload. A connected wallet is not an authority, a signature is not an accepted command, and a relayed ACCEPTED is a backend admission and not an on-chain fact."}

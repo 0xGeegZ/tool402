@@ -106,7 +106,7 @@ export function RiskScanToolLoop() {
           <fieldset className="rounded-card border border-border bg-secondary/35 p-4 sm:p-5">
             <legend id="tool-loop-disclosures" className="text-base font-semibold">Caller-reported disclosures</legend>
             <div className="mt-1 space-y-4">
-              <p className="text-sm leading-6 text-muted-foreground">Select only disclosures supplied by the caller. This form does not verify them.</p>
+              <p className="max-w-prose text-sm leading-6 text-muted-foreground">Select only disclosures supplied by the caller. This form does not verify them.</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="flex min-h-10 items-center gap-3 rounded-control bg-background px-3 text-sm font-medium">
                   <input name="identity" type="checkbox" defaultChecked={defaults.declarations.identity} className="size-4 accent-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" />

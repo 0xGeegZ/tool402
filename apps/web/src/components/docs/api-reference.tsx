@@ -33,7 +33,7 @@ export function ApiReference() {
           <div className="max-w-2xl space-y-2">
             <p className="text-sm font-semibold text-primary">01 · Current routes</p>
             <h2 id="api-routes-title" className="text-2xl font-bold tracking-tight">Two current HTTP boundaries</h2>
-            <p className="text-base leading-7 text-muted-foreground">
+            <p className="max-w-prose text-base leading-7 text-muted-foreground">
               These route descriptions are static. They do not run a request or expose configuration values.
             </p>
           </div>
@@ -44,7 +44,7 @@ export function ApiReference() {
                 <Badge variant="outline" className="w-fit border-border bg-secondary/50">Descriptor</Badge>
                 <div className="space-y-2">
                   <h3 className="font-mono text-lg font-bold tracking-tight">GET /api/tools</h3>
-                  <p className="text-sm leading-6 text-muted-foreground">
+                  <p className="max-w-prose text-sm leading-6 text-muted-foreground">
                     The default boundary returns the current tool descriptor. It does not establish a configured payment path.
                   </p>
                 </div>
@@ -56,7 +56,7 @@ export function ApiReference() {
                 <Badge variant="outline" className="w-fit border-border bg-secondary/50">RiskScan Quick</Badge>
                 <div className="space-y-2">
                   <h3 className="font-mono text-lg font-bold tracking-tight">POST /api/riskscan</h3>
-                  <p className="text-sm leading-6 text-muted-foreground">
+                  <p className="max-w-prose text-sm leading-6 text-muted-foreground">
                     The request boundary evaluates caller-supplied declarations for the current RiskScan Quick surface.
                   </p>
                 </div>
@@ -69,7 +69,7 @@ export function ApiReference() {
           <div className="max-w-2xl space-y-2">
             <p className="text-sm font-semibold text-primary">02 · Request shape</p>
             <h2 id="request-shape-title" className="text-2xl font-bold tracking-tight">RiskScan Quick fields</h2>
-            <p className="text-base leading-7 text-muted-foreground">
+            <p className="max-w-prose text-base leading-7 text-muted-foreground">
               The request shape has three top-level fields and one declarations object with four boolean fields.
             </p>
           </div>

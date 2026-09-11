@@ -50,7 +50,7 @@ export function DocumentationFaq() {
         <div className="max-w-2xl space-y-2">
           <p className="text-sm font-semibold text-primary">Current local facts</p>
           <h2 id="faq-title" className="text-2xl font-bold tracking-tight">Read the boundary before the route</h2>
-          <p className="text-base leading-7 text-muted-foreground">
+          <p className="max-w-prose text-base leading-7 text-muted-foreground">
             These answers describe the present prototype without adding a product claim or a new action.
           </p>
         </div>

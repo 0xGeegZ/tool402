@@ -41,14 +41,14 @@ export function RiskScanGuide() {
             <div className="space-y-2">
               <p className="text-sm font-semibold text-primary">01 · Scope</p>
               <h2 id="scope-title" className="text-2xl font-bold tracking-tight">What Quick covers</h2>
-              <p className="max-w-2xl text-base leading-7 text-muted-foreground">
+              <p className="max-w-prose text-base leading-7 text-muted-foreground">
                 Quick is a bounded assessment of caller-supplied declarations. It does not verify an external service, payment, or evidence record.
               </p>
             </div>
             <Card className="rounded-panel bg-card shadow-none">
               <CardHeader className="space-y-2">
                 <p className="text-sm font-semibold">Start from the descriptor</p>
-                <p className="text-sm leading-6 text-muted-foreground">
+                <p className="max-w-prose text-sm leading-6 text-muted-foreground">
                   Use <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-foreground">GET /api/tools</code> to read the current descriptor before choosing a local next step.
                 </p>
               </CardHeader>
@@ -59,7 +59,7 @@ export function RiskScanGuide() {
             <div className="space-y-2">
               <p className="text-sm font-semibold text-primary">02 · Input</p>
               <h2 id="request-shape-title" className="text-2xl font-bold tracking-tight">Request shape</h2>
-              <p className="max-w-2xl text-base leading-7 text-muted-foreground">
+              <p className="max-w-prose text-base leading-7 text-muted-foreground">
                 RiskScan Quick uses <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-foreground">POST /api/riskscan</code> with three top-level references and one required declarations object.
               </p>
             </div>
@@ -85,7 +85,7 @@ export function RiskScanGuide() {
             <div className="space-y-2">
               <p className="text-sm font-semibold text-primary">03 · Boundary</p>
               <h2 id="result-boundary-title" className="text-2xl font-bold tracking-tight">Read the result boundary</h2>
-              <p className="max-w-2xl text-base leading-7 text-muted-foreground">
+              <p className="max-w-prose text-base leading-7 text-muted-foreground">
                 The result can report <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-foreground">needs_disclosure</code> or <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-foreground">disclosures_reported</code>. Those dispositions describe the submitted declarations only.
               </p>
             </div>
@@ -105,7 +105,7 @@ export function RiskScanGuide() {
               {localRoutes.map((route) => (
                 <Card key={route.href} className="rounded-panel shadow-none">
                   <CardContent className="space-y-4 pt-5">
-                    <p className="text-sm leading-6 text-muted-foreground">{route.description}</p>
+                    <p className="max-w-prose text-sm leading-6 text-muted-foreground">{route.description}</p>
                     <Link href={route.href} className={linkClass}>{route.label}</Link>
                   </CardContent>
                 </Card>

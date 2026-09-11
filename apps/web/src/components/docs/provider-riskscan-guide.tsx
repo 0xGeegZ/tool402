@@ -47,7 +47,7 @@ export function ProviderRiskScanGuide() {
             <div className="space-y-2">
               <p className="text-sm font-semibold text-primary">01 · Provider preview</p>
               <h2 id="provider-preview-title" className="text-2xl font-bold tracking-tight">Read the current local surface</h2>
-              <p className="max-w-2xl text-base leading-7 text-muted-foreground">
+              <p className="max-w-prose text-base leading-7 text-muted-foreground">
                 The Provider overview is read-only. It reflects the current local projection and does not publish a public campaign.
               </p>
             </div>
@@ -62,7 +62,7 @@ export function ProviderRiskScanGuide() {
             <div className="space-y-2">
               <p className="text-sm font-semibold text-primary">02 · Five steps</p>
               <h2 id="five-steps-title" className="text-2xl font-bold tracking-tight">Follow the local preview</h2>
-              <p className="max-w-2xl text-base leading-7 text-muted-foreground">
+              <p className="max-w-prose text-base leading-7 text-muted-foreground">
                 The first four steps contain the documented local editable fields. Review and sign is a non-editable review and sign surface.
               </p>
             </div>
@@ -74,7 +74,7 @@ export function ProviderRiskScanGuide() {
                       <Badge variant="outline" className="w-fit border-border bg-secondary/50">Step {step.number}</Badge>
                       <div className="space-y-2">
                         <h3 className="text-lg font-bold tracking-tight">{step.title}</h3>
-                        <p className="text-sm leading-6 text-muted-foreground">{step.detail}</p>
+                        <p className="max-w-prose text-sm leading-6 text-muted-foreground">{step.detail}</p>
                       </div>
                     </CardHeader>
                   </Card>
@@ -105,7 +105,7 @@ export function ProviderRiskScanGuide() {
               {localRoutes.map((route) => (
                 <Card key={route.href} className="rounded-panel shadow-none">
                   <CardContent className="space-y-4 pt-5">
-                    <p className="text-sm leading-6 text-muted-foreground">{route.description}</p>
+                    <p className="max-w-prose text-sm leading-6 text-muted-foreground">{route.description}</p>
                     <Link href={route.href} className={linkClass}>{route.label}</Link>
                   </CardContent>
                 </Card>
