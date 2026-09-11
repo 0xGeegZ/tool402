@@ -103,31 +103,6 @@ function StepProgress({
   );
 }
 
-function ProviderDeploySidebar() {
-  return (
-    <aside data-ui="provider-deploy-sidebar" className="space-y-4">
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-none">
-        <div className="flex items-start justify-between gap-3">
-          <h2 className="text-base font-semibold tracking-tight">Issuer wallet</h2>
-          <Badge variant="outline" className="rounded-full border-border bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-            Connect at review
-          </Badge>
-        </div>
-        <p className="mt-4 text-xs leading-5 text-muted-foreground">
-          The issuer wallet is only requested on the final review step, after the prepared details have been checked.
-        </p>
-      </section>
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-none">
-        <h2 className="text-base font-semibold tracking-tight">What signing does</h2>
-        <div className="mt-3 space-y-3 text-xs leading-5 text-muted-foreground">
-          <p>Every signature is tied to the bounded local command and the exact prepared fields shown in this wizard.</p>
-          <p>Nothing is created, funded, or published until the named signature and receipt exist.</p>
-        </div>
-      </section>
-    </aside>
-  );
-}
-
 function Field({
   label,
   hint,
@@ -301,7 +276,7 @@ function ReviewStep({ values }: { values: WizardValues }) {
   ] as const;
 
   return (
-    <div className="space-y-8">
+    <DeployStageSigning values={values}>
       <section aria-labelledby="provider-deploy-review" className="space-y-4">
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Review</p>
@@ -317,8 +292,7 @@ function ReviewStep({ values }: { values: WizardValues }) {
           ))}
         </dl>
       </section>
-      <DeployStageSigning values={values} />
-    </div>
+    </DeployStageSigning>
   );
 }
 
@@ -408,7 +382,7 @@ export function ProviderDeployWizard() {
         <StepProgress currentStep={currentStep} onStepSelect={returnToStep} />
       </div>
 
-      <div data-ui="provider-deploy-workspace" className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1.62fr)_minmax(17rem,0.9fr)] lg:items-start">
+      <div data-ui="provider-deploy-workspace" className="mt-7 space-y-5">
         <section data-ui="provider-deploy-form">
           <Card className="overflow-hidden rounded-2xl border border-border bg-card shadow-none">
             <CardHeader className="space-y-1 px-5 pb-2 pt-5 sm:px-6 sm:pt-6">
@@ -435,7 +409,6 @@ export function ProviderDeployWizard() {
             </form>
           </Card>
         </section>
-        <ProviderDeploySidebar />
       </div>
     </main>
   );

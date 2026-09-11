@@ -28,10 +28,14 @@ test("defines the truthful Provider RiskScan preparation hierarchy", async () =>
   assert.match(wizard, /h-1\.5/);
   assert.match(wizard, /data-ui=["']provider-deploy-workspace["']/);
   assert.match(wizard, /data-ui=["']provider-deploy-form["']/);
-  assert.match(wizard, /data-ui=["']provider-deploy-sidebar["']/);
-  assert.match(wizard, /Issuer wallet/);
-  assert.match(wizard, /What signing does/);
+  assert.doesNotMatch(wizard, /provider-deploy-sidebar/);
+  assert.doesNotMatch(wizard, /lg:grid-cols-\[minmax\(0,1\.62fr\)_minmax\(17rem,0\.9fr\)\]/);
   assert.match(signing, /data-ui=["']provider-deploy-signing["']/);
+  assert.match(signing, /data-ui=["']provider-review-wallet-context["']/);
+  assert.match(signing, /heading="Issuer wallet"/);
+  assert.match(signing, /What signing does/);
+  assert.match(signing, /Connect MetaMask/);
+  assert.match(signing, /session === null \? "ml-auto grid max-w-3xl gap-4 sm:grid-cols-2" : "hidden"/);
 
   const wizardCards = wizard.match(/<Card\b[^>]*>/g) ?? [];
   for (const card of wizardCards) assert.match(card, /\bshadow-none\b/);

@@ -9,11 +9,11 @@ const links = [
   { href: "/explore", label: "Explore tools" },
   { href: "/docs", label: "Docs" },
   { href: "/demo", label: "Guided demo" },
-  { href: "/provider", label: "Providers" },
+  { href: "/provider", label: "Campaign" },
 ] as const;
 
 function isActiveLink(pathname: string, href: (typeof links)[number]["href"]) {
-  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 type SheetContentProps = {
