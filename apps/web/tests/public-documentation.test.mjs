@@ -10,9 +10,13 @@ const sourcePaths = [
   "src/app/docs/page.tsx",
   "src/app/docs/riskscan/page.tsx",
   "src/app/docs/providers/page.tsx",
+  "src/app/docs/api/page.tsx",
+  "src/app/docs/faq/page.tsx",
   "src/components/docs/documentation-home.tsx",
   "src/components/docs/riskscan-guide.tsx",
   "src/components/docs/provider-riskscan-guide.tsx",
+  "src/components/docs/api-reference.tsx",
+  "src/components/docs/documentation-faq.tsx",
 ];
 
 function readAppFile(path) {
@@ -31,28 +35,41 @@ async function fileExists(path) {
 async function readDocumentationSources(t) {
   const exists = await Promise.all(sourcePaths.map(fileExists));
   if (!exists.every(Boolean)) {
-    t.skip("GREEN assertions wait for the six declared documentation sources");
+    t.skip("GREEN assertions wait for the ten declared documentation sources");
     return null;
   }
 
-  const [homePage, riskScanPage, providerPage, home, riskScanGuide, providerGuide, navigation, footer] = await Promise.all([
+  const [homePage, riskScanPage, providerPage, apiPage, faqPage, home, riskScanGuide, providerGuide, apiReference, faq, navigation, footer] = await Promise.all([
     ...sourcePaths.map(readAppFile),
     readAppFile("src/components/discovery/local-navigation.tsx"),
     readAppFile("src/components/landing/landing-footer.tsx"),
   ]);
-  return { homePage, riskScanPage, providerPage, home, riskScanGuide, providerGuide, navigation, footer };
+  return {
+    homePage,
+    riskScanPage,
+    providerPage,
+    apiPage,
+    faqPage,
+    home,
+    riskScanGuide,
+    providerGuide,
+    apiReference,
+    faq,
+    navigation,
+    footer,
+  };
 }
 
-test("requires the six declared documentation sources before GREEN", async () => {
+test("requires every declared documentation source before GREEN", async () => {
   assert.deepEqual(await Promise.all(sourcePaths.map(fileExists)), Array.from({ length: sourcePaths.length }, () => true));
 });
 
-test("composes the three server-rendered documentation routes", async (t) => {
+test("composes the five server-rendered documentation routes", async (t) => {
   const sources = await readDocumentationSources(t);
   if (!sources) return;
-  const { homePage, riskScanPage, providerPage } = sources;
+  const { homePage, riskScanPage, providerPage, apiPage, faqPage } = sources;
 
-  for (const page of [homePage, riskScanPage, providerPage]) {
+  for (const page of [homePage, riskScanPage, providerPage, apiPage, faqPage]) {
     assert.equal((page.match(/<main\b/g) ?? []).length, 1);
     assert.match(page, /<LandingFooter\s*\/>/);
     assert.doesNotMatch(page, /["']use client["']/);
@@ -60,6 +77,8 @@ test("composes the three server-rendered documentation routes", async (t) => {
   assert.match(homePage, /<DocumentationHome\s*\/>/);
   assert.match(riskScanPage, /<RiskScanGuide\s*\/>/);
   assert.match(providerPage, /<ProviderRiskScanGuide\s*\/>/);
+  assert.match(apiPage, /<ApiReference\s*\/>/);
+  assert.match(faqPage, /<DocumentationFaq\s*\/>/);
 });
 
 test("keeps the documentation entry and RiskScan guide factual and local", async (t) => {
@@ -123,10 +142,15 @@ test("keeps the guides static, flat, focusable, and free of public-capability cl
     sources.home,
     sources.riskScanGuide,
     sources.providerGuide,
+    sources.apiReference,
+    sources.faq,
   ].join("\n");
   const declaredHrefLiterals = new Set([
+    "/docs",
     "/docs/riskscan",
     "/docs/providers",
+    "/docs/api",
+    "/docs/faq",
     "/explore/riskscan",
     "/explore/riskscan/tool-loop",
     "/demo",
