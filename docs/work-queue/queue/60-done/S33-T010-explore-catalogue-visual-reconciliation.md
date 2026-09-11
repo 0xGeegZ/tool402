@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 30-task-review
+- Queue state: 60-done
 - Dependencies: S20-T010, S23-T010, S25-T010, and S31-T010 accepted.
 - Owner: The root owns queue records, the UI ledger, decisions, reviews,
   commits, and pushes. Candidate implementation paths are exactly those
@@ -72,6 +72,43 @@ whitespace are clear under Node 22.21.1. Root browser evidence records
 1440px/390px captures, no horizontal overflow, and axe 0 violations/incomplete;
 the reviewer could not rerun browser evidence because its sandbox denied a
 Next port bind. Source is frozen pending independent module review.
+
+## Module-review correction
+
+The canonical-main module review blocks the source on the unsupported
+machine-payment phrase and an incomplete no-runtime proof. D-S33-010-006
+reopens only `apps/web/tests/explore-visual-reconciliation.test.mjs` to write
+durable corrective RED. D-S33-010-007 additionally reserves only the matching
+`machine-payable` assertion in `apps/web/tests/landing-explore.test.mjs` after
+the fresh RED review found it would otherwise block Green. The Explore page
+and every other source path remain frozen until a fresh independent RED review
+accepts both test deltas and authorizes the supporting-sentence replacement
+and matching assertion alone.
+
+## Rebuilt exact-head review
+
+The previous-branch review evidence is non-ancestral after the clean S33
+rebuild. At `51dc20e`, fresh review confirms the two intended failures are
+only the old page sentence but blocks incomplete JSX static-boundary coverage.
+D-S33-010-008 keeps only the focused visual test and the exact matching
+landing assertion in corrective RED; production remains frozen.
+
+## Corrective RED acceptance
+
+Independent RED review at `2f26d7185c991eb8b1f6e3c4054ee2960fe2faad` is
+clear. D-S33-010-009 authorizes only the Explore supporting-sentence literal
+in `apps/web/src/app/explore/page.tsx`; the two matching assertions are
+already RED. No other source/test path or behavior is authorized.
+
+## Corrective acceptance
+
+Independent module review accepts exact head
+`25d8b4e2a774e22e44642619af299063ed0fc504`. It follows D-S33-010-009 and
+changes only the authorized Explore supporting-sentence literal; the static
+boundary, local routes, matching assertions, and quiet placeholder remain
+intact. Focused 7/7, Web 333/333, root test/typecheck/lint, queue, and
+whitespace are clear. Browser replay is host-unavailable; retained 1440/390
+evidence is the visual record. S33-T010 is 60-done and all reservations close.
 
 ## Ready authority
 

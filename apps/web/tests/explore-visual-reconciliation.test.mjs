@@ -20,7 +20,7 @@ test("uses the compact Explore presentation without changing its static catalogu
 
   assert.match(page, /aria-label="Explore introduction"/);
   assert.match(page, /\bMarketplace\b/);
-  assert.match(page, /\bBounded, machine-payable tools with an inspectable journey\. Start with what each one covers\./);
+  assert.match(page, /\bTwo local tools with clear routes to inspect what each one covers\./);
   assert.match(page, /\bPageHeader\b/);
 
   assert.match(catalog, /\bCurrent catalogue\b/);
@@ -30,8 +30,6 @@ test("uses the compact Explore presentation without changing its static catalogu
   assert.match(catalog, /grid gap-5 md:grid-cols-2 xl:grid-cols-3/);
   assert.doesNotMatch(catalog, /\bFILTER_GROUPS\b/);
   assert.doesNotMatch(catalog, /\bcountsFor\b/);
-  assert.doesNotMatch(catalog, /\buseState\b|\bfetch\b|\binput\b|\bbutton\b/);
-
   for (const [card, href] of [
     [riskScan, "/explore/riskscan"],
     [entityCheck, "/explore/entitycheck"],
@@ -45,10 +43,19 @@ test("uses the compact Explore presentation without changing its static catalogu
     assert.doesNotMatch(card, /\bshadow-lg\b/);
   }
 
-  const presentationSource = [page, catalog, riskScan, entityCheck].join("\n");
+  const presentationSources = [page, catalog, riskScan, entityCheck];
+  const presentationSource = presentationSources.join("\n");
+
+  for (const source of presentationSources) {
+    assert.doesNotMatch(
+      source,
+      /^\s*["']use client["']|\buse(?:[A-Z][A-Za-z0-9_]*|\s*)\(|\b(?:axios|fetch(?:er)?|got|ky|request|XMLHttpRequest)\b|\baddEventListener\s*\(|\bon[A-Z][A-Za-z]*\s*[:=]|\{\s*\.\.\.|<(?:button|input|select|textarea|form|[A-Za-z0-9]*(?:Button|Checkbox|Combobox|Dialog|Dropdown|Input|Menu|Popover|Radio|Select|Slider|Switch|Text(?:area|Field)))\b|\brole\s*=|\baria-(?:activedescendant|checked|controls|expanded|haspopup|multiselectable|pressed|selected|valuemax|valuemin|valuenow|valuetext)\s*=/m,
+    );
+  }
+
   assert.doesNotMatch(
     presentationSource,
-    /\b(?:provider|wallet|payment|price|funding|revenue|transaction|deploy(?:ment)?|live availability)\b/i,
+    /\b(?:account|activity|payable|provider|wallet|payment|price|funding|revenue|testimonial|transaction|deploy(?:ment)?|live availability)\b/i,
   );
-  assert.doesNotMatch(presentationSource, /https?:\/\//i);
+  assert.doesNotMatch(presentationSource, /["'`](?:[a-z][a-z\d+.-]*:|\/\/)/i);
 });
