@@ -206,6 +206,7 @@ async function walletIslandHarness(provider) {
     },
     [walletIslandUrl.href]: {
       "react/jsx-runtime": jsxRuntime,
+      "next/link": { default: "Link" },
       "../ui/badge": { Badge: "Badge" },
       "../ui/button": { Button: "Button" },
       "./wallet-session": sessionModule.exports,
