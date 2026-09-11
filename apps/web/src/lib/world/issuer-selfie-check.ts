@@ -1,3 +1,4 @@
+import { hashSignal } from "@worldcoin/idkit/hashing";
 import { signRequest } from "@worldcoin/idkit/signing";
 
 export const WORLD_ISSUER_COOKIE = "tool402_world_issuer";
@@ -22,6 +23,16 @@ const cookiePayloadPattern = /^([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)$/u;
 
 export function isCanonicalWorldAddress(value: unknown): value is string {
   return typeof value === "string" && addressPattern.test(value);
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function hasExpectedWorldIssuerSignal(result: unknown, address: unknown): boolean {
+  if (!isRecord(result) || !isCanonicalWorldAddress(address) || result.protocol_version !== "3.0" || !Array.isArray(result.responses) || result.responses.length === 0) return false;
+  const expectedSignalHash = hashSignal(address);
+  return result.responses.every((response) => isRecord(response) && response.identifier === "selfie" && response.signal_hash === expectedSignalHash);
 }
 
 function configuration(env: WorldEnvironment): WorldConfiguration | null {

@@ -195,11 +195,6 @@ export async function handleCommandRelayPost(
   env: RelayEnvironment,
   dependencies: RelayDependencies = {},
 ): Promise<Response> {
-  const configuration = readConfiguration(env);
-  if (configuration === null) {
-    return relayResponse("not_configured", 503);
-  }
-  const fetchImplementation = dependencies.fetch ?? globalThis.fetch;
   const nowMilliseconds = dependencies.nowMilliseconds ?? Date.now;
 
   const bytes = await readBoundedBytes(request.body, RELAY_MAX_REQUEST_BYTES);
@@ -210,6 +205,11 @@ export async function handleCommandRelayPost(
   if (publishSigner !== null && !await hasWorldIssuerCookie(request.headers.get("cookie")?.match(new RegExp(`(?:^|;\\s*)${WORLD_ISSUER_COOKIE}=([^;]+)`))?.[1] ?? null, publishSigner, env, nowMilliseconds())) {
     return relayResponse("WORLD_VERIFICATION_REQUIRED", 403);
   }
+  const configuration = readConfiguration(env);
+  if (configuration === null) {
+    return relayResponse("not_configured", 503);
+  }
+  const fetchImplementation = dependencies.fetch ?? globalThis.fetch;
   const bodySha256 = bytesToHex(
     new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", bytes)),
   ).slice(2);

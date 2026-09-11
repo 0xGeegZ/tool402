@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createWorldIssuerCookie, isCanonicalWorldAddress, WORLD_ISSUER_COOKIE, WORLD_ISSUER_SESSION_SECONDS, worldVerificationUrl } from "../../../../lib/world/issuer-selfie-check";
+import { createWorldIssuerCookie, hasExpectedWorldIssuerSignal, isCanonicalWorldAddress, WORLD_ISSUER_COOKIE, WORLD_ISSUER_SESSION_SECONDS, worldVerificationUrl } from "../../../../lib/world/issuer-selfie-check";
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -9,6 +9,7 @@ export async function POST(request: Request) {
   const url = worldVerificationUrl(process.env);
   if (!url) return NextResponse.json({ error: "world_not_configured" }, { status: 503 });
   if (!isCanonicalWorldAddress(address) || typeof idkitResponse !== "object" || idkitResponse === null || Array.isArray(idkitResponse)) return NextResponse.json({ error: "invalid_request" }, { status: 400 });
+  if (!hasExpectedWorldIssuerSignal(idkitResponse, address)) return NextResponse.json({ error: "world_verification_failed" }, { status: 403 });
   let verified: Response;
   try { verified = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(idkitResponse), cache: "no-store", signal: AbortSignal.timeout(10_000) }); } catch { return NextResponse.json({ error: "world_unavailable" }, { status: 502 }); }
   if (!verified.ok) return NextResponse.json({ error: "world_verification_failed" }, { status: 403 });

@@ -33,6 +33,6 @@ export function WorldIssuerVerification({ address, onVerified }: { address: stri
     </div>
     <p role="status" aria-live="polite" className="text-sm text-muted-foreground">{status}</p>
     <button type="button" onClick={start} className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">Verify with World</button>
-    {request ? <IDKitRequestWidget open={open} onOpenChange={setOpen} app_id={request.app_id} action={request.action} rp_context={request.rp_context} environment={request.environment} allow_legacy_proofs={false} preset={selfieCheckLegacy({ signal: address })} handleVerify={verify} onSuccess={() => { setStatus("World verification complete for this browser session."); onVerified(); }} onError={() => setStatus("World verification did not complete. Try again when you are ready.")} /> : null}
+    {request ? <IDKitRequestWidget open={open} onOpenChange={setOpen} app_id={request.app_id} action={request.action} rp_context={request.rp_context} environment={request.environment} allow_legacy_proofs={true} preset={selfieCheckLegacy({ signal: address })} handleVerify={verify} onSuccess={() => { setStatus("World verification complete for this browser session."); onVerified(); }} onError={() => setStatus("World verification did not complete. Try again when you are ready.")} /> : null}
   </section>;
 }
