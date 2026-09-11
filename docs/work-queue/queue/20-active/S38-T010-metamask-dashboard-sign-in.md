@@ -164,3 +164,14 @@ the existing `provider-deploy-visual-reconciliation.test.mjs` synchronized
 with the merged S26 header-session layout. It is staged after the
 server session reader and remains subject to the same no-wallet/no-live-action
 boundary and fresh review.
+
+## User-directed sign-in clarity amendment
+
+After testing the connected-address navigation, the repository owner found the
+unsigned redirect too implicit for a human. The existing declared sign-in page,
+sign-in component, and `dashboard-auth.test.mjs` are additionally reserved to
+make the remaining step explicit: the signed-in dashboard needs one secure
+MetaMask authentication signature, it is not a transaction and costs no HBAR,
+and the primary action reads `Sign and open dashboard`. This does not change
+the route, protocol, shared wallet state, server guard, or post-success target
+(`/dashboard`), and authorizes no real signature.
