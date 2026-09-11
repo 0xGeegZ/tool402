@@ -1,5 +1,14 @@
+type ProviderSessionChangeEvent = "accountsChanged" | "chainChanged";
+type ProviderSessionChangeListener = () => void;
+type ProviderSessionChangeRegistration = (
+  type: ProviderSessionChangeEvent,
+  listener: ProviderSessionChangeListener,
+) => void;
+
 export interface Eip1193Provider {
   readonly isMetaMask?: boolean;
+  readonly on?: ProviderSessionChangeRegistration;
+  readonly removeListener?: ProviderSessionChangeRegistration;
   request(args: {
     readonly method: string;
     readonly params?: readonly unknown[];
@@ -55,6 +64,34 @@ const defaultSettleMilliseconds = 250;
 const unrecognizedChainErrorCode = 4902;
 const userRejectedRequestCode = 4001;
 const addressPattern = /^0x[0-9a-fA-F]{40}$/u;
+
+export function watchWalletSessionChanges(
+  provider: Eip1193Provider,
+  onChange: () => void,
+): () => void {
+  const { on, removeListener } = provider;
+  if (typeof on !== "function" || typeof removeListener !== "function") {
+    return () => {};
+  }
+
+  let active = true;
+  const listener: ProviderSessionChangeListener = () => {
+    if (active) {
+      onChange();
+    }
+  };
+  on.call(provider, "accountsChanged", listener);
+  on.call(provider, "chainChanged", listener);
+
+  return () => {
+    if (!active) {
+      return;
+    }
+    active = false;
+    removeListener.call(provider, "accountsChanged", listener);
+    removeListener.call(provider, "chainChanged", listener);
+  };
+}
 
 function defaultSettle(): Promise<void> {
   return new Promise((resolve) => {
