@@ -1519,3 +1519,58 @@ implementedTest("returns only the highest sanitized offering projection and fail
   }
   assert.equal(accessorReads, 0);
 });
+
+implementedTest("projects a durable ATS resume reference only from its exact linked PREPARED attempt", async (t) => {
+  const { offerings } = await loadOfferings(t);
+  const input = admissionInput();
+  const pending = offeringDocument(input, { state: "ASSET_PENDING", atsAttemptId });
+  const prepared = atsCreateAttempt(input);
+  const db = database({ offerings: [pending], attempts: [prepared] });
+
+  assert.deepEqual(
+    await offerings.getPublicProjection._handler(db.ctx, {
+      offeringPublicId: input.payload.offeringPublicId,
+    }),
+    {
+      offeringPublicId: pending.offeringPublicId,
+      version: pending.version,
+      subjectPublicId: pending.subjectPublicId,
+      state: "ASSET_PENDING",
+      definition: pending.definition,
+      narrative: pending.narrative,
+      advertisedQuickPriceTinybars: pending.advertisedQuickPriceTinybars,
+      advertisedStandardPriceTinybars: pending.advertisedStandardPriceTinybars,
+      canonicalSignerAddress: pending.canonicalSignerAddress,
+      atsAttemptPublicId: prepared.idempotencyKey,
+      acceptedAt: pending.acceptedAt,
+      updatedAt: pending.updatedAt,
+    },
+  );
+  assert.deepEqual(db.reads, [
+    {
+      table: "offerings",
+      index: "by_offering_public_id_and_version",
+      filters: [["offeringPublicId", input.payload.offeringPublicId]],
+      orders: ["desc"],
+      limit: 2,
+    },
+    { table: "externalPrepareCommandAttempts", id: atsAttemptId, kind: "get" },
+  ]);
+
+  for (const attempt of [
+    { ...prepared, state: "SUBMITTED" },
+    { ...prepared, canonicalSignerAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+    { ...prepared, principalPublicId: "foreign-principal" },
+    { ...prepared, authorityVersion: "foreign-authority" },
+    { ...prepared, subjectPublicId: "foreign_subject" },
+    { ...prepared, idempotencyKey: "not-a-canonical-attempt-id" },
+  ]) {
+    const invalid = database({ offerings: [pending], attempts: [attempt] });
+    await assert.rejects(
+      () => offerings.getPublicProjection._handler(invalid.ctx, {
+        offeringPublicId: input.payload.offeringPublicId,
+      }),
+    );
+    assert.deepEqual(invalid.writes, []);
+  }
+});
