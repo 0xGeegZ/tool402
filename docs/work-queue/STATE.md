@@ -206,7 +206,7 @@
   grant an S18 exception.
 - S18_BACKER_FUNDING_ACCEPTANCE: HI-012 records no enabled `BACKER` authority
   and no M40 funding treasury, so S18 is accepted only as a supplied-projection
-  UI boundary. The independently reviewed lane integration `3e437be` passes
+  UI boundary. The independently reviewed rebased lane integration `164f170` passes
   its focused twelve tests and Web typecheck. The direct route supplies `null`
   and renders unavailable; no live funding, wallet use, transfer, allocation,
   or authority is active. Any future caller must be separately accepted and

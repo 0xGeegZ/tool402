@@ -652,7 +652,7 @@ be accepted before M44 touches its declared action path. No other cross-card
 source overlap is authorized. Every card retains its explicit human-action and
 external-capability exclusions.
 
-S18-T010 is accepted at source integration `3e437be3e5095a2e5f0c94422d35394842c7a445`.
+S18-T010 is accepted at rebased source `164f170ef759490a82476669266946e9aa3b5a5d`.
 Its route, backing components, and focused tests have no continuing reservation.
 The direct route remains supplied-projection-only and unavailable while no
 separately accepted runtime boundary supplies an OPEN offering and explicit
