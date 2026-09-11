@@ -76,8 +76,12 @@ function readConfiguration(env: DashboardAuthEnvironment): Configuration | null 
 
 function timestamp(milliseconds: number): string | null {
   if (!Number.isSafeInteger(milliseconds) || milliseconds < 0) return null;
-  const value = new Date(milliseconds).toISOString();
-  return Date.parse(value) === milliseconds ? value : null;
+  try {
+    const value = new Date(milliseconds).toISOString();
+    return Date.parse(value) === milliseconds ? value : null;
+  } catch {
+    return null;
+  }
 }
 
 function messageFor(payload: ChallengePayload): string {
@@ -102,19 +106,52 @@ function equalMac(left: Uint8Array, right: Uint8Array): boolean {
   return difference === 0;
 }
 
-async function unseal<T extends ChallengePayload | SessionPayload>(cookie: string, configuration: Configuration, dependencies: AuthDependencies): Promise<T | null> {
+function parseChallengePayload(text: string): ChallengePayload | null {
+  try {
+    const value: unknown = JSON.parse(text);
+    if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+    const record = value as Record<string, unknown>;
+    if (JSON.stringify(Object.keys(record)) !== JSON.stringify(["v", "address", "nonce", "issuedAt", "expiresAt", "origin"])) return null;
+    const { v, address, nonce, issuedAt, expiresAt, origin } = record;
+    if (v !== 1 || typeof address !== "string" || typeof nonce !== "string" || typeof issuedAt !== "string" || typeof expiresAt !== "string" || typeof origin !== "string") return null;
+    if (JSON.stringify({ v, address, nonce, issuedAt, expiresAt, origin }) !== text) return null;
+    return { v, address, nonce, issuedAt, expiresAt, origin };
+  } catch {
+    return null;
+  }
+}
+
+function parseSessionPayload(text: string): SessionPayload | null {
+  try {
+    const value: unknown = JSON.parse(text);
+    if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+    const record = value as Record<string, unknown>;
+    if (JSON.stringify(Object.keys(record)) !== JSON.stringify(["v", "address", "issuedAt", "expiresAt"])) return null;
+    const { v, address, issuedAt, expiresAt } = record;
+    if (v !== 1 || typeof address !== "string" || typeof issuedAt !== "string" || typeof expiresAt !== "string") return null;
+    if (JSON.stringify({ v, address, issuedAt, expiresAt }) !== text) return null;
+    return { v, address, issuedAt, expiresAt };
+  } catch {
+    return null;
+  }
+}
+
+async function unseal<T extends ChallengePayload | SessionPayload>(cookie: string, configuration: Configuration, dependencies: AuthDependencies, parse: (text: string) => T | null): Promise<T | null> {
   const parts = cookie.split(".");
   if (parts.length !== 2 || parts[0] === undefined || parts[1] === undefined) return null;
   const payloadBytes = decodeBase64Url(parts[0]);
   const receivedMac = decodeBase64Url(parts[1]);
   if (payloadBytes === null || receivedMac === null || receivedMac.byteLength !== 32) return null;
-  const expectedMac = await (dependencies.hmacSha256 ?? defaultHmacSha256)(configuration.secret, new TextEncoder().encode(parts[0]));
+  let expectedMac: Uint8Array;
+  try {
+    expectedMac = await (dependencies.hmacSha256 ?? defaultHmacSha256)(configuration.secret, new TextEncoder().encode(parts[0]));
+  } catch {
+    return null;
+  }
   if (!equalMac(receivedMac, expectedMac)) return null;
   try {
     const text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(payloadBytes);
-    const payload: unknown = JSON.parse(text);
-    if (typeof payload !== "object" || payload === null || Array.isArray(payload)) return null;
-    return JSON.stringify(payload) === text ? payload as T : null;
+    return parse(text);
   } catch {
     return null;
   }
@@ -123,7 +160,8 @@ async function unseal<T extends ChallengePayload | SessionPayload>(cookie: strin
 function isChallengePayload(payload: ChallengePayload | null, configuration: Configuration): payload is ChallengePayload {
   if (payload === null) return false;
   const { v, address, nonce, issuedAt, expiresAt, origin } = payload;
-  return v === 1 && addressPattern.test(address) && noncePattern.test(nonce) && typeof origin === "string" && origin === configuration.origin && isLifetime(issuedAt, expiresAt, CHALLENGE_MAX_AGE_SECONDS);
+  const nonceBytes = decodeBase64Url(nonce);
+  return v === 1 && addressPattern.test(address) && noncePattern.test(nonce) && nonceBytes?.byteLength === 16 && origin === configuration.origin && isLifetime(issuedAt, expiresAt, CHALLENGE_MAX_AGE_SECONDS);
 }
 
 function isSessionPayload(payload: SessionPayload | null): payload is SessionPayload {
@@ -137,6 +175,10 @@ function isLifetime(issuedAt: unknown, expiresAt: unknown, seconds: number): boo
   const issued = Date.parse(issuedAt);
   const expires = Date.parse(expiresAt);
   return timestamp(issued) === issuedAt && timestamp(expires) === expiresAt && expires - issued === seconds * 1000;
+}
+
+function isCurrent(issuedAt: string, expiresAt: string, now: number): boolean {
+  return timestamp(now) !== null && Date.parse(issuedAt) <= now && now < Date.parse(expiresAt);
 }
 
 export async function createChallenge(
@@ -160,10 +202,15 @@ export async function verifyChallenge(
 ): Promise<Readonly<{ kind: "rejected" }> | Readonly<{ kind: "authenticated"; sessionCookie: string }>> {
   const configuration = readConfiguration(input.env);
   if (configuration === null || input.origin !== configuration.origin || typeof input.challengeCookie !== "string" || typeof input.message !== "string" || !signaturePattern.test(input.signature)) return { kind: "rejected" };
-  const payload = await unseal<ChallengePayload>(input.challengeCookie, configuration, dependencies);
+  const payload = await unseal(input.challengeCookie, configuration, dependencies, parseChallengePayload);
   const now = dependencies.now?.() ?? Date.now();
-  if (!isChallengePayload(payload, configuration) || !Number.isSafeInteger(now) || now > Date.parse(payload.expiresAt) || input.message !== messageFor(payload)) return { kind: "rejected" };
-  const verified = await (dependencies.verifyMessage ?? verifyViemMessage)({ address: payload.address as `0x${string}`, message: input.message, signature: input.signature as `0x${string}` });
+  if (!isChallengePayload(payload, configuration) || !isCurrent(payload.issuedAt, payload.expiresAt, now) || input.message !== messageFor(payload)) return { kind: "rejected" };
+  let verified: boolean;
+  try {
+    verified = await (dependencies.verifyMessage ?? verifyViemMessage)({ address: payload.address as `0x${string}`, message: input.message, signature: input.signature as `0x${string}` });
+  } catch {
+    return { kind: "rejected" };
+  }
   if (!verified) return { kind: "rejected" };
   const issuedAt = timestamp(now);
   const expiresAt = timestamp(now + SESSION_MAX_AGE_SECONDS * 1000);
@@ -174,8 +221,8 @@ export async function verifyChallenge(
 
 export async function readDashboardSession(cookie: string | undefined, env: DashboardAuthEnvironment, now: number = Date.now()): Promise<Readonly<{ address: string; issuedAt: string; expiresAt: string }> | null> {
   const configuration = readConfiguration(env);
-  if (configuration === null || typeof cookie !== "string" || !Number.isSafeInteger(now)) return null;
-  const payload = await unseal<SessionPayload>(cookie, configuration, {});
-  if (!isSessionPayload(payload) || now > Date.parse(payload.expiresAt)) return null;
+  if (configuration === null || typeof cookie !== "string") return null;
+  const payload = await unseal(cookie, configuration, {}, parseSessionPayload);
+  if (!isSessionPayload(payload) || !isCurrent(payload.issuedAt, payload.expiresAt, now)) return null;
   return { address: payload.address, issuedAt: payload.issuedAt, expiresAt: payload.expiresAt };
 }

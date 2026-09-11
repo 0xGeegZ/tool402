@@ -78,6 +78,19 @@ function tamper(cookie) {
   return `${cookie.slice(0, -1)}${replacement}`;
 }
 
+async function sealFixture(text) {
+  const encoded = Buffer.from(text).toString("base64url");
+  const key = await crypto.subtle.importKey(
+    "raw",
+    Buffer.from(secret, "hex"),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(encoded)));
+  return `${encoded}.${Buffer.from(mac).toString("base64url")}`;
+}
+
 coreTest("exports the fixed Hedera challenge and session lifetimes", async () => {
   const api = await loadApi();
   assert.deepEqual(Object.keys(api).sort(), [
@@ -202,6 +215,90 @@ coreTest("rejects malformed signatures and failed verification generically", asy
     origin,
     env: challengeInput().env,
   }, fixedDependencies({ verifyMessage: async () => false })), { kind: "rejected" });
+});
+
+coreTest("fails closed when a grammar-valid signature makes the verifier throw", async () => {
+  const api = await loadApi();
+  const dependencies = { now: () => nowMilliseconds, randomBytes: () => Uint8Array.from({ length: 16 }, (_, index) => index) };
+  const created = await api.createChallenge(challengeInput(), dependencies);
+  assert.deepEqual(await api.verifyChallenge({
+    challengeCookie: created.cookie,
+    message: created.message,
+    signature: `0x${"00".repeat(65)}`,
+    origin,
+    env: challengeInput().env,
+  }, { now: () => nowMilliseconds }), { kind: "rejected" });
+
+  assert.deepEqual(await api.verifyChallenge({
+    challengeCookie: created.cookie,
+    message: created.message,
+    signature: `0x${"11".repeat(65)}`,
+    origin,
+    env: challengeInput().env,
+  }, { now: () => nowMilliseconds, verifyMessage: async () => { throw new Error("verifier failure"); } }), { kind: "rejected" });
+});
+
+coreTest("rejects noncanonical challenge envelopes before signature verification", async () => {
+  const api = await loadApi();
+  const created = await api.createChallenge(challengeInput(), fixedDependencies());
+  const issuedAt = "2026-09-11T12:00:00.000Z";
+  const expiresAt = "2026-09-11T12:05:00.000Z";
+  const nonce = "AAECAwQFBgcICQoLDA0ODw";
+  const payloads = [
+    `{"v":1,"address":"${address}","nonce":"${nonce}","issuedAt":"${issuedAt}","expiresAt":"${expiresAt}","origin":"${origin}","extra":true}`,
+    `{"v":1,"address":"${address}","nonce":"${nonce}","issuedAt":"${issuedAt}","expiresAt":"${expiresAt}"}`,
+    `{"address":"${address}","v":1,"nonce":"${nonce}","issuedAt":"${issuedAt}","expiresAt":"${expiresAt}","origin":"${origin}"}`,
+    `{"v":1,"address":["${address}"],"nonce":"${nonce}","issuedAt":"${issuedAt}","expiresAt":"${expiresAt}","origin":"${origin}"}`,
+    `{"v":1,"address":"${address}","nonce":"AAECAwQFBgcICQoLDA0ODx","issuedAt":"${issuedAt}","expiresAt":"${expiresAt}","origin":"${origin}"}`,
+  ];
+  for (const payload of payloads) {
+    let verifierCalls = 0;
+    const dependencies = {
+      now: () => nowMilliseconds,
+      verifyMessage: async () => {
+        verifierCalls += 1;
+        return true;
+      },
+    };
+    assert.deepEqual(await api.verifyChallenge({
+      challengeCookie: await sealFixture(payload),
+      message: created.message,
+      signature: `0x${"11".repeat(65)}`,
+      origin,
+      env: challengeInput().env,
+    }, dependencies), { kind: "rejected" });
+    assert.equal(verifierCalls, 0);
+  }
+});
+
+coreTest("requires challenge and session times to satisfy issuedAt <= now < expiresAt", async () => {
+  const api = await loadApi();
+  const created = await api.createChallenge(challengeInput(), fixedDependencies());
+  for (const current of [nowMilliseconds - 1, nowMilliseconds + 300_000, -1, 1.5]) {
+    const dependencies = fixedDependencies({ now: () => current });
+    assert.deepEqual(await api.verifyChallenge({
+      challengeCookie: created.cookie,
+      message: created.message,
+      signature: `0x${"11".repeat(65)}`,
+      origin,
+      env: challengeInput().env,
+    }, dependencies), { kind: "rejected" });
+    assert.equal(dependencies.verifyMessageCalls, 0);
+  }
+
+  const sessionPayloads = [
+    `{"v":1,"address":"${address}","issuedAt":"2026-09-11T12:00:00.000Z","expiresAt":"2026-09-11T20:00:00.000Z","extra":true}`,
+    `{"v":1,"address":"${address}","issuedAt":"2026-09-11T12:00:00.000Z"}`,
+    `{"v":1,"address":["${address}"],"issuedAt":"2026-09-11T12:00:00.000Z","expiresAt":"2026-09-11T20:00:00.000Z"}`,
+    `{"address":"${address}","v":1,"issuedAt":"2026-09-11T12:00:00.000Z","expiresAt":"2026-09-11T20:00:00.000Z"}`,
+  ];
+  for (const payload of sessionPayloads) assert.equal(await api.readDashboardSession(await sealFixture(payload), challengeInput().env, nowMilliseconds), null);
+
+  const validSession = await sealFixture(`{"v":1,"address":"${address}","issuedAt":"2026-09-11T12:00:00.000Z","expiresAt":"2026-09-11T20:00:00.000Z"}`);
+  assert.equal(await api.readDashboardSession(validSession, challengeInput().env, nowMilliseconds - 1), null);
+  assert.equal(await api.readDashboardSession(validSession, challengeInput().env, nowMilliseconds + 28_800_000), null);
+  assert.equal(await api.readDashboardSession(validSession, challengeInput().env, -1), null);
+  assert.equal(await api.readDashboardSession(validSession, challengeInput().env, 1.5), null);
 });
 
 coreTest("issues sessions for verified challenges and rejects them after eight hours", async () => {
