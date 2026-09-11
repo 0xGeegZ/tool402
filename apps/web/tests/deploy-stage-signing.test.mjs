@@ -44,6 +44,7 @@ async function signingIslandHarness(values) {
     "./ats-create-configuration": await import("../src/components/provider/deploy/ats-create-configuration.ts"),
     "./directory-record-literal": await import("../src/components/provider/deploy/directory-record-literal.ts"),
     "./provider-deploy-stages": { ProviderDeployStages: "ProviderDeployStages" },
+    "./world-issuer-verification": { WorldIssuerVerification: "WorldIssuerVerification" },
     "./provider-deploy-state": await import("../src/components/provider/deploy/provider-deploy-state.ts"),
   };
   const { outputText } = typescript.transpileModule(await readIsland(), {
@@ -114,6 +115,8 @@ implementedTest("composes the accepted wallet island, signature dialog, and stag
   assert.match(island, /<SignatureDialog\b[^>]*\bonResult=/u);
   assert.match(island, /<ProviderDeployStages\b[^>]*\bonActivate=/u);
   assert.match(island, /<ProviderDeployStages\b[^>]*\benabledStage=/u);
+  assert.match(island, /<WorldIssuerVerification\b[^>]*\bonVerified=/u);
+  assert.match(island, /actionableStage === 3 && !worldVerified/u);
 });
 
 implementedTest("keeps stage state session-only and truthful with no persistence, retry, environment, or transport", async () => {

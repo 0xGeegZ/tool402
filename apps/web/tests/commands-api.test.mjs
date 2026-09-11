@@ -42,6 +42,7 @@ implementedTest("keeps the closed server relay outcome vocabulary in the relay m
     "CONFLICT",
     "REJECTED",
     "UNSUPPORTED_TYPE",
+    "WORLD_VERIFICATION_REQUIRED",
     "not_configured",
     "transport_failure",
     "unexpected_response",
@@ -170,6 +171,7 @@ test("fixes the closed eight-outcome relay union", async () => {
     "CONFLICT",
     "REJECTED",
     "UNSUPPORTED_TYPE",
+    "WORLD_VERIFICATION_REQUIRED",
     "not_configured",
     "transport_failure",
     "unexpected_response",
@@ -216,6 +218,32 @@ test("answers 503 not_configured and sends nothing when any environment name is 
     assert.equal(response.headers.get("cache-control"), "no-store");
     assert.equal(fetchImpl.calls.length, 0, JSON.stringify(variant));
   }
+});
+
+test("fails closed before forwarding directory publication without a World session bound to its signer", async () => {
+  const { handleCommandRelayPost } = await loadRelayModule();
+  const fetchImpl = createFetch(() => jsonResponse({ outcome: "ACCEPTED" }));
+  const body = new TextEncoder().encode(JSON.stringify({
+    command: {
+      type: "directory.publish",
+      signer: "0xc89f87052c3e080b4a9b021d4930055031ef378e",
+    },
+    payload: {},
+  }));
+  const response = await handleCommandRelayPost(
+    createRequest(body),
+    configuredEnvironment({
+      WORLD_APP_ID: "app_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      WORLD_RP_ID: "rp_aaaaaaaaaaaaaaaa",
+      WORLD_RP_SIGNING_KEY: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      WORLD_ENVIRONMENT: "staging",
+    }),
+    dependencies(fetchImpl),
+  );
+
+  assert.equal(response.status, 403);
+  assert.deepEqual(await response.json(), { outcome: "WORLD_VERIFICATION_REQUIRED" });
+  assert.equal(fetchImpl.calls.length, 0);
 });
 
 test("forwards the exact received bytes under a verifiable M22 envelope to the fixed ingress path", async () => {
