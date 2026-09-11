@@ -43,6 +43,11 @@ D-S35-010-005 records only a candidate correction in
 expectations and direct API-endpoint denial may change only after a fresh
 independent scope review accepts that exact test scope.
 
+D-S35-010-006 accepts that scope and reserves only the two expected-array
+additions and direct API-endpoint denial refinement in
+`apps/web/tests/product-landing.test.mjs`. All other assertions, sources, and
+paths remain fixed.
+
 ## Verification
 
 Final acceptance requires focused RED/GREEN evidence, Web typecheck/test/lint,
