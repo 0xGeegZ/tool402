@@ -3,11 +3,11 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: S34-T010 and S31-T010 accepted.
 - Owner: The root owns the queue, specification, UI manifest, plan, decisions,
-  evidence, commits, and integration. Candidate source/test paths are exactly
-  those named by UI-S35.
+  evidence, commits, and integration. The only current implementation
+  reservation is the two declared test paths below.
 - Human actions: none. This work creates no API request, MCP server, wallet,
   signer, payment, command, transaction, campaign, deployment, or live action.
 
@@ -19,24 +19,21 @@ current product limits. Prepared documentation labels are visual direction;
 their API & MCP, mock account, funding, payment, revenue, and activity claims
 are excluded.
 
-## Ready evidence
+## RED authority
 
-Independent readiness at `4c5770c8a5cefc9fa1a1c31cbe8fac7b9e9fd62d` is
-clear. S31/S34 are accepted, no active task owns the candidate paths, the new
-routes/components/test are absent, and Node 22.21.1 current Docs baseline is
-5/5. D-S35-010-002 moves this card to 10-ready; it grants no source or test
-authority.
-
-## RED and Green boundary
-
-A separate activation may reserve only
+D-S35-010-003 reserves only
 `apps/web/tests/documentation-expansion.test.mjs` and
-`apps/web/tests/public-documentation.test.mjs` for durable RED. Source remains
-prohibited until independent RED acceptance. The later minimal Green may touch
-only UI-S35's two pages, two components, Docs home, and footer. No route
-behavior, API/Agent/Core/Backend, configuration, MCP, wallet, provider,
-payment, command, transaction, deployment, or live-capability path is in
-scope.
+`apps/web/tests/public-documentation.test.mjs` for durable RED. The contract
+must prove the absent API/FAQ routes/components, Docs-home cards, Docs footer
+group, local hrefs, and static no-runtime boundary. All source is prohibited
+until a fresh independent RED review accepts exact minimal Green paths.
+
+## Green boundary
+
+The later minimal Green may touch only UI-S35's two pages, two components,
+Docs home, and footer. No route behavior, API/Agent/Core/Backend,
+configuration, MCP, wallet, provider, payment, command, transaction,
+deployment, or live-capability path is in scope.
 
 ## Verification
 

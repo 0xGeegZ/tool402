@@ -27,6 +27,12 @@ Independent readiness accepts S35-T010 at 10-ready under D-S35-010-002. Its
 candidate paths remain unreserved: only a later fresh activation may reserve
 the two declared test paths for durable RED.
 
+D-S35-010-003 activates S35-T010 and reserves only
+`apps/web/tests/documentation-expansion.test.mjs` and
+`apps/web/tests/public-documentation.test.mjs` for durable RED. Every S35
+source path remains prohibited until independent RED acceptance; the existing
+Docs source, footer, and every runtime/product path remain frozen.
+
 M00-T070 reserves its card, qualification matrix, STATE.md, HUMAN-ACTIONS.md, DECISIONS.md, TASK-CATALOG.md, and AI_USAGE.md to the root integrator. M00-T080 reserves its card, STATE.md, FILE-OWNERSHIP.md, TASK-CATALOG.md, DECISIONS.md, HUMAN-ACTIONS.md, AI_USAGE.md, ORCHESTRATOR-RUNBOOK.md, and WORKTREE-POLICY.md to the root integrator.
 
 P00-T010 reserves its card, docs/product/OVERVIEW.md, STATE.md, TASK-CATALOG.md, FILE-OWNERSHIP.md, DECISIONS.md, and AI_USAGE.md to the root integrator.
