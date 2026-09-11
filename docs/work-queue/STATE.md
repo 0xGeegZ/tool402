@@ -1,5 +1,12 @@
 # Runtime queue state
 
+- M52_STAGE_B_ISSUER_ACCOUNT_SELECTION_INTAKE: User-directed CORE_P0
+  correction. MetaMask may return more than one site-authorized account. M52
+  may evaluate a narrow fixed-issuer membership check only after independent
+  readiness and a separate test-only RED activation; no provider request,
+  transaction, receipt, Mirror read, candidate, attachment, authority, or
+  live action is authorized.
+
 - M51_PROVIDER_DURABLE_RESUME_RED: User-directed CORE_P0 correction. The
   current Provider screen must recover only its existing Convex
   `ASSET_PENDING` RiskScan offering plus revalidated linked `PREPARED`
