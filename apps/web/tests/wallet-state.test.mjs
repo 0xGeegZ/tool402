@@ -472,6 +472,8 @@ test("renders the closed seven-phase signature dialog with refusal copy inside e
   assert.match(source, /idempotency key/iu);
   assert.match(source, /nothing was (?:sent or )?recorded/iu);
   assert.match(source, /already claimed by an earlier attempt/u);
+  assert.match(source, /case\s+["']WORLD_VERIFICATION_REQUIRED["']:/u);
+  assert.match(source, /World verification is required before directory publication/iu);
   assert.doesNotMatch(source, /earlier command stands/u);
   assert.doesNotMatch(source, /\buseEffect\b/u);
   assert.doesNotMatch(source, /\b(?:console|localStorage|sessionStorage|setTimeout|setInterval|retry\()/u);

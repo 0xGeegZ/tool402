@@ -11,6 +11,7 @@ import {
   type RandomBytes,
 } from "./tool402-command.ts";
 import { readCurrentSession } from "./wallet-state.ts";
+import { hasWorldIssuerCookie, WORLD_ISSUER_COOKIE } from "../world/issuer-selfie-check.ts";
 
 export const RELAY_OUTCOMES = Object.freeze([
   "ACCEPTED",
@@ -18,6 +19,7 @@ export const RELAY_OUTCOMES = Object.freeze([
   "CONFLICT",
   "REJECTED",
   "UNSUPPORTED_TYPE",
+  "WORLD_VERIFICATION_REQUIRED",
   "not_configured",
   "transport_failure",
   "unexpected_response",
@@ -175,22 +177,39 @@ function parseOutcome(
   return candidates.find((candidate) => candidate === outcome) ?? null;
 }
 
+function publishedCommandSigner(bytes: Uint8Array): string | null {
+  try {
+    const parsed: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null;
+    const command = (parsed as { command?: unknown }).command;
+    if (typeof command !== "object" || command === null || Array.isArray(command)) return null;
+    const { type, signer } = command as { type?: unknown; signer?: unknown };
+    return type === "directory.publish" && typeof signer === "string" ? signer : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function handleCommandRelayPost(
   request: Request,
   env: RelayEnvironment,
   dependencies: RelayDependencies = {},
 ): Promise<Response> {
-  const configuration = readConfiguration(env);
-  if (configuration === null) {
-    return relayResponse("not_configured", 503);
-  }
-  const fetchImplementation = dependencies.fetch ?? globalThis.fetch;
   const nowMilliseconds = dependencies.nowMilliseconds ?? Date.now;
 
   const bytes = await readBoundedBytes(request.body, RELAY_MAX_REQUEST_BYTES);
   if (bytes === null) {
     return relayResponse("REJECTED", 413);
   }
+  const publishSigner = publishedCommandSigner(bytes);
+  if (publishSigner !== null && !await hasWorldIssuerCookie(request.headers.get("cookie")?.match(new RegExp(`(?:^|;\\s*)${WORLD_ISSUER_COOKIE}=([^;]+)`))?.[1] ?? null, publishSigner, env, nowMilliseconds())) {
+    return relayResponse("WORLD_VERIFICATION_REQUIRED", 403);
+  }
+  const configuration = readConfiguration(env);
+  if (configuration === null) {
+    return relayResponse("not_configured", 503);
+  }
+  const fetchImplementation = dependencies.fetch ?? globalThis.fetch;
   const bodySha256 = bytesToHex(
     new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", bytes)),
   ).slice(2);

@@ -1347,3 +1347,23 @@ M50's accepted event behavior if it later rebases its shared-session redesign.
 M50 does not own or amend
 `wallet-state.ts`, deploy-stage signing, command/relay code, configuration,
 packages, lockfiles, or any live path.
+
+M51-T010 is a root-owned 20-active CORE_P0 minimal-GREEN lane for an issuer
+World Selfie Check gate, authorized by D-M51-010-002. Its reserved surface is
+exactly
+`apps/web/package.json`, `package-lock.json`,
+`apps/web/src/lib/world/issuer-selfie-check.ts`,
+`apps/web/src/app/api/world/request/route.ts`,
+`apps/web/src/app/api/world/verify/route.ts`,
+`apps/web/src/components/provider/deploy/world-issuer-verification.tsx`,
+`apps/web/tests/world-issuer-selfie-check.test.mjs`, plus narrow established
+command-relay, signing-island, static-shell, and wallet-state tests, and
+`docs/submission/world-selfie-check-feedback.md`. Wallet authority, EIP-712
+validation, Convex state, deployment, payment, transaction, legal identity,
+KYC, and production claims remain outside this GREEN scope.
+
+D-M51-010-007 additionally reserves only
+`apps/web/tests/backing-state.test.mjs` and
+`apps/web/src/components/backing/backing-state.ts` for the rebase-only
+exhaustive handling of `WORLD_VERIFICATION_REQUIRED`. Every other S18 source,
+test, lifecycle, command, payment, transfer, and live boundary remains fixed.

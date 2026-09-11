@@ -274,6 +274,7 @@ const relayOutcomeKinds = Object.freeze({
   REJECTED: "rejected",
   REPLAYED: "replayed",
   CONFLICT: "conflict",
+  WORLD_VERIFICATION_REQUIRED: "unavailable",
   not_configured: "unavailable",
   transport_failure: "unknown",
   unexpected_response: "unknown",
