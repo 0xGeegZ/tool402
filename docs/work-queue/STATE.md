@@ -1,5 +1,13 @@
 # Runtime queue state
 
+- M51_PROVIDER_DURABLE_RESUME_INTAKE: User-directed CORE_P0 intake. The
+  current Provider screen must recover only its existing Convex
+  `ASSET_PENDING` RiskScan offering plus revalidated linked `PREPARED`
+  ATS_CREATE reference after a reload. It is `00-inbox`; no source/test path
+  is active before independent readiness and RED activation, and no wallet,
+  authority, signature, relay, Stage-B, transaction, candidate, or live action
+  is authorized.
+
 - S36_PROVIDER_SIGNATURE_HANDOFF_INTAKE: User-directed local POLISH intake.
   S36-T010 may make the existing actionable signature request discoverable
   after fresh readiness and durable RED activation. It has no active source

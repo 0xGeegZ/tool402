@@ -2,6 +2,19 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
+M51-T010 is a root-owned `00-inbox` CORE_P0 recovery intake. It owns its
+card, specification, queue/decision/review records, and the future candidate
+paths `packages/backend/convex/offerings.ts`,
+`packages/backend/tests/offering-command-admission.test.mjs`,
+`apps/web/src/lib/offering-projection.ts`, new
+`apps/web/src/lib/provider-campaign-resume.ts`,
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, and new
+`apps/web/tests/provider-campaign-resume.test.mjs`. No candidate path is
+active or reserved before independent readiness and separate RED activation.
+M51 may expose only a revalidated `ASSET_PENDING`/`PREPARED` durable recovery
+reference. Provider, wallet, signature, relay, authority, transaction,
+candidate attachment, deployment, and every live path remain excluded.
+
 B04-T010 is a root-owned `20-active` security remediation. It reserves its
 card, specification, plan, queue records, and exactly these future durable-RED
 tests: `stage-b-ats-create-canonical-identity.test.mjs`,
