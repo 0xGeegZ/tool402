@@ -211,6 +211,13 @@
   and renders unavailable; no live funding, wallet use, transfer, allocation,
   or authority is active. Any future caller must be separately accepted and
   require an OPEN offering with an explicit lowercase EVM treasury.
+- HA_ATS_PREPARED_ATTEMPT_ACCEPTANCE: The decision owner accepted
+  HA-ATS-PREPARED-ATTEMPT-001. Root then found that its named
+  `http://localhost:3000` host serves unrelated worktree source `f9238ee`,
+  rather than required source `d2a2be44`. The accepted packet treats that as a
+  stop condition. No issuer authority record was provisioned or re-enabled,
+  no signature, relay, or external action occurred, and execution remains
+  pending exact-host verification.
 - S34_PUBLIC_DOCUMENTATION_READY: Independent readiness at
   `3f52a4941354321ed5d5dd57a0f44b93f72bce48` accepts the root-owned static
   documentation candidate. D-S34-010-001/002, UI-S34, the S34 specification,
