@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import "./globals.css";
@@ -56,6 +57,11 @@ export default function RootLayout({
               </div>
             </div>
           </header>
+          <NuqsAdapter>
+            <Suspense fallback={null}>
+              <DemoTourBar />
+            </Suspense>
+          </NuqsAdapter>
           <div className="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-6 sm:pb-20 lg:px-8 lg:pb-24">
             <NuqsAdapter>{children}</NuqsAdapter>
           </div>

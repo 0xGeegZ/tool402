@@ -516,9 +516,11 @@ implementedTest("keeps the signing island mounted before review so a durable cam
   assert.ok(island, "ProviderDeployWizard must mount DeployStageSigning");
   assert.match(island.getText(shell.sourceFile), /reviewing=\{currentStep === lastStep\}/);
   assert.match(island.getText(shell.sourceFile), /onResume=\{resumeDurableCampaign\}/);
-  const resume = namedFunctionContext("provider-deploy-wizard.tsx", wizard, "resumeDurableCampaign");
-  assert.match(resume.declaration.getText(resume.sourceFile), /setCurrentStep\(lastStep\)/);
-  assert.match(resume.declaration.getText(resume.sourceFile), /setShowValidationErrors\(false\)/);
+  assert.match(wizard, /\{layout\.connect\}/, "both deploy layouts must receive the shared-session connect action");
+  assert.doesNotMatch(wizard, /layout\.wallet/, "the deploy layouts must not remount a wallet-local control");
+  assert.match(wizard, /const resumeDurableCampaign = useCallback\(\(\) =>/);
+  assert.match(wizard, /setCurrentStep\(lastStep\)/);
+  assert.match(wizard, /setShowValidationErrors\(false\)/);
   assert.doesNotMatch(shell.declaration.getText(shell.sourceFile), /<ProviderDeployStages\b/);
   assert.doesNotMatch(wizard, /providerDeployStageStates/);
 

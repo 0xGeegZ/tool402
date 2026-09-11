@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { formatHbar, formatShare, groupThousands } from "../../../lib/hbar-format";
 import { createStageBAtsCreateExecutionProjection } from "../../../lib/ats/stage-b-ats-create-execution-projection.ts";
 import { Badge } from "../../ui/badge";
@@ -343,7 +343,7 @@ function TermsStep({
 
 function ReviewStep({
   values,
-  wallet,
+  connect,
   resumeNotice,
   constructionNotice,
   stages,
@@ -351,7 +351,7 @@ function ReviewStep({
   footer,
 }: {
   values: WizardValues;
-  wallet: ReactNode;
+  connect: ReactNode;
   resumeNotice: ReactNode;
   constructionNotice: ReactNode;
   stages: ReactNode;
@@ -362,7 +362,7 @@ function ReviewStep({
 
   return (
     <div className="space-y-4">
-      <section className="rounded-card border border-primary/10 bg-card p-5 shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_6%,transparent)] sm:p-6" aria-label="Wallet connection"><div className="grid gap-5 lg:grid-cols-[1fr_0.8fr] lg:items-center"><div className="flex gap-4"><ProviderIcon kind="wallet" /><div className="min-w-0 flex-1">{wallet}</div></div><div className="rounded-field border border-success/15 bg-success/10 p-4"><div className="flex items-center gap-2"><ProviderIcon kind="shield" compact /><p className="font-semibold">Your keys, your control</p></div><p className="mt-2 text-sm leading-5 text-muted-foreground">You authorize each step. Nothing is submitted to the network until you sign and confirm.</p></div></div></section>
+      {connect ? <section className="rounded-card border border-primary/10 bg-card p-5 shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_6%,transparent)] sm:p-6" aria-label="Wallet connection"><div className="grid gap-5 lg:grid-cols-[1fr_0.8fr] lg:items-center"><div className="flex gap-4"><ProviderIcon kind="wallet" /><div className="min-w-0 flex-1">{connect}</div></div><div className="rounded-field border border-success/15 bg-success/10 p-4"><div className="flex items-center gap-2"><ProviderIcon kind="shield" compact /><p className="font-semibold">Your keys, your control</p></div><p className="mt-2 text-sm leading-5 text-muted-foreground">You authorize each step. Nothing is submitted to the network until you sign and confirm.</p></div></div></section> : null}
       <section className="rounded-card border border-primary/10 bg-card p-5 shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_6%,transparent)] sm:p-6" aria-labelledby="prepared-title"><div className="flex items-start justify-between gap-4"><div className="flex gap-4"><ProviderIcon kind="document" /><div><h2 id="prepared-title" className="text-lg font-bold">Prepared details</h2><p className="mt-1 text-sm leading-5 text-muted-foreground">Review the key details of your offering. These values remain editable until you sign.</p></div></div><Button type="button" variant="outline" className="hidden shrink-0 sm:inline-flex">Edit details</Button></div><dl className="mt-4 grid gap-x-8 gap-y-3 rounded-field border border-primary/10 bg-primary/[0.03] p-3 text-sm sm:grid-cols-2">{reviewRows.map(([label, value]) => <div key={label} className="grid grid-cols-[minmax(7rem,0.8fr)_1.2fr] gap-2"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium text-foreground">{value}</dd></div>)}</dl></section>
       {resumeNotice}
       {constructionNotice}
@@ -412,10 +412,10 @@ export function ProviderDeployWizard() {
     setShowValidationErrors(false);
   }
 
-  function resumeDurableCampaign() {
+  const resumeDurableCampaign = useCallback(() => {
     setShowValidationErrors(false);
     setCurrentStep(lastStep);
-  }
+  }, [lastStep]);
 
   function moveForward() {
     const nextFieldErrors = providerDeployFieldErrors(values, currentStep);
@@ -501,7 +501,7 @@ export function ProviderDeployWizard() {
                   </Card>
                 </section>
                 <aside className="flex min-w-0 flex-col gap-5">
-                  <section className="rounded-card border border-border bg-card p-5 shadow-none sm:p-6" aria-label="Wallet connection">{layout.wallet}</section>
+                  {layout.connect ? <section className="rounded-card border border-border bg-card p-5 shadow-none sm:p-6" aria-label="Wallet connection">{layout.connect}</section> : null}
                   {layout.resumeNotice}
                   <CampaignSummary values={values} />
                 </aside>
