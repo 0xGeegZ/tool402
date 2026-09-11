@@ -308,7 +308,7 @@ function ReviewStep({ values }: { values: WizardValues }) {
 }
 
 export function ProviderDeployWizard() {
-  const [currentStep, setCurrentStep] = useState(4);
+  const [currentStep, setCurrentStep] = useState(0);
   const [values, setValues] = useState<WizardValues>(initialValues);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const fieldErrors = showValidationErrors ? providerDeployFieldErrors(values, currentStep) : emptyFieldErrors;
