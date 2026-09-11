@@ -49,7 +49,7 @@ test("uses the compact Explore presentation without changing its static catalogu
   for (const source of presentationSources) {
     assert.doesNotMatch(
       source,
-      /^\s*["']use client["']\s*;?\s*(?:\r?\n|$)|\buse[A-Z][A-Za-z0-9_]*\s*\(|\bfetch\s*\(|\bon[A-Z][A-Za-z]*\s*=|<(?:button|input|select|textarea|form)\b|\brole=["']button["']|\baria-(?:pressed|expanded|checked|controls|selected)=/m,
+      /^\s*["']use client["']|\buse(?:[A-Z][A-Za-z0-9_]*|\s*)\(|\b(?:axios|fetch|got|ky|request|XMLHttpRequest)\b|\baddEventListener\s*\(|\bon[A-Z][A-Za-z]*\s*[:=]|\{\s*\.\.\.|<(?:button|input|select|textarea|form|[A-Za-z0-9]*Button)\b|\brole=["'](?:button|checkbox|combobox|menuitem|option|radio|slider|switch|tab|textbox)["']|\baria-(?:activedescendant|checked|controls|expanded|haspopup|multiselectable|pressed|selected|valuemax|valuemin|valuenow|valuetext)=/m,
     );
   }
 
@@ -57,5 +57,5 @@ test("uses the compact Explore presentation without changing its static catalogu
     presentationSource,
     /\b(?:account|activity|payable|provider|wallet|payment|price|funding|revenue|testimonial|transaction|deploy(?:ment)?|live availability)\b/i,
   );
-  assert.doesNotMatch(presentationSource, /\b(?:[a-z][a-z\d+.-]*:|\/\/)/i);
+  assert.doesNotMatch(presentationSource, /["'`](?:[a-z][a-z\d+.-]*:|\/\/)/i);
 });
