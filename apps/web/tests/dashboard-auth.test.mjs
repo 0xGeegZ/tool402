@@ -206,14 +206,20 @@ coreTest("rejects malformed signatures and failed verification generically", asy
 
 coreTest("issues sessions for verified challenges and rejects them after eight hours", async () => {
   const api = await loadApi();
-  const created = await api.createChallenge(challengeInput(), fixedDependencies());
+  const created = await api.createChallenge(challengeInput(), {
+    now: () => nowMilliseconds,
+    randomBytes: () => Uint8Array.from({ length: 16 }, (_, index) => index),
+  });
   const verified = await api.verifyChallenge({
     challengeCookie: created.cookie,
     message: created.message,
     signature: `0x${"11".repeat(65)}`,
     origin,
     env: challengeInput().env,
-  }, fixedDependencies());
+  }, {
+    now: () => nowMilliseconds,
+    verifyMessage: async () => true,
+  });
 
   assert.equal(verified.kind, "authenticated");
   assert.deepEqual(await api.readDashboardSession(verified.sessionCookie, challengeInput().env, nowMilliseconds), {
