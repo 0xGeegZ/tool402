@@ -2,8 +2,7 @@
 
 ## Scope
 
-Independent review covered activated test-only commits
-`2b0de2153f7abdbcfad5ab3b34d0d79f7c8004f7` and corrective commit
+Independent review covered durable test-only commit
 `3d8ad88a5d654b974ef7154874a7564d0f3e938e` against the M50 card,
 specification, activation evidence, and ownership records.
 

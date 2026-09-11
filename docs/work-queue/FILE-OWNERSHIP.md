@@ -1317,7 +1317,8 @@ Its candidate surface is exactly
 `apps/web/src/components/wallet/wallet-connect.tsx`,
 `apps/web/tests/wallet-state.test.mjs`, and new
 `apps/web/tests/wallet-session-sync.test.mjs`. It has no active source or test
-source reservation pending independent RED acceptance. The refreshed
+reservation pending independent RED acceptance. It now has active source and
+test reservations for GREEN following independent RED acceptance. The refreshed
 activation review at `96cce4c` reserved only
 `apps/web/tests/wallet-state.test.mjs` and new
 `apps/web/tests/wallet-session-sync.test.mjs` for durable RED. Independent RED

@@ -106,9 +106,8 @@ signature, relay, request, transaction, deployment, or live action.
 ## RED acceptance
 
 The independent [M50 RED review](../../evidence/M50-T010-red-review.md) accepts
-test-only commits `2b0de2153f7abdbcfad5ab3b34d0d79f7c8004f7` and
-`3d8ad88a5d654b974ef7154874a7564d0f3e938e`. The durable contract fails only
-for the absent native helper and island wiring; it separately rejects missing
+durable test-only commit `3d8ad88a5d654b974ef7154874a7564d0f3e938e`. The durable
+contract fails only for the absent native helper and island wiring; it separately rejects missing
 cleanup capability, absent unmount/disconnect cleanup, unsafe event-handler
 work, and direct raw event wiring.
 

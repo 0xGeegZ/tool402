@@ -497,9 +497,8 @@ No secrets, account keys, or private evidence belong in this file.
   deployment, and live boundary remain prohibited pending independent RED
   acceptance.
 - M50_WALLET_SESSION_SYNC_RED_ACCEPTANCE: Independent review accepts durable
-  test-only `2b0de2153f7abdbcfad5ab3b34d0d79f7c8004f7` plus corrective RED
-  `3d8ad88a5d654b974ef7154874a7564d0f3e938e`. The focused contract has 12
-  existing passes and only three intended absent-helper/island-wiring failures.
+  test-only `3d8ad88a5d654b974ef7154874a7564d0f3e938e`. The focused contract has
+  12 existing passes and only three intended absent-helper/island-wiring failures.
   GREEN is authorized only for `metamask-provider.ts`, `wallet-connect.tsx`,
   and the two matching M50 tests. `wallet-state.ts`, deploy signing,
   command/relay, configuration, packages, wallet/provider/live actions, and
