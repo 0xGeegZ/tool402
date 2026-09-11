@@ -1,14 +1,15 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { MetaMaskDashboardSignIn } from "../../components/auth/metamask-dashboard-sign-in";
 import { readDashboardSession } from "../../lib/dashboard-auth/dashboard-auth.ts";
 
 const sessionCookieName = "__Host-tool402-dashboard-session";
 
-export default async function SignInPage() {
+async function SignInBoundary() {
   const session = await readDashboardSession(
-    (await cookies()).get(sessionCookieName)?.value,
+    (await cookies()).get(sessionCookieName)?.value ?? null,
     {
       TOOL402_DASHBOARD_AUTH_ORIGIN: process.env.TOOL402_DASHBOARD_AUTH_ORIGIN,
       TOOL402_DASHBOARD_AUTH_SECRET: process.env.TOOL402_DASHBOARD_AUTH_SECRET,
@@ -28,5 +29,13 @@ export default async function SignInPage() {
       </header>
       <MetaMaskDashboardSignIn />
     </main>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignInBoundary />
+    </Suspense>
   );
 }

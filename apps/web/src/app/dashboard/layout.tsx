@@ -1,15 +1,16 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { Suspense, type ReactNode } from "react";
 
 import { readDashboardSession } from "../../lib/dashboard-auth/dashboard-auth.ts";
 
 const sessionCookieName = "__Host-tool402-dashboard-session";
 
-export default async function DashboardLayout({
+async function DashboardGate({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: Readonly<{ children: ReactNode }>) {
   const session = await readDashboardSession(
-    (await cookies()).get(sessionCookieName)?.value,
+    (await cookies()).get(sessionCookieName)?.value ?? null,
     {
       TOOL402_DASHBOARD_AUTH_ORIGIN: process.env.TOOL402_DASHBOARD_AUTH_ORIGIN,
       TOOL402_DASHBOARD_AUTH_SECRET: process.env.TOOL402_DASHBOARD_AUTH_SECRET,
@@ -21,4 +22,14 @@ export default async function DashboardLayout({
   }
 
   return children;
+}
+
+export default function DashboardLayout({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  return (
+    <Suspense fallback={null}>
+      <DashboardGate>{children}</DashboardGate>
+    </Suspense>
+  );
 }
