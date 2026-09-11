@@ -1220,3 +1220,10 @@ is 20-active only for apps/web/tests/explore-catalog.test.mjs and the new
 apps/web/tests/explore-visual-reconciliation.test.mjs to create durable RED.
 Every source path remains prohibited until independent RED acceptance grants
 the minimal Green scope.
+
+Independent RED review at 85f99346077d1dadb4e728eefe5ac31df2f08934 is clear:
+the durable tests change only within their reservation and fail only because
+the current page/catalogue/card presentation is absent. The root may amend
+only the four declared S33 presentation source paths and the two matching
+focused tests for minimal Green. All behavior, data, route, wallet, provider,
+payment, transaction, deployment, and live paths remain excluded.

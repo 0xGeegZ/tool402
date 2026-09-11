@@ -45,6 +45,22 @@ Only the two named focused test paths are authorized to create durable RED.
 No source path is authorized. Only a fresh independent RED review may
 authorize minimal presentation Green in the exact UI-S33 path set.
 
+## RED acceptance and minimal Green authority
+
+Independent RED review at 85f99346077d1dadb4e728eefe5ac31df2f08934 is clear.
+The two focused tests changed only within their reservation and fail only for
+the absent catalogue/intro/card presentation. The root may now amend only:
+
+- apps/web/src/app/explore/page.tsx
+- apps/web/src/components/discovery/explore-catalog.tsx
+- apps/web/src/components/discovery/riskscan-discovery-card.tsx
+- apps/web/src/components/discovery/entitycheck-discovery-card.tsx
+- apps/web/tests/explore-catalog.test.mjs
+- apps/web/tests/explore-visual-reconciliation.test.mjs
+
+No behavior, data, route, wallet, provider, payment, transaction, deployment,
+or live capability path is authorized.
+
 ## Ready authority
 
 Independent readiness review is clear at
