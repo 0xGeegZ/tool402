@@ -24,6 +24,12 @@ const previewEnv = {
   VERCEL_ENV: "preview",
   VERCEL_URL: "tool402-ftxhxdvoh-indyweb.vercel.app",
 };
+const localOrigin = "http://localhost:4317";
+const localEnv = {
+  TOOL402_DASHBOARD_AUTH_ORIGIN: localOrigin,
+  TOOL402_DASHBOARD_AUTH_SECRET: env.TOOL402_DASHBOARD_AUTH_SECRET,
+  NODE_ENV: "development",
+};
 
 async function loadRoutes() {
   return import(routesUrl.href);
@@ -83,6 +89,42 @@ routesTest("issues a host-only sealed challenge with no-store", async () => {
   const [cookie] = cookieValues(response);
   assert.match(cookie, /^__Host-tool402-dashboard-challenge=/u);
   for (const attribute of ["Path=/", "Secure", "HttpOnly", "SameSite=Strict", "Max-Age=300"]) assert.match(cookie, new RegExp(attribute, "u"));
+});
+
+routesTest("uses development-only localhost cookies without Secure or __Host", async () => {
+  const routes = await loadRoutes();
+  const request = new Request(`${localOrigin}/api/auth/metamask/challenge`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: localOrigin },
+    body: JSON.stringify({ address }),
+  });
+  const challenge = await routes.handleChallengePost(request, localEnv, {
+    now: () => Date.parse("2026-09-11T12:00:00.000Z"),
+    randomBytes: () => Uint8Array.from({ length: 16 }, (_, index) => index),
+  });
+  assert.equal(challenge.status, 200);
+  const [challengeCookie] = cookieValues(challenge);
+  assert.match(challengeCookie, /^tool402-local-dashboard-challenge=/u);
+  assert.doesNotMatch(challengeCookie, /(?:Secure|__Host-)/u);
+
+  const { message } = await challenge.json();
+  const challengeValue = challengeCookie.match(/^tool402-local-dashboard-challenge=([^;]+)/u)[1];
+  const verification = await routes.handleVerifyPost(new Request(`${localOrigin}/api/auth/metamask/verify`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      origin: localOrigin,
+      cookie: `tool402-local-dashboard-challenge=${challengeValue}`,
+    },
+    body: JSON.stringify({ message, signature: `0x${"11".repeat(65)}` }),
+  }), localEnv, {
+    now: () => Date.parse("2026-09-11T12:00:00.000Z"),
+    verifyMessage: async () => true,
+  });
+  assert.equal(verification.status, 200);
+  const cookies = cookieValues(verification).join("\n");
+  assert.match(cookies, /tool402-local-dashboard-session=.*Path=\/.*HttpOnly.*SameSite=Strict.*Max-Age=28800/u);
+  assert.doesNotMatch(cookies, /(?:Secure|__Host-)/u);
 });
 
 routesTest("derives the exact Vercel Preview origin when no explicit origin is configured", async () => {

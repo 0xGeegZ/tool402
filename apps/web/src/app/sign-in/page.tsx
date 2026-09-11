@@ -3,13 +3,12 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { MetaMaskDashboardSignIn } from "../../components/auth/metamask-dashboard-sign-in";
-import { readDashboardSession } from "../../lib/dashboard-auth/dashboard-auth.ts";
-
-const sessionCookieName = "__Host-tool402-dashboard-session";
+import { readDashboardSession, readDashboardSessionCookieName } from "../../lib/dashboard-auth/dashboard-auth.ts";
 
 async function SignInBoundary() {
+  const sessionCookieName = readDashboardSessionCookieName(process.env);
   const session = await readDashboardSession(
-    (await cookies()).get(sessionCookieName)?.value ?? null,
+    sessionCookieName === null ? null : (await cookies()).get(sessionCookieName)?.value ?? null,
     process.env,
     Date.now(),
   );

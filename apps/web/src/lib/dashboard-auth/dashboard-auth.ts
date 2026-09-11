@@ -29,7 +29,13 @@ type SessionPayload = Readonly<{
   expiresAt: string;
 }>;
 
-type Configuration = Readonly<{ origin: string; secret: Uint8Array }>;
+type DashboardAuthCookieNames = Readonly<{
+  challenge: string;
+  session: string;
+  secure: boolean;
+}>;
+
+type Configuration = Readonly<{ origin: string; secret: Uint8Array; cookieNames: DashboardAuthCookieNames }>;
 
 const addressPattern = /^0x[0-9a-f]{40}$/u;
 const noncePattern = /^[A-Za-z0-9_-]{22}$/u;
@@ -62,8 +68,10 @@ function readConfiguration(env: DashboardAuthEnvironment): Configuration | null 
   if (typeof origin !== "string" || typeof secret !== "string" || !secretPattern.test(secret)) return null;
   try {
     const url = new URL(origin);
+    const secure = url.protocol === "https:";
+    const localDevelopment = url.protocol === "http:" && url.hostname === "localhost" && env.NODE_ENV === "development";
     if (
-      url.protocol !== "https:" ||
+      (!secure && !localDevelopment) ||
       url.username !== "" ||
       url.password !== "" ||
       url.pathname !== "/" ||
@@ -71,7 +79,13 @@ function readConfiguration(env: DashboardAuthEnvironment): Configuration | null 
       url.hash !== "" ||
       url.origin !== origin
     ) return null;
-    return { origin, secret: new Uint8Array(Buffer.from(secret, "hex")) };
+    return {
+      origin,
+      secret: new Uint8Array(Buffer.from(secret, "hex")),
+      cookieNames: secure
+        ? { challenge: "__Host-tool402-dashboard-challenge", session: "__Host-tool402-dashboard-session", secure: true }
+        : { challenge: "tool402-local-dashboard-challenge", session: "tool402-local-dashboard-session", secure: false },
+    };
   } catch {
     return null;
   }
@@ -79,6 +93,14 @@ function readConfiguration(env: DashboardAuthEnvironment): Configuration | null 
 
 export function readDashboardAuthOrigin(env: DashboardAuthEnvironment): string | null {
   return readConfiguration(env)?.origin ?? null;
+}
+
+export function readDashboardSessionCookieName(env: DashboardAuthEnvironment): string | null {
+  return readConfiguration(env)?.cookieNames.session ?? null;
+}
+
+export function readDashboardAuthCookieNames(env: DashboardAuthEnvironment): DashboardAuthCookieNames | null {
+  return readConfiguration(env)?.cookieNames ?? null;
 }
 
 function timestamp(milliseconds: number): string | null {
