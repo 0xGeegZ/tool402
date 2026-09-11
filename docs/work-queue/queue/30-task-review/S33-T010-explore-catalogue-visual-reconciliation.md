@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 30-task-review
 - Dependencies: S20-T010, S23-T010, S25-T010, and S31-T010 accepted.
 - Owner: The root owns queue records, the UI ledger, decisions, reviews,
   commits, and pushes. Candidate implementation paths are exactly those
@@ -60,6 +60,18 @@ the absent catalogue/intro/card presentation. The root may now amend only:
 
 No behavior, data, route, wallet, provider, payment, transaction, deployment,
 or live capability path is authorized.
+
+## Task review
+
+Independent review at a56687ef538c5bd23eb1add95df723271e55d87c is clear. The
+final source remains confined to the declared presentation set and matching
+visual test; local routes/listings, quiet placeholder, no-faux-control and
+no-prohibited-claim boundaries, compact no-shadow cards, headings, focus, and
+reduced motion hold. Focused 2/2, Web 333/333, typecheck, lint, queue, and
+whitespace are clear under Node 22.21.1. Root browser evidence records
+1440px/390px captures, no horizontal overflow, and axe 0 violations/incomplete;
+the reviewer could not rerun browser evidence because its sandbox denied a
+Next port bind. Source is frozen pending independent module review.
 
 ## Ready authority
 
