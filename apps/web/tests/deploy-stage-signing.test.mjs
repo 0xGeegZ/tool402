@@ -20,7 +20,12 @@ async function readIsland() {
 async function signingIslandHarness(values) {
   const slots = [];
   let cursor = 0;
-  let session = { state: { kind: "disconnected" }, provider: null };
+  let connectionRequests = 0;
+  let session = {
+    state: { kind: "disconnected" },
+    provider: null,
+    async connect() { connectionRequests += 1; },
+  };
   const imports = {
     react: {
       useState(initial) {
@@ -53,6 +58,7 @@ async function signingIslandHarness(values) {
           : null;
       },
     },
+    "../../ui/button": { Button: "Button" },
     "../../ui/status": { Status: "Status" },
     "./ats-create-configuration": await import("../src/components/provider/deploy/ats-create-configuration.ts"),
     "./directory-record-literal": await import("../src/components/provider/deploy/directory-record-literal.ts"),
@@ -84,9 +90,11 @@ async function signingIslandHarness(values) {
       session = {
         state: { kind: "connected", address: "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf" },
         provider: { request() { assert.fail("local construction failure must not request the wallet"); } },
+        async connect() { connectionRequests += 1; },
       };
       this.render();
     },
+    connectionRequests() { return connectionRequests; },
   };
 }
 
@@ -208,4 +216,31 @@ implementedTest("uses the shared connected session without an issuer-specific lo
   assert.match(await readIsland(), /connectedWalletSession\(wallet\)/u);
   const island = await readIsland();
   assert.doesNotMatch(island, /\b(?:isIssuerAdvisory|issuerEvmAddress|notIssuer|approved issuer)\b/u);
+});
+
+implementedTest("offers one explicit deploy-form MetaMask connection while the shared session is disconnected", async () => {
+  const { campaignFixture } = await import("../src/components/provider/deploy/campaign-fixture.ts");
+  const values = {
+    ...campaignFixture,
+    targetAgentCustomers: campaignFixture.targetAgentCustomers.join("\n"),
+    useOfFunds: campaignFixture.useOfFunds.join("\n"),
+    risks: campaignFixture.risks.join("\n"),
+  };
+  const harness = await signingIslandHarness(values);
+  const disconnectedTree = harness.render();
+  const connectSection = elements(disconnectedTree).find((element) => element.props["data-ui"] === "provider-deploy-connect");
+
+  assert.ok(connectSection, "the final deploy form must offer a disconnected wallet action");
+  assert.match(visibleText(connectSection), /Connect MetaMask on Hedera Testnet to enable the first signing step\./u);
+  const connectButton = elements(connectSection).find((element) => element.type === "Button" && visibleText(element) === "Connect MetaMask");
+  assert.ok(connectButton, "the deploy-form section must expose one labelled connect button");
+  connectButton.props.onClick();
+  assert.equal(harness.connectionRequests(), 1, "only the explicit button click may invoke the shared connect action");
+
+  harness.connect();
+  assert.equal(
+    elements(harness.render()).some((element) => element.props["data-ui"] === "provider-deploy-connect"),
+    false,
+    "the deploy-form action must disappear once the shared session is connected",
+  );
 });
