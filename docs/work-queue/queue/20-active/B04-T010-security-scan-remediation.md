@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M02-T060 accepted, M46-T030 accepted, M47-T010 accepted
 - Owner: Root owns queue records, code, tests, review, commit, push, and integration.
 - Human actions: none for local delivery. Wallets, providers, payments,
@@ -21,12 +21,11 @@ This user-directed remediation addresses only the two reproduced scan findings:
 The authority is the local [B04 specification](../../../specs/b04-security-scan-remediation.md)
 and [implementation plan](../../../superpowers/plans/2026-09-11-b04-security-scan-remediation.md).
 
-## Ready boundary
+## Activated durable RED surface
 
-Readiness confirms the accepted dependencies, absent new identity and bounded
-reader targets, and no active ownership collision. This card reserves its
-declared candidate paths for a future activation review only. Its exact
-durable-RED candidates are:
+Readiness and activation confirm the accepted dependencies, absent new identity
+and bounded reader targets, and no active ownership collision. This card
+authorizes a durable RED contract only in these exact tests:
 
 - `apps/web/tests/stage-b-ats-create-canonical-identity.test.mjs`;
 - `apps/web/tests/bounded-request-json.test.mjs`;
@@ -37,8 +36,8 @@ durable-RED candidates are:
 - `apps/web/tests/stage-b-ats-create-command-projection.test.mjs`; and
 - `apps/web/tests/stage-b-browser-provider-bridge.test.mjs`.
 
-No source or test change, RED, or GREEN work is authorized while it is
-`10-ready`.
+No source path, GREEN work, or live action is authorized. A fresh independent
+RED review must accept the test-only failures before any source authorization.
 
 Payment, settlement, wallet/provider, transaction, deployment, and live
 boundaries remain excluded.

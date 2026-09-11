@@ -2,14 +2,14 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
-B04-T010 is a root-owned `10-ready` security remediation. It reserves its
+B04-T010 is a root-owned `20-active` security remediation. It reserves its
 card, specification, plan, queue records, and exactly these future durable-RED
 tests: `stage-b-ats-create-canonical-identity.test.mjs`,
 `bounded-request-json.test.mjs`, `entitycheck-api.test.mjs`,
 `riskscan-api.test.mjs`, `provider-deploy-route.test.mjs`,
 `provider-deploy-state.test.mjs`, `stage-b-ats-create-command-projection.test.mjs`,
-and `stage-b-browser-provider-bridge.test.mjs`. The reservation does not
-authorize a source or test change until a separate activation. Existing M42
+and `stage-b-browser-provider-bridge.test.mjs`. The activation authorizes only
+those durable RED tests; no source path is reserved. Existing M42
 preimage, route configuration, source adapters, payment, settlement,
 wallet/provider, transaction, deployment, and live paths remain excluded.
 
