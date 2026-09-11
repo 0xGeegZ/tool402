@@ -186,3 +186,21 @@ implementedTest("keeps a rejected local request out of the dialog and stage resu
     assert.doesNotMatch(visibleText(feedback), /RangeError|TypeError|qualifyingResource|quickPrice|canonical|idempotency/u);
   }
 });
+implementedTest("uses the shared connected session without an issuer-specific local gate", async () => {
+  const { campaignFixture } = await import("../src/components/provider/deploy/campaign-fixture.ts");
+  const values = {
+    ...campaignFixture,
+    targetAgentCustomers: campaignFixture.targetAgentCustomers.join("\n"),
+    useOfFunds: campaignFixture.useOfFunds.join("\n"),
+    risks: campaignFixture.risks.join("\n"),
+  };
+  const harness = await signingIslandHarness(values);
+  harness.connect("0x7e5f4552091a69125d5dfcb7b8c2659029395bdf");
+  const tree = harness.render();
+  const stages = elements(tree).find((element) => element.type === "ProviderDeployStages");
+
+  assert.equal(stages.props.enabledStage, 0);
+  assert.equal(elements(tree).some((element) => typeof element.type === "function" && element.type.name === "SessionReporter"), true);
+  const island = await readIsland();
+  assert.doesNotMatch(island, /\b(?:isIssuerAdvisory|issuerEvmAddress|notIssuer|approved issuer)\b/u);
+});
