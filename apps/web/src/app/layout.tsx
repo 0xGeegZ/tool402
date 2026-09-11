@@ -25,7 +25,7 @@ export default function RootLayout({
               <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="size-3">
                 <path d="M3 12.5h10M4.5 10V6.5m3.5 3.5V3.5m3.5 6.5V5" strokeLinecap="round" />
               </svg>
-              Hedera testnet · campaign previews are not live offers.
+              Hedera testnet · tool previews are not live offerings.
             </p>
             <p className="flex min-h-6 items-center justify-center gap-1 border-t border-border bg-muted px-4 py-1 text-[11px] leading-4 text-muted-foreground">
               <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-3">

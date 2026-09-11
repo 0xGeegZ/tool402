@@ -43,8 +43,8 @@ export function DocumentationHome() {
       <section className="border-b border-border bg-muted/35 px-5 py-10 sm:px-8 sm:py-14">
         <PageHeader
           eyebrow="Documentation"
-          title="Tool402, explained by route"
-          description="Start with the current local journey you need. Each guide names what the route covers and where its boundary sits."
+          title="Tool402, explained clearly"
+          description="Tool402 helps agents discover verifiable tools, meet explicit payment requirements, and receive bounded results. Use these guides to understand the product flow and its current boundaries."
         />
       </section>
 
