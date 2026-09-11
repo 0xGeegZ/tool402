@@ -69,6 +69,7 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
     "../../ui/status": { Status: "Status" },
     "./ats-create-configuration": await import("../src/components/provider/deploy/ats-create-configuration.ts"),
     "./directory-record-literal": await import("../src/components/provider/deploy/directory-record-literal.ts"),
+    "./provider-icon": { ProviderGlyph: "ProviderGlyph" },
     "./provider-deploy-stages": { ProviderDeployStages: "ProviderDeployStages" },
     "./provider-deploy-state": await import("../src/components/provider/deploy/provider-deploy-state.ts"),
   };

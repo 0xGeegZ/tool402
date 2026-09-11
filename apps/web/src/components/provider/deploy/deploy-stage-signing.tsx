@@ -14,6 +14,7 @@ import { connectedWalletSession, useWalletSession, type WalletSession } from "..
 import { Button } from "../../ui/button";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { directoryRecordLiteral, isDirectoryRecordComplete } from "./directory-record-literal";
+import { ProviderGlyph } from "./provider-icon";
 import { ProviderDeployStages } from "./provider-deploy-stages";
 import {
   providerDeployStageStates,
@@ -133,7 +134,7 @@ export function DeployStageSigning({
     <section data-ui="provider-deploy-connect" aria-labelledby="provider-deploy-connect-title" className="h-full rounded-card border border-primary/15 bg-primary/[0.03] p-5 shadow-none sm:p-6">
       <div className="flex items-start gap-3">
         <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H19v14H6.5A2.5 2.5 0 0 1 4 16.5v-9Z" /><path d="M4 8h15" /><path d="M15 13h2" /></svg>
+          <ProviderGlyph kind="wallet" size="20" />
         </span>
         <div>
           <h2 id="provider-deploy-connect-title" className="text-lg font-bold tracking-tight">Connect MetaMask</h2>
