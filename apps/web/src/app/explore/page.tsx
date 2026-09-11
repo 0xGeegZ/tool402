@@ -8,7 +8,7 @@ export default function ExplorePage() {
         <PageHeader
           eyebrow="Marketplace"
           title="Explore tools"
-          description="Bounded, machine-payable tools with an inspectable journey. Start with what each one covers."
+          description="Two local tools with clear routes to inspect what each one covers."
         />
       </section>
       <ExploreCatalog />
