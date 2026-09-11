@@ -30,8 +30,10 @@ test("defines the prepared Provider overview hierarchy without prototype metrics
   assert.match(status, /data-ui=["']provider-overview-state-grid["']/);
   assert.match(status, /\bmd:grid-cols-3\b/);
   assert.match(status, /data-ui=["']provider-riskscan-offering-card["']/);
-  assert.match(status, /Local RiskScan offering path/);
-  assert.match(status, /data-ui=["']provider-riskscan-offering-card["'][\s\S]*?href=["']\/provider\/deploy["']/);
+  assert.match(status, /Current tool offering/);
+  assert.doesNotMatch(status, /Local RiskScan offering path|Open the local wizard|Local wizard/);
+  assert.equal((status.match(/href=["']\/provider\/deploy["']/g) ?? []).length, 1);
+  assert.match(status, /aria-labelledby=["']provider-next-action["'][\s\S]*?href=["']\/provider\/deploy["']/);
   assert.match(status, /id=["']provider-evidence["']/);
   for (const heading of ["Deployment evidence", "Active terms", "Active directory", "Signer"]) {
     assert.match(status, new RegExp(`>\\s*${heading}\\s*<`));

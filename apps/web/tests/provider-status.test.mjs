@@ -304,7 +304,8 @@ implementedTest("presents unavailable provider data as an actionable workspace w
   assert.match(status, /bg-\[#e9e1ff\]/);
   assert.match(status, /Offering record/);
   assert.match(status, /Directory record/);
-  assert.match(status, /Provider action/);
+  assert.match(status, /Next step/);
+  assert.doesNotMatch(status, /Provider action/);
   assert.match(status, /Open the deploy wizard/);
   assert.doesNotMatch(status, /funding raised|units issued|paid task|balance|Live testnet|Connected/i);
 });
