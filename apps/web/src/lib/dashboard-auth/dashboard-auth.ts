@@ -4,7 +4,7 @@ export const DASHBOARD_AUTH_CHAIN_ID = 296;
 export const CHALLENGE_MAX_AGE_SECONDS = 300;
 export const SESSION_MAX_AGE_SECONDS = 28_800;
 
-type DashboardAuthEnvironment = Readonly<{
+export type DashboardAuthEnvironment = Readonly<{
   TOOL402_DASHBOARD_AUTH_ORIGIN?: string;
   TOOL402_DASHBOARD_AUTH_SECRET?: string;
 }>;
@@ -72,6 +72,10 @@ function readConfiguration(env: DashboardAuthEnvironment): Configuration | null 
   } catch {
     return null;
   }
+}
+
+export function readDashboardAuthOrigin(env: DashboardAuthEnvironment): string | null {
+  return readConfiguration(env)?.origin ?? null;
 }
 
 function timestamp(milliseconds: number): string | null {

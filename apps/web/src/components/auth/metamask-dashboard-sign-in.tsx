@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
 import { Button } from "../ui/button";
-import { useWalletSession, type WalletSession } from "../wallet/wallet-session";
+import { connectedWalletSession, useWalletSession, type WalletSession } from "../wallet/wallet-session";
 
 const failureMessage = "Sign-in could not be completed. Please try again.";
 
@@ -116,10 +116,7 @@ function MetaMaskSignInButton({ session }: { session: WalletSession }) {
 
 export function MetaMaskDashboardSignIn() {
   const wallet = useWalletSession();
-  const session: WalletSession | null =
-    wallet.state.kind === "connected" && wallet.provider !== null
-      ? { provider: wallet.provider, address: wallet.state.address }
-      : null;
+  const session: WalletSession | null = connectedWalletSession(wallet);
 
   return (
     <section aria-labelledby="metamask-dashboard-sign-in-title" className="space-y-3">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import {
   buildStageSignatureRequest,
@@ -10,7 +10,7 @@ import {
 } from "../../../lib/wallet/command-bridge.ts";
 import { SignatureDialog, type SignatureResult } from "../../wallet/signature-dialog";
 import { loadProviderCampaignResume } from "../../../lib/provider-campaign-resume.ts";
-import { useWalletSession, type WalletSession } from "../../wallet/wallet-session";
+import { connectedWalletSession, useWalletSession, type WalletSession } from "../../wallet/wallet-session";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { directoryRecordLiteral, isDirectoryRecordComplete } from "./directory-record-literal";
 import { ProviderDeployStages } from "./provider-deploy-stages";
@@ -21,23 +21,6 @@ import {
 } from "./provider-deploy-state";
 
 const finalPhases: ReadonlySet<SignatureResult["phase"]> = new Set(["complete", "rejected", "failed", "unknown"]);
-
-function SessionReporter({
-  session,
-  onSession,
-  children,
-}: {
-  session: WalletSession;
-  onSession: (session: WalletSession | null) => void;
-  children: ReactNode;
-}) {
-  const { provider, address } = session;
-  useEffect(() => {
-    onSession({ provider, address });
-    return () => onSession(null);
-  }, [provider, address, onSession]);
-  return <>{children}</>;
-}
 
 export function DeployStageSigning({
   values,
@@ -51,13 +34,8 @@ export function DeployStageSigning({
   reviewing?: boolean;
 }) {
   const wallet = useWalletSession();
-  const walletSession: WalletSession | null =
-    wallet.state.kind === "connected" && wallet.provider !== null
-      ? { provider: wallet.provider, address: wallet.state.address }
-      : null;
-  const [session, setSession] = useState<WalletSession | null>(null);
+  const session: WalletSession | null = connectedWalletSession(wallet);
   const [candidate, setCandidate] = useState<AtsCreateCandidate | null>(null);
-  const candidateRef = useRef<AtsCreateCandidate | null>(null);
   const [results, setResults] = useState<readonly (ProviderDeployStageState | undefined)[]>([]);
   const [attemptPublicId, setAttemptPublicId] = useState<string | null>(null);
   const [request, setRequest] = useState<StageSignatureRequest | null>(null);
@@ -82,14 +60,12 @@ export function DeployStageSigning({
       setResults([]);
       setAttemptPublicId(null);
       setCandidate(null);
-      candidateRef.current = null;
       setResumePending(false);
       return () => { cancelled = true; };
     }
     setResults([]);
     setAttemptPublicId(null);
     setCandidate(null);
-    candidateRef.current = null;
     setResumePending(true);
     void loadProviderCampaignResume(session.address).then((resume) => {
       if (cancelled) return;
@@ -137,9 +113,7 @@ export function DeployStageSigning({
   }
 
   function receiveCandidate(nextCandidate: AtsCreateCandidate) {
-    if (candidateRef.current !== null) return;
-    candidateRef.current = nextCandidate;
-    setCandidate(nextCandidate);
+    setCandidate((current) => current ?? nextCandidate);
   }
 
   return (
@@ -149,11 +123,6 @@ export function DeployStageSigning({
         <WhatSigningDoes />
       </aside>
       <div data-ui="provider-deploy-signing" className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-1">
-        {walletSession !== null ? (
-          <SessionReporter session={walletSession} onSession={setSession}>
-            {null}
-          </SessionReporter>
-        ) : null}
         {children}
         {session !== null && resumePending ? <p role="status" aria-live="polite" className="text-[13px] leading-5 text-muted-foreground">Checking the existing durable campaign before enabling any signature.</p> : null}
         {reviewing && constructionError ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null}

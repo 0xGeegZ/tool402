@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ChangeEvent, type ReactNode } from "react";
+import { useState, type ChangeEvent } from "react";
 
 import { isUserRejection } from "../../lib/wallet/metamask-provider.ts";
 import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
@@ -9,7 +9,7 @@ import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { DetailList } from "../ui/detail-list";
 import { SignatureDialog, type SignatureResult } from "../wallet/signature-dialog";
-import { useWalletSession, type WalletSession } from "../wallet/wallet-session";
+import { connectedWalletSession, useWalletSession, type WalletSession } from "../wallet/wallet-session";
 import {
   backingLifecycleLabels,
   createBackingIntent,
@@ -28,23 +28,6 @@ import {
 } from "./backing-state";
 
 const finalPhases: ReadonlySet<SignatureResult["phase"]> = new Set(["complete", "rejected", "failed", "unknown"]);
-
-function SessionReporter({
-  session,
-  onSession,
-  children,
-}: {
-  session: WalletSession;
-  onSession: (session: WalletSession | null) => void;
-  children?: ReactNode;
-}) {
-  const { provider, address } = session;
-  useEffect(() => {
-    onSession({ provider, address });
-    return () => onSession(null);
-  }, [provider, address, onSession]);
-  return <>{children}</>;
-}
 
 function describeView(view: BackingView): string {
   switch (view.kind) {
@@ -68,13 +51,9 @@ function describeView(view: BackingView): string {
 
 function BackingForm({ offering }: { offering: BackingOffering }) {
   const wallet = useWalletSession();
-  const walletSession: WalletSession | null =
-    wallet.state.kind === "connected" && wallet.provider !== null
-      ? { provider: wallet.provider, address: wallet.state.address }
-      : null;
+  const session: WalletSession | null = connectedWalletSession(wallet);
   const [unitsInput, setUnitsInput] = useState(offering.terms.minimumPurchaseUnits.toString());
   const [acknowledged, setAcknowledged] = useState(false);
-  const [session, setSession] = useState<WalletSession | null>(null);
   const [view, setView] = useState<BackingView>({ kind: "choosing" });
   const [request, setRequest] = useState<BackingIntent | null>(null);
   const [transferring, setTransferring] = useState(false);
@@ -168,11 +147,9 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
         </CardContent>
       </Card>
 
-      {walletSession === null ? (
+      {session === null ? (
         <p className="text-sm text-muted-foreground">Connect MetaMask from the header to prepare a funding request.</p>
-      ) : (
-        <SessionReporter session={walletSession} onSession={setSession} />
-      )}
+      ) : null}
 
       <section aria-labelledby="backing-status" className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">

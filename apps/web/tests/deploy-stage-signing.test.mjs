@@ -45,7 +45,14 @@ async function signingIslandHarness(values) {
       },
     },
     "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
-    "../../wallet/wallet-session": { useWalletSession: () => session },
+    "../../wallet/wallet-session": {
+      useWalletSession: () => session,
+      connectedWalletSession(wallet) {
+        return wallet.state.kind === "connected" && wallet.provider !== null
+          ? { provider: wallet.provider, address: wallet.state.address }
+          : null;
+      },
+    },
     "../../ui/status": { Status: "Status" },
     "./ats-create-configuration": await import("../src/components/provider/deploy/ats-create-configuration.ts"),
     "./directory-record-literal": await import("../src/components/provider/deploy/directory-record-literal.ts"),
@@ -78,10 +85,7 @@ async function signingIslandHarness(values) {
         state: { kind: "connected", address: "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf" },
         provider: { request() { assert.fail("local construction failure must not request the wallet"); } },
       };
-      const reporter = elements(this.render()).find(
-        (element) => typeof element.type === "function" && element.type.name === "SessionReporter",
-      );
-      reporter.type(reporter.props);
+      this.render();
     },
   };
 }
@@ -142,7 +146,8 @@ implementedTest("keeps stage state session-only and truthful with no persistence
 implementedTest("holds the M49 candidate in this session and passes one stable action controller through the stage view", async () => {
   const island = await readIsland();
 
-  assert.match(island, /\buseRef\b/u, "the action controller must survive rerenders");
+  assert.match(island, /setCandidate\(\(current\) => current \?\? nextCandidate\)/u, "the first candidate must survive rerenders");
+  assert.doesNotMatch(island, /\buseRef\b/u, "candidate state must not be mirrored in a ref");
   assert.match(island, /\bsetCandidate\b/u, "a verified candidate belongs only to this browser session");
   assert.match(island, /useState<AtsCreateCandidate \| null>/u);
   assert.doesNotMatch(island, /(?:external\.attachCandidate|eth_signTypedData_v4)/u);
@@ -200,7 +205,7 @@ implementedTest("uses the shared connected session without an issuer-specific lo
   const stages = elements(tree).find((element) => element.type === "ProviderDeployStages");
 
   assert.equal(stages.props.enabledStage, 0);
-  assert.equal(elements(tree).some((element) => typeof element.type === "function" && element.type.name === "SessionReporter"), true);
+  assert.match(await readIsland(), /connectedWalletSession\(wallet\)/u);
   const island = await readIsland();
   assert.doesNotMatch(island, /\b(?:isIssuerAdvisory|issuerEvmAddress|notIssuer|approved issuer)\b/u);
 });

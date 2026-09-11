@@ -1,14 +1,11 @@
 import {
   CHALLENGE_MAX_AGE_SECONDS,
   createChallenge as createCoreChallenge,
+  readDashboardAuthOrigin,
   SESSION_MAX_AGE_SECONDS,
+  type DashboardAuthEnvironment,
   verifyChallenge as verifyCoreChallenge,
 } from "./dashboard-auth.ts";
-
-type DashboardAuthEnvironment = Readonly<{
-  TOOL402_DASHBOARD_AUTH_ORIGIN?: string;
-  TOOL402_DASHBOARD_AUTH_SECRET?: string;
-}>;
 
 type CoreDependencies = NonNullable<Parameters<typeof createCoreChallenge>[1]>;
 
@@ -20,19 +17,9 @@ type RouteDependencies = CoreDependencies & Readonly<{
 const CHALLENGE_COOKIE = "__Host-tool402-dashboard-challenge";
 const SESSION_COOKIE = "__Host-tool402-dashboard-session";
 const cookieValuePattern = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/u;
-const secretPattern = /^[0-9a-f]{64}$/u;
 
 function configuredOrigin(env: DashboardAuthEnvironment): string | null {
-  const { TOOL402_DASHBOARD_AUTH_ORIGIN: origin, TOOL402_DASHBOARD_AUTH_SECRET: secret } = env;
-  if (typeof origin !== "string" || typeof secret !== "string" || !secretPattern.test(secret)) return null;
-  try {
-    const url = new URL(origin);
-    return url.protocol === "https:" && url.username === "" && url.password === "" && url.pathname === "/" && url.search === "" && url.hash === "" && url.origin === origin
-      ? origin
-      : null;
-  } catch {
-    return null;
-  }
+  return readDashboardAuthOrigin(env);
 }
 
 function response(status: number, body: object, cookies: readonly string[] = []): Response {

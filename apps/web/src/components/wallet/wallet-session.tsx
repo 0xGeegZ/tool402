@@ -34,6 +34,12 @@ export interface WalletSessionValue {
   disconnect(): void;
 }
 
+export function connectedWalletSession(wallet: WalletSessionValue): WalletSession | null {
+  return wallet.state.kind === "connected" && wallet.provider !== null
+    ? { provider: wallet.provider, address: wallet.state.address }
+    : null;
+}
+
 const WalletSessionContext = createContext<WalletSessionValue | null>(null);
 
 export function WalletSessionProvider({ children }: { readonly children: ReactNode }) {

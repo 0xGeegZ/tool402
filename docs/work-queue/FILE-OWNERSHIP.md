@@ -1141,6 +1141,13 @@ Suspense; it may not read, mount, modify, or infer state from S26/UI-S15 wallet
 code. This narrowly supersedes the earlier S38 exclusion of the root header,
 not any other S26 reservation.
 
+User-directed S38 environment-template amendment: the root additionally
+reserves `.env.example` and `apps/web/.env.example` only as documentation for
+the two fixed dashboard-auth keys. They contain no secret, do not configure a
+running environment, and do not authorize TLS trust, wallet permission,
+signature, transaction, deployment, or any live action. This narrowly
+supersedes the configuration-file exclusion only for those templates.
+
 S39-T010 is an `00-inbox` CORE_P0 follow-up with no active source or test
 reservation. S38 acceptance is an explicit activation gate while the card is
 still speculative. After that gate and its own independent readiness/activation

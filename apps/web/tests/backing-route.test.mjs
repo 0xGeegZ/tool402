@@ -35,7 +35,7 @@ test("consumes the shared wallet session, signature dialog, and relay without a 
   const flow = await readAppFile("src/components/backing/backing-flow.tsx");
 
   assert.match(flow, /^["']use client["'];/);
-  assert.match(flow, /import \{ useWalletSession, type WalletSession \} from "\.\.\/wallet\/wallet-session"/);
+  assert.match(flow, /import \{ connectedWalletSession, useWalletSession, type WalletSession \} from "\.\.\/wallet\/wallet-session"/);
   assert.match(flow, /import \{ SignatureDialog, type SignatureResult \} from "\.\.\/wallet\/signature-dialog"/);
   assert.equal((flow.match(/useWalletSession\(\)/g) ?? []).length, 1);
   assert.equal((flow.match(/<SignatureDialog\b/g) ?? []).length, 1);

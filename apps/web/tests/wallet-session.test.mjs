@@ -84,6 +84,7 @@ implementedTest("exports the fixed session API and throws outside the provider",
   assert.match(source, /^"use client";/u);
   assert.match(source, /export function WalletSessionProvider\(/u);
   assert.match(source, /export function useWalletSession\(\)/u);
+  assert.match(source, /export function connectedWalletSession\(/u);
   assert.match(source, /async function connect\(approvedIssuerAddress\?: string\)/u);
   assert.match(source, /async function switchChain\(\)/u);
   assert.match(source, /function disconnect\(\)/u);
@@ -238,6 +239,6 @@ implementedTest("reads the shared session in the signing stage instead of mounti
   assert.match(signing, /Connect MetaMask from the header to sign\./u);
   assert.doesNotMatch(signing, /approved issuer|issuer-specific/u);
   assert.doesNotMatch(signing, /approvedIssuerAddress/u, "the wizard passes no approved issuer address");
-  assert.match(signing, /<SessionReporter\b/u);
+  assert.match(signing, /connectedWalletSession\(wallet\)/u);
   assert.equal((signing.match(/<SignatureDialog\b/gu) ?? []).length, 1);
 });

@@ -76,6 +76,12 @@
   Suspense; it grants no wallet state, signature, configuration, API, or S26
   header-wallet authority.
 
+- S38_ENVIRONMENT_TEMPLATE_AMENDMENT: The repository owner explicitly
+  requested `.env.example` at the root and its Web counterpart. The two files
+  are reserved as documentation-only templates for the fixed dashboard-auth
+  keys; they do not configure a runtime, contain a secret, or authorize TLS
+  trust, wallet permission, signature, transaction, deployment, or live action.
+
 - S36_PROVIDER_SIGNATURE_HANDOFF_INTAKE: User-directed local POLISH intake.
   S36-T010 may make the existing actionable signature request discoverable
   after fresh readiness and durable RED activation. It has no active source

@@ -103,6 +103,7 @@ coreTest("exports the fixed Hedera challenge and session lifetimes", async () =>
     "DASHBOARD_AUTH_CHAIN_ID",
     "SESSION_MAX_AGE_SECONDS",
     "createChallenge",
+    "readDashboardAuthOrigin",
     "readDashboardSession",
     "verifyChallenge",
   ]);

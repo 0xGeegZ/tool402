@@ -49,6 +49,12 @@ The card may add exactly these new paths:
 - `apps/web/tests/dashboard-auth.test.mjs`; and
 - `apps/web/tests/dashboard-auth-routes.test.mjs`.
 
+The repository owner additionally reserves `.env.example` and
+`apps/web/.env.example` as documentation-only templates for the two fixed
+dashboard-auth keys. They may show the canonical local HTTPS origin and an
+empty secret placeholder with generation guidance; they neither configure a
+running environment nor commit a secret or authorize a real signature.
+
 Under a root integration reservation it may additionally amend the existing
 header-navigation slot of `apps/web/src/app/layout.tsx` and the link-list/prop
 contract of `apps/web/src/components/discovery/local-navigation.tsx`, solely
@@ -151,6 +157,14 @@ matching wording assertions in the plan's staged order. Every other path and
 every configuration/environment value, real wallet account request/signature,
 provider command, relay, transaction, payment, deployment, and live action
 remains prohibited.
+
+## User-directed environment-template amendment
+
+The repository owner explicitly requested a documented root local-environment
+template and its Web counterpart. The two reserved `.env.example` files above
+are template documentation only. The actual `.env.local`, any origin/secret
+value used at runtime, TLS trust, wallet account request, and real signature
+remain human-owned and outside this card.
 
 ## User-directed navigation amendment
 
