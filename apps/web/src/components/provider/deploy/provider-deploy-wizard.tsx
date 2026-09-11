@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../ui/card";
@@ -287,7 +287,7 @@ function ReviewRows({ rows }: { rows: readonly (readonly [string, ReviewValue])[
         <div key={label} className={`space-y-1 ${typeof value === "string" && value.length > 80 ? "sm:col-span-2" : ""}`}>
           <dt className="text-muted-foreground">{label}</dt>
           {typeof value === "string" ? (
-            <dd className="font-medium text-foreground">{value}</dd>
+            <dd className="max-w-prose font-medium text-foreground">{value}</dd>
           ) : (
             <dd>
               <ul className="list-disc space-y-1 pl-5 font-medium text-foreground">
@@ -334,11 +334,13 @@ function ReviewStep({ values, onEdit }: { values: WizardValues; onEdit: (step: n
         </div>
         <div className="border-b border-border">
           {groups.map(({ step, rows }) => (
-            <details key={step} className="group border-t border-border">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm font-medium text-foreground marker:content-none [&::-webkit-details-marker]:hidden">
-                <span>{providerDeploySteps[step].label}</span>
-                <span className="text-xs font-medium text-muted-foreground group-open:hidden">Show</span>
-                <span className="hidden text-xs font-medium text-muted-foreground group-open:inline">Hide</span>
+            <details key={step} open className="group border-t border-border">
+              <summary className="cursor-pointer list-none py-3 text-sm font-medium text-foreground marker:content-none [&::-webkit-details-marker]:hidden">
+                <span className="flex items-center justify-between gap-3">
+                  <span>{providerDeploySteps[step].label}</span>
+                  <span className="text-xs font-medium text-muted-foreground group-open:hidden">Show</span>
+                  <span className="hidden text-xs font-medium text-muted-foreground group-open:inline">Hide</span>
+                </span>
               </summary>
               <div className="space-y-4 pb-4">
                 <ReviewRows rows={rows} />
@@ -363,6 +365,13 @@ export function ProviderDeployWizard() {
     ? "Correct the fields marked invalid before continuing."
     : null;
   const currentDefinition = providerDeploySteps[currentStep];
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const announcedStep = useRef(currentStep);
+  useEffect(() => {
+    if (announcedStep.current === currentStep) return;
+    announcedStep.current = currentStep;
+    titleRef.current?.focus();
+  }, [currentStep]);
 
   function changeText(field: Exclude<keyof WizardValues, "category" | "acknowledgement">) {
     return (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -444,7 +453,7 @@ export function ProviderDeployWizard() {
         <section data-ui="provider-deploy-form">
           <Card className="rounded-card border border-border bg-card shadow-none">
             <CardHeader className="space-y-1 px-5 pb-2 pt-5 sm:px-6 sm:pt-6">
-              <CardTitle className="text-xl tracking-tight sm:text-2xl">{currentDefinition?.label}</CardTitle>
+              <CardTitle ref={titleRef} tabIndex={-1} className="scroll-mt-28 text-xl tracking-tight outline-none sm:text-2xl">{currentDefinition?.label}</CardTitle>
               <CardDescription className="text-xs leading-5">
                 {currentStep < providerDeploySteps.length - 1
                   ? "Complete the prepared fields for this step. Every value remains editable until review."

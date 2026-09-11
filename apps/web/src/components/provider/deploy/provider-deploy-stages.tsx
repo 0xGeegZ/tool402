@@ -218,7 +218,7 @@ export function ProviderDeployStages({
           </Button>
         </div>
       ) : null}
-      <p className="text-sm leading-6 text-muted-foreground">
+      <p className="max-w-prose text-sm leading-6 text-muted-foreground">
         A declined signature leaves its stage ready to try again. Nothing was recorded, and this page never retries on its own.
       </p>
     </div>
