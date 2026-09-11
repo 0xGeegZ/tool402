@@ -65,9 +65,14 @@ test("renders one visible handoff that invokes the existing actionable stage cal
   assert.deepEqual(calls, [0]);
 });
 
-test("does not render a handoff when no stage is actionable", async () => {
+test("does not render a handoff for an enabled non-actionable stage", async () => {
   for (const kind of ["blocked", "in_progress", "done", "unavailable"]) {
-    const tree = await renderStages({ states: activeStates(kind), enabledStage: -1, onActivate() {} });
+    const tree = await renderStages({ states: activeStates(kind), enabledStage: 0, onActivate() {} });
     assert.equal(elements(tree).some((element) => element.props["data-ui"] === "provider-signature-handoff"), false, `${kind} must not create a new signature entry point`);
   }
+});
+
+test("does not render a handoff without the existing activation callback", async () => {
+  const tree = await renderStages({ states: activeStates("actionable"), enabledStage: 0 });
+  assert.equal(elements(tree).some((element) => element.props["data-ui"] === "provider-signature-handoff"), false);
 });
