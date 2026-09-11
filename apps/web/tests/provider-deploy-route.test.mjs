@@ -511,10 +511,11 @@ implementedTest("mounts the signing island on the review step and lets the stage
   const stages = sources["src/components/provider/deploy/provider-deploy-stages.tsx"];
 
   assert.match(wizard, /import\s*\{\s*DeployStageSigning\s*\}\s+from\s+["']\.\/deploy-stage-signing["']/);
-  const review = namedFunctionContext("provider-deploy-wizard.tsx", wizard, "ReviewStep");
-  const island = review.elements.find((element) => element.tagName.getText(review.sourceFile) === "DeployStageSigning");
-  assert.ok(island, "ReviewStep must mount DeployStageSigning");
-  assert.doesNotMatch(review.declaration.getText(review.sourceFile), /<ProviderDeployStages\b/);
+  const shell = namedFunctionContext("provider-deploy-wizard.tsx", wizard, "ProviderDeployWizard");
+  const island = shell.elements.find((element) => element.tagName.getText(shell.sourceFile) === "DeployStageSigning");
+  assert.ok(island, "ProviderDeployWizard must mount DeployStageSigning");
+  assert.match(island.getText(shell.sourceFile), /reviewing=\{currentStep === lastStep\}/);
+  assert.doesNotMatch(shell.declaration.getText(shell.sourceFile), /<ProviderDeployStages\b/);
   assert.doesNotMatch(wizard, /providerDeployStageStates/);
 
   const stageList = namedFunctionContext("provider-deploy-stages.tsx", stages, "ProviderDeployStages");

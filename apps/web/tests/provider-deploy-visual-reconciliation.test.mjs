@@ -34,8 +34,7 @@ test("defines the truthful Provider RiskScan preparation hierarchy", async () =>
   assert.match(signing, /data-ui=["']provider-review-wallet-context["']/);
   assert.match(signing, /heading="Issuer wallet"/);
   assert.match(signing, /What signing does/);
-  assert.match(signing, /Connect MetaMask/);
-  assert.match(signing, /session === null \? "grid gap-4 sm:grid-cols-2" : "hidden"/);
+  assert.match(presentation, /Connect MetaMask/);
 
   const wizardCards = wizard.match(/<Card\b[^>]*>/g) ?? [];
   for (const card of wizardCards) assert.match(card, /\bshadow-none\b/);

@@ -1,6 +1,6 @@
 const tinybarsPerHbar = 100_000_000n;
 
-function groupThousands(digits: string): string {
+export function groupThousands(digits: string): string {
   return digits.replace(/\B(?=(?:\d{3})+(?!\d))/gu, ",");
 }
 
