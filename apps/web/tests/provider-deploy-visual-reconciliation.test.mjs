@@ -32,7 +32,8 @@ test("defines the truthful Provider RiskScan preparation hierarchy", async () =>
   assert.doesNotMatch(wizard, /lg:grid-cols-\[minmax\(0,1\.62fr\)_minmax\(17rem,0\.9fr\)\]/);
   assert.match(signing, /data-ui=["']provider-deploy-signing["']/);
   assert.doesNotMatch(signing, /Issuer wallet|approved issuer/iu);
-  assert.match(signing, /Connect MetaMask from the header/iu);
+  assert.match(signing, /data-ui=["']provider-deploy-connect["']/u);
+  assert.match(signing, /Connect MetaMask on Hedera Testnet to enable the first signing step\./u);
 
   const wizardCards = wizard.match(/<Card\b[^>]*>/g) ?? [];
   for (const card of wizardCards) assert.match(card, /\bshadow-none\b/);

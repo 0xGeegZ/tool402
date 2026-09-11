@@ -236,7 +236,9 @@ implementedTest("reads the shared session in the signing stage instead of mounti
   assert.doesNotMatch(signing, /WalletIsland/u);
   assert.match(signing, /import\s*\{[^}]*\buseWalletSession\b[^}]*\}\s+from\s+["']\.\.\/\.\.\/wallet\/wallet-session["']/u);
   assert.equal((signing.match(/useWalletSession\(\)/gu) ?? []).length, 1);
-  assert.match(signing, /Connect MetaMask from the header to sign\./u);
+  assert.match(signing, /data-ui=["']provider-deploy-connect["']/u);
+  assert.match(signing, /wallet\.state\.kind === "disconnected"/u);
+  assert.match(signing, /void wallet\.connect\(\)/u);
   assert.doesNotMatch(signing, /approved issuer|issuer-specific/u);
   assert.doesNotMatch(signing, /approvedIssuerAddress/u, "the wizard passes no approved issuer address");
   assert.match(signing, /connectedWalletSession\(wallet\)/u);
