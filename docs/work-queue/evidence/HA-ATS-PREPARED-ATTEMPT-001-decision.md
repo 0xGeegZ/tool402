@@ -21,6 +21,27 @@ That commit does not contain required runtime source
 
 The accepted packet explicitly treats a different runtime source as a stop
 condition. Therefore no authority record was provisioned or re-enabled, no
-signature was requested, and no relay or external action occurred. The
-acceptance remains recorded; execution can begin only after the named host is
-verified to serve the required source without changing any accepted tuple.
+signature was requested, and no relay or external action occurred.
+
+## Re-verified rehearsal host
+
+After the decision owner explicitly authorized release of that separate local
+server, root started the named host from this worktree. At verification time:
+
+```text
+host                      = http://localhost:3000
+runtime checkout           = ca80c6edddae09b0577678e4b61c63f87553321f
+required application source = d2a2be44a78ee460fe6590d606baf630e72a78cc
+git diff required..runtime = only this packet's control-record files
+apps/web diff              = empty
+Next.js version             = 16.3.4 (Turbopack)
+compilation issues          = none
+runtime errors              = none
+```
+
+The named host therefore serves the exact approved application source; the
+checkout's later changes are solely the secret-free decision/control records.
+The Provider route was opened read-only through step 1, with no wallet prompt,
+signature, relay, authority-record mutation, or external action. The accepted
+Stage 1 human action is now ready for Human Ops execution under its existing
+limits.
