@@ -24,72 +24,29 @@ const CATALOG = Object.freeze([
   },
 ]);
 
-const FILTER_GROUPS = [
-  { label: "Category", field: "category", includeAll: true },
-  { label: "Status", field: "status", includeAll: false },
-  { label: "Access", field: "access", includeAll: false },
-] as const;
-
-function countsFor(field: "category" | "status" | "access") {
-  const values = [...new Set(CATALOG.map(tool => tool[field]))];
-
-  return values
-    .map((value) => ({ value, count: CATALOG.filter(tool => tool[field] === value).length }))
-    .filter(row => row.count > 0);
-}
-
 export function ExploreCatalog() {
   return (
-    <section className="space-y-6 border-t border-border pt-10" aria-label="Tool catalog">
-      <aside className="rounded-[calc(var(--radius)*2)] border bg-card px-5 py-4 shadow-none">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="shrink-0 space-y-1">
-            <p className="text-sm font-semibold">Browse tools</p>
-            <p className="text-sm leading-6 text-muted-foreground">A static view of the journeys currently ready to inspect.</p>
-          </div>
-
-          <div className="flex flex-wrap gap-x-5 gap-y-4 lg:justify-end">
-            {FILTER_GROUPS.map(({ label, field, includeAll }) => {
-              const rows = countsFor(field);
-
-              return (
-                <section key={field} className="space-y-1.5" aria-labelledby={`${field}-filters`}>
-                  <h2 id={`${field}-filters`} className="text-[0.625rem] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                    {label}
-                  </h2>
-                  <ul className="flex flex-wrap gap-1.5 text-xs">
-                    {includeAll ? (
-                      <li className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/40 px-2.5 py-1 font-medium">
-                        <span>All tools</span>
-                        <span className="font-mono text-[0.625rem] text-muted-foreground">{CATALOG.length}</span>
-                      </li>
-                    ) : null}
-                    {rows.map((row) => (
-                      <li key={row.value} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-muted-foreground">
-                        <span>{row.value}</span>
-                        <span className="font-mono text-[0.625rem]">{row.count}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              );
-            })}
-          </div>
+    <section className="space-y-5" aria-label="Current tool catalogue">
+      <div className="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold">Current catalogue</p>
+          <p className="text-sm leading-6 text-muted-foreground">Static marketplace view</p>
         </div>
-      </aside>
-
-      <div className="min-w-0 space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
-            {CATALOG.length} tools
-          </p>
-          <Badge variant="outline">Read-only catalog</Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm text-muted-foreground">{CATALOG.length} current tools</p>
+          <Badge variant="outline" className="border-border bg-background">Hedera testnet</Badge>
         </div>
+      </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      <p className="text-sm leading-6 text-muted-foreground">
+        Current routes, with no simulated availability or pricing.
+      </p>
+
+      <div className="min-w-0">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           <RiskScanDiscoveryCard />
           <EntityCheckDiscoveryCard />
-          <Card className="min-h-[25rem] rounded-[calc(var(--radius)*2)] border-dashed bg-transparent shadow-none">
+          <Card className="flex min-h-[20rem] flex-col rounded-[calc(var(--radius)*2)] border-dashed bg-transparent shadow-none">
             <CardHeader className="gap-4">
               <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-[var(--radius)] bg-secondary text-secondary-foreground">
                 <svg viewBox="0 0 16 16" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.75}>
@@ -102,8 +59,8 @@ export function ExploreCatalog() {
             <CardContent>
               <p className="text-sm leading-6 text-muted-foreground">This space stays intentionally quiet until another journey is ready.</p>
             </CardContent>
-            <CardFooter>
-              <p className="text-sm text-muted-foreground">Catalog updates remain deliberate and reviewable.</p>
+            <CardFooter className="mt-auto">
+              <p className="text-sm text-muted-foreground">Catalogue updates remain deliberate and reviewable.</p>
             </CardFooter>
           </Card>
         </div>

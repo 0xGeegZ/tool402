@@ -18,11 +18,10 @@ test("uses the compact Explore presentation without changing its static catalogu
     readAppFile("src/components/discovery/entitycheck-discovery-card.tsx"),
   ]);
 
-  assert.match(page, /aria-labelledby="explore-page-title"/);
-  assert.match(page, /id="explore-page-title"/);
+  assert.match(page, /aria-label="Explore introduction"/);
   assert.match(page, /\bMarketplace\b/);
-  assert.match(page, /\bInspect the two tools currently available through their local routes\./);
-  assert.doesNotMatch(page, /\bPageHeader\b/);
+  assert.match(page, /\bBounded, machine-payable tools with an inspectable journey\. Start with what each one covers\./);
+  assert.match(page, /\bPageHeader\b/);
 
   assert.match(catalog, /\bCurrent catalogue\b/);
   assert.match(catalog, /\bStatic marketplace view\b/);
@@ -40,7 +39,7 @@ test("uses the compact Explore presentation without changing its static catalogu
     assert.match(card, /min-h-\[20rem\]/);
     assert.match(card, /\bshadow-none\b/);
     assert.match(card, /\bCurrent route\b/);
-    assert.match(card, /\bOpen tool\b/);
+    assert.match(card, /\bView details\b/);
     assert.match(card, new RegExp('href="' + href + '"'));
     assert.doesNotMatch(card, /min-h-\[25rem\]/);
     assert.doesNotMatch(card, /\bshadow-lg\b/);
