@@ -374,8 +374,8 @@ export function ProviderDeployWizard() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-1 pb-10 sm:px-2 sm:pb-14" data-ui="provider-deploy-surface">
-      <header data-ui="provider-deploy-identity" className="max-w-3xl">
+    <main className="mx-auto max-w-6xl px-3 pb-10 sm:px-5 sm:pb-14" data-ui="provider-deploy-surface">
+      <header data-ui="provider-deploy-identity" className="max-w-4xl">
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline" className="rounded-full border-warning/40 bg-warning/10 px-2 py-0.5 text-[10px] font-medium text-warning-foreground">
             Prepared / demo data fixture
@@ -387,7 +387,7 @@ export function ProviderDeployWizard() {
             Terms v1 · fixed
           </Badge>
         </div>
-        <h1 className="mt-4 text-3xl font-bold tracking-[-0.04em] text-foreground sm:text-4xl">Deploy the RiskScan campaign</h1>
+        <h1 className="mt-4 text-3xl font-bold tracking-[-0.04em] text-foreground sm:text-5xl">Deploy the RiskScan campaign</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
           Review every field of the prepared offering, then authorize each step with your issuer wallet. Nothing is created, funded, or published until the named signature and receipt exist.
         </p>
@@ -397,21 +397,21 @@ export function ProviderDeployWizard() {
         <StepProgress currentStep={currentStep} onStepSelect={returnToStep} />
       </div>
 
-      <div data-ui="provider-deploy-workspace" className="mt-7 space-y-5">
+      <div data-ui="provider-deploy-workspace" className="mt-8 space-y-5">
         <section data-ui="provider-deploy-form">
-          <Card className="overflow-hidden rounded-2xl border border-border bg-card shadow-none">
-            <CardHeader className="space-y-1 px-5 pb-2 pt-5 sm:px-6 sm:pt-6">
+          <Card className="overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-none">
+            <CardHeader className="space-y-1 px-5 pb-3 pt-6 sm:px-8 sm:pt-8">
               <CardTitle className="text-xl tracking-tight sm:text-2xl">{currentDefinition?.label}</CardTitle>
               <CardDescription className="text-xs leading-5">
                 Complete the prepared fields for this step. Every value remains editable until review.
               </CardDescription>
             </CardHeader>
             <form onSubmit={onSubmit}>
-              <CardContent className="px-5 py-5 sm:px-6 sm:py-6">
+              <CardContent className="px-5 py-6 sm:px-8 sm:py-8">
                 {renderCurrentStep()}
                 {validationMessage ? <p aria-live="polite" className="mt-6 rounded-xl border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
               </CardContent>
-              <CardFooter className="flex flex-col-reverse gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <CardFooter className="flex flex-col-reverse gap-3 border-t border-border px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
                 <Button type="button" variant="ghost" className="justify-start px-2 text-sm" disabled={!canGoBack(currentStep)} onClick={() => returnToStep(Math.max(0, currentStep - 1))}>
                   Back
                 </Button>

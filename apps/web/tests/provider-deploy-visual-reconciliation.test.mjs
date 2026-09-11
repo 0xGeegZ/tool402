@@ -30,6 +30,9 @@ test("defines the truthful Provider RiskScan preparation hierarchy", async () =>
   assert.doesNotMatch(wizard, /h-1\.5 w-full rounded-full/);
   assert.match(wizard, /data-ui=["']provider-deploy-workspace["']/);
   assert.match(wizard, /data-ui=["']provider-deploy-form["']/);
+  assert.match(wizard, /max-w-6xl/);
+  assert.match(wizard, /rounded-\[1\.75rem\]/);
+  assert.match(wizard, /sm:px-8/);
   assert.match(wizard, /Prepared campaign details/);
   assert.match(wizard, /divide-y divide-border/);
   assert.doesNotMatch(wizard, /provider-deploy-sidebar/);
