@@ -1347,3 +1347,19 @@ M50's accepted event behavior if it later rebases its shared-session redesign.
 M50 does not own or amend
 `wallet-state.ts`, deploy-stage signing, command/relay code, configuration,
 packages, lockfiles, or any live path.
+
+M51-T010 is a root-owned 00-inbox CORE_P0 intake for an issuer World Selfie
+Check gate. Its candidate surface is exactly
+`apps/web/package.json`, `package-lock.json`,
+`apps/web/src/lib/world/issuer-selfie-check.ts`,
+`apps/web/src/app/api/world/request/route.ts`,
+`apps/web/src/app/api/world/verify/route.ts`,
+`apps/web/src/components/provider/deploy/world-issuer-verification.tsx`,
+`apps/web/tests/world-issuer-selfie-check.test.mjs`,
+`docs/submission/world-selfie-check-feedback.md`, the necessary narrow
+integration in `apps/web/src/lib/wallet/command-relay.ts` and
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, and their
+existing focused tests. No path is active before a committed durable RED and
+an explicit root activation record. Wallet authority, EIP-712 validation,
+Convex state, deployment, payment, transaction, legal identity, KYC, and
+production claims remain outside this candidate scope.
