@@ -73,8 +73,9 @@ availability claim.
 
 The S33 module review blocks the merged source on one copy claim and one
 missing static-boundary proof. The corrective cycle may amend only the Explore
-supporting sentence and `explore-visual-reconciliation.test.mjs`: replace the
-machine-payment claim with local-route-only copy, and guard every S33
+supporting sentence, `explore-visual-reconciliation.test.mjs`, and the exact
+matching supporting-sentence assertion in `landing-explore.test.mjs`: replace
+the machine-payment claim with local-route-only copy, and guard every S33
 presentation source against client directives, hooks, fetches, handlers,
 controls, interactive ARIA state, external URLs, and the prohibited claims.
 No other source path, behavior, or product fact is reopened.

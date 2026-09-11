@@ -78,9 +78,12 @@ Next port bind. Source is frozen pending independent module review.
 The canonical-main module review blocks the source on the unsupported
 machine-payment phrase and an incomplete no-runtime proof. D-S33-010-006
 reopens only `apps/web/tests/explore-visual-reconciliation.test.mjs` to write
-durable corrective RED. The Explore page and every other source path remain
-frozen until a fresh independent RED review accepts the test delta and
-authorizes the supporting-sentence replacement alone.
+durable corrective RED. D-S33-010-007 additionally reserves only the matching
+`machine-payable` assertion in `apps/web/tests/landing-explore.test.mjs` after
+the fresh RED review found it would otherwise block Green. The Explore page
+and every other source path remain frozen until a fresh independent RED review
+accepts both test deltas and authorizes the supporting-sentence replacement
+and matching assertion alone.
 
 ## Ready authority
 

@@ -1240,3 +1240,7 @@ Every production path remains frozen until a fresh RED review; that review may
 authorize only the supporting sentence in `apps/web/src/app/explore/page.tsx`.
 The catalogue, cards, routes, data, client/runtime behavior, wallet/provider/
 payment, transactions, deployment, and live boundaries remain excluded.
+
+D-S33-010-007 additionally reserves only the existing `machine-payable`
+supporting-sentence assertion in `apps/web/tests/landing-explore.test.mjs`.
+No other assertion in that test, test path, or source path is reserved.

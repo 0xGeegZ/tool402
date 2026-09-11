@@ -184,6 +184,12 @@
   proof. D-S33-010-006 reopens only `explore-visual-reconciliation.test.mjs`
   for durable corrective RED; all production source stays frozen until a fresh
   independent RED review authorizes the Explore supporting sentence alone.
+- S33_DEPENDENT_TEST_CORRECTION: The corrected RED review at
+  `16ff8ace44033254a6868b317d6b03bbfb6ee506` is blocked only because one
+  existing global Explore assertion still requires the prohibited phrase.
+  D-S33-010-007 reserves that exact assertion in `landing-explore.test.mjs`;
+  no other test or source path is reopened. Fresh RED review must authorize the
+  sentence and that matching assertion together.
 - LOCAL_UI_RECORD_AMENDMENT: UI-S33 is a committed local visual record; its target paths and exclusions are fixed by docs/ui/UI-S33.md.
 - M47_RECONCILIATION: At synced `89b8c2c43927d4efd309d1a50d354dbaea4918fe`, M42's accepted real eleven-field preimage and digest `1880065c5ae64b3fc6279cfdd8c85a6880d43e98ce129ed697c72372204296f9` remain byte-identical. M44-T020's Factory artifact + viem seam is a consumer implementation choice, not a preimage member. M47-T010 is accepted as the local source-only binding that keeps S16's synthetic display literal out of the Stage-2 command input; M48 supplies the separate one static compiled M33 mapping. Neither record provisions authority or executes Stage B.
 - M43_RED_SCOPE_CORRECTION: M43's existing verification source remains fixed to `NOT_CONFIGURED` for every ATS_* operation before Mirror I/O or its durable outcome write; that behavior is unchanged by M48's compiled mapping and remains the boundary until a separately reviewed post-Stage-B positive verifier. The one-read ContractResult boundary cannot prove a created EVM address, so positive ATS_CREATE verification and M40 readiness stay deferred. One exact M41 disabled-entry assertion is replaced as a test-only RED contract for the already-declared M43 dispatch enablement and closed existing-response mapping. Fresh review acceptance authorizes only the matching local source, schema, and dispatch scope; it grants no configuration, SDK, wallet, provider, transaction, deployment, or live behavior.
