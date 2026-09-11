@@ -21,10 +21,10 @@ test("presents the guest workspace as a dashboard rather than a preview", async 
   ]);
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
-  assert.match(page, /<h1\b[^>]*>\s*Dashboard\s*<\/h1>/);
+  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
+  assert.match(page, /<PageHeader\b[^>]*title="Dashboard"/);
   assert.doesNotMatch(page, /Workspace preview/);
-  assert.match(shell, /aria-label="Guest workspace"/);
+  assert.match(shell, /aria-label="Guest dashboard"/);
   assert.match(shell, /guest/i);
   assert.match(shell, /<Badge\b/);
   assert.match(overview, /<Card\b/);
@@ -33,29 +33,24 @@ test("presents the guest workspace as a dashboard rather than a preview", async 
   assert.doesNotMatch(navigation, /<(?:a|button)\b/i);
 });
 
-test("preserves the exact five-entry local navigation", async () => {
+test("preserves the current four-entry local navigation", async () => {
   const navigation = await readAppFile("src/components/discovery/local-navigation.tsx");
 
-  assert.match(navigation, /\{ href: "\/dashboard", label: "Workspace" \}/);
   const links = [...navigation.matchAll(/\{ href: "([^"]+)", label: "([^"]+)" \}/g)].map(([, href, label]) => ({ href, label }));
   assert.deepEqual(links, [
-    { href: "/", label: "Home" },
-    { href: "/explore", label: "Explore" },
-    { href: "/dashboard", label: "Workspace" },
-    { href: "/demo", label: "Demo" },
-    { href: "/provider", label: "Provider" },
+    { href: "/explore", label: "Explore tools" },
+    { href: "/#how-it-works", label: "How it works" },
+    { href: "/demo", label: "Guided demo" },
+    { href: "/provider", label: "Campaign" },
   ]);
 });
 
-test("keeps the shared local navigation list responsive without a width workaround", async () => {
+test("uses a compact mobile menu instead of wrapping the desktop navigation", async () => {
   const navigation = await readAppFile("src/components/discovery/local-navigation.tsx");
-  const listOpenings = [...navigation.matchAll(/<ul\b([^>]*)>/gu)];
 
-  assert.equal(listOpenings.length, 1);
-  assert.equal(
-    listOpenings[0][1],
-    ' className="flex flex-wrap items-center gap-1 text-sm font-medium"',
-  );
+  assert.match(navigation, /<ul className="hidden items-center gap-1 lg:flex">/);
+  assert.match(navigation, /<SheetContent side="right"/);
+  assert.doesNotMatch(navigation, /flex-wrap/);
 });
 
 test("keeps the workspace shell static and local", async () => {

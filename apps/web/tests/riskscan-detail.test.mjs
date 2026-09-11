@@ -22,8 +22,11 @@ test("locks the read-only RiskScan detail boundary", async () => {
   const sourcesWithoutRequiredLimitation = [page, detail.replace(requiredLimitation, ""), discoveryCard].join("\n");
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((detail.match(/<h1\b/g) ?? []).length, 1);
+  assert.equal((detail.match(/<PageHeader\b/g) ?? []).length, 1);
   assert.match(page, /<RiskScanDetail\s*\/>/);
+  assert.match(detail, /<PageHeader\b[^>]*title="RiskScan"/);
+  assert.match(detail, /lg:grid-cols-\[minmax\(0,1fr\)_22rem\]/);
+  assert.match(detail, />\s*Current boundary\s*</);
 
   for (const input of ["requestRef", "subjectRef", "context", "identity", "pricing", "limitations", "evidence"]) {
     assert.match(detail, new RegExp(`\\b${input}\\b`));
@@ -38,7 +41,9 @@ test("locks the read-only RiskScan detail boundary", async () => {
   assert.match(discoveryCard, /href=["']\/explore\/riskscan["']/);
 
   const hrefs = [...sources.matchAll(/href=["']([^"']+)["']/g)].map(([, href]) => href);
-  assert.deepEqual(hrefs, ["/explore", "/explore/riskscan/try", "/explore/riskscan/tool-loop", "/explore/riskscan"]);
+  assert.deepEqual(hrefs, ["/explore", "/explore/riskscan"]);
+  assert.match(detail, /href: "\/explore\/riskscan\/try", label: "Try RiskScan"/);
+  assert.match(detail, /href: "\/explore\/riskscan\/tool-loop", label: "Explore RiskScan ToolLoop"/);
   assert.doesNotMatch(sources, /<(?:form|button|input|select|textarea)\b/i);
   assert.doesNotMatch(sources, /\bon[A-Z][A-Za-z]+\s*=|\baction\s*=/);
   assert.doesNotMatch(sources, /["']use client["']|fetch\(|process\.env\b/i);

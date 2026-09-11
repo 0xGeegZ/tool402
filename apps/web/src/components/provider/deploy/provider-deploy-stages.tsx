@@ -139,7 +139,7 @@ export function ProviderDeployStages({
   const stageTwoDone = visibleStates[1]?.kind === "done";
 
   return (
-    <section aria-labelledby="provider-deploy-stages" className="space-y-4">
+    <section aria-labelledby="provider-deploy-stages" data-ui="provider-deploy-stages" className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Local workflow</p>
@@ -157,7 +157,7 @@ export function ProviderDeployStages({
           const controlDescriptionId = `provider-deploy-stage-${index + 1}-control-description`;
           return (
             <li key={definition.label}>
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden shadow-none">
                 <CardHeader className="gap-3 sm:flex sm:flex-row sm:items-start sm:justify-between">
                   <div className="space-y-2">
                     <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Stage {index + 1} of 4</p>

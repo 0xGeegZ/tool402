@@ -3,13 +3,11 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: M02-T010 accepted, M02-T070 accepted, M02-T080 accepted,
   M08-T010 accepted, M11-T020 accepted, M13-T010 accepted, M14-T010 accepted,
   M15-T010 accepted, S11-T010 accepted, S16-T010 accepted, S17-T010 accepted;
-  S22-T010 and S24-T010 (active) must be accepted before this card's
-  landing-adjacent and dashboard amendments, and the root sequences them
-  after those cards.
+  S22-T010, S24-T010, S31-T010, and S32-T010 accepted.
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
   exactly the UI-S25 local targets: new
@@ -60,9 +58,8 @@ builds on are the [UI-S00 manifest](../../../ui/UI-S00.md) and the
 - Every amended path belongs to an accepted record named in the manifest;
   each amendment needs an explicit root integration reservation before source
   changes, limited to the header block, the one navigation label, the outcome
-  sentences, or the one test assertion, and the root sequences this card's
-  amendments after any sibling amendment to the same file, including the
-  active S22-T010 and S24-T010.
+  sentences, or one named test assertion. The reconciled manifest names every
+  exact test path and declares all other tests verification-only.
 - The primitive's anatomy, the per-page eyebrow and action lists, the
   navigation label, and the four outcome sentences are fixed in the manifest
   before code, so no figure, control, or link can be added while the slice is
@@ -72,7 +69,7 @@ builds on are the [UI-S00 manifest](../../../ui/UI-S00.md) and the
 
 - A durable test-only RED commit precedes every source change and fails
   because the primitive does not exist, every page still hand-writes its
-  header, the navigation label is `Provider`, and `/provider` still renders
+  header, the navigation label is `For providers`, and `/provider` still renders
   bare tokens.
 - Focused tests prove the primitive's fixed anatomy, primary-then-outline
   action styling, three-action cap, and that every listed page and component
@@ -94,6 +91,28 @@ route, redirect, external link, or economic claim, and it does not alter the
 landing hero, the navigation order or hrefs, the wizard state machine, the
 `/provider` reader, or the API routes. The manifest's exclusions govern; this
 card does not restate them.
+
+## Green scope
+
+After independent RED acceptance at `ea19691`, minimal GREEN may amend only
+the fourteen presentation paths named in UI-S25 and the matching twelve
+activated tests. Independent scope review at `c98edcc` accepts the one
+`riskscan-try.test.mjs` assertion update: it may replace only the raw detail
+`href=` check with the fixed `Try RiskScan` PageHeader action pair. The Provider
+reader and `Suspense`, all existing page body content, deploy wizard
+fields/state/signing flow, route hrefs, and every data, wallet, payment, ATS,
+transaction, deployment, and live boundary stay fixed.
+
+## Acceptance
+
+S25-T010 is accepted at source commit
+`886987ab8854d7f90bf734e84ad31cdfcb0720f1`. Independent GREEN review is
+clear: its source/test delivery is within the fourteen named presentation
+paths and the one accepted RiskScan Try assertion correction. Node 22.21.1
+Web tests pass `300/300`; Web typecheck, root lint, `queue:check`, whitespace,
+and desktop/390px browser verification are clear. The card releases every
+source/test reservation and grants no data, reader, workflow, wallet, payment,
+ATS, transaction, deployment, or live authority.
 
 ## Human worktree lane request
 

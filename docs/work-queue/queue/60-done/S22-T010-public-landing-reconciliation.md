@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T040 accepted; M11-T010 accepted; S20-T010 accepted; and
   `D-S22-010-002` accepted. `HA-ATS-STAGE-B-001` remains pending as a hard
   truth filter and a prerequisite to public deployment or demo recording, but
@@ -53,6 +53,19 @@ active GREEN scope is recorded in
 `docs/work-queue/evidence/S22-T010-green-scope-authorization.md`; it cannot
 reopen unrelated routes, import a general archive, select a new asset, or
 substitute fake product states for current local truth.
+
+## Acceptance
+
+S22-T010 is accepted at final refinement `c210a5a` after the independently
+reviewed complete landing scope. At exact head
+`a4833329fbd72531980283ff269afe6ba8882765`, the landing and its focused tests
+remain within the authorized source set; the combined S22/S31 focused suite
+passes 27/27, Web typecheck and queue validation are clear, and desktop/390px
+browser evidence confirms the truthful local-route footer, keyboard focus, and
+no horizontal overflow. The reconciliation uses the prepared visual grammar
+without importing prototype metrics, funding, payment, account, return, or
+live-capability claims. Its public deployment/demo-video truth gate remains
+unchanged.
 
 ## Acceptance criteria
 

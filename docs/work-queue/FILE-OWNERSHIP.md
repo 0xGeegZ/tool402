@@ -664,6 +664,23 @@ allows only its declared presentation amendments to
 and UI-S05 mount-record amendments. It must not modify the Directory island's
 source or state, the guest workbench, the RiskScan detail route, or navigation.
 
+S23-T010 is a root-owned `60-done` presentation delivery at
+`f2c28eafd3da7c2913ef274d41578f34b773f8d2`. Its constrained root integration
+reservation over the completed S20/M14 files covered the existing
+`apps/web/src/components/discovery/explore-catalog.tsx` and
+`apps/web/tests/explore-catalog.test.mjs`; the five new paths were
+`apps/web/src/components/discovery/entitycheck-discovery-card.tsx`,
+`apps/web/src/app/explore/entitycheck/page.tsx`,
+`apps/web/src/app/explore/entitycheck/loading.tsx`,
+`apps/web/src/components/entitycheck/detail/entitycheck-detail.tsx`, and
+`apps/web/tests/entitycheck-detail.test.mjs`. The independent RED review at
+`ce21757` and GREEN review at `f2c28ea` are accepted. This did not amend the
+completed S20/M14 behavior. `apps/web/tests/landing-explore.test.mjs` remains
+expressly excluded because S22/S31 retain its active shared assertions. The
+Directory island, guest workbench, RiskScan detail route, navigation, all
+API/data behavior, and every wallet/provider/payment/transaction/deployment/
+live path remain excluded.
+
 M46-T010 is a root-controlled `60-done` CORE_P0 record comprising its card,
 `docs/specs/m46-entity-check-core.md`, the new Core module
 `packages/core/src/entity-check.ts`, and the focused runtime/type fixtures
@@ -940,8 +957,9 @@ and only the named label/caption/progress assertions in
 amendment and remains disjoint from M49. S27 adds no provider, wallet,
 transaction, deployment, or live authority.
 
-S22-T010 is a root-owned early truth-first POLISH lane. Its first independently
-accepted GREEN scope comprised only `apps/web/src/app/page.tsx`,
+S22-T010 is an accepted root-owned early truth-first POLISH lane at final
+refinement `c210a5a`. Its independently accepted source/test scope comprises
+only `apps/web/src/app/page.tsx`,
 `apps/web/src/components/landing/landing-hero.tsx`,
 `apps/web/src/components/landing/landing-sections.tsx`,
 `apps/web/src/components/landing/landing-footer.tsx`,
@@ -953,8 +971,12 @@ root/three component paths, their three focused tests, and the individually
 selected `apps/web/public/brand/hero-trio.png` asset for GREEN. Every global
 layout/navigation/CSS, non-root route, provider/ATS, configuration, package,
 README, submission, deployment, video, and all other path remains prohibited.
+S31-T010 holds the sole root integration reservation to amend only the
+`LocalNavigation` entry assertions in `apps/web/tests/landing-explore.test.mjs`;
+all other S22 assertions and every S22 source path remain unchanged.
 
-S24-T010 is a root-owned early truth-first POLISH lane. It is `20-active` for
+S24-T010 is an accepted root-owned early truth-first POLISH lane at final
+refinement `27fb244`, limited to
 `apps/web/src/app/dashboard/page.tsx`,
 `apps/web/src/components/workspace/workspace-shell.tsx`,
 `apps/web/src/components/workspace/workspace-overview.tsx`,
@@ -963,5 +985,250 @@ S24-T010 is a root-owned early truth-first POLISH lane. It is `20-active` for
 `apps/web/tests/dashboard-workspace-reconciliation.test.mjs`. Global
 layout/navigation/CSS, child route/island, API/Agent, Provider/Demo, asset,
 configuration, package, README, submission, deployment, and video paths remain
-prohibited. Independent task and module review remain required before
-acceptance.
+prohibited. Independent final review is recorded in
+`docs/work-queue/evidence/S24-T010-final-review.md`.
+S31-T010 holds the sole root integration reservation to amend only the
+`LocalNavigation` entry and responsive-list assertions in
+`apps/web/tests/workspace-shell.test.mjs`; all other S24 assertions and every
+S24 source path remain unchanged.
+
+S30-T010 is an accepted root-owned truth-first POLISH slice comprising its card,
+`docs/ui/UI-S30.md`, the local UI ledger, decision, state, catalog, this
+ownership record, reviews, commits, and pushes. Its accepted source/test set
+is exactly `apps/web/src/app/explore/riskscan/tool-loop/page.tsx`,
+`apps/web/src/components/riskscan/tool-loop/riskscan-tool-loop.tsx`,
+`apps/web/src/components/demo/guided-demo-steps.tsx`,
+`apps/web/tests/riskscan-tool-loop.test.mjs`, and
+`apps/web/tests/guided-demo-route.test.mjs`. It may change only the full
+ToolLoop page/form composition and the existing Guided Demo Dashboard-step
+wording. The current fields, declarations, defaults, submit lock, Agent
+composition, and closed outcome mapping remain fixed. Every other route,
+source, test, state module, Agent/API/Core/Backend, global layout/navigation/
+CSS, asset, configuration, wallet/provider, payment, transaction, deployment,
+and live path remains prohibited until a separate accepted scope says
+otherwise.
+
+D-S30-010-002 reserves only the `/dashboard` expected-row assertion in
+`apps/web/tests/guided-demo-route.test.mjs` for S30-T010. S31-T010 retains
+every navigation assertion in that file, including its four local navigation
+entries; neither slice may change the other's assertion or source path.
+D-S30-010-005 accepts this exact source/test set at `4382af2` after focused
+validation, Web typecheck, responsive browser verification, and independent
+review. Its request semantics and every no-mock exclusion remain fixed.
+
+S31-T010 is an accepted root-owned truth-first POLISH source scope at final
+refinement `fb706f1`, comprising its card,
+`docs/ui/UI-S31.md`, the local UI ledger, decision, state, catalog, this
+ownership record, reviews, commits, and pushes. Its accepted source/test set
+is exactly `apps/web/src/app/layout.tsx`,
+`apps/web/src/components/discovery/local-navigation.tsx`,
+`apps/web/tests/landing-explore.test.mjs`,
+`apps/web/tests/workspace-shell.test.mjs`, and the navigation assertion in
+`apps/web/tests/guided-demo-route.test.mjs`. It may migrate only the full
+shared shell presentation into the selected reference direction while
+retaining the two truthful strips, current home/desktop/menu/CTA hrefs, and
+their behavior. Every non-shell route/component/test, global CSS, asset,
+dependency, data/runtime/configuration, wallet/provider/payment/transaction,
+deployment, and live path remains prohibited until a separate accepted scope
+says otherwise.
+
+D-S31-010-006 supersedes only S31's completed status after an independent
+review found one unreserved compact-strip assertion in the shared
+`apps/web/tests/landing-explore.test.mjs`. S31 is `20-active` solely to remove
+that exact test. Its layout, navigation source, and every other test assertion
+are closed; this remedial reservation grants no new behavior, presentation, or
+CTA authority.
+
+D-S31-010-007 accepts correction `20125ac`; S31 is again `60-done` and grants
+no further source or test reservation.
+
+S32-T010 is an accepted root-owned test-contract correction at `5ab83af`.
+Its only former reserved path was `apps/web/tests/static-shell.test.mjs`. S32
+may never
+amend `layout.tsx`, `page.tsx`, or any other source/test path. Its source
+inputs are accepted S31 shell copy and the exact existing internal
+`/provider/deploy` CTA. The correction must retain the static no-runtime
+vocabulary boundary and grants no visual, route, product, wallet, payment,
+provider runtime, or live authority.
+
+Independent readiness at `8256d62`, activation at `106c61a`, and final review
+at `5ab83af` accept only
+the existing assertion correction: retain static shell/home checks, add the
+exact local provider-deploy href and CTA label checks, remove only
+`provider|deploy` from the deny-list, and retain the remaining no-runtime
+terms. No further path or authority is granted.
+
+S25-T010 is a root-owned `00-inbox` presentation intake. Its only candidate
+new paths are `apps/web/src/components/ui/page-header.tsx` and
+`apps/web/tests/page-header.test.mjs`. Its only candidate amendments are the
+header blocks of the nine routed pages and the two components listed in
+`docs/ui/UI-S25.md`, the `/provider` display label in
+`apps/web/src/components/discovery/local-navigation.tsx`, the four closed
+outcome sentences in `apps/web/src/components/provider/status/provider-status.tsx`,
+and only their header/label/copy assertions in the manifest's accepted tests.
+Those candidate paths were released by accepted S20/S22/S23/S24/S28/S29/S30/
+S31 slices and are root integration reservations only; S25 owns no source or
+test path until a separate independent readiness review and durable RED
+activation. No route, body/card/shell redesign, data/state/reader/action
+change, wallet/provider/payment/transaction/deployment, external link, metric,
+account, funding, return, or live claim is in scope.
+
+D-S25-010-002 reconciles S25-T010's future scope at `266c786`: S22, S24,
+S31, and S32 are accepted and release their former reservations. If a fresh
+independent readiness review later accepts durable RED, S25's exact test scope
+is `apps/web/tests/page-header.test.mjs`,
+`apps/web/tests/workspace-shell.test.mjs`,
+`apps/web/tests/guided-demo-route.test.mjs`,
+`apps/web/tests/landing-explore.test.mjs`,
+`apps/web/tests/provider-status.test.mjs`,
+`apps/web/tests/riskscan-detail.test.mjs`,
+`apps/web/tests/dashboard-workspace-reconciliation.test.mjs`,
+`apps/web/tests/guest-riskscan-workbench.test.mjs`,
+`apps/web/tests/riskscan-native-quote-compatibility.test.mjs`,
+`apps/web/tests/riskscan-quick-preflight.test.mjs`,
+`apps/web/tests/riskscan-tool-loop.test.mjs`, and
+`apps/web/tests/provider-visual-reconciliation.test.mjs`, limited to the
+declared header/label/outcome assertions. No S25 source or test path is active
+until that separate review and activation; all other tests are
+verification-only.
+
+D-S25-010-004 activates S25-T010 at `d240d10` only for durable RED in those
+twelve named test paths. No S25 source path, including the future
+`page-header.tsx`, is active. Every route/data/action/state, wallet/provider/
+payment/transaction/deployment, and live boundary remains prohibited pending
+an independent RED review.
+
+D-S25-010-005 accepts RED at `ea19691` and authorizes minimal GREEN only in
+`apps/web/src/components/ui/page-header.tsx`; the nine routed-page header
+blocks named by UI-S25; `apps/web/src/components/riskscan/detail/riskscan-detail.tsx`;
+`apps/web/src/components/provider/deploy/provider-deploy-wizard.tsx`;
+`apps/web/src/components/discovery/local-navigation.tsx`; and
+`apps/web/src/components/provider/status/provider-status.tsx`, with matching
+updates only to the twelve activated tests. Every other source/test path and
+all non-presentation behavior remain prohibited.
+
+D-S25-010-006 records one proposed scope correction after the full Web suite:
+`apps/web/tests/riskscan-try.test.mjs` statically asserts the RiskScan-detail
+Try action, which the authorised header migration now supplies through the
+fixed PageHeader action object. The candidate amendment is limited to that
+one assertion; it changes no request-flow/form/response/client assertion. The
+path remains prohibited pending a fresh independent scope review.
+
+D-S25-010-007 accepts that correction at `c98edcc`: S25 owns only the raw
+RiskScan-detail Try-href assertion in
+`apps/web/tests/riskscan-try.test.mjs`, which may change to the fixed
+PageHeader action-object pair. The test's other assertions and every source
+path remain governed by their existing scopes.
+
+D-S25-010-008 accepts S25-T010 at
+`886987ab8854d7f90bf734e84ad31cdfcb0720f1` after independent GREEN review.
+Its completed delivery is the fourteen named presentation paths and the one
+accepted RiskScan Try assertion correction in UI-S25; all reservations are
+released. No data, reader, request/form/workflow, wallet, payment, ATS,
+transaction, deployment, or live path is granted by this acceptance.
+
+S28-T010 is a root-owned 00-inbox truth-first POLISH intake comprising its
+card, `docs/ui/UI-S28.md`, the local UI ledger, decision, state, catalog, this
+ownership record, reviews, commits, and pushes. Its only candidate source/test
+paths are `apps/web/src/app/provider/page.tsx`,
+`apps/web/src/components/provider/status/provider-status.tsx`, and the new
+`apps/web/tests/provider-visual-reconciliation.test.mjs`. The accepted S17
+projection reader/state, existing provider-status reader test, and provider
+deploy wizard are expressly excluded. No implementation path is reserved until
+an independent readiness review, durable focused RED, and independent RED
+review accept exact GREEN.
+
+D-S28-010-002 reserves only the new
+`apps/web/tests/provider-visual-reconciliation.test.mjs` for S28-T010's
+durable RED. The Provider page and status component remain source-prohibited;
+the S17 reader/state and test, deploy wizard, every live/financial claim, and
+all other paths remain outside S28 until a fresh independent RED review grants
+an exact GREEN scope.
+
+D-S28-010-003 authorizes exactly `apps/web/src/app/provider/page.tsx`,
+`apps/web/src/components/provider/status/provider-status.tsx`, and
+`apps/web/tests/provider-visual-reconciliation.test.mjs` for S28's minimal
+presentational GREEN. The RiskScan card is a local `/provider/deploy` path,
+not an admitted/active/published offering assertion; all real states remain in
+the existing closed projection regions. No other source/test path is granted.
+
+S28-T010 is accepted at source `5352f05`. Its final local source/test set is
+exactly the Provider page, Provider status component, and focused S28 visual
+test named above. This is a completed presentation-only scope: it grants no
+further reservation, no reader/state/deploy-wizard amendment, and no data,
+wallet/provider/payment/transaction/deployment/live path.
+
+S29-T010 is a root-owned `20-active` test-only RED truth-first POLISH slice
+comprising its
+card, `docs/ui/UI-S29.md`, the local UI ledger, decision, state, catalog, this
+ownership record, reviews, commits, and pushes. Its only candidate source/test
+paths are `apps/web/src/app/provider/deploy/page.tsx`,
+`apps/web/src/components/provider/deploy/provider-deploy-wizard.tsx`,
+`apps/web/src/components/provider/deploy/provider-deploy-stages.tsx`,
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, and the
+new `apps/web/tests/provider-deploy-visual-reconciliation.test.mjs`. The four
+listed components may change only presentation markup, classes, heading/copy,
+and local return/footer links while preserving their existing imports, fields,
+initial values, validation, state transitions, calls, and handlers. The exact
+immutable S16/M47 paths are `provider-deploy-state.ts`, `campaign-fixture.ts`,
+`ats-create-configuration.ts`, `ats-create-action.tsx`,
+`directory-record-literal.ts`, `apps/web/src/lib/wallet/command-bridge.ts`, and
+their current behavior tests. No implementation path is reserved until
+independent readiness, durable RED, and independent RED review accept exact
+GREEN.
+
+D-S29-010-003 reserves only the new
+`apps/web/tests/provider-deploy-visual-reconciliation.test.mjs` for S29's
+durable RED. Its four candidate components remain source-prohibited. The
+S16/M47 logic modules and all existing behavior tests remain outside S29;
+no other source or test path is granted until independent RED acceptance names
+an exact GREEN scope.
+
+D-S29-010-004 authorizes exactly
+`apps/web/src/app/provider/deploy/page.tsx`,
+`apps/web/src/components/provider/deploy/provider-deploy-wizard.tsx`,
+`apps/web/src/components/provider/deploy/provider-deploy-stages.tsx`,
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, and
+`apps/web/tests/provider-deploy-visual-reconciliation.test.mjs` for minimal
+presentational GREEN. The current S16/S21/M47/M44 behavior tests are
+verification-only. No other path, state transition, handler, wallet/signature,
+ATS, data, payment, transaction, deployment, or live claim is granted.
+
+S29-T010 is accepted at source `dc9f010`. Its final local source/test set is
+exactly the Provider deploy page, wizard, stages, signing component, and
+focused S29 visual test named above. This completed presentation-only slice
+grants no further reservation and no amendment to any existing S16/S21/M47/M44
+behavior test, state, fixture, configuration, wallet/signature, ATS, data,
+payment, transaction, deployment, or live path.
+
+S33-T010 is a root-owned 00-inbox presentation intake. Its candidate paths
+are exactly apps/web/src/app/explore/page.tsx,
+apps/web/src/components/discovery/explore-catalog.tsx,
+apps/web/src/components/discovery/riskscan-discovery-card.tsx,
+apps/web/src/components/discovery/entitycheck-discovery-card.tsx,
+apps/web/tests/explore-catalog.test.mjs, and one new
+apps/web/tests/explore-visual-reconciliation.test.mjs. S20/S23 accepted
+ownership is historical only and grants no continuing source reservation.
+No target is active until a fresh independent readiness review and separate
+RED activation. The Directory island, navigation, shared/global CSS, route
+behavior, API/data, client state, wallet/provider/payment, transaction,
+deployment, and every live boundary remain excluded.
+
+Independent readiness at dec98bb22fc8a3e2403a426fa5639130bb053cf4 and
+activation at c541039d6d7a0cc98cdc1ced8d3e9f4ff997db08 are clear. S33-T010
+is 20-active only for apps/web/tests/explore-catalog.test.mjs and the new
+apps/web/tests/explore-visual-reconciliation.test.mjs to create durable RED.
+Every source path remains prohibited until independent RED acceptance grants
+the minimal Green scope.
+
+Independent RED review at 85f99346077d1dadb4e728eefe5ac31df2f08934 is clear:
+the durable tests change only within their reservation and fail only because
+the current page/catalogue/card presentation is absent. The root may amend
+only the four declared S33 presentation source paths and the two matching
+focused tests for minimal Green. All behavior, data, route, wallet, provider,
+payment, transaction, deployment, and live paths remain excluded.
+
+Independent task review at a56687ef538c5bd23eb1add95df723271e55d87c is clear.
+S33-T010 is in task review; its exact Green source/test surface is frozen
+through independent module review. No behavior, data, route, wallet, provider,
+payment, transaction, deployment, or live path is added or authorized.

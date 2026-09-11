@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Badge } from "../ui/badge";
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
 
 export function RiskScanDiscoveryCard() {
   return (
@@ -9,18 +9,18 @@ export function RiskScanDiscoveryCard() {
       href="/explore/riskscan"
       className="group block rounded-[var(--radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
-      <Card className="h-full overflow-hidden transition-colors group-hover:border-primary/40">
+      <Card className="flex h-full min-h-[20rem] flex-col overflow-hidden rounded-[calc(var(--radius)*2)] shadow-none transition-colors duration-200 group-hover:border-primary/40 motion-reduce:transition-none">
         <CardHeader className="gap-4">
           <div className="flex items-start justify-between gap-4">
-            <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius)] bg-secondary text-secondary-foreground">
+            <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-purple/15 text-brand-purple">
               <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.75}>
                 <path d="M5 17.5V19h14v-1.5M7.5 15l2.25-3 2 1.75L15.5 9l2 2.5" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M5 5h14v10.5H5z" strokeLinejoin="round" />
               </svg>
             </span>
-            <div className="space-y-2 text-right">
+            <div className="flex flex-wrap justify-end gap-2">
               <Badge variant="secondary">In discovery</Badge>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Risk assessment</p>
+              <Badge variant="outline">Risk assessment</Badge>
             </div>
           </div>
           <CardTitle>RiskScan</CardTitle>
@@ -28,7 +28,13 @@ export function RiskScanDiscoveryCard() {
             A read-only introduction to a bounded assessment for considering a tool&apos;s risk signals with care.
           </CardDescription>
         </CardHeader>
-        <CardFooter className="flex items-center justify-between gap-4">
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+            <p className="text-xs text-muted-foreground">Current route</p>
+            <span className="text-xs font-medium text-foreground">Local detail</span>
+          </div>
+        </CardContent>
+        <CardFooter className="mt-auto flex items-center justify-between gap-4">
           <p className="text-sm leading-6 text-muted-foreground">This surface is descriptive only.</p>
           <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primary">
             View details

@@ -16,7 +16,7 @@ const expectedRows = [
   ["/explore/riskscan", "Read RiskScan", "Review the Quick input, result, and configuration boundaries."],
   ["/explore/riskscan/try", "Try the local request", "Inspect the bounded Quick request surface."],
   ["/explore/riskscan/tool-loop?demo=tool-loop", "Follow ToolLoop", "Inspect the local ToolLoop request boundary."],
-  ["/dashboard", "Open the workspace", "See the guest workspace shell."],
+  ["/dashboard", "Open the dashboard", "See the guest dashboard shell."],
   ["/dashboard/riskscan", "Review the workbench", "Follow the guest RiskScan workbench sequence."],
   [
     "/dashboard/riskscan/compatibility",
@@ -76,7 +76,7 @@ test("composes one server page with the named guided step component", async (t) 
   const { page } = sources;
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
+  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
   assert.match(page, /import\s*\{\s*GuidedDemoSteps\s*\}\s+from\s+["'][^"']*guided-demo-steps["']/);
   assert.match(page, /<GuidedDemoSteps\s*\/>/);
 });
@@ -129,7 +129,7 @@ test("keeps the demo route local, static, and outside excluded authority claims"
   assert.ok([...sources.matchAll(/href\s*=\s*\{?(["'])(\/[^"']*)\1\}?/g)].every(([, , href]) => !href.startsWith("//")));
 });
 
-test("preserves the five exact local navigation entries", async (t) => {
+test("preserves the four exact local navigation entries", async (t) => {
   const sources = await readGuidedSources(t);
   if (!sources) return;
   const { navigation, landingTest } = sources;
@@ -138,11 +138,10 @@ test("preserves the five exact local navigation entries", async (t) => {
     ...navigation.matchAll(/\{ href: "([^"]+)", label: "([^"]+)" \}/g),
   ].map(([, href, label]) => [href, label]);
   assert.deepEqual(entries, [
-    ["/", "Home"],
-    ["/explore", "Explore"],
-    ["/dashboard", "Workspace"],
-    ["/demo", "Demo"],
-    ["/provider", "Provider"],
+    ["/explore", "Explore tools"],
+    ["/#how-it-works", "How it works"],
+    ["/demo", "Guided demo"],
+    ["/provider", "Campaign"],
   ]);
   const hrefGuardLines = landingTest
     .split("\n")
@@ -150,7 +149,7 @@ test("preserves the five exact local navigation entries", async (t) => {
   assert.equal(hrefGuardLines.length, 1);
   assert.match(
     hrefGuardLines[0],
-    /href: "\(\?!\\?\/"\|\\?\/explore"\|\\?\/dashboard"\|\\?\/demo"\|\\?\/provider"\)/,
+    /href: "\(\?!\\?\/explore"\|\\?\/#how-it-works"\|\\?\/demo"\|\\?\/provider"\)/,
   );
-  assert.equal((hrefGuardLines[0].match(/\|/g) ?? []).length, 4);
+  assert.equal((hrefGuardLines[0].match(/\|/g) ?? []).length, 3);
 });

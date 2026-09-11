@@ -30,8 +30,10 @@ The slice may add or amend only:
 
 Every amendment above is to an accepted card's owned path and needs its own
 root integration reservation. `apps/web/src/components/discovery/local-navigation.tsx`
-is reserved by S25-T010; the control sits beside the navigation in the layout
-header, not inside it.
+is not active under S25-T010 while S25 remains in `00-inbox`; any future
+navigation-label amendment is confined to S25's separately accepted source
+scope. The control sits beside the navigation in the layout header, not inside
+it.
 
 ## Session contract
 

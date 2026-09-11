@@ -24,7 +24,7 @@ const steps = [
     title: "Follow ToolLoop",
     observation: "Inspect the local ToolLoop request boundary."
   },
-  { href: "/dashboard", title: "Open the workspace", observation: "See the guest workspace shell." },
+  { href: "/dashboard", title: "Open the dashboard", observation: "See the guest dashboard shell." },
   {
     href: "/dashboard/riskscan",
     title: "Review the workbench",

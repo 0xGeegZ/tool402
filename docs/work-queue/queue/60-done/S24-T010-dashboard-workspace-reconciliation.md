@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M11-T020 accepted. `D-S24-010-002` supersedes only the former
   start-order conditions. `HA-ATS-STAGE-B-001` remains a hard truth filter and
   a prerequisite to public deployment or demo recording, but is not a
@@ -53,6 +53,17 @@ scope authorization. The comparison cannot reopen unrelated routes, import a
 general archive, or invent account, session, wallet, provider, balance,
 payment, transaction, evidence, or live state. Independent task and module
 review remain required before acceptance.
+
+## Acceptance
+
+S24-T010 is accepted at final density refinement `27fb244`. The independent
+current-head review at `a4833329fbd72531980283ff269afe6ba8882765` confirms
+that later source changes are disjoint from S24's six reserved paths; focused
+S24/S31-compatible checks pass 10/10, Web typecheck and queue validation are
+clear, and the 1440px/390px route checks confirm one main/H1, usable focus,
+the mobile menu, no overflow, and no browser console errors. The dashboard
+remains a truthful guest workspace: no account, position, balance, payment,
+transaction, funding, return, or live status is asserted.
 
 ## Acceptance criteria
 

@@ -266,7 +266,8 @@ implementedTest("renders only the fixed status regions, actions, evidence rows, 
   const presentation = `${page}\n${status}\n${state}`;
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
+  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
+  assert.match(page, /<PageHeader\b[^>]*title="Campaign status"/);
   assert.equal((page.match(/<Suspense\b/g) ?? []).length, 1);
   assert.doesNotMatch(page, /["']use client["']|\bfetch\s*\(|set(?:Timeout|Interval)\s*\(/);
   for (const text of [
@@ -283,7 +284,29 @@ implementedTest("renders only the fixed status regions, actions, evidence rows, 
   ]) assert.match(presentation, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.match(presentation, /https:\/\/hashscan\.io\/testnet\/contract\//);
   assert.match(presentation, /rel=["']noreferrer["']/);
+  assert.doesNotMatch(status, /replaceAll\(["']_["'], ["'] ["']\)/);
+  for (const sentence of [
+    "No campaign backend is configured for this host.",
+    "No admitted record exists yet.",
+    "The campaign backend did not answer.",
+    "The campaign backend returned a record this page cannot read.",
+  ]) assert.match(status, new RegExp(sentence.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.doesNotMatch(presentation, /funding raised|units issued|paid task|balance|Live testnet|Connected|New offering version/i);
+});
+
+implementedTest("presents unavailable provider data as an actionable workspace without inventing records", async () => {
+  const sources = await readSources();
+  const page = sources["src/app/provider/page.tsx"];
+  const status = sources["src/components/provider/status/provider-status.tsx"];
+
+  assert.match(page, /Campaign status/);
+  assert.match(page, /Tool operator/);
+  assert.match(status, /bg-\[#e9e1ff\]/);
+  assert.match(status, /Offering record/);
+  assert.match(status, /Directory record/);
+  assert.match(status, /Provider action/);
+  assert.match(status, /Open the deploy wizard/);
+  assert.doesNotMatch(status, /funding raised|units issued|paid task|balance|Live testnet|Connected/i);
 });
 
 implementedTest("derives the fixed region order, next actions, evidence cells, and Hashscan gate from admitted projection data", async () => {

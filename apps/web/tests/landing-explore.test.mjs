@@ -65,15 +65,23 @@ function directPageLinkViolations(source) {
 
 test("renders labeled navigation between the committed local routes", async () => {
   const navigation = await readAppFile("src/components/discovery/local-navigation.tsx");
+  const layout = await readAppFile("src/app/layout.tsx");
 
   assert.match(navigation, /<nav\b[^>]*aria-label=["']Main navigation["']/);
-  assert.match(navigation, /\{ href: "\/", label: "Home" \}/);
-  assert.match(navigation, /\{ href: "\/explore", label: "Explore" \}/);
-  assert.match(navigation, /\{ href: "\/dashboard", label: "Workspace" \}/);
-  assert.match(navigation, /\{ href: "\/demo", label: "Demo" \}/);
-  assert.match(navigation, /\{ href: "\/provider", label: "Provider" \}/);
-  assert.match(navigation, /<Link href=\{link\.href\}/);
-  assert.doesNotMatch(navigation, /\{ href: "(?!\/"|\/explore"|\/dashboard"|\/demo"|\/provider")[^"]+/);
+  assert.match(navigation, /\{ href: "\/explore", label: "Explore tools" \}/);
+  assert.match(navigation, /\{ href: "\/#how-it-works", label: "How it works" \}/);
+  assert.match(navigation, /\{ href: "\/demo", label: "Guided demo" \}/);
+  assert.match(navigation, /\{ href: "\/provider", label: "Campaign" \}/);
+  assert.match(navigation, /<Link\s+href=\{link\.href\}/);
+  assert.doesNotMatch(navigation, /\{ href: "(?!\/explore"|\/#how-it-works"|\/demo"|\/provider")[^"]+/);
+  assert.match(navigation, /["']use client["']/);
+  assert.match(navigation, /aria-label="Open menu"/);
+  assert.match(navigation, /<SheetContent side="right"/);
+  assert.match(navigation, /\blg:hidden\b/);
+  assert.match(navigation, /matchMedia\("\(min-width: 1024px\)"\)/);
+  assert.match(layout, /<Link href="\/" aria-label="Tool402 home"/);
+  assert.match(layout, /<Link href="\/provider\/deploy"/);
+  assert.match(layout, />\s*Prepare a tool\s*</);
 });
 
 test("renders a single landing main landmark and page heading", async () => {
@@ -92,8 +100,8 @@ test("gives the decorative landing artwork an explicit responsive width", async 
   const hero = await readAppFile("src/components/landing/landing-hero.tsx");
 
   assert.match(hero, /\/brand\/hero-trio\.png/);
-  assert.match(hero, /\bw-full\s+max-w-xl\b/);
-  assert.match(hero, /\blg:max-w-none\b/);
+  assert.match(hero, /\bw-full\s+max-w-sm\b/);
+  assert.match(hero, /\blg:grid-cols-\[minmax\(0,1fr\)_minmax\(0,1fr\)\]/);
 });
 
 test("renders a single read-only Explore marketplace catalog", async () => {
@@ -104,12 +112,12 @@ test("renders a single read-only Explore marketplace catalog", async () => {
 
   assert.match(page, /<main\b/);
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
+  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
   assert.match(page, /<ExploreCatalog\s*\/>/);
   assert.doesNotMatch(page, /\bRiskScanDirectoryDiscovery\b/);
   assert.doesNotMatch(page, /<RiskScanDiscoveryCard\s*\/>/);
-  assert.match(page, />\s*Marketplace\s*</);
-  assert.match(page, />\s*Explore tools\s*</);
+  assert.match(page, /eyebrow="Marketplace"/);
+  assert.match(page, /title="Explore tools"/);
   assert.match(page, /Bounded, machine-payable tools with an inspectable journey\. Start with what each one covers\./);
   assert.deepEqual(directPageLinkViolations(page), []);
   assert.match(card, /RiskScan/);

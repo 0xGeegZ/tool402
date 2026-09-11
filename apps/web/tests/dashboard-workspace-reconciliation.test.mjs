@@ -47,14 +47,59 @@ test("keeps the dashboard guest-only and free of unsupported state", async () =>
   const [shell, overview, navigation] = await readWorkspaceSources();
   const workspace = [shell, overview, navigation].join("\n");
 
-  assert.match(workspace, /Guest workspace/);
+  assert.match(workspace, /Guest dashboard/);
   assert.match(
-    overview,
-    /These guest routes stay local\. Nothing is sent until you explicitly submit a journey that supports it\./,
+    shell,
+    /Routes stay local until a supported journey asks you to continue\./,
   );
   assert.doesNotMatch(overview, /local and descriptive/i);
   assert.doesNotMatch(
     workspace,
     /\b(?:account|wallet|provider|balance|payment|transaction|receipt|evidence|funding|live)\b/i,
   );
+});
+
+test("adapts the reference dashboard hierarchy to the current guest workspace", async () => {
+  const [shell, overview, navigation] = await readWorkspaceSources();
+  const dashboard = await readAppFile("src/app/dashboard/page.tsx");
+
+  assert.match(dashboard, /Guest dashboard/);
+  assert.match(dashboard, /Current local journeys/);
+  assert.match(shell, /space-y-8/);
+  assert.match(overview, /Access/);
+  assert.match(overview, /Current tool/);
+  assert.match(overview, /Available journeys/);
+  assert.match(navigation, /Start with RiskScan/);
+  assert.match(navigation, /Continue a local journey/);
+  assert.match(navigation, /one guest dashboard/);
+  assert.match(overview, /aria-label="Dashboard overview"/);
+  assert.match(navigation, /rounded-2xl/);
+  assert.match(navigation, /shadow-none/);
+});
+
+test("gives the guest dashboard a compact factual summary and one featured starting path", async () => {
+  const [shell, overview, navigation] = await readWorkspaceSources();
+  const dashboard = await readAppFile("src/app/dashboard/page.tsx");
+
+  assert.match(overview, /Available journeys/);
+  assert.match(overview, />\s*6 local routes\s*</);
+  assert.match(overview, /min-h-24/);
+  assert.doesNotMatch(overview, /min-h-28/);
+  assert.match(dashboard, /<PageHeader\b[^>]*title="Dashboard"/);
+  assert.match(shell, /space-y-8/);
+  assert.match(navigation, /Start with RiskScan/);
+  assert.match(navigation, /Inspect the current tool before choosing another local journey\./);
+});
+
+test("keeps the featured RiskScan marker readable on its lavender surface", async () => {
+  const [, , navigation] = await readWorkspaceSources();
+
+  assert.doesNotMatch(navigation, /bg-\[\#e9e1ff\] text-brand-purple/);
+});
+
+test("reuses the truthful local footer below the guest workspace", async () => {
+  const dashboard = await readAppFile("src/app/dashboard/page.tsx");
+
+  assert.match(dashboard, /import \{ LandingFooter \} from "\.\.\/\.\.\/components\/landing\/landing-footer";/);
+  assert.match(dashboard, /<LandingFooter\s*\/>/);
 });

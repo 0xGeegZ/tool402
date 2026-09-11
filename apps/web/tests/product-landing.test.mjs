@@ -38,14 +38,18 @@ test("translates the selected marketplace composition through current local orie
   assert.match(landing, /Tool402/);
   assert.match(landing, /RiskScan/);
   assert.match(hero, /<section\b[^>]*className=["'][^"']*radial-gradient[^"']*["']/);
+  assert.match(hero, /<section\b[^>]*className=["'][^"']*\bborder-b\b[^"']*\bbg-card\/30\b[^"']*["']/);
   assert.match(hero, /<h1\b[^>]*>\s*Back the tools\s*<span className=["'][^"']*\btext-brand-purple\b[^"']*["']>agents pay<\/span>\s*to use\./);
+  assert.match(hero, /<h1\b[^>]*className=["'][^"']*\bfont-extrabold\b[^"']*\bleading-\[1\.04\][^"']*["']/);
   assert.match(hero, /hero-trio\.png/);
   assert.match(landing, /id=["']how-it-works["']/);
   assert.match(landing, /Explore a current tool/i);
   assert.match(landing, /Inspect its boundary/i);
   assert.match(landing, /Choose a local next step/i);
+  assert.match(sections, /id=["']how-it-works["'][^>]*className=["'][^"']*\bbg-muted\/40\b[^"']*/);
   assert.match(sections, /<ol\b[^>]*className=["'][^"']*\bgrid\b[^"']*\blg:grid-cols-3\b[^"']*["']/);
-  assert.match(sections, /<Card className=["'][^"']*rounded-\[calc\(var\(--radius\)\*2\)\][^"']*\bbg-card\b[^"']*["']/);
+  assert.match(sections, /border-t border-dashed border-border/);
+  assert.match(sections, /<Card className=["'][^"']*\brounded-2xl\b[^"']*\bbg-card\b[^"']*["']/);
   assert.match(landing, /Prepare a tool offering/i);
 });
 
@@ -59,15 +63,22 @@ test("offers only the specified current local CTA destinations", async () => {
   assert.deepEqual(ctas, [
     ["/explore", "Explore tools"],
     ["/demo", "Open guided demo"],
-    ["/explore/riskscan", "View RiskScan"],
-    ["/explore/riskscan/try", "Try RiskScan"],
+    ["/explore", "Browse all tools →"],
+    ["/explore", "Explore tools"],
+    ["/demo", "Open guided demo"],
     ["/provider/deploy", "Prepare a tool offering"],
+    ["/provider", "Provider overview"],
     ["/explore", "Explore tools"],
     ["/explore/riskscan", "RiskScan"],
     ["/demo", "Guided demo"],
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
+    ["/", "Home"],
+    ["/dashboard", "Dashboard"],
   ]);
+  assert.match(landing, /href=\{campaign\.href\}/);
+  assert.match(landing, /route: "\/explore\/riskscan"/);
+  assert.match(landing, /route: "\/provider"/);
   assert.doesNotMatch(landing, /<Link\b[^>]*>\s*<Button\b/);
 });
 
@@ -83,7 +94,12 @@ test("keeps the fuller footer limited to existing local routes", async () => {
     ["/demo", "Guided demo"],
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
+    ["/", "Home"],
+    ["/dashboard", "Dashboard"],
   ]);
+  assert.match(footer, /aria-label="Dashboard links"/);
+  assert.match(footer, /Hedera testnet prototype/);
+  assert.doesNotMatch(footer, /new Date\s*\(/);
   assert.doesNotMatch(footer, /(?:https?:\/\/|\/api\/)/i);
 });
 
@@ -94,13 +110,16 @@ test("keeps each repeated step heading subordinate to the how-it-works heading",
   assert.doesNotMatch(sections, /<CardTitle>\{step\.title\}<\/CardTitle>/);
 });
 
-test("keeps RiskScan copy readable on its section background", async () => {
+test("keeps campaign cards limited to current routes and truthful preparation states", async () => {
   const sections = await readAppFile("src/components/landing/landing-sections.tsx");
 
-  assert.match(
-    sections,
-    /<p className=["'][^"']*\btext-muted-foreground\b[^"']*["']>\s*A bounded assessment route/,
-  );
+  assert.match(sections, /const campaignCards = \[/);
+  assert.match(sections, /name: "RiskScan"/);
+  assert.match(sections, /name: "EntityCheck France"/);
+  assert.match(sections, /status: "Campaign preview"/);
+  assert.match(sections, /Campaign preparation/);
+  assert.match(sections, /grid grid-cols-2 gap-4 rounded-\[var\(--radius\)\] border border-dashed/);
+  assert.doesNotMatch(sections, /RiskScan Quick|No public route/);
 });
 
 test("keeps the selected visual asset decorative, local, and free of unsupported claims", async () => {

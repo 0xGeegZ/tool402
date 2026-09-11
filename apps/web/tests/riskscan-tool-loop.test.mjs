@@ -191,11 +191,33 @@ test("locks the static ToolLoop page, bounded client form, and non-payment prese
 
   assert.doesNotMatch(page, /["']use client["']/);
   assert.match(page, /<RiskScanToolLoop\s*\/>/);
+  assert.match(page, /<PageHeader\b[^>]*title="Run RiskScan through ToolLoop"/);
+  assert.match(page, /<Link href=["']\/explore\/riskscan["']/);
+  assert.match(page, />\s*Back to RiskScan\s*</);
+  assert.match(page, />\s*Testnet request boundary · no payment is made from this form\.\s*</);
+  assert.match(page, /title="Run RiskScan through ToolLoop"/);
+  assert.match(page, /<LandingFooter\s*\/>/);
   assert.match(flow, /["']use client["']/);
   assert.match(flow, /<form\b[^>]*>/);
+  assert.match(flow, /data-ui=["']tool-loop-request-surface["']/);
+  assert.match(flow, /\bsm:grid-cols-2\b/);
+  assert.match(flow, /<fieldset[^>]*>\s*<legend id=["']tool-loop-disclosures["']/);
+  assert.match(flow, /A payment challenge does not mean a payment, result, or verification has occurred\./);
+  assert.match(flow, /focus-visible:outline/);
 
   for (const field of ["requestRef", "subjectRef", "context", "identity", "pricing", "limitations", "evidence"]) {
     assert.match(flow, new RegExp(`name=["']${field}["']`));
+  }
+  for (const label of [
+    "Request reference",
+    "Subject reference",
+    "Request context",
+    "Identity disclosure",
+    "Pricing disclosure",
+    "Limitations disclosure",
+    "Evidence disclosure",
+  ]) {
+    assert.match(flow, new RegExp(`>\\s*${label}\\s*<`));
   }
   assert.match(flow, /name=["']requestRef["'][^>]*required[^>]*maxLength=\{96\}/);
   assert.match(flow, /name=["']subjectRef["'][^>]*required[^>]*maxLength=\{160\}/);
@@ -211,7 +233,7 @@ test("locks the static ToolLoop page, bounded client form, and non-payment prese
   assert.match(flow, /aria-live=["']polite["']/);
   assert.equal((flow.match(/\brunRiskScanQuickFlow\b/g) ?? []).length, 2);
 
-  assert.match(detail, /href=["']\/explore\/riskscan\/tool-loop["']/);
+  assert.match(detail, /href: "\/explore\/riskscan\/tool-loop", label: "Explore RiskScan ToolLoop"/);
 
   assert.doesNotMatch(flow, /\bfetch\b|\/api\//);
   assert.doesNotMatch(flow, /\bheaders\b|payment-required|PAYMENT-REQUIRED/i);
@@ -221,4 +243,5 @@ test("locks the static ToolLoop page, bounded client form, and non-payment prese
   assert.doesNotMatch(flow, /\b(?:localStorage|sessionStorage|setTimeout|setInterval|retry)\b/i);
   assert.doesNotMatch(flow, /https?:\/\/|mailto:|target=/i);
   assert.doesNotMatch(flow, /\b(?:paid|settled|completed)\b/i);
+  assert.doesNotMatch(page, /\bsimulat(?:e|ed|ion)\b/i);
 });

@@ -6,7 +6,7 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useRef, useState, type FormEvent } from "react";
 
 import { Button } from "../../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
 import { Status, statusToneForOutcome } from "../../ui/status";
 import {
   getToolLoopDemoDefaults,
@@ -57,67 +57,79 @@ export function RiskScanToolLoop() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>ToolLoop request</CardTitle>
+    <Card data-ui="tool-loop-request-surface" className="rounded-[calc(var(--radius)*2)] shadow-none">
+      <CardHeader className="space-y-2 border-b px-6 py-6 sm:px-7">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">ToolLoop request</p>
+        <CardTitle className="text-2xl tracking-tight">Prepare a bounded request</CardTitle>
+        <CardDescription className="max-w-xl leading-6">
+          The current local form sends only the declared Quick fields and caller-reported disclosures.
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form key={demoMode ?? "blank"} onSubmit={onSubmit} className="space-y-6">
-          {demoMode === "tool-loop" ? <p aria-live="polite" className="rounded-[var(--radius)] border border-border bg-secondary px-3 py-2 text-sm font-medium text-secondary-foreground">Demo values loaded. Review before checking.</p> : null}
-          <div className="space-y-4">
+      <CardContent className="px-6 pb-6 pt-6 sm:px-7 sm:pb-7">
+        <form key={demoMode ?? "blank"} onSubmit={onSubmit} className="space-y-7">
+          {demoMode === "tool-loop" ? <p aria-live="polite" className="rounded-[var(--radius)] border border-brand-purple/20 bg-brand-purple/10 px-3 py-2 text-sm font-medium text-secondary-foreground">Demo values loaded. Review before checking.</p> : null}
+          <div className="grid gap-5 sm:grid-cols-2">
             <label className="block space-y-2">
-              <span className="font-medium">Request reference</span>
+              <span className="text-sm font-semibold">Request reference</span>
               <input
                 name="requestRef"
                 required
                 maxLength={96}
                 defaultValue={defaults.requestRef}
-                className="min-h-10 w-full rounded-[var(--radius)] border bg-background px-3"
+                className="min-h-11 w-full rounded-[var(--radius)] border border-border bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               />
             </label>
             <label className="block space-y-2">
-              <span className="font-medium">Subject reference</span>
+              <span className="text-sm font-semibold">Subject reference</span>
               <input
                 name="subjectRef"
                 required
                 maxLength={160}
                 defaultValue={defaults.subjectRef}
-                className="min-h-10 w-full rounded-[var(--radius)] border bg-background px-3"
+                className="min-h-11 w-full rounded-[var(--radius)] border border-border bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               />
             </label>
-            <label className="block space-y-2">
-              <span className="font-medium">Request context</span>
+            <label className="block space-y-2 sm:col-span-2">
+              <span className="text-sm font-semibold">Request context</span>
               <textarea
                 name="context"
                 required
                 maxLength={280}
                 defaultValue={defaults.context}
-                className="min-h-24 w-full rounded-[var(--radius)] border bg-background px-3 py-2"
+                className="min-h-28 w-full resize-y rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm leading-6 outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               />
             </label>
           </div>
-          <fieldset className="space-y-3">
-            <legend className="font-medium">Caller-reported disclosures</legend>
-            <label className="flex items-center gap-2">
-              <input name="identity" type="checkbox" defaultChecked={defaults.declarations.identity} />
-              <span>Identity disclosure</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input name="pricing" type="checkbox" defaultChecked={defaults.declarations.pricing} />
-              <span>Pricing disclosure</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input name="limitations" type="checkbox" defaultChecked={defaults.declarations.limitations} />
-              <span>Limitations disclosure</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input name="evidence" type="checkbox" defaultChecked={defaults.declarations.evidence} />
-              <span>Evidence disclosure</span>
-            </label>
+          <fieldset className="rounded-[calc(var(--radius)*1.5)] border border-border bg-secondary/35 p-4 sm:p-5">
+            <legend id="tool-loop-disclosures" className="text-base font-semibold">Caller-reported disclosures</legend>
+            <div className="mt-1 space-y-4">
+              <p className="text-sm leading-6 text-muted-foreground">Select only disclosures supplied by the caller. This form does not verify them.</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="flex min-h-10 items-center gap-3 rounded-[var(--radius)] bg-background px-3 text-sm font-medium">
+                  <input name="identity" type="checkbox" defaultChecked={defaults.declarations.identity} className="size-4 accent-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" />
+                  <span>Identity disclosure</span>
+                </label>
+                <label className="flex min-h-10 items-center gap-3 rounded-[var(--radius)] bg-background px-3 text-sm font-medium">
+                  <input name="pricing" type="checkbox" defaultChecked={defaults.declarations.pricing} className="size-4 accent-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" />
+                  <span>Pricing disclosure</span>
+                </label>
+                <label className="flex min-h-10 items-center gap-3 rounded-[var(--radius)] bg-background px-3 text-sm font-medium">
+                  <input name="limitations" type="checkbox" defaultChecked={defaults.declarations.limitations} className="size-4 accent-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" />
+                  <span>Limitations disclosure</span>
+                </label>
+                <label className="flex min-h-10 items-center gap-3 rounded-[var(--radius)] bg-background px-3 text-sm font-medium">
+                  <input name="evidence" type="checkbox" defaultChecked={defaults.declarations.evidence} className="size-4 accent-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" />
+                  <span>Evidence disclosure</span>
+                </label>
+              </div>
+            </div>
           </fieldset>
-          <Button type="submit" disabled={state.kind === "submitting"}>
-            Check ToolLoop availability
-          </Button>
+          <div className="flex flex-col gap-4 rounded-[calc(var(--radius)*1.5)] border border-border bg-secondary/55 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="max-w-md text-sm leading-6 text-muted-foreground">A payment challenge does not mean a payment, result, or verification has occurred.</p>
+            <Button type="submit" disabled={state.kind === "submitting"} className="shrink-0">
+              Check ToolLoop availability
+            </Button>
+          </div>
           <ToolLoopOutcome state={state} />
         </form>
       </CardContent>

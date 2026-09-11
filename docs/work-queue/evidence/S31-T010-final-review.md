@@ -1,0 +1,25 @@
+# S31-T010 final acceptance review
+
+- Reviewed exact head: `a4833329fbd72531980283ff269afe6ba8882765`.
+- Verdict: clear to move S31-T010 to `60-done`.
+- Final shell refinement `fb706f1` is limited to the two declared source paths
+  and three reserved focused-test paths. Later S23 changes are disjoint.
+- The combined S22/S31 focused suite passes 27/27; Web typecheck, queue
+  validation, and whitespace are clear. Desktop/390px checks cover navigation,
+  focus, menu operation, Escape handling, local hrefs, and no overflow.
+- The two truthful notices, clickable home logo, four local routes,
+  provider-deploy CTA, and no-external/no-mock/no-runtime boundary are intact.
+
+## Supersession
+
+This acceptance is provisional. A follow-up scope review found that the
+compact-strip assertion in `landing-explore.test.mjs` exceeded the exact
+assertion reservation. D-S31-010-006 reopens S31 only to remove that test;
+the reviewed shell source remains closed pending a fresh correction review.
+
+## Correction acceptance
+
+The exact-diff follow-up review accepts `20125ac`: only the unreserved
+compact-strip test is removed, the reserved navigation assertions remain, and
+the focused Node 22 run passes 6/6. S31 returns to `60-done` with no new source
+or test reservation.
