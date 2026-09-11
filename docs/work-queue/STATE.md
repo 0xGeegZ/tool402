@@ -1,5 +1,13 @@
 # Runtime queue state
 
+- M53_STAGE_B_FACTORY_RECEIPT_LOG_SELECTION_INTAKE: The confirmed first
+  ATS_CREATE receipt has one valid fixed-Factory `BondDeployed` event alongside
+  98 unrelated receipt logs. M53-T010 records the narrow local decoder
+  correction: select exactly one valid Factory event while retaining missing,
+  malformed, zero-address, and ambiguous-event rejection. B04-T010 currently
+  owns the bridge/test pair, so M53 remains `00-inbox`; it grants no source
+  change, transaction, retry, candidate attachment, or other live action.
+
 - M52_STAGE_B_ISSUER_ACCOUNT_SELECTION_INTAKE: User-directed CORE_P0
   correction. MetaMask may return more than one site-authorized account. The
   acceptance is clear at `dc5c0701`: the bridge accepts only a valid account
