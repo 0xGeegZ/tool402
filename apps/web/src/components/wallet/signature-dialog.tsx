@@ -99,6 +99,11 @@ function describeOutcome(outcome: RelayOutcome): DialogState {
         "Backend outcome: UNSUPPORTED_TYPE. No dispatch entry is enabled for this command type, so nothing was recorded.",
         outcome,
       );
+    case "WORLD_VERIFICATION_REQUIRED":
+      return failed(
+        "World verification is required before directory publication. Complete the World Selfie Check for this wallet, then sign again.",
+        outcome,
+      );
     case "not_configured":
       return failed(
         "The relay is not configured, so nothing left this host and nothing was recorded.",
