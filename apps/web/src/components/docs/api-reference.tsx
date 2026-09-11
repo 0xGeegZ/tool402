@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { buttonVariants } from "../ui/button";
+
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import { PageHeader } from "../ui/page-header";
@@ -13,7 +15,6 @@ const documentationLinks = [
   { href: "/docs", label: "All documentation" },
 ] as const;
 
-const linkClass = "inline-flex min-h-11 items-center rounded-full border border-border bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 export function ApiReference() {
   return (
@@ -117,7 +118,7 @@ export function ApiReference() {
           </div>
           <div className="flex flex-wrap gap-3">
             {documentationLinks.map((link) => (
-              <Link key={link.href} href={link.href} className={linkClass}>{link.label}</Link>
+              <Link key={link.href} href={link.href} className={buttonVariants({ variant: "outline", size: "lg", shape: "pill" })}>{link.label}</Link>
             ))}
           </div>
         </section>

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+
+import { buttonVariants } from "../ui/button";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -115,7 +117,7 @@ export function LocalNavigation() {
       <div className="flex items-center gap-2 lg:hidden">
         <Link
           href="/explore"
-          className="inline-flex min-h-10 touch-target items-center rounded-full border border-border bg-secondary px-3.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className={buttonVariants({ variant: "outline", shape: "pill", className: "bg-secondary font-semibold" })}
         >
           Explore
         </Link>
@@ -177,7 +179,7 @@ export function LocalNavigation() {
                   <Link
                     href="/provider/deploy"
                     onClick={() => closeMenu()}
-                    className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    className={buttonVariants({ size: "lg", shape: "pill", className: "w-full font-semibold" })}
                   >
                     Prepare a tool
                   </Link>

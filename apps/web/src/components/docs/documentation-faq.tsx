@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { buttonVariants } from "../ui/button";
+
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import { PageHeader } from "../ui/page-header";
@@ -31,7 +33,6 @@ const questions = [
   },
 ] as const;
 
-const linkClass = "inline-flex min-h-11 items-center rounded-full border border-border bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 export function DocumentationFaq() {
   return (
@@ -69,9 +70,9 @@ export function DocumentationFaq() {
         </div>
 
         <div className="flex flex-wrap gap-3 border-t border-border pt-6">
-          <Link href="/docs/api" className={linkClass}>Read the API reference</Link>
-          <Link href="/docs/riskscan" className={linkClass}>Read the RiskScan guide</Link>
-          <Link href="/docs/providers" className={linkClass}>Read the Provider guide</Link>
+          <Link href="/docs/api" className={buttonVariants({ variant: "outline", size: "lg", shape: "pill" })}>Read the API reference</Link>
+          <Link href="/docs/riskscan" className={buttonVariants({ variant: "outline", size: "lg", shape: "pill" })}>Read the RiskScan guide</Link>
+          <Link href="/docs/providers" className={buttonVariants({ variant: "outline", size: "lg", shape: "pill" })}>Read the Provider guide</Link>
         </div>
       </section>
     </article>

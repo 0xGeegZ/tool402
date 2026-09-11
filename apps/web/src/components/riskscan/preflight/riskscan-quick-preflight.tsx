@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 
 import { Button } from "../../ui/button";
+import { CheckboxRow, Field, textAreaClass, textInputClass } from "../../ui/field";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Status, statusToneForOutcome } from "../../ui/status";
 import {
@@ -62,54 +63,47 @@ export function RiskScanQuickPreflight() {
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-6">
           <div className="space-y-4">
-            <label className="block space-y-2">
-              <span className="font-medium">Request reference</span>
+            <Field label="Request reference">
               <input
                 name="requestRef"
                 type="text"
                 required
                 maxLength={96}
-                className="min-h-10 w-full rounded-control border bg-background px-3"
+                className={textInputClass}
               />
-            </label>
-            <label className="block space-y-2">
-              <span className="font-medium">Subject reference</span>
+            </Field>
+            <Field label="Subject reference">
               <input
                 name="subjectRef"
                 type="text"
                 required
                 maxLength={160}
-                className="min-h-10 w-full rounded-control border bg-background px-3"
+                className={textInputClass}
               />
-            </label>
-            <label className="block space-y-2">
-              <span className="font-medium">Request context</span>
+            </Field>
+            <Field label="Request context">
               <textarea
                 name="context"
                 required
                 maxLength={280}
-                className="min-h-24 w-full rounded-control border bg-background px-3 py-2"
+                className={textAreaClass}
               />
-            </label>
+            </Field>
           </div>
           <fieldset className="space-y-3">
             <legend className="font-medium">Caller-reported disclosures</legend>
-            <label className="flex items-center gap-2">
+            <CheckboxRow label="Identity disclosure">
               <input name="identity" type="checkbox" />
-              <span>Identity disclosure</span>
-            </label>
-            <label className="flex items-center gap-2">
+            </CheckboxRow>
+            <CheckboxRow label="Pricing disclosure">
               <input name="pricing" type="checkbox" />
-              <span>Pricing disclosure</span>
-            </label>
-            <label className="flex items-center gap-2">
+            </CheckboxRow>
+            <CheckboxRow label="Limitations disclosure">
               <input name="limitations" type="checkbox" />
-              <span>Limitations disclosure</span>
-            </label>
-            <label className="flex items-center gap-2">
+            </CheckboxRow>
+            <CheckboxRow label="Evidence disclosure">
               <input name="evidence" type="checkbox" />
-              <span>Evidence disclosure</span>
-            </label>
+            </CheckboxRow>
           </fieldset>
           <Button type="submit">Assess local preflight</Button>
           <RiskScanQuickPreflightOutcome state={state} />

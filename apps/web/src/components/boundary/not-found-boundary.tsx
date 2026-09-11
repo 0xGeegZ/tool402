@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { buttonVariants } from "../ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
 
 export function NotFoundBoundary() {
@@ -22,13 +23,13 @@ export function NotFoundBoundary() {
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="/"
-                  className="inline-flex min-h-10 touch-target items-center rounded-control bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-brand-purple"
+                  className={buttonVariants()}
                 >
                   Return home
                 </Link>
                 <Link
                   href="/explore"
-                  className="inline-flex min-h-10 touch-target items-center rounded-control border border-border px-4 text-sm font-medium transition-colors hover:bg-muted"
+                  className={buttonVariants({ variant: "outline" })}
                 >
                   Explore tools
                 </Link>
