@@ -80,15 +80,19 @@ row.
 ## Wizard contract
 
 `deploy-stage-signing.tsx` drops its `Wallet` heading, address badge, state
-sentence, and connect, retry, and disconnect buttons. It reads
-`useWalletSession()`: while the kind is not `connected`, it renders one
-sentence `Connect MetaMask from the header to sign.` and keeps every stage
-control disabled; when `connected`, it passes the session provider and address
-to the existing `SessionReporter` and renders `SignatureDialog` exactly as
-today. Stage sequencing, signature phases, relay outcomes, and the truth-first
-paragraph beginning `Connect MetaMask on Hedera Testnet to enable the first
-stage` are unchanged except that its first sentence points to the header. The
-wizard passes no approved issuer address, as today.
+sentence, retry, and disconnect buttons. It reads `useWalletSession()`: while
+the kind is `disconnected`, the final deploy/signing form renders one labelled
+`Connect MetaMask` section with one `Connect MetaMask` button. Its explicit
+user click calls the shared `connect()` action; it does not discover, connect,
+or request anything during rendering. The section says `Connect MetaMask on
+Hedera Testnet to enable the first signing step.` and every stage control stays
+disabled until the shared session becomes `connected`. Other non-connected
+kinds retain their disabled controls without an additional form action. When
+`connected`, the form does not render the connection section, passes the
+session provider and address to the existing `SessionReporter`, and renders
+`SignatureDialog` exactly as today. Stage sequencing, signature phases, relay
+outcomes, and the truth-first paragraph are otherwise unchanged. The wizard
+passes no approved issuer address, as today.
 
 ## Explicit exclusions
 

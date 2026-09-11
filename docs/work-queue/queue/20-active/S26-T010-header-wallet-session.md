@@ -143,3 +143,15 @@ exclusions govern; this card does not restate them.
   390px connected-header/wizard browser evidence plus fresh task and module
   review. No wallet request, signature, transaction, deployment, or live
   action is authorized by this activation.
+
+## User-directed deploy-form connection amendment
+
+- The repository owner directs that the last deploy/signing form surface an
+  actionable shared-session `Connect MetaMask` section when, and only when,
+  the wallet kind is `disconnected`. This amends only the existing reserved
+  deploy-signing block and its existing focused assertion seam.
+- The button invokes the already accepted `connect()` action only after its
+  explicit click. It neither creates a second wallet session nor discovers a
+  provider, requests an account, switches a chain, signs, or grants authority
+  during render. Connected and other non-connected states retain the existing
+  shared-session behavior.

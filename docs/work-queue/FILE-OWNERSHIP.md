@@ -1089,6 +1089,14 @@ The root additionally reserves only the connected-address badge wrapper in
 internal `/dashboard` navigation. It neither reads nor grants the separate S38
 signed dashboard session.
 
+The owner-directed deploy-form amendment further reserves only the existing
+`deploy-stage-signing.tsx` signing block and its existing
+`deploy-stage-signing.test.mjs` assertion to render one explicit shared-session
+`Connect MetaMask` action while the session is `disconnected`. It may call the
+accepted session `connect()` only from that button click; it creates no second
+session and changes no provider discovery, account request, chain switch,
+signature, authority, transaction, or live boundary.
+
 S38-T010 is an `00-inbox` CORE_P0 authentication card with no active source or
 test reservation. Its eight proposed new source paths are
 `apps/web/src/lib/dashboard-auth/dashboard-auth.ts`,

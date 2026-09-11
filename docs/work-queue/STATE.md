@@ -667,3 +667,10 @@ No secrets, account keys, or private evidence belong in this file.
   without invoking Connect, signature, relay, or transaction behavior.
   M50-T010 moves to `60-done`; its source/test reservations are released and
   all wallet/live gates remain unchanged.
+
+- S26_DEPLOY_FORM_CONNECT_AMENDMENT: 2026-09-11. The repository owner directs
+  the existing last deploy/signing form to render one explicit shared-session
+  `Connect MetaMask` action only while the wallet kind is `disconnected`. The
+  action may call the accepted `connect()` handler only from the user's click;
+  it adds no second session, automatic discovery, account request, chain
+  switch, signature, authority, transaction, deployment, or live behavior.
