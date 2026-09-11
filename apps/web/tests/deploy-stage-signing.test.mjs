@@ -232,6 +232,7 @@ implementedTest("offers one explicit deploy-form MetaMask connection while the s
 
   assert.ok(connectSection, "the final deploy form must offer a disconnected wallet action");
   assert.match(visibleText(connectSection), /Connect MetaMask on Hedera Testnet to enable the first signing step\./u);
+  assert.doesNotMatch(visibleText(disconnectedTree), /Connect MetaMask to sign\./u);
   const connectButton = elements(connectSection).find((element) => element.type === "Button" && visibleText(element) === "Connect MetaMask");
   assert.ok(connectButton, "the deploy-form section must expose one labelled connect button");
   connectButton.props.onClick();
