@@ -118,6 +118,7 @@ routesTest("rejects invalid challenge and verification requests before side effe
     assert.equal(response.status, 401);
     assert.deepEqual(await response.json(), { outcome: "rejected" });
     assert.equal(response.headers.get("cache-control"), "no-store");
+    assert.match(cookieValues(response).join("\n"), /__Host-tool402-dashboard-challenge=.*Max-Age=0/u);
     assert.doesNotMatch(cookieValues(response).join("\n"), /__Host-tool402-dashboard-session=/u);
   }
   assert.equal(verifierCalls, 0);
