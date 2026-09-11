@@ -53,25 +53,24 @@ export function LandingHero() {
           </dl>
         </div>
         <div className="relative mx-auto w-full max-w-sm lg:translate-y-[0.5625rem]">
-          <div className="aspect-square overflow-hidden rounded-[2rem] border border-border bg-muted shadow-[0_1.5rem_5rem_-1.75rem_color-mix(in_oklab,var(--brand-purple)_45%,transparent)]">
+          <div className="aspect-square overflow-hidden rounded-frame border border-border bg-muted shadow-[0_1.5rem_5rem_-1.75rem_color-mix(in_oklab,var(--brand-purple)_45%,transparent)]">
             <Image
               src="/brand/hero-trio.png"
               alt=""
               width={1024}
               height={1024}
               priority
-              unoptimized
               sizes="(min-width: 1024px) 24rem, (min-width: 640px) 24rem, calc(100vw - 3rem)"
               className="size-full scale-110 object-cover"
             />
           </div>
-          <div className="absolute -left-2 top-2 z-20 rounded-2xl border border-border/80 bg-card/95 p-3.5 shadow-lg backdrop-blur sm:-left-6 sm:top-6 sm:p-4">
-            <span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">RiskScan</span>
+          <div className="absolute -left-2 top-2 z-20 rounded-card border border-border/80 bg-card/95 p-3.5 shadow-lg backdrop-blur sm:-left-6 sm:top-6 sm:p-4">
+            <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">RiskScan</span>
             <span className="mt-1 block text-base font-bold">Current entry</span>
             <span className="mt-1 block text-[11px] text-muted-foreground">Explore the detail route</span>
           </div>
-          <div className="absolute -right-2 bottom-2 z-20 rounded-2xl border border-border bg-card p-3 shadow-md sm:-right-4 sm:bottom-8 sm:p-3.5">
-            <span className="block text-[10px] font-semibold uppercase tracking-wide text-brand-purple">Guided demo</span>
+          <div className="absolute -right-2 bottom-2 z-20 rounded-card border border-border bg-card p-3 shadow-md sm:-right-4 sm:bottom-8 sm:p-3.5">
+            <span className="block text-[11px] font-semibold uppercase tracking-wide text-primary">Guided demo</span>
             <span className="mt-1 block text-[11px] text-muted-foreground">Current local route</span>
           </div>
         </div>

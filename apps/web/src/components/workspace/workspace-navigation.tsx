@@ -63,13 +63,13 @@ export function WorkspaceNavigation() {
           <li>
             <Link
               href="/explore/riskscan"
-              className="group block h-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="group block h-full rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <Card className="flex min-h-64 h-full flex-col rounded-2xl border-border bg-card shadow-none transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-foreground/15 group-hover:shadow-sm motion-reduce:transform-none motion-reduce:transition-none">
+              <Card className="flex min-h-64 h-full flex-col rounded-card border-border bg-card shadow-none transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-foreground/15 group-hover:shadow-sm motion-reduce:transform-none motion-reduce:transition-none">
                 <CardHeader className="flex-1 gap-5 p-5">
                   <div className="flex items-start justify-between gap-3">
-                    <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#e9e1ff] text-sm font-bold text-[#4f3baa]">RS</span>
-                    <Badge variant="secondary" className="bg-[#e9e1ff] text-secondary-foreground">{featuredJourney.status}</Badge>
+                    <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-field bg-brand-purple/15 text-sm font-bold text-brand-purple">RS</span>
+                    <Badge variant="secondary">{featuredJourney.status}</Badge>
                   </div>
                   <div className="space-y-1">
                     <CardTitle>RiskScan</CardTitle>
@@ -107,17 +107,17 @@ export function WorkspaceNavigation() {
         <ul className="grid gap-3 sm:grid-cols-2">
           {additionalLinks.map((link, index) => {
           const journey = journeyDetails[link.href];
-          const color = index % 3 === 0 ? "bg-[#ddf1e8] text-brand-green" : index % 3 === 1 ? "bg-[#e9e1ff] text-[#4f3baa]" : "bg-[#fde8e2] text-brand-coral";
+          const color = index % 3 === 0 ? "bg-brand-green/15 text-brand-green" : index % 3 === 1 ? "bg-brand-purple/15 text-brand-purple" : "bg-brand-coral/15 text-brand-coral";
 
           return (
             <li key={link.href}>
               <Link
                 href={link.href}
-                className="group block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="group block h-full rounded-field focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <Card className="flex h-full flex-row items-center justify-between gap-3 rounded-xl border-border bg-card p-4 shadow-none transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-foreground/15 group-hover:shadow-sm motion-reduce:transform-none motion-reduce:transition-none">
+                <Card className="flex h-full flex-row items-center justify-between gap-3 rounded-field border-border bg-card p-4 shadow-none transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-foreground/15 group-hover:shadow-sm motion-reduce:transform-none motion-reduce:transition-none">
                   <CardHeader className="flex min-w-0 flex-1 flex-row items-center gap-3 p-0">
-                    <span aria-hidden="true" className={`flex size-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${color}`}>
+                    <span aria-hidden="true" className={`flex size-9 shrink-0 items-center justify-center rounded-tile text-xs font-bold ${color}`}>
                         ↗
                     </span>
                     <div className="min-w-0 space-y-0.5">

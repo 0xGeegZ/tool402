@@ -70,7 +70,7 @@ export function RiskScanDetail() {
         </Link>
 
         <div className="flex items-start gap-4 border-b border-border pb-10">
-          <span aria-hidden="true" className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-brand-purple/15 text-brand-purple">
+          <span aria-hidden="true" className="flex size-14 shrink-0 items-center justify-center rounded-card bg-brand-purple/15 text-brand-purple">
             <svg viewBox="0 0 24 24" className="size-7" fill="none" stroke="currentColor" strokeWidth={1.75}>
               <path d="M12 3 5 6v5c0 4.5 3 7.8 7 10 4-2.2 7-5.5 7-10V6l-7-3Z" strokeLinejoin="round" />
             </svg>
@@ -99,7 +99,7 @@ export function RiskScanDetail() {
               </h2>
               <p className="leading-7 text-muted-foreground">Quick accepts the following request fields and declarations.</p>
             </div>
-            <Card className="rounded-[calc(var(--radius)*2)]">
+            <Card className="rounded-panel">
               <CardContent className="divide-y pb-0">
                 <FieldGroup label="Request fields" fields={requestFields} />
                 <FieldGroup label="Declarations" fields={declarationFields} tag="boolean" />
@@ -119,7 +119,7 @@ export function RiskScanDetail() {
             <ul className="grid gap-4 sm:grid-cols-2">
               {dispositions.map(([disposition, description]) => (
                 <li key={disposition}>
-                  <Card className="h-full rounded-[calc(var(--radius)*2)]">
+                  <Card className="h-full rounded-panel">
                     <CardHeader className="space-y-2">
                       <Badge variant="secondary" className="w-fit">
                         Disposition
@@ -138,20 +138,20 @@ export function RiskScanDetail() {
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-28">
-          <Card className="rounded-[calc(var(--radius)*2)]">
+          <Card className="rounded-panel">
             <CardHeader className="space-y-2">
               <CardTitle>Current boundary</CardTitle>
               <CardDescription>What this local detail can show today.</CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li className="rounded-[var(--radius)] bg-secondary/45 px-3 py-2"><span className="font-medium text-foreground">Read-only detail</span><br />No request is submitted from this page.</li>
-                <li className="rounded-[var(--radius)] bg-secondary/45 px-3 py-2"><span className="font-medium text-foreground">Caller-reported inputs</span><br />The result describes declarations, not a score.</li>
+                <li className="rounded-control bg-secondary/45 px-3 py-2"><span className="font-medium text-foreground">Read-only detail</span><br />No request is submitted from this page.</li>
+                <li className="rounded-control bg-secondary/45 px-3 py-2"><span className="font-medium text-foreground">Caller-reported inputs</span><br />The result describes declarations, not a score.</li>
               </ul>
             </CardContent>
           </Card>
           <section aria-labelledby="riskscan-availability">
-            <Card className="rounded-[calc(var(--radius)*2)] border-dashed bg-transparent shadow-none">
+            <Card className="rounded-panel border-dashed bg-transparent shadow-none">
               <CardHeader className="space-y-2">
                 <CardTitle id="riskscan-availability">Configuration boundary</CardTitle>
                 <CardDescription>

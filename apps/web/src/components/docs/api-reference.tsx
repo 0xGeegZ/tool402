@@ -31,7 +31,7 @@ export function ApiReference() {
       <div className="space-y-10 px-5 py-10 sm:px-8 sm:py-14">
         <section aria-labelledby="api-routes-title" className="space-y-5">
           <div className="max-w-2xl space-y-2">
-            <p className="text-sm font-semibold text-brand-purple">01 · Current routes</p>
+            <p className="text-sm font-semibold text-primary">01 · Current routes</p>
             <h2 id="api-routes-title" className="text-2xl font-bold tracking-tight">Two current HTTP boundaries</h2>
             <p className="text-base leading-7 text-muted-foreground">
               These route descriptions are static. They do not run a request or expose configuration values.
@@ -39,7 +39,7 @@ export function ApiReference() {
           </div>
 
           <div className="grid gap-5 md:grid-cols-2">
-            <Card className="rounded-[calc(var(--radius)*2)] shadow-none">
+            <Card className="rounded-panel shadow-none">
               <CardHeader className="space-y-3">
                 <Badge variant="outline" className="w-fit border-border bg-secondary/50">Descriptor</Badge>
                 <div className="space-y-2">
@@ -51,7 +51,7 @@ export function ApiReference() {
               </CardHeader>
             </Card>
 
-            <Card className="rounded-[calc(var(--radius)*2)] shadow-none">
+            <Card className="rounded-panel shadow-none">
               <CardHeader className="space-y-3">
                 <Badge variant="outline" className="w-fit border-border bg-secondary/50">RiskScan Quick</Badge>
                 <div className="space-y-2">
@@ -67,14 +67,14 @@ export function ApiReference() {
 
         <section aria-labelledby="request-shape-title" className="space-y-5">
           <div className="max-w-2xl space-y-2">
-            <p className="text-sm font-semibold text-brand-purple">02 · Request shape</p>
+            <p className="text-sm font-semibold text-primary">02 · Request shape</p>
             <h2 id="request-shape-title" className="text-2xl font-bold tracking-tight">RiskScan Quick fields</h2>
             <p className="text-base leading-7 text-muted-foreground">
               The request shape has three top-level fields and one declarations object with four boolean fields.
             </p>
           </div>
 
-          <Card className="rounded-[calc(var(--radius)*2)] shadow-none">
+          <Card className="rounded-panel shadow-none">
             <CardContent className="grid gap-6 pt-6 sm:grid-cols-2">
               <div className="space-y-3">
                 <p className="text-sm font-semibold">Top-level fields</p>
@@ -98,10 +98,10 @@ export function ApiReference() {
 
         <section aria-labelledby="api-boundary-title" className="space-y-5">
           <div className="max-w-2xl space-y-2">
-            <p className="text-sm font-semibold text-brand-purple">03 · Boundary</p>
+            <p className="text-sm font-semibold text-primary">03 · Boundary</p>
             <h2 id="api-boundary-title" className="text-2xl font-bold tracking-tight">Configuration and protocol limits</h2>
           </div>
-          <Card className="rounded-[calc(var(--radius)*2)] bg-secondary/35 shadow-none">
+          <Card className="rounded-panel bg-secondary/35 shadow-none">
             <CardContent className="space-y-3 pt-6 text-sm leading-6 text-muted-foreground">
               <p>x402 configuration is host-specific. If it is not configured, the existing unavailable boundary can be returned.</p>
               <p>A 402 boundary is not proof of a completed payment.</p>
@@ -112,7 +112,7 @@ export function ApiReference() {
 
         <section aria-labelledby="api-next-title" className="space-y-5">
           <div className="max-w-2xl space-y-2">
-            <p className="text-sm font-semibold text-brand-purple">04 · Continue reading</p>
+            <p className="text-sm font-semibold text-primary">04 · Continue reading</p>
             <h2 id="api-next-title" className="text-2xl font-bold tracking-tight">Use a local guide</h2>
           </div>
           <div className="flex flex-wrap gap-3">

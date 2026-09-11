@@ -7,12 +7,12 @@ export function RiskScanDiscoveryCard() {
   return (
     <Link
       href="/explore/riskscan"
-      className="group block rounded-[var(--radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      className="group block rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
-      <Card className="flex h-full min-h-[20rem] flex-col overflow-hidden rounded-[calc(var(--radius)*2)] shadow-none transition-colors duration-200 group-hover:border-primary/40 motion-reduce:transition-none">
+      <Card className="flex h-full min-h-[20rem] flex-col overflow-hidden rounded-panel shadow-none transition-colors duration-200 group-hover:border-primary/40 motion-reduce:transition-none">
         <CardHeader className="gap-4">
           <div className="flex items-start justify-between gap-4">
-            <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-purple/15 text-brand-purple">
+            <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-field bg-brand-purple/15 text-brand-purple">
               <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.75}>
                 <path d="M5 17.5V19h14v-1.5M7.5 15l2.25-3 2 1.75L15.5 9l2 2.5" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M5 5h14v10.5H5z" strokeLinejoin="round" />

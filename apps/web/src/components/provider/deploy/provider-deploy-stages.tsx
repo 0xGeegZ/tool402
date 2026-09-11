@@ -97,7 +97,7 @@ function ConfigurationContext({ projection, stageIndex }: { projection?: AtsCrea
   if (!projection || stageIndex !== 1) return null;
 
   return (
-    <dl className="grid gap-2 rounded-[calc(var(--radius)*0.75)] bg-muted/60 p-3 text-xs sm:grid-cols-2">
+    <dl className="grid gap-2 rounded-field bg-muted/60 p-3 text-xs sm:grid-cols-2">
       <div className="space-y-1">
         <dt className="text-muted-foreground">Factory identifier</dt>
         <dd className="font-mono text-foreground">{projection.factoryHederaId}</dd>

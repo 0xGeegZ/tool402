@@ -59,7 +59,7 @@ export function DocumentationHome() {
 
         <div className="grid gap-5 md:grid-cols-2">
           {guides.map((guide) => (
-            <Card key={guide.href} className="flex min-h-64 flex-col rounded-[calc(var(--radius)*2)] shadow-none">
+            <Card key={guide.href} className="flex min-h-64 flex-col rounded-panel shadow-none">
               <CardHeader className="space-y-4">
                 <Badge variant="outline" className="w-fit border-border bg-secondary/50">{guide.eyebrow}</Badge>
                 <div className="space-y-2">

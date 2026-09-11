@@ -6,7 +6,7 @@ type CardProps = React.ComponentPropsWithoutRef<"section">;
 type CardSectionProps = React.ComponentPropsWithoutRef<"div">;
 
 export function Card({ className, ...props }: CardProps) {
-  return <section data-slot="card" className={cn("rounded-[var(--radius)] border bg-card text-card-foreground shadow-sm", className)} {...props} />;
+  return <section data-slot="card" className={cn("rounded-control border bg-card text-card-foreground shadow-sm", className)} {...props} />;
 }
 
 export function CardHeader({ className, ...props }: CardSectionProps) {

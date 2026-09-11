@@ -25,6 +25,21 @@
   --color-brand-green: var(--brand-green);
   --color-brand-coral: var(--brand-coral);
   --color-brand-yellow: var(--brand-yellow);
+  --radius-tile: calc(var(--radius) * 0.6);
+  --radius-field: calc(var(--radius) * 0.75);
+  --radius-control: var(--radius);
+  --radius-card: calc(var(--radius) * 1.5);
+  --radius-panel: calc(var(--radius) * 2);
+  --radius-frame: calc(var(--radius) * 2.5);
+}
+
+@utility touch-target {
+  @media (pointer: coarse) {
+    display: inline-flex;
+    align-items: center;
+    min-height: --spacing(11);
+    min-width: --spacing(11);
+  }
 }
 
 :root {
@@ -40,7 +55,7 @@
   --secondary: #ece7fa;
   --secondary-foreground: #16162a;
   --muted: #f0ebdd;
-  --muted-foreground: #6d6a7c;
+  --muted-foreground: #625f76;
   --border: #e7e0cd;
   --ring: #5b4fe0;
   --destructive: #fdeae4;
