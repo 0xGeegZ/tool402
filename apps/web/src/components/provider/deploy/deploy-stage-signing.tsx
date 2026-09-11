@@ -120,7 +120,6 @@ export function DeployStageSigning({
   return (
     <div className="grid gap-5 sm:gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-start">
       <aside data-ui="provider-review-wallet-context" className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1">
-        <p className="text-[13px] leading-5 text-muted-foreground">Connect MetaMask to sign.</p>
         <WhatSigningDoes />
       </aside>
       <div data-ui="provider-deploy-signing" className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-1">
