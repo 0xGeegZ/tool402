@@ -41,6 +41,7 @@ async function signingIslandHarness(values) {
     "../../../lib/ats/stage-b-ats-create-execution-projection.ts": await import("../src/lib/ats/stage-b-ats-create-execution-projection.ts"),
     "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
     "../../wallet/wallet-connect": { WalletIsland: "WalletIsland" },
+    "../../ui/status": { Status: "Status" },
     "./ats-create-configuration": await import("../src/components/provider/deploy/ats-create-configuration.ts"),
     "./directory-record-literal": await import("../src/components/provider/deploy/directory-record-literal.ts"),
     "./provider-deploy-stages": { ProviderDeployStages: "ProviderDeployStages" },

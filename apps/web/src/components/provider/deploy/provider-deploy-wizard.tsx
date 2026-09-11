@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Badge } from "../../ui/badge";
-import { Button, buttonVariants } from "../../ui/button";
+import { Button } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../ui/card";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { campaignFixture } from "./campaign-fixture";
@@ -43,6 +43,14 @@ const fieldLabelClassName = "space-y-2 text-sm font-medium text-foreground";
 const fieldHintClassName = "text-sm leading-6 text-muted-foreground";
 const fieldErrorClassName = "text-sm leading-6 text-destructive";
 const emptyFieldErrors: ProviderDeployFieldErrors = Object.freeze({});
+const termsEconomicsRows = [
+  ["Funding target", `${termsV1Economics.fundingTargetHbar} HBAR`],
+  ["Note unit price", `${termsV1Economics.noteUnitPriceHbar} HBAR`],
+  ["Maximum note units", termsV1Economics.maximumNoteUnits],
+  ["Minimum purchase", `${termsV1Economics.minimumPurchaseUnits} units`],
+  ["Revenue routing", "80% operator / 20% backer reserve / 0% fee"],
+  ["Payout cap and maturity", `${termsV1Economics.payoutCapHbar} HBAR until ${termsV1Economics.maturityDate}`],
+] as const;
 
 function initialValues(): WizardValues {
   return {
@@ -93,7 +101,7 @@ function StepProgress({
                 className={`flex w-full flex-col gap-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 ${isCurrent ? "text-foreground" : isComplete ? "text-foreground" : "text-muted-foreground"}`}
               >
                 <span aria-hidden="true" className={`h-1.5 w-full rounded-full ${isCurrent || isComplete ? "bg-primary" : "bg-secondary"}`} />
-                <span className={`text-[11px] font-medium leading-4 ${isCurrent || isComplete ? "text-foreground" : "text-muted-foreground"}`}>{step.label}</span>
+                <span className={`text-[11px] leading-4 ${isCurrent ? "font-semibold text-foreground" : isComplete ? "font-medium text-foreground" : "font-medium text-muted-foreground"}`}>{step.label}</span>
               </button>
             </li>
           );
@@ -212,14 +220,6 @@ function TermsStep({
   onAcknowledgementChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
   const configurationRows = revenueNoteConfigurationRows(atsCreateConfiguration);
-  const economics = [
-    ["Funding target", `${termsV1Economics.fundingTargetHbar} HBAR`],
-    ["Note unit price", `${termsV1Economics.noteUnitPriceHbar} HBAR`],
-    ["Maximum note units", termsV1Economics.maximumNoteUnits],
-    ["Minimum purchase", `${termsV1Economics.minimumPurchaseUnits} units`],
-    ["Revenue routing", "80% operator / 20% backer reserve / 0% fee"],
-    ["Payout cap and maturity", `${termsV1Economics.payoutCapHbar} HBAR until ${termsV1Economics.maturityDate}`],
-  ] as const;
 
   return (
     <div className="space-y-6">
@@ -237,7 +237,7 @@ function TermsStep({
           <h2 id="provider-deploy-terms" className="text-lg font-semibold">Funding and revenue-note terms</h2>
         </div>
         <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-          {economics.map(([label, value]) => (
+          {termsEconomicsRows.map(([label, value]) => (
             <div key={label} className="space-y-1">
               <dt className="text-muted-foreground">{label}</dt>
               <dd className="font-medium text-foreground">{value}</dd>
@@ -274,31 +274,81 @@ function TermsStep({
   );
 }
 
-function ReviewStep({ values }: { values: WizardValues }) {
-  const reviewRows = [
+type ReviewValue = string | readonly string[];
+
+function reviewLines(value: string): readonly string[] {
+  return value.split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
+}
+
+function ReviewRows({ rows }: { rows: readonly (readonly [string, ReviewValue])[] }) {
+  return (
+    <dl className="grid gap-3 text-sm sm:grid-cols-2">
+      {rows.map(([label, value]) => (
+        <div key={label} className={`space-y-1 ${typeof value === "string" && value.length > 80 ? "sm:col-span-2" : ""}`}>
+          <dt className="text-muted-foreground">{label}</dt>
+          {typeof value === "string" ? (
+            <dd className="font-medium text-foreground">{value}</dd>
+          ) : (
+            <dd>
+              <ul className="list-disc space-y-1 pl-5 font-medium text-foreground">
+                {value.map((line, index) => <li key={index}>{line}</li>)}
+              </ul>
+            </dd>
+          )}
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function ReviewStep({ values, onEdit }: { values: WizardValues; onEdit: (step: number) => void }) {
+  const samePrice = values.quickPrice === values.standardPrice;
+  const summaryRows: readonly (readonly [string, ReviewValue])[] = [
     ["Tool", values.toolName],
     ["Category", values.category],
     ["Resource", values.qualifyingResource],
-    ["Quick display price", `${values.quickPrice} HBAR`],
-    ["Standard display price", `${values.standardPrice} HBAR`],
-  ] as const;
+    ...(samePrice
+      ? [["Display price", `${values.quickPrice} HBAR, quick and standard`] as const]
+      : [["Quick display price", `${values.quickPrice} HBAR`] as const, ["Standard display price", `${values.standardPrice} HBAR`] as const]),
+  ];
+  const groups: readonly { step: number; rows: readonly (readonly [string, ReviewValue])[] }[] = [
+    { step: 0, rows: [["One-liner", values.oneLiner], ["Customer problem", values.customerProblem]] },
+    { step: 1, rows: [["Capability summary", values.capabilitySummary], ["Fixed capability", campaignFixture.capability]] },
+    { step: 2, rows: [["Target agent customers", reviewLines(values.targetAgentCustomers)]] },
+    {
+      step: 3,
+      rows: [
+        ["Use of funds", reviewLines(values.useOfFunds)],
+        ["Risks", reviewLines(values.risks)],
+        ...termsEconomicsRows,
+        ["Acknowledgement", values.acknowledgement ? "Confirmed" : "Not confirmed"],
+      ],
+    },
+  ];
 
   return (
     <DeployStageSigning values={values}>
-      <section aria-labelledby="provider-deploy-review" className="space-y-4">
-        <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Review</p>
-          <h2 id="provider-deploy-review" className="text-2xl font-semibold tracking-tight">Check the prepared details</h2>
-          <p className="max-w-prose text-sm leading-6 text-muted-foreground">Nothing is sent until you request and confirm a signature below. The values above remain a local, editable preview.</p>
+      <section aria-label="Prepared offering" className="space-y-4">
+        <div className="rounded-field bg-muted/40 p-4">
+          <ReviewRows rows={summaryRows} />
         </div>
-        <dl className="grid gap-3 rounded-field border bg-muted/30 p-4 text-sm sm:grid-cols-2">
-          {reviewRows.map(([label, value]) => (
-            <div key={label} className="space-y-1">
-              <dt className="text-muted-foreground">{label}</dt>
-              <dd className="font-medium text-foreground">{value}</dd>
-            </div>
+        <div className="border-b border-border">
+          {groups.map(({ step, rows }) => (
+            <details key={step} className="group border-t border-border">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm font-medium text-foreground marker:content-none [&::-webkit-details-marker]:hidden">
+                <span>{providerDeploySteps[step].label}</span>
+                <span className="text-xs font-medium text-muted-foreground group-open:hidden">Show</span>
+                <span className="hidden text-xs font-medium text-muted-foreground group-open:inline">Hide</span>
+              </summary>
+              <div className="space-y-4 pb-4">
+                <ReviewRows rows={rows} />
+                <Button type="button" variant="outline" size="sm" onClick={() => onEdit(step)}>
+                  Edit step {step + 1}
+                </Button>
+              </div>
+            </details>
           ))}
-        </dl>
+        </div>
       </section>
     </DeployStageSigning>
   );
@@ -362,7 +412,7 @@ export function ProviderDeployWizard() {
       case 3:
         return <TermsStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} onAcknowledgementChange={changeAcknowledgement} />;
       default:
-        return <ReviewStep values={values} />;
+        return <ReviewStep values={values} onEdit={returnToStep} />;
     }
   }
 
@@ -392,11 +442,13 @@ export function ProviderDeployWizard() {
 
       <div data-ui="provider-deploy-workspace" className="mt-7 space-y-5">
         <section data-ui="provider-deploy-form">
-          <Card className="overflow-hidden rounded-card border border-border bg-card shadow-none">
+          <Card className="rounded-card border border-border bg-card shadow-none">
             <CardHeader className="space-y-1 px-5 pb-2 pt-5 sm:px-6 sm:pt-6">
               <CardTitle className="text-xl tracking-tight sm:text-2xl">{currentDefinition?.label}</CardTitle>
               <CardDescription className="text-xs leading-5">
-                Complete the prepared fields for this step. Every value remains editable until review.
+                {currentStep < providerDeploySteps.length - 1
+                  ? "Complete the prepared fields for this step. Every value remains editable until review."
+                  : "Check every value, then sign each stage below. Use Edit to change a step."}
               </CardDescription>
             </CardHeader>
             <form onSubmit={onSubmit}>
@@ -404,7 +456,7 @@ export function ProviderDeployWizard() {
                 {renderCurrentStep()}
                 {validationMessage ? <p aria-live="polite" className="mt-6 rounded-field border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
               </CardContent>
-              <CardFooter className="flex flex-col-reverse gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <CardFooter className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-4 sm:px-6">
                 <Button type="button" variant="ghost" className="justify-start px-2 text-sm" disabled={!canGoBack(currentStep)} onClick={() => returnToStep(Math.max(0, currentStep - 1))}>
                   Back
                 </Button>
@@ -413,7 +465,7 @@ export function ProviderDeployWizard() {
                     Continue
                   </Button>
                 ) : (
-                  <Link href="/provider" className={buttonVariants({ variant: "outline", size: "md" })}>
+                  <Link href="/provider" className="touch-target text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
                     Back to the provider workspace
                   </Link>
                 )}

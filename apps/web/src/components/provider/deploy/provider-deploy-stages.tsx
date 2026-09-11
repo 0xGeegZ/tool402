@@ -142,68 +142,65 @@ export function ProviderDeployStages({
   const activeControl = activeStage?.kind === "actionable" && activeDefinition && onActivate
     ? providerDeployStageControl(enabledStage, activeStage, true)
     : null;
+  const firstOpenStage = visibleStates.findIndex((stage) => stage.kind !== "done");
+  const focusedStage = enabledStage >= 0 ? enabledStage : firstOpenStage >= 0 ? firstOpenStage : providerDeployStages.length - 1;
+  const walletNeeded = (index: number, stage: ProviderDeployStageState) => session === null && index === 0 && stage.kind === "unavailable";
+  const describe = (index: number, stage: ProviderDeployStageState) =>
+    walletNeeded(index, stage) ? "Connect MetaMask above to request this signature." : stage.detail ?? stageStatusDescription[stage.kind];
+  const focused = visibleStates[focusedStage] ?? { kind: "blocked" as const };
 
   return (
-    <section aria-labelledby="provider-deploy-stages" data-ui="provider-deploy-stages" className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Local workflow</p>
-          <h2 id="provider-deploy-stages" className="text-2xl font-semibold tracking-tight">Deployment stages</h2>
-        </div>
-        <Badge variant="outline" className="w-fit">Session-only status</Badge>
-      </div>
-      <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-        This is a review map, not a live status feed. The separately carded provider status route is authoritative.
+    <div data-ui="provider-deploy-stages" className="space-y-4">
+      <p aria-live="polite" className="sr-only">
+        {`Stage ${focusedStage + 1}, ${providerDeployStages[focusedStage].label}: ${describe(focusedStage, focused)}`}
       </p>
-      <div className="overflow-x-auto rounded-control border bg-muted/20 p-3" aria-label="Provider command flow">
-        <ol className="flex min-w-[680px] items-stretch gap-2">
-          {providerDeployStages.map((definition, index) => {
-            const stage = visibleStates[index] ?? { kind: "blocked" as const };
-            const isCurrent = stage.kind === "actionable" || stage.kind === "in_progress";
-            return (
-              <li key={`flow-${definition.label}`} className="flex min-w-0 flex-1 items-center gap-2">
-                <div className={`min-w-0 flex-1 rounded-field border p-3 ${isCurrent ? "border-primary bg-primary/10" : stage.kind === "done" ? "border-success/40 bg-success/10" : "bg-card"}`}>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{index + 1} · {stageStatusCopy[stage.kind]}</span>
-                  </div>
-                  <p className="mt-2 text-sm font-semibold leading-5 text-foreground">{definition.label}</p>
-                </div>
-                {index < providerDeployStages.length - 1 ? <span aria-hidden="true" className="text-muted-foreground">→</span> : null}
-              </li>
-            );
-          })}
-        </ol>
-      </div>
-      <ol className="grid gap-3">
+      <ol aria-label="Deployment stages" className="border-y border-border">
         {providerDeployStages.map((definition, index) => {
           const stage = visibleStates[index] ?? { kind: "blocked" as const };
           const control = providerDeployStageControl(index, stage, enabledStage === index);
           const controlDescriptionId = `provider-deploy-stage-${index + 1}-control-description`;
+          const numeral = String(index + 1).padStart(2, "0");
+          const showControl = session !== null && !(activeControl && index === enabledStage);
+          const badge = (
+            <Badge variant={stage.kind === "done" ? "default" : "outline"} className="w-fit shrink-0">
+              {walletNeeded(index, stage) ? "Wallet needed" : stageStatusCopy[stage.kind]}
+            </Badge>
+          );
+          if (index !== focusedStage) {
+            return (
+              <li key={definition.label} className="flex items-center gap-3 border-b border-border py-3 last:border-b-0">
+                <span aria-hidden="true" className="w-6 shrink-0 font-mono text-xs text-muted-foreground">{numeral}</span>
+                <span className="min-w-0 flex-1 text-sm font-medium text-foreground">{definition.label}</span>
+                {badge}
+              </li>
+            );
+          }
           return (
-            <li key={definition.label}>
-              <Card className="overflow-hidden shadow-none">
+            <li key={definition.label} className="border-b border-border py-3 last:border-b-0">
+              <Card className="shadow-none">
                 <CardHeader className="gap-3 sm:flex sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Stage {index + 1} of 4</p>
-                    <CardTitle>{definition.label}</CardTitle>
-                    <CardDescription>{stageStatusDescription[stage.kind]}</CardDescription>
+                  <div className="space-y-1">
+                    <CardTitle className="flex items-baseline gap-3">
+                      <span aria-hidden="true" className="font-mono text-sm text-muted-foreground">{numeral}</span>
+                      <span>{definition.label}</span>
+                    </CardTitle>
+                    <CardDescription>{describe(index, stage)}</CardDescription>
                   </div>
-                  <Badge variant={stage.kind === "done" ? "default" : "outline"} className="w-fit shrink-0">
-                    {stageStatusCopy[stage.kind]}
-                  </Badge>
+                  {badge}
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <StageCommand index={index} session={session} stageTwoDone={stageTwoDone} candidate={candidate} onCandidate={onCandidate} />
                   <ConfigurationContext projection={projection} stageIndex={index} />
-                  <p aria-live="polite" className="text-sm text-muted-foreground">
-                    {stage.detail ?? stageStatusDescription[stage.kind]}
-                  </p>
-                  <p id={controlDescriptionId} className="text-sm leading-6 text-muted-foreground">
-                    {control.description}
-                  </p>
-                  <Button type="button" aria-describedby={controlDescriptionId} disabled={control.disabled} onClick={() => onActivate?.(index)} variant={control.disabled ? "outline" : "primary"} className="w-full sm:w-auto">
-                    {control.label}
-                  </Button>
+                  {showControl ? (
+                    <>
+                      <p id={controlDescriptionId} className="text-sm leading-6 text-muted-foreground">
+                        {control.description}
+                      </p>
+                      <Button type="button" aria-describedby={controlDescriptionId} disabled={control.disabled} onClick={() => onActivate?.(index)} variant={control.disabled ? "outline" : "primary"} className="w-full sm:w-auto">
+                        {control.label}
+                      </Button>
+                    </>
+                  ) : null}
                 </CardContent>
               </Card>
             </li>
@@ -211,20 +208,19 @@ export function ProviderDeployStages({
         })}
       </ol>
       {activeControl && activeDefinition ? (
-        <div data-ui="provider-signature-handoff" className="space-y-3 rounded-field border border-primary/30 bg-primary/5 p-4">
-          <div className="space-y-1">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">Next action</p>
-            <p className="font-medium text-foreground">Stage {enabledStage + 1}: {activeDefinition.label}</p>
-            <p className="max-w-prose text-sm leading-6 text-muted-foreground">Open the existing signature request. Nothing is recorded unless the relay reports acceptance.</p>
-          </div>
+        <div data-ui="provider-signature-handoff" className="sticky bottom-3 z-10 flex flex-col gap-3 rounded-control border border-primary/30 bg-card p-3 shadow-md sm:flex-row sm:items-center sm:justify-between sm:pl-4">
+          <p className="text-sm text-foreground">
+            <span className="font-medium">Next: </span>
+            <span className="font-mono text-xs text-muted-foreground">{String(enabledStage + 1).padStart(2, "0")}</span> {activeDefinition.label}
+          </p>
           <Button type="button" onClick={() => onActivate?.(enabledStage)} className="w-full sm:w-auto">
             {activeControl.label}
           </Button>
         </div>
       ) : null}
-      <p className="border-l-2 border-border pl-4 text-sm leading-6 text-muted-foreground">
-        A declined signature leaves its stage ready to try again: Nothing was recorded. This page never retries on its own.
+      <p className="text-sm leading-6 text-muted-foreground">
+        A declined signature leaves its stage ready to try again. Nothing was recorded, and this page never retries on its own.
       </p>
-    </section>
+    </div>
   );
 }
