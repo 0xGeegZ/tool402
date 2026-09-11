@@ -40,9 +40,16 @@ control head `04c589eabc960d02c82e07f9c9fa1f6e3522305a`, S42-T010 moves to
 remains prohibited until that test has one expected absence failure and the
 root records RED acceptance.
 
-## Candidate GREEN boundary
+## RED acceptance and GREEN boundary
 
-After RED acceptance, only these paths may be activated:
+At control head `54507e6cfadbd3bf6c7f0f4ace318831fac1c846`, the focused
+Node 22.21.1 contract has exactly one expected absence failure for
+`apps/web/src/lib/dashboard-campaign.ts`; its matching-signer and fail-closed
+cases skip until that adapter exists. The root may now activate only the three
+declared source paths below, alongside the focused test. No other source or
+test path is authorized.
+
+The activated paths are:
 
 - `apps/web/src/lib/dashboard-campaign.ts`;
 - `apps/web/src/components/dashboard/dashboard-campaign.tsx`; and
@@ -55,8 +62,8 @@ functions, provider deploy state, package files, or lockfile.
 
 ## Verification and boundary
 
-The RED contract must prove that a matching signer produces the campaign view
-model and that an absent, malformed, or different signer cannot produce one.
-S42 is read-only and server-rendered: no generic offering enumeration, address
+The RED contract proves that a matching signer produces the campaign view model
+and that an absent, malformed, or different signer cannot produce one. S42 is
+read-only and server-rendered: no generic offering enumeration, address
 display, browser storage, wallet request, signature, command, relay,
 transaction, deployment, or external write is authorized.

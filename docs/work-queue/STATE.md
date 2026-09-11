@@ -22,6 +22,13 @@
   for durable RED in `apps/web/tests/dashboard-campaign.test.mjs`. Production
   source remains prohibited pending an expected RED failure and acceptance.
 
+- S42_DASHBOARD_CAMPAIGN_CONTINUATION_RED_ACCEPTANCE: At control head
+  `54507e6cfadbd3bf6c7f0f4ace318831fac1c846`, the focused Node 22.21.1 test
+  has one expected absence failure for the declared ownership adapter; the
+  matching/mismatch cases skip until it exists. S42-T010 may now amend only
+  `dashboard-campaign.ts`, its server component, dashboard page, and focused
+  test. No other source/test path or live boundary expands.
+
 - M53_STAGE_B_FACTORY_RECEIPT_LOG_SELECTION_ACTIVATION: The confirmed first
   ATS_CREATE receipt has one valid fixed-Factory `BondDeployed` event alongside
   98 unrelated receipt logs. M53-T010 records the narrow local decoder
