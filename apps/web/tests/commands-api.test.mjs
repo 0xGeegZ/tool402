@@ -237,7 +237,7 @@ test("fails closed before forwarding directory publication without a World sessi
       WORLD_RP_ID: "rp_aaaaaaaaaaaaaaaa",
       WORLD_RP_SIGNING_KEY: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       WORLD_ACTION: "issuer-publish",
-      WORLD_ENVIRONMENT: "staging",
+      WORLD_ENVIRONMENT: "sandbox",
     }),
     dependencies(fetchImpl),
   );
@@ -278,7 +278,7 @@ test("fails closed before forwarding directory publication for malformed, expire
     WORLD_RP_ID: "rp_aaaaaaaaaaaaaaaa",
     WORLD_RP_SIGNING_KEY: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     WORLD_ACTION: "issuer-publish",
-    WORLD_ENVIRONMENT: "staging",
+    WORLD_ENVIRONMENT: "sandbox",
   });
   const otherIssuerCookie = await createWorldIssuerCookie("0x7e5f4552091a69125d5dfcb7b8c2659029395bdf", worldEnvironment, nowMilliseconds);
   const expiredCookie = await createWorldIssuerCookie(signer, worldEnvironment, nowMilliseconds - 600_001);

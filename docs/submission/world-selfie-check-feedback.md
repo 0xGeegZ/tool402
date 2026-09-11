@@ -23,9 +23,9 @@ that Selfie Check Sandbox proofs are enabled for this app.
 
 ## Sandbox app
 
-The Tool402 request is intentionally staging-only. Browser QA confirmed the
-normal provider-deploy route and its review/sign boundary render without a
-runtime error. An end-to-end Selfie Check proof has not been claimed: it needs
-the external Sandbox Selfie Check enablement and a connected compatible wallet
-session. This is an integration-test limitation, not a production-readiness
-claim.
+The Tool402 request is intentionally Sandbox-only. Browser QA confirmed the
+normal provider-deploy route, the review/sign boundary, and the Sandbox World
+ID QR-code modal render without a runtime error. An end-to-end Selfie Check
+proof has not been claimed: it still needs the external Sandbox Selfie Check
+enablement and approved iOS Sandbox access. This is an integration-test
+limitation, not a production-readiness claim.

@@ -107,6 +107,7 @@ const refusalMessages: Readonly<Record<Exclude<RelayOutcome, "ACCEPTED" | "trans
   CONFLICT: "The backend reported a conflicting command. Nothing was sent.",
   REJECTED: "The backend refused the command. No BACKER authority admitted it, so nothing was sent.",
   UNSUPPORTED_TYPE: "The backend does not accept this command type. Nothing was sent.",
+  WORLD_VERIFICATION_REQUIRED: "The backend required World verification. Nothing was sent.",
   not_configured: "This host has no command relay configured. Nothing left the browser.",
 });
 

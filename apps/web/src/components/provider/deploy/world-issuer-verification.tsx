@@ -3,7 +3,7 @@
 import { IDKitRequestWidget, selfieCheckLegacy, type IDKitResult, type RpContext } from "@worldcoin/idkit";
 import { useState } from "react";
 
-type RequestValues = Readonly<{ app_id: `app_${string}`; action: string; environment: "staging"; rp_context: RpContext }>;
+type RequestValues = Readonly<{ app_id: `app_${string}`; action: string; environment: "sandbox"; rp_context: RpContext }>;
 
 export function WorldIssuerVerification({ address, onVerified }: { address: string; onVerified: () => void }) {
   const [request, setRequest] = useState<RequestValues | null>(null);
@@ -17,7 +17,7 @@ export function WorldIssuerVerification({ address, onVerified }: { address: stri
       if (!response.ok) throw new Error("request");
       setRequest(await response.json());
       setOpen(true);
-    } catch { setStatus("World verification is not available. Check the staging configuration and try again."); }
+    } catch { setStatus("World verification is not available. Check the Sandbox configuration and try again."); }
   }
 
   async function verify(result: IDKitResult) {
@@ -27,7 +27,7 @@ export function WorldIssuerVerification({ address, onVerified }: { address: stri
 
   return <section aria-labelledby="world-issuer-title" className="rounded-[calc(var(--radius)*0.75)] border bg-background p-4 space-y-3">
     <div className="space-y-1">
-      <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">World ID · staging</p>
+      <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">World ID · sandbox</p>
       <h3 id="world-issuer-title" className="text-base font-semibold">Verify issuer liveness</h3>
       <p className="text-sm leading-6 text-muted-foreground">Selfie Check is a liveness signal for this session, not identity verification or KYC.</p>
     </div>

@@ -12,7 +12,7 @@ type WorldConfiguration = Readonly<{
   appId: string;
   rpId: string;
   signingKey: string;
-  environment: "staging";
+  environment: "sandbox";
 }>;
 
 const addressPattern = /^0x[0-9a-f]{40}$/u;
@@ -46,7 +46,7 @@ function configuration(env: WorldEnvironment): WorldConfiguration | null {
     typeof rpId !== "string" || !rpIdPattern.test(rpId) ||
     typeof signingKey !== "string" || !keyPattern.test(signingKey) ||
     action !== WORLD_ISSUER_ACTION ||
-    environment !== "staging"
+    environment !== "sandbox"
   ) return null;
   return { appId, rpId, signingKey, environment };
 }
