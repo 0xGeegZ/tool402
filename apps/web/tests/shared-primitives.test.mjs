@@ -8,6 +8,12 @@ import typescript from "typescript";
 const appRoot = fileURLToPath(new URL("..", import.meta.url));
 const fieldPath = "src/components/ui/field.tsx";
 const buttonPath = "src/components/ui/button.tsx";
+const detailListPath = "src/components/ui/detail-list.tsx";
+const detailListPaths = [
+  "src/components/provider/status/provider-status.tsx",
+  "src/components/backing/backing-flow.tsx",
+  "src/components/riskscan/native-quote/riskscan-native-quote-compatibility.tsx",
+];
 const flowPaths = [
   "src/components/riskscan/request/riskscan-request-flow.tsx",
   "src/components/riskscan/preflight/riskscan-quick-preflight.tsx",
@@ -66,5 +72,22 @@ test("buttonVariants owns the pill shape and every hand-rolled CTA consumes it",
     assert.match(source, /\bbuttonVariants\b/, path);
     assert.doesNotMatch(source, /const (?:linkClass|guideLinkClass) =/, path);
     assert.doesNotMatch(source, /hover:bg-brand-purple/, path);
+  }
+});
+
+test("DetailList owns the label and value stat panel and the hand-rolled dl grids consume it", async () => {
+  const detailList = await readAppFile(detailListPath);
+  assertParses(detailListPath, detailList);
+  assert.doesNotMatch(detailList, /["']use client["']/);
+  assert.match(detailList, /export function DetailList\(/);
+  assert.match(detailList, /<dl\b(?=[^>]*\bdata-slot=["']detail-list["'])[^>]*>/);
+  assert.match(detailList, /items\.map\(/);
+  assert.match(detailList, /<dt className=["']text-muted-foreground["']>/);
+  for (const path of detailListPaths) {
+    const source = await readAppFile(path);
+    assert.match(source, /import\s*\{[^}]*\bDetailList\b[^}]*\}\s*from\s*["'](?:\.\.\/)+ui\/detail-list["']/, path);
+    assert.doesNotMatch(source, /<dt className=["']text-muted-foreground["']>/, path);
+    assert.doesNotMatch(source, /<dt className=["']font-medium text-foreground["']>/, path);
+    assert.doesNotMatch(source, /function Term\(/, path);
   }
 });

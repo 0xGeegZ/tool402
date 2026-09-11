@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Badge } from "../../ui/badge";
 import { buttonVariants } from "../../ui/button";
+import { DetailList } from "../../ui/detail-list";
 import { Status } from "../../ui/status";
 import type { OfferingRecord, ProviderProjections } from "../../../lib/offering-projection";
 import { formatHbar, formatShare } from "../../../lib/hbar-format";
@@ -28,10 +29,6 @@ function Outcome({ outcome }: { outcome: Projection }) {
     : <Status tone="warning">{sentence}</Status>;
 }
 
-function Term({ label, value }: { label: string; value: string }) {
-  return <div><dt className="text-muted-foreground">{label}</dt><dd className="mt-1 break-all font-medium">{value}</dd></div>;
-}
-
 function LoadedRegions({ offering, directoryOutcome }: { offering: OfferingRecord; directoryOutcome: ProviderProjections["directory"] }) {
   const directory = directoryOutcome.outcome === "loaded" ? directoryOutcome : undefined;
   const rows = providerEvidenceRows(offering, directory);
@@ -52,32 +49,38 @@ function LoadedRegions({ offering, directoryOutcome }: { offering: OfferingRecor
 
       <section aria-labelledby="provider-terms" className="space-y-4 border-t border-border pt-8">
         <h2 id="provider-terms" className={headingClass}>Active terms</h2>
-        <dl className="grid gap-x-6 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
-          <Term label="Funding target" value={formatHbar(BigInt(terms.fundingTargetTinybars))} />
-          <Term label="Payout cap" value={formatHbar(BigInt(terms.payoutCapTinybars))} />
-          <Term label="Unit price" value={formatHbar(BigInt(terms.noteUnitPriceTinybars))} />
-          <Term label="Maximum units" value={terms.maximumNoteUnits} />
-          <Term label="Minimum purchase units" value={terms.minimumPurchaseUnits} />
-          <Term label="Reserve share" value={`${formatShare(BigInt(terms.reserveShareBps))}%`} />
-          <Term label="Issuer share" value={`${formatShare(BigInt(terms.issuerShareBps))}%`} />
-          <Term label="Platform fee" value={`${formatShare(BigInt(terms.platformFeeBps))}%`} />
-          <Term label="Maturity" value={offering.definition.maturityAt} />
-          <Term label="Qualifying resource" value={offering.definition.qualifyingResource} />
-          <Term label="Advertised quick price" value={formatHbar(BigInt(offering.advertisedQuickPriceTinybars))} />
-          <Term label="Advertised standard price" value={formatHbar(BigInt(offering.advertisedStandardPriceTinybars))} />
-        </dl>
+        <DetailList
+          columns={3}
+          items={[
+            ["Funding target", formatHbar(BigInt(terms.fundingTargetTinybars))],
+            ["Payout cap", formatHbar(BigInt(terms.payoutCapTinybars))],
+            ["Unit price", formatHbar(BigInt(terms.noteUnitPriceTinybars))],
+            ["Maximum units", terms.maximumNoteUnits],
+            ["Minimum purchase units", terms.minimumPurchaseUnits],
+            ["Reserve share", `${formatShare(BigInt(terms.reserveShareBps))}%`],
+            ["Issuer share", `${formatShare(BigInt(terms.issuerShareBps))}%`],
+            ["Platform fee", `${formatShare(BigInt(terms.platformFeeBps))}%`],
+            ["Maturity", offering.definition.maturityAt],
+            ["Qualifying resource", offering.definition.qualifyingResource],
+            ["Advertised quick price", formatHbar(BigInt(offering.advertisedQuickPriceTinybars))],
+            ["Advertised standard price", formatHbar(BigInt(offering.advertisedStandardPriceTinybars))],
+          ]}
+        />
         <p className="max-w-prose text-sm leading-6 text-muted-foreground">A material change needs a separately signed offering and directory version.</p>
       </section>
 
       <section aria-labelledby="provider-directory" className="space-y-4 border-t border-border pt-8">
         <h2 id="provider-directory" className={headingClass}>Active directory</h2>
-        {directory === undefined ? <Outcome outcome={directoryOutcome} /> : <dl className="grid gap-x-6 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
-          <Term label="Service" value={directory.record.serviceSlug} />
-          <Term label="Version" value={String(directory.directoryVersion)} />
-          <Term label="Status" value={directory.record.status} />
-          <Term label="Endpoint" value={directory.record.x402Endpoint} />
-          <Term label="Clearing account" value={directory.record.clearingAccount} />
-        </dl>}
+        {directory === undefined ? <Outcome outcome={directoryOutcome} /> : <DetailList
+          columns={3}
+          items={[
+            ["Service", directory.record.serviceSlug],
+            ["Version", String(directory.directoryVersion)],
+            ["Status", directory.record.status],
+            ["Endpoint", directory.record.x402Endpoint],
+            ["Clearing account", directory.record.clearingAccount],
+          ]}
+        />}
       </section>
 
       <section aria-labelledby="provider-signer" className="space-y-3 border-t border-border pt-8">
