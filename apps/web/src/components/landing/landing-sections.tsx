@@ -14,13 +14,13 @@ const steps = [
     title: "Inspect its boundary",
     description: "Send a bounded request and read the 402 challenge the tool returns before anything is released.",
     number: "02",
-    tone: "bg-success text-success-foreground",
+    tone: "bg-secondary text-primary",
   },
   {
     title: "Choose a local next step",
     description: "Continue to the guided demo, the guest dashboard, or the provider wizard; each names what it can show today.",
     number: "03",
-    tone: "bg-destructive text-destructive-foreground",
+    tone: "bg-secondary text-primary",
   },
 ] as const;
 

@@ -14,7 +14,7 @@ export default function RiskScanToolLoopPage() {
               <ChevronLeft />
               Back to RiskScan
             </Link>
-            <p className="inline-flex rounded-full border border-success/30 bg-success/10 px-3 py-1.5 text-sm font-medium text-success-foreground">
+            <p className="inline-flex rounded-full border border-warning/30 bg-warning px-3 py-1.5 text-sm font-medium text-warning-foreground">
               Testnet request boundary · no payment is made from this form.
             </p>
             <PageHeader
