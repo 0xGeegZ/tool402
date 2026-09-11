@@ -78,6 +78,19 @@ async function withConfiguredEnvironment(callback) {
   }
 }
 
+async function withoutConfiguredEnvironment(callback) {
+  const previous = Object.fromEntries(configuredEnvironmentNames.map((name) => [name, process.env[name]]));
+  for (const name of configuredEnvironmentNames) delete process.env[name];
+  try {
+    return await callback();
+  } finally {
+    for (const name of configuredEnvironmentNames) {
+      if (previous[name] === undefined) delete process.env[name];
+      else process.env[name] = previous[name];
+    }
+  }
+}
+
 test("declares the server-only World issuer verification boundary", () => {
   assert.equal(
     existsSync(modulePath),
@@ -248,6 +261,29 @@ test("rejects a verified World result whose signal is not bound to the requested
           }],
         },
       }),
+    })));
+
+    assert.equal(response.status, 403);
+    assert.deepEqual(await response.json(), { error: "world_verification_failed" });
+    assert.equal(forwarded, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("rejects a malformed World result before checking World configuration", async () => {
+  const originalFetch = globalThis.fetch;
+  let forwarded = 0;
+  globalThis.fetch = async () => {
+    forwarded += 1;
+    return new Response("{}", { status: 200 });
+  };
+  try {
+    const route = await loadRoute(fileURLToPath(verifyRouteUrl));
+    const response = await withoutConfiguredEnvironment(() => route.POST(new Request("http://localhost/api/world/verify", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ address: "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf", idkitResponse: {} }),
     })));
 
     assert.equal(response.status, 403);
