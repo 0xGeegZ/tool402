@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: S34-T010 and S31-T010 accepted.
 - Owner: The root owns the queue, specification, UI manifest, plan, decisions,
   evidence, commits, and integration. D-S35-010-004 freezes the two declared
@@ -53,3 +53,11 @@ paths remain fixed.
 Final acceptance requires focused RED/GREEN evidence, Web typecheck/test/lint,
 queue/whitespace checks, 1440px/390px browser evidence, and independent task
 and module review.
+
+## Acceptance
+
+Fresh independent task/module/UI review at
+`9be748891b25749782b8b3c52706ec7e9ce1ea5c` is clear. S35-T010 is accepted at
+60-done under D-S35-010-007. Its source/test reservations are released; the
+completed Docs routes and footer remain static, local, and outside
+runtime/product authority.

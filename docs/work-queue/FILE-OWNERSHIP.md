@@ -53,6 +53,10 @@ D-S35-010-006 reserves only `apps/web/tests/product-landing.test.mjs` for its
 two exact Docs-link expected-array additions and direct API-endpoint denial
 refinement. All source and other test paths remain frozen.
 
+S35-T010 is accepted. D-S35-010-007 releases its two Docs routes, two Docs
+components, Docs home, footer, and all S35 test reservations. The completed
+surface remains static and local; all runtime/product paths remain excluded.
+
 M00-T070 reserves its card, qualification matrix, STATE.md, HUMAN-ACTIONS.md, DECISIONS.md, TASK-CATALOG.md, and AI_USAGE.md to the root integrator. M00-T080 reserves its card, STATE.md, FILE-OWNERSHIP.md, TASK-CATALOG.md, DECISIONS.md, HUMAN-ACTIONS.md, AI_USAGE.md, ORCHESTRATOR-RUNBOOK.md, and WORKTREE-POLICY.md to the root integrator.
 
 P00-T010 reserves its card, docs/product/OVERVIEW.md, STATE.md, TASK-CATALOG.md, FILE-OWNERSHIP.md, DECISIONS.md, and AI_USAGE.md to the root integrator.

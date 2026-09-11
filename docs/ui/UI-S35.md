@@ -60,3 +60,9 @@ or an active ATS campaign.
   readable wrapping, visible focus, and no horizontal overflow.
 - Focused Web tests, typecheck, lint, queue/whitespace checks, and independent
   task/module review are clear before acceptance.
+
+## Acceptance
+
+Accepted under D-S35-010-007 after focused 16/16, Web 342/342, typecheck,
+lint, queue/whitespace, independent task/module review, and 1440px/390px
+browser checks. The delivered documentation remains static and local.

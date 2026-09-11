@@ -179,7 +179,7 @@ is visible and route text wraps intentionally.
 Expected: Review confirms exact UI-S35 scope, truthful copy, static sources,
 and local-only links.
 
-- [ ] **Step 4: Commit acceptance evidence**
+- [x] **Step 4: Commit acceptance evidence**
 
 ```bash
 git add docs/work-queue docs/ui docs/specs docs/superpowers/plans
