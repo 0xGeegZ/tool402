@@ -132,7 +132,10 @@ is cached as public content.
 
 `/sign-in` redirects a valid session to `/dashboard`; otherwise it renders the
 MetaMask island and the sign-in control. On successful verification, the
-client navigates to `/dashboard`. A server-only navigation boundary validates
+client uses the fixed internal App Router `replace("/dashboard")` transition,
+which preserves the mounted root wallet-session provider for that navigation.
+The sealed `HttpOnly` cookie remains the sole durable dashboard-access state.
+A server-only navigation boundary validates
 the same signed session and supplies a `Dashboard` link to both desktop and
 mobile main menus only when it is valid. It must be wrapped in the existing
 root-header `Suspense` boundary so Cache Components do not make the root shell

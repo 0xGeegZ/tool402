@@ -674,3 +674,11 @@ No secrets, account keys, or private evidence belong in this file.
   action may call the accepted `connect()` handler only from the user's click;
   it adds no second session, automatic discovery, account request, chain
   switch, signature, authority, transaction, deployment, or live behavior.
+
+- S38_WALLET_SESSION_PRESERVATION_AMENDMENT: 2026-09-11. The repository owner
+  directs successful sign-in to use the fixed internal App Router dashboard
+  transition instead of a full-document reload, preserving the mounted shared
+  wallet session for that navigation. The sealed `HttpOnly` cookie remains the
+  sole durable authorization decision. No storage, automatic wallet discovery,
+  account request, signature, wallet-state mutation, transaction, deployment,
+  or live behavior is authorized.

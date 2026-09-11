@@ -200,3 +200,13 @@ explicit `TOOL402_DASHBOARD_AUTH_ORIGIN` is present. The derived value must
 pass the existing canonical HTTPS validation; production, development, and any
 request-derived host remain fail-closed. `TOOL402_DASHBOARD_AUTH_SECRET`
 remains required and human-configured for Preview.
+
+## User-directed wallet-session preservation amendment
+
+The repository owner directs the existing sign-in component and its focused
+auth assertion to replace the successful full-document navigation with the
+fixed internal App Router `replace("/dashboard")` transition. The root layout
+and its shared wallet session stay mounted for this transition, while the
+server still authorizes dashboard access solely from the sealed `HttpOnly`
+cookie. This adds no storage, wallet discovery, account request, signature,
+wallet-state mutation, route target, or live authority.

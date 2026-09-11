@@ -1163,6 +1163,15 @@ explicit dashboard-auth origin is absent. The same canonical validation still
 applies; no request host, production, development, secret, wallet, or live
 authority is added.
 
+User-directed S38 wallet-session preservation amendment: the root additionally
+reserves only `apps/web/src/components/auth/metamask-dashboard-sign-in.tsx`
+and its existing `apps/web/tests/dashboard-auth.test.mjs` assertion to use the
+fixed internal App Router transition after verified sign-in. It preserves the
+already-mounted S26 session for that navigation only; it does not persist or
+rehydrate wallet data, read a wallet, discover a provider, alter the server
+cookie guard, or add any wallet, account, signature, transaction, deployment,
+or live authority.
+
 S39-T010 is an `00-inbox` CORE_P0 follow-up with no active source or test
 reservation. S38 acceptance is an explicit activation gate while the card is
 still speculative. After that gate and its own independent readiness/activation
