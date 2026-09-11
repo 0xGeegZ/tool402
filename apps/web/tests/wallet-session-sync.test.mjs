@@ -14,6 +14,10 @@ const walletIslandUrl = new URL(
   "../src/components/wallet/wallet-connect.tsx",
   import.meta.url,
 );
+const walletSessionUrl = new URL(
+  "../src/components/wallet/wallet-session.tsx",
+  import.meta.url,
+);
 
 function createEventProvider({ on, removeListener } = {}) {
   const registrations = [];
@@ -126,85 +130,112 @@ function visibleText(node) {
     : "";
 }
 
+function transpile(url) {
+  return async () => {
+    const { outputText } = typescript.transpileModule(await readFile(url, "utf8"), {
+      fileName: fileURLToPath(url),
+      compilerOptions: {
+        target: typescript.ScriptTarget.ES2022,
+        module: typescript.ModuleKind.CommonJS,
+        jsx: typescript.JsxEmit.ReactJSX,
+      },
+    });
+    return outputText;
+  };
+}
+
 async function walletIslandHarness(provider) {
   const stateSlots = [];
   const refSlots = [];
   const effectSlots = [];
   let cursor = 0;
+  const context = { Provider: "WalletSessionContext.Provider", value: null };
   const providerApi = await import(providerModuleUrl.href);
   const walletStateApi = await import("../src/lib/wallet/wallet-state.ts");
-  const imports = {
-    react: {
-      useState(initial) {
-        const index = cursor++;
-        if (!(index in stateSlots)) {
-          stateSlots[index] = typeof initial === "function" ? initial() : initial;
-        }
-        return [stateSlots[index], (value) => {
-          stateSlots[index] = typeof value === "function" ? value(stateSlots[index]) : value;
-        }];
-      },
-      useRef(initial) {
-        const index = cursor++;
-        if (!(index in refSlots)) refSlots[index] = { current: initial };
-        return refSlots[index];
-      },
-      useEffect(effect, dependencies) {
-        const index = cursor++;
-        const previous = effectSlots[index];
-        const changed =
-          previous === undefined ||
-          dependencies.length !== previous.dependencies.length ||
-          dependencies.some((dependency, dependencyIndex) =>
-            dependency !== previous.dependencies[dependencyIndex],
-          );
-        if (changed) {
-          previous?.cleanup?.();
-          effectSlots[index] = { dependencies, effect, cleanup: null, pending: true };
-        }
-      },
+  const react = {
+    createContext() {
+      return context;
     },
-    "react/jsx-runtime": jsxRuntime,
-    "../../lib/wallet/metamask-provider.ts": {
-      ...providerApi,
-      discoverMetaMaskProvider: async () => ({ kind: "provider", provider }),
+    useContext(target) {
+      assert.equal(target, context);
+      return context.value;
     },
-    "../../lib/wallet/metamask-provider": {
-      ...providerApi,
-      discoverMetaMaskProvider: async () => ({ kind: "provider", provider }),
+    useState(initial) {
+      const index = cursor++;
+      if (!(index in stateSlots)) {
+        stateSlots[index] = typeof initial === "function" ? initial() : initial;
+      }
+      return [stateSlots[index], (value) => {
+        stateSlots[index] = typeof value === "function" ? value(stateSlots[index]) : value;
+      }];
     },
-    "../../lib/wallet/wallet-state.ts": walletStateApi,
-    "../../lib/wallet/wallet-state": walletStateApi,
-    "../ui/badge": { Badge: "Badge" },
-    "../ui/button": { Button: "Button" },
+    useRef(initial) {
+      const index = cursor++;
+      if (!(index in refSlots)) refSlots[index] = { current: initial };
+      return refSlots[index];
+    },
+    useEffect(effect, dependencies) {
+      const index = cursor++;
+      const previous = effectSlots[index];
+      const changed =
+        previous === undefined ||
+        dependencies.length !== previous.dependencies.length ||
+        dependencies.some((dependency, dependencyIndex) =>
+          dependency !== previous.dependencies[dependencyIndex],
+        );
+      if (changed) {
+        previous?.cleanup?.();
+        effectSlots[index] = { dependencies, effect, cleanup: null, pending: true };
+      }
+    },
   };
-  const { outputText } = typescript.transpileModule(await readFile(walletIslandUrl, "utf8"), {
-    fileName: fileURLToPath(walletIslandUrl),
-    compilerOptions: {
-      target: typescript.ScriptTarget.ES2022,
-      module: typescript.ModuleKind.CommonJS,
-      jsx: typescript.JsxEmit.ReactJSX,
+  const discovery = {
+    ...providerApi,
+    discoverMetaMaskProvider: async () => ({ kind: "provider", provider }),
+  };
+  const sessionModule = { exports: {} };
+  const islandModule = { exports: {} };
+  const imports = {
+    [walletSessionUrl.href]: {
+      react,
+      "react/jsx-runtime": jsxRuntime,
+      "../../lib/wallet/metamask-provider.ts": discovery,
+      "../../lib/wallet/metamask-provider": discovery,
+      "../../lib/wallet/wallet-state.ts": walletStateApi,
+      "../../lib/wallet/wallet-state": walletStateApi,
     },
-  });
-  const module = { exports: {} };
-  runInNewContext(outputText, {
-    exports: module.exports,
-    window: {
-      ethereum: provider,
-      addEventListener() {},
-      removeEventListener() {},
-      dispatchEvent() { return true; },
+    [walletIslandUrl.href]: {
+      "react/jsx-runtime": jsxRuntime,
+      "../ui/badge": { Badge: "Badge" },
+      "../ui/button": { Button: "Button" },
+      "./wallet-session": sessionModule.exports,
     },
-    require(specifier) {
-      assert.ok(Object.hasOwn(imports, specifier), `unexpected wallet island import: ${specifier}`);
-      return imports[specifier];
-    },
-  }, { filename: fileURLToPath(walletIslandUrl) });
+  };
+  for (const [url, module] of [[walletSessionUrl, sessionModule], [walletIslandUrl, islandModule]]) {
+    runInNewContext(await transpile(url)(), {
+      exports: module.exports,
+      window: {
+        ethereum: provider,
+        addEventListener() {},
+        removeEventListener() {},
+        dispatchEvent() { return true; },
+      },
+      require(specifier) {
+        assert.ok(Object.hasOwn(imports[url.href], specifier), `unexpected wallet import: ${specifier}`);
+        return imports[url.href][specifier];
+      },
+    }, { filename: fileURLToPath(url) });
+  }
 
   return {
-    render(props = {}) {
+    session() {
+      return context.value;
+    },
+    render() {
       cursor = 0;
-      const tree = module.exports.WalletIsland(props);
+      const providerTree = sessionModule.exports.WalletSessionProvider({ children: null });
+      context.value = providerTree.props.value;
+      const tree = islandModule.exports.WalletIsland({});
       for (const effect of effectSlots) {
         if (effect?.pending) {
           effect.pending = false;
@@ -300,7 +331,7 @@ test("keeps the newest session event state when an older account read resolves l
   ]);
 });
 
-test("invalidates a pending session read when the subscription effect cleans up", async () => {
+test("invalidates a pending session read when the session disconnects", async () => {
   const fake = deferredProvider();
   const harness = await walletIslandHarness(fake.provider);
 
@@ -313,17 +344,13 @@ test("invalidates a pending session read when the subscription effect cleans up"
 
   fake.emit("accountsChanged");
   await fake.waitForAccountRead();
-  const afterCleanup = harness.render({
-    approvedIssuerAddress: "0x0000000000000000000000000000000000000402",
-  });
-  assert.match(visibleText(afterCleanup), /Waiting for MetaMask/u);
+  harness.session().disconnect();
+  assert.match(visibleText(harness.render()), /No wallet is connected/u);
 
   fake.resolveAccounts();
   await flushMicrotasks();
 
-  const text = visibleText(harness.render({
-    approvedIssuerAddress: "0x0000000000000000000000000000000000000402",
-  }));
-  assert.match(text, /Waiting for MetaMask/u);
+  const text = visibleText(harness.render());
+  assert.match(text, /No wallet is connected/u);
   assert.doesNotMatch(text, /Connected as 0xc89f87052c3e080b4a9b021d4930055031ef378e/u);
 });

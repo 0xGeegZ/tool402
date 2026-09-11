@@ -1,32 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
-
-import {
-  discoverMetaMaskProvider,
-  type Eip1193Provider,
-  watchWalletSessionChanges,
-} from "../../lib/wallet/metamask-provider.ts";
-import {
-  connectWallet,
-  readCurrentSession,
-  recheckAfterSwitch,
-  type WalletState,
-} from "../../lib/wallet/wallet-state.ts";
+import type { WalletState } from "../../lib/wallet/wallet-state.ts";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-
-export interface WalletSession {
-  readonly provider: Eip1193Provider;
-  readonly address: string;
-}
-
-export interface WalletIslandProps {
-  readonly approvedIssuerAddress?: string;
-  readonly children?: (session: WalletSession) => ReactNode;
-  readonly className?: string;
-  readonly heading?: string;
-}
+import { useWalletSession } from "./wallet-session";
 
 function describe(state: WalletState): string {
   switch (state.kind) {
@@ -49,120 +26,43 @@ function describe(state: WalletState): string {
   }
 }
 
-export function WalletIsland({
-  approvedIssuerAddress,
-  children,
-  className,
-  heading = "Wallet",
-}: WalletIslandProps) {
-  const [state, setState] = useState<WalletState>({ kind: "disconnected" });
-  const providerRef = useRef<Eip1193Provider | null>(null);
-  const cleanupRef = useRef<(() => void) | null>(null);
-  const sessionReadGenerationRef = useRef(0);
-  const provider = providerRef.current;
+function shortenAddress(address: string): string {
+  return `${address.slice(0, 6)}…${address.slice(-4)}`;
+}
 
-  useEffect(() => {
-    if (provider === null) {
-      return;
-    }
-
-    const cleanup = watchWalletSessionChanges(provider, async () => {
-      const readGeneration = sessionReadGenerationRef.current + 1;
-      sessionReadGenerationRef.current = readGeneration;
-      setState({ kind: "connecting" });
-      const connection = await readCurrentSession(provider, approvedIssuerAddress);
-      if (
-        providerRef.current === provider &&
-        sessionReadGenerationRef.current === readGeneration
-      ) {
-        setState(connection.state);
-      }
-    });
-    cleanupRef.current = cleanup;
-    return () => {
-      sessionReadGenerationRef.current += 1;
-      cleanup();
-    };
-  }, [approvedIssuerAddress, provider]);
-
-  async function connect() {
-    setState({ kind: "connecting" });
-    const connection = await connectWallet({
-      discover: () => discoverMetaMaskProvider(window),
-      approvedIssuerAddress,
-    });
-    providerRef.current = connection.provider;
-    setState(connection.state);
-  }
-
-  async function switchChain() {
-    const provider = providerRef.current;
-    if (provider === null) {
-      return;
-    }
-    setState({ kind: "connecting" });
-    const connection = await recheckAfterSwitch(
-      provider,
-      approvedIssuerAddress,
-    );
-    providerRef.current = connection.provider;
-    setState(connection.state);
-  }
-
-  function disconnect() {
-    sessionReadGenerationRef.current += 1;
-    cleanupRef.current?.();
-    cleanupRef.current = null;
-    providerRef.current = null;
-    setState({ kind: "disconnected" });
-  }
+export function WalletIsland() {
+  const { state, connect, switchChain } = useWalletSession();
 
   return (
-    <section
-      data-slot="wallet-island"
-      aria-labelledby="wallet-island-title"
-      className={className ?? "space-y-3"}
-    >
-      <div className="flex flex-wrap items-center gap-2">
-        <h2 id="wallet-island-title" className="text-lg font-semibold">
-          {heading}
-        </h2>
-        {state.kind === "connected" ? (
-          <Badge variant="secondary">{state.address}</Badge>
-        ) : null}
-      </div>
-      <p aria-live="polite" className="text-sm text-muted-foreground">
+    <div data-slot="wallet-island" className="flex items-center gap-2">
+      {state.kind === "disconnected" ? (
+        <Button variant="outline" size="sm" className="whitespace-nowrap" onClick={() => connect()}>
+          Connect MetaMask
+        </Button>
+      ) : null}
+      {state.kind === "connecting" ? (
+        <Button size="sm" className="whitespace-nowrap" disabled aria-disabled="true">
+          Connecting…
+        </Button>
+      ) : null}
+      {state.kind === "wrong_chain" ? (
+        <Button variant="outline" size="sm" className="whitespace-nowrap" onClick={switchChain}>
+          Switch to Hedera Testnet
+        </Button>
+      ) : null}
+      {state.kind === "no_provider" || state.kind === "multiple_providers" ? (
+        <Button variant="outline" size="sm" className="whitespace-nowrap" onClick={() => connect()}>
+          Retry
+        </Button>
+      ) : null}
+      {state.kind === "connected" || state.kind === "not_issuer" ? (
+        <Badge variant="secondary" title={state.address}>
+          {shortenAddress(state.address)}
+        </Badge>
+      ) : null}
+      <p aria-live="polite" className="sr-only">
         {describe(state)}
       </p>
-      <div className="flex flex-wrap gap-2">
-        {state.kind === "disconnected" ? (
-          <Button onClick={connect}>Connect MetaMask</Button>
-        ) : null}
-        {state.kind === "connecting" ? (
-          <Button disabled aria-disabled="true">
-            Connecting…
-          </Button>
-        ) : null}
-        {state.kind === "wrong_chain" ? (
-          <Button onClick={switchChain}>Switch to Hedera Testnet</Button>
-        ) : null}
-        {state.kind === "no_provider" ||
-        state.kind === "multiple_providers" ||
-        state.kind === "wrong_chain" ||
-        state.kind === "not_issuer" ? (
-          <Button variant="outline" onClick={connect}>
-            Retry
-          </Button>
-        ) : null}
-        {state.kind === "connected" ? (
-          <Button variant="outline" onClick={disconnect}>
-            Disconnect
-          </Button>
-        ) : null}
-      </div>
-      {state.kind === "connected" && provider !== null && children !== undefined
-        ? children({ provider, address: state.address })
-        : null}
-    </section>
+    </div>
   );
 }

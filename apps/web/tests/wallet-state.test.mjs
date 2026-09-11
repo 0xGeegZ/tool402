@@ -337,7 +337,10 @@ test("keeps the state library free of network, storage, timers, and logging", as
 });
 
 test("renders every wallet state from a client island that synchronizes only an explicitly selected session", async () => {
-  const source = await readAppFile("src/components/wallet/wallet-connect.tsx");
+  const source = [
+    await readAppFile("src/components/wallet/wallet-session.tsx"),
+    await readAppFile("src/components/wallet/wallet-connect.tsx"),
+  ].join("\n");
 
   assert.match(source, /^"use client";/u);
   assert.match(
@@ -370,7 +373,7 @@ test("renders every wallet state from a client island that synchronizes only an 
   );
   assert.match(
     source,
-    /async function connect\(\)[\s\S]*?discoverMetaMaskProvider\(\s*window\s*\)/u,
+    /async function connect\(approvedIssuerAddress\?: string\)[\s\S]*?discoverMetaMaskProvider\(\s*window\s*\)/u,
   );
   const effectStart = source.indexOf("useEffect(");
   assert.notEqual(effectStart, -1);

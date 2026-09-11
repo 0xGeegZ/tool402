@@ -70,7 +70,7 @@ test("renders the static Tool402 shell and home composition", async () => {
   assert.match(page, /<LandingHero\s*\/>/);
   assert.doesNotMatch(
     `${layout}\n${page}`,
-    /\b(?:wallet|payment|credential|auth|onboarding|analytics|evidence|metric)\b/i,
+    /\b(?:payment|credential|auth|onboarding|analytics|evidence|metric)\b/i,
   );
 });
 
