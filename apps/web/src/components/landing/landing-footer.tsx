@@ -30,6 +30,7 @@ export function LandingFooter() {
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
               <li><Link href="/provider" className="transition-colors hover:text-foreground">Provider overview</Link></li>
               <li><Link href="/provider/deploy" className="transition-colors hover:text-foreground">Prepare a tool offering</Link></li>
+              <li><Link href="/docs/providers" className="transition-colors hover:text-foreground">Provider documentation</Link></li>
             </ul>
           </nav>
           <nav aria-label="Dashboard links">
