@@ -20,15 +20,15 @@ existing `viem` 2.56.1, Node 22.21.1 injected-fake tests.
 **Spec:** `docs/specs/metamask-dashboard-sign-in.md`
 
 **Follow-up:** The user-directed sandbox authority that is created after a
-successful S38 signature is specified and planned separately in
+successful S40 signature is specified and planned separately in
 `docs/specs/s39-sandbox-issuer-onboarding.md` and
 `docs/superpowers/plans/2026-09-11-sandbox-issuer-onboarding.md`. It must not
-be folded into S38 source work: S39 starts only after S38 acceptance and gives
+be folded into S40 source work: S41 starts only after S40 acceptance and gives
 the wallet only `offering.create` on its own `DRAFT` subject.
 
 ## Global Constraints
 
-- Before source work, the human creates `S38-T010` in `00-inbox` and the root
+- Before source work, the human creates `S40-T010` in `00-inbox` and the root
   records its card, UI manifest, catalog row, ownership, readiness, activation,
   and durable RED authorization. This planning PR grants none of that authority.
 - Do not add a package, database, durable identity record, role, allowlist,
@@ -66,7 +66,7 @@ the wallet only `offering.create` on its own `DRAFT` subject.
 
 **Files:**
 
-- Create: `docs/work-queue/queue/00-inbox/S38-T010-metamask-dashboard-sign-in.md`
+- Create: `docs/work-queue/queue/00-inbox/S40-T010-metamask-dashboard-sign-in.md`
 - Create: `docs/ui/UI-S38.md`
 - Modify: `docs/work-queue/TASK-CATALOG.md`
 - Modify: `docs/work-queue/FILE-OWNERSHIP.md`
@@ -75,7 +75,7 @@ the wallet only `offering.create` on its own `DRAFT` subject.
 **Interfaces:**
 
 - Consumes: `docs/specs/metamask-dashboard-sign-in.md`, UI-S15, and M50.
-- Produces: a dependency-satisfied, root-owned `S38-T010` intake with the
+- Produces: a dependency-satisfied, root-owned `S40-T010` intake with the
   exact source and test paths in the file-structure table.
 
 - [ ] **Step 1: Have the human add the S38 intake and UI manifest**
@@ -109,7 +109,7 @@ the wallet only `offering.create` on its own `DRAFT` subject.
 - [ ] **Step 4: Commit root-only authority records**
 
   ```bash
-  git add docs/work-queue/queue/00-inbox/S38-T010-metamask-dashboard-sign-in.md docs/work-queue/TASK-CATALOG.md docs/work-queue/FILE-OWNERSHIP.md docs/work-queue/STATE.md docs/ui/UI-S38.md
+  git add docs/work-queue/queue/00-inbox/S40-T010-metamask-dashboard-sign-in.md docs/work-queue/TASK-CATALOG.md docs/work-queue/FILE-OWNERSHIP.md docs/work-queue/STATE.md docs/specs/metamask-dashboard-sign-in.md
   git commit -m "docs: Authorize MetaMask dashboard sign-in"
   ```
 
@@ -478,7 +478,7 @@ the wallet only `offering.create` on its own `DRAFT` subject.
   git fetch origin main
   git rebase origin/main
   git log --oneline origin/main..HEAD
-  git add docs/work-queue/queue/60-done/S38-T010-metamask-dashboard-sign-in.md docs/work-queue/evidence/S38-T010-ready-review.md docs/work-queue/evidence/S38-T010-activation-review.md docs/work-queue/evidence/S38-T010-red-review.md docs/work-queue/evidence/S38-T010-task-review.md docs/work-queue/evidence/S38-T010-module-review-spec.md docs/work-queue/evidence/S38-T010-module-review-standards.md docs/work-queue/TASK-CATALOG.md docs/work-queue/FILE-OWNERSHIP.md docs/work-queue/STATE.md
+  git add docs/work-queue/queue/60-done/S40-T010-metamask-dashboard-sign-in.md docs/work-queue/evidence/S40-T010-ready-review.md docs/work-queue/evidence/S40-T010-activation-review.md docs/work-queue/evidence/S40-T010-red-review.md docs/work-queue/evidence/S40-T010-task-review.md docs/work-queue/evidence/S40-T010-module-review-spec.md docs/work-queue/evidence/S40-T010-module-review-standards.md docs/work-queue/TASK-CATALOG.md docs/work-queue/FILE-OWNERSHIP.md docs/work-queue/STATE.md
   git commit -m "docs: Accept MetaMask dashboard sign-in"
   git push -u origin feat/metamask-dashboard-sign-in
   ```

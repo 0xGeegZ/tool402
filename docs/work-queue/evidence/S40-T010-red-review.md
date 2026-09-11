@@ -1,4 +1,4 @@
-# S38-T010 durable RED review
+# S40-T010 durable RED review
 
 ## Scope
 

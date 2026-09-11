@@ -10,8 +10,8 @@ one isolated sandbox issuer that can create its own offering `DRAFT` in
 
 ## Preconditions
 
-- [ ] S38-T010 has been accepted at a recorded exact head.
-- [ ] S39 readiness independently confirms that the dynamic-subject and
+- [ ] S40-T010 has been accepted at a recorded exact head.
+- [ ] S41 readiness independently confirms that the dynamic-subject and
   capability boundaries do not collide with S21/M47/M49 or the manual ATS
   authority.
 - [ ] A human has supplied the private deployment configuration. No source
@@ -19,7 +19,7 @@ one isolated sandbox issuer that can create its own offering `DRAFT` in
 
 ## Task 1 — authorize and prove the capability model in RED
 
-**Files:** S39 queue records; `packages/core/src/ingress-envelope.ts`, its
+**Files:** S41 queue records; `packages/core/src/ingress-envelope.ts`, its
 focused tests, `packages/backend/src/ingress/protected-ingress-verifier.ts`,
 its focused tests, `packages/backend/convex/schema.ts`, ingress normalizers,
 durable-admission modules, and their focused tests, only after activation.
@@ -58,7 +58,7 @@ provisioning helper, and focused backend/web tests.
 **Files:** the declared S38 auth route/helper and its focused tests, plus a
 small server-only provisioning relay.
 
-- [ ] After S38 signature verification, call the private backend with the
+- [ ] After S40 signature verification, call the private backend with the
   verified address; issue the `HttpOnly` session only for exact `NEW`/`EXISTS`.
 - [ ] Return a closed `not_configured`/`unavailable` outcome for absent
   deployment config, bad response, transport failure, or conflict. Do not

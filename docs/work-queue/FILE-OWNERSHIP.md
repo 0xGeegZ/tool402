@@ -1097,8 +1097,8 @@ accepted session `connect()` only from that button click; it creates no second
 session and changes no provider discovery, account request, chain switch,
 signature, authority, transaction, or live boundary.
 
-S38-T010 is an `00-inbox` CORE_P0 authentication card with no active source or
-test reservation. Its eight proposed new source paths are
+S40-T010 is an `20-active` CORE_P0 authentication card. Its eight declared
+source paths are
 `apps/web/src/lib/dashboard-auth/dashboard-auth.ts`,
 `apps/web/src/lib/dashboard-auth/dashboard-auth-routes.ts`,
 `apps/web/src/app/api/auth/metamask/challenge/route.ts`,
@@ -1172,20 +1172,20 @@ rehydrate wallet data, read a wallet, discover a provider, alter the server
 cookie guard, or add any wallet, account, signature, transaction, deployment,
 or live authority.
 
-S39-T010 is an `00-inbox` CORE_P0 follow-up with no active source or test
-reservation. S38 acceptance is an explicit activation gate while the card is
+S41-T010 is an `00-inbox` CORE_P0 follow-up with no active source or test
+reservation. S40 acceptance is an explicit activation gate while the card is
 still speculative. After that gate and its own independent readiness/activation
 cycle, it may reserve only the exact closed-path Core ingress envelope and
 focused Core test, Backend expected-path verifier and focused Backend test,
 capability-aware `commandAuthorities` schema/normalizer/admission seams, a
 dedicated HMAC-private Convex provisioning handler, the shared Web HMAC relay
-and its test, the server-only S38 verification handoff, and the narrowly
+and its test, the server-only S40 verification handoff, and the narrowly
 necessary `/provider/deploy` route/command-bridge/signing-state paths for a
 server-derived personal sandbox subject. It must add matching focused
 Core/Backend/Web contracts. The shared `riskscan_revenue_note_demo` subject,
 ATS configuration and Stage-B modules, manual issuer authority, wallet session
 and header controls, packages, lockfiles, payment/transaction code, public
-APIs, and all unlisted paths remain excluded. S39's only capability is a
+APIs, and all unlisted paths remain excluded. S41's only capability is a
 durable `offering.create` result in `DRAFT`; it may not authorize any on-chain
 action.
 

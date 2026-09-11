@@ -1,4 +1,4 @@
-# S38-T010 activation review
+# S40-T010 activation review
 
 ## Scope
 
@@ -20,7 +20,7 @@ Independent read-only activation review at clean control head
 
 ## Verdict
 
-CLEAR — S38-T010 moves to `20-active` only for a durable RED contract in:
+CLEAR — S40-T010 moves to `20-active` only for a durable RED contract in:
 
 - `apps/web/tests/dashboard-auth.test.mjs`; and
 - `apps/web/tests/dashboard-auth-routes.test.mjs`.

@@ -26,18 +26,19 @@
   six declared Backend/Web GREEN paths are active, and no wallet,
   authority, signature, relay, Stage-B, transaction, candidate, or live action
   is authorized.
-- S39_SANDBOX_ISSUER_ONBOARDING_INTAKE: User-directed CORE_P0 follow-up to
-  S38. It is `00-inbox` and has no active source or test reservation. Its
+- S41_SANDBOX_ISSUER_ONBOARDING_INTAKE: User-directed CORE_P0 follow-up to
+  S40. It is `00-inbox` and has no active source or test reservation. Its
   fixed outcome is a deterministic wallet-isolated sandbox `ISSUER`, with one
   personal subject and explicit `offering.create` capability, provisioned only
-  after a successful S38 signature and before the dashboard session is issued.
-  S39 cannot begin until S38 is accepted and a fresh independent readiness/
+  after a successful S40 signature and before the dashboard session is issued.
+  S41 cannot begin until S40 is accepted and a fresh independent readiness/
   activation/RED cycle records exact paths. It grants no shared ATS subject,
   ATS preparation, candidate attachment, directory publication, payment,
   transaction, asset, deployment, or live authority.
 
-- S38_METAMASK_DASHBOARD_AUTH_INTAKE: User-directed CORE_P0 intake. S38-T010
-  owns only the UI-S38 sealed MetaMask challenge/session proposal and has no
+- S40_METAMASK_DASHBOARD_AUTH_INTAKE: User-directed CORE_P0 intake. S40-T010
+  owns only the sealed MetaMask challenge/session proposal in
+  `docs/specs/metamask-dashboard-sign-in.md` and has no
   active source or test reservation. S15/M50/S24 are accepted, S26 is an
   independent active client-session card, and the exact canonical Web baseline is green at
   362/362. A fresh independent readiness review and a separate test-only RED
@@ -45,22 +46,22 @@
   origin/secret configuration, wallet account request, signature, provider
   command, relay, transaction, payment, role, profile, balance, protected API,
   deployment, or live action is authorized by this intake.
-- S38_METAMASK_DASHBOARD_AUTH_READY: Independent readiness is clear at
+- S40_METAMASK_DASHBOARD_AUTH_READY: Independent readiness is clear at
   `71a059caa525cbfa397f40f262b01207ba46dab7`, rebased on canonical
-  `ca80c6edddae09b0577678e4b61c63f87553321f`, after Web 362/362. S38-T010 is
+  `ca80c6edddae09b0577678e4b61c63f87553321f`, after Web 362/362. S40-T010 is
   `10-ready` with no active source/test reservation. A separate activation may
   authorize only durable RED in the two new S38 auth tests; every production
   source, dashboard wording amendment, configuration, wallet/account/signature,
   provider command, relay, transaction, payment, deployment, and live action
   remains prohibited.
-- S38_METAMASK_DASHBOARD_AUTH_ACTIVATION: Independent activation is clear at
-  `473b4edd346ce45249c257e36432684b1429112f`. S38-T010 is `20-active` only
+- S40_METAMASK_DASHBOARD_AUTH_ACTIVATION: Independent activation is clear at
+  `473b4edd346ce45249c257e36432684b1429112f`. S40-T010 is `20-active` only
   for durable RED in `apps/web/tests/dashboard-auth.test.mjs` and
   `apps/web/tests/dashboard-auth-routes.test.mjs`. Every production source,
   dashboard wording/test amendment, configuration, wallet account/signature,
   provider command, relay, transaction, payment, deployment, and live action
   remains prohibited pending independent RED acceptance.
-- S38_METAMASK_DASHBOARD_AUTH_RED_ACCEPTANCE: Independent re-review accepts
+- S40_METAMASK_DASHBOARD_AUTH_RED_ACCEPTANCE: Independent re-review accepts
   durable RED `5a7ca33bd23e3877f77798a8b3490d643eb9a154`: one intended absence
   failure names all eight source paths and twenty staged contracts skip. Only
   the eight declared auth sources and the root-reserved Dashboard eyebrow plus
@@ -68,7 +69,7 @@
   source/test path, configuration, wallet account/signature, provider command,
   relay, transaction, payment, deployment, or live action is authorized.
 
-- S38_AUTHENTICATED_NAVIGATION_AMENDMENT: The repository owner explicitly
+- S40_AUTHENTICATED_NAVIGATION_AMENDMENT: The repository owner explicitly
   requires a Dashboard main-menu link after a valid signed dashboard session.
   The root reserves only a new server auth-navigation boundary, the existing
   root header navigation slot, the LocalNavigation link-list/prop contract,
@@ -76,13 +77,13 @@
   Suspense; it grants no wallet state, signature, configuration, API, or S26
   header-wallet authority.
 
-- S38_ENVIRONMENT_TEMPLATE_AMENDMENT: The repository owner explicitly
+- S40_ENVIRONMENT_TEMPLATE_AMENDMENT: The repository owner explicitly
   requested `.env.example` at the root and its Web counterpart. The two files
   are reserved as documentation-only templates for the fixed dashboard-auth
   keys; they do not configure a runtime, contain a secret, or authorize TLS
   trust, wallet permission, signature, transaction, deployment, or live action.
 
-- S38_VERCEL_PREVIEW_ORIGIN_AMENDMENT: The repository owner explicitly
+- S40_VERCEL_PREVIEW_ORIGIN_AMENDMENT: The repository owner explicitly
   requires ephemeral Vercel previews to derive their exact canonical origin
   from `VERCEL_URL` only when `VERCEL_ENV=preview` and the explicit origin is
   absent. The configured secret remains required; development, production, and

@@ -1,4 +1,4 @@
-# S38-T010 readiness review
+# S40-T010 readiness review
 
 ## Scope
 
@@ -27,7 +27,7 @@ Independent read-only readiness review at clean control head
 
 ## Verdict
 
-CLEAR — S38-T010 moves to `10-ready` with no active source or test reservation.
+CLEAR — S40-T010 moves to `10-ready` with no active source or test reservation.
 A fresh separate activation may authorize only durable RED in
 `apps/web/tests/dashboard-auth.test.mjs` and
 `apps/web/tests/dashboard-auth-routes.test.mjs`. Every production source path,

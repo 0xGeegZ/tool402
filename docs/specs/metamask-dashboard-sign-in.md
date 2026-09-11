@@ -4,7 +4,7 @@
 
 Planning-only specification. It creates no runtime task, source authority,
 wallet action, account, deployment, or production configuration. Before source
-work, the human must add an `S38-T010` card to `00-inbox`; the root must then
+work, the human must add an `S40-T010` card to `00-inbox`; the root must then
 record ownership, readiness, activation, and the durable RED contract.
 
 ## Outcome

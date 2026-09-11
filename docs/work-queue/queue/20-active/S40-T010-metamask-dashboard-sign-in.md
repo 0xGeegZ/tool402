@@ -1,4 +1,4 @@
-# S38-T010 — MetaMask dashboard sign-in
+# S40-T010 — MetaMask dashboard sign-in
 
 ## State
 
@@ -6,9 +6,10 @@
 - Queue state: 20-active
 - Dependencies: S15-T010 accepted, M50-T010 accepted, S24-T010 accepted.
   S26-T010 is not a dependency and remains an independent header-wallet slice.
-- Owner: the root owns this card, the UI manifest, catalog, ownership, state,
+- Owner: the root owns this card, source contract, catalog, ownership, state,
   readiness/activation/RED/acceptance evidence, commits, and pushes. The only
-  proposed source/test paths are those named in [UI-S38](../../../ui/UI-S38.md).
+  proposed source/test paths are those declared below and in the
+  [MetaMask dashboard sign-in specification](../../../specs/metamask-dashboard-sign-in.md).
 - Human actions: configuring the HTTPS origin and secret, connecting a real
   wallet, requesting an account, and signing a real message remain human-owned.
   This card creates no deployment, account, provider permission, transaction,
@@ -23,8 +24,10 @@ receive a signed `HttpOnly` dashboard session, and render `/dashboard`. An
 invalid, expired, missing, or altered session redirects to `/sign-in` before
 any dashboard child renders.
 
-The local contract is [UI-S38](../../../ui/UI-S38.md), derived from the
+The local contract is the
 [MetaMask dashboard sign-in specification](../../../specs/metamask-dashboard-sign-in.md).
+`UI-S38` is independently owned by the Back this tool entry card and is not
+part of this authentication lane.
 It reuses UI-S15 for provider selection, account request, chain gate, and
 `WalletIsland`, and M50 for passive client-session re-reads. It does not change
 either accepted slice, the command signature/relay path, or any public API.
@@ -127,18 +130,18 @@ switch, transaction, typed-data signature, or relay action.
 
 ## Readiness
 
-The independent [S38 readiness review](../../evidence/S38-T010-ready-review.md)
+The independent [S40 readiness review](../../evidence/S40-T010-ready-review.md)
 is clear at control head `71a059caa525cbfa397f40f262b01207ba46dab7`, rebased on
 canonical `ca80c6edddae09b0577678e4b61c63f87553321f`, with the Web baseline
-green 362/362. S38-T010 is `10-ready` only. No test or source path is active;
+green 362/362. S40-T010 is `10-ready` only. No test or source path is active;
 only a fresh independent activation may next authorize the two new RED test
 paths.
 
 ## RED activation
 
-The independent [S38 activation review](../../evidence/S38-T010-activation-review.md)
+The independent [S40 activation review](../../evidence/S40-T010-activation-review.md)
 is clear at control head `473b4edd346ce45249c257e36432684b1429112f`.
-S38-T010 is `20-active` only for durable RED in
+S40-T010 is `20-active` only for durable RED in
 `apps/web/tests/dashboard-auth.test.mjs` and
 `apps/web/tests/dashboard-auth-routes.test.mjs`. Every production source path,
 the existing dashboard wording amendment, configuration/environment value,
@@ -148,7 +151,7 @@ RED acceptance.
 
 ## RED acceptance
 
-The independent [S38 durable RED review](../../evidence/S38-T010-red-review.md)
+The independent [S40 durable RED review](../../evidence/S40-T010-red-review.md)
 is clear at `5a7ca33bd23e3877f77798a8b3490d643eb9a154`. The focused RED contract
 has exactly one source-absence failure covering all eight declared S38 sources
 and twenty staged skips. The card may now implement only its eight declared
