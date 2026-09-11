@@ -382,8 +382,10 @@ dashboardNavigationTest("shows Dashboard only after server-side session validati
 clientTest("keeps sign-in limited to the accepted local authentication boundary", async () => {
   const client = await readFile(clientUrl, "utf8");
   assert.match(client, /["']use client["']/u);
-  assert.match(client, /\bWalletIsland\b/u);
-  assert.match(client, /heading\s*=\s*["']Sign in with MetaMask["']/u);
+  assert.match(client, /\buseWalletSession\b/u);
+  assert.match(client, /Sign in with MetaMask/u);
+  assert.match(client, /Sign and open dashboard/u);
+  assert.match(client, /never sends a transaction or costs HBAR/u);
   assert.match(client, /\breadCurrentSession\b/u);
   assert.match(client, /\bpersonal_sign\b/u);
   assert.match(client, /\/api\/auth\/metamask\/challenge/u);
@@ -404,6 +406,7 @@ signInTest("redirects valid sessions and otherwise renders the public sign-in bo
   assert.match(signIn, /__Host-tool402-dashboard-session/u);
   assert.match(signIn, /redirect\(\s*["']\/dashboard["']\s*\)/u);
   assert.match(signIn, /\bMetaMaskDashboardSignIn\b/u);
+  assert.match(signIn, /Unlock your dashboard/u);
 });
 
 dashboardLayoutTest("guards dashboard descendants on the server before rendering them", async () => {
