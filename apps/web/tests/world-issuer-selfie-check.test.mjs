@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { runInNewContext } from "node:vm";
+import { hashSignal } from "@worldcoin/idkit/hashing";
 import typescript from "typescript";
 
 const modulePath = fileURLToPath(
@@ -11,6 +12,7 @@ const modulePath = fileURLToPath(
 );
 const requestRouteUrl = new URL("../src/app/api/world/request/route.ts", import.meta.url);
 const verifyRouteUrl = new URL("../src/app/api/world/verify/route.ts", import.meta.url);
+const verificationComponentUrl = new URL("../src/components/provider/deploy/world-issuer-verification.tsx", import.meta.url);
 
 const configuredEnvironment = Object.freeze({
   WORLD_APP_ID: "app_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -82,6 +84,13 @@ test("declares the server-only World issuer verification boundary", () => {
     true,
     `missing declared World boundary: ${modulePath}`,
   );
+});
+
+test("enables legacy proofs for the supported Selfie Check credential", async () => {
+  const component = await readFile(verificationComponentUrl, "utf8");
+
+  assert.match(component, /selfieCheckLegacy\s*\(/u);
+  assert.match(component, /allow_legacy_proofs=\{true\}/u);
 });
 
 test("creates a short-lived staging request and binds a tamper-evident browser session to one canonical issuer", async () => {
@@ -174,7 +183,19 @@ test("forwards the opaque World result unchanged and emits only the scoped issue
   try {
     const route = await loadRoute(fileURLToPath(verifyRouteUrl));
     const address = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf";
-    const idkitResponse = Object.freeze({ proof: "opaque-proof", nested: Object.freeze({ nullifier_hash: "opaque-nullifier" }) });
+    const idkitResponse = Object.freeze({
+      protocol_version: "3.0",
+      action: "issuer-publish",
+      environment: "staging",
+      nonce: "opaque-nonce",
+      responses: Object.freeze([Object.freeze({
+        identifier: "selfie",
+        signal_hash: hashSignal(address),
+        proof: "opaque-proof",
+        merkle_root: "0x01",
+        nullifier: "opaque-nullifier",
+      })]),
+    });
     const response = await withConfiguredEnvironment(() => route.POST(new Request("http://localhost/api/world/verify", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -193,6 +214,45 @@ test("forwards the opaque World result unchanged and emits only the scoped issue
     assert.match(cookie, /SameSite=Lax/iu);
     assert.match(cookie, /Path=\/api\/commands/iu);
     assert.doesNotMatch(cookie, /opaque-proof|opaque-nullifier/iu);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("rejects a verified World result whose signal is not bound to the requested issuer", async () => {
+  const originalFetch = globalThis.fetch;
+  let forwarded = 0;
+  globalThis.fetch = async () => {
+    forwarded += 1;
+    return new Response("{}", { status: 200 });
+  };
+  try {
+    const route = await loadRoute(fileURLToPath(verifyRouteUrl));
+    const address = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf";
+    const response = await withConfiguredEnvironment(() => route.POST(new Request("http://localhost/api/world/verify", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        address,
+        idkitResponse: {
+          protocol_version: "3.0",
+          action: "issuer-publish",
+          environment: "staging",
+          nonce: "opaque-nonce",
+          responses: [{
+            identifier: "selfie",
+            signal_hash: hashSignal("0xc89f87052c3e080b4a9b021d4930055031ef378e"),
+            proof: "opaque-proof",
+            merkle_root: "0x01",
+            nullifier: "opaque-nullifier",
+          }],
+        },
+      }),
+    })));
+
+    assert.equal(response.status, 403);
+    assert.deepEqual(await response.json(), { error: "world_verification_failed" });
+    assert.equal(forwarded, 0);
   } finally {
     globalThis.fetch = originalFetch;
   }

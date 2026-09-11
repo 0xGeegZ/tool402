@@ -247,6 +247,27 @@ test("fails closed before forwarding directory publication without a World sessi
   assert.equal(fetchImpl.calls.length, 0);
 });
 
+test("checks the World publication gate before reporting an unconfigured ingress", async () => {
+  const { handleCommandRelayPost } = await loadRelayModule();
+  const fetchImpl = createFetch(() => jsonResponse({ outcome: "ACCEPTED" }));
+  const body = new TextEncoder().encode(JSON.stringify({
+    command: {
+      type: "directory.publish",
+      signer: "0xc89f87052c3e080b4a9b021d4930055031ef378e",
+    },
+    payload: {},
+  }));
+  const response = await handleCommandRelayPost(
+    createRequest(body),
+    {},
+    dependencies(fetchImpl),
+  );
+
+  assert.equal(response.status, 403);
+  assert.deepEqual(await response.json(), { outcome: "WORLD_VERIFICATION_REQUIRED" });
+  assert.equal(fetchImpl.calls.length, 0);
+});
+
 test("fails closed before forwarding directory publication for malformed, expired, or other-issuer World sessions", async () => {
   const { createWorldIssuerCookie } = await import("../src/lib/world/issuer-selfie-check.ts");
   const { handleCommandRelayPost } = await loadRelayModule();
