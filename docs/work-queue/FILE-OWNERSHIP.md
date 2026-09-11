@@ -12,9 +12,9 @@ paths `packages/backend/convex/offerings.ts`,
 `apps/web/tests/provider-campaign-resume.test.mjs`, plus the narrow
 import-harness amendment of `apps/web/tests/deploy-stage-signing.test.mjs`.
 The isolated public-HTTP continuation correction reserves only
-`packages/backend/tests/command-dispatch.test.mjs` for durable RED; its
-`packages/backend/convex/command_dispatch.ts` source remains prohibited until
-that RED is accepted.
+`packages/backend/tests/command-dispatch.test.mjs` and
+`packages/backend/convex/command_dispatch.ts` for the accepted minimal GREEN
+correction; every other command-dispatch source and test remains prohibited.
 No candidate path is
 active or reserved before independent readiness and separate RED activation.
 M51 may expose only a revalidated `ASSET_PENDING`/`PREPARED` durable recovery

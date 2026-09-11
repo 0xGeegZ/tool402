@@ -90,6 +90,14 @@ the absent durable offering reference and absent pure Web resume helper. The
 exact GREEN paths are the seven candidate paths declared in this card; every
 other source/test path and every live boundary remains prohibited.
 
+The adapter correction RED at `2fde5b78a87c57a134a91a64455188a67c7dc0f6`
+has one intended failure: the validated public projection is converted to
+`UNAVAILABLE` solely because the HTTP adapter excludes its optional canonical
+attempt reference. Its focused GREEN scope is exactly
+`packages/backend/convex/command_dispatch.ts` and
+`packages/backend/tests/command-dispatch.test.mjs`; no other M51 scope or live
+boundary expands.
+
 ## Verification
 
 - RED proves a valid durable pending offering resumes the exact stage facts,
