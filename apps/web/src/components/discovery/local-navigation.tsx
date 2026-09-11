@@ -106,7 +106,8 @@ export function LocalNavigation() {
           <li key={link.href}>
             <Link
               href={link.href}
-              className={`touch-target rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isActiveLink(pathname, link.href) ? "bg-secondary text-foreground" : "text-muted-foreground"}`}
+              aria-current={isActiveLink(pathname, link.href) ? "page" : undefined}
+              className={`touch-target rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isActiveLink(pathname, link.href) ? "bg-secondary text-foreground" : "text-muted-foreground"}`}
             >
               {link.label}
             </Link>
@@ -168,7 +169,8 @@ export function LocalNavigation() {
                       <Link
                         href={link.href}
                         onClick={() => closeMenu()}
-                        className={`flex min-h-11 items-center rounded-control px-3 text-base font-semibold transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isActiveLink(pathname, link.href) ? "bg-muted text-foreground" : "text-foreground"}`}
+                        aria-current={isActiveLink(pathname, link.href) ? "page" : undefined}
+                        className={`flex min-h-11 items-center rounded-control px-3 text-base font-semibold transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isActiveLink(pathname, link.href) ? "bg-secondary text-foreground" : "text-foreground"}`}
                       >
                         {link.label}
                       </Link>
