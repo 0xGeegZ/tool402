@@ -54,6 +54,7 @@ export function WalletIsland({
   const [state, setState] = useState<WalletState>({ kind: "disconnected" });
   const providerRef = useRef<Eip1193Provider | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
+  const sessionReadGenerationRef = useRef(0);
   const provider = providerRef.current;
 
   useEffect(() => {
@@ -62,14 +63,22 @@ export function WalletIsland({
     }
 
     const cleanup = watchWalletSessionChanges(provider, async () => {
+      const readGeneration = sessionReadGenerationRef.current + 1;
+      sessionReadGenerationRef.current = readGeneration;
       setState({ kind: "connecting" });
       const connection = await readCurrentSession(provider, approvedIssuerAddress);
-      if (providerRef.current === provider) {
+      if (
+        providerRef.current === provider &&
+        sessionReadGenerationRef.current === readGeneration
+      ) {
         setState(connection.state);
       }
     });
     cleanupRef.current = cleanup;
-    return cleanup;
+    return () => {
+      sessionReadGenerationRef.current += 1;
+      cleanup();
+    };
   }, [approvedIssuerAddress, provider]);
 
   async function connect() {
@@ -97,6 +106,7 @@ export function WalletIsland({
   }
 
   function disconnect() {
+    sessionReadGenerationRef.current += 1;
     cleanupRef.current?.();
     cleanupRef.current = null;
     providerRef.current = null;
