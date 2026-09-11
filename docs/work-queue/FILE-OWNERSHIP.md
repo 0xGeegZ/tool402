@@ -2,11 +2,11 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
-M52-T010 is a root-owned `10-ready` CORE_P0 correction. It owns its card,
+M52-T010 is a root-owned `20-active` CORE_P0 correction. It owns its card,
 specification, queue/review records, and only the future candidate paths
 `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts` and
 `apps/web/tests/stage-b-browser-provider-bridge.test.mjs`. No candidate path
-is active before separate durable test-only RED activation. M52 may only replace the strict one-account condition with exact
+source remains prohibited until a fresh RED review. M52 may only replace the strict one-account condition with exact
 fixed-issuer membership; provider, wallet, transaction, receipt, Mirror,
 candidate, attachment, authority, deployment, and every live path remain
 excluded.
