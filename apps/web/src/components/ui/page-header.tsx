@@ -23,7 +23,7 @@ type PageHeaderProps = {
 
 export function PageHeader({ title, description, eyebrow, actions }: PageHeaderProps) {
   return (
-    <header className="max-w-3xl space-y-4">
+    <header className="max-w-3xl space-y-5">
       {eyebrow ? <Badge variant="outline" className="w-fit">{eyebrow}</Badge> : null}
       <h1 className="text-4xl font-extrabold tracking-[-0.045em] sm:text-5xl">{title}</h1>
       {description ? <p className="text-lg leading-8 text-muted-foreground">{description}</p> : null}
