@@ -25,8 +25,20 @@ and [implementation plan](../../../superpowers/plans/2026-09-11-b04-security-sca
 
 Readiness confirms the accepted dependencies, absent new identity and bounded
 reader targets, and no active ownership collision. This card reserves its
-declared candidate paths for a future activation review only; no source or test
-change, RED, or GREEN work is authorized while it is `10-ready`.
+declared candidate paths for a future activation review only. Its exact
+durable-RED candidates are:
+
+- `apps/web/tests/stage-b-ats-create-canonical-identity.test.mjs`;
+- `apps/web/tests/bounded-request-json.test.mjs`;
+- `apps/web/tests/entitycheck-api.test.mjs`;
+- `apps/web/tests/riskscan-api.test.mjs`;
+- `apps/web/tests/provider-deploy-route.test.mjs`;
+- `apps/web/tests/provider-deploy-state.test.mjs`;
+- `apps/web/tests/stage-b-ats-create-command-projection.test.mjs`; and
+- `apps/web/tests/stage-b-browser-provider-bridge.test.mjs`.
+
+No source or test change, RED, or GREEN work is authorized while it is
+`10-ready`.
 
 Payment, settlement, wallet/provider, transaction, deployment, and live
 boundaries remain excluded.
