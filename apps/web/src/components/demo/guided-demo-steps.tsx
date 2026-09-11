@@ -37,12 +37,12 @@ export function GuidedDemoSteps() {
               <li key={step.href}>
                 <Card className="h-full rounded-card shadow-none">
                   <CardHeader className="gap-2">
-                    <p className="text-sm font-medium text-brand-purple">Step {chapter.start + index + 1}</p>
+                    <p className="text-sm font-medium text-primary">Step {chapter.start + index + 1}</p>
                     <CardTitle>{step.title}</CardTitle>
                     <CardDescription>{step.observation}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Link href={step.href} className="inline-flex min-h-9 items-center rounded-control bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                    <Link href={step.href} className="inline-flex min-h-9 touch-target items-center rounded-control bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
                       Open this screen →
                     </Link>
                   </CardContent>

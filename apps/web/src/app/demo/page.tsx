@@ -11,14 +11,14 @@ export default function DemoPage() {
           description="A presenter-first route through local discovery, request boundaries, and current guest surfaces. Keep this guide open while you present."
         />
         <section aria-label="Demo context" className="grid gap-3 sm:grid-cols-4">
-          <div className="rounded-card border border-border bg-card p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Target duration</p><p className="mt-2 font-semibold">3–4 minutes</p></div>
-          <div className="rounded-card border border-border bg-card p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Network</p><p className="mt-2 font-semibold">Hedera testnet</p></div>
-          <div className="rounded-card border border-border bg-card p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Core story</p><p className="mt-2 font-semibold">Discover → request → inspect</p></div>
-          <div className="rounded-card border border-border bg-card p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Mode</p><p className="mt-2 font-semibold">Presenter guide</p></div>
+          <div className="rounded-card border border-border bg-card p-4"><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Target duration</p><p className="mt-2 font-semibold">3–4 minutes</p></div>
+          <div className="rounded-card border border-border bg-card p-4"><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Network</p><p className="mt-2 font-semibold">Hedera testnet</p></div>
+          <div className="rounded-card border border-border bg-card p-4"><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Core story</p><p className="mt-2 font-semibold">Discover → request → inspect</p></div>
+          <div className="rounded-card border border-border bg-card p-4"><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Mode</p><p className="mt-2 font-semibold">Presenter guide</p></div>
         </section>
-        <section aria-labelledby="demo-loop-title" className="rounded-3xl border border-brand-purple/20 bg-brand-purple/5 p-5 sm:p-6">
+        <section aria-labelledby="demo-loop-title" className="rounded-panel border border-brand-purple/20 bg-brand-purple/5 p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div><p className="text-xs font-semibold uppercase tracking-wide text-brand-purple">The route map</p><h2 id="demo-loop-title" className="mt-1 text-xl font-bold">Discover → Request → 402 → Inspect boundary → Next local step</h2></div>
+            <div><p className="text-xs font-semibold uppercase tracking-wide text-primary">The route map</p><h2 id="demo-loop-title" className="mt-1 text-xl font-bold">Discover → Request → 402 → Inspect boundary → Next local step</h2></div>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">The guide points to screens that are available locally and names the limits of each surface.</p>
           </div>
         </section>

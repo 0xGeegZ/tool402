@@ -92,7 +92,7 @@ function StepProgress({
                 className={`flex w-full flex-col gap-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 ${isCurrent ? "text-foreground" : isComplete ? "text-foreground" : "text-muted-foreground"}`}
               >
                 <span aria-hidden="true" className={`h-1.5 w-full rounded-full ${isCurrent || isComplete ? "bg-primary" : "bg-secondary"}`} />
-                <span className="text-[10px] font-medium leading-4 sm:text-[11px]">{step.label}</span>
+                <span className="text-[11px] font-medium leading-4 sm:text-[11px]">{step.label}</span>
               </button>
             </li>
           );
@@ -362,13 +362,13 @@ export function ProviderDeployWizard() {
     <main className="mx-auto max-w-5xl px-1 pb-10 sm:px-2 sm:pb-14" data-ui="provider-deploy-surface">
       <header data-ui="provider-deploy-identity" className="max-w-3xl">
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="rounded-full border-warning/40 bg-warning/10 px-2 py-0.5 text-[10px] font-medium text-warning-foreground">
+          <Badge variant="outline" className="rounded-full border-warning/40 bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning-foreground">
             Prepared / demo data fixture
           </Badge>
-          <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-foreground">
+          <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-foreground">
             Hedera testnet · chain 296
           </Badge>
-          <Badge variant="outline" className="rounded-full border-border bg-secondary px-2 py-0.5 text-[10px] font-medium text-foreground">
+          <Badge variant="outline" className="rounded-full border-border bg-secondary px-2 py-0.5 text-[11px] font-medium text-foreground">
             Terms v1 · fixed
           </Badge>
         </div>
