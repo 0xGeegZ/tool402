@@ -107,16 +107,15 @@ routesTest("uses development-only localhost cookies without Secure or __Host", a
   assert.match(challengeCookie, /^tool402-local-dashboard-challenge=/u);
   assert.doesNotMatch(challengeCookie, /(?:Secure|__Host-)/u);
 
-  const { message } = await challenge.json();
-  const challengeValue = challengeCookie.match(/^tool402-local-dashboard-challenge=([^;]+)/u)[1];
+  const { message, challenge: challengeTicket } = await challenge.json();
+  assert.equal(typeof challengeTicket, "string");
   const verification = await routes.handleVerifyPost(new Request(`${localOrigin}/api/auth/metamask/verify`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
       origin: localOrigin,
-      cookie: `tool402-local-dashboard-challenge=${challengeValue}`,
     },
-    body: JSON.stringify({ message, signature: `0x${"11".repeat(65)}` }),
+    body: JSON.stringify({ message, signature: `0x${"11".repeat(65)}`, challenge: challengeTicket }),
   }), localEnv, {
     now: () => Date.parse("2026-09-11T12:00:00.000Z"),
     verifyMessage: async () => true,
@@ -125,6 +124,21 @@ routesTest("uses development-only localhost cookies without Secure or __Host", a
   const cookies = cookieValues(verification).join("\n");
   assert.match(cookies, /tool402-local-dashboard-session=.*Path=\/.*HttpOnly.*SameSite=Strict.*Max-Age=28800/u);
   assert.doesNotMatch(cookies, /(?:Secure|__Host-)/u);
+});
+
+routesTest("does not expose or accept a body challenge outside localhost development", async () => {
+  const routes = await loadRoutes();
+  const challenge = await routes.handleChallengePost(post("/api/auth/metamask/challenge", { address }), env);
+  assert.equal(challenge.status, 200);
+  assert.deepEqual(Object.keys(await challenge.json()).sort(), ["expiresAt", "message"]);
+
+  const verification = await routes.handleVerifyPost(post("/api/auth/metamask/verify", {
+    message: "anything",
+    signature: `0x${"11".repeat(65)}`,
+    challenge: "not-accepted-over-https",
+  }), env);
+  assert.equal(verification.status, 401);
+  assert.deepEqual(await verification.json(), { outcome: "rejected" });
 });
 
 routesTest("derives the exact Vercel Preview origin when no explicit origin is configured", async () => {

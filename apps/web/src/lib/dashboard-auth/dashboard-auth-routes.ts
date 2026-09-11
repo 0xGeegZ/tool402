@@ -98,7 +98,10 @@ export async function handleChallengePost(request: Request, env: DashboardAuthEn
     const createChallenge = dependencies.createChallenge ?? createCoreChallenge;
     const challenge = await createChallenge({ address: body.address, env }, coreDependencies(dependencies));
     if (!isBoundedCookieValue(challenge.cookie)) return rejected(settings);
-    return response(200, { message: challenge.message, expiresAt: challenge.expiresAt }, [cookie(settings.cookieNames.challenge, challenge.cookie, CHALLENGE_MAX_AGE_SECONDS, settings.cookieNames.secure)]);
+    const responseBody = settings.cookieNames.secure
+      ? { message: challenge.message, expiresAt: challenge.expiresAt }
+      : { message: challenge.message, expiresAt: challenge.expiresAt, challenge: challenge.cookie };
+    return response(200, responseBody, [cookie(settings.cookieNames.challenge, challenge.cookie, CHALLENGE_MAX_AGE_SECONDS, settings.cookieNames.secure)]);
   } catch {
     return rejected(settings);
   }
@@ -107,12 +110,12 @@ export async function handleChallengePost(request: Request, env: DashboardAuthEn
 export async function handleVerifyPost(request: Request, env: DashboardAuthEnvironment, dependencies: RouteDependencies = {}): Promise<Response> {
   const settings = configuredAuth(env);
   if (settings === null) return notConfigured();
-  const body = await exactJsonBody(request, ["message", "signature"]);
+  const body = await exactJsonBody(request, settings.cookieNames.secure ? ["message", "signature"] : ["message", "signature", "challenge"]);
   if (body === null || request.headers.get("origin") !== settings.origin) return rejected(settings, true);
   try {
     const verifyChallenge = dependencies.verifyChallenge ?? verifyCoreChallenge;
     const verification = await verifyChallenge({
-      challengeCookie: challengeCookieFrom(request, settings.cookieNames.challenge),
+      challengeCookie: challengeCookieFrom(request, settings.cookieNames.challenge) || body.challenge,
       message: body.message,
       signature: body.signature,
       origin: settings.origin,

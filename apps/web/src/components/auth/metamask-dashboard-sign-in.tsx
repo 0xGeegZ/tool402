@@ -9,12 +9,13 @@ import { connectedWalletSession, useWalletSession, type WalletSession } from "..
 
 const failureMessage = "Sign-in could not be completed. Please try again.";
 
-function isChallenge(value: unknown): value is Readonly<{ message: string }> {
+function isChallenge(value: unknown): value is Readonly<{ message: string; challenge?: string }> {
+  const keys = typeof value === "object" && value !== null && Object.getPrototypeOf(value) === Object.prototype ? Object.keys(value) : [];
   return (
     typeof value === "object" &&
     value !== null &&
     Object.getPrototypeOf(value) === Object.prototype &&
-    Object.keys(value).length === 2 &&
+    (keys.length === 2 || (keys.length === 3 && typeof (value as { challenge?: unknown }).challenge === "string")) &&
     typeof (value as { message?: unknown }).message === "string" &&
     typeof (value as { expiresAt?: unknown }).expiresAt === "string"
   );
@@ -85,6 +86,7 @@ function MetaMaskSignInButton({ session }: { session: WalletSession }) {
       const verification = await postJson("/api/auth/metamask/verify", {
         message,
         signature,
+        challenge: challenge.challenge,
       });
       if (!isAuthenticated(verification)) {
         throw new Error("verification rejected");

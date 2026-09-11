@@ -412,6 +412,7 @@ clientTest("keeps sign-in limited to the accepted local authentication boundary"
   assert.match(client, /\/api\/auth\/metamask\/challenge/u);
   assert.match(client, /\/api\/auth\/metamask\/verify/u);
   assert.match(client, /credentials\s*:\s*["']same-origin["']/u);
+  assert.match(client, /challenge\s*:\s*challenge\.challenge/u);
   assert.match(client, /params\s*:\s*\[\s*message\s*,\s*address\s*\]/u);
   assert.match(client, /disabled\s*=\s*\{\s*pending\s*\}/u);
   assert.match(client, /aria-live\s*=\s*["']polite["']/u);
