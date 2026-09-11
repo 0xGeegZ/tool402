@@ -1252,3 +1252,6 @@ same exact landing assertion reserved for corrective RED.
 D-S33-010-009 authorizes only the supporting-sentence literal in
 `apps/web/src/app/explore/page.tsx`. The matching two test assertions are
 already established RED; every other test and source path remains frozen.
+
+D-S33-010-010 accepts `25d8b4e` and closes every S33 source and test
+reservation. The correction grants no continuing ownership or behavior scope.

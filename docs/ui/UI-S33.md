@@ -79,3 +79,9 @@ the machine-payment claim with local-route-only copy, and guard every S33
 presentation source against client directives, hooks, fetches, handlers,
 controls, interactive ARIA state, external URLs, and the prohibited claims.
 No other source path, behavior, or product fact is reopened.
+
+## Corrective acceptance
+
+At `25d8b4e`, the correction replaces only the unsupported payment phrase with
+the accepted local-route sentence. Its four-source static contract, local
+routes, two matching assertions, and quiet placeholder remain unchanged.

@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active (corrective RED only)
+- Queue state: 60-done
 - Dependencies: S20-T010, S23-T010, S25-T010, and S31-T010 accepted.
 - Owner: The root owns queue records, the UI ledger, decisions, reviews,
   commits, and pushes. Candidate implementation paths are exactly those
@@ -99,6 +99,16 @@ Independent RED review at `2f26d7185c991eb8b1f6e3c4054ee2960fe2faad` is
 clear. D-S33-010-009 authorizes only the Explore supporting-sentence literal
 in `apps/web/src/app/explore/page.tsx`; the two matching assertions are
 already RED. No other source/test path or behavior is authorized.
+
+## Corrective acceptance
+
+Independent module review accepts exact head
+`25d8b4e2a774e22e44642619af299063ed0fc504`. It follows D-S33-010-009 and
+changes only the authorized Explore supporting-sentence literal; the static
+boundary, local routes, matching assertions, and quiet placeholder remain
+intact. Focused 7/7, Web 333/333, root test/typecheck/lint, queue, and
+whitespace are clear. Browser replay is host-unavailable; retained 1440/390
+evidence is the visual record. S33-T010 is 60-done and all reservations close.
 
 ## Ready authority
 
