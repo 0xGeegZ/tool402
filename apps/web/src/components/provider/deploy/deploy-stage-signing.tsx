@@ -19,6 +19,7 @@ import {
   type AtsCreateCandidate,
   type ProviderDeployStageState,
 } from "./provider-deploy-state";
+import { WorldIssuerVerification } from "./world-issuer-verification";
 
 const finalPhases: ReadonlySet<SignatureResult["phase"]> = new Set(["complete", "rejected", "failed", "unknown"]);
 
@@ -53,6 +54,7 @@ export function DeployStageSigning({
   const [attemptPublicId, setAttemptPublicId] = useState<string | null>(null);
   const [request, setRequest] = useState<StageSignatureRequest | null>(null);
   const [constructionError, setConstructionError] = useState<string | null>(null);
+  const [worldVerifiedAddress, setWorldVerifiedAddress] = useState<string | null>(null);
   const executionProjection = createStageBAtsCreateExecutionProjection();
   const states = providerDeployStageStates(atsCreateConfiguration, {
     connected: session !== null,
@@ -60,12 +62,19 @@ export function DeployStageSigning({
     candidate,
     recordComplete: isDirectoryRecordComplete(directoryRecordLiteral),
   });
+  const worldVerified = worldVerifiedAddress === session?.address;
+  const worldGatedStates = states.map((stage, index) => (
+    index === 3 && stage.kind === "actionable" && !worldVerified
+      ? { kind: "unavailable" as const, detail: "Complete the World Selfie Check for this wallet before directory publication." }
+      : stage
+  ));
   const visibleStates = request
-    ? states.map((stage, index) => (index === request.stage ? { kind: "in_progress" as const } : stage))
-    : states;
-  const enabledStage = session !== null && request === null
-    ? states.findIndex((stage) => stage.kind === "actionable")
+    ? worldGatedStates.map((stage, index) => (index === request.stage ? { kind: "in_progress" as const } : stage))
+    : worldGatedStates;
+  const actionableStage = session !== null && request === null
+    ? worldGatedStates.findIndex((stage) => stage.kind === "actionable")
     : -1;
+  const enabledStage = actionableStage;
 
   function activate(stage: number) {
     if (request !== null || stage !== enabledStage) return;
@@ -121,6 +130,7 @@ export function DeployStageSigning({
           </p>
         </section>
       </div>
+      {session ? <WorldIssuerVerification key={session.address} address={session.address} onVerified={() => setWorldVerifiedAddress(session.address)} /> : null}
       {children}
       <section aria-labelledby="deploy-stage-signing-title" data-ui="provider-deploy-signing" className="space-y-4 rounded-field border bg-muted/30 p-4 shadow-none">
         <div className="space-y-1">
