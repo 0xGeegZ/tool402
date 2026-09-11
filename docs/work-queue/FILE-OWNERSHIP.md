@@ -1318,9 +1318,12 @@ Its candidate surface is exactly
 `apps/web/tests/wallet-state.test.mjs`, and new
 `apps/web/tests/wallet-session-sync.test.mjs`. It has no active source or test
 source reservation pending independent RED acceptance. The refreshed
-activation review at `96cce4c` reserves only
+activation review at `96cce4c` reserved only
 `apps/web/tests/wallet-state.test.mjs` and new
-`apps/web/tests/wallet-session-sync.test.mjs` for durable RED. S26-T010 is
+`apps/web/tests/wallet-session-sync.test.mjs` for durable RED. Independent RED
+acceptance at `3d8ad88` now reserves exactly those test paths plus
+`apps/web/src/lib/wallet/metamask-provider.ts` and
+`apps/web/src/components/wallet/wallet-connect.tsx` for GREEN. S26-T010 is
 inbox-only and explicitly excludes `metamask-provider.ts`; it must preserve
 M50's accepted event behavior if it later rebases its shared-session redesign.
 M50 does not own or amend

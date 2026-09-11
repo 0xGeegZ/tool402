@@ -103,6 +103,27 @@ Every source path remains prohibited pending independent RED acceptance. This
 activation grants no discovery, account read or selection, chain switch,
 signature, relay, request, transaction, deployment, or live action.
 
+## RED acceptance
+
+The independent [M50 RED review](../../evidence/M50-T010-red-review.md) accepts
+test-only commits `2b0de2153f7abdbcfad5ab3b34d0d79f7c8004f7` and
+`3d8ad88a5d654b974ef7154874a7564d0f3e938e`. The durable contract fails only
+for the absent native helper and island wiring; it separately rejects missing
+cleanup capability, absent unmount/disconnect cleanup, unsafe event-handler
+work, and direct raw event wiring.
+
+The exact GREEN surface is now limited to:
+
+- `apps/web/src/lib/wallet/metamask-provider.ts`;
+- `apps/web/src/components/wallet/wallet-connect.tsx`;
+- `apps/web/tests/wallet-state.test.mjs`; and
+- `apps/web/tests/wallet-session-sync.test.mjs`.
+
+`wallet-state.ts`, deploy-stage signing, every command/relay boundary,
+configuration, packages, lockfiles, and all wallet/provider/live actions
+remain prohibited. GREEN must preserve event payload as an untrusted hint and
+use only the existing passive current-session reader.
+
 ## Verification
 
 - A durable RED commit first changes only
