@@ -1232,3 +1232,11 @@ Independent task review at a56687ef538c5bd23eb1add95df723271e55d87c is clear.
 S33-T010 is in task review; its exact Green source/test surface is frozen
 through independent module review. No behavior, data, route, wallet, provider,
 payment, transaction, deployment, or live path is added or authorized.
+
+The independent module review blocks S33 on one unsupported payment claim and
+one incomplete static-boundary proof. D-S33-010-006 reserves only
+`apps/web/tests/explore-visual-reconciliation.test.mjs` for corrective RED.
+Every production path remains frozen until a fresh RED review; that review may
+authorize only the supporting sentence in `apps/web/src/app/explore/page.tsx`.
+The catalogue, cards, routes, data, client/runtime behavior, wallet/provider/
+payment, transactions, deployment, and live boundaries remain excluded.

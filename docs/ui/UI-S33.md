@@ -44,6 +44,10 @@ Only these product facts may be rendered:
 - new tools are added only after their journey is accepted; and
 - current Hedera testnet/local-boundary wording already accepted by the shell.
 
+The Explore introduction may describe a clear local route to inspect each
+tool. It must not describe any tool as machine-payable or imply an available
+payment capability.
+
 ## Explicit exclusions
 
 Do not add a searchable input, stateful filter, toggle, sort, form, mock
@@ -64,3 +68,13 @@ availability claim.
 - Focused Web tests, Web/root typecheck and test, lint, queue/reference/
   whitespace checks, and independent task/module review are clear before
   acceptance.
+
+## Module-review correction
+
+The S33 module review blocks the merged source on one copy claim and one
+missing static-boundary proof. The corrective cycle may amend only the Explore
+supporting sentence and `explore-visual-reconciliation.test.mjs`: replace the
+machine-payment claim with local-route-only copy, and guard every S33
+presentation source against client directives, hooks, fetches, handlers,
+controls, interactive ARIA state, external URLs, and the prohibited claims.
+No other source path, behavior, or product fact is reopened.

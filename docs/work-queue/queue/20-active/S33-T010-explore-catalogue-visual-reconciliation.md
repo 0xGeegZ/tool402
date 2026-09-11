@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 30-task-review
+- Queue state: 20-active (corrective RED only)
 - Dependencies: S20-T010, S23-T010, S25-T010, and S31-T010 accepted.
 - Owner: The root owns queue records, the UI ledger, decisions, reviews,
   commits, and pushes. Candidate implementation paths are exactly those
@@ -72,6 +72,15 @@ whitespace are clear under Node 22.21.1. Root browser evidence records
 1440px/390px captures, no horizontal overflow, and axe 0 violations/incomplete;
 the reviewer could not rerun browser evidence because its sandbox denied a
 Next port bind. Source is frozen pending independent module review.
+
+## Module-review correction
+
+The canonical-main module review blocks the source on the unsupported
+machine-payment phrase and an incomplete no-runtime proof. D-S33-010-006
+reopens only `apps/web/tests/explore-visual-reconciliation.test.mjs` to write
+durable corrective RED. The Explore page and every other source path remain
+frozen until a fresh independent RED review accepts the test delta and
+authorizes the supporting-sentence replacement alone.
 
 ## Ready authority
 
