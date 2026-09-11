@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: S15-T010 accepted, S16-T010 accepted.
 - Compatibility context: M49-T010 is accepted with no active reservation on
   this card's paths. M50 preserves its existing Stage-B revalidation behavior
@@ -89,6 +89,19 @@ S26-T010 remains inbox-only. The three existing candidate paths are present,
 the new focused test is absent, and no source has changed. A separate fresh
 activation may authorize only the two durable test paths; all source remains
 prohibited until independent RED acceptance.
+
+## Activation review
+
+The independent [M50 activation review](../../evidence/M50-T010-activation-review.md)
+is clear at current merged control head `96cce4c540c0510a9ab871b577a8b8f0b40ad9f6`.
+Only durable RED changes to the following exact test paths are active:
+
+- `apps/web/tests/wallet-state.test.mjs`; and
+- `apps/web/tests/wallet-session-sync.test.mjs`.
+
+Every source path remains prohibited pending independent RED acceptance. This
+activation grants no discovery, account read or selection, chain switch,
+signature, relay, request, transaction, deployment, or live action.
 
 ## Verification
 

@@ -1311,16 +1311,18 @@ already established RED; every other test and source path remains frozen.
 D-S33-010-010 accepts `25d8b4e` and closes every S33 source and test
 reservation. The correction grants no continuing ownership or behavior scope.
 
-M50-T010 is an `00-inbox` CORE_P0 wallet-session synchronization correction.
+M50-T010 is a `20-active` CORE_P0 wallet-session synchronization correction.
 Its candidate surface is exactly
 `apps/web/src/lib/wallet/metamask-provider.ts`,
 `apps/web/src/components/wallet/wallet-connect.tsx`,
 `apps/web/tests/wallet-state.test.mjs`, and new
 `apps/web/tests/wallet-session-sync.test.mjs`. It has no active source or test
-reservation until a separate test-only RED activation. The independent
-readiness review at `795a5c1` is clear and M50-T010 is `10-ready`; it reserves
-no source or test path yet. S26-T010 is inbox-only and explicitly excludes
-`metamask-provider.ts`; it must preserve M50's accepted event behavior if it
-later rebases its shared-session redesign. M50 does not own or amend
+source reservation pending independent RED acceptance. The refreshed
+activation review at `96cce4c` reserves only
+`apps/web/tests/wallet-state.test.mjs` and new
+`apps/web/tests/wallet-session-sync.test.mjs` for durable RED. S26-T010 is
+inbox-only and explicitly excludes `metamask-provider.ts`; it must preserve
+M50's accepted event behavior if it later rebases its shared-session redesign.
+M50 does not own or amend
 `wallet-state.ts`, deploy-stage signing, command/relay code, configuration,
 packages, lockfiles, or any live path.

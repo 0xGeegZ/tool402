@@ -488,3 +488,11 @@ No secrets, account keys, or private evidence belong in this file.
   inbox-only. A separate root activation may authorize only the two named
   durable RED tests; no wallet/account action, signature, relay, transaction,
   or live behavior is authorized.
+- M50_WALLET_SESSION_SYNC_ACTIVATION: Fresh independent review at merged
+  current control head `96cce4c540c0510a9ab871b577a8b8f0b40ad9f6` is clear.
+  M50-T010 is `20-active` only for durable RED in
+  `apps/web/tests/wallet-state.test.mjs` and new
+  `apps/web/tests/wallet-session-sync.test.mjs`. All source paths and every
+  wallet/provider, account, signature, relay, request, transaction,
+  deployment, and live boundary remain prohibited pending independent RED
+  acceptance.
