@@ -23,6 +23,10 @@
   Sandbox flow. The iOS tester enrollment is submitted and pending; Selfie
   Check feature enablement and an end-to-end proof remain external and
   unproven.
+- M51_REBASE_TYPE_INTEGRATION: D-M51-010-007 reserves only the S18 backing
+  state test and refusal-copy map needed to exhaustively handle M51's closed
+  `WORLD_VERIFICATION_REQUIRED` relay outcome after the rebase. No backing
+  lifecycle, command, payment, transfer, or live behavior expands.
 
 - HA_PUBLIC_DEPLOYMENT_RECONCILIATION: `D-HA-PUBLIC-DEPLOY-001-001` and
   docs/work-queue/evidence/HA-PUBLIC-DEPLOY-001-review.md supersede solely

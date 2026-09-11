@@ -1361,3 +1361,9 @@ command-relay, signing-island, static-shell, and wallet-state tests, and
 `docs/submission/world-selfie-check-feedback.md`. Wallet authority, EIP-712
 validation, Convex state, deployment, payment, transaction, legal identity,
 KYC, and production claims remain outside this GREEN scope.
+
+D-M51-010-007 additionally reserves only
+`apps/web/tests/backing-state.test.mjs` and
+`apps/web/src/components/backing/backing-state.ts` for the rebase-only
+exhaustive handling of `WORLD_VERIFICATION_REQUIRED`. Every other S18 source,
+test, lifecycle, command, payment, transfer, and live boundary remains fixed.

@@ -45,6 +45,9 @@ short-lived cookie gate, current publication-only scope, UI, and demo evidence.
   and `apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`
 - `apps/web/tests/world-issuer-selfie-check.test.mjs`, plus narrow assertions
   in the established command and signing-island tests
+- Rebase-only exhaustive outcome compatibility in
+  `apps/web/tests/backing-state.test.mjs` and
+  `apps/web/src/components/backing/backing-state.ts`
 - `docs/submission/world-selfie-check-feedback.md`
 
 ## Verification
