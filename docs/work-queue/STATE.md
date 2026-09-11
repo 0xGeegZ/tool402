@@ -174,11 +174,12 @@
 - CURRENT_MODULE: S13 outcome-feedback treatment is accepted at source commit `ece66c2fd7b2278ed0f801ad1febd478d9ddc39f`; S15 wallet-island/relay is accepted at `506f038fffb87739cc5fd302a30033b5c56d36ee`; S16 provider deploy wizard is accepted at `ed46ae18a08c859d5f2c94722ab84453ef674835`; M38 offering command payloads and M40 durable offering/Directory admission are accepted at `60-done`. HA-COMMAND-AUTHORITY-002, HA-ATS-RETARGET-001, HA-ATS-RUNTIME-BINDING-001, HA-ISSUER-ACCOUNT-001, and HA-CAMPAIGN-CONVEX-001 are accepted only as bounded local authority or human evidence. B03 Agent payment remains locally green and awaits its separate human-owned testnet exercise.
 - M41_DELIVERY: accepted at `20983649632f4812d9ee045637eb183b3158cc38` as a local HTTP ingress, transport replay, atomic ATS_CREATE admission, and public-projection boundary only; it adds no configuration, key, publication, wallet, provider, SDK, transaction, deployment, or live authority.
 - CURRENT_TASK: S33-T010 (60-done) is the truth-first Explore catalogue visual reconciliation, including its accepted truthful-copy correction. It has no continuing source reservation. S22, S23, S24, S25, S28, S29, S30, S31, and S32 are accepted presentation slices at 60-done; their scopes grant no continuing source reservation. B03-T020, M44-T030, M46-T040, M47-T010, M48-T010, and M49-T010 are also accepted at 60-done. HA-ATS-STAGE-B-001 remains human-owned; no live capability is authorized by any record.
-- S34_PUBLIC_DOCUMENTATION_INTAKE: S34-T010 is a root-owned static
-  documentation candidate. D-S34-010-001, UI-S34, the S34 specification,
-  plan, catalog, and future-path declaration are committed; no S34 source or
-  test reservation exists until fresh independent readiness and activation.
-  The documentation may describe only current local RiskScan and Provider
+- S34_PUBLIC_DOCUMENTATION_READY: Independent readiness at
+  `3f52a4941354321ed5d5dd57a0f44b93f72bce48` accepts the root-owned static
+  documentation candidate. D-S34-010-001/002, UI-S34, the S34 specification,
+  plan, catalog, and exact future-path declaration are committed; no S34
+  source or test reservation exists until fresh independent activation. The
+  documentation may describe only current local RiskScan and Provider
   boundaries and must not create a payment, campaign, ATS, or live claim.
 - S33_EXPLORE_CATALOGUE_INTAKE: UI-S33 and its card record one static visual reconciliation of /explore over exactly its page, catalogue, two existing cards, and focused tests. The selected PREP-UI-001 Explore composition is visual authority only. A fresh independent readiness review and separate RED activation are required before any test or source path changes; mock listings, search/filter state, prices, funding, metrics, data/API, wallet/provider/payment, transactions, deployment, and live claims remain prohibited.
 - S33_EXPLORE_CATALOGUE_READY: Independent review at dec98bb22fc8a3e2403a426fa5639130bb053cf4 is clear: the dependency/control records resolve, the five existing targets are disjoint and present, the new visual test is absent, and the static Explore baseline passes 1/1 under Node 22.21.1. S33-T010 is 10-ready only; a separate activation may authorize only its two focused RED test paths.

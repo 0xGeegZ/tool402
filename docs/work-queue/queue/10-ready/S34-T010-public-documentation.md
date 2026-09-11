@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: S28-T010, S29-T010, S31-T010, and S33-T010 accepted.
 - Owner: The root owns queue records, the UI ledger, decisions, reviews,
   commits, and pushes. Candidate implementation paths are exactly those
@@ -36,6 +36,13 @@ route targets, product facts, and exclusions.
   assertion in those files is eligible.
 - A fresh independent readiness review must accept the candidate scope before
   a separate activation can permit durable RED.
+
+## Ready authority
+
+Independent readiness at `3f52a4941354321ed5d5dd57a0f44b93f72bce48` is
+clear. S34-T010 is 10-ready only. No source or test path is active; a fresh
+independent activation must confirm this authority remains intact before it
+can reserve the five declared test paths for durable RED.
 
 ## RED and Green boundary
 
