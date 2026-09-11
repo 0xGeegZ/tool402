@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 20-active
 - Dependencies: S17-T010 accepted, S21-T010 accepted, M47-T010 accepted,
   M48-T010 accepted, M49-T010 accepted, M50-T010 accepted.
 - Owner: root integrator for queue/control records; a later implementer may
@@ -64,6 +64,14 @@ Candidate paths after readiness are exactly:
 - All dependencies remain accepted and no active task owns a candidate path.
 - The focused baseline and queue/reference/whitespace checks are clear.
 - A separate activation may reserve only the two test paths for durable RED.
+
+## Readiness and activation
+
+The root [readiness review](../../evidence/M51-T010-ready-review.md) is clear
+at `88108b98fb9ef01b46146afcf2b13573c960c20e`. The root
+[activation review](../../evidence/M51-T010-activation-review.md) reserves
+only the two declared test paths for durable RED. Every source path remains
+prohibited until the RED contract is reviewed.
 
 ## Verification
 

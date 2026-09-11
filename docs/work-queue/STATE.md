@@ -1,10 +1,11 @@
 # Runtime queue state
 
-- M51_PROVIDER_DURABLE_RESUME_INTAKE: User-directed CORE_P0 intake. The
+- M51_PROVIDER_DURABLE_RESUME_RED: User-directed CORE_P0 correction. The
   current Provider screen must recover only its existing Convex
   `ASSET_PENDING` RiskScan offering plus revalidated linked `PREPARED`
-  ATS_CREATE reference after a reload. It is `00-inbox`; no source/test path
-  is active before independent readiness and RED activation, and no wallet,
+  ATS_CREATE reference after a reload. It is `20-active` only for durable RED
+  in its existing Backend test and new focused Web test; no source is active,
+  and no wallet,
   authority, signature, relay, Stage-B, transaction, candidate, or live action
   is authorized.
 
