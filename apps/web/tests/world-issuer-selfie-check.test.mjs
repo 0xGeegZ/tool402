@@ -19,7 +19,7 @@ const configuredEnvironment = Object.freeze({
   WORLD_RP_ID: "rp_aaaaaaaaaaaaaaaa",
   WORLD_RP_SIGNING_KEY: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   WORLD_ACTION: "issuer-publish",
-  WORLD_ENVIRONMENT: "staging",
+  WORLD_ENVIRONMENT: "sandbox",
 });
 const configuredEnvironmentNames = Object.freeze(Object.keys(configuredEnvironment));
 
@@ -106,7 +106,7 @@ test("enables legacy proofs for the supported Selfie Check credential", async ()
   assert.match(component, /allow_legacy_proofs=\{true\}/u);
 });
 
-test("creates a short-lived staging request and binds a tamper-evident browser session to one canonical issuer", async () => {
+test("creates a short-lived Sandbox request and binds a tamper-evident browser session to one canonical issuer", async () => {
   const world = await import("../src/lib/world/issuer-selfie-check.ts");
   const env = configuredEnvironment;
   const address = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf";
@@ -114,7 +114,7 @@ test("creates a short-lived staging request and binds a tamper-evident browser s
 
   assert.equal(request.app_id, env.WORLD_APP_ID);
   assert.equal(request.action, "issuer-publish");
-  assert.equal(request.environment, "staging");
+  assert.equal(request.environment, "sandbox");
   assert.equal(request.rp_context.rp_id, env.WORLD_RP_ID);
   assert.equal(typeof request.rp_context.signature, "string");
   assert.equal(typeof request.rp_context.nonce, "string");
@@ -127,12 +127,13 @@ test("creates a short-lived staging request and binds a tamper-evident browser s
   assert.equal(await world.hasWorldIssuerCookie(cookie, address, env, 601_001), false);
 });
 
-test("fails closed when the fixed action is absent or the environment is not staging", async () => {
+test("fails closed when the fixed action is absent or the environment is not Sandbox", async () => {
   const world = await import("../src/lib/world/issuer-selfie-check.ts");
   const address = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf";
 
   assert.equal(world.createWorldRequest(address, { ...configuredEnvironment, WORLD_ACTION: undefined }), null);
   assert.equal(world.createWorldRequest(address, { ...configuredEnvironment, WORLD_ACTION: "another-action" }), null);
+  assert.equal(world.createWorldRequest(address, { ...configuredEnvironment, WORLD_ENVIRONMENT: "staging" }), null);
   assert.equal(world.createWorldRequest(address, { ...configuredEnvironment, WORLD_ENVIRONMENT: "production" }), null);
 });
 
@@ -199,7 +200,7 @@ test("forwards the opaque World result unchanged and emits only the scoped issue
     const idkitResponse = Object.freeze({
       protocol_version: "3.0",
       action: "issuer-publish",
-      environment: "staging",
+      environment: "sandbox",
       nonce: "opaque-nonce",
       responses: Object.freeze([Object.freeze({
         identifier: "selfie",
@@ -250,7 +251,7 @@ test("rejects a verified World result whose signal is not bound to the requested
         idkitResponse: {
           protocol_version: "3.0",
           action: "issuer-publish",
-          environment: "staging",
+          environment: "sandbox",
           nonce: "opaque-nonce",
           responses: [{
             identifier: "selfie",
