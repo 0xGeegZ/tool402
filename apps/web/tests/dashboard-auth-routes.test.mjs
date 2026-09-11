@@ -18,6 +18,12 @@ const env = {
   TOOL402_DASHBOARD_AUTH_ORIGIN: origin,
   TOOL402_DASHBOARD_AUTH_SECRET: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
 };
+const previewOrigin = "https://tool402-ftxhxdvoh-indyweb.vercel.app";
+const previewEnv = {
+  TOOL402_DASHBOARD_AUTH_SECRET: env.TOOL402_DASHBOARD_AUTH_SECRET,
+  VERCEL_ENV: "preview",
+  VERCEL_URL: "tool402-ftxhxdvoh-indyweb.vercel.app",
+};
 
 async function loadRoutes() {
   return import(routesUrl.href);
@@ -77,6 +83,40 @@ routesTest("issues a host-only sealed challenge with no-store", async () => {
   const [cookie] = cookieValues(response);
   assert.match(cookie, /^__Host-tool402-dashboard-challenge=/u);
   for (const attribute of ["Path=/", "Secure", "HttpOnly", "SameSite=Strict", "Max-Age=300"]) assert.match(cookie, new RegExp(attribute, "u"));
+});
+
+routesTest("derives the exact Vercel Preview origin when no explicit origin is configured", async () => {
+  const routes = await loadRoutes();
+  const request = new Request(`${previewOrigin}/api/auth/metamask/challenge`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: previewOrigin },
+    body: JSON.stringify({ address }),
+  });
+
+  const response = await routes.handleChallengePost(request, previewEnv, {
+    now: () => Date.parse("2026-09-11T12:00:00.000Z"),
+    randomBytes: () => Uint8Array.from({ length: 16 }, (_, index) => index),
+  });
+
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.match(body.message, /URI: https:\/\/tool402-ftxhxdvoh-indyweb\.vercel\.app\/dashboard/u);
+});
+
+routesTest("fails closed for Vercel URLs outside Preview or outside canonical-origin grammar", async () => {
+  const routes = await loadRoutes();
+  for (const envOverride of [
+    { VERCEL_ENV: "production" },
+    { VERCEL_URL: "tool402-ftxhxdvoh-indyweb.vercel.app/not-a-host" },
+  ]) {
+    const response = await routes.handleChallengePost(new Request(`${previewOrigin}/api/auth/metamask/challenge`, {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: previewOrigin },
+      body: JSON.stringify({ address }),
+    }), { ...previewEnv, ...envOverride });
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { outcome: "not_configured" });
+  }
 });
 
 routesTest("rejects invalid challenge and verification requests before side effects", async () => {

@@ -4,10 +4,7 @@ export const DASHBOARD_AUTH_CHAIN_ID = 296;
 export const CHALLENGE_MAX_AGE_SECONDS = 300;
 export const SESSION_MAX_AGE_SECONDS = 28_800;
 
-export type DashboardAuthEnvironment = Readonly<{
-  TOOL402_DASHBOARD_AUTH_ORIGIN?: string;
-  TOOL402_DASHBOARD_AUTH_SECRET?: string;
-}>;
+export type DashboardAuthEnvironment = Readonly<Record<string, string | undefined>>;
 
 type AuthDependencies = Readonly<{
   now?: () => number;
@@ -55,7 +52,13 @@ function decodeBase64Url(value: string): Uint8Array | null {
 }
 
 function readConfiguration(env: DashboardAuthEnvironment): Configuration | null {
-  const { TOOL402_DASHBOARD_AUTH_ORIGIN: origin, TOOL402_DASHBOARD_AUTH_SECRET: secret } = env;
+  const {
+    TOOL402_DASHBOARD_AUTH_ORIGIN: explicitOrigin,
+    TOOL402_DASHBOARD_AUTH_SECRET: secret,
+    VERCEL_ENV: vercelEnvironment,
+    VERCEL_URL: vercelUrl,
+  } = env;
+  const origin = explicitOrigin ?? (vercelEnvironment === "preview" && typeof vercelUrl === "string" ? `https://${vercelUrl}` : undefined);
   if (typeof origin !== "string" || typeof secret !== "string" || !secretPattern.test(secret)) return null;
   try {
     const url = new URL(origin);
