@@ -89,8 +89,8 @@ function messageFor(payload: ChallengePayload): string {
 }
 
 async function defaultHmacSha256(key: Uint8Array, value: Uint8Array): Promise<Uint8Array> {
-  const cryptoKey = await globalThis.crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  return new Uint8Array(await globalThis.crypto.subtle.sign("HMAC", cryptoKey, value));
+  const cryptoKey = await globalThis.crypto.subtle.importKey("raw", new Uint8Array(key), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return new Uint8Array(await globalThis.crypto.subtle.sign("HMAC", cryptoKey, new Uint8Array(value)));
 }
 
 async function seal(payload: ChallengePayload | SessionPayload, configuration: Configuration, dependencies: AuthDependencies): Promise<string> {
