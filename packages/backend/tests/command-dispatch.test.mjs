@@ -1017,6 +1017,39 @@ implementedTest("serves only closed offering and active-directory read projectio
   assert.deepEqual(await responseJson(unavailableResponse), { outcome: "UNAVAILABLE" });
 });
 
+implementedTest("preserves only a canonical pending ATS resume reference through the public offering adapter", async () => {
+  const { handleOfferingProjection } = await import(dispatchUrl);
+  const offering = {
+    offeringPublicId: "offering_42",
+    version: 1,
+    subjectPublicId: "subject_42",
+    state: "ASSET_PENDING",
+    definition: offeringCreatePayload().definition,
+    narrative: offeringCreatePayload().narrative,
+    advertisedQuickPriceTinybars: "10",
+    advertisedStandardPriceTinybars: "25",
+    canonicalSignerAddress,
+    atsAttemptPublicId: "aaaaaaaaaaaaaaaaaaaaaA",
+    acceptedAt: 1n,
+    updatedAt: 1n,
+  };
+  const valid = await handleOfferingProjection(
+    commandContext({ queryResult: offering }).ctx,
+    new Request("https://tool402.test/public/offerings/offering_42"),
+  );
+  assert.equal(valid.status, 200);
+  assert.equal((await responseJson(valid)).record.atsAttemptPublicId, offering.atsAttemptPublicId);
+
+  for (const atsAttemptPublicId of ["", "aaaaaaaaaaaaaaaaaaaaaB", "aaaaaaaaaaaaaaaaaaaaaA="]) {
+    const invalid = await handleOfferingProjection(
+      commandContext({ queryResult: { ...offering, atsAttemptPublicId } }).ctx,
+      new Request("https://tool402.test/public/offerings/offering_42"),
+    );
+    assert.equal(invalid.status, 503);
+    assert.deepEqual(await responseJson(invalid), { outcome: "UNAVAILABLE" });
+  }
+});
+
 implementedTest("maps null and malformed public projections to only NOT_FOUND or UNAVAILABLE", async () => {
   const { handleActiveDirectory, handleOfferingProjection } = await import(dispatchUrl);
   const offering = {

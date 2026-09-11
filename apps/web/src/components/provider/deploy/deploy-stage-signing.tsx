@@ -11,6 +11,7 @@ import {
 import { SignatureDialog, type SignatureResult } from "../../wallet/signature-dialog";
 import { WalletIsland, type WalletSession } from "../../wallet/wallet-connect";
 import { createStageBAtsCreateExecutionProjection } from "../../../lib/ats/stage-b-ats-create-execution-projection.ts";
+import { loadProviderCampaignResume } from "../../../lib/provider-campaign-resume.ts";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { directoryRecordLiteral, isDirectoryRecordComplete } from "./directory-record-literal";
 import { ProviderDeployStages } from "./provider-deploy-stages";
@@ -57,6 +58,7 @@ export function DeployStageSigning({
   const [attemptPublicId, setAttemptPublicId] = useState<string | null>(null);
   const [request, setRequest] = useState<StageSignatureRequest | null>(null);
   const [constructionError, setConstructionError] = useState<string | null>(null);
+  const [resumePending, setResumePending] = useState(false);
   const executionProjection = createStageBAtsCreateExecutionProjection();
   const states = providerDeployStageStates(atsCreateConfiguration, {
     connected: session !== null,
@@ -67,9 +69,38 @@ export function DeployStageSigning({
   const visibleStates = request
     ? states.map((stage, index) => (index === request.stage ? { kind: "in_progress" as const } : stage))
     : states;
-  const enabledStage = session !== null && request === null
+  const enabledStage = session !== null && request === null && !resumePending
     ? states.findIndex((stage) => stage.kind === "actionable")
     : -1;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (session === null) {
+      setResults([]);
+      setAttemptPublicId(null);
+      setCandidate(null);
+      candidateRef.current = null;
+      setResumePending(false);
+      return () => { cancelled = true; };
+    }
+    setResults([]);
+    setAttemptPublicId(null);
+    setCandidate(null);
+    candidateRef.current = null;
+    setResumePending(true);
+    void loadProviderCampaignResume(session.address).then((resume) => {
+      if (cancelled) return;
+      if (resume !== null) {
+        setResults([
+          { kind: "done", detail: "Recovered from the durable offering record." },
+          { kind: "done", detail: "Recovered from the durable prepared attempt." },
+        ]);
+        setAttemptPublicId(resume.attemptPublicId);
+      }
+      setResumePending(false);
+    });
+    return () => { cancelled = true; };
+  }, [session?.address]);
 
   function activate(stage: number) {
     if (request !== null || stage !== enabledStage) return;
@@ -122,6 +153,7 @@ export function DeployStageSigning({
       </aside>
       <div data-ui="provider-deploy-signing" className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-1">
         {children}
+        {session !== null && resumePending ? <p role="status" aria-live="polite" className="text-[13px] leading-5 text-muted-foreground">Checking the existing durable campaign before enabling any signature.</p> : null}
         {reviewing && constructionError ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null}
         {reviewing ? <ProviderDeployStages states={visibleStates} projection={atsCreateConfiguration} enabledStage={enabledStage} onActivate={activate} session={session} candidate={candidate} onCandidate={receiveCandidate} /> : null}
         {reviewing && request && session ? <SignatureDialog provider={session.provider} request={request} onResult={finish} onCancel={() => finish({ phase: "rejected", outcome: null })} /> : null}

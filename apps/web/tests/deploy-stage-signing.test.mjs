@@ -39,6 +39,11 @@ async function signingIslandHarness(values) {
     "react/jsx-runtime": jsxRuntime,
     "../../../lib/wallet/command-bridge.ts": await import("../src/lib/wallet/command-bridge.ts"),
     "../../../lib/ats/stage-b-ats-create-execution-projection.ts": await import("../src/lib/ats/stage-b-ats-create-execution-projection.ts"),
+    "../../../lib/provider-campaign-resume.ts": {
+      loadProviderCampaignResume() {
+        return { then(resolve) { resolve(null); } };
+      },
+    },
     "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
     "../../wallet/wallet-connect": { WalletIsland: "WalletIsland" },
     "./ats-create-configuration": await import("../src/components/provider/deploy/ats-create-configuration.ts"),
@@ -150,6 +155,7 @@ implementedTest("keeps a rejected local request out of the dialog and stage resu
   };
   const validHarness = await signingIslandHarness(values);
   validHarness.connect(validHarness.render());
+  await Promise.resolve();
   const validStages = elements(validHarness.render()).find((element) => element.type === "ProviderDeployStages");
   validStages.props.onActivate(0);
   const validTree = validHarness.render();
@@ -159,6 +165,7 @@ implementedTest("keeps a rejected local request out of the dialog and stage resu
   for (const invalidValue of [{ qualifyingResource: "" }, { quickPrice: "0" }]) {
     const harness = await signingIslandHarness({ ...values, ...invalidValue });
     harness.connect(harness.render());
+    await Promise.resolve();
     const before = harness.render();
     const stages = elements(before).find((element) => element.type === "ProviderDeployStages");
     assert.equal(stages.props.enabledStage, 0);

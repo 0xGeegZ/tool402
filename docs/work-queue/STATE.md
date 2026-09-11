@@ -1,5 +1,22 @@
 # Runtime queue state
 
+- M52_STAGE_B_ISSUER_ACCOUNT_SELECTION_INTAKE: User-directed CORE_P0
+  correction. MetaMask may return more than one site-authorized account. The
+  acceptance is clear at `dc5c0701`: the bridge accepts only a valid account
+  list containing the fixed issuer exactly once, while preserving every
+  transaction input and rejecting absent, duplicate, and malformed issuer
+  values before a send. No provider request,
+  transaction, receipt, Mirror read, candidate, attachment, authority, or
+  live action is authorized.
+
+- M51_PROVIDER_DURABLE_RESUME_RED: User-directed CORE_P0 correction. The
+  current Provider screen must recover only its existing Convex
+  `ASSET_PENDING` RiskScan offering plus revalidated linked `PREPARED`
+  ATS_CREATE reference after a reload. Its RED contract is accepted; only its
+  six declared Backend/Web GREEN paths are active, and no wallet,
+  authority, signature, relay, Stage-B, transaction, candidate, or live action
+  is authorized.
+
 - S36_PROVIDER_SIGNATURE_HANDOFF_INTAKE: User-directed local POLISH intake.
   S36-T010 may make the existing actionable signature request discoverable
   after fresh readiness and durable RED activation. It has no active source

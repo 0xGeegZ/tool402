@@ -18,7 +18,7 @@ function fixture(mutate = () => {}) {
   const root = mkdtempSync(join(tmpdir(), 'queue-check-'));
   const manifest = {
     name: 'fixture', version: '0.0.0', private: true, packageManager: 'npm@10.9.4',
-    engines: { node: '>=22 <23', npm: '>=10 <11' }, workspaces: ['apps/*', 'packages/*'],
+    engines: { node: '^22.0.0 || ^24.0.0', npm: '^10.0.0 || ^11.0.0' }, workspaces: ['apps/*', 'packages/*'],
     scripts: {
       typecheck: 'true', lint: 'true', test: 'true', build: 'true',
       'queue:check': 'node scripts/queue-check.mjs',
@@ -79,6 +79,12 @@ test('accepts a coherent queue repository', () => {
 test('rejects root package workspace drift', () => {
   withFixture(({ manifest }) => { manifest.workspaces = ['apps/*']; }, ({ status, stderr }) => {
     assertFailure({ status, stdout: '', stderr }, 'PACKAGE_CONTRACT_INVALID');
+  });
+});
+
+test('rejects a root package with an unbounded runtime range', () => {
+  withFixture(({ manifest }) => { manifest.engines.node = '>=22 <25'; }, (result) => {
+    assertFailure(result, 'PACKAGE_CONTRACT_INVALID');
   });
 });
 

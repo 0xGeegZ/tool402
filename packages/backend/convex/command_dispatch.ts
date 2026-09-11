@@ -20,6 +20,7 @@ const maximumInt64 = 9_223_372_036_854_775_807n;
 const publicIdPattern = /^[A-Za-z0-9_-]{1,96}$/u;
 const ingressKeyIdPattern = /^[A-Za-z0-9_-]{1,64}$/u;
 const canonicalAddressPattern = /^0x[0-9a-f]{40}$/u;
+const canonicalAttemptPublicIdPattern = /^[A-Za-z0-9_-]{21}[AQgw]$/u;
 const ingressHeaders = [
   ["x-tool402-key-id", "keyId"],
   ["x-tool402-timestamp", "timestampUnixSeconds"],
@@ -664,7 +665,7 @@ function offeringRecord(input: unknown) {
     "canonicalSignerAddress",
     "acceptedAt",
     "updatedAt",
-  ], ["atsAssetEvmAddress"]);
+  ], ["atsAssetEvmAddress", "atsAttemptPublicId"]);
   if (
     record === null
     || typeof record.offeringPublicId !== "string" || !publicIdPattern.test(record.offeringPublicId)
@@ -676,6 +677,10 @@ function offeringRecord(input: unknown) {
     || typeof record.canonicalSignerAddress !== "string" || !canonicalAddressPattern.test(record.canonicalSignerAddress)
     || (Object.hasOwn(record, "atsAssetEvmAddress")
       && (typeof record.atsAssetEvmAddress !== "string" || !canonicalAddressPattern.test(record.atsAssetEvmAddress)))
+    || (Object.hasOwn(record, "atsAttemptPublicId")
+      && (record.state !== "ASSET_PENDING"
+        || typeof record.atsAttemptPublicId !== "string"
+        || !canonicalAttemptPublicIdPattern.test(record.atsAttemptPublicId)))
   ) {
     return null;
   }
@@ -698,6 +703,9 @@ function offeringRecord(input: unknown) {
     canonicalSignerAddress: record.canonicalSignerAddress,
     ...(Object.hasOwn(record, "atsAssetEvmAddress")
       ? { atsAssetEvmAddress: record.atsAssetEvmAddress }
+      : {}),
+    ...(Object.hasOwn(record, "atsAttemptPublicId")
+      ? { atsAttemptPublicId: record.atsAttemptPublicId }
       : {}),
     acceptedAt,
     updatedAt,

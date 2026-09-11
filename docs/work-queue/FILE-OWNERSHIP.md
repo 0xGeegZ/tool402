@@ -2,6 +2,40 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
+M52-T010 is accepted. Its bridge/test reservation is released after the
+reviewed `dc5c0701` correction. The completed boundary validates every
+site-authorized account and requires exactly one fixed issuer match before its
+otherwise unchanged fixed-send boundary. It creates no live authority or
+evidence.
+
+M52-T010 was a root-owned CORE_P0 correction. It owned its card,
+specification, queue/review records, and only the future candidate paths
+`apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts` and
+`apps/web/tests/stage-b-browser-provider-bridge.test.mjs`. No candidate path
+M52 could only replace the strict one-account condition with exact
+fixed-issuer membership; provider, wallet, transaction, receipt, Mirror,
+candidate, attachment, authority, deployment, and every live path remain
+excluded.
+
+M51-T010 is a root-owned `00-inbox` CORE_P0 recovery intake. It owns its
+card, specification, queue/decision/review records, and the future candidate
+paths `packages/backend/convex/offerings.ts`,
+`packages/backend/tests/offering-command-admission.test.mjs`,
+`apps/web/src/lib/offering-projection.ts`, new
+`apps/web/src/lib/provider-campaign-resume.ts`,
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, and new
+`apps/web/tests/provider-campaign-resume.test.mjs`, plus the narrow
+import-harness amendment of `apps/web/tests/deploy-stage-signing.test.mjs`.
+The isolated public-HTTP continuation correction reserves only
+`packages/backend/tests/command-dispatch.test.mjs` and
+`packages/backend/convex/command_dispatch.ts` for the accepted minimal GREEN
+correction; every other command-dispatch source and test remains prohibited.
+No candidate path is
+active or reserved before independent readiness and separate RED activation.
+M51 may expose only a revalidated `ASSET_PENDING`/`PREPARED` durable recovery
+reference. Provider, wallet, signature, relay, authority, transaction,
+candidate attachment, deployment, and every live path remain excluded.
+
 B04-T010 is a root-owned `20-active` security remediation. It reserves its
 card, specification, plan, queue records, and exactly these future durable-RED
 tests: `stage-b-ats-create-canonical-identity.test.mjs`,

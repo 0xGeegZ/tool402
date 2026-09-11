@@ -31,6 +31,7 @@ export type OfferingRecord = {
   readonly advertisedStandardPriceTinybars: string;
   readonly canonicalSignerAddress: string;
   readonly atsAssetEvmAddress?: string;
+  readonly atsAttemptPublicId?: string;
   readonly acceptedAt: number | string;
   readonly updatedAt: number | string;
 };
@@ -65,6 +66,7 @@ const timeoutMilliseconds = 2_000;
 const jsonContentType = /^application\/json(?:;|$)/iu;
 const abortedRead = Symbol("aborted provider projection read");
 const canonicalEvmAddressPattern = /^0x[0-9a-f]{40}$/u;
+const canonicalAttemptPublicIdPattern = /^[A-Za-z0-9_-]{21}[AQgw]$/u;
 const canonicalIntegerPattern = /^(?:0|[1-9][0-9]*)$/u;
 const maximumInt64 = 9_223_372_036_854_775_807n;
 
@@ -124,21 +126,27 @@ function readAdvertisedPrice(input: unknown): string | null {
 }
 
 function readOfferingRecord(input: unknown): OfferingRecord | null {
-  const fields = ["offeringPublicId", "version", "subjectPublicId", "state", "definition", "narrative", "advertisedQuickPriceTinybars", "advertisedStandardPriceTinybars", "canonicalSignerAddress", "atsAssetEvmAddress", "acceptedAt", "updatedAt"] as const;
-  const withoutAsset = fields.filter((field) => field !== "atsAssetEvmAddress");
-  if (!hasOnlyOwnFields(input, fields) && !hasOnlyOwnFields(input, withoutAsset)) return null;
+  if (input === null || typeof input !== "object" || Object.getPrototypeOf(input) !== Object.prototype) return null;
+  const record = input as Record<string, unknown>;
+  const baseFields = ["offeringPublicId", "version", "subjectPublicId", "state", "definition", "narrative", "advertisedQuickPriceTinybars", "advertisedStandardPriceTinybars", "canonicalSignerAddress", "acceptedAt", "updatedAt"] as const;
+  const fields = [
+    baseFields,
+    [...baseFields, "atsAssetEvmAddress"],
+    [...baseFields, "atsAttemptPublicId"],
+  ];
+  if (!fields.some((candidate) => hasOnlyOwnFields(record, candidate))) return null;
 
-  const offeringPublicId = readString(input.offeringPublicId);
-  const version = input.version;
-  const subjectPublicId = readString(input.subjectPublicId);
-  const state = input.state;
-  const definition = readOfferingDefinition(input.definition);
-  const narrative = input.narrative;
-  const advertisedQuickPriceTinybars = readAdvertisedPrice(input.advertisedQuickPriceTinybars);
-  const advertisedStandardPriceTinybars = readAdvertisedPrice(input.advertisedStandardPriceTinybars);
-  const canonicalSignerAddress = readString(input.canonicalSignerAddress);
-  const acceptedAt = readTimestamp(input.acceptedAt);
-  const updatedAt = readTimestamp(input.updatedAt);
+  const offeringPublicId = readString(record.offeringPublicId);
+  const version = record.version;
+  const subjectPublicId = readString(record.subjectPublicId);
+  const state = record.state;
+  const definition = readOfferingDefinition(record.definition);
+  const narrative = record.narrative;
+  const advertisedQuickPriceTinybars = readAdvertisedPrice(record.advertisedQuickPriceTinybars);
+  const advertisedStandardPriceTinybars = readAdvertisedPrice(record.advertisedStandardPriceTinybars);
+  const canonicalSignerAddress = readString(record.canonicalSignerAddress);
+  const acceptedAt = readTimestamp(record.acceptedAt);
+  const updatedAt = readTimestamp(record.updatedAt);
   if (
     offeringPublicId === null || !publicIdPattern.test(offeringPublicId)
     || typeof version !== "number" || !Number.isSafeInteger(version) || version < 1
@@ -155,8 +163,10 @@ function readOfferingRecord(input: unknown): OfferingRecord | null {
   const risks = readStringArray(narrative.risks);
   if (title === null || customerProblem === null || customerUseCases === null || useOfFunds === null || risks === null) return null;
 
-  const atsAssetEvmAddress = Object.hasOwn(input, "atsAssetEvmAddress") ? readString(input.atsAssetEvmAddress) : undefined;
+  const atsAssetEvmAddress = Object.hasOwn(record, "atsAssetEvmAddress") ? readString(record.atsAssetEvmAddress) : undefined;
   if (atsAssetEvmAddress === null || (atsAssetEvmAddress !== undefined && !canonicalEvmAddressPattern.test(atsAssetEvmAddress))) return null;
+  const atsAttemptPublicId = Object.hasOwn(record, "atsAttemptPublicId") ? readString(record.atsAttemptPublicId) : undefined;
+  if (atsAttemptPublicId === null || (atsAttemptPublicId !== undefined && !canonicalAttemptPublicIdPattern.test(atsAttemptPublicId))) return null;
   return {
     offeringPublicId,
     version,
@@ -168,6 +178,7 @@ function readOfferingRecord(input: unknown): OfferingRecord | null {
     advertisedStandardPriceTinybars,
     canonicalSignerAddress,
     ...(atsAssetEvmAddress === undefined ? {} : { atsAssetEvmAddress }),
+    ...(atsAttemptPublicId === undefined ? {} : { atsAttemptPublicId }),
     acceptedAt,
     updatedAt,
   };

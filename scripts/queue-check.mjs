@@ -26,7 +26,7 @@ function main(args) {
 
   let manifest;
   try { manifest = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')); } catch { add('PACKAGE_CONTRACT_INVALID', 'root package manifest is unreadable'); }
-  if (manifest && (!manifest.private || manifest.packageManager !== 'npm@10.9.4' || manifest.engines?.node !== '>=22 <23' || manifest.engines?.npm !== '>=10 <11' || JSON.stringify(manifest.workspaces) !== JSON.stringify(['apps/*', 'packages/*']) || requiredScripts.some((name) => typeof manifest.scripts?.[name] !== 'string') || manifest.scripts?.['queue:check'] !== 'node scripts/queue-check.mjs' || dependencyKeys.filter((key) => key !== 'devDependencies').some((key) => Object.hasOwn(manifest, key)) || JSON.stringify(manifest.devDependencies) !== JSON.stringify({ marked: '18.0.11' }))) add('PACKAGE_CONTRACT_INVALID', 'root package contract does not match the foundation specification');
+  if (manifest && (!manifest.private || manifest.packageManager !== 'npm@10.9.4' || manifest.engines?.node !== '^22.0.0 || ^24.0.0' || manifest.engines?.npm !== '^10.0.0 || ^11.0.0' || JSON.stringify(manifest.workspaces) !== JSON.stringify(['apps/*', 'packages/*']) || requiredScripts.some((name) => typeof manifest.scripts?.[name] !== 'string') || manifest.scripts?.['queue:check'] !== 'node scripts/queue-check.mjs' || dependencyKeys.filter((key) => key !== 'devDependencies').some((key) => Object.hasOwn(manifest, key)) || JSON.stringify(manifest.devDependencies) !== JSON.stringify({ marked: '18.0.11' }))) add('PACKAGE_CONTRACT_INVALID', 'root package contract does not match the foundation specification');
 
   const catalogPath = resolve(root, 'docs/work-queue/TASK-CATALOG.md');
   let rows = [];
