@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 20-active
 - Dependencies: M41-T010, S15-T010, S16-T010, and S21-T010 accepted. M49-T010
   is historical deploy-browser context, not a queue dependency because it has
   no current catalog record.
@@ -21,15 +21,16 @@ command. The local [M51 specification](../../../specs/m51-world-issuer-selfie-ch
 fixes the server-only configuration, proof request/verification boundary,
 short-lived cookie gate, current publication-only scope, UI, and demo evidence.
 
-## Candidate ready requirements
+## Active RED requirements
 
-- The card, specification, catalog, ownership, and state records are committed
-  before the RED contract or source.
-- The declared World paths are absent and disjoint from every active lane.
-- Existing command relay and provider signing paths receive a root integration
-  reservation; their established behaviours must remain covered by their
-  existing tests.
-- The World package version is pinned in the Web manifest and lockfile.
+- The card, specification, catalog, ownership, state, and activation decision
+  are committed before the RED contract.
+- Only the listed World and narrow established-test paths may change for RED;
+  all application and package source remains prohibited until a subsequent
+  independent RED-acceptance decision.
+- The RED contract must fail because the declared World source and integration
+  are absent, while preserving established command-relay and signing-island
+  behavior tests.
 
 ## Proposed paths
 
