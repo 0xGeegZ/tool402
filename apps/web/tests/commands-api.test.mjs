@@ -42,6 +42,7 @@ implementedTest("keeps the closed server relay outcome vocabulary in the relay m
     "CONFLICT",
     "REJECTED",
     "UNSUPPORTED_TYPE",
+    "WORLD_VERIFICATION_REQUIRED",
     "not_configured",
     "transport_failure",
     "unexpected_response",
@@ -78,10 +79,10 @@ function configuredEnvironment(overrides = {}) {
   };
 }
 
-function createRequest(body = bodyBytes) {
+function createRequest(body = bodyBytes, headers = {}) {
   return new Request("https://web.test/api/commands", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...headers },
     body,
   });
 }
@@ -170,6 +171,7 @@ test("fixes the closed eight-outcome relay union", async () => {
     "CONFLICT",
     "REJECTED",
     "UNSUPPORTED_TYPE",
+    "WORLD_VERIFICATION_REQUIRED",
     "not_configured",
     "transport_failure",
     "unexpected_response",
@@ -215,6 +217,62 @@ test("answers 503 not_configured and sends nothing when any environment name is 
     assert.deepEqual(await response.json(), { outcome: "not_configured" });
     assert.equal(response.headers.get("cache-control"), "no-store");
     assert.equal(fetchImpl.calls.length, 0, JSON.stringify(variant));
+  }
+});
+
+test("fails closed before forwarding directory publication without a World session bound to its signer", async () => {
+  const { handleCommandRelayPost } = await loadRelayModule();
+  const fetchImpl = createFetch(() => jsonResponse({ outcome: "ACCEPTED" }));
+  const body = new TextEncoder().encode(JSON.stringify({
+    command: {
+      type: "directory.publish",
+      signer: "0xc89f87052c3e080b4a9b021d4930055031ef378e",
+    },
+    payload: {},
+  }));
+  const response = await handleCommandRelayPost(
+    createRequest(body),
+    configuredEnvironment({
+      WORLD_APP_ID: "app_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      WORLD_RP_ID: "rp_aaaaaaaaaaaaaaaa",
+      WORLD_RP_SIGNING_KEY: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      WORLD_ACTION: "issuer-publish",
+      WORLD_ENVIRONMENT: "staging",
+    }),
+    dependencies(fetchImpl),
+  );
+
+  assert.equal(response.status, 403);
+  assert.deepEqual(await response.json(), { outcome: "WORLD_VERIFICATION_REQUIRED" });
+  assert.equal(fetchImpl.calls.length, 0);
+});
+
+test("fails closed before forwarding directory publication for malformed, expired, or other-issuer World sessions", async () => {
+  const { createWorldIssuerCookie } = await import("../src/lib/world/issuer-selfie-check.ts");
+  const { handleCommandRelayPost } = await loadRelayModule();
+  const signer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const body = new TextEncoder().encode(JSON.stringify({ command: { type: "directory.publish", signer }, payload: {} }));
+  const worldEnvironment = configuredEnvironment({
+    WORLD_APP_ID: "app_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    WORLD_RP_ID: "rp_aaaaaaaaaaaaaaaa",
+    WORLD_RP_SIGNING_KEY: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    WORLD_ACTION: "issuer-publish",
+    WORLD_ENVIRONMENT: "staging",
+  });
+  const otherIssuerCookie = await createWorldIssuerCookie("0x7e5f4552091a69125d5dfcb7b8c2659029395bdf", worldEnvironment, nowMilliseconds);
+  const expiredCookie = await createWorldIssuerCookie(signer, worldEnvironment, nowMilliseconds - 600_001);
+
+  for (const cookie of ["invalid", otherIssuerCookie, expiredCookie]) {
+    const fetchImpl = createFetch(() => jsonResponse({ outcome: "ACCEPTED" }));
+    const response = await handleCommandRelayPost(
+      createRequest(body, { cookie: `tool402_world_issuer=${cookie}` }),
+      worldEnvironment,
+      dependencies(fetchImpl),
+    );
+
+    assert.equal(response.status, 403);
+    assert.deepEqual(await response.json(), { outcome: "WORLD_VERIFICATION_REQUIRED" });
+    assert.equal(fetchImpl.calls.length, 0);
   }
 });
 
