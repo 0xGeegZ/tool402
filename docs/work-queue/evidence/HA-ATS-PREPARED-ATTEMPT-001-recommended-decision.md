@@ -8,10 +8,11 @@ server-side issuer authority and obtain one durable PREPARED attempt. It does
 not authorize a provider transaction, public Mirror observation, candidate
 attachment, asset creation, verification, lifecycle transition, or deployment.
 
-This draft did not authorize the closed production preflight recorded in
-`HA-ATS-PREPARED-ATTEMPT-001-stage-1-production-preflight.md`; it names a
-different local host and source. It must not be used for another production
-attempt until a new exact host/source decision replaces it.
+This revised draft supersedes only the stale runtime wording used by the closed
+preflight recorded in `HA-ATS-PREPARED-ATTEMPT-001-stage-1-production-preflight.md`.
+That preflight remains closed and records no signature or durable result. This
+draft still has no live authority until the human accepts its exact current
+runtime tuple below.
 
 ## Why this is a separate human decision
 
@@ -27,7 +28,8 @@ approved one-shot transaction.
 The human may use only a local runtime served by this exact build:
 
 ~~~text
-Required M49 source      = aeb866adbe86e41ab01476a4b54ece95dc234813
+Required canonical runtime source = d2a2be44a78ee460fe6590d606baf630e72a78cc
+Accepted M49 implementation source = aeb866adbe86e41ab01476a4b54ece95dc234813
 Rehearsal host           = http://localhost:3000
 Network                  = hedera:testnet
 EVM chain ID             = 296
@@ -46,10 +48,11 @@ Resolver Hedera ID       = 0.0.9212226
 M42 canonical digest     = 1880065c5ae64b3fc6279cfdd8c85a6880d43e98ce129ed697c72372204296f9
 ~~~
 
-The human must record the exact runtime build SHA and confirm that it contains
-the required M49 source unchanged before any action. A different host, runtime,
-build, issuer, chain, subject, target, or digest is a stop condition and
-requires a new decision.
+The human must record the exact runtime build SHA and confirm that it is built
+from the required canonical runtime source. The accepted M49 tuple remains
+unchanged; its direct execution modules are byte-identical to the accepted M49
+source. A different host, runtime, build, issuer, chain, subject, target, or
+digest is a stop condition and requires a new decision.
 
 ## One time-bounded authority-record action
 
@@ -193,8 +196,8 @@ is not transaction, candidate, receipt, Mirror, finality, or asset evidence.
 
 > I approve HA-ATS-PREPARED-ATTEMPT-001 exactly as recorded in
 > docs/work-queue/evidence/HA-ATS-PREPARED-ATTEMPT-001-recommended-decision.md.
-> I confirm the named local host serves the required M49 source unchanged and
-> will record its exact runtime build SHA. I authorize only myself to
+> I confirm the named local host serves the required canonical runtime source
+> and will record its exact runtime build SHA. I authorize only myself to
 > provision the one exact active issuer commandAuthorities record described
 > here after verifying zero prior active records, then to make at most one
 > code-generated offering.create signature with the fixed values and at most
