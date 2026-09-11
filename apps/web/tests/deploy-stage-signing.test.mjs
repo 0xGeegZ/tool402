@@ -17,7 +17,7 @@ async function readIsland() {
   return readFile(join(appRoot, islandPath), "utf8");
 }
 
-async function signingIslandHarness(values) {
+async function signingIslandHarness(values, renderReview, resume = null, onResume = undefined) {
   const slots = [];
   let cursor = 0;
   let connectionRequests = 0;
@@ -40,13 +40,20 @@ async function signingIslandHarness(values) {
         if (!(index in slots)) slots[index] = { current: initial };
         return slots[index];
       },
-      useEffect(effect) { effect(); },
+      useEffect(effect, dependencies) {
+        const index = cursor++;
+        const previous = slots[index];
+        const changed = previous === undefined || dependencies.some((dependency, dependencyIndex) => !Object.is(dependency, previous.dependencies[dependencyIndex]));
+        if (!changed) return;
+        previous?.cleanup?.();
+        slots[index] = { dependencies, cleanup: effect() };
+      },
     },
     "react/jsx-runtime": jsxRuntime,
     "../../../lib/wallet/command-bridge.ts": await import("../src/lib/wallet/command-bridge.ts"),
     "../../../lib/provider-campaign-resume.ts": {
       loadProviderCampaignResume() {
-        return { then(resolve) { resolve(null); } };
+        return { then(resolve) { resolve(resume); } };
       },
     },
     "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
@@ -62,6 +69,7 @@ async function signingIslandHarness(values) {
     "../../ui/status": { Status: "Status" },
     "./ats-create-configuration": await import("../src/components/provider/deploy/ats-create-configuration.ts"),
     "./directory-record-literal": await import("../src/components/provider/deploy/directory-record-literal.ts"),
+    "./provider-icon": { ProviderGlyph: "ProviderGlyph" },
     "./provider-deploy-stages": { ProviderDeployStages: "ProviderDeployStages" },
     "./provider-deploy-state": await import("../src/components/provider/deploy/provider-deploy-state.ts"),
   };
@@ -84,7 +92,7 @@ async function signingIslandHarness(values) {
   return {
     render() {
       cursor = 0;
-      return module.exports.DeployStageSigning({ values });
+      return module.exports.DeployStageSigning({ values, renderReview, onResume });
     },
     connect() {
       session = {
@@ -159,6 +167,61 @@ implementedTest("holds the M49 candidate in this session and passes one stable a
   assert.match(island, /\bsetCandidate\b/u, "a verified candidate belongs only to this browser session");
   assert.match(island, /useState<AtsCreateCandidate \| null>/u);
   assert.doesNotMatch(island, /(?:external\.attachCandidate|eth_signTypedData_v4)/u);
+});
+
+implementedTest("hides the embedded MetaMask action after the shared session connects", async () => {
+  const values = {
+    toolName: "RiskScan",
+    customerProblem: "Tool operators need a bounded way to assess request risk before they continue a workflow.",
+    qualifyingResource: "riskscan-local-assessment",
+    quickPrice: "0.1",
+    standardPrice: "0.1",
+    targetAgentCustomers: "Security-oriented agent operators",
+    useOfFunds: "Maintain the local assessment workflow and provider documentation.",
+    risks: "Testnet terms do not promise yield, principal, or return.",
+  };
+  let embeddedLayout = null;
+  const harness = await signingIslandHarness(values, (layout) => {
+    embeddedLayout = layout;
+    return [layout.connect, layout.stages];
+  });
+
+  const beforeConnection = harness.render();
+  assert.ok(embeddedLayout, "the embedded review must receive the conditional shared-session action");
+  assert.ok(elements(beforeConnection).some((element) => element.props["data-ui"] === "provider-deploy-connect"));
+
+  harness.connect();
+  await Promise.resolve();
+  const afterConnection = harness.render();
+  const stages = elements(afterConnection).find((element) => element.type === "ProviderDeployStages");
+  assert.equal(embeddedLayout.connect, null, "the embedded MetaMask action must disappear when the shared session is active");
+  assert.equal(stages.props.enabledStage, 0, "the embedded stage list must receive the connected wallet session");
+});
+
+implementedTest("notifies the wizard when a connected issuer has a durable campaign to resume", async () => {
+  const values = {
+    toolName: "RiskScan",
+    customerProblem: "Tool operators need a bounded way to assess request risk before they continue a workflow.",
+    qualifyingResource: "riskscan-local-assessment",
+    quickPrice: "0.1",
+    standardPrice: "0.1",
+    targetAgentCustomers: "Security-oriented agent operators",
+    useOfFunds: "Maintain the local assessment workflow and provider documentation.",
+    risks: "Testnet terms do not promise yield, principal, or return.",
+  };
+  let resumeCount = 0;
+  const harness = await signingIslandHarness(
+    values,
+    undefined,
+    { attemptPublicId: "JBSWY3DPEBLW64TMMQ" },
+    () => { resumeCount += 1; },
+  );
+
+  harness.connect(harness.render());
+  await Promise.resolve();
+  harness.render();
+
+  assert.equal(resumeCount, 1, "a recovered durable campaign must return the wizard to its review step");
 });
 
 implementedTest("keeps a rejected local request out of the dialog and stage results with actionable feedback", async () => {

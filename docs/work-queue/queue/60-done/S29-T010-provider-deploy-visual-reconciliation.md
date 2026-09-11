@@ -81,3 +81,16 @@ wallet/signature/ATS boundary remain unchanged.
 This is a Provider deploy presentation slice only. It neither changes nor
 asserts form behavior, signature/wallet operation, ATS configuration, command
 handling, payment, transaction, deployment, publication, or live availability.
+
+## Post-acceptance review correction
+
+The repository owner explicitly directs the two confirmed PR #82 review
+corrections. The root reserves only
+`apps/web/src/components/provider/deploy/provider-deploy-wizard.tsx`,
+`deploy-stage-signing.tsx`, the new local `provider-icon.tsx`,
+`provider-deploy-visual-reconciliation.test.mjs`, and
+`deploy-stage-signing.test.mjs` to split line-oriented textarea content on
+actual LF/CRLF delimiters, make the local Terms link target an existing region,
+and extract the exact duplicated Provider wallet SVG glyph. Every wallet,
+session, signature, command, ATS, transaction, and live boundary remains
+unchanged.

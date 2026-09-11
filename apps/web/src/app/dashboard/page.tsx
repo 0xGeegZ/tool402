@@ -1,3 +1,4 @@
+import { DashboardCampaign } from "../../components/dashboard/dashboard-campaign";
 import { LandingFooter } from "../../components/landing/landing-footer";
 import { PageHeader } from "../../components/ui/page-header";
 import { WorkspaceShell } from "../../components/workspace/workspace-shell";
@@ -11,6 +12,7 @@ export default function DashboardPage() {
           title="Dashboard"
           description="Current local journeys for inspecting Tool402. Start with RiskScan, then choose the next supported boundary."
         />
+        <DashboardCampaign />
         <WorkspaceShell />
       </main>
       <LandingFooter />

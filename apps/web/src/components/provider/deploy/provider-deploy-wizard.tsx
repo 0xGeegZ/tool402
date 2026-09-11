@@ -1,15 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { formatHbar, formatShare, groupThousands } from "../../../lib/hbar-format";
 import { createStageBAtsCreateExecutionProjection } from "../../../lib/ats/stage-b-ats-create-execution-projection.ts";
 import { Badge } from "../../ui/badge";
 import { Button, buttonVariants } from "../../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../ui/card";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { campaignFixture } from "./campaign-fixture";
 import { DeployStageSigning } from "./deploy-stage-signing";
+import { ProviderGlyph, type ProviderIconKind } from "./provider-icon";
 import {
   acknowledgementCopy,
   canAdvance,
@@ -117,6 +118,14 @@ function FlaskIcon() {
   );
 }
 
+function ProviderIcon({ kind, compact = false }: { kind: ProviderIconKind; compact?: boolean }) {
+  return (
+    <span data-ui="provider-deploy-icon" className={`flex shrink-0 items-center justify-center bg-primary/10 text-primary shadow-[inset_0_1px_0_color-mix(in_srgb,white_55%,transparent)] ${compact ? "size-7 rounded-lg" : "size-11 rounded-2xl"}`}>
+      <ProviderGlyph kind={kind} size={compact ? "16" : "21"} />
+    </span>
+  );
+}
+
 function StepProgress({
   currentStep,
   onStepSelect,
@@ -125,23 +134,19 @@ function StepProgress({
   onStepSelect: (step: number) => void;
 }) {
   return (
-    <nav aria-label="Provider deploy progress" data-ui="provider-deploy-progress" className="flex flex-col gap-2">
-      <ol className="flex gap-1.5 sm:gap-2">
+    <nav aria-label="Provider deploy progress" data-ui="provider-deploy-progress" className="flex flex-col gap-2 pb-1">
+      <ol className="grid grid-cols-5 gap-0">
         {providerDeploySteps.map((step, index) => {
           const isCurrent = index === currentStep;
-          const reached = index <= currentStep;
+          const isComplete = index < currentStep;
+          const stateClass = isCurrent || isComplete ? "bg-primary text-primary-foreground" : "border-2 border-primary/35 bg-card text-primary";
           return (
-            <li key={step.label} className="min-w-0 flex-1">
-              <button
-                type="button"
-                aria-label={`Return to step ${index + 1}: ${step.label}`}
-                aria-current={isCurrent ? "step" : undefined}
-                disabled={index >= currentStep}
-                onClick={() => onStepSelect(index)}
-                className="flex w-full flex-col gap-2 rounded-tile text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100"
-              >
-                <span aria-hidden="true" className={`h-1.5 w-full rounded-full ${reached ? "bg-brand-purple" : "bg-muted"}`} />
-                <span className={`hidden text-xs font-medium leading-4 sm:block ${isCurrent ? "text-foreground" : "text-muted-foreground"}`}>{step.label}</span>
+            <li key={step.label} className="relative flex min-w-0 flex-col items-center text-center">
+              {index > 0 ? <span aria-hidden="true" className={`absolute left-0 right-1/2 top-3 h-0.5 -translate-y-1/2 ${index <= currentStep ? "bg-primary" : "bg-primary/20"}`} /> : null}
+              {index < providerDeploySteps.length - 1 ? <span aria-hidden="true" className={`absolute left-1/2 right-0 top-3 h-0.5 -translate-y-1/2 ${index < currentStep ? "bg-primary" : "bg-primary/20"}`} /> : null}
+              <button type="button" aria-label={`Return to step ${index + 1}: ${step.label}`} aria-current={isCurrent ? "step" : undefined} disabled={index >= currentStep} onClick={() => onStepSelect(index)} className="relative z-10 flex min-w-0 flex-col items-center gap-2 rounded-md px-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100">
+                <span aria-hidden="true" className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ring-4 ring-background transition-colors ${stateClass}`}>{isComplete ? "✓" : index + 1}</span>
+                <span className={`max-w-36 text-[11px] font-medium leading-[1.35] ${isCurrent || isComplete ? "text-foreground" : "text-muted-foreground"}`}>{step.label}</span>
               </button>
             </li>
           );
@@ -149,6 +154,30 @@ function StepProgress({
       </ol>
       <p className="text-[13px] font-medium text-muted-foreground">{stepCaption(currentStep)}</p>
     </nav>
+  );
+}
+
+function CampaignSummary({ values }: { values: WizardValues }) {
+  const lineItems = (value: string) => value.split(/\r?\n/u).filter(Boolean);
+  return (
+    <aside className="h-fit rounded-panel border border-primary/10 bg-card p-5 shadow-[0_14px_36px_color-mix(in_srgb,var(--primary)_8%,transparent)] lg:sticky lg:top-5" aria-labelledby="campaign-summary-title">
+      <h2 id="campaign-summary-title" className="text-lg font-bold tracking-tight">Campaign summary</h2>
+      <div className="mt-4 flex items-start gap-3 border-b border-primary/10 pb-4">
+        <ProviderIcon kind="layers" />
+        <div><p className="font-bold">{values.toolName || "Untitled tool"}</p><p className="text-xs leading-5 text-muted-foreground">{values.oneLiner || "Add a short description in Tool details."}</p></div>
+      </div>
+      <dl className="grid gap-3 border-b border-primary/10 py-4 text-sm">
+        <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Category</dt><dd className="font-medium">{values.category}</dd></div>
+        <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Resource</dt><dd className="max-w-[13rem] text-right font-medium">{values.qualifyingResource || "Not set"}</dd></div>
+        <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Capability</dt><dd className="max-w-[13rem] text-right font-medium">{campaignFixture.capability}</dd></div>
+        <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Quick price</dt><dd className="font-medium">{values.quickPrice || "—"} HBAR</dd></div>
+        <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Standard price</dt><dd className="font-medium">{values.standardPrice || "—"} HBAR</dd></div>
+      </dl>
+      <section className="border-b border-primary/10 py-4"><h3 className="flex items-center gap-2 font-bold"><ProviderIcon kind="document" compact />Offering details</h3><p className="mt-3 text-sm text-muted-foreground">Customer problem</p><p className="text-sm leading-6">{values.customerProblem || "Not set"}</p><p className="mt-3 text-sm text-muted-foreground">Capability summary</p><p className="text-sm leading-6">{values.capabilitySummary || "Not set"}</p><p className="mt-3 text-sm text-muted-foreground">Target agent customers</p><ul className="grid gap-1 text-sm leading-6">{lineItems(values.targetAgentCustomers).map((item) => <li key={item}>• {item}</li>)}</ul></section>
+      <section id="terms" className="border-b border-primary/10 py-4"><h3 className="flex items-center gap-2 font-bold"><ProviderIcon kind="layers" compact />Funding &amp; revenue-note terms</h3><p className="mt-3 text-sm text-muted-foreground">Use of funds</p><ul className="grid gap-1 text-sm leading-6">{lineItems(values.useOfFunds).map((item) => <li key={item}>• {item}</li>)}</ul><p className="mt-3 text-sm text-muted-foreground">Risks</p><ul className="grid gap-1 text-sm leading-6">{lineItems(values.risks).map((item) => <li key={item}>• {item}</li>)}</ul><p className="mt-3 text-sm text-muted-foreground">Terms acknowledgement</p><p className="text-sm leading-6">{values.acknowledgement ? "Confirmed" : "Pending confirmation"}</p><a href="#terms" className="mt-4 inline-block text-sm font-semibold text-primary">View full terms →</a></section>
+      <section className="border-b border-primary/10 py-4"><h3 className="flex items-center gap-2 font-bold"><ProviderIcon kind="spark" compact />What happens next</h3><ol className="mt-3 grid gap-3 text-sm leading-5 text-muted-foreground"><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary bg-primary/5 text-xs text-primary">1</span>You connect your wallet and review the details</li><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary bg-primary/5 text-xs text-primary">2</span>You sign each deployment stage in order</li><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary bg-primary/5 text-xs text-primary">3</span>A revenue note is created on Hedera testnet</li><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary bg-primary/5 text-xs text-primary">4</span>Your tool is published to the Tool402 directory</li></ol></section>
+      <section className="pt-4"><h3 className="flex items-center gap-2 font-bold"><ProviderIcon kind="shield" compact />Security &amp; scope</h3><p className="mt-3 text-sm leading-6 text-muted-foreground">Nothing is created, funded, or published until the required signatures and receipts exist. This is a testnet prototype.</p><div className="mt-4 rounded-field border border-primary/10 bg-primary/5 p-3 text-sm leading-5"><strong>Testnet prototype</strong><br /><span className="text-muted-foreground">Local routes are descriptive and labelled with their current boundaries.</span></div></section>
+    </aside>
   );
 }
 
@@ -307,40 +336,40 @@ function TermsStep({
   );
 }
 
-function ReviewStep({ values }: { values: WizardValues }) {
-  const issuer = createStageBAtsCreateExecutionProjection().issuerEvmAddress;
-  const note = atsCreateConfiguration.revenueNote;
-  const rows: readonly (readonly [string, string, boolean])[] = [
-    ["Tool", values.toolName, false],
-    ["Qualifying resource", values.qualifyingResource, true],
-    ["Advertised tiers", `quick ${values.quickPrice} · standard ${values.standardPrice} HBAR`, true],
-    ["Funding target · unit price", `${wholeHbar(termsV1Economics.fundingTargetHbar)} · ${wholeHbar(termsV1Economics.noteUnitPriceHbar)}`, true],
-    ["Revenue routing", `${routingShort} · cap ${wholeHbar(termsV1Economics.payoutCapHbar)} · maturity ${termsV1Economics.maturityDate}`, true],
-    ["Revenue note", `${note.symbol} · ${note.numberOfUnits} units · factory ${atsCreateConfiguration.factoryHederaId}`, true],
-    ["Issuer wallet", `${shortAddress(issuer)} (configured issuer)`, true],
-    ["Subject · version", `${atsCreateConfiguration.subjectPublicId} · ${atsCreateConfiguration.offeringVersion}`, true],
-  ];
+function ReviewStep({
+  values,
+  connect,
+  resumeNotice,
+  constructionNotice,
+  stages,
+  dialog,
+  footer,
+}: {
+  values: WizardValues;
+  connect: ReactNode;
+  resumeNotice: ReactNode;
+  constructionNotice: ReactNode;
+  stages: ReactNode;
+  dialog: ReactNode;
+  footer: ReactNode;
+}) {
+  const reviewRows = [["Tool name", values.toolName], ["Category", values.category], ["Qualifying resource", values.qualifyingResource], ["Quick display price", `${values.quickPrice} HBAR`], ["Standard price (HBAR)", `${values.standardPrice} HBAR`], ["Target agent customers", values.targetAgentCustomers], ["Capability summary", values.capabilitySummary], ["Funding terms", values.useOfFunds]] as const;
 
   return (
-    <Card className="rounded-control border border-border bg-card shadow-none">
-        <CardHeader className="gap-1 p-4 sm:p-5">
-          <CardTitle className="text-lg font-bold tracking-[-0.01em] sm:text-[22px] sm:leading-7">Review and sign</CardTitle>
-          <CardDescription className="text-[13px] leading-5">Each stage below needs its own wallet signature. The exact canonical payload is shown before you sign.</CardDescription>
-        </CardHeader>
-        <dl className="border-t border-border">
-        {rows.map(([label, value, mono]) => (
-          <div key={label} className="flex items-start justify-between gap-3 border-t border-border px-4 py-2.5 text-[13px] first:border-t-0 sm:gap-4 sm:px-5 sm:py-3 sm:text-sm">
-            <dt className="shrink-0 text-muted-foreground">{label}</dt>
-            <dd className={`min-w-0 break-words text-right ${mono ? monoValueClassName : "font-medium"}`}>{value}</dd>
-          </div>
-        ))}
-        </dl>
-    </Card>
+    <div className="space-y-5">
+      {connect ? <section aria-label="Wallet connection" data-ui="provider-deploy-wallet-pair" className="grid gap-4 lg:grid-cols-2 lg:items-stretch"><div className="min-w-0">{connect}</div><section className="flex h-full flex-col rounded-card border border-primary/15 bg-primary/[0.06] p-5 shadow-none sm:p-6"><div className="flex items-start gap-3"><ProviderIcon kind="shield" /><div><h2 className="text-lg font-bold tracking-tight">Your keys, your control</h2><p className="mt-1.5 text-sm leading-6 text-muted-foreground">You authorize each step. Nothing is submitted to the network until you sign and confirm.</p></div></div><p className="mt-5 border-t border-primary/15 pt-3 text-xs leading-5 text-muted-foreground">Connecting a wallet only enables the next local signature request.</p></section></section> : null}
+      <section className="rounded-card border border-primary/10 bg-card p-5 shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_6%,transparent)] sm:p-6" aria-labelledby="prepared-title"><div className="flex items-start justify-between gap-4"><div className="flex gap-4"><ProviderIcon kind="document" /><div><h2 id="prepared-title" className="text-lg font-bold">Prepared details</h2><p className="mt-1 text-sm leading-5 text-muted-foreground">Review the key details of your offering. These values remain editable until you sign.</p></div></div><Button type="button" variant="outline" className="hidden shrink-0 sm:inline-flex">Edit details</Button></div><dl className="mt-4 grid gap-x-8 gap-y-3 rounded-field border border-primary/10 bg-primary/[0.03] p-3 text-sm sm:grid-cols-2">{reviewRows.map(([label, value]) => <div key={label} className="grid grid-cols-[minmax(7rem,0.8fr)_1.2fr] gap-2"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium text-foreground">{value}</dd></div>)}</dl></section>
+      {resumeNotice}
+      {constructionNotice}
+      {stages}
+      {dialog}
+      {footer}
+    </div>
   );
 }
 
 export function ProviderDeployWizard() {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState<number>(0);
   const [values, setValues] = useState<WizardValues>(initialValues);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const fieldErrors = showValidationErrors ? providerDeployFieldErrors(values, currentStep) : emptyFieldErrors;
@@ -348,6 +377,7 @@ export function ProviderDeployWizard() {
     ? "Correct the fields marked invalid before continuing."
     : null;
   const lastStep = providerDeploySteps.length - 1;
+  const currentDefinition = providerDeploySteps[currentStep];
   const stepRef = useRef<HTMLDivElement>(null);
   const announcedStep = useRef(currentStep);
   useEffect(() => {
@@ -376,6 +406,11 @@ export function ProviderDeployWizard() {
     setCurrentStep(step);
     setShowValidationErrors(false);
   }
+
+  const resumeDurableCampaign = useCallback(() => {
+    setShowValidationErrors(false);
+    setCurrentStep(lastStep);
+  }, [lastStep]);
 
   function moveForward() {
     const nextFieldErrors = providerDeployFieldErrors(values, currentStep);
@@ -426,30 +461,48 @@ export function ProviderDeployWizard() {
   );
 
   return (
-    <main className="mx-auto flex w-full max-w-[1088px] flex-col gap-5 pb-12 sm:gap-8 sm:pb-20" data-ui="provider-deploy-surface">
-      <header data-ui="provider-deploy-identity" className="flex flex-col gap-2.5 sm:gap-3">
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
-          <Badge className="gap-1.5 bg-warning uppercase text-warning-foreground">
-            <FlaskIcon />
-            Prepared / demo data fixture
-          </Badge>
-          <Badge variant="secondary">Hedera testnet · chain 296</Badge>
-          <Badge variant="outline">Terms v1 · fixed</Badge>
-        </div>
-        <h1 className="text-[26px] font-semibold leading-[1.15] tracking-[-0.02em] text-foreground sm:text-4xl sm:leading-[1.1]">Deploy the RiskScan campaign</h1>
-        <p className="hidden max-w-[720px] text-base text-muted-foreground sm:block">
-          Review every field of the prepared offering, then authorize each step with your MetaMask issuer wallet. Nothing is created, funded, or published until the named signature and receipt exist.
-        </p>
+    <main className="mx-auto max-w-6xl px-4 pb-10 sm:px-6 sm:pb-14" data-ui="provider-deploy-surface">
+      <header data-ui="provider-deploy-identity" className="pt-6 lg:pt-8">
+        <div className="flex flex-wrap gap-2"><Badge variant="outline" className="rounded-full border-warning/40 bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning-foreground">Prepared / demo data fixture</Badge><Badge variant="outline" className="rounded-full border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-foreground">Hedera testnet · chain 296</Badge><Badge variant="outline" className="rounded-full border-border bg-secondary px-2 py-0.5 text-[11px] font-medium text-foreground">Terms v1 · fixed</Badge></div>
+        <h1 className="mt-4 text-3xl font-bold tracking-[-0.05em] text-foreground sm:text-4xl">Deploy the RiskScan campaign</h1>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">Review every field of the prepared offering, then authorize each step with your issuer wallet. Nothing is created, funded, or published until the named signature and receipt exist.</p>
       </header>
-
-      <StepProgress currentStep={currentStep} onStepSelect={returnToStep} />
-
+      <div className="mt-7"><StepProgress currentStep={currentStep} onStepSelect={returnToStep} /></div>
       <form data-ui="provider-deploy-form" onSubmit={onSubmit}>
-        <div ref={stepRef} tabIndex={-1} aria-label={stepCaption(currentStep)} data-ui="provider-deploy-workspace" className="scroll-mt-24 outline-none">
-          <DeployStageSigning values={values} footer={footer} reviewing={currentStep === lastStep}>
-            {currentStep === lastStep ? <ReviewStep values={values} /> : renderCurrentStep()}
-            {validationMessage ? <p aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
-          </DeployStageSigning>
+        <div ref={stepRef} tabIndex={-1} aria-label={stepCaption(currentStep)} data-ui="provider-deploy-workspace" className="mt-7 outline-none">
+          <DeployStageSigning
+            values={values}
+            footer={footer}
+            reviewing={currentStep === lastStep}
+            onResume={resumeDurableCampaign}
+            renderReview={(layout) => currentStep === lastStep ? (
+              <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_326px]">
+                <section data-ui="provider-deploy-form"><ReviewStep values={values} {...layout} /></section>
+                <CampaignSummary values={values} />
+              </div>
+            ) : (
+              <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_326px]">
+                <section data-ui="provider-deploy-form">
+                  <Card className="overflow-hidden rounded-card border border-primary/10 bg-card shadow-none">
+                    <CardHeader className="space-y-1 px-5 pb-2 pt-5 sm:px-6 sm:pt-6">
+                      <CardTitle className="text-xl tracking-tight sm:text-2xl">{currentDefinition.label}</CardTitle>
+                      <CardDescription className="text-xs leading-5">Complete the prepared fields for this step. Every value remains editable until review.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="px-5 py-5 sm:px-6 sm:py-6">
+                      {renderCurrentStep()}
+                      {validationMessage ? <p aria-live="polite" className="mt-6 rounded-field border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
+                    </CardContent>
+                    <CardFooter className="px-5 pb-5 pt-0 sm:px-6 sm:pb-6">{layout.footer}</CardFooter>
+                  </Card>
+                </section>
+                <aside className="flex min-w-0 flex-col gap-5">
+                  {layout.connect}
+                  {layout.resumeNotice}
+                  <CampaignSummary values={values} />
+                </aside>
+              </div>
+            )}
+          />
         </div>
       </form>
     </main>

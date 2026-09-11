@@ -1,5 +1,43 @@
 # Runtime queue state
 
+- S29_POST_ACCEPTANCE_REVIEW_FIX: The repository owner explicitly directs the
+  two confirmed Provider deploy review corrections on PR #82. The root may
+  amend only `provider-deploy-wizard.tsx`, `deploy-stage-signing.tsx`, the new
+  local `provider-icon.tsx`, `provider-deploy-visual-reconciliation.test.mjs`,
+  and `deploy-stage-signing.test.mjs`: split line-oriented text on actual
+  LF/CRLF delimiters, give the local Terms link an existing target, and extract
+  the exact duplicated Provider wallet SVG glyph. No wallet/session behavior,
+  signature, command, ATS, transaction, or live boundary is authorized.
+
+- S42_DASHBOARD_CAMPAIGN_CONTINUATION_INTAKE: The repository owner explicitly
+  authorizes S42-T010 as a new local dashboard continuation card. It replaces
+  S24's historical guest-only dashboard restriction only for S42's later
+  declared read-only server card: the one current RiskScan projection may be
+  rendered only after exact canonical signer equality with the sealed dashboard
+  session. S42 begins in `00-inbox`; it has no active source/test reservation,
+  creates no generic listing, and grants no wallet, signature, command, relay,
+  transaction, deployment, or live authority.
+
+- S42_DASHBOARD_CAMPAIGN_CONTINUATION_READY: At control head
+  `7b748286389d66904320b7b33e64a175325f80e5`, the declared paths were absent
+  and unowned, and the full Web baseline passed under Node 22.21.1 (422 pass,
+  1 skipped). Node 20 cannot load the repository's existing TypeScript test
+  imports and is not a valid runner. S42-T010 is `10-ready`; only a separate
+  user-directed activation may reserve its focused test for durable RED.
+
+- S42_DASHBOARD_CAMPAIGN_CONTINUATION_ACTIVATION: The repository owner
+  explicitly authorized implementation in this PR. At control head
+  `04c589eabc960d02c82e07f9c9fa1f6e3522305a`, S42-T010 is `20-active` only
+  for durable RED in `apps/web/tests/dashboard-campaign.test.mjs`. Production
+  source remains prohibited pending an expected RED failure and acceptance.
+
+- S42_DASHBOARD_CAMPAIGN_CONTINUATION_RED_ACCEPTANCE: At control head
+  `54507e6cfadbd3bf6c7f0f4ace318831fac1c846`, the focused Node 22.21.1 test
+  has one expected absence failure for the declared ownership adapter; the
+  matching/mismatch cases skip until it exists. S42-T010 may now amend only
+  `dashboard-campaign.ts`, its server component, dashboard page, and focused
+  test. No other source/test path or live boundary expands.
+
 - M53_STAGE_B_FACTORY_RECEIPT_LOG_SELECTION_ACTIVATION: The confirmed first
   ATS_CREATE receipt has one valid fixed-Factory `BondDeployed` event alongside
   98 unrelated receipt logs. M53-T010 records the narrow local decoder

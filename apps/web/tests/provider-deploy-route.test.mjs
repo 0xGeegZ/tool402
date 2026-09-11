@@ -505,7 +505,7 @@ implementedTest("keeps progress responsive and lets only completed steps receive
   assert.match(returnToStep.declaration.getText(returnToStep.sourceFile), /setShowValidationErrors\(false\)/);
 });
 
-implementedTest("mounts the signing island on the review step and lets the stage list render an enabled control", async () => {
+implementedTest("keeps the signing island mounted before review so a durable campaign can resume", async () => {
   const sources = await readS16Sources();
   const wizard = sources["src/components/provider/deploy/provider-deploy-wizard.tsx"];
   const stages = sources["src/components/provider/deploy/provider-deploy-stages.tsx"];
@@ -515,6 +515,12 @@ implementedTest("mounts the signing island on the review step and lets the stage
   const island = shell.elements.find((element) => element.tagName.getText(shell.sourceFile) === "DeployStageSigning");
   assert.ok(island, "ProviderDeployWizard must mount DeployStageSigning");
   assert.match(island.getText(shell.sourceFile), /reviewing=\{currentStep === lastStep\}/);
+  assert.match(island.getText(shell.sourceFile), /onResume=\{resumeDurableCampaign\}/);
+  assert.match(wizard, /\{layout\.connect\}/, "both deploy layouts must receive the shared-session connect action");
+  assert.doesNotMatch(wizard, /layout\.wallet/, "the deploy layouts must not remount a wallet-local control");
+  assert.match(wizard, /const resumeDurableCampaign = useCallback\(\(\) =>/);
+  assert.match(wizard, /setCurrentStep\(lastStep\)/);
+  assert.match(wizard, /setShowValidationErrors\(false\)/);
   assert.doesNotMatch(shell.declaration.getText(shell.sourceFile), /<ProviderDeployStages\b/);
   assert.doesNotMatch(wizard, /providerDeployStageStates/);
 
