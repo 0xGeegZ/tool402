@@ -66,9 +66,11 @@ unreachable, exactly as the accepted UI-S15 rule states; the badge branch
 exists only so the closed union is handled. The accepted
 UI-S15 sentence for the current kind renders in one visually hidden
 `aria-live="polite"` region so the "not an authority" copy stays available to
-assistive technology. No disconnect control is rendered; MetaMask itself
-revokes the site. The control has no icon set, popover, menu, or external
-link. `app/layout.tsx` wraps the shell in `WalletSessionProvider` and renders
+assistive technology. Both address badges are internal links to `/dashboard`;
+they are navigation only, not authentication or authority proof. The server
+dashboard guard redirects to `/sign-in` unless the separate signed S38 session
+is valid. No disconnect control is rendered; MetaMask itself revokes the site.
+The control has no icon set, popover, menu, or external link. `app/layout.tsx` wraps the shell in `WalletSessionProvider` and renders
 the control immediately after `LocalNavigation` inside the existing header
 row.
 

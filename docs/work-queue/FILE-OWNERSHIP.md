@@ -1083,6 +1083,11 @@ M49-T010 is accepted and the
 integration is rebased on its interface. S26 uses the shared connected provider
 without an issuer-specific local authority display or gate. S26 adds no current
 wallet permission, provider request, signature, transaction, or live authority.
+The root additionally reserves only the connected-address badge wrapper in
+`apps/web/src/components/wallet/wallet-connect.tsx` and its
+`apps/web/tests/wallet-session.test.mjs` assertion for the owner-directed
+internal `/dashboard` navigation. It neither reads nor grants the separate S38
+signed dashboard session.
 
 S38-T010 is an `00-inbox` CORE_P0 authentication card with no active source or
 test reservation. Its eight proposed new source paths are

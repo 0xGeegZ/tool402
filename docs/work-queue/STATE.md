@@ -88,6 +88,12 @@
   not change its behavior. S26 final acceptance still requires its declared
   browser evidence and independent review; this records no wallet request,
   signature, transaction, deployment, or live authority.
+- S26_CONNECTED_BADGE_NAVIGATION: The repository owner directs the compact
+  connected-address badge to link internally to `/dashboard`. The root reserves
+  only its wrapper and matching wallet-session assertion. This navigation does
+  not read or create an S38 signed session and is never proof of authority;
+  `/dashboard` remains server-guarded and redirects unsigned users to
+  `/sign-in`.
 
 - HA_PUBLIC_DEPLOYMENT_RECONCILIATION: `D-HA-PUBLIC-DEPLOY-001-001` and
   docs/work-queue/evidence/HA-PUBLIC-DEPLOY-001-review.md supersede solely

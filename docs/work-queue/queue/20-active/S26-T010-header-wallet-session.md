@@ -126,6 +126,12 @@ exclusions govern; this card does not restate them.
   supplies an approved issuer address and a connected header session does not
   create authority. The deploy view must use the shared connected provider
   without an issuer-specific local gate or display.
+- The repository owner additionally directs each connected-address badge to
+  navigate internally to `/dashboard`. This reserves only the badge wrapper
+  in `apps/web/src/components/wallet/wallet-connect.tsx` and its assertion in
+  `apps/web/tests/wallet-session.test.mjs`. It neither creates an S38 session
+  nor reads one on the client; the server guard remains the sole dashboard
+  access decision and redirects unsigned users to `/sign-in`.
 - The root also reserves only the shared-session composition assertions in
   `apps/web/tests/backing-route.test.mjs` (accepted S18 flow),
   `apps/web/tests/wallet-session-sync.test.mjs` (accepted M50 passive-event
