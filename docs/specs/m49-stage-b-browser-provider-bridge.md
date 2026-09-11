@@ -12,7 +12,8 @@ link corroborates.
 The card is implementation authority only. It does not itself authorize a
 wallet, provider, transaction, candidate attachment, Mirror request, asset,
 receipt verification, lifecycle operation, funding, deployment, or live claim.
-HA-ATS-STAGE-B-001 remains the sole execution authority.
+HA-ATS-PREPARED-ATTEMPT-001 is the pending no-transaction signature
+prerequisite; HA-ATS-STAGE-B-001 is the separate downstream transaction gate.
 
 ## Fixed execution projection
 

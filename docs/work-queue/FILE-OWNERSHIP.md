@@ -892,6 +892,16 @@ bridge, provider discovery, Backend/Convex, packages, lockfiles, environment,
 key, SDK, deployment, and every live provider/request/transaction/candidate/
 verification/lifecycle path remain excluded until their own authority gates.
 
+HI-011 is a root-only pending human-gate control record. It owns only its
+intake card, the two draft decision packets, the corresponding HUMAN-ACTIONS,
+STATE, TASK-CATALOG, DECISIONS, ownership, review, commit, and push records.
+It owns no source, test, schema, package, environment, configuration, runtime,
+provider, wallet, signer, authority row, transaction, Mirror request,
+candidate, verification, lifecycle, funding, deployment, or live-evidence
+path. Human Ops alone may act only after an explicit accepted human decision;
+root independently reviews its redacted evidence before preparing the separate
+downstream Stage-B decision.
+
 M44-T030 is an accepted `60-done` CORE_P0 decoded-event correction to M44-T020.
 Its completed source is `8d019e599c320d951197d3a405d5fa3969958380`; no active
 reservation remains. It changed only

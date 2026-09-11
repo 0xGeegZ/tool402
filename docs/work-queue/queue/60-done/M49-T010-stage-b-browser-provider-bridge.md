@@ -11,10 +11,12 @@
 - Owner: Root owns queue state, catalog, ownership, decisions, readiness,
   activation, reviews, commits, pushes, and integration. A later implementer
   receives only the exact RED/GREEN paths recorded after the normal reviews.
-- Human actions: HA-ATS-STAGE-B-001 remains PENDING and is the only authority
-  for a real provider interaction, transaction, public Mirror observation, or
-  candidate attachment. This card authorizes local source/test work only after
-  its own queue gates.
+- Human actions: HA-ATS-PREPARED-ATTEMPT-001 remains PENDING for the two
+  no-transaction browser signatures and exact durable attempt. Only after its
+  evidence is independently reviewed may the separate pending
+  HA-ATS-STAGE-B-001 govern one provider transaction, bounded public Mirror
+  observation, and candidate attachment. This card authorizes local source/test
+  work only after its own queue gates.
 
 ## Purpose
 
@@ -22,7 +24,8 @@ M49 is the browser/provider successor requested by HI-009. It turns the
 accepted local Factory + viem seam into one explicit, fail-closed boundary:
 
 ```text
-stage-2 external.prepare ACCEPTED
+HA-ATS-PREPARED-ATTEMPT-001: stage-2 external.prepare ACCEPTED
+and a durable PREPARED attempt
 → exact issuer/chain recheck
 → one MetaMask eth_sendTransaction to the fixed Factory
 → bounded receipt and public-Mirror observation
@@ -31,8 +34,9 @@ stage-2 external.prepare ACCEPTED
 ```
 
 It never turns a local candidate into receipt verification, an asset-ready
-claim, a lifecycle operation, or live evidence. The human owns every actual
-send and signature under HA-ATS-STAGE-B-001.
+claim, a lifecycle operation, or live evidence. The human owns the two
+preparatory signatures only under HA-ATS-PREPARED-ATTEMPT-001 and the later
+send plus attachment only under HA-ATS-STAGE-B-001.
 
 ## Local authority
 
@@ -146,12 +150,21 @@ projection independently rehashes to
 M49 is accepted at `60-done` as a local browser/provider bridge. It does not
 authorize an actual provider request, transaction, public Mirror observation,
 candidate attachment, receipt verification, lifecycle, deployment, or any
-other live action. Root may prepare—but not execute—the separate
-`HA-ATS-STAGE-B-001` human decision packet.
+other live action. Root may prepare—but not execute—the first
+`HA-ATS-PREPARED-ATTEMPT-001` human decision packet. Only after independent
+review of its exact durable result may root fill the downstream Stage-B packet.
+
+The prepared [prepared-attempt packet](../../evidence/HA-ATS-PREPARED-ATTEMPT-001-recommended-decision.md)
+and downstream [Stage-B packet](../../evidence/HA-ATS-STAGE-B-001-recommended-decision-v3.md)
+are drafts only. They preserve the ordered no-transaction then one-send scope
+while leaving both human-action rows pending until explicit acceptance is
+recorded.
 
 ## Fixed one-shot execution contract
 
-When and only when a human has separately approved HA-ATS-STAGE-B-001 and
+When and only when the human has first completed the reviewed
+HA-ATS-PREPARED-ATTEMPT-001 result in the same unchanged browser session, has
+separately approved HA-ATS-STAGE-B-001 binding that exact attemptPublicId, and
 clicks the explicit UI control, the implementation may:
 
 1. Require the existing MetaMask session to report `eth_chainId === "0x128"`
@@ -233,9 +246,12 @@ provider, endpoint, account, or transaction.
 M49 is accepted only after durable RED precedes source, all focused and
 affected Web tests/typecheck/lint pass, queue/reference/whitespace checks and
 the local guard pass, and independent task plus module reviews are clear. Once
-accepted, root may prepare—not execute—a prefilled HA-ATS-STAGE-B-001 packet
-for one human-operated rehearsal. That packet must name the accepted commit and
-host, authorize exactly one Factory `deployBond` send, bounded public Mirror
-observation, and one separately clicked candidate attachment; it must exclude
-positive M43 verification, `ASSET_READY`, lifecycle, funding, allocation,
-clearing, HCS, payout, deployment, and automatic retry.
+accepted, root may prepare—but not execute—the prefilled
+HA-ATS-PREPARED-ATTEMPT-001 packet. After its redacted result independently
+proves the exact durable PREPARED attempt and linked ASSET_PENDING offering in
+the same browser session, root may fill—but not execute—the downstream
+HA-ATS-STAGE-B-001 packet. That packet must name the accepted commit, host, and
+attemptPublicId; authorize exactly one Factory `deployBond` send, bounded
+public Mirror observation, and one separately clicked candidate attachment; and
+exclude positive M43 verification, `ASSET_READY`, lifecycle, funding,
+allocation, clearing, HCS, payout, deployment, and automatic retry.
