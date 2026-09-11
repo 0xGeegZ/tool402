@@ -37,15 +37,14 @@ route targets, product facts, and exclusions.
 - A fresh independent readiness review must accept the candidate scope before
   a separate activation can permit durable RED.
 
-## RED activation authority
+## Green authority
 
-Fresh independent activation at `6420f088ab2306e8aa8e34c2d67c38f3f221dfa1`
-is clear. S34-T010 reserves only durable RED in
-`apps/web/tests/public-documentation.test.mjs` and the exact S34 assertions
-in `landing-explore.test.mjs`, `product-landing.test.mjs`,
-`workspace-shell.test.mjs`, and `guided-demo-route.test.mjs`. No S34 source
-path is active. A fresh independent RED review must accept the durable
-failures before any minimal Green source authority exists.
+Fresh independent RED review at `621e062a5e5e6d0bac7b5268cd74450786d82e27`
+is clear. The five S34 test paths are frozen as the accepted contract.
+Minimal Green may touch only the eight source paths declared by D-S34-010-004:
+the three Docs pages, three Docs components, `local-navigation.tsx`, and
+`landing-footer.tsx`. A fresh independent Green review is required before
+acceptance; every route behavior and runtime/product path remains excluded.
 
 ## RED and Green boundary
 
