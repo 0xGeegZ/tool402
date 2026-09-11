@@ -17,7 +17,7 @@ async function readIsland() {
   return readFile(join(appRoot, islandPath), "utf8");
 }
 
-async function signingIslandHarness(values, renderReview) {
+async function signingIslandHarness(values, renderReview, resume = null, onResume = undefined) {
   const slots = [];
   let cursor = 0;
   let connectionRequests = 0;
@@ -46,7 +46,7 @@ async function signingIslandHarness(values, renderReview) {
     "../../../lib/wallet/command-bridge.ts": await import("../src/lib/wallet/command-bridge.ts"),
     "../../../lib/provider-campaign-resume.ts": {
       loadProviderCampaignResume() {
-        return { then(resolve) { resolve(null); } };
+        return { then(resolve) { resolve(resume); } };
       },
     },
     "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
@@ -84,7 +84,7 @@ async function signingIslandHarness(values, renderReview) {
   return {
     render() {
       cursor = 0;
-      return module.exports.DeployStageSigning({ values, renderReview });
+      return module.exports.DeployStageSigning({ values, renderReview, onResume });
     },
     connect() {
       session = {
@@ -187,6 +187,32 @@ implementedTest("passes the connected wallet and stage controls to an embedded r
   const afterConnection = harness.render();
   const stages = elements(afterConnection).find((element) => element.type === "ProviderDeployStages");
   assert.equal(stages.props.enabledStage, 0, "the embedded stage list must receive the connected wallet session");
+});
+
+implementedTest("notifies the wizard when a connected issuer has a durable campaign to resume", async () => {
+  const values = {
+    toolName: "RiskScan",
+    customerProblem: "Tool operators need a bounded way to assess request risk before they continue a workflow.",
+    qualifyingResource: "riskscan-local-assessment",
+    quickPrice: "0.1",
+    standardPrice: "0.1",
+    targetAgentCustomers: "Security-oriented agent operators",
+    useOfFunds: "Maintain the local assessment workflow and provider documentation.",
+    risks: "Testnet terms do not promise yield, principal, or return.",
+  };
+  let resumeCount = 0;
+  const harness = await signingIslandHarness(
+    values,
+    undefined,
+    { attemptPublicId: "JBSWY3DPEBLW64TMMQ" },
+    () => { resumeCount += 1; },
+  );
+
+  harness.connect(harness.render());
+  await Promise.resolve();
+  harness.render();
+
+  assert.equal(resumeCount, 1, "a recovered durable campaign must return the wizard to its review step");
 });
 
 implementedTest("keeps a rejected local request out of the dialog and stage results with actionable feedback", async () => {

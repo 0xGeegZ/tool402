@@ -29,11 +29,13 @@ export function DeployStageSigning({
   footer,
   reviewing = true,
   renderReview,
+  onResume,
 }: {
   values: CampaignReviewValues;
   children?: ReactNode;
   footer?: ReactNode;
   reviewing?: boolean;
+  onResume?: () => void;
   renderReview?: (layout: {
     connect: ReactNode;
     resumeNotice: ReactNode;
@@ -85,11 +87,12 @@ export function DeployStageSigning({
           { kind: "done", detail: "Recovered from the durable prepared attempt." },
         ]);
         setAttemptPublicId(resume.attemptPublicId);
+        onResume?.();
       }
       setResumePending(false);
     });
     return () => { cancelled = true; };
-  }, [session?.address]);
+  }, [session?.address, onResume]);
 
   function activate(stage: number) {
     if (request !== null || stage !== enabledStage) return;

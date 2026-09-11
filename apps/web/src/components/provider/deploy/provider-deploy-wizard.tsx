@@ -398,6 +398,11 @@ export function ProviderDeployWizard() {
     setShowValidationErrors(false);
   }
 
+  function resumeDurableCampaign() {
+    setShowValidationErrors(false);
+    setCurrentStep(lastStep);
+  }
+
   function moveForward() {
     const nextFieldErrors = providerDeployFieldErrors(values, currentStep);
     if (Object.keys(nextFieldErrors).length > 0) {
@@ -454,11 +459,43 @@ export function ProviderDeployWizard() {
         <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">Review every field of the prepared offering, then authorize each step with your issuer wallet. Nothing is created, funded, or published until the named signature and receipt exist.</p>
       </header>
       <div className="mt-7"><StepProgress currentStep={currentStep} onStepSelect={returnToStep} /></div>
-      <div data-ui="provider-deploy-workspace" className="mt-7 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_326px]">
-        <section data-ui="provider-deploy-form"><Card className="overflow-hidden rounded-card border border-border bg-card shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_5%,transparent)]"><CardHeader className="space-y-1 px-5 pb-2 pt-5 sm:px-6 sm:pt-6"><CardTitle className="text-xl tracking-tight sm:text-2xl">{currentDefinition.label}</CardTitle><CardDescription className="text-xs leading-5">Complete the prepared fields for this step. Every value remains editable until review.</CardDescription></CardHeader>{currentStep === lastStep ? <div ref={stepRef} tabIndex={-1} aria-label={stepCaption(currentStep)} className="outline-none"><DeployStageSigning values={values} footer={footer} reviewing={currentStep === lastStep} renderReview={(layout) => <ReviewStep values={values} {...layout} />} /></div> : <form onSubmit={onSubmit}><CardContent className="px-5 py-5 sm:px-6 sm:py-6">{renderCurrentStep()}{validationMessage ? <p aria-live="polite" className="mt-6 rounded-field border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}</CardContent><CardFooter className="flex flex-col-reverse gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"><Button type="button" variant="ghost" className="justify-start px-2 text-sm" disabled={!canGoBack(currentStep)} onClick={() => returnToStep(Math.max(0, currentStep - 1))}>Back</Button><Button type="submit" className="h-10 rounded-control px-5 text-sm" disabled={!canAdvance(currentStep, values)}>Continue <span aria-hidden="true">→</span></Button></CardFooter></form>}</Card></section>
-        <CampaignSummary values={values} />
-      </div>
+      <form data-ui="provider-deploy-form" onSubmit={onSubmit}>
+        <div ref={stepRef} tabIndex={-1} aria-label={stepCaption(currentStep)} data-ui="provider-deploy-workspace" className="mt-7 outline-none">
+          <DeployStageSigning
+            values={values}
+            footer={footer}
+            reviewing={currentStep === lastStep}
+            onResume={resumeDurableCampaign}
+            renderReview={(layout) => currentStep === lastStep ? (
+              <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_326px]">
+                <section data-ui="provider-deploy-form"><ReviewStep values={values} {...layout} /></section>
+                <CampaignSummary values={values} />
+              </div>
+            ) : (
+              <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_326px]">
+                <section data-ui="provider-deploy-form">
+                  <Card className="overflow-hidden rounded-card border border-border bg-card shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_5%,transparent)]">
+                    <CardHeader className="space-y-1 px-5 pb-2 pt-5 sm:px-6 sm:pt-6">
+                      <CardTitle className="text-xl tracking-tight sm:text-2xl">{currentDefinition.label}</CardTitle>
+                      <CardDescription className="text-xs leading-5">Complete the prepared fields for this step. Every value remains editable until review.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="px-5 py-5 sm:px-6 sm:py-6">
+                      {renderCurrentStep()}
+                      {validationMessage ? <p aria-live="polite" className="mt-6 rounded-field border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
+                    </CardContent>
+                    <CardFooter className="px-5 pb-5 pt-0 sm:px-6 sm:pb-6">{layout.footer}</CardFooter>
+                  </Card>
+                </section>
+                <aside className="flex min-w-0 flex-col gap-5">
+                  <section className="rounded-card border border-border bg-card p-5 shadow-none sm:p-6" aria-label="Wallet connection">{layout.wallet}</section>
+                  {layout.resumeNotice}
+                  <CampaignSummary values={values} />
+                </aside>
+              </div>
+            )}
+          />
+        </div>
+      </form>
     </main>
   );
 }
-
