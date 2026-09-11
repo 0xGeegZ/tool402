@@ -66,25 +66,16 @@ export function ProviderStatus({ projections }: { projections: ProviderProjectio
           <StatusSummary title="Offering record" outcome={projections.offering} />
           <StatusSummary title="Directory record" outcome={projections.directory} />
           <section className="min-h-32 rounded-2xl border border-border bg-card p-5 shadow-none">
-            <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Provider action</p>
-            <p className="mt-3 text-lg font-semibold tracking-tight">{action?.href === null ? "No further action" : "Open the local wizard"}</p>
+            <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Next step</p>
+            <div className="mt-3 text-lg font-semibold tracking-tight">{action === undefined ? <Outcome outcome={projections.offering} /> : action.message}</div>
           </section>
         </div>
       </section>
 
-      <section data-ui="provider-riskscan-offering-card" aria-labelledby="provider-riskscan-offering" className="grid gap-5 rounded-[calc(var(--radius)*2)] border border-border bg-card p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">Local RiskScan offering path</p>
-          <h2 id="provider-riskscan-offering" className="text-2xl font-semibold tracking-[-0.03em]">RiskScan</h2>
-          <p className="max-w-2xl text-sm leading-6 text-muted-foreground">Prepare the existing RiskScan offering in the local provider wizard. A preview is not a public offer.</p>
-        </div>
-        <div className="flex flex-col items-start gap-3 lg:items-end">
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-1 rounded-xl border border-dashed border-border bg-secondary/30 px-4 py-3 text-sm">
-            <div><dt className="text-xs text-muted-foreground">Route</dt><dd className="font-medium">/provider/deploy</dd></div>
-            <div><dt className="text-xs text-muted-foreground">Scope</dt><dd className="font-medium">Local wizard</dd></div>
-          </dl>
-          <Link className="inline-flex min-h-10 items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-brand-purple motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/provider/deploy">Open the deploy wizard</Link>
-        </div>
+      <section data-ui="provider-riskscan-offering-card" aria-labelledby="provider-riskscan-offering" className="space-y-2 rounded-[calc(var(--radius)*2)] border border-border bg-card p-5 sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">Current tool offering</p>
+        <h2 id="provider-riskscan-offering" className="text-2xl font-semibold tracking-[-0.03em]">RiskScan</h2>
+        <p className="max-w-2xl text-sm leading-6 text-muted-foreground">The deploy wizard prepares this existing offering. A preview is not a public offer.</p>
       </section>
 
       <section aria-labelledby="provider-evidence" className="rounded-[calc(var(--radius)*2)] border border-border bg-card p-5 shadow-none sm:p-6">
