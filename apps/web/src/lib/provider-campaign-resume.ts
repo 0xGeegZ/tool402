@@ -1,6 +1,6 @@
-export type ProviderCampaignResume = Readonly<{
-  attemptPublicId: string;
-}>;
+export type ProviderCampaignResume =
+  | Readonly<{ kind: "ASSET_PENDING"; attemptPublicId: string }>
+  | Readonly<{ kind: "READY" }>;
 
 type ResumeRecord = Readonly<{
   offeringPublicId?: unknown;
@@ -8,6 +8,7 @@ type ResumeRecord = Readonly<{
   state?: unknown;
   canonicalSignerAddress?: unknown;
   atsAttemptPublicId?: unknown;
+  atsAssetEvmAddress?: unknown;
 }>;
 
 const canonicalAddressPattern = /^0x[0-9a-f]{40}$/u;
@@ -30,14 +31,21 @@ export function readProviderCampaignResume(
   if (
     input.offeringPublicId !== riskScanSubjectPublicId
     || input.subjectPublicId !== riskScanSubjectPublicId
-    || input.state !== "ASSET_PENDING"
     || input.canonicalSignerAddress !== connectedIssuerAddress
-    || typeof input.atsAttemptPublicId !== "string"
-    || !canonicalAttemptPublicIdPattern.test(input.atsAttemptPublicId)
   ) {
     return null;
   }
-  return Object.freeze({ attemptPublicId: input.atsAttemptPublicId });
+  if (
+    input.state === "ASSET_PENDING"
+    && typeof input.atsAttemptPublicId === "string"
+    && canonicalAttemptPublicIdPattern.test(input.atsAttemptPublicId)
+  ) {
+    return Object.freeze({ kind: "ASSET_PENDING", attemptPublicId: input.atsAttemptPublicId });
+  }
+  if (input.state === "READY" && canonicalAddress(input.atsAssetEvmAddress)) {
+    return Object.freeze({ kind: "READY" });
+  }
+  return null;
 }
 
 export async function loadProviderCampaignResume(

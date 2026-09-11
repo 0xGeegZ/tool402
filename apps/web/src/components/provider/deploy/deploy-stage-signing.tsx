@@ -93,11 +93,15 @@ export function DeployStageSigning({
     void loadProviderCampaignResume(session.address).then((resume) => {
       if (cancelled) return;
       if (resume !== null) {
-        setResults([
+        const recovered: ProviderDeployStageState[] = [
           { kind: "done", detail: "Recovered from the durable offering record." },
           { kind: "done", detail: "Recovered from the durable prepared attempt." },
-        ]);
-        setAttemptPublicId(resume.attemptPublicId);
+        ];
+        if (resume.kind === "READY") {
+          recovered.push({ kind: "done", detail: "Recovered from the durable candidate attachment." });
+        }
+        setResults(recovered);
+        if (resume.kind === "ASSET_PENDING") setAttemptPublicId(resume.attemptPublicId);
         onResume?.();
       }
       setResumePending(false);

@@ -348,7 +348,9 @@ export function providerDeployStageStates(
 
   const first = sessionStageState(session.results[0], undefined);
   const second = projection ? sessionStageState(session.results[1], first) : Object.freeze({ kind: "unavailable" as const });
-  const third = session.candidate ? sessionStageState(session.results[2], second) : Object.freeze({ kind: "unavailable" as const });
+  const third = session.candidate || session.results[2]?.kind === "done"
+    ? sessionStageState(session.results[2], second)
+    : Object.freeze({ kind: "unavailable" as const });
   const fourth = session.recordComplete
     ? sessionStageState(session.results[3], third)
     : Object.freeze({ kind: "unavailable" as const, detail: stageFourUnavailableDetail });

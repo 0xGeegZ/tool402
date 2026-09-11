@@ -314,6 +314,7 @@ function readSafeOffering(input: unknown): SafeOffering {
 }
 
 export function readAtsCreateReplayOffering(input: unknown): {
+  readonly offeringId: GenericId<"offerings">;
   readonly atsAttemptId: GenericId<"externalPrepareCommandAttempts">;
   readonly state: "ASSET_PENDING";
   readonly subjectPublicId: string;
@@ -332,6 +333,7 @@ export function readAtsCreateReplayOffering(input: unknown): {
       return null;
     }
     return Object.freeze({
+      offeringId: offering.offeringId,
       atsAttemptId: offering.atsAttemptId,
       state: "ASSET_PENDING" as const,
       subjectPublicId: offering.subjectPublicId,

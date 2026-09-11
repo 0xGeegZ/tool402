@@ -290,6 +290,7 @@ implementedTest("enables only an actionable control the bridge reports and deriv
   ]);
   assert.deepEqual(state.providerDeployStageStates(atsCreateConfiguration, { ...connected, results: [done], candidate })[2], { kind: "blocked" });
   assert.deepEqual(state.providerDeployStageStates(atsCreateConfiguration, { ...connected, results: [done, done], candidate })[2], { kind: "actionable" });
+  assert.deepEqual(state.providerDeployStageStates(atsCreateConfiguration, { ...connected, results: [done, done, done] })[2], done);
   const complete = state.providerDeployStageStates(atsCreateConfiguration, { connected: true, results: [done, done, done], candidate, recordComplete: true });
   assert.deepEqual(complete, [done, done, done, { kind: "actionable" }]);
   assert.deepEqual(

@@ -84,10 +84,56 @@ function input(overrides = {}) {
   };
 }
 
-function database({ attempts = [attempt()], claims = [] } = {}) {
+function offering(overrides = {}) {
+  return {
+    _id: "offerings:pending",
+    _creationTime: 1,
+    offeringPublicId: "riskscan_revenue_note_demo",
+    subjectPublicId: "riskscan_revenue_note_demo",
+    canonicalSignerAddress: signer,
+    principalPublicId: "issuer_42",
+    authorityVersion: "issuer_v1",
+    payloadHash: "0x" + "c".repeat(64),
+    idempotencyKey: "EEEEEEEEEEEEEEEEEEEEEw",
+    advertisedQuickPriceTinybars: "10",
+    advertisedStandardPriceTinybars: "25",
+    version: 1,
+    acceptedAt: 1n,
+    updatedAt: 1n,
+    definition: {
+      schemaVersion: 1,
+      terms: {
+        version: "riskscan-revenue-note-v1",
+        fundingTargetTinybars: "1000",
+        noteUnitPriceTinybars: "10",
+        maximumNoteUnits: "100",
+        minimumPurchaseUnits: "1",
+        reserveShareBps: "2000",
+        issuerShareBps: "8000",
+        platformFeeBps: "0",
+        payoutCapTinybars: "1500",
+      },
+      maturityAt: "2027-09-09T00:00:00.000Z",
+      qualifyingResource: "riskscan.quick",
+    },
+    narrative: {
+      title: "RiskScan",
+      customerProblem: "Risk",
+      customerUseCases: ["Check"],
+      useOfFunds: ["Build"],
+      risks: ["Market"],
+    },
+    state: "ASSET_PENDING",
+    atsAttemptId: attemptId,
+    ...overrides,
+  };
+}
+
+function database({ attempts = [attempt()], claims = [], offerings = [offering()] } = {}) {
   const rows = {
     externalPrepareCommandAttempts: attempts,
     walletCommandReplayClaims: claims,
+    offerings,
   };
   const reads = [];
   const writes = [];
@@ -131,8 +177,8 @@ function database({ attempts = [attempt()], claims = [] } = {}) {
     },
     async patch(rowId, patch) {
       accesses.push({ kind: "patch", rowId });
-      const row = rows.externalPrepareCommandAttempts.find((candidate) => candidate?._id === rowId);
-      assert.notEqual(row, undefined, "patch must target the resolved attempt only");
+      const row = Object.values(rows).flat().find((candidate) => candidate?._id === rowId);
+      assert.notEqual(row, undefined, "patch must target a resolved document only");
       const copy = structuredClone(patch);
       Object.assign(row, copy);
       writes.push({ kind: "patch", rowId, patch: copy });
@@ -265,8 +311,30 @@ implementedTest("claims a fresh replay identity before the sole candidate patch 
         candidateEvmAddress: candidateAddress,
       },
     },
+    {
+      kind: "patch",
+      rowId: "offerings:pending",
+      patch: {
+        state: "READY",
+        atsAssetEvmAddress: candidateAddress,
+        updatedAt: db.writes[2].patch.updatedAt,
+      },
+    },
   ]);
   assert.equal(typeof db.writes[0].document.claimedAt, "bigint");
+});
+
+implementedTest("promotes the exact linked offering to READY with the verified ATS_CREATE candidate", async () => {
+  const db = database();
+  await api.attachAtsCandidateReceipt._handler(db.ctx, input());
+
+  assert.deepEqual(db.rows.offerings[0], {
+    ...offering(),
+    state: "READY",
+    atsAssetEvmAddress: candidateAddress,
+    updatedAt: db.rows.offerings[0].updatedAt,
+  });
+  assert.equal(typeof db.rows.offerings[0].updatedAt, "bigint");
 });
 
 implementedTest("returns a no-write already-attached result only for byte-identical stored candidates", async () => {
@@ -276,6 +344,7 @@ implementedTest("returns a no-write already-attached result only for byte-identi
       candidateTransactionId: "0.0.123@1735689600.123456789",
       candidateEvmAddress: candidateAddress,
     })],
+    offerings: [offering({ state: "READY", atsAssetEvmAddress: candidateAddress })],
   });
   const result = await api.attachAtsCandidateReceipt._handler(db.ctx, input({ replayIdentity: replayIdentity(secondNonce) }));
 
@@ -292,6 +361,64 @@ implementedTest("returns a no-write already-attached result only for byte-identi
     ineligibleReceiptError,
   );
   assert.deepEqual(different.writes, []);
+});
+
+implementedTest("repairs a pending offering when a fresh attachment signature repeats its exact submitted candidate", async () => {
+  const db = database({
+    attempts: [attempt({
+      state: "SUBMITTED",
+      candidateTransactionId: "0.0.123@1735689600.123456789",
+      candidateEvmAddress: candidateAddress,
+    })],
+  });
+  const result = await api.attachAtsCandidateReceipt._handler(
+    db.ctx,
+    input({ replayIdentity: replayIdentity(secondNonce) }),
+  );
+
+  assert.deepEqual(result, { status: "ATTACHED", attemptId, state: "SUBMITTED" });
+  assert.deepEqual(db.writes, [{
+    kind: "patch",
+    rowId: "offerings:pending",
+    patch: {
+      state: "READY",
+      atsAssetEvmAddress: candidateAddress,
+      updatedAt: db.writes[0].patch.updatedAt,
+    },
+  }]);
+});
+
+implementedTest("repairs a claimed ATS_CREATE attachment when its exact pending offering was left unpromoted", async () => {
+  const db = database({
+    attempts: [attempt({
+      state: "SUBMITTED",
+      candidateTransactionId: "0.0.123@1735689600.123456789",
+      candidateEvmAddress: candidateAddress,
+    })],
+    claims: [{
+      _id: "walletCommandReplayClaims:claimed",
+      _creationTime: 1,
+      replayIdentity: replayIdentity(),
+      commandType: "external.attachCandidate",
+      outcome: "NEW",
+      targetId: attemptId,
+      claimedAt: 1n,
+    }],
+  });
+
+  assert.deepEqual(
+    await api.attachAtsCandidateReceipt._handler(db.ctx, input()),
+    { status: "ATTACHED", attemptId, state: "SUBMITTED" },
+  );
+  assert.deepEqual(db.writes, [{
+    kind: "patch",
+    rowId: "offerings:pending",
+    patch: {
+      state: "READY",
+      atsAssetEvmAddress: candidateAddress,
+      updatedAt: db.writes[0].patch.updatedAt,
+    },
+  }]);
 });
 
 implementedTest("attaches one non-ATS candidate without an EVM address", async () => {

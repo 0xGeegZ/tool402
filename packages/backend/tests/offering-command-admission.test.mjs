@@ -612,6 +612,7 @@ atomicTest("reads only a complete safe ASSET_PENDING offering before an M41 ATS_
     atsAttemptId,
   });
   const expected = {
+    offeringId: valid._id,
     atsAttemptId,
     state: "ASSET_PENDING",
     subjectPublicId: input.payload.subjectPublicId,

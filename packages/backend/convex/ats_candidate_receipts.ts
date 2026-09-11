@@ -1,4 +1,5 @@
 import {
+  type GenericMutationCtx,
   internalMutationGeneric,
   internalQueryGeneric,
 } from "convex/server";
@@ -21,6 +22,7 @@ import {
   isInt64,
   readStoredRecord,
 } from "../src/offering-command-admission.ts";
+import { readAtsCreateReplayOffering } from "./offerings.ts";
 import type schema from "./schema.ts";
 
 type AttemptState =
@@ -49,6 +51,7 @@ type StoredAttempt = {
   readonly role: "ISSUER" | "BACKER";
   readonly authorityVersion: string;
   readonly operationKind: ExternalOperationKind;
+  readonly subjectPublicId: string;
   readonly network: "hedera:testnet";
   readonly chainId: 296;
   readonly expectedTarget: string;
@@ -344,6 +347,7 @@ function readAttempt(input: unknown): StoredAttempt {
       role: record.role,
       authorityVersion: record.authorityVersion,
       operationKind: payload.operationKind,
+      subjectPublicId: payload.subjectPublicId,
       network: payload.network,
       chainId: payload.chainId,
       expectedTarget: payload.expectedTarget,
@@ -357,7 +361,10 @@ function readAttempt(input: unknown): StoredAttempt {
   }
 }
 
-function revalidateReplayClaim(input: unknown, replayIdentity: string): void {
+function revalidateReplayClaim(
+  input: unknown,
+  replayIdentity: string,
+): "offering.create" | "directory.publish" | "external.attachCandidate" {
   try {
     const record = readStoredRecord(
       input,
@@ -383,6 +390,7 @@ function revalidateReplayClaim(input: unknown, replayIdentity: string): void {
     ) {
       return reject();
     }
+    return record.commandType;
   } catch {
     return reject();
   }
@@ -392,6 +400,42 @@ function durableNow(): bigint {
   const now = Date.now();
   if (!Number.isSafeInteger(now) || now < 0) return reject();
   return BigInt(now);
+}
+
+function matchesAttachmentAttempt(attempt: StoredAttempt, attachment: Attachment): boolean {
+  return attempt.idempotencyKey === attachment.attemptPublicId
+    && attempt.canonicalSignerAddress === attachment.canonicalSignerAddress
+    && attempt.principalPublicId === attachment.principalPublicId
+    && attempt.role === attachment.role
+    && attempt.authorityVersion === attachment.authorityVersion
+    && attempt.operationKind === attachment.operationKind
+    && attempt.chainId === 296
+    && attempt.network === "hedera:testnet";
+}
+
+async function readLinkedPendingAtsCreateOffering(
+  ctx: GenericMutationCtx<DataModelFromSchemaDefinition<typeof schema>>,
+  attempt: StoredAttempt,
+  attachment: Attachment,
+  required = true,
+) {
+  if (attachment.operationKind !== "ATS_CREATE") return null;
+  const offerings = await ctx.db.query("offerings")
+    .withIndex("by_ats_attempt_id", (query) => query.eq("atsAttemptId", attempt.attemptId))
+    .take(2);
+  if (offerings.length !== 1) return required ? reject() : null;
+  const offering = readAtsCreateReplayOffering(offerings[0]);
+  if (
+    offering === null
+    || offering.atsAttemptId !== attempt.attemptId
+    || offering.subjectPublicId !== attempt.subjectPublicId
+    || offering.canonicalSignerAddress !== attachment.canonicalSignerAddress
+    || offering.principalPublicId !== attachment.principalPublicId
+    || offering.authorityVersion !== attachment.authorityVersion
+  ) {
+    return required ? reject() : null;
+  }
+  return offering;
 }
 
 export const attachAtsCandidateReceipt = internalMutation({
@@ -428,7 +472,35 @@ export const attachAtsCandidateReceipt = internalMutation({
       .take(2);
     if (claims.length > 1) return reject();
     if (claims.length === 1) {
-      revalidateReplayClaim(claims[0], attachment.replayIdentity);
+      const commandType = revalidateReplayClaim(claims[0], attachment.replayIdentity);
+      if (commandType === "external.attachCandidate" && attachment.operationKind === "ATS_CREATE") {
+        const attempts = await ctx.db.query("externalPrepareCommandAttempts")
+          .withIndex("by_idempotency_key", (query) => (
+            query.eq("idempotencyKey", attachment.attemptPublicId)
+          ))
+          .take(2);
+        if (attempts.length !== 1) return reject();
+        const attempt = readAttempt(attempts[0]);
+        if (
+          matchesAttachmentAttempt(attempt, attachment)
+          && attempt.state === "SUBMITTED"
+          && attempt.candidateTransactionId === attachment.candidateTransactionId
+          && attempt.candidateEvmAddress === attachment.candidateEvmAddress
+        ) {
+          const offering = await readLinkedPendingAtsCreateOffering(ctx, attempt, attachment, false);
+          if (offering === null) return reject();
+          await ctx.db.patch(offering.offeringId, {
+            state: "READY",
+            atsAssetEvmAddress: attachment.candidateEvmAddress,
+            updatedAt: durableNow(),
+          });
+          return {
+            status: "ATTACHED" as const,
+            attemptId: attempt.attemptId,
+            state: "SUBMITTED" as const,
+          };
+        }
+      }
       return { status: "COMMAND_REPLAYED" as const };
     }
 
@@ -439,16 +511,7 @@ export const attachAtsCandidateReceipt = internalMutation({
       .take(2);
     if (attempts.length !== 1) return reject();
     const attempt = readAttempt(attempts[0]);
-    if (
-      attempt.idempotencyKey !== attachment.attemptPublicId
-      || attempt.canonicalSignerAddress !== attachment.canonicalSignerAddress
-      || attempt.principalPublicId !== attachment.principalPublicId
-      || attempt.role !== attachment.role
-      || attempt.authorityVersion !== attachment.authorityVersion
-      || attempt.operationKind !== attachment.operationKind
-      || attempt.chainId !== 296
-      || attempt.network !== "hedera:testnet"
-    ) {
+    if (!matchesAttachmentAttempt(attempt, attachment)) {
       return reject();
     }
     if (attempt.state === "SUBMITTED") {
@@ -458,6 +521,19 @@ export const attachAtsCandidateReceipt = internalMutation({
       ) {
         return reject();
       }
+      const offering = await readLinkedPendingAtsCreateOffering(ctx, attempt, attachment, false);
+      if (offering !== null) {
+        await ctx.db.patch(offering.offeringId, {
+          state: "READY",
+          atsAssetEvmAddress: attachment.candidateEvmAddress,
+          updatedAt: durableNow(),
+        });
+        return {
+          status: "ATTACHED" as const,
+          attemptId: attempt.attemptId,
+          state: "SUBMITTED" as const,
+        };
+      }
       return {
         status: "ALREADY_ATTACHED" as const,
         attemptId: attempt.attemptId,
@@ -465,6 +541,8 @@ export const attachAtsCandidateReceipt = internalMutation({
       };
     }
     if (attempt.state !== "PREPARED") return reject();
+
+    const offering = await readLinkedPendingAtsCreateOffering(ctx, attempt, attachment);
 
     await ctx.db.insert("walletCommandReplayClaims", {
       replayIdentity: attachment.replayIdentity,
@@ -480,6 +558,13 @@ export const attachAtsCandidateReceipt = internalMutation({
         ? {}
         : { candidateEvmAddress: attachment.candidateEvmAddress }),
     });
+    if (offering !== null) {
+      await ctx.db.patch(offering.offeringId, {
+        state: "READY",
+        atsAssetEvmAddress: attachment.candidateEvmAddress,
+        updatedAt: durableNow(),
+      });
+    }
     return {
       status: "ATTACHED" as const,
       attemptId: attempt.attemptId,
