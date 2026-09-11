@@ -192,7 +192,7 @@ export function ProviderDeployStages({
         })}
       </ol>
       {activeControl && activeDefinition ? (
-        <div data-ui="provider-signature-handoff" className="space-y-3 rounded-[calc(var(--radius)*0.75)] border border-primary/30 bg-primary/5 p-4">
+        <div data-ui="provider-signature-handoff" className="space-y-3 rounded-field border border-primary/30 bg-primary/5 p-4">
           <div className="space-y-1">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">Next action</p>
             <p className="font-medium text-foreground">Stage {enabledStage + 1}: {activeDefinition.label}</p>
