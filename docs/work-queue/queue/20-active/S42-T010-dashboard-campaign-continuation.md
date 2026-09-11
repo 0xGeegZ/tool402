@@ -3,14 +3,14 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: none. S42 consumes the already-merged dashboard-session and
   offering-projection read boundaries without modifying their active source or
   test paths; S24-T010's historical dashboard restriction is superseded only
   by the explicit state decision for this card.
 - Owner: the root owns this card, specification, queue records, implementation,
-  validation, and integration. No source or test path is active while this card
-  remains in `10-ready`.
+  validation, and integration. The only active path is the focused durable RED
+  contract below; production source remains prohibited.
 - Human actions: a real wallet connection and dashboard sign-in remain
   user-initiated. This card does not request either action and creates no
   signature, command, relay, transaction, deployment, or live authority.
@@ -31,44 +31,32 @@ route. It does not claim that every possible future offering can be listed.
 The minimum implementation contract is
 `docs/specs/s42-dashboard-campaign-continuation.md`.
 
-## Candidate source and test boundary
+## RED activation
 
-A later RED and GREEN cycle may reserve only:
+The repository owner explicitly authorized S42 implementation in this PR. At
+control head `04c589eabc960d02c82e07f9c9fa1f6e3522305a`, S42-T010 moves to
+`20-active` only for durable RED in
+`apps/web/tests/dashboard-campaign.test.mjs`. Every production source path
+remains prohibited until that test has one expected absence failure and the
+root records RED acceptance.
+
+## Candidate GREEN boundary
+
+After RED acceptance, only these paths may be activated:
 
 - `apps/web/src/lib/dashboard-campaign.ts`;
-- `apps/web/src/components/dashboard/dashboard-campaign.tsx`;
-- `apps/web/src/app/dashboard/page.tsx`; and
-- `apps/web/tests/dashboard-campaign.test.mjs`.
+- `apps/web/src/components/dashboard/dashboard-campaign.tsx`; and
+- `apps/web/src/app/dashboard/page.tsx`.
 
 It may reuse the existing server-only dashboard session reader and existing
 public RiskScan projection reader. It may not amend the dashboard auth
 protocol, session layout gate, wallet session, public APIs, Convex schema or
 functions, provider deploy state, package files, or lockfile.
 
-## Readiness
+## Verification and boundary
 
-At control head `7b748286389d66904320b7b33e64a175325f80e5`, the root confirmed
-that all candidate paths are absent, no active card owns them, and the full Web
-baseline is green under Node 22.21.1 (422 pass, 1 skipped). The Node 20 runner
-cannot load the existing TypeScript test imports and is not a valid baseline.
-S42-T010 is ready only; a separate owner-directed activation may reserve the
-focused test for durable RED. Production source remains prohibited.
-
-## Acceptance requirements
-
-Before source work, the root records a test-only RED activation. A durable RED
-must prove that a matching signer produces the campaign view model and that an
-absent, malformed, or different signer cannot produce one. Only then may the
-declared source paths be activated.
-
-Acceptance requires focused and complete Web validation, lint, production
-build, queue/reference/whitespace checks, a non-signing browser confirmation,
-and a final scope review.
-
-## Boundary
-
-This is a read-only, server-rendered dashboard continuation surface. It does
-not enumerate arbitrary offerings, expose an address, persist browser data,
-make an external write, change an offering state, request a provider, sign,
-or submit anything. S24's historical guest-only presentation restriction is
-superseded only by this card after its gates are satisfied.
+The RED contract must prove that a matching signer produces the campaign view
+model and that an absent, malformed, or different signer cannot produce one.
+S42 is read-only and server-rendered: no generic offering enumeration, address
+display, browser storage, wallet request, signature, command, relay,
+transaction, deployment, or external write is authorized.

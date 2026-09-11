@@ -16,6 +16,12 @@
   imports and is not a valid runner. S42-T010 is `10-ready`; only a separate
   user-directed activation may reserve its focused test for durable RED.
 
+- S42_DASHBOARD_CAMPAIGN_CONTINUATION_ACTIVATION: The repository owner
+  explicitly authorized implementation in this PR. At control head
+  `04c589eabc960d02c82e07f9c9fa1f6e3522305a`, S42-T010 is `20-active` only
+  for durable RED in `apps/web/tests/dashboard-campaign.test.mjs`. Production
+  source remains prohibited pending an expected RED failure and acceptance.
+
 - M53_STAGE_B_FACTORY_RECEIPT_LOG_SELECTION_ACTIVATION: The confirmed first
   ATS_CREATE receipt has one valid fixed-Factory `BondDeployed` event alongside
   98 unrelated receipt logs. M53-T010 records the narrow local decoder
