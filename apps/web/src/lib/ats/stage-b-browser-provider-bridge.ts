@@ -1,5 +1,6 @@
 import { isAddress } from "viem";
 
+import { STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH } from "./stage-b-ats-create-canonical-identity.ts";
 import { createStageBAtsCreateExecutionProjection } from "./stage-b-ats-create-execution-projection.ts";
 import {
   buildFactoryDeployBondRequest,
@@ -12,7 +13,7 @@ const chainId = "0x128";
 const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
 const factory = "0xd1f118a40f3b02883d35909ef2517e7edd78379d";
 const mirrorBase = "https://testnet.mirrornode.hedera.com/api/v1/";
-const expectedHash = "1880065c5ae64b3fc6279cfdd8c85a6880d43e98ce129ed697c72372204296f9";
+const expectedHash = STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH;
 const timestampPattern = /^(?:0|[1-9][0-9]{0,9})\.[0-9]{9}$/u;
 const transactionHashPattern = /^0x[0-9a-f]{64}$/u;
 const bodyCapBytes = 1024 * 1024;

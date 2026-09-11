@@ -1,7 +1,9 @@
 import { canonicalizeRequirements } from "@tool402/core";
 import { keccak256, stringToHex } from "viem";
 
-const canonicalParametersHash = "1880065c5ae64b3fc6279cfdd8c85a6880d43e98ce129ed697c72372204296f9";
+import { STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH } from "./stage-b-ats-create-canonical-identity.ts";
+
+const canonicalParametersHash = STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH;
 const issuerEvmAddress = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
 const issuerHederaAccountId = "0.0.10430887";
 const mirrorNodeBaseUrl = "https://testnet.mirrornode.hedera.com/api/v1/";

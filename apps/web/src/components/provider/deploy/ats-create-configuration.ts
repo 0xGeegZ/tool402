@@ -1,4 +1,5 @@
 import type { AtsCreateConfigurationProjection } from "./provider-deploy-state";
+import { STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH } from "../../../lib/ats/stage-b-ats-create-canonical-identity.ts";
 
 export const atsCreateConfiguration: AtsCreateConfigurationProjection = Object.freeze({
   network: "hedera:testnet",
@@ -9,7 +10,7 @@ export const atsCreateConfiguration: AtsCreateConfigurationProjection = Object.f
   operationKind: "ATS_CREATE",
   targetKind: "EVM_ADDRESS",
   expectedTarget: "0xd1f118a40f3b02883d35909ef2517e7edd78379d",
-  canonicalParametersHash: "39a4d53db2aa60dd40b50c97738f53a888fdadcb350e1e85984fbd4dd76abc9a",
+  canonicalParametersHash: STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH,
   factoryHederaId: "0.0.9213391",
   resolverHederaId: "0.0.9212226",
   revenueNote: Object.freeze({

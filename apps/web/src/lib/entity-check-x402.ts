@@ -11,6 +11,7 @@ import {
   createX402ProtectedHandler,
   readX402Configuration,
 } from "./x402-protected-route.ts";
+import { readBoundedRequestJson } from "./bounded-request-json.ts";
 
 const require = createRequire(import.meta.url);
 const { NextResponse } = require("next/server") as typeof import("next/server");
@@ -40,6 +41,13 @@ function invalidRequestResponse(): NextResponseType {
   );
 }
 
+function tooLargeRequestResponse(): NextResponseType {
+  return NextResponse.json(
+    { error: "entity_check_request_too_large" },
+    { status: 413 },
+  );
+}
+
 function unavailableSourceResponse(kind: "registry_unavailable" | "sanctions_unavailable"): NextResponseType {
   return NextResponse.json({ error: kind }, { status: 503 });
 }
@@ -49,13 +57,10 @@ async function evaluateEntityCheck(
   environment: NodeJS.ProcessEnv,
   readSources: typeof readEntityCheckSources,
 ): Promise<NextResponseType> {
-  let input: unknown;
-
-  try {
-    input = await request.json();
-  } catch {
-    return invalidRequestResponse();
-  }
+  const body = await readBoundedRequestJson(request);
+  if (body.kind === "too_large") return tooLargeRequestResponse();
+  if (body.kind === "invalid") return invalidRequestResponse();
+  const input = body.value;
 
   let entityRequest;
   try {
