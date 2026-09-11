@@ -18,8 +18,8 @@ const variants: Record<ButtonVariant, string> = {
 };
 
 const sizes: Record<ButtonSize, string> = {
-  sm: "min-h-8 px-3 text-sm",
-  md: "min-h-10 px-4 text-sm",
+  sm: "min-h-8 px-3 text-sm touch-target",
+  md: "min-h-10 px-4 text-sm touch-target",
   lg: "min-h-11 px-5 text-base",
 };
 
@@ -29,7 +29,7 @@ export function buttonVariants({
   className,
 }: { variant?: ButtonVariant; size?: ButtonSize; className?: string } = {}): string {
   return cn(
-    "inline-flex items-center justify-center rounded-[var(--radius)] font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
+    "inline-flex items-center justify-center rounded-control font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
     variants[variant],
     sizes[size],
     className,

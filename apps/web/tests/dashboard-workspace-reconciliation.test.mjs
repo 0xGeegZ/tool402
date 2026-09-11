@@ -73,7 +73,7 @@ test("adapts the reference dashboard hierarchy to the current guest workspace", 
   assert.match(navigation, /Continue a local journey/);
   assert.match(navigation, /one guest dashboard/);
   assert.match(overview, /aria-label="Dashboard overview"/);
-  assert.match(navigation, /rounded-2xl/);
+  assert.match(navigation, /rounded-card/);
   assert.match(navigation, /shadow-none/);
 });
 

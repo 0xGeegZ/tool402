@@ -97,7 +97,7 @@ function ConfigurationContext({ projection, stageIndex }: { projection?: AtsCrea
   if (!projection || stageIndex !== 1) return null;
 
   return (
-    <dl className="grid gap-2 rounded-[calc(var(--radius)*0.75)] bg-muted/60 p-3 text-xs sm:grid-cols-2">
+    <dl className="grid gap-2 rounded-field bg-muted/60 p-3 text-xs sm:grid-cols-2">
       <div className="space-y-1">
         <dt className="text-muted-foreground">Factory identifier</dt>
         <dd className="font-mono text-foreground">{projection.factoryHederaId}</dd>
@@ -137,6 +137,11 @@ export function ProviderDeployStages({
 }) {
   const visibleStates = orderedStageStates(states);
   const stageTwoDone = visibleStates[1]?.kind === "done";
+  const activeStage = enabledStage >= 0 ? visibleStates[enabledStage] : undefined;
+  const activeDefinition = enabledStage >= 0 ? providerDeployStages[enabledStage] : undefined;
+  const activeControl = activeStage?.kind === "actionable" && activeDefinition && onActivate
+    ? providerDeployStageControl(enabledStage, activeStage, true)
+    : null;
 
   return (
     <section aria-labelledby="provider-deploy-stages" data-ui="provider-deploy-stages" className="space-y-4">
@@ -186,6 +191,18 @@ export function ProviderDeployStages({
           );
         })}
       </ol>
+      {activeControl && activeDefinition ? (
+        <div data-ui="provider-signature-handoff" className="space-y-3 rounded-field border border-primary/30 bg-primary/5 p-4">
+          <div className="space-y-1">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">Next action</p>
+            <p className="font-medium text-foreground">Stage {enabledStage + 1}: {activeDefinition.label}</p>
+            <p className="text-sm leading-6 text-muted-foreground">Open the existing signature request. Nothing is recorded unless the relay reports acceptance.</p>
+          </div>
+          <Button type="button" onClick={() => onActivate?.(enabledStage)} className="w-full sm:w-auto">
+            {activeControl.label}
+          </Button>
+        </div>
+      ) : null}
       <p className="border-l-2 border-border pl-4 text-sm leading-6 text-muted-foreground">
         A declined signature leaves its stage ready to try again: Nothing was recorded. This page never retries on its own.
       </p>

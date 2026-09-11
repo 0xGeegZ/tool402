@@ -21,7 +21,7 @@ export default function RiskScanToolLoopPage() {
               title="Run RiskScan through ToolLoop"
               description="Prepare a bounded Quick request with the same fields an agent can inspect through the current local route."
             />
-            <aside aria-label="ToolLoop request boundary" className="flex gap-3 rounded-[calc(var(--radius)*1.5)] border border-border bg-card px-4 py-3 text-sm leading-6 text-muted-foreground">
+            <aside aria-label="ToolLoop request boundary" className="flex gap-3 rounded-card border border-border bg-card px-4 py-3 text-sm leading-6 text-muted-foreground">
               <InfoIcon />
               <p>Review the request before sending it. A returned payment challenge does not confirm a payment, result, or verification.</p>
             </aside>

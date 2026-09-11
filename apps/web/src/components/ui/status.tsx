@@ -62,7 +62,8 @@ export function Status({ className, children, tone, ...props }: StatusProps) {
     <p
       data-slot="status"
       data-tone={tone}
-      className={cn("flex items-start gap-2 rounded-[var(--radius)] border px-3 py-2 text-sm", toneClassNames[tone], className)}
+      role={tone === "error" ? "alert" : "status"}
+      className={cn("flex items-start gap-2 rounded-control border px-3 py-2 text-sm", toneClassNames[tone], className)}
       {...props}
     >
       <span data-slot="status-label" className="shrink-0 font-medium">{toneLabels[tone]}</span>

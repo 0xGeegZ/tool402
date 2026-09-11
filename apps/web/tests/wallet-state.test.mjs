@@ -60,6 +60,27 @@ function readAppFile(path) {
   return readFile(join(appRoot, path), "utf8");
 }
 
+function extractBracedBody(source, from) {
+  const opening = source.indexOf("{", from);
+  assert.notEqual(opening, -1, "expected a braced callback body");
+  let depth = 0;
+  for (let index = opening; index < source.length; index += 1) {
+    if (source[index] === "{") {
+      depth += 1;
+    } else if (source[index] === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        return source.slice(opening + 1, index);
+      }
+    }
+  }
+  assert.fail("expected the callback body to close");
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+}
+
 function loadStateModule() {
   return import("../src/lib/wallet/wallet-state.ts");
 }
@@ -315,7 +336,7 @@ test("keeps the state library free of network, storage, timers, and logging", as
   assert.doesNotMatch(source, /wallet_addEthereumChain|eip6963/u);
 });
 
-test("renders every wallet state from a client island that discovers only on click", async () => {
+test("renders every wallet state from a client island that synchronizes only an explicitly selected session", async () => {
   const source = await readAppFile("src/components/wallet/wallet-connect.tsx");
 
   assert.match(source, /^"use client";/u);
@@ -327,6 +348,8 @@ test("renders every wallet state from a client island that discovers only on cli
     source,
     /from\s+["']\.\.\/\.\.\/lib\/wallet\/metamask-provider\.ts["']/u,
   );
+  assert.match(source, /\bwatchWalletSessionChanges\b/u);
+  assert.match(source, /\breadCurrentSession\b/u);
   assert.match(source, /from\s+["']\.\.\/ui\/button["']/u);
   for (const kind of [
     "disconnected",
@@ -339,12 +362,76 @@ test("renders every wallet state from a client island that discovers only on cli
   ]) {
     assert.match(source, new RegExp(`case\\s+["']${kind}["']`, "u"));
   }
-  assert.doesNotMatch(source, /\buseEffect\b/u);
+  assert.match(source, /\buseEffect\b/u);
+  assert.equal(
+    [...source.matchAll(/discoverMetaMaskProvider\(\s*window\s*\)/gu)].length,
+    1,
+    "provider discovery remains in the explicit Connect or Retry path",
+  );
+  assert.match(
+    source,
+    /async function connect\(\)[\s\S]*?discoverMetaMaskProvider\(\s*window\s*\)/u,
+  );
+  const effectStart = source.indexOf("useEffect(");
+  assert.notEqual(effectStart, -1);
+  const effectBody = extractBracedBody(source, source.indexOf("=>", effectStart));
+  const cleanupBinding = effectBody.match(
+    /\b(?:const|let)\s+([A-Za-z_$][\w$]*)\s*=\s*watchWalletSessionChanges\s*\(/u,
+  );
+  assert.notEqual(cleanupBinding, null, "the effect owns the native subscription");
+  const cleanup = cleanupBinding[1];
+  const cleanupReference = effectBody.match(
+    new RegExp(
+      `\\b([A-Za-z_$][\\w$]*)\\.current\\s*=\\s*${escapeRegExp(cleanup)}\\s*;`,
+      "u",
+    ),
+  );
+  assert.notEqual(cleanupReference, null, "the local disconnect shares the effect cleanup");
+  const cleanupRef = cleanupReference[1];
+  assert.match(
+    effectBody,
+    new RegExp(
+      `return\\s*(?:${escapeRegExp(cleanup)}\\s*;|\\(\\s*\\)\\s*=>\\s*(?:\\{[\\s\\S]*?\\b${escapeRegExp(cleanup)}\\s*\\(\\s*\\)[\\s\\S]*?\\}|${escapeRegExp(cleanup)}\\s*\\(\\s*\\)\\s*;?))`,
+      "u",
+    ),
+    "the effect returns the exact subscription cleanup for unmount",
+  );
+  const disconnectStart = source.indexOf("function disconnect()");
+  assert.notEqual(disconnectStart, -1);
+  const disconnectBody = extractBracedBody(source, disconnectStart);
+  assert.match(
+    disconnectBody,
+    new RegExp(`${escapeRegExp(cleanupRef)}\\.current\\?\\.\\s*\\(\\s*\\)`, "u"),
+    "local disconnect invokes the shared listener cleanup",
+  );
+  const sessionChangeStart = source.indexOf("watchWalletSessionChanges(");
+  assert.notEqual(sessionChangeStart, -1);
+  const sessionChangeHandler = extractBracedBody(source, sessionChangeStart);
+  const connecting = sessionChangeHandler.search(
+    /setState\(\s*\{\s*kind:\s*["']connecting["']\s*\}\s*\)/u,
+  );
+  const passiveRead = sessionChangeHandler.search(
+    /await\s+readCurrentSession\(\s*provider\s*,\s*approvedIssuerAddress\s*\)/u,
+  );
+  assert.ok(
+    connecting !== -1 && passiveRead !== -1 && connecting < passiveRead,
+    "a native session-change invalidates actionable content before the passive re-read",
+  );
+  assert.doesNotMatch(
+    sessionChangeHandler,
+    /\b(?:eth_requestAccounts|wallet_[A-Za-z0-9_]*|eth_sign(?:TypedData(?:_v4)?|[A-Za-z0-9_]*)?|personal_sign|signAndRelayCommand|signCommand|signTypedData(?:_v4)?|signMessage|relay[A-Za-z0-9_]*|fetch|eth_send(?:Raw)?Transaction|send(?:Raw)?Transaction|rawTransaction|localStorage|sessionStorage|indexedDB|setTimeout|setInterval)\b|\bprovider\s*\.\s*request\s*\(/u,
+    "session changes only invalidate and use the passive reader",
+  );
   assert.doesNotMatch(
     source,
     /\b(?:fetch|console|localStorage|sessionStorage|setTimeout|setInterval)\b/u,
   );
   assert.doesNotMatch(source, /\bdocument\.cookie\b/u);
+  assert.doesNotMatch(
+    source,
+    /(?:\.|\?\.)\s*(?:on|addListener|removeListener|off)\s*\(|\[\s*["'](?:on|addListener|removeListener|off)["']\s*\]\s*\(/u,
+    "only watchWalletSessionChanges owns native provider event wiring",
+  );
   assert.match(source, /Connect MetaMask/u);
   assert.match(source, /Switch to Hedera Testnet/u);
   assert.match(source, /Retry/u);

@@ -2,6 +2,16 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
+S36-T010 is a `20-active` root-owned POLISH slice. It owns its card,
+UI-S36 manifest, implementation plan, catalog, state, ledger, decision, and
+review evidence. Its active Web paths are only
+`apps/web/src/components/provider/deploy/provider-deploy-stages.tsx` and new
+`apps/web/tests/provider-deploy-signature-handoff.test.mjs`. The test-only RED
+proves one missing handoff region and is accepted for minimal GREEN in exactly
+those two paths. S26/S27 remain inbox-only and M50/S29 are accepted with no
+active reservation; command, wallet/provider, relay, authority, API, payment,
+transaction, ATS, deployment, and live paths remain excluded.
+
 S34-T010 is accepted. Its five RED tests and eight Green source paths are
 released; D-S34-010-005 records the static public documentation acceptance.
 All API/Agent/Core/Backend,
@@ -1310,3 +1320,23 @@ already established RED; every other test and source path remains frozen.
 
 D-S33-010-010 accepts `25d8b4e` and closes every S33 source and test
 reservation. The correction grants no continuing ownership or behavior scope.
+
+M50-T010 is an accepted `60-done` CORE_P0 wallet-session synchronization
+correction. Its delivered surface is exactly
+`apps/web/src/lib/wallet/metamask-provider.ts`,
+`apps/web/src/components/wallet/wallet-connect.tsx`,
+`apps/web/tests/wallet-state.test.mjs`, and new
+`apps/web/tests/wallet-session-sync.test.mjs`. Its source and test reservations
+are released after independent GREEN acceptance. The refreshed activation review
+at `96cce4c` reserved only
+`apps/web/tests/wallet-state.test.mjs` and new
+`apps/web/tests/wallet-session-sync.test.mjs` for durable RED. Independent RED
+acceptance at `3d8ad88` now reserves exactly those test paths plus
+`apps/web/src/lib/wallet/metamask-provider.ts` and
+`apps/web/src/components/wallet/wallet-connect.tsx` for the accepted GREEN
+history. S26-T010 is
+inbox-only and explicitly excludes `metamask-provider.ts`; it must preserve
+M50's accepted event behavior if it later rebases its shared-session redesign.
+M50 does not own or amend
+`wallet-state.ts`, deploy-stage signing, command/relay code, configuration,
+packages, lockfiles, or any live path.

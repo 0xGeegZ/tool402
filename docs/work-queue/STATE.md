@@ -1,5 +1,17 @@
 # Runtime queue state
 
+- S36_PROVIDER_SIGNATURE_HANDOFF_INTAKE: User-directed local POLISH intake.
+  S36-T010 may make the existing actionable signature request discoverable
+  after fresh readiness and durable RED activation. It has no active source
+  or test reservation and grants no wallet, signature, authority, relay,
+  payment, transaction, ATS, deployment, or live action.
+- S36_PROVIDER_SIGNATURE_HANDOFF_ACTIVATION: At clean `6f40b95`, S29 and M50
+  are accepted and released; S26/S27 are inbox-only; the two S36 targets are
+  disjoint; and the focused RED has exactly one absence failure. S36-T010 is
+  `20-active` only for its two UI-S36 paths. It may reuse the existing stage
+  callback but may not change command, wallet/provider, relay, authority,
+  records, API, payment, transaction, ATS, deployment, or live behavior.
+
 - HA_PUBLIC_DEPLOYMENT_RECONCILIATION: `D-HA-PUBLIC-DEPLOY-001-001` and
   docs/work-queue/evidence/HA-PUBLIC-DEPLOY-001-review.md supersede solely
   every current-summary statement below that treats Stage B as a prerequisite
@@ -473,3 +485,44 @@
 - M38_RED_ACCEPTANCE: 2026-09-08T22:17:00Z. Independent re-review at pushed `fb95e731dfff85145ed50bd0be28ee087a0173d7` is clear. Under Node 22.21.1, offering-create, directory-publish, and attach-candidate each fail exactly once only for their declared absent source module and skip their GREEN checks. The complete contracts cover descriptor-safe closed roots, delegated local parsers, canonical bytes, exact candidate transaction types, and optional address shape. Only the three declared Core source modules and narrow append-only barrel amendment are eligible; no command, wallet, provider, network, storage, ATS, transaction, deployment, or live behavior is authorized.
 
 No secrets, account keys, or private evidence belong in this file.
+
+- M50_WALLET_SESSION_SYNC_INTAKE: M50-T010 is a new `00-inbox` CORE_P0
+  correction for stale displayed MetaMask account/chain state after a native
+  session-change event. Its sole candidate surface is the native provider seam,
+  the existing wallet island, and two focused test paths. S26-T010 remains
+  inbox-only and has no active collision. No test or source path is active
+  until independent readiness and test-only RED activation; no wallet
+  permission, account selection, signature, relay, transaction, or live action
+  is authorized by this intake.
+- M50_WALLET_SESSION_SYNC_READY: The independent review at `795a5c1` is clear:
+  M50-T010 is `10-ready` with no active source or test reservation. S15/S16
+  are accepted, M49 is compatibility-only and accepted, and S26 remains
+  inbox-only. A separate root activation may authorize only the two named
+  durable RED tests; no wallet/account action, signature, relay, transaction,
+  or live behavior is authorized.
+- M50_WALLET_SESSION_SYNC_ACTIVATION: Fresh independent review at merged
+  current control head `96cce4c540c0510a9ab871b577a8b8f0b40ad9f6` is clear.
+  M50-T010 is `20-active` only for durable RED in
+  `apps/web/tests/wallet-state.test.mjs` and new
+  `apps/web/tests/wallet-session-sync.test.mjs`. All source paths and every
+  wallet/provider, account, signature, relay, request, transaction,
+  deployment, and live boundary remain prohibited pending independent RED
+  acceptance.
+- M50_WALLET_SESSION_SYNC_RED_ACCEPTANCE: Independent review accepts durable
+  test-only `3d8ad88a5d654b974ef7154874a7564d0f3e938e`. The focused contract has
+  12 existing passes and only three intended absent-helper/island-wiring failures.
+  GREEN is authorized only for `metamask-provider.ts`, `wallet-connect.tsx`,
+  and the two matching M50 tests. `wallet-state.ts`, deploy signing,
+  command/relay, configuration, packages, wallet/provider/live actions, and
+  every other path remain prohibited.
+- M50_WALLET_SESSION_SYNC_ACCEPTANCE: The accepted source set `20ac68f`,
+  `f10551d`, and `03c5f36` implements native cleanup-capable invalidation and
+  passive re-evaluation only. Independent task, specification, and standards
+  reviews are clear. Under Node 22.21.1, focused wallet/session/deploy tests
+  pass 22/22; the complete Web suite passes 346/346; Web typecheck, root lint,
+  queue/reference/whitespace validation, and the enabled local-reference guard
+  are clear. A fresh Next 16.3.4 Turbopack instance reports no compilation
+  issues and an isolated non-signing browser renders `/` and `/provider/deploy`
+  without invoking Connect, signature, relay, or transaction behavior.
+  M50-T010 moves to `60-done`; its source/test reservations are released and
+  all wallet/live gates remain unchanged.

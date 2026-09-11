@@ -7,12 +7,12 @@ export function EntityCheckDiscoveryCard() {
   return (
     <Link
       href="/explore/entitycheck"
-      className="group block rounded-[var(--radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      className="group block rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
-      <Card className="flex h-full min-h-[20rem] flex-col overflow-hidden rounded-[calc(var(--radius)*2)] shadow-none transition-colors duration-200 group-hover:border-brand-green/45 motion-reduce:transition-none">
+      <Card className="flex h-full min-h-[20rem] flex-col overflow-hidden rounded-panel shadow-none transition-colors duration-200 group-hover:border-brand-green/45 motion-reduce:transition-none">
         <CardHeader className="gap-4">
           <div className="flex items-start justify-between gap-4">
-            <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-green/15 text-brand-green">
+            <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-field bg-brand-green/15 text-brand-green">
               <BuildingIcon />
             </span>
             <div className="flex flex-wrap justify-end gap-2">

@@ -46,7 +46,7 @@ test("keeps the reference section rhythm without synthetic inter-section gaps", 
   assert.match(hero, /left-1\/2 isolate w-screen -translate-x-1\/2/);
   assert.match(hero, /mx-auto grid max-w-7xl/);
   assert.match(sections, /<div className="space-y-0">/);
-  assert.match(sections, /min-h-60[^"']*rounded-2xl/);
+  assert.match(sections, /min-h-60[^"']*rounded-card/);
   assert.match(sections, /w-screen -translate-x-1\/2/);
 });
 
