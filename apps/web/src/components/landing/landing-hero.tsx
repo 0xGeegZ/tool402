@@ -33,24 +33,6 @@ export function LandingHero() {
               Open guided demo
             </Link>
           </div>
-          <dl className="grid min-h-36 max-w-xl grid-cols-2 gap-x-5 gap-y-5 border-t border-border pt-6 sm:grid-cols-4 sm:gap-4 lg:translate-y-1">
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Explore</dt>
-              <dd className="mt-1 font-medium">Current catalogue</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Inspect</dt>
-              <dd className="mt-1 font-medium">RiskScan detail</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Prepare</dt>
-              <dd className="mt-1 font-medium">Provider route</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Guide</dt>
-              <dd className="mt-1 font-medium">Local demo</dd>
-            </div>
-          </dl>
         </div>
         <div className="relative mx-auto w-full max-w-sm lg:translate-y-[0.5625rem]">
           <div className="aspect-square overflow-hidden rounded-frame border border-border bg-muted shadow-[0_1.5rem_5rem_-1.75rem_color-mix(in_oklab,var(--brand-purple)_45%,transparent)]">
