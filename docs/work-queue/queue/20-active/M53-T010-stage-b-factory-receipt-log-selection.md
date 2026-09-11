@@ -48,3 +48,20 @@ from B04-T010 solely for this independent live-receipt defect.
 Only `apps/web/tests/stage-b-browser-provider-bridge.test.mjs` is authorized
 for the durable RED contract. Production source remains prohibited pending the
 focused RED result review.
+
+## RED result and minimal GREEN scope
+
+The injected-fake focused run has 380 passing tests and exactly one intended
+failure: a receipt with two valid non-Factory logs and one valid Factory event
+returns `submission_unknown` before any Mirror request. The failure proves the
+strict whole-array condition without sending a provider request or reading an
+external service.
+
+Only these paths are authorized for the minimal correction:
+
+- `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`; and
+- `apps/web/tests/stage-b-browser-provider-bridge.test.mjs`.
+
+The source may select exactly one fixed-Factory event from a valid multi-log
+array before the existing M44 decode boundary. All command, authority,
+transaction, retry, attachment, and deployment exclusions remain fixed.

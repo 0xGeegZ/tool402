@@ -6,9 +6,9 @@
   correction: select exactly one valid Factory event while retaining missing,
   malformed, zero-address, and ambiguous-event rejection. B04-T010 currently
   did not cover this receipt-selection defect. Root transferred the exact
-  bridge/test pair to M53-T010, which is `20-active` only for durable RED in
-  the focused bridge test. It grants no source change, transaction, retry,
-  candidate attachment, or other live action.
+  bridge/test pair to M53-T010. Its focused RED result is exact, so only the
+  bridge/test pair is active for the minimal source correction. It grants no
+  transaction, retry, candidate attachment, or other live action.
 
 - M52_STAGE_B_ISSUER_ACCOUNT_SELECTION_INTAKE: User-directed CORE_P0
   correction. MetaMask may return more than one site-authorized account. The

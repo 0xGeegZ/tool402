@@ -307,13 +307,24 @@ function eligibleFactoryLog(value: unknown): { readonly data: `0x${string}`; rea
   });
 }
 
+function hasFixedFactoryEmitter(value: unknown): boolean {
+  const fields = captureOwnEnumerableDataFields(value, ["address"]);
+  return fields !== null && canonicalAddress(fields[0]) === factory;
+}
+
 function decodeSingleFactoryEvent(logs: unknown): string | null {
   const values = captureOwnArrayValues(logs);
-  if (values === null || values.length !== 1) return null;
-  const log = eligibleFactoryLog(values[0]);
-  if (log === null) return null;
+  if (values === null) return null;
+  let factoryLog: { readonly data: `0x${string}`; readonly topics: readonly `0x${string}`[] } | null = null;
+  for (const value of values) {
+    if (!hasFixedFactoryEmitter(value)) continue;
+    const log = eligibleFactoryLog(value);
+    if (log === null || factoryLog !== null) return null;
+    factoryLog = log;
+  }
+  if (factoryLog === null) return null;
   try {
-    return decodeBondDeployed(log).evmAddress;
+    return decodeBondDeployed(factoryLog).evmAddress;
   } catch {
     return null;
   }

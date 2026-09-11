@@ -5,10 +5,11 @@ CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to 
 M53-T010 is a root-owned `20-active` CORE_P0 receipt-decoder correction. It
 owns its card, specification, and queue/review records. Root transferred the
 overlapping B04 reservation solely for
-`apps/web/tests/stage-b-browser-provider-bridge.test.mjs`, which is active for
-durable RED. `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts` remains
-prohibited pending focused RED review. No command, authority, transaction,
-candidate attachment, deployment, or other live behavior is authorized.
+`apps/web/tests/stage-b-browser-provider-bridge.test.mjs` and
+`apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`. The focused RED
+review releases both only for M53's exact minimal Factory-event selection
+correction. No command, authority, transaction, candidate attachment,
+deployment, or other live behavior is authorized.
 
 M52-T010 is accepted. Its bridge/test reservation is released after the
 reviewed `dc5c0701` correction. The completed boundary validates every
