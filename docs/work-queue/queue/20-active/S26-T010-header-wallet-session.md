@@ -115,8 +115,13 @@ exclusions govern; this card does not restate them.
   explicitly directed the root to integrate `work/wallet-session` (PR #63)
   into this S38 branch. The root records S26 as `20-active` only for the
   manifest's declared wallet-session, header, deploy-signing, backing-flow,
-  and named-test surfaces. M49-T010 and S18-T010 are accepted, so the
-  conditional amendments are eligible.
+  and named-test surfaces, plus only the assertion seams in
+  `apps/web/tests/backing-route.test.mjs` (S18),
+  `apps/web/tests/wallet-session-sync.test.mjs` (M50),
+  `apps/web/tests/wallet-state.test.mjs` (S15), and
+  `apps/web/tests/provider-deploy-visual-reconciliation.test.mjs` (S29).
+  M49-T010 and S18-T010 are accepted, so the conditional amendments are
+  eligible.
 - The integration preserves UI-S26's client-state-only boundary: no caller
   supplies an approved issuer address and a connected header session does not
   create authority. The deploy view must use the shared connected provider
