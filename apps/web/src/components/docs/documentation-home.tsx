@@ -19,6 +19,20 @@ const guides = [
     href: "/docs/providers",
     action: "Read the Provider guide",
   },
+  {
+    eyebrow: "HTTP API",
+    title: "API reference",
+    description: "Read the current descriptor and request boundaries without running a request.",
+    href: "/docs/api",
+    action: "Read the API reference",
+  },
+  {
+    eyebrow: "Current scope",
+    title: "FAQ",
+    description: "Read the current testnet, RiskScan, and Provider boundaries.",
+    href: "/docs/faq",
+    action: "Read the FAQ",
+  },
 ] as const;
 
 const guideLinkClass = "inline-flex min-h-11 items-center rounded-full border border-border bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
