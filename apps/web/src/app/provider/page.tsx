@@ -16,10 +16,10 @@ export default function ProviderPage() {
       <main className="space-y-10 pb-12 sm:space-y-12 sm:pb-20">
         <PageHeader
           eyebrow="Tool operator"
-          title="Campaign status"
-          description="Read the current local campaign records without advancing either one."
+          title="Provider status"
+          description="Read the current local offering records without advancing either one."
           actions={[
-            { href: "/provider/deploy", label: "Open the deploy wizard" },
+            { href: "/provider/deploy", label: "Prepare an offering" },
             { href: "/explore/riskscan", label: "Explore RiskScan" },
           ]}
         />

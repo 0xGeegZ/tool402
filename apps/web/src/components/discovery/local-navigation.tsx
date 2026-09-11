@@ -8,7 +8,7 @@ const links = [
   { href: "/explore", label: "Explore tools" },
   { href: "/docs", label: "Docs" },
   { href: "/demo", label: "Guided demo" },
-  { href: "/provider", label: "Campaign" },
+  { href: "/provider", label: "Providers" },
 ] as const;
 
 type SheetContentProps = {
