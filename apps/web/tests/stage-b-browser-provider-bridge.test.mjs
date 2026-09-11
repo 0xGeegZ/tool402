@@ -539,6 +539,38 @@ implementedTest("correlates a bounded, fake-only Mirror candidate and never foll
   assert.equal(Object.hasOwn(outcome, "attach"), false);
 });
 
+implementedTest("selects one Factory BondDeployed event among unrelated receipt and Mirror logs", async () => {
+  const log = createBondDeployedLog(factoryApi, projectionApi);
+  const unrelatedLog = { address: otherEmitter, data: "0x", topics: [] };
+  const logs = [unrelatedLog, log, unrelatedLog];
+  const provider = fakeProvider({
+    receipt: { transactionHash, status: "0x1", to: factory, logs },
+  });
+  const mirror = responseQueue([
+    new Response("", { status: 404 }),
+    jsonResponse(mirrorContractResult(log, { logs })),
+    jsonResponse({
+      transactions: [{
+        name: "ETHEREUMTRANSACTION",
+        result: "SUCCESS",
+        nonce: 0,
+        consensus_timestamp: timestamp,
+        transaction_id: rawTransactionId,
+      }],
+    }),
+    jsonResponse(mirrorContractResult(log, { logs })),
+  ]);
+
+  const outcome = await createBridge(api, provider, mirror.fetch).execute();
+
+  assert.deepEqual(outcome, {
+    kind: "candidate",
+    candidate: { transactionId: canonicalTransactionId, evmAddress: canonicalBondAddress },
+  });
+  assertMirrorRequestShape(mirror.calls);
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
+});
+
 implementedTest("bounds all Mirror cycles to one five-second deadline through the injected timing seam", async () => {
   const provider = fakeProvider({
     receipt: { transactionHash, status: "0x1", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },

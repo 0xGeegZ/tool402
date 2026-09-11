@@ -2,12 +2,12 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
-M53-T010 is a root-owned `00-inbox` CORE_P0 receipt-decoder correction intake.
-It owns its card, specification, and queue/review records. Its only future
-candidate paths are `apps/web/tests/stage-b-browser-provider-bridge.test.mjs`
-and `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`; B04-T010's
-active reservation currently takes precedence. M53 owns neither candidate path
-until B04 is accepted and releases it. No command, authority, transaction,
+M53-T010 is a root-owned `20-active` CORE_P0 receipt-decoder correction. It
+owns its card, specification, and queue/review records. Root transferred the
+overlapping B04 reservation solely for
+`apps/web/tests/stage-b-browser-provider-bridge.test.mjs`, which is active for
+durable RED. `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts` remains
+prohibited pending focused RED review. No command, authority, transaction,
 candidate attachment, deployment, or other live behavior is authorized.
 
 M52-T010 is accepted. Its bridge/test reservation is released after the

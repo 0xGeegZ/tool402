@@ -54,6 +54,13 @@ deployment, or live action is authorized.
 Payment, settlement, wallet/provider, transaction, deployment, and live
 boundaries remain excluded.
 
+## M53 overlap release
+
+The root transfers only `apps/web/tests/stage-b-browser-provider-bridge.test.mjs`
+and `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts` to M53-T010 for
+the distinct confirmed receipt-log selection defect. Every remaining B04 path
+and exclusion stays unchanged.
+
 ## Completion requirements
 
 The final patch must keep the Stage-B execution preimage unchanged, preserve
