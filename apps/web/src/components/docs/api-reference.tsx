@@ -70,14 +70,14 @@ export function ApiReference() {
             <p className="text-sm font-semibold text-brand-purple">02 · Request shape</p>
             <h2 id="request-shape-title" className="text-2xl font-bold tracking-tight">RiskScan Quick fields</h2>
             <p className="text-base leading-7 text-muted-foreground">
-              The request shape has three top-level references and one declarations object with four boolean fields.
+              The request shape has three top-level fields and one declarations object with four boolean fields.
             </p>
           </div>
 
           <Card className="rounded-[calc(var(--radius)*2)] shadow-none">
             <CardContent className="grid gap-6 pt-6 sm:grid-cols-2">
               <div className="space-y-3">
-                <p className="text-sm font-semibold">Top-level references</p>
+                <p className="text-sm font-semibold">Top-level fields</p>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   {requestFields.map((field) => (
                     <li key={field}><code className="font-mono text-foreground">{field}</code></li>
