@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: S34-T010 and S31-T010 accepted.
 - Owner: The root owns the queue, specification, UI manifest, plan, decisions,
   evidence, commits, and integration. Candidate source/test paths are exactly
@@ -19,24 +19,24 @@ current product limits. Prepared documentation labels are visual direction;
 their API & MCP, mock account, funding, payment, revenue, and activity claims
 are excluded.
 
-## Candidate ready requirements
+## Ready evidence
 
-- This card, S35 specification, UI-S35, ledger row, plan, catalog, ownership,
-  State, and decision record are committed before test or source changes.
-- A fresh independent readiness review confirms S34/S31 remain accepted, the
-  candidate source/test paths are present-or-absent as declared, and no active
-  lane owns them.
-- A separate activation reserves only the focused test paths for durable RED;
-  source remains prohibited until independent RED acceptance.
+Independent readiness at `4c5770c8a5cefc9fa1a1c31cbe8fac7b9e9fd62d` is
+clear. S31/S34 are accepted, no active task owns the candidate paths, the new
+routes/components/test are absent, and Node 22.21.1 current Docs baseline is
+5/5. D-S35-010-002 moves this card to 10-ready; it grants no source or test
+authority.
 
 ## RED and Green boundary
 
-After activation, only `apps/web/tests/documentation-expansion.test.mjs` and
-`apps/web/tests/public-documentation.test.mjs` may change for RED. A later RED
-review may authorize only UI-S35's two pages, two components, Docs home, and
-footer for minimal static GREEN. No route behavior, API/Agent/Core/Backend,
-configuration, MCP, wallet, provider, payment, command, transaction,
-deployment, or live-capability path is in scope.
+A separate activation may reserve only
+`apps/web/tests/documentation-expansion.test.mjs` and
+`apps/web/tests/public-documentation.test.mjs` for durable RED. Source remains
+prohibited until independent RED acceptance. The later minimal Green may touch
+only UI-S35's two pages, two components, Docs home, and footer. No route
+behavior, API/Agent/Core/Backend, configuration, MCP, wallet, provider,
+payment, command, transaction, deployment, or live-capability path is in
+scope.
 
 ## Verification
 
