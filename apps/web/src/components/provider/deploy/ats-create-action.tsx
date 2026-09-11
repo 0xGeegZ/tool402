@@ -77,7 +77,7 @@ export function AtsCreateAction({
         size="sm"
         className="w-full sm:w-auto"
       >
-        Create in MetaMask
+        Create the note in MetaMask
       </Button>
       {feedback ? <p role="status" aria-live="polite" className="text-sm text-muted-foreground">{feedback}</p> : null}
       {!feedback && sessionChanged.current ? <p role="status" aria-live="polite" className="text-sm text-muted-foreground">The wallet session changed. Reload before choosing any new action.</p> : null}

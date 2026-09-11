@@ -14,10 +14,10 @@ import {
 } from "./provider-deploy-state";
 
 const stageCopy = [
-  { description: "EIP-712 offering.create → server verifies → the draft offering is recorded.", label: "Sign offering.create", done: "Signed" },
-  { description: "external.prepare(ATS_CREATE) is persisted before any wallet transaction.", label: "Sign external.prepare", done: "Prepared" },
-  { description: "Bond.create via the ATS SDK in MetaMask, then attach the returned candidate.", label: "Create in MetaMask", done: "Attached" },
-  { description: "directory.publish activates version v1. The offering becomes OPEN.", label: "Sign directory.publish", done: "Active" },
+  { description: "EIP-712 offering.create → server verifies → the draft offering is recorded.", label: "Sign to record the draft", done: "Draft recorded" },
+  { description: "external.prepare(ATS_CREATE) is persisted before any wallet transaction.", label: "Sign to prepare the asset", done: "Asset prepared" },
+  { description: "Bond.create via the ATS SDK in MetaMask, then attach the returned candidate.", label: "Sign to attach the candidate", done: "Candidate attached" },
+  { description: "directory.publish activates version v1. The offering becomes OPEN.", label: "Sign to publish", done: "Published" },
 ] as const;
 
 const offeringStates = [
