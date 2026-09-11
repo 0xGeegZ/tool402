@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Badge } from "../../ui/badge";
-import { Button } from "../../ui/button";
+import { Button, buttonVariants } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../ui/card";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { campaignFixture } from "./campaign-fixture";
@@ -92,7 +93,7 @@ function StepProgress({
                 className={`flex w-full flex-col gap-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 ${isCurrent ? "text-foreground" : isComplete ? "text-foreground" : "text-muted-foreground"}`}
               >
                 <span aria-hidden="true" className={`h-1.5 w-full rounded-full ${isCurrent || isComplete ? "bg-primary" : "bg-secondary"}`} />
-                <span className="text-[11px] font-medium leading-4 sm:text-[11px]">{step.label}</span>
+                <span className={`text-[11px] font-medium leading-4 ${isCurrent || isComplete ? "text-foreground" : "text-muted-foreground"}`}>{step.label}</span>
               </button>
             </li>
           );
@@ -244,20 +245,27 @@ function TermsStep({
           ))}
         </dl>
       </section>
-      <section aria-labelledby="provider-deploy-configuration" className="rounded-field border bg-background p-4">
-        <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Local configuration projection</p>
-        <h2 id="provider-deploy-configuration" className="mt-1 text-lg font-semibold">Revenue note context</h2>
-        {configurationRows.length > 0 ? (
-          <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-            {configurationRows.map((row) => (
-              <div key={row.label} className="space-y-1">
-                <dt className="text-muted-foreground">{row.label}</dt>
-                <dd className="break-words font-mono text-xs text-foreground">{row.value}</dd>
-              </div>
-            ))}
-          </dl>
-        ) : <p className="mt-3 text-sm text-muted-foreground">Not configured. No projection is available to display.</p>}
-      </section>
+      <details className="rounded-field border bg-background">
+        <summary className="cursor-pointer list-none p-4 marker:content-none [&::-webkit-details-marker]:hidden">
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Local configuration projection</p>
+          <span className="mt-1 flex items-center justify-between gap-3">
+            <span className="text-lg font-semibold">Revenue note context</span>
+            <span className="text-sm text-muted-foreground">{configurationRows.length > 0 ? `${configurationRows.length} values · show` : "Not configured · show"}</span>
+          </span>
+        </summary>
+        <div className="border-t px-4 pb-4">
+          {configurationRows.length > 0 ? (
+            <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+              {configurationRows.map((row) => (
+                <div key={row.label} className="space-y-1">
+                  <dt className="text-muted-foreground">{row.label}</dt>
+                  <dd className="break-words font-mono text-xs text-foreground">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : <p className="mt-3 text-sm text-muted-foreground">Not configured. No projection is available to display.</p>}
+        </div>
+      </details>
       <label className="flex items-start gap-3 rounded-field border bg-background p-4 text-sm leading-6">
         <input className="mt-1 size-4 shrink-0 accent-[var(--primary)]" type="checkbox" checked={values.acknowledgement} onChange={onAcknowledgementChange} />
         <span>{acknowledgementCopy}</span>
@@ -404,7 +412,11 @@ export function ProviderDeployWizard() {
                   <Button type="submit" className="h-10 rounded-control px-4 text-sm" disabled={!canAdvance(currentStep, values)}>
                     Continue
                   </Button>
-                ) : <Badge variant="outline">Review complete locally</Badge>}
+                ) : (
+                  <Link href="/provider" className={buttonVariants({ variant: "outline", size: "md" })}>
+                    Back to the provider workspace
+                  </Link>
+                )}
               </CardFooter>
             </form>
           </Card>
