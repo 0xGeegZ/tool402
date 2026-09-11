@@ -1248,3 +1248,7 @@ No other assertion in that test, test path, or source path is reserved.
 D-S33-010-008 supersedes no source authority: the rebuilt exact-head review
 keeps only `apps/web/tests/explore-visual-reconciliation.test.mjs` and that
 same exact landing assertion reserved for corrective RED.
+
+D-S33-010-009 authorizes only the supporting-sentence literal in
+`apps/web/src/app/explore/page.tsx`. The matching two test assertions are
+already established RED; every other test and source path remains frozen.

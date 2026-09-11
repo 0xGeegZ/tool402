@@ -93,6 +93,13 @@ only the old page sentence but blocks incomplete JSX static-boundary coverage.
 D-S33-010-008 keeps only the focused visual test and the exact matching
 landing assertion in corrective RED; production remains frozen.
 
+## Corrective RED acceptance
+
+Independent RED review at `2f26d7185c991eb8b1f6e3c4054ee2960fe2faad` is
+clear. D-S33-010-009 authorizes only the Explore supporting-sentence literal
+in `apps/web/src/app/explore/page.tsx`; the two matching assertions are
+already RED. No other source/test path or behavior is authorized.
+
 ## Ready authority
 
 Independent readiness review is clear at
