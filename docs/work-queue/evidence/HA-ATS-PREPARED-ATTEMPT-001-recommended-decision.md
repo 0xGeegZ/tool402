@@ -8,6 +8,11 @@ server-side issuer authority and obtain one durable PREPARED attempt. It does
 not authorize a provider transaction, public Mirror observation, candidate
 attachment, asset creation, verification, lifecycle transition, or deployment.
 
+This draft did not authorize the closed production preflight recorded in
+`HA-ATS-PREPARED-ATTEMPT-001-stage-1-production-preflight.md`; it names a
+different local host and source. It must not be used for another production
+attempt until a new exact host/source decision replaces it.
+
 ## Why this is a separate human decision
 
 The later Stage-B transaction requires a current durable PREPARED attempt, but
@@ -62,14 +67,17 @@ authorityVersion        = ats_issuer_testnet_v1
 enabled                 = true
 ~~~
 
-The human must first verify that zero active record exists for the exact
-(chainId, canonicalSignerAddress) tuple. Immediately after provisioning, the
-human must verify that there is exactly one active record overall for that
-tuple and every field equals the literal above. A pre-existing record, a
-second active record, a disabled record, or any field mismatch stops this
-packet. It authorizes no row change other than this exact time-bounded
-provisioning and the required terminal revocation; it never authorizes a
-duplicate, replacement, repair, or other mutation.
+The human must first verify the total number of records for the exact
+`(chainId, canonicalSignerAddress)` tuple. If no record exists, this packet
+may provision exactly one. If exactly one literal-matching disabled record
+exists, a new exact decision must expressly authorize re-enabling and revoking
+that same record; this draft alone does not. Any second record, a field
+mismatch, or an ambiguous record stops the packet. Immediately after
+provisioning or re-enabling, the human must verify that there is exactly one
+active record overall for that tuple and every field equals the literal above.
+No packet may create a duplicate, replacement, repair, or any mutation beyond
+an expressly authorized provisioning, re-enable, or terminal revocation of
+that exact record.
 
 The current record schema has no command-type allowlist or TTL. Consequently,
 the human must treat this as a single temporary exception: do not use it for
