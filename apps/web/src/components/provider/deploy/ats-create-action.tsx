@@ -86,7 +86,7 @@ export function AtsCreateAction({
   async function recoverCandidate() {
     if (!recoveryEnabled || controller.current === null) return;
     setRecoveryPending(true);
-    const outcome = await controller.current.recover(recoveryHash);
+  const outcome = await controller.current.recover(recoveryHash);
     setRecoveryPending(false);
     if (outcome.kind === "candidate") {
       setTerminalOutcome(true);
