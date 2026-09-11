@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M02-T060 accepted, M46-T030 accepted, M47-T010 accepted
 - Owner: Root owns queue records, code, tests, review, commit, push, and integration.
 - Human actions: none for local delivery. Wallets, providers, payments,
@@ -21,11 +21,13 @@ This user-directed remediation addresses only the two reproduced scan findings:
 The authority is the local [B04 specification](../../../specs/b04-security-scan-remediation.md)
 and [implementation plan](../../../superpowers/plans/2026-09-11-b04-security-scan-remediation.md).
 
-## Intake boundary
+## Ready boundary
 
-This card is intake-only. A fresh readiness review must confirm its declared
-dependencies, candidate paths, and ownership before it may enter `10-ready`.
-No source or test path is reserved, and no RED or GREEN work is authorized.
+Readiness confirms the accepted dependencies, absent new identity and bounded
+reader targets, and no active ownership collision. This card reserves its
+declared candidate paths for a future activation review only; no source or test
+change, RED, or GREEN work is authorized while it is `10-ready`.
+
 Payment, settlement, wallet/provider, transaction, deployment, and live
 boundaries remain excluded.
 
