@@ -36,8 +36,20 @@ authorizes a durable RED contract only in these exact tests:
 - `apps/web/tests/stage-b-ats-create-command-projection.test.mjs`; and
 - `apps/web/tests/stage-b-browser-provider-bridge.test.mjs`.
 
-No source path, GREEN work, or live action is authorized. A fresh independent
-RED review must accept the test-only failures before any source authorization.
+The independent RED review accepts the test-only failures and authorizes the
+smallest GREEN change only in:
+
+- `apps/web/src/lib/ats/stage-b-ats-create-canonical-identity.ts`;
+- `apps/web/src/components/provider/deploy/ats-create-configuration.ts`;
+- `apps/web/src/lib/ats/stage-b-ats-create-command-projection.ts`;
+- `apps/web/src/lib/ats/stage-b-ats-create-execution-projection.ts`;
+- `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`;
+- `apps/web/src/lib/bounded-request-json.ts`;
+- `apps/web/src/lib/x402-protected-route.ts`; and
+- `apps/web/src/lib/entity-check-x402.ts`.
+
+No other source path, payment, wallet/provider authority, transaction,
+deployment, or live action is authorized.
 
 Payment, settlement, wallet/provider, transaction, deployment, and live
 boundaries remain excluded.

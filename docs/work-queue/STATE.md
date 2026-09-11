@@ -187,6 +187,7 @@
 - M41_DELIVERY: accepted at `20983649632f4812d9ee045637eb183b3158cc38` as a local HTTP ingress, transport replay, atomic ATS_CREATE admission, and public-projection boundary only; it adds no configuration, key, publication, wallet, provider, SDK, transaction, deployment, or live authority.
 - CURRENT_TASK: B04-T010 (20-active) is the user-directed local security remediation. It authorizes only its eight named durable-RED tests; no source, payment, wallet, provider, transaction, deployment, or live capability is authorized.
 - B04_SECURITY_SCAN_REMEDIATION_ACTIVATION: Independent activation at `d5d4a384` confirms the exact eight RED tests are collision-free. B04-T010 is `20-active` only for those tests; source remains prohibited pending fresh RED acceptance.
+- B04_SECURITY_SCAN_REMEDIATION_RED_ACCEPTANCE: Independent review of `8f7fc8a1` confirms 94 passes, seven intended source-absence or pre-fix failures, and one dependent skip across the eight activated tests. Only the eight exact B04 source paths recorded in the card and ownership ledger may now receive the minimal Green implementation.
 - S18_BACKER_FUNDING_READY: Independent readiness at canonical
   `e54ed962d7cb381208bf5006ffd26039aa20a1d6` is clear. Every declared
   dependency is accepted, the five S18 targets are absent, and no active lane

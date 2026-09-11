@@ -9,7 +9,13 @@ tests: `stage-b-ats-create-canonical-identity.test.mjs`,
 `riskscan-api.test.mjs`, `provider-deploy-route.test.mjs`,
 `provider-deploy-state.test.mjs`, `stage-b-ats-create-command-projection.test.mjs`,
 and `stage-b-browser-provider-bridge.test.mjs`. The activation authorizes only
-those durable RED tests; no source path is reserved. Existing M42
+those durable RED tests. The accepted RED review additionally reserves only
+`stage-b-ats-create-canonical-identity.ts`, `ats-create-configuration.ts`,
+`stage-b-ats-create-command-projection.ts`,
+`stage-b-ats-create-execution-projection.ts`,
+`stage-b-browser-provider-bridge.ts`, `bounded-request-json.ts`,
+`x402-protected-route.ts`, and `entity-check-x402.ts` for minimal GREEN.
+Existing M42
 preimage, route configuration, source adapters, payment, settlement,
 wallet/provider, transaction, deployment, and live paths remain excluded.
 
