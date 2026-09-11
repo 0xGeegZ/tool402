@@ -2,23 +2,20 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
-S34-T010 is a ready-only public-documentation candidate. Its declared future
-paths are `docs/specs/s34-public-documentation.md`, `docs/ui/UI-S34.md`,
-`docs/superpowers/plans/2026-09-11-s34-public-documentation.md`,
-`apps/web/src/app/docs/page.tsx`, `apps/web/src/app/docs/riskscan/page.tsx`,
+S34-T010 is active only for durable RED in
+`apps/web/tests/public-documentation.test.mjs` plus its exact assertions in
+`apps/web/tests/landing-explore.test.mjs`,
+`apps/web/tests/product-landing.test.mjs`,
+`apps/web/tests/workspace-shell.test.mjs`, and
+`apps/web/tests/guided-demo-route.test.mjs`. Every S34 source target remains
+prohibited until independent RED acceptance: `apps/web/src/app/docs/page.tsx`,
+`apps/web/src/app/docs/riskscan/page.tsx`,
 `apps/web/src/app/docs/providers/page.tsx`,
 `apps/web/src/components/docs/documentation-home.tsx`,
 `apps/web/src/components/docs/riskscan-guide.tsx`,
 `apps/web/src/components/docs/provider-riskscan-guide.tsx`,
-`apps/web/src/components/discovery/local-navigation.tsx`,
-`apps/web/src/components/landing/landing-footer.tsx`,
-`apps/web/tests/public-documentation.test.mjs`,
-`apps/web/tests/landing-explore.test.mjs`, and
-`apps/web/tests/product-landing.test.mjs`,
-`apps/web/tests/workspace-shell.test.mjs`, and
-`apps/web/tests/guided-demo-route.test.mjs`. This row is not a source or test
-reservation: fresh independent activation and RED acceptance are required
-before each corresponding phase. All API/Agent/Core/Backend,
+`apps/web/src/components/discovery/local-navigation.tsx`, and
+`apps/web/src/components/landing/landing-footer.tsx`. All API/Agent/Core/Backend,
 configuration, data, wallet, provider, payment, command, transaction,
 deployment, and live paths remain excluded.
 

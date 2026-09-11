@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: S28-T010, S29-T010, S31-T010, and S33-T010 accepted.
 - Owner: The root owns queue records, the UI ledger, decisions, reviews,
   commits, and pushes. Candidate implementation paths are exactly those
@@ -37,12 +37,15 @@ route targets, product facts, and exclusions.
 - A fresh independent readiness review must accept the candidate scope before
   a separate activation can permit durable RED.
 
-## Ready authority
+## RED activation authority
 
-Independent readiness at `3f52a4941354321ed5d5dd57a0f44b93f72bce48` is
-clear. S34-T010 is 10-ready only. No source or test path is active; a fresh
-independent activation must confirm this authority remains intact before it
-can reserve the five declared test paths for durable RED.
+Fresh independent activation at `6420f088ab2306e8aa8e34c2d67c38f3f221dfa1`
+is clear. S34-T010 reserves only durable RED in
+`apps/web/tests/public-documentation.test.mjs` and the exact S34 assertions
+in `landing-explore.test.mjs`, `product-landing.test.mjs`,
+`workspace-shell.test.mjs`, and `guided-demo-route.test.mjs`. No S34 source
+path is active. A fresh independent RED review must accept the durable
+failures before any minimal Green source authority exists.
 
 ## RED and Green boundary
 
