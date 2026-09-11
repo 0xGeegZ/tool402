@@ -1,12 +1,9 @@
 "use client";
 
 import { useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
-import Link from "next/link";
-
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../ui/card";
-import { PageHeader } from "../../ui/page-header";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { campaignFixture } from "./campaign-fixture";
 import { DeployStageSigning } from "./deploy-stage-signing";
@@ -16,6 +13,7 @@ import {
   canGoBack,
   providerDeployCategories,
   providerDeployFieldErrors,
+  providerDeployStages,
   providerDeploySteps,
   revenueNoteConfigurationRows,
   stepCaption,
@@ -39,7 +37,7 @@ type WizardValues = {
   acknowledgement: boolean;
 };
 
-const inputClassName = "min-h-11 w-full rounded-field border bg-background px-3 py-2 text-sm text-foreground shadow-none transition-colors placeholder:text-muted-foreground focus:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+const inputClassName = "min-h-11 w-full rounded-xl border border-border bg-[#fbf7ef] px-3 py-2 text-sm text-foreground shadow-none transition-colors placeholder:text-muted-foreground hover:border-foreground/20 focus:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const fieldLabelClassName = "space-y-2 text-sm font-medium text-foreground";
 const fieldHintClassName = "text-sm leading-6 text-muted-foreground";
 const fieldErrorClassName = "text-sm leading-6 text-destructive";
@@ -78,8 +76,8 @@ function StepProgress({
   onStepSelect: (step: number) => void;
 }) {
   return (
-    <nav aria-label="Provider deploy progress" data-ui="provider-deploy-progress" className="rounded-field border bg-muted/40 p-1">
-      <ol className="grid grid-cols-5 gap-1">
+    <nav aria-label="Provider deploy progress" data-ui="provider-deploy-progress" className="space-y-3">
+      <ol className="grid grid-cols-5 gap-2 sm:gap-3">
         {providerDeploySteps.map((step, index) => {
           const isCurrent = index === currentStep;
           const isComplete = index < currentStep;
@@ -91,18 +89,16 @@ function StepProgress({
                 aria-current={isCurrent ? "step" : undefined}
                 disabled={index >= currentStep}
                 onClick={() => onStepSelect(index)}
-                title={step.label}
-                className={`grid w-full min-w-0 gap-1 rounded-tile border px-1 py-2 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 ${isCurrent ? "border-primary bg-primary text-primary-foreground" : isComplete ? "border-border bg-secondary text-secondary-foreground hover:border-primary" : "border-border bg-background text-muted-foreground"}`}
+                className={`flex w-full flex-col gap-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 ${isCurrent ? "text-foreground" : isComplete ? "text-foreground" : "text-muted-foreground"}`}
               >
-                <span className="mx-auto flex size-7 items-center justify-center rounded-full border border-current text-xs font-semibold">
-                  {index + 1}
-                </span>
-                <span className="hidden truncate text-xs font-medium sm:block">{step.label}</span>
+                <span aria-hidden="true" className={`h-1.5 w-full rounded-full ${isCurrent || isComplete ? "bg-primary" : "bg-secondary"}`} />
+                <span className="text-[10px] font-medium leading-4 sm:text-[11px]">{step.label}</span>
               </button>
             </li>
           );
         })}
       </ol>
+      <p className="text-xs font-medium text-muted-foreground">{stepCaption(currentStep)}</p>
     </nav>
   );
 }
@@ -172,7 +168,7 @@ function InterfaceStep({ values, fieldErrors, onTextChange }: {
       <Field label="Capability summary" hint="Describe the bounded capability in clear terms.">
         <textarea className={`${inputClassName} min-h-32 resize-y`} value={values.capabilitySummary} onChange={onTextChange("capabilitySummary")} />
       </Field>
-      <div className="rounded-field border bg-muted/50 p-4">
+      <div className="rounded-[calc(var(--radius)*0.75)] border bg-muted/50 p-4">
         <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Fixed capability</p>
         <p className="mt-2 font-mono text-sm text-foreground">{campaignFixture.capability}</p>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">This directory capability is read-only in the prepared fixture.</p>
@@ -234,7 +230,7 @@ function TermsStep({
           <textarea aria-invalid={fieldErrors.risks ? true : undefined} aria-describedby={fieldErrors.risks ? fieldErrorId("risks") : undefined} className={`${fieldClassName(fieldErrors.risks)} min-h-32 resize-y`} value={values.risks} onChange={onTextChange("risks")} />
         </Field>
       </div>
-      <section aria-labelledby="provider-deploy-terms" className="rounded-field border bg-muted/40 p-4">
+      <section aria-labelledby="provider-deploy-terms" className="rounded-[calc(var(--radius)*0.75)] border bg-muted/40 p-4">
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Read-only terms v1</p>
           <h2 id="provider-deploy-terms" className="text-lg font-semibold">Funding and revenue-note terms</h2>
@@ -248,7 +244,7 @@ function TermsStep({
           ))}
         </dl>
       </section>
-      <section aria-labelledby="provider-deploy-configuration" className="rounded-field border bg-background p-4">
+      <section aria-labelledby="provider-deploy-configuration" className="rounded-[calc(var(--radius)*0.75)] border bg-background p-4">
         <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Local configuration projection</p>
         <h2 id="provider-deploy-configuration" className="mt-1 text-lg font-semibold">Revenue note context</h2>
         {configurationRows.length > 0 ? (
@@ -262,7 +258,7 @@ function TermsStep({
           </dl>
         ) : <p className="mt-3 text-sm text-muted-foreground">Not configured. No projection is available to display.</p>}
       </section>
-      <label className="flex items-start gap-3 rounded-field border bg-background p-4 text-sm leading-6">
+      <label className="flex items-start gap-3 rounded-[calc(var(--radius)*0.75)] border bg-background p-4 text-sm leading-6">
         <input className="mt-1 size-4 shrink-0 accent-[var(--primary)]" type="checkbox" checked={values.acknowledgement} onChange={onAcknowledgementChange} />
         <span>{acknowledgementCopy}</span>
       </label>
@@ -280,14 +276,14 @@ function ReviewStep({ values }: { values: WizardValues }) {
   ] as const;
 
   return (
-    <div className="space-y-8">
+    <DeployStageSigning values={values}>
       <section aria-labelledby="provider-deploy-review" className="space-y-4">
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Review</p>
           <h2 id="provider-deploy-review" className="text-2xl font-semibold tracking-tight">Check the prepared details</h2>
           <p className="text-sm leading-6 text-muted-foreground">Nothing is sent until you request and confirm a signature below. The values above remain a local, editable preview.</p>
         </div>
-        <dl className="grid gap-3 rounded-field border bg-muted/30 p-4 text-sm sm:grid-cols-2">
+        <dl className="grid gap-3 rounded-[calc(var(--radius)*0.75)] border bg-muted/30 p-4 text-sm sm:grid-cols-2">
           {reviewRows.map(([label, value]) => (
             <div key={label} className="space-y-1">
               <dt className="text-muted-foreground">{label}</dt>
@@ -296,8 +292,7 @@ function ReviewStep({ values }: { values: WizardValues }) {
           ))}
         </dl>
       </section>
-      <DeployStageSigning values={values} />
-    </div>
+    </DeployStageSigning>
   );
 }
 
@@ -364,59 +359,57 @@ export function ProviderDeployWizard() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 pb-10 sm:pb-14" data-ui="provider-deploy-surface">
-      <div className="space-y-5 border-b border-border pb-7">
-        <Link href="/provider" className="inline-flex w-fit items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
-          Back to provider workspace
-        </Link>
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-start gap-4">
-            <div aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-sm font-semibold text-primary">RS</div>
-            <PageHeader
-              eyebrow="RiskScan"
-              title="Prepare a local offering"
-              description="Configure the existing RiskScan context before any separate signing or provider action is considered."
-            />
-          </div>
-          <div className="flex flex-wrap gap-2 sm:justify-end">
-            <Badge variant="secondary">Local editable preview</Badge>
-            <Badge variant="outline">Testnet only</Badge>
-          </div>
+    <main className="mx-auto max-w-5xl px-1 pb-10 sm:px-2 sm:pb-14" data-ui="provider-deploy-surface">
+      <header data-ui="provider-deploy-identity" className="max-w-3xl">
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline" className="rounded-full border-warning/40 bg-warning/10 px-2 py-0.5 text-[10px] font-medium text-warning-foreground">
+            Prepared / demo data fixture
+          </Badge>
+          <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-foreground">
+            Hedera testnet · chain 296
+          </Badge>
+          <Badge variant="outline" className="rounded-full border-border bg-secondary px-2 py-0.5 text-[10px] font-medium text-foreground">
+            Terms v1 · fixed
+          </Badge>
         </div>
-        <p className="max-w-3xl border-l-2 border-primary/60 pl-4 text-sm leading-6 text-muted-foreground">
-          These values stay editable in this browser. They do not create, publish, or verify an offering; a signature is requested only from the wallet section on the review step.
+        <h1 className="mt-4 text-3xl font-bold tracking-[-0.04em] text-foreground sm:text-4xl">Deploy the RiskScan campaign</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+          Review every field of the prepared offering, then authorize each step with your issuer wallet. Nothing is created, funded, or published until the named signature and receipt exist.
         </p>
+      </header>
+
+      <div className="mt-7">
+        <StepProgress currentStep={currentStep} onStepSelect={returnToStep} />
       </div>
 
-      <Card className="overflow-hidden shadow-none">
-        <CardHeader className="space-y-5 border-b bg-muted/20 p-5 sm:p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{stepCaption(currentStep)}</p>
-              <CardTitle>{currentDefinition?.label}</CardTitle>
-              <CardDescription>Complete this local preview, then review the next bounded step.</CardDescription>
-            </div>
-            <Badge variant="outline" className="w-fit">{currentStep + 1} / {providerDeploySteps.length}</Badge>
-          </div>
-          <StepProgress currentStep={currentStep} onStepSelect={returnToStep} />
-        </CardHeader>
-        <form onSubmit={onSubmit}>
-          <CardContent className="space-y-6">
-            {renderCurrentStep()}
-            {validationMessage ? <p aria-live="polite" className="rounded-field border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
-          </CardContent>
-          <CardFooter className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Button type="button" variant="ghost" disabled={!canGoBack(currentStep)} onClick={() => returnToStep(Math.max(0, currentStep - 1))}>
-              Back
-            </Button>
-            {currentStep < providerDeploySteps.length - 1 ? (
-              <Button type="submit" disabled={!canAdvance(currentStep, values)}>
-                Continue to {providerDeploySteps[currentStep + 1]?.label}
-              </Button>
-            ) : <Badge variant="outline">Review complete locally</Badge>}
-          </CardFooter>
-        </form>
-      </Card>
+      <div data-ui="provider-deploy-workspace" className="mt-7 space-y-5">
+        <section data-ui="provider-deploy-form">
+          <Card className="overflow-hidden rounded-2xl border border-border bg-card shadow-none">
+            <CardHeader className="space-y-1 px-5 pb-2 pt-5 sm:px-6 sm:pt-6">
+              <CardTitle className="text-xl tracking-tight sm:text-2xl">{currentDefinition?.label}</CardTitle>
+              <CardDescription className="text-xs leading-5">
+                Complete the prepared fields for this step. Every value remains editable until review.
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={onSubmit}>
+              <CardContent className="px-5 py-5 sm:px-6 sm:py-6">
+                {renderCurrentStep()}
+                {validationMessage ? <p aria-live="polite" className="mt-6 rounded-xl border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
+              </CardContent>
+              <CardFooter className="flex flex-col-reverse gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                <Button type="button" variant="ghost" className="justify-start px-2 text-sm" disabled={!canGoBack(currentStep)} onClick={() => returnToStep(Math.max(0, currentStep - 1))}>
+                  Back
+                </Button>
+                {currentStep < providerDeploySteps.length - 1 ? (
+                  <Button type="submit" className="h-10 rounded-xl px-4 text-sm" disabled={!canAdvance(currentStep, values)}>
+                    Continue
+                  </Button>
+                ) : <Badge variant="outline">Review complete locally</Badge>}
+              </CardFooter>
+            </form>
+          </Card>
+        </section>
+      </div>
     </main>
   );
 }

@@ -155,6 +155,25 @@ export function ProviderDeployStages({
       <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
         This is a review map, not a live status feed. The separately carded provider status route is authoritative.
       </p>
+      <div className="overflow-x-auto rounded-[calc(var(--radius)*0.9)] border bg-muted/20 p-3" aria-label="Provider command flow">
+        <ol className="flex min-w-[680px] items-stretch gap-2">
+          {providerDeployStages.map((definition, index) => {
+            const stage = visibleStates[index] ?? { kind: "blocked" as const };
+            const isCurrent = stage.kind === "actionable" || stage.kind === "in_progress";
+            return (
+              <li key={`flow-${definition.label}`} className="flex min-w-0 flex-1 items-center gap-2">
+                <div className={`min-w-0 flex-1 rounded-[calc(var(--radius)*0.7)] border p-3 ${isCurrent ? "border-primary bg-primary/10" : stage.kind === "done" ? "border-success/40 bg-success/10" : "bg-card"}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{index + 1} · {stageStatusCopy[stage.kind]}</span>
+                  </div>
+                  <p className="mt-2 text-sm font-semibold leading-5 text-foreground">{definition.label}</p>
+                </div>
+                {index < providerDeployStages.length - 1 ? <span aria-hidden="true" className="text-muted-foreground">→</span> : null}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
       <ol className="grid gap-3">
         {providerDeployStages.map((definition, index) => {
           const stage = visibleStates[index] ?? { kind: "blocked" as const };

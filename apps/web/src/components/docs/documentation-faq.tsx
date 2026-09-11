@@ -7,19 +7,23 @@ import { PageHeader } from "../ui/page-header";
 const questions = [
   {
     question: "What is Tool402?",
-    answer: "Tool402 is a Hedera testnet prototype for discovering tools and reading the current local routes around them.",
+    answer: "Tool402 is a Hedera testnet prototype for agent tool discovery. An agent can find a capability and inspect the current local route boundary. A configured 402 response is not evidence that payment completed.",
+  },
+  {
+    question: "How does the Tool402 flow work?",
+    answer: "The current route flow is Discover → Request → 402 Payment Required → inspect the boundary → choose a local next step. A route does not turn a payment requirement into proof of settlement.",
   },
   {
     question: "What does RiskScan Quick assess?",
-    answer: "RiskScan Quick assesses caller-supplied declarations. It does not verify an external service, payment, or evidence record.",
+    answer: "RiskScan Quick assesses caller-supplied declarations about identity, pricing, limitations, and evidence. It is a bounded technical assessment, not financial, legal, insurance, identity, or security advice.",
   },
   {
-    question: "Does a 402 boundary prove that a payment completed?",
-    answer: "No. A 402 boundary is not proof of a completed payment.",
+    question: "What is x402?",
+    answer: "x402 is the payment boundary used by a tool to say that payment is required before access. Receiving a 402 challenge alone is not proof of a completed payment.",
   },
   {
     question: "Does the Provider path deploy an ATS asset?",
-    answer: "No. A Provider preview, review, or signature is not an ATS deployment and does not publish a public campaign.",
+    answer: "No. A Provider preview, review, or signature is not an ATS deployment and does not publish a public tool offering.",
   },
   {
     question: "Is there a public MCP endpoint?",

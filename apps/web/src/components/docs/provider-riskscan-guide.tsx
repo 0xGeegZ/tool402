@@ -36,7 +36,7 @@ export function ProviderRiskScanGuide() {
           <Badge variant="outline" className="border-border bg-background">RiskScan · Provider guide</Badge>
           <PageHeader
             title="Prepare a RiskScan provider preview"
-            description="A route-by-route guide to the existing Provider preview and the boundaries of its local controls."
+            description="A route-by-route guide to preparing a tool offering preview, reviewing its controls, and understanding what is not deployed or published."
           />
         </div>
       </section>

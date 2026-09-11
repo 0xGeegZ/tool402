@@ -51,7 +51,7 @@ export function ProviderStatus({ projections }: { projections: ProviderProjectio
             {action === undefined ? "No admitted offering record is configured in this environment. Use the local wizard to prepare the next step." : "Review the current local preparation before advancing the provider path."}
           </p>
         </div>
-        <Link className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-brand-purple motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/provider/deploy">Open the deploy wizard</Link>
+        <Link className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-brand-purple motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/provider/deploy">Prepare an offering</Link>
       </section>
 
       <section aria-labelledby="provider-current-state" className="space-y-4">
@@ -83,7 +83,7 @@ export function ProviderStatus({ projections }: { projections: ProviderProjectio
             <div><dt className="text-xs text-muted-foreground">Route</dt><dd className="font-medium">/provider/deploy</dd></div>
             <div><dt className="text-xs text-muted-foreground">Scope</dt><dd className="font-medium">Local wizard</dd></div>
           </dl>
-          <Link className="inline-flex min-h-10 items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-brand-purple motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/provider/deploy">Open the deploy wizard</Link>
+          <Link className="inline-flex min-h-10 items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-brand-purple motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/provider/deploy">Prepare an offering</Link>
         </div>
       </section>
 

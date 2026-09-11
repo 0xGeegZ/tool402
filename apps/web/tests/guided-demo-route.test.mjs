@@ -95,7 +95,10 @@ test("keeps the nine guided steps in the exact local order and copy", async (t) 
   assert.equal((steps.match(/<Link\b/g) ?? []).length, 1);
   assert.doesNotMatch(steps, /<a\b/i);
   assert.match(steps, /from\s+["']next\/link["']/);
-  assert.match(steps, /steps\.map\(\s*\(\s*step(?:\s*,\s*index)?\s*\)\s*=>/);
+  assert.match(steps, /const chapters = \[/);
+  assert.match(steps, /steps\.slice\(chapter\.start, chapter\.end\)\.map\(/);
+  assert.match(steps, /className="flex flex-col gap-8"/);
+  assert.match(steps, /className="grid gap-4 md:grid-cols-2"/);
   assert.match(steps, /<Link\b[^>]*href=\{step\.href\}/);
   assert.deepEqual(
     [...steps.matchAll(/href:\s*["']([^"']+)["']/g)].map(([, href]) => href),

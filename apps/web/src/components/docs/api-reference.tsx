@@ -23,7 +23,7 @@ export function ApiReference() {
           <Badge variant="outline" className="border-border bg-background">HTTP API · current boundary</Badge>
           <PageHeader
             title="API reference"
-            description="Read the current local descriptor and request boundaries before choosing a Tool402 route."
+            description="Use the current HTTP surfaces to discover the tool descriptor and submit a bounded RiskScan request. This reference documents the real request shape without inventing a payment or settlement result."
           />
         </div>
       </section>

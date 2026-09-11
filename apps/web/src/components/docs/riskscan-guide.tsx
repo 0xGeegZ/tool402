@@ -30,7 +30,7 @@ export function RiskScanGuide() {
           <Badge variant="outline" className="border-border bg-background">RiskScan Quick · local guide</Badge>
           <PageHeader
             title="RiskScan Quick"
-            description="A concise guide to the bounded assessment of caller-supplied declarations and its current local routes."
+            description="A bounded technical assessment for agent workflows. Read what it accepts, what it returns, and where the current payment and evidence boundaries begin."
           />
         </div>
       </section>

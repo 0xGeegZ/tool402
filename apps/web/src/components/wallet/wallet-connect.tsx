@@ -24,6 +24,8 @@ export interface WalletSession {
 export interface WalletIslandProps {
   readonly approvedIssuerAddress?: string;
   readonly children?: (session: WalletSession) => ReactNode;
+  readonly className?: string;
+  readonly heading?: string;
 }
 
 function describe(state: WalletState): string {
@@ -50,6 +52,8 @@ function describe(state: WalletState): string {
 export function WalletIsland({
   approvedIssuerAddress,
   children,
+  className,
+  heading = "Wallet",
 }: WalletIslandProps) {
   const [state, setState] = useState<WalletState>({ kind: "disconnected" });
   const providerRef = useRef<Eip1193Provider | null>(null);
@@ -117,11 +121,11 @@ export function WalletIsland({
     <section
       data-slot="wallet-island"
       aria-labelledby="wallet-island-title"
-      className="space-y-3"
+      className={className ?? "space-y-3"}
     >
       <div className="flex flex-wrap items-center gap-2">
         <h2 id="wallet-island-title" className="text-lg font-semibold">
-          Wallet
+          {heading}
         </h2>
         {state.kind === "connected" ? (
           <Badge variant="secondary">{state.address}</Badge>

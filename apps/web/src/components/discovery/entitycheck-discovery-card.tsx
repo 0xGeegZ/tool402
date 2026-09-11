@@ -16,7 +16,7 @@ export function EntityCheckDiscoveryCard() {
               <BuildingIcon />
             </span>
             <div className="flex flex-wrap justify-end gap-2">
-              <Badge variant="secondary">In discovery</Badge>
+              <Badge variant="secondary">Catalogue preview</Badge>
               <Badge variant="outline">Counterparty verification</Badge>
             </div>
           </div>

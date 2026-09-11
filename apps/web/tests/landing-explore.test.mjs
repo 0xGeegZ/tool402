@@ -77,6 +77,8 @@ test("renders labeled navigation between the committed local routes", async () =
   assert.match(navigation, /["']use client["']/);
   assert.match(navigation, /aria-label="Open menu"/);
   assert.match(navigation, /<SheetContent side="right"/);
+  assert.match(navigation, /href="\/provider\/deploy"/);
+  assert.match(navigation, />\s*Prepare a tool\s*</);
   assert.match(navigation, /\blg:hidden\b/);
   assert.match(navigation, /matchMedia\("\(min-width: 1024px\)"\)/);
   assert.match(layout, /<Link href="\/" aria-label="Tool402 home"/);
@@ -100,7 +102,7 @@ test("gives the decorative landing artwork an explicit responsive width", async 
   const hero = await readAppFile("src/components/landing/landing-hero.tsx");
 
   assert.match(hero, /\/brand\/hero-trio\.png/);
-  assert.match(hero, /\bw-full\s+max-w-sm\b/);
+  assert.match(hero, /\bw-full\s+max-w-md\b/);
   assert.match(hero, /\blg:grid-cols-\[minmax\(0,1fr\)_minmax\(0,1fr\)\]/);
 });
 
@@ -148,7 +150,19 @@ test("keeps the marketplace thesis local while discovery remains read-only", asy
 
   assert.match(hero, /Back the tools\s*<span[^>]*>agents pay<\/span>\s*to use\./);
   assert.match(hero, /<span className=["'][^"']*\btext-brand-purple\b[^"']*["']>agents pay<\/span>/);
-  assert.match(hero, /<Link\b[^>]*href=["']\/demo["'][^>]*>\s*Open guided demo\s*<\/Link>/);
+  assert.match(hero, /<Link\b[^>]*href=["']\/demo["'][^>]*>\s*Follow the hackathon demo\s*<\/Link>/);
   assert.match(discoveryCard, /read-only/i);
   assert.match(page, /<LandingHero\s*\/>/);
+});
+
+test("renders factual campaign context around the landing hero", async () => {
+  const hero = await readAppFile("src/components/landing/landing-hero.tsx");
+
+  assert.match(hero, /Hedera testnet preview/);
+  assert.match(hero, /402 · Payment Required/);
+  assert.match(hero, /Campaign preparation/);
+  assert.match(hero, /Testnet · not live/);
+  assert.match(hero, /x402 payment boundary/);
+  assert.match(hero, /Provider campaign preparation/);
+  assert.doesNotMatch(hero, /\$68,200|68% funded|12,561/);
 });
