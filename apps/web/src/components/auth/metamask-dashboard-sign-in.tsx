@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
 import { Button } from "../ui/button";
-import { WalletIsland, type WalletSession } from "../wallet/wallet-connect";
+import { useWalletSession, type WalletSession } from "../wallet/wallet-session";
 
 const failureMessage = "Sign-in could not be completed. Please try again.";
 
@@ -99,8 +99,11 @@ function MetaMaskSignInButton({ session }: { session: WalletSession }) {
 
   return (
     <div className="space-y-2">
+      <p className="text-sm text-muted-foreground">
+        Confirm the secure authentication message in MetaMask. It does not send funds or cost HBAR.
+      </p>
       <Button disabled={pending} aria-disabled={pending} onClick={signIn}>
-        {pending ? "Signing in…" : "Sign in with MetaMask"}
+        {pending ? "Unlocking dashboard…" : "Sign and open dashboard"}
       </Button>
       {failure === null ? null : (
         <p aria-live="polite" className="text-sm text-muted-foreground">
@@ -112,9 +115,18 @@ function MetaMaskSignInButton({ session }: { session: WalletSession }) {
 }
 
 export function MetaMaskDashboardSignIn() {
+  const wallet = useWalletSession();
+  const session: WalletSession | null =
+    wallet.state.kind === "connected" && wallet.provider !== null
+      ? { provider: wallet.provider, address: wallet.state.address }
+      : null;
+
   return (
-    <WalletIsland heading="Sign in with MetaMask">
-      {(session) => <MetaMaskSignInButton session={session} />}
-    </WalletIsland>
+    <section aria-labelledby="metamask-dashboard-sign-in-title" className="space-y-3">
+      <h2 id="metamask-dashboard-sign-in-title" className="text-lg font-semibold">Sign in with MetaMask</h2>
+      {session === null ? (
+        <p aria-live="polite" className="text-sm text-muted-foreground">Connect MetaMask from the header on Hedera Testnet, then sign to unlock the dashboard.</p>
+      ) : <MetaMaskSignInButton session={session} />}
+    </section>
   );
 }

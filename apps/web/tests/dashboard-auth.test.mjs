@@ -385,7 +385,7 @@ clientTest("keeps sign-in limited to the accepted local authentication boundary"
   assert.match(client, /\buseWalletSession\b/u);
   assert.match(client, /Sign in with MetaMask/u);
   assert.match(client, /Sign and open dashboard/u);
-  assert.match(client, /never sends a transaction or costs HBAR/u);
+  assert.match(client, /does not send funds or cost HBAR/u);
   assert.match(client, /\breadCurrentSession\b/u);
   assert.match(client, /\bpersonal_sign\b/u);
   assert.match(client, /\/api\/auth\/metamask\/challenge/u);

@@ -24,8 +24,8 @@ async function SignInBoundary() {
     <main className="mx-auto max-w-xl space-y-6">
       <header className="space-y-2">
         <p className="text-sm font-medium text-muted-foreground">Dashboard access</p>
-        <h1 className="text-3xl font-semibold tracking-tight">Sign in to Tool402</h1>
-        <p className="text-muted-foreground">Connect MetaMask on Hedera Testnet, then choose whether to sign in.</p>
+        <h1 className="text-3xl font-semibold tracking-tight">Unlock your dashboard</h1>
+        <p className="text-muted-foreground">Connect MetaMask on Hedera Testnet, then sign one secure authentication message to continue. It does not send funds or cost HBAR.</p>
       </header>
       <MetaMaskDashboardSignIn />
     </main>
