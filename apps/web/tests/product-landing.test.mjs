@@ -82,7 +82,7 @@ test("offers only the specified current local CTA destinations", async () => {
   ]);
   assert.match(landing, /href=\{campaign\.href\}/);
   assert.match(landing, /route: "\/explore\/riskscan"/);
-  assert.match(landing, /route: "\/provider"/);
+  assert.match(landing, /route: "\/explore\/entitycheck"/);
   assert.doesNotMatch(landing, /<Link\b[^>]*>\s*<Button\b/);
 });
 
