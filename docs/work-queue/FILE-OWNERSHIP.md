@@ -1130,11 +1130,16 @@ User-directed S38 navigation amendment: after durable RED, the root reserves
 `apps/web/src/components/auth/dashboard-navigation.tsx`, the header-navigation
 slot of `apps/web/src/app/layout.tsx`, and only the link list/prop contract of
 `apps/web/src/components/discovery/local-navigation.tsx`, alongside matching
-`apps/web/tests/dashboard-auth.test.mjs` assertions. The boundary reads only a
-validated S38 `HttpOnly` session on the server and supplies a Dashboard link
-inside Suspense; it may not read, mount, modify, or infer state from S26/UI-S15
-wallet code. This narrowly supersedes the earlier S38 exclusion of the root
-header, not any other S26 reservation.
+`apps/web/tests/dashboard-auth.test.mjs` assertions and the exact
+navigation/auth reconciliation assertions in
+`apps/web/tests/guided-demo-route.test.mjs`,
+`apps/web/tests/landing-explore.test.mjs`,
+`apps/web/tests/workspace-shell.test.mjs`, and
+`apps/web/tests/static-shell.test.mjs`. The boundary reads only a validated
+S38 `HttpOnly` session on the server and supplies a Dashboard link inside
+Suspense; it may not read, mount, modify, or infer state from S26/UI-S15 wallet
+code. This narrowly supersedes the earlier S38 exclusion of the root header,
+not any other S26 reservation.
 
 S27-T010 is an `00-inbox` POLISH card with no active source reservation. Its
 proposed new test is `apps/web/tests/deploy-wizard-stepper.test.mjs`; its
