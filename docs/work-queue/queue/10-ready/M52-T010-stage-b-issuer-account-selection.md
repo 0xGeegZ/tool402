@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M47-T010 accepted, M48-T010 accepted, M50-T010 accepted.
 - Owner: root integrator owns queue/control records, reviews, integration, commits, and pushes.
 - Human actions: none. This card does not authorize a wallet request, transaction, Mirror read, candidate, attachment, or other live action.
@@ -19,8 +19,9 @@ requesting `eth_sendTransaction`.
 ## Local authority
 
 The implementation contract is [M52 Stage-B issuer account selection](../../../specs/m52-stage-b-issuer-account-selection.md).
+The [M52 readiness review](../../evidence/M52-T010-ready-review.md) is clear.
 
-Candidate paths after readiness are exactly:
+Candidate paths after activation are exactly:
 
 - `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`; and
 - `apps/web/tests/stage-b-browser-provider-bridge.test.mjs`.
@@ -35,10 +36,8 @@ remain rejected before a send. The card changes no configuration, digest,
 wallet selection, authority, transaction, receipt, Mirror, candidate,
 attachment, deployment, or live-action boundary.
 
-## Candidate-ready requirements
+## RED activation requirement
 
-- This card and its specification are committed before a test or source edit.
-- M49's completed source/test paths are released and no active task owns either
-  candidate path.
-- A separate independent readiness review and test-only RED activation are
-  required before the test changes.
+A separate activation may reserve only
+`apps/web/tests/stage-b-browser-provider-bridge.test.mjs` for durable RED.
+Every source path remains prohibited until the RED contract is accepted.

@@ -1,9 +1,9 @@
 # Runtime queue state
 
 - M52_STAGE_B_ISSUER_ACCOUNT_SELECTION_INTAKE: User-directed CORE_P0
-  correction. MetaMask may return more than one site-authorized account. M52
-  may evaluate a narrow fixed-issuer membership check only after independent
-  readiness and a separate test-only RED activation; no provider request,
+  correction. MetaMask may return more than one site-authorized account. The
+  readiness review is clear and M52 may evaluate a narrow fixed-issuer
+  membership check only after a separate test-only RED activation; no provider request,
   transaction, receipt, Mirror read, candidate, attachment, authority, or
   live action is authorized.
 
