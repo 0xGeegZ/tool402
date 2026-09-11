@@ -85,6 +85,14 @@ and every other source path remain frozen until a fresh independent RED review
 accepts both test deltas and authorizes the supporting-sentence replacement
 and matching assertion alone.
 
+## Rebuilt exact-head review
+
+The previous-branch review evidence is non-ancestral after the clean S33
+rebuild. At `51dc20e`, fresh review confirms the two intended failures are
+only the old page sentence but blocks incomplete JSX static-boundary coverage.
+D-S33-010-008 keeps only the focused visual test and the exact matching
+landing assertion in corrective RED; production remains frozen.
+
 ## Ready authority
 
 Independent readiness review is clear at

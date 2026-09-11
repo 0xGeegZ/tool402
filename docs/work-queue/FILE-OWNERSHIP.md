@@ -1244,3 +1244,7 @@ payment, transactions, deployment, and live boundaries remain excluded.
 D-S33-010-007 additionally reserves only the existing `machine-payable`
 supporting-sentence assertion in `apps/web/tests/landing-explore.test.mjs`.
 No other assertion in that test, test path, or source path is reserved.
+
+D-S33-010-008 supersedes no source authority: the rebuilt exact-head review
+keeps only `apps/web/tests/explore-visual-reconciliation.test.mjs` and that
+same exact landing assertion reserved for corrective RED.
