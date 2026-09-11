@@ -189,7 +189,7 @@ test("keeps the static Explore catalog separate from the bounded client-only Dir
   assert.match(island, /<Button\b(?=[^>]*\btype=["']button["'])(?=[^>]*\bdisabled=\{state\.kind === ["']inspecting["']\})[^>]*>/);
   assert.match(island, />\s*Inspect local directory\s*<\/Button>/);
   assert.match(island, /directoryOutcomeMessage\(state\)/);
-  assert.match(island, /aria-live=["']polite["']/);
+  assert.match(island, /<StatusRegion\b/);
   assert.match(island, /state\.kind === ["']tool_selected["']/);
   assert.match(island, /state\.tool\.id/);
   assert.match(island, /state\.tool\.name/);

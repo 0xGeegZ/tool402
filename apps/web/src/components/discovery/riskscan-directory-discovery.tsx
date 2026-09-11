@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Status, statusToneForOutcome } from "../ui/status";
+import { Status, StatusRegion, statusToneForOutcome } from "../ui/status";
 import { directoryOutcomeMessage, runExclusive, type RiskScanDirectoryViewState } from "./riskscan-directory-state";
 
 function DirectorySelection({ state }: { state: Extract<RiskScanDirectoryViewState, { kind: "tool_selected" }> }) {
@@ -54,10 +54,10 @@ function DirectorySelection({ state }: { state: Extract<RiskScanDirectoryViewSta
 
 function DirectoryOutcome({ state }: { state: RiskScanDirectoryViewState }) {
   const message = directoryOutcomeMessage(state);
-  return message === null ? null : (
-    <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
-      {message}
-    </Status>
+  return (
+    <StatusRegion className="mt-5">
+      {message === null ? null : <Status live={false} tone={statusToneForOutcome(state.kind)}>{message}</Status>}
+    </StatusRegion>
   );
 }
 
@@ -79,12 +79,12 @@ export function RiskScanDirectoryDiscovery() {
         <Badge variant="secondary" className="w-fit">Local directory</Badge>
         <CardTitle>Inspect RiskScan Quick</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent>
         <Button type="button" disabled={state.kind === "inspecting"} onClick={inspectDirectory}>
           Inspect local directory
         </Button>
         <DirectoryOutcome state={state} />
-        {state.kind === "tool_selected" ? <DirectorySelection state={state} /> : null}
+        {state.kind === "tool_selected" ? <div className="mt-5"><DirectorySelection state={state} /></div> : null}
       </CardContent>
     </Card>
   );

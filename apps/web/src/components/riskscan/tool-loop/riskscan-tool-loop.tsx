@@ -7,7 +7,7 @@ import { useRef, useState, type FormEvent } from "react";
 
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
-import { Status, statusToneForOutcome } from "../../ui/status";
+import { Status, StatusRegion, statusToneForOutcome } from "../../ui/status";
 import {
   getToolLoopDemoDefaults,
   runExclusive,
@@ -34,10 +34,10 @@ function readQuickInput(data: FormData): RiskScanQuickInput {
 
 function ToolLoopOutcome({ state }: { state: ToolLoopViewState }) {
   const message = toolLoopOutcomeMessage(state);
-  return message === null ? null : (
-    <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
-      {message}
-    </Status>
+  return (
+    <StatusRegion className="mt-7">
+      {message === null ? null : <Status live={false} tone={statusToneForOutcome(state.kind)}>{message}</Status>}
+    </StatusRegion>
   );
 }
 
@@ -133,8 +133,8 @@ export function RiskScanToolLoop() {
               Inspect request boundary
             </Button>
           </div>
-          <ToolLoopOutcome state={state} />
         </form>
+        <ToolLoopOutcome state={state} />
       </CardContent>
     </Card>
   );

@@ -6,7 +6,7 @@ import { useState, type FormEvent } from "react";
 import { Button } from "../../ui/button";
 import { CheckboxRow, Field, textAreaClass, textInputClass } from "../../ui/field";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
-import { Status, statusToneForOutcome } from "../../ui/status";
+import { Status, StatusRegion, statusToneForOutcome } from "../../ui/status";
 import {
   submitRiskScanRequest,
   type RiskScanRequestOutcome,
@@ -34,56 +34,56 @@ function readQuickInput(data: FormData): RiskScanQuickInput {
   };
 }
 
-function RequestOutcome({ state }: { state: RiskScanRequestViewState }) {
+function RequestResult({ state }: { state: RiskScanRequestViewState }) {
   if (state.kind === "idle") return null;
   if (state.kind === "submitting") {
     return (
-      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
+      <Status live={false} tone={statusToneForOutcome(state.kind)}>
         Sending the request boundary.
       </Status>
     );
   }
   if (state.kind === "unavailable") {
     return (
-      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
+      <Status live={false} tone={statusToneForOutcome(state.kind)}>
         RiskScan is unavailable. No payment challenge or result was returned.
       </Status>
     );
   }
   if (state.kind === "payment_required") {
     return (
-      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
+      <Status live={false} tone={statusToneForOutcome(state.kind)}>
         A payment challenge was returned. No payment was made in this browser.
       </Status>
     );
   }
   if (state.kind === "invalid_request") {
     return (
-      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
+      <Status live={false} tone={statusToneForOutcome(state.kind)}>
         The request was rejected before a result. Check the fields and try again.
       </Status>
     );
   }
   if (state.kind === "transport_failure") {
     return (
-      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
+      <Status live={false} tone={statusToneForOutcome(state.kind)}>
         The request could not reach the service. No payment or result was confirmed.
       </Status>
     );
   }
   if (state.kind === "unexpected_response") {
     return (
-      <Status tone={statusToneForOutcome(state.kind)} aria-live="polite">
+      <Status live={false} tone={statusToneForOutcome(state.kind)}>
         The service returned an unexpected response. No payment or result is shown.
       </Status>
     );
   }
 
   return (
-    <section aria-live="polite" className="space-y-4">
+    <div className="space-y-4">
       <div className="space-y-1">
         <h2 className="text-xl font-semibold">Quick endpoint response</h2>
-        <Status tone={statusToneForOutcome(state.kind)}>
+        <Status live={false} tone={statusToneForOutcome(state.kind)}>
           This is only an endpoint response. It is not payment or lifecycle evidence.
         </Status>
       </div>
@@ -106,7 +106,15 @@ function RequestOutcome({ state }: { state: RiskScanRequestViewState }) {
           </ul>
         </div>
       </div>
-    </section>
+    </div>
+  );
+}
+
+function RequestOutcome({ state }: { state: RiskScanRequestViewState }) {
+  return (
+    <StatusRegion>
+      <RequestResult state={state} />
+    </StatusRegion>
   );
 }
 
@@ -174,8 +182,8 @@ export function RiskScanRequestFlow() {
           <Button type="submit" disabled={state.kind === "submitting"}>
             Check availability
           </Button>
-          <RequestOutcome state={state} />
         </form>
+        <RequestOutcome state={state} />
       </CardContent>
     </Card>
   );

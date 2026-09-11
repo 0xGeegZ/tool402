@@ -230,7 +230,7 @@ test("locks the static ToolLoop page, bounded client form, and non-payment prese
   assert.match(flow, /const inFlight = useRef\(false\);/);
   assert.match(flow, /await runExclusive\(inFlight, async \(\) =>/);
   assert.match(flow, /toolLoopOutcomeMessage\(state\)/);
-  assert.match(flow, /aria-live=["']polite["']/);
+  assert.match(flow, /<StatusRegion\b/);
   assert.equal((flow.match(/\brunRiskScanQuickFlow\b/g) ?? []).length, 2);
 
   assert.match(detail, /href: "\/explore\/riskscan\/tool-loop", label: "Explore RiskScan ToolLoop"/);

@@ -7,7 +7,7 @@ import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Field, textInputClass } from "../../ui/field";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
-import { Status, statusToneForOutcome } from "../../ui/status";
+import { Status, StatusRegion, statusToneForOutcome } from "../../ui/status";
 import {
   nativeQuoteCompatibilityOutcomeMessage,
   readNativeQuotePolicy,
@@ -17,13 +17,12 @@ import {
 
 function NativeQuoteCompatibilityOutcome({ state }: { state: NativeQuoteCompatibilityViewState }) {
   const message = nativeQuoteCompatibilityOutcomeMessage(state);
-  if (message === null) return null;
 
   return (
-    <section aria-live="polite" className="space-y-3 text-sm text-muted-foreground">
-      <Status tone={statusToneForOutcome(state.kind)}>
+    <StatusRegion className="mt-5 space-y-3 text-sm text-muted-foreground">
+      {message === null ? null : <Status live={false} tone={statusToneForOutcome(state.kind)}>
         {message}
-      </Status>
+      </Status>}
       {state.kind === "eligible" ? (
         <dl className="grid gap-2 sm:grid-cols-3">
           <div>
@@ -40,7 +39,7 @@ function NativeQuoteCompatibilityOutcome({ state }: { state: NativeQuoteCompatib
           </div>
         </dl>
       ) : null}
-    </section>
+    </StatusRegion>
   );
 }
 
@@ -98,8 +97,8 @@ export function RiskScanNativeQuoteCompatibility() {
           <Button type="submit" disabled={state.kind === "evaluating"}>
             Evaluate local compatibility
           </Button>
-          <NativeQuoteCompatibilityOutcome state={state} />
         </form>
+        <NativeQuoteCompatibilityOutcome state={state} />
       </CardContent>
     </Card>
   );
