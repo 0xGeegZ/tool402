@@ -1558,8 +1558,36 @@ implementedTest("projects a durable ATS resume reference only from its exact lin
     { table: "externalPrepareCommandAttempts", id: atsAttemptId, kind: "get" },
   ]);
 
+  const submitted = atsCreateAttempt(input, {
+    state: "SUBMITTED",
+    candidateTransactionId: "0.0.7314364-1789162676-441089095",
+    candidateEvmAddress: "0x1111111111111111111111111111111111111111",
+  });
+  const submittedDb = database({ offerings: [pending], attempts: [submitted] });
+  assert.deepEqual(
+    await offerings.getPublicProjection._handler(submittedDb.ctx, {
+      offeringPublicId: input.payload.offeringPublicId,
+    }),
+    {
+      offeringPublicId: pending.offeringPublicId,
+      version: pending.version,
+      subjectPublicId: pending.subjectPublicId,
+      state: "ASSET_PENDING",
+      definition: pending.definition,
+      narrative: pending.narrative,
+      advertisedQuickPriceTinybars: pending.advertisedQuickPriceTinybars,
+      advertisedStandardPriceTinybars: pending.advertisedStandardPriceTinybars,
+      canonicalSignerAddress: pending.canonicalSignerAddress,
+      atsAttemptPublicId: submitted.idempotencyKey,
+      acceptedAt: pending.acceptedAt,
+      updatedAt: pending.updatedAt,
+    },
+  );
+
   for (const attempt of [
-    { ...prepared, state: "SUBMITTED" },
+    { ...prepared, state: "CONFIRMED" },
+    { ...submitted, candidateTransactionId: undefined },
+    { ...submitted, candidateEvmAddress: "0x111111111111111111111111111111111111111A" },
     { ...prepared, canonicalSignerAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
     { ...prepared, principalPublicId: "foreign-principal" },
     { ...prepared, authorityVersion: "foreign-authority" },
