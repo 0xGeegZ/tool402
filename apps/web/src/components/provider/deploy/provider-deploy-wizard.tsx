@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
-import Link from "next/link";
-
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../ui/card";
@@ -363,21 +361,13 @@ export function ProviderDeployWizard() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl space-y-8 pb-10 sm:pb-14" data-ui="provider-deploy-surface">
+    <main className="mx-auto max-w-5xl space-y-7 pb-10 sm:pb-14" data-ui="provider-deploy-surface">
       <div className="space-y-5 border-b border-border pb-7">
-        <Link href="/provider" className="inline-flex w-fit items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
-          Back to provider workspace
-        </Link>
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-3">
-            <div className="flex flex-wrap gap-2"><Badge variant="secondary">Prepared / demo data fixture</Badge><Badge variant="outline">Hedera testnet · chain 296</Badge><Badge variant="outline">Terms v1 · fixed</Badge></div>
-            <PageHeader
-              eyebrow="Provider preparation"
-              title="Deploy the RiskScan campaign"
-              description="Review every field of the prepared offering, then authorize each bounded step with the issuer wallet. Nothing is created, funded, or published until the named signature and receipt exist."
-            />
-          </div>
-        </div>
+        <div className="flex flex-wrap gap-2"><Badge variant="secondary">Prepared / demo data fixture</Badge><Badge variant="outline">Hedera testnet · chain 296</Badge><Badge variant="outline">Terms v1 · fixed</Badge></div>
+        <PageHeader
+          title="Deploy the RiskScan campaign"
+          description="Review every field of the prepared offering, then authorize each bounded step with the issuer wallet. Nothing is created, funded, or published until the named signature and receipt exist."
+        />
       </div>
 
       <Card className="overflow-hidden shadow-sm">
