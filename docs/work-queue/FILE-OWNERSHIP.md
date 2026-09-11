@@ -2,6 +2,16 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
+S36-T010 is a `20-active` root-owned POLISH slice. It owns its card,
+UI-S36 manifest, implementation plan, catalog, state, ledger, decision, and
+review evidence. Its active Web paths are only
+`apps/web/src/components/provider/deploy/provider-deploy-stages.tsx` and new
+`apps/web/tests/provider-deploy-signature-handoff.test.mjs`. The test-only RED
+proves one missing handoff region and is accepted for minimal GREEN in exactly
+those two paths. S26/S27 remain inbox-only and M50/S29 are accepted with no
+active reservation; command, wallet/provider, relay, authority, API, payment,
+transaction, ATS, deployment, and live paths remain excluded.
+
 S34-T010 is accepted. Its five RED tests and eight Green source paths are
 released; D-S34-010-005 records the static public documentation acceptance.
 All API/Agent/Core/Backend,

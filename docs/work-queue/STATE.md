@@ -1,5 +1,17 @@
 # Runtime queue state
 
+- S36_PROVIDER_SIGNATURE_HANDOFF_INTAKE: User-directed local POLISH intake.
+  S36-T010 may make the existing actionable signature request discoverable
+  after fresh readiness and durable RED activation. It has no active source
+  or test reservation and grants no wallet, signature, authority, relay,
+  payment, transaction, ATS, deployment, or live action.
+- S36_PROVIDER_SIGNATURE_HANDOFF_ACTIVATION: At clean `6f40b95`, S29 and M50
+  are accepted and released; S26/S27 are inbox-only; the two S36 targets are
+  disjoint; and the focused RED has exactly one absence failure. S36-T010 is
+  `20-active` only for its two UI-S36 paths. It may reuse the existing stage
+  callback but may not change command, wallet/provider, relay, authority,
+  records, API, payment, transaction, ATS, deployment, or live behavior.
+
 - HA_PUBLIC_DEPLOYMENT_RECONCILIATION: `D-HA-PUBLIC-DEPLOY-001-001` and
   docs/work-queue/evidence/HA-PUBLIC-DEPLOY-001-review.md supersede solely
   every current-summary statement below that treats Stage B as a prerequisite
