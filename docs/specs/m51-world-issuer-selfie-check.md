@@ -38,8 +38,9 @@ as its signal and enables legacy proofs for that credential.
 result. Before forwarding it to World v4, the route requires a legacy
 `selfie` response and verifies that every response signal hash equals the
 expected hash of that exact canonical address. A mismatched or malformed
-result returns the closed verification failure without calling World. On World
-success only, it writes a HttpOnly, Secure, SameSite=Lax cookie scoped to
+result returns the closed verification failure without calling World or reading
+World configuration. On World success only, it writes a HttpOnly, Secure,
+SameSite=Lax cookie scoped to
 `/api/commands`, bound to the address and expiring after ten minutes. The
 cookie payload is MACed using a key derived from the RP private key with the
 fixed `tool402-world-session-v1` context. Neither raw proof nor nullifier is
