@@ -125,7 +125,13 @@ is cached as public content.
 
 `/sign-in` redirects a valid session to `/dashboard`; otherwise it renders the
 MetaMask island and the sign-in control. On successful verification, the
-client navigates to `/dashboard`. `POST /api/auth/logout` clears both cookie
+client navigates to `/dashboard`. A server-only navigation boundary validates
+the same signed session and supplies a `Dashboard` link to both desktop and
+mobile main menus only when it is valid. It must be wrapped in the existing
+root-header `Suspense` boundary so Cache Components do not make the root shell
+dynamic; its fallback is the existing public menu without that link. This
+does not reuse wallet connection state, alter the S26 wallet/header contract,
+or expose an identity in the navigation. `POST /api/auth/logout` clears both cookie
 names and returns `204` with `Cache-Control: no-store`. It provides a bounded
 server logout boundary only; this slice intentionally adds no header or
 dashboard logout control because that belongs with the later S26 header work.

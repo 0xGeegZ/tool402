@@ -29,6 +29,12 @@ It reuses UI-S15 for provider selection, account request, chain gate, and
 `WalletIsland`, and M50 for passive client-session re-reads. It does not change
 either accepted slice, the command signature/relay path, or any public API.
 
+On 2026-09-11 the repository owner explicitly added one bounded acceptance
+requirement: a validated dashboard session must reveal a `Dashboard` link in
+both desktop and mobile main menus. The link is derived only from the signed
+`HttpOnly` session on the server. It is not a wallet-connected indicator and
+does not modify S26's wallet-header contract.
+
 The card may add exactly these new paths:
 
 - `apps/web/src/lib/dashboard-auth/dashboard-auth.ts`;
@@ -39,8 +45,16 @@ The card may add exactly these new paths:
 - `apps/web/src/components/auth/metamask-dashboard-sign-in.tsx`;
 - `apps/web/src/app/sign-in/page.tsx`;
 - `apps/web/src/app/dashboard/layout.tsx`;
+- `apps/web/src/components/auth/dashboard-navigation.tsx`;
 - `apps/web/tests/dashboard-auth.test.mjs`; and
 - `apps/web/tests/dashboard-auth-routes.test.mjs`.
+
+Under a root integration reservation it may additionally amend the existing
+header-navigation slot of `apps/web/src/app/layout.tsx` and the link-list/prop
+contract of `apps/web/src/components/discovery/local-navigation.tsx`, solely
+to mount the server-validated `Dashboard` menu boundary inside `Suspense`.
+It must not alter wallet header/session behavior, connect a provider, expose
+the account, or change another header region.
 
 Under a root integration reservation it may amend only the `Guest dashboard`
 eyebrow in `apps/web/src/app/dashboard/page.tsx` and the two matching wording
@@ -137,3 +151,12 @@ matching wording assertions in the plan's staged order. Every other path and
 every configuration/environment value, real wallet account request/signature,
 provider command, relay, transaction, payment, deployment, and live action
 remains prohibited.
+
+## User-directed navigation amendment
+
+The owner explicitly authorized the narrow authenticated-navigation extension
+above after durable RED. The root reserves only the declared server boundary,
+the root header navigation slot, the existing local-navigation link list/prop,
+and matching `dashboard-auth.test.mjs` assertions. It is staged after the
+server session reader and remains subject to the same no-wallet/no-live-action
+boundary and fresh review.

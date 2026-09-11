@@ -378,6 +378,48 @@ existing `viem` 2.56.1, Node 22.21.1 injected-fake tests.
   git commit -m "feat: Protect dashboard with MetaMask sign-in"
   ```
 
+### Task 5b: Reveal Dashboard in navigation only for a validated session
+
+**Files:**
+
+- Create: `apps/Web/src/components/auth/dashboard-navigation.tsx`
+- Modify: `apps/Web/src/app/layout.tsx`
+- Modify: `apps/Web/src/components/discovery/local-navigation.tsx`
+- Modify: `apps/Web/tests/dashboard-auth.test.mjs`
+
+**Interfaces:**
+
+- Consumes: Task 3's `readDashboardSession` and the accepted root
+  `LocalNavigation` component.
+- Produces: one server-validated `Dashboard` main-menu link without any wallet
+  connection or address boundary.
+
+- [ ] **Step 1: Keep the session decision on the server**
+
+  Add a server component that reads only the signed dashboard cookie and calls
+  `readDashboardSession`. It passes `showDashboard` to `LocalNavigation` only
+  when the session is valid. It must neither import wallet UI/state nor expose
+  an address.
+
+- [ ] **Step 2: Preserve Cache Components and the public fallback**
+
+  Mount that component in the existing root-header `Suspense` boundary with
+  `<LocalNavigation />` as its fallback. Do not make the root layout itself
+  await `cookies()`, and do not move navigation into a client auth guard.
+
+- [ ] **Step 3: Render one link in each menu form**
+
+  Extend `LocalNavigation` with a narrow optional boolean prop. It conditionally
+  appends `{ href: "/dashboard", label: "Dashboard" }` to its local link list,
+  so desktop and mobile menus use one identical source of truth. Do not alter
+  wallet/header controls, other navigation labels, or mobile focus behavior.
+
+- [ ] **Step 4: Prove behavior and commit**
+
+  Extend the auth static contract for the server session reader, Suspense
+  fallback, and conditional desktop/mobile Dashboard link. Run focused tests,
+  typecheck, and the Web build; then commit the authorized files only.
+
 ### Task 6: Verify, review, and integrate
 
 **Files:**

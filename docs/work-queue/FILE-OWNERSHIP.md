@@ -1086,17 +1086,21 @@ test reservation. Its eight proposed new source paths are
 `apps/web/src/app/api/auth/metamask/verify/route.ts`,
 `apps/web/src/app/api/auth/logout/route.ts`,
 `apps/web/src/components/auth/metamask-dashboard-sign-in.tsx`,
-`apps/web/src/app/sign-in/page.tsx`, and
-`apps/web/src/app/dashboard/layout.tsx`; its two new focused tests are
+`apps/web/src/app/sign-in/page.tsx`,
+`apps/web/src/app/dashboard/layout.tsx`, and
+`apps/web/src/components/auth/dashboard-navigation.tsx`; its two new focused tests are
 `apps/web/tests/dashboard-auth.test.mjs` and
 `apps/web/tests/dashboard-auth-routes.test.mjs`. The root-only integration
 reservation is limited to the `Guest dashboard` eyebrow in
 `apps/web/src/app/dashboard/page.tsx` and its two matching wording assertions
-in `apps/web/tests/dashboard-workspace-reconciliation.test.mjs`.
+in `apps/web/tests/dashboard-workspace-reconciliation.test.mjs`, plus the
+subsequently owner-authorized header navigation slot in
+`apps/web/src/app/layout.tsx` and LocalNavigation link-list/prop contract.
 
 S38 consumes UI-S15 and M50 without changing their wallet selection,
 chain-gate, passive session, command, relay, or provider-event paths. S26 is
-not a dependency: S38 must not amend `apps/web/src/app/layout.tsx`,
+not a dependency: except for the owner-authorized authenticated-navigation
+slot, S38 must not amend `apps/web/src/app/layout.tsx`,
 `apps/web/src/components/wallet/wallet-connect.tsx`, or
 `apps/web/src/components/wallet/wallet-session.tsx`. Nested dashboard pages,
 workspace components, public APIs, packages, lockfile, configuration files,
@@ -1110,6 +1114,16 @@ dashboard eyebrow plus the two matching wording assertions. They must land in
 the plan's staged order; no other source/test path, configuration, wallet or
 account action, signature, relay, transaction, payment, deployment, or live
 boundary is transferred.
+
+User-directed S38 navigation amendment: after durable RED, the root reserves
+`apps/web/src/components/auth/dashboard-navigation.tsx`, the header-navigation
+slot of `apps/web/src/app/layout.tsx`, and only the link list/prop contract of
+`apps/web/src/components/discovery/local-navigation.tsx`, alongside matching
+`apps/web/tests/dashboard-auth.test.mjs` assertions. The boundary reads only a
+validated S38 `HttpOnly` session on the server and supplies a Dashboard link
+inside Suspense; it may not read, mount, modify, or infer state from S26/UI-S15
+wallet code. This narrowly supersedes the earlier S38 exclusion of the root
+header, not any other S26 reservation.
 
 S27-T010 is an `00-inbox` POLISH card with no active source reservation. Its
 proposed new test is `apps/web/tests/deploy-wizard-stepper.test.mjs`; its

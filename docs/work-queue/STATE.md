@@ -58,6 +58,14 @@
   source/test path, configuration, wallet account/signature, provider command,
   relay, transaction, payment, deployment, or live action is authorized.
 
+- S38_AUTHENTICATED_NAVIGATION_AMENDMENT: The repository owner explicitly
+  requires a Dashboard main-menu link after a valid signed dashboard session.
+  The root reserves only a new server auth-navigation boundary, the existing
+  root header navigation slot, the LocalNavigation link-list/prop contract,
+  and matching auth assertions. The decision remains server-side and inside
+  Suspense; it grants no wallet state, signature, configuration, API, or S26
+  header-wallet authority.
+
 - S36_PROVIDER_SIGNATURE_HANDOFF_INTAKE: User-directed local POLISH intake.
   S36-T010 may make the existing actionable signature request discoverable
   after fresh readiness and durable RED activation. It has no active source
