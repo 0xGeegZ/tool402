@@ -4,7 +4,6 @@ import { useState, type ChangeEvent, type FormEvent, type ReactNode } from "reac
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../ui/card";
-import { PageHeader } from "../../ui/page-header";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { campaignFixture } from "./campaign-fixture";
 import { DeployStageSigning } from "./deploy-stage-signing";
@@ -361,38 +360,30 @@ export function ProviderDeployWizard() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-7 pb-10 sm:pb-14" data-ui="provider-deploy-surface">
-      <div className="space-y-5 border-b border-border pb-7">
-        <div className="flex flex-wrap gap-2"><Badge variant="secondary">Prepared / demo data fixture</Badge><Badge variant="outline">Hedera testnet · chain 296</Badge><Badge variant="outline">Terms v1 · fixed</Badge></div>
-        <PageHeader
-          title="Deploy the RiskScan campaign"
-          description="Review every field of the prepared offering, then authorize each bounded step with the issuer wallet. Nothing is created, funded, or published until the named signature and receipt exist."
-        />
-      </div>
-
-      <Card className="overflow-hidden shadow-sm">
-        <CardHeader className="space-y-5 border-b bg-card p-5 sm:p-6">
+    <main className="mx-auto max-w-6xl px-5 pb-10 sm:px-6 sm:pb-14" data-ui="provider-deploy-surface">
+      <Card className="overflow-hidden rounded-[calc(var(--radius)*1.25)] border shadow-sm">
+        <CardHeader className="space-y-6 border-b bg-card px-7 py-7 sm:px-8 sm:py-8">
           <div className="flex items-start justify-between gap-4">
-            <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Step {currentStep + 1} of {providerDeploySteps.length} · {currentDefinition?.label}</p>
-              <CardTitle className="text-2xl sm:text-3xl">{currentDefinition?.label}</CardTitle>
-              <CardDescription>Complete this local preview, then review the next bounded step.</CardDescription>
+            <div className="flex flex-col gap-3">
+              <p className="text-sm font-medium uppercase tracking-[0.24em] text-muted-foreground">Step {currentStep + 1} of {providerDeploySteps.length} · {currentDefinition?.label}</p>
+              <CardTitle className="text-3xl tracking-tight sm:text-4xl">{currentDefinition?.label}</CardTitle>
+              <CardDescription className="text-base">Complete this local preview, then review the next bounded step.</CardDescription>
             </div>
-            <Badge variant="outline" className="shrink-0">{currentStep + 1} / {providerDeploySteps.length}</Badge>
+            <Badge variant="outline" className="shrink-0 rounded-full px-3 py-1 text-sm">{currentStep + 1} / {providerDeploySteps.length}</Badge>
           </div>
           <StepProgress currentStep={currentStep} onStepSelect={returnToStep} />
         </CardHeader>
         <form onSubmit={onSubmit}>
-          <CardContent className="p-5 sm:p-8">
+          <CardContent className="px-7 py-8 sm:px-8 sm:py-9">
             {renderCurrentStep()}
             {validationMessage ? <p aria-live="polite" className="mt-6 rounded-[calc(var(--radius)*0.75)] border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
           </CardContent>
-          <CardFooter className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Button type="button" variant="ghost" disabled={!canGoBack(currentStep)} onClick={() => returnToStep(Math.max(0, currentStep - 1))}>
+          <CardFooter className="flex flex-col-reverse gap-3 border-t px-7 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+            <Button type="button" variant="ghost" className="justify-start px-2 text-base" disabled={!canGoBack(currentStep)} onClick={() => returnToStep(Math.max(0, currentStep - 1))}>
               Back
             </Button>
             {currentStep < providerDeploySteps.length - 1 ? (
-              <Button type="submit" disabled={!canAdvance(currentStep, values)}>
+              <Button type="submit" className="h-12 rounded-xl px-5 text-base" disabled={!canAdvance(currentStep, values)}>
                 Continue to {providerDeploySteps[currentStep + 1]?.label}
               </Button>
             ) : <Badge variant="outline">Review complete locally</Badge>}
