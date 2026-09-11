@@ -76,6 +76,17 @@ function canonicalAddress(value: unknown): string | null {
   return typeof value === "string" && isAddress(value) ? value.toLowerCase() : null;
 }
 
+function hasExactlyOneIssuerAccount(value: unknown): boolean {
+  if (!Array.isArray(value) || value.length === 0) return false;
+  let issuerCount = 0;
+  for (const account of value) {
+    const address = canonicalAddress(account);
+    if (address === null) return false;
+    if (address === issuer) issuerCount += 1;
+  }
+  return issuerCount === 1;
+}
+
 function canonicalTransactionHash(value: unknown): string | null {
   return typeof value === "string" && transactionHashPattern.test(value) ? value : null;
 }
@@ -493,7 +504,7 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
     try {
       if (await provider.request({ method: "eth_chainId" }) !== chainId) return rejectedOutcome();
       const accounts = await provider.request({ method: "eth_accounts" });
-      if (!Array.isArray(accounts) || accounts.length !== 1 || canonicalAddress(accounts[0]) !== issuer) return rejectedOutcome();
+      if (!hasExactlyOneIssuerAccount(accounts)) return rejectedOutcome();
 
       const projection = createStageBAtsCreateExecutionProjection();
       if (

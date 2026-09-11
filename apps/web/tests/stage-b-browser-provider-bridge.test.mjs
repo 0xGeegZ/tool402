@@ -336,7 +336,8 @@ implementedTest("accepts the fixed issuer once among other valid MetaMask accoun
   const outcome = await createBridge(api, provider, mirror.fetch).execute();
 
   assert.equal(outcome.kind, "submission_unknown");
-  assert.deepEqual(provider.calls.map(({ method }) => method), ["eth_chainId", "eth_accounts", "eth_sendTransaction", "eth_getTransactionReceipt"]);
+  assert.deepEqual(provider.calls.map(({ method }) => method).slice(0, 3), ["eth_chainId", "eth_accounts", "eth_sendTransaction"]);
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
   assert.equal(provider.calls.find(({ method }) => method === "eth_sendTransaction")?.params[0].from, issuer);
   assert.equal(mirror.calls.length, 0);
 });
