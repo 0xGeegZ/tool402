@@ -70,4 +70,3 @@ unchanged.
 This is a visual and terminology slice only. It neither changes nor asserts
 the Agent request behavior, payment state, result, wallet, provider,
 configuration, transaction, deployment, or live availability.
-
