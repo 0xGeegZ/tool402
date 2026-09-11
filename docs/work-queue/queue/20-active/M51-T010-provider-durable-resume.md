@@ -37,7 +37,8 @@ Candidate paths after readiness are exactly:
 - `apps/web/src/lib/offering-projection.ts`;
 - `apps/web/src/lib/provider-campaign-resume.ts` (new);
 - `apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`; and
-- `apps/web/tests/provider-campaign-resume.test.mjs` (new).
+- `apps/web/tests/provider-campaign-resume.test.mjs` (new); and
+- `apps/web/tests/deploy-stage-signing.test.mjs` (wiring amendment only).
 
 ## Contract
 
@@ -78,7 +79,7 @@ prohibited until the RED contract is reviewed.
 The root [RED review](../../evidence/M51-T010-red-review.md) accepts
 `3aca764fb845d52912fee359323fdc6a72a4b71e`: its two intended failures prove
 the absent durable offering reference and absent pure Web resume helper. The
-exact GREEN paths are the six candidate paths declared in this card; every
+exact GREEN paths are the seven candidate paths declared in this card; every
 other source/test path and every live boundary remains prohibited.
 
 ## Verification

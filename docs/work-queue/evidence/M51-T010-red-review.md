@@ -23,6 +23,8 @@ The minimal GREEN surface is now:
 - `apps/web/src/lib/offering-projection.ts`;
 - `apps/web/src/lib/provider-campaign-resume.ts` (new);
 - `apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`; and
-- `apps/web/tests/provider-campaign-resume.test.mjs`.
+- `apps/web/tests/provider-campaign-resume.test.mjs`; and
+- `apps/web/tests/deploy-stage-signing.test.mjs` (only its local import
+  harness for the newly declared helper).
 
 Every other path and every live boundary remains prohibited.

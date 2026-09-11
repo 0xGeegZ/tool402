@@ -9,7 +9,9 @@ paths `packages/backend/convex/offerings.ts`,
 `apps/web/src/lib/offering-projection.ts`, new
 `apps/web/src/lib/provider-campaign-resume.ts`,
 `apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, and new
-`apps/web/tests/provider-campaign-resume.test.mjs`. No candidate path is
+`apps/web/tests/provider-campaign-resume.test.mjs`, plus the narrow
+import-harness amendment of `apps/web/tests/deploy-stage-signing.test.mjs`.
+No candidate path is
 active or reserved before independent readiness and separate RED activation.
 M51 may expose only a revalidated `ASSET_PENDING`/`PREPARED` durable recovery
 reference. Provider, wallet, signature, relay, authority, transaction,
