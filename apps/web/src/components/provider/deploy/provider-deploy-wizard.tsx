@@ -117,6 +117,20 @@ function FlaskIcon() {
   );
 }
 
+function ProviderIcon({ kind, compact = false }: { kind: "wallet" | "shield" | "document" | "layers" | "spark"; compact?: boolean }) {
+  return (
+    <span data-ui="provider-deploy-icon" className={`flex shrink-0 items-center justify-center bg-primary/10 text-primary shadow-[inset_0_1px_0_color-mix(in_srgb,white_55%,transparent)] ${compact ? "size-7 rounded-lg" : "size-11 rounded-2xl"}`}>
+      <svg aria-hidden="true" width={compact ? "16" : "21"} height={compact ? "16" : "21"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        {kind === "wallet" ? <><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H19v14H6.5A2.5 2.5 0 0 1 4 16.5v-9Z" /><path d="M4 8h15" /><path d="M15 13h2" /></> : null}
+        {kind === "shield" ? <><path d="M12 3 19 6v5c0 4.5-3 7.8-7 10-4-2.2-7-5.5-7-10V6l7-3Z" /><path d="m9.5 12 1.7 1.7 3.5-3.7" /></> : null}
+        {kind === "document" ? <><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5" /><path d="M9 13h6M9 17h4" /></> : null}
+        {kind === "layers" ? <><path d="m12 3 8 4.5-8 4.5-8-4.5L12 3Z" /><path d="m4 12 8 4.5 8-4.5" /><path d="m4 16.5 8 4.5 8-4.5" /></> : null}
+        {kind === "spark" ? <><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" /><path d="m19 16 .8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z" /></> : null}
+      </svg>
+    </span>
+  );
+}
+
 function StepProgress({
   currentStep,
   onStepSelect,
@@ -151,23 +165,23 @@ function StepProgress({
 function CampaignSummary({ values }: { values: WizardValues }) {
   const lineItems = (value: string) => value.split("\\n").filter(Boolean);
   return (
-    <aside className="h-fit rounded-panel border border-border bg-card p-5 shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_8%,transparent)] lg:sticky lg:top-5" aria-labelledby="campaign-summary-title">
+    <aside className="h-fit rounded-panel border border-primary/10 bg-card p-5 shadow-[0_14px_36px_color-mix(in_srgb,var(--primary)_8%,transparent)] lg:sticky lg:top-5" aria-labelledby="campaign-summary-title">
       <h2 id="campaign-summary-title" className="text-lg font-bold tracking-tight">Campaign summary</h2>
-      <div className="mt-4 flex items-start gap-3 border-b border-border pb-4">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-secondary text-2xl" aria-hidden="true">▣</div>
+      <div className="mt-4 flex items-start gap-3 border-b border-primary/10 pb-4">
+        <ProviderIcon kind="layers" />
         <div><p className="font-bold">{values.toolName || "Untitled tool"}</p><p className="text-xs leading-5 text-muted-foreground">{values.oneLiner || "Add a short description in Tool details."}</p></div>
       </div>
-      <dl className="grid gap-3 border-b border-border py-4 text-sm">
+      <dl className="grid gap-3 border-b border-primary/10 py-4 text-sm">
         <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Category</dt><dd className="font-medium">{values.category}</dd></div>
         <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Resource</dt><dd className="max-w-[13rem] text-right font-medium">{values.qualifyingResource || "Not set"}</dd></div>
         <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Capability</dt><dd className="max-w-[13rem] text-right font-medium">{campaignFixture.capability}</dd></div>
         <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Quick price</dt><dd className="font-medium">{values.quickPrice || "—"} HBAR</dd></div>
         <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Standard price</dt><dd className="font-medium">{values.standardPrice || "—"} HBAR</dd></div>
       </dl>
-      <section className="border-b border-border py-4"><h3 className="font-bold">Offering details</h3><p className="mt-3 text-sm text-muted-foreground">Customer problem</p><p className="text-sm leading-6">{values.customerProblem || "Not set"}</p><p className="mt-3 text-sm text-muted-foreground">Capability summary</p><p className="text-sm leading-6">{values.capabilitySummary || "Not set"}</p><p className="mt-3 text-sm text-muted-foreground">Target agent customers</p><ul className="grid gap-1 text-sm leading-6">{lineItems(values.targetAgentCustomers).map((item) => <li key={item}>• {item}</li>)}</ul></section>
-      <section className="border-b border-border py-4"><h3 className="font-bold">Funding &amp; revenue-note terms</h3><p className="mt-3 text-sm text-muted-foreground">Use of funds</p><ul className="grid gap-1 text-sm leading-6">{lineItems(values.useOfFunds).map((item) => <li key={item}>• {item}</li>)}</ul><p className="mt-3 text-sm text-muted-foreground">Risks</p><ul className="grid gap-1 text-sm leading-6">{lineItems(values.risks).map((item) => <li key={item}>• {item}</li>)}</ul><p className="mt-3 text-sm text-muted-foreground">Terms acknowledgement</p><p className="text-sm leading-6">{values.acknowledgement ? "Confirmed" : "Pending confirmation"}</p><a href="#terms" className="mt-4 inline-block text-sm font-semibold text-primary">View full terms →</a></section>
-      <section className="border-b border-border py-4"><h3 className="font-bold">What happens next</h3><ol className="mt-3 grid gap-3 text-sm leading-5 text-muted-foreground"><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary text-xs text-primary">1</span>You connect your wallet and review the details</li><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary text-xs text-primary">2</span>You sign each deployment stage in order</li><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary text-xs text-primary">3</span>A revenue note is created on Hedera testnet</li><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary text-xs text-primary">4</span>Your tool is published to the Tool402 directory</li></ol></section>
-      <section className="pt-4"><h3 className="font-bold">Security &amp; scope</h3><p className="mt-3 text-sm leading-6 text-muted-foreground">Nothing is created, funded, or published until the required signatures and receipts exist. This is a testnet prototype.</p><div className="mt-4 rounded-field bg-secondary p-3 text-sm leading-5"><strong>Testnet prototype</strong><br /><span className="text-muted-foreground">Local routes are descriptive and labelled with their current boundaries.</span></div></section>
+      <section className="border-b border-primary/10 py-4"><h3 className="flex items-center gap-2 font-bold"><ProviderIcon kind="document" compact />Offering details</h3><p className="mt-3 text-sm text-muted-foreground">Customer problem</p><p className="text-sm leading-6">{values.customerProblem || "Not set"}</p><p className="mt-3 text-sm text-muted-foreground">Capability summary</p><p className="text-sm leading-6">{values.capabilitySummary || "Not set"}</p><p className="mt-3 text-sm text-muted-foreground">Target agent customers</p><ul className="grid gap-1 text-sm leading-6">{lineItems(values.targetAgentCustomers).map((item) => <li key={item}>• {item}</li>)}</ul></section>
+      <section className="border-b border-primary/10 py-4"><h3 className="flex items-center gap-2 font-bold"><ProviderIcon kind="layers" compact />Funding &amp; revenue-note terms</h3><p className="mt-3 text-sm text-muted-foreground">Use of funds</p><ul className="grid gap-1 text-sm leading-6">{lineItems(values.useOfFunds).map((item) => <li key={item}>• {item}</li>)}</ul><p className="mt-3 text-sm text-muted-foreground">Risks</p><ul className="grid gap-1 text-sm leading-6">{lineItems(values.risks).map((item) => <li key={item}>• {item}</li>)}</ul><p className="mt-3 text-sm text-muted-foreground">Terms acknowledgement</p><p className="text-sm leading-6">{values.acknowledgement ? "Confirmed" : "Pending confirmation"}</p><a href="#terms" className="mt-4 inline-block text-sm font-semibold text-primary">View full terms →</a></section>
+      <section className="border-b border-primary/10 py-4"><h3 className="flex items-center gap-2 font-bold"><ProviderIcon kind="spark" compact />What happens next</h3><ol className="mt-3 grid gap-3 text-sm leading-5 text-muted-foreground"><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary bg-primary/5 text-xs text-primary">1</span>You connect your wallet and review the details</li><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary bg-primary/5 text-xs text-primary">2</span>You sign each deployment stage in order</li><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary bg-primary/5 text-xs text-primary">3</span>A revenue note is created on Hedera testnet</li><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary bg-primary/5 text-xs text-primary">4</span>Your tool is published to the Tool402 directory</li></ol></section>
+      <section className="pt-4"><h3 className="flex items-center gap-2 font-bold"><ProviderIcon kind="shield" compact />Security &amp; scope</h3><p className="mt-3 text-sm leading-6 text-muted-foreground">Nothing is created, funded, or published until the required signatures and receipts exist. This is a testnet prototype.</p><div className="mt-4 rounded-field border border-primary/10 bg-primary/5 p-3 text-sm leading-5"><strong>Testnet prototype</strong><br /><span className="text-muted-foreground">Local routes are descriptive and labelled with their current boundaries.</span></div></section>
     </aside>
   );
 }
@@ -348,8 +362,8 @@ function ReviewStep({
 
   return (
     <div className="space-y-4">
-      <section className="rounded-card border border-border bg-card p-5 shadow-none sm:p-6" aria-label="Wallet connection"><div className="grid gap-5 lg:grid-cols-[1fr_0.8fr] lg:items-center"><div className="flex gap-4"><div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-secondary text-xl text-primary" aria-hidden="true">▣</div><div className="min-w-0 flex-1">{wallet}</div></div><div className="rounded-field bg-secondary p-4"><p className="font-semibold">Your keys, your control</p><p className="mt-1 text-sm leading-5 text-muted-foreground">You authorize each step. Nothing is submitted to the network until you sign and confirm.</p></div></div></section>
-      <section className="rounded-card border border-border bg-card p-5 shadow-none sm:p-6" aria-labelledby="prepared-title"><div className="flex items-start justify-between gap-4"><div className="flex gap-4"><div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-secondary text-xl text-primary" aria-hidden="true">▤</div><div><h2 id="prepared-title" className="text-lg font-bold">Prepared details</h2><p className="mt-1 text-sm leading-5 text-muted-foreground">Review the key details of your offering. These values remain editable until you sign.</p></div></div><Button type="button" variant="outline" className="hidden shrink-0 sm:inline-flex">Edit details</Button></div><dl className="mt-4 grid gap-x-8 gap-y-3 rounded-field border border-border bg-muted/30 p-3 text-sm sm:grid-cols-2">{reviewRows.map(([label, value]) => <div key={label} className="grid grid-cols-[minmax(7rem,0.8fr)_1.2fr] gap-2"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium text-foreground">{value}</dd></div>)}</dl></section>
+      <section className="rounded-card border border-primary/10 bg-card p-5 shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_6%,transparent)] sm:p-6" aria-label="Wallet connection"><div className="grid gap-5 lg:grid-cols-[1fr_0.8fr] lg:items-center"><div className="flex gap-4"><ProviderIcon kind="wallet" /><div className="min-w-0 flex-1">{wallet}</div></div><div className="rounded-field border border-success/15 bg-success/10 p-4"><div className="flex items-center gap-2"><ProviderIcon kind="shield" compact /><p className="font-semibold">Your keys, your control</p></div><p className="mt-2 text-sm leading-5 text-muted-foreground">You authorize each step. Nothing is submitted to the network until you sign and confirm.</p></div></div></section>
+      <section className="rounded-card border border-primary/10 bg-card p-5 shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_6%,transparent)] sm:p-6" aria-labelledby="prepared-title"><div className="flex items-start justify-between gap-4"><div className="flex gap-4"><ProviderIcon kind="document" /><div><h2 id="prepared-title" className="text-lg font-bold">Prepared details</h2><p className="mt-1 text-sm leading-5 text-muted-foreground">Review the key details of your offering. These values remain editable until you sign.</p></div></div><Button type="button" variant="outline" className="hidden shrink-0 sm:inline-flex">Edit details</Button></div><dl className="mt-4 grid gap-x-8 gap-y-3 rounded-field border border-primary/10 bg-primary/[0.03] p-3 text-sm sm:grid-cols-2">{reviewRows.map(([label, value]) => <div key={label} className="grid grid-cols-[minmax(7rem,0.8fr)_1.2fr] gap-2"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium text-foreground">{value}</dd></div>)}</dl></section>
       {resumeNotice}
       {constructionNotice}
       {stages}
@@ -474,7 +488,7 @@ export function ProviderDeployWizard() {
             ) : (
               <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_326px]">
                 <section data-ui="provider-deploy-form">
-                  <Card className="overflow-hidden rounded-card border border-border bg-card shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_5%,transparent)]">
+                  <Card className="overflow-hidden rounded-card border border-primary/10 bg-card shadow-none">
                     <CardHeader className="space-y-1 px-5 pb-2 pt-5 sm:px-6 sm:pt-6">
                       <CardTitle className="text-xl tracking-tight sm:text-2xl">{currentDefinition.label}</CardTitle>
                       <CardDescription className="text-xs leading-5">Complete the prepared fields for this step. Every value remains editable until review.</CardDescription>

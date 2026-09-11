@@ -67,6 +67,18 @@ const stageStatusDescription: Record<ProviderDeployStageKind, string> = {
   unknown: "The outcome may already be recorded. Do not retry automatically.",
 };
 
+function StageIcon() {
+  return (
+    <span data-ui="provider-deploy-stage-icon" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m12 3 8 4.5-8 4.5-8-4.5L12 3Z" />
+        <path d="m4 12 8 4.5 8-4.5" />
+        <path d="m4 16.5 8 4.5 8-4.5" />
+      </svg>
+    </span>
+  );
+}
+
 function orderedStageStates(states: readonly ProviderDeployStageState[]): readonly ProviderDeployStageState[] {
   return states.map((stage, index) => {
     if (stage.kind === "unavailable" || index === 0) return stage;
@@ -180,18 +192,21 @@ export function ProviderDeployStages({
     walletNeeded(index, stage) ? "Connect MetaMask to request this signature." : stage.detail ?? stageStatusDescription[stage.kind];
 
   return (
-    <Card data-ui="provider-deploy-stages" className="rounded-control border border-border bg-card shadow-none">
+    <Card data-ui="provider-deploy-stages" className="rounded-control border border-primary/10 bg-card shadow-none">
       <p aria-live="polite" className="sr-only">
         {`Stage ${focusedStage + 1}, ${providerDeployStages[focusedStage].label}: ${describe(focusedStage, focused)}`}
       </p>
       <CardHeader className="flex flex-row items-center justify-between gap-3 p-4 sm:p-5">
-        <div className="flex flex-col gap-1">
-          <CardTitle className="text-base font-semibold sm:text-lg">Deployment stages</CardTitle>
+        <div className="flex items-center gap-3">
+          <StageIcon />
+          <div className="flex flex-col gap-1">
+            <CardTitle className="text-base font-semibold sm:text-lg">Deployment stages</CardTitle>
           <CardDescription className="hidden text-[13px] leading-5 sm:block">Persist before sign. A wallet callback is never success; each stage closes only on a verified record.</CardDescription>
+          </div>
         </div>
         <Badge className={`shrink-0 font-mono ${offering.className}`}>{offering.label}</Badge>
       </CardHeader>
-      <ol className="border-t border-border">
+      <ol data-ui="provider-deploy-stage-rail" className="border-t border-primary/10">
         {providerDeployStages.map((definition, index) => {
           const stage = visibleStates[index] ?? { kind: "blocked" as const };
           const control = providerDeployStageControl(index, stage, enabledStage === index);
@@ -203,8 +218,8 @@ export function ProviderDeployStages({
           const showControl = index !== 2 || stage.kind !== "unavailable";
           const detail = stage.detail ?? (stage.kind === "done" || stage.kind === "blocked" || stage.kind === "actionable" || stage.kind === "unavailable" ? undefined : stageStatusDescription[stage.kind]);
           return (
-            <li key={definition.label} className="grid grid-cols-[28px_minmax(0,1fr)] items-start gap-x-2.5 gap-y-2.5 border-t border-border px-4 py-3.5 first:border-t-0 sm:grid-cols-[40px_minmax(0,1fr)_auto] sm:gap-4 sm:px-5 sm:py-4">
-              <span aria-hidden="true" className={`flex size-7 items-center justify-center rounded-full text-xs font-semibold sm:size-8 sm:text-[13px] ${done ? "bg-brand-green text-white" : "bg-muted text-foreground"}`}>{index + 1}</span>
+            <li key={definition.label} className="relative grid grid-cols-[28px_minmax(0,1fr)] items-start gap-x-2.5 gap-y-2.5 border-t border-primary/10 px-4 py-3.5 first:border-t-0 sm:grid-cols-[40px_minmax(0,1fr)_auto] sm:gap-4 sm:px-5 sm:py-4">
+              <span aria-hidden="true" className={`relative flex size-7 items-center justify-center rounded-full text-xs font-semibold sm:size-8 sm:text-[13px] ${index < providerDeployStages.length - 1 ? "after:absolute after:left-1/2 after:top-full after:h-[calc(100%+1rem)] after:w-px after:-translate-x-1/2 after:bg-primary/15" : ""} ${done ? "bg-success text-success-foreground ring-4 ring-success/10" : "border border-primary/20 bg-primary/5 text-primary"}`}>{index + 1}</span>
               <div className="flex min-w-0 flex-col gap-1.5">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold">{definition.label}</span>
@@ -232,7 +247,7 @@ export function ProviderDeployStages({
           );
         })}
       </ol>
-      <p className="border-t border-border px-4 py-3 text-[13px] leading-5 text-muted-foreground sm:px-5">
+      <p className="border-t border-primary/10 px-4 py-3 text-[13px] leading-5 text-muted-foreground sm:px-5">
         A declined signature leaves its stage ready to try again. Nothing was recorded, and this page never retries on its own.
       </p>
     </Card>

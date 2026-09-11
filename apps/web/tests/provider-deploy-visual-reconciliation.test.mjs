@@ -25,7 +25,10 @@ test("defines the truthful Provider RiskScan preparation hierarchy", async () =>
   assert.match(wizard, /Deploy the RiskScan campaign/);
   assert.match(wizard, /Prepared \/ demo data fixture/);
   assert.match(wizard, /data-ui=["']provider-deploy-progress["']/);
-  assert.match(wizard, /h-1\.5/);
+  assert.match(wizard, /h-0\.5/);
+  assert.match(wizard, /data-ui=["']provider-deploy-icon["']/);
+  assert.match(wizard, /<ProviderIcon kind="wallet"/);
+  assert.match(wizard, /<ProviderIcon kind="shield"/);
   assert.match(wizard, /data-ui=["']provider-deploy-workspace["']/);
   assert.match(wizard, /data-ui=["']provider-deploy-form["']/);
   assert.doesNotMatch(wizard, /provider-deploy-sidebar/);
@@ -34,6 +37,11 @@ test("defines the truthful Provider RiskScan preparation hierarchy", async () =>
   assert.doesNotMatch(signing, /Issuer wallet|approved issuer/iu);
   assert.match(signing, /data-ui=["']provider-deploy-connect["']/u);
   assert.match(signing, /Connect MetaMask on Hedera Testnet to enable the first signing step\./u);
+  assert.match(signing, /data-ui=["']provider-review-wallet-context["']/);
+  assert.match(signing, /What signing does/);
+  assert.match(presentation, /Connect MetaMask/);
+  assert.match(stages, /data-ui=["']provider-deploy-stage-rail["']/);
+  assert.match(stages, /data-ui=["']provider-deploy-stage-icon["']/);
 
   const wizardCards = wizard.match(/<Card\b[^>]*>/g) ?? [];
   for (const card of wizardCards) assert.match(card, /\bshadow-none\b/);
