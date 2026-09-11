@@ -68,8 +68,7 @@ test("migrates only the declared headers and fixes the two page-level action set
     readAppFile("src/components/riskscan/detail/riskscan-detail.tsx"),
   ]);
   assert.match(provider, /eyebrow="Tool operator"/);
-  assert.match(provider, /href: "\/provider\/deploy", label: "Prepare an offering"/);
-  assert.match(provider, /href: "\/explore\/riskscan", label: "Explore RiskScan"/);
+  assert.doesNotMatch(provider, /actions=/);
   assert.match(detail, /href: "\/explore\/riskscan\/try", label: "Try RiskScan"/);
   assert.match(detail, /href: "\/explore\/riskscan\/tool-loop", label: "Explore RiskScan ToolLoop"/);
 });
