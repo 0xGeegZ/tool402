@@ -9,7 +9,7 @@ export default function DeployRedesignProposalPage() {
   return (
     <div className={`${redesignSans.variable} ${redesignMono.variable}`} style={{ fontFamily: "var(--font-redesign-sans)" }}>
       <div className="mb-8 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
-        Design proposal · not wired to any deployment logic. Preview only, isolated from the live &quot;Prepare a tool&quot;
+        Design proposal · not wired to any deployment logic. Preview only, isolated from the live &quot;Register a tool&quot;
         flow at <code className="font-[family-name:var(--font-redesign-mono)] text-[12px]">/provider/deploy</code>.
       </div>
 

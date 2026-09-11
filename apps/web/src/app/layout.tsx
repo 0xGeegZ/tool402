@@ -45,7 +45,7 @@ export default function RootLayout({
               <div className="flex items-center justify-end gap-2">
                 <LocalNavigation />
                 <Link href="/provider/deploy" className="hidden min-h-9 touch-target items-center rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:inline-flex">
-                  Prepare a tool
+                  Register a tool
                 </Link>
               </div>
             </div>

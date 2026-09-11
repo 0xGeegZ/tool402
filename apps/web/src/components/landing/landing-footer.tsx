@@ -29,7 +29,7 @@ export function LandingFooter() {
             <p className="text-sm font-semibold">For providers</p>
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
               <li><Link href="/provider" className="transition-colors hover:text-foreground touch-target">Provider overview</Link></li>
-              <li><Link href="/provider/deploy" className="transition-colors hover:text-foreground touch-target">Prepare a tool offering</Link></li>
+              <li><Link href="/provider/deploy" className="transition-colors hover:text-foreground touch-target">Register a tool</Link></li>
               <li><Link href="/docs/providers" className="transition-colors hover:text-foreground touch-target">Provider documentation</Link></li>
             </ul>
           </nav>

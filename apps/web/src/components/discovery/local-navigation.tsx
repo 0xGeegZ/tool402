@@ -183,7 +183,7 @@ export function LocalNavigation() {
                     onClick={() => closeMenu()}
                     className={buttonVariants({ size: "lg", shape: "pill", className: "w-full font-semibold" })}
                   >
-                    Prepare a tool
+                    Register a tool
                   </Link>
                 </div>
               </SheetContent>

@@ -227,7 +227,7 @@ export function LandingSections() {
                   href="/provider/deploy"
                   className={buttonVariants({ size: "sm" })}
                 >
-                  Prepare a tool offering
+                  Register a tool
                 </Link>
                 <Link
                   href="/provider"
