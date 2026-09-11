@@ -107,7 +107,7 @@ export function WorkspaceNavigation() {
         <ul className="grid gap-3 sm:grid-cols-2">
           {additionalLinks.map((link, index) => {
           const journey = journeyDetails[link.href];
-          const color = index % 3 === 0 ? "bg-brand-green/15 text-brand-green" : index % 3 === 1 ? "bg-brand-purple/15 text-brand-purple" : "bg-brand-coral/15 text-brand-coral";
+          const color = "bg-brand-purple/15 text-brand-purple";
 
           return (
             <li key={link.href}>

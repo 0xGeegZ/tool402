@@ -14,13 +14,13 @@ const steps = [
     title: "Inspect its boundary",
     description: "See what the local route can show before you continue through the journey.",
     number: "02",
-    tone: "bg-success text-success-foreground",
+    tone: "bg-secondary text-primary",
   },
   {
     title: "Choose a local next step",
     description: "Move from an overview to its guided route at your own pace.",
     number: "03",
-    tone: "bg-destructive text-destructive-foreground",
+    tone: "bg-secondary text-primary",
   },
 ] as const;
 
