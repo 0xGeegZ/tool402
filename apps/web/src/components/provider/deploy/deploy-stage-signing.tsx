@@ -145,26 +145,19 @@ export function DeployStageSigning({
   return (
     <div className="grid gap-5 sm:gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-start">
       <aside data-ui="provider-review-wallet-context" className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1">
-        <section className="flex flex-col gap-2 rounded-control border border-border bg-card p-4 shadow-none sm:p-5">
-          <h2 className="text-sm font-semibold">Issuer wallet</h2>
-          <p className="text-[13px] leading-5 text-muted-foreground">
-            {walletSession === null
-              ? "Connect MetaMask from the header to enable the next local signature request."
-              : "The shared header session enables only the next local signature request. Authority remains server-side."}
-          </p>
-        </section>
         <WhatSigningDoes />
       </aside>
       <div data-ui="provider-deploy-signing" className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-1">
+        {walletSession !== null ? (
+          <SessionReporter session={walletSession} onSession={setSession}>
+            {null}
+          </SessionReporter>
+        ) : null}
         {children}
         {session !== null && resumePending ? <p role="status" aria-live="polite" className="text-[13px] leading-5 text-muted-foreground">Checking the existing durable campaign before enabling any signature.</p> : null}
         {reviewing && constructionError ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null}
         {reviewing ? <ProviderDeployStages states={visibleStates} projection={atsCreateConfiguration} enabledStage={enabledStage} onActivate={activate} session={session} candidate={candidate} onCandidate={receiveCandidate} /> : null}
-        {walletSession !== null ? (
-          <SessionReporter session={walletSession} onSession={setSession}>
-            {reviewing && request ? <SignatureDialog provider={walletSession.provider} request={request} onResult={finish} onCancel={() => finish({ phase: "rejected", outcome: null })} /> : null}
-          </SessionReporter>
-        ) : null}
+        {reviewing && request && session ? <SignatureDialog provider={session.provider} request={request} onResult={finish} onCancel={() => finish({ phase: "rejected", outcome: null })} /> : null}
         {footer}
       </div>
     </div>
