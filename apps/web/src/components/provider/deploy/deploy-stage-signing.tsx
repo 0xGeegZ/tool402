@@ -106,7 +106,7 @@ export function DeployStageSigning({
 
   return (
     <div className="space-y-8">
-      <div data-ui="provider-review-wallet-context" className={session === null ? "ml-auto grid max-w-3xl gap-4 sm:grid-cols-2" : "hidden"}>
+      <div data-ui="provider-review-wallet-context" className={session === null ? "grid gap-4 sm:grid-cols-2" : "hidden"}>
         <WalletIsland approvedIssuerAddress={executionProjection.issuerEvmAddress} heading="Issuer wallet" className="space-y-3 rounded-card border border-border bg-card p-5 shadow-none">
           {(walletSession) => (
             <SessionReporter session={walletSession} onSession={setSession}>
