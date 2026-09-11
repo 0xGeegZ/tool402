@@ -13,6 +13,7 @@ import { WalletIsland, type WalletSession } from "../../wallet/wallet-connect";
 import { createStageBAtsCreateExecutionProjection } from "../../../lib/ats/stage-b-ats-create-execution-projection.ts";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { directoryRecordLiteral, isDirectoryRecordComplete } from "./directory-record-literal";
+import { Status, type StatusTone } from "../../ui/status";
 import { ProviderDeployStages } from "./provider-deploy-stages";
 import {
   providerDeployStageStates,
@@ -104,38 +105,46 @@ export function DeployStageSigning({
     setCandidate(nextCandidate);
   }
 
+  const doneCount = visibleStates.filter((stage) => stage.kind === "done").length;
+  const has = (kind: ProviderDeployStageState["kind"]) => visibleStates.some((stage) => stage.kind === kind);
+  const progressTone: StatusTone = doneCount === visibleStates.length
+    ? "success"
+    : has("rejected") || has("conflict") || has("unknown") || has("unsupported_type")
+      ? "error"
+      : has("replayed") ? "warning" : has("in_progress") ? "working" : "neutral";
+
   return (
     <div className="space-y-8">
-      <div data-ui="provider-review-wallet-context" className={session === null ? "grid gap-4 sm:grid-cols-2" : "hidden"}>
-        <WalletIsland approvedIssuerAddress={executionProjection.issuerEvmAddress} heading="Issuer wallet" className="space-y-3 rounded-card border border-border bg-card p-5 shadow-none">
-          {(walletSession) => (
-            <SessionReporter session={walletSession} onSession={setSession}>
-              {null}
-            </SessionReporter>
-          )}
-        </WalletIsland>
-        <section className="rounded-card border border-border bg-card p-5 shadow-none">
-          <h2 className="text-base font-semibold tracking-tight">What signing does</h2>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            A connected wallet only enables the next local signature request. It does not create, fund, or publish anything by itself.
-          </p>
-        </section>
-      </div>
       {children}
-      <section aria-labelledby="deploy-stage-signing-title" data-ui="provider-deploy-signing" className="space-y-4 rounded-field border bg-muted/30 p-4 shadow-none">
+      <section aria-labelledby="deploy-stage-signing-title" data-ui="provider-deploy-signing" className="space-y-5">
         <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Session-only signing</p>
-          <h2 id="deploy-stage-signing-title" className="text-lg font-semibold">Sign the deployment stages</h2>
+          <h2 id="deploy-stage-signing-title" className="text-xl font-semibold tracking-tight">Sign the deployment stages</h2>
           <p className="max-w-prose text-sm leading-6 text-muted-foreground">
             {session === null
-              ? "Connect MetaMask above on Hedera Testnet to enable the first stage that needs a signature."
-              : "The connected wallet enables the next local signature request. Stage results live only in this browser session and return to their resting state on reload. A connected wallet is not an authority, a signature is not an accepted command, and a relayed ACCEPTED is a backend admission and not an on-chain fact."}
+              ? "Connect MetaMask on Hedera Testnet to request the first signature. Nothing is recorded until the relay reports acceptance."
+              : "Request each signature in order. Results live only in this browser session and reset on reload; a signature is not an authority, and a relayed ACCEPTED is not an on-chain fact."}
           </p>
         </div>
+        {constructionError ? <p role="status" aria-live="polite" className="rounded-field border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null}
+        <Status tone={progressTone}>{doneCount} of {visibleStates.length} stages reported done in this session.</Status>
+        <div data-ui="provider-review-wallet-context" className={session === null ? "grid gap-4 sm:grid-cols-2" : "hidden"}>
+          <WalletIsland approvedIssuerAddress={executionProjection.issuerEvmAddress} heading="Issuer wallet" className="space-y-3 rounded-card border border-border bg-card p-5 shadow-none">
+            {(walletSession) => (
+              <SessionReporter session={walletSession} onSession={setSession}>
+                {null}
+              </SessionReporter>
+            )}
+          </WalletIsland>
+          <section className="rounded-card border border-border bg-card p-5 shadow-none">
+            <h3 className="text-base font-semibold tracking-tight">What signing does</h3>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              A connected wallet only enables the next local signature request. It does not create, fund, or publish anything by itself.
+            </p>
+          </section>
+        </div>
         {request && session ? <SignatureDialog provider={session.provider} request={request} onResult={finish} /> : null}
+        <ProviderDeployStages states={visibleStates} projection={atsCreateConfiguration} enabledStage={enabledStage} onActivate={activate} session={session} candidate={candidate} onCandidate={receiveCandidate} />
       </section>
-      <ProviderDeployStages states={visibleStates} projection={atsCreateConfiguration} enabledStage={enabledStage} onActivate={activate} session={session} candidate={candidate} onCandidate={receiveCandidate} />
-      {constructionError ? <p role="status" aria-live="polite" className="rounded-field border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null}
     </div>
   );
 }

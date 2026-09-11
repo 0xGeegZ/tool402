@@ -13,7 +13,7 @@ export function CardHeader({ className, ...props }: CardSectionProps) {
   return <div data-slot="card-header" className={cn("space-y-1 p-5", className)} {...props} />;
 }
 
-export function CardTitle({ className, ...props }: React.ComponentPropsWithoutRef<"h2">) {
+export function CardTitle({ className, ...props }: React.ComponentProps<"h2">) {
   return <h2 data-slot="card-title" className={cn("text-lg font-semibold", className)} {...props} />;
 }
 
