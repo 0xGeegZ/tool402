@@ -26,10 +26,12 @@ short-lived cookie gate, current publication-only scope, UI, and demo evidence.
 - D-M51-010-002 accepts durable RED `676cf507fad6d7c3ed7e726b38c7851aaea81324`
   and authorizes only the declared World source, package pin, submission
   feedback, and matching tests.
-- The implementation must reject any non-staging/action-drift configuration,
+- D-M51-010-006 corrects the configured IDKit environment from `staging` to
+  `sandbox`, as required by the official mobile Sandbox flow.
+- The implementation must reject any non-sandbox/action-drift configuration,
   bind the verified browser session to the current wallet, and keep stage four
   unavailable until verification.
-- No World Sandbox proof, production action, KYC/identity claim, wallet
+- No completed World Sandbox proof, production action, KYC/identity claim, wallet
   permission, transaction, deployment, or live authority is part of GREEN.
 
 ## Proposed paths

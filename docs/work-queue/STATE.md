@@ -18,6 +18,11 @@
   liveness/continuity signal before the existing `directory.publish` BFF
   forwarding. Sandbox enablement, proof, legal identity, KYC, update path, and
   production readiness remain separately unproven and unauthorized.
+- M51_WORLD_SELFIE_CHECK_SANDBOX: D-M51-010-006 corrects the IDKit request
+  environment to `sandbox`, the environment required by the official mobile
+  Sandbox flow. The iOS tester enrollment is submitted and pending; Selfie
+  Check feature enablement and an end-to-end proof remain external and
+  unproven.
 
 - HA_PUBLIC_DEPLOYMENT_RECONCILIATION: `D-HA-PUBLIC-DEPLOY-001-001` and
   docs/work-queue/evidence/HA-PUBLIC-DEPLOY-001-review.md supersede solely
@@ -192,7 +197,7 @@
 - PRODUCT_OVERVIEW: accepted as P00-T010
 - CURRENT_MODULE: S13 outcome-feedback treatment is accepted at source commit `ece66c2fd7b2278ed0f801ad1febd478d9ddc39f`; S15 wallet-island/relay is accepted at `506f038fffb87739cc5fd302a30033b5c56d36ee`; S16 provider deploy wizard is accepted at `ed46ae18a08c859d5f2c94722ab84453ef674835`; M38 offering command payloads and M40 durable offering/Directory admission are accepted at `60-done`. HA-COMMAND-AUTHORITY-002, HA-ATS-RETARGET-001, HA-ATS-RUNTIME-BINDING-001, HA-ISSUER-ACCOUNT-001, and HA-CAMPAIGN-CONVEX-001 are accepted only as bounded local authority or human evidence. B03 Agent payment remains locally green and awaits its separate human-owned testnet exercise.
 - M41_DELIVERY: accepted at `20983649632f4812d9ee045637eb183b3158cc38` as a local HTTP ingress, transport replay, atomic ATS_CREATE admission, and public-projection boundary only; it adds no configuration, key, publication, wallet, provider, SDK, transaction, deployment, or live authority.
-- CURRENT_TASK: M51-T010 (20-active) is the World issuer Selfie Check minimal GREEN scope authorized by D-M51-010-002. Only its declared helper/routes/component/package pin, narrow command/signing integration, matching tests, and feedback may change; Sandbox exercise, deployment, and live authority remain prohibited. All previously accepted presentation, provider, and wallet records retain no active source reservation; HA-ATS-STAGE-B-001 remains human-owned.
+- CURRENT_TASK: M51-T010 (20-active) is the World issuer Selfie Check minimal GREEN scope authorized by D-M51-010-002 and the Sandbox-environment correction authorized by D-M51-010-006. Only its declared World helper/component/tests, local environment value, and matching records may change for that correction; completed Sandbox proof, deployment, and live authority remain prohibited. All previously accepted presentation, provider, and wallet records retain no active source reservation; HA-ATS-STAGE-B-001 remains human-owned.
 - S18_BACKER_FUNDING_READY: Independent readiness at canonical
   `e54ed962d7cb381208bf5006ffd26039aa20a1d6` is clear. Every declared
   dependency is accepted, the five S18 targets are absent, and no active lane

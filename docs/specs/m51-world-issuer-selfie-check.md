@@ -18,11 +18,11 @@ The server reads these private environment values only:
 - `WORLD_RP_ID=rp_79a787d6ca3b25f7`
 - `WORLD_RP_SIGNING_KEY` — 32-byte `0x`-prefixed hexadecimal private key
 - `WORLD_ACTION=issuer-publish`
-- `WORLD_ENVIRONMENT=staging`
+- `WORLD_ENVIRONMENT=sandbox`
 
 `WORLD_RP_SIGNING_KEY` is never returned to the browser, logged, committed, or
 used as a general purpose application secret. The request endpoint returns
-only the public app id, action, staging environment, and a short-lived RP
+only the public app id, action, Sandbox environment, and a short-lived RP
 context. Missing or malformed configuration fails closed before a request is
 created.
 
