@@ -6,17 +6,30 @@ import { fileURLToPath } from "node:url";
 
 const coreUrl = new URL("../src/lib/dashboard-auth/dashboard-auth.ts", import.meta.url);
 const clientUrl = new URL("../src/components/auth/metamask-dashboard-sign-in.tsx", import.meta.url);
+const signInUrl = new URL("../src/app/sign-in/page.tsx", import.meta.url);
 const dashboardLayoutUrl = new URL("../src/app/dashboard/layout.tsx", import.meta.url);
-const requiredSources = [coreUrl, clientUrl, dashboardLayoutUrl];
-const sourcesExist = requiredSources.every((url) => existsSync(fileURLToPath(url)));
-const implementedTest = sourcesExist ? test : test.skip;
+const allS38Sources = [
+  coreUrl,
+  new URL("../src/lib/dashboard-auth/dashboard-auth-routes.ts", import.meta.url),
+  new URL("../src/app/api/auth/metamask/challenge/route.ts", import.meta.url),
+  new URL("../src/app/api/auth/metamask/verify/route.ts", import.meta.url),
+  new URL("../src/app/api/auth/logout/route.ts", import.meta.url),
+  clientUrl,
+  signInUrl,
+  dashboardLayoutUrl,
+];
+const coreTest = existsSync(fileURLToPath(coreUrl)) ? test : test.skip;
+const clientTest = existsSync(fileURLToPath(clientUrl)) ? test : test.skip;
+const signInTest = existsSync(fileURLToPath(signInUrl)) ? test : test.skip;
+const dashboardLayoutTest = existsSync(fileURLToPath(dashboardLayoutUrl)) ? test : test.skip;
+const allS38AbsentTest = allS38Sources.every((url) => !existsSync(fileURLToPath(url))) ? test : test.skip;
 const origin = "https://app.tool402.example";
 const address = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf";
 const nowMilliseconds = Date.parse("2026-09-11T12:00:00.000Z");
 const secret = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
-test("requires the declared dashboard auth core, client, and layout modules", () => {
-  const missing = requiredSources.map(fileURLToPath).filter((path) => !existsSync(path));
+allS38AbsentTest("reports every declared S38 source path that remains absent", () => {
+  const missing = allS38Sources.map(fileURLToPath).filter((path) => !existsSync(path));
   assert.deepEqual(missing, [], `missing declared source modules: ${missing.join(", ")}`);
 });
 
@@ -29,7 +42,9 @@ function fixedDependencies(overrides = {}) {
   return {
     now: () => nowMilliseconds,
     randomBytes: () => Uint8Array.from({ length: 16 }, (_, index) => index),
-    hmacSha256: async (_key, value) => new Uint8Array(await crypto.subtle.digest("SHA-256", value)),
+    hmacSha256: async (_key, value) => {
+      return new Uint8Array(await crypto.subtle.digest("SHA-256", value));
+    },
     verifyMessage: async () => {
       verifyMessageCalls += 1;
       return true;
@@ -38,6 +53,19 @@ function fixedDependencies(overrides = {}) {
       return verifyMessageCalls;
     },
     ...overrides,
+  };
+}
+
+function countingHmac(byte) {
+  let calls = 0;
+  return {
+    hmacSha256: async () => {
+      calls += 1;
+      return Uint8Array.from({ length: 32 }, () => byte);
+    },
+    get calls() {
+      return calls;
+    },
   };
 }
 
@@ -50,7 +78,7 @@ function tamper(cookie) {
   return `${cookie.slice(0, -1)}${replacement}`;
 }
 
-implementedTest("exports the fixed Hedera challenge and session lifetimes", async () => {
+coreTest("exports the fixed Hedera challenge and session lifetimes", async () => {
   const api = await loadApi();
   assert.deepEqual(Object.keys(api).sort(), [
     "CHALLENGE_MAX_AGE_SECONDS",
@@ -68,7 +96,7 @@ implementedTest("exports the fixed Hedera challenge and session lifetimes", asyn
   }
 });
 
-implementedTest("creates the exact lower-case five-minute personal-sign message", async () => {
+coreTest("creates the exact lower-case five-minute personal-sign message", async () => {
   const api = await loadApi();
   const challenge = await api.createChallenge(challengeInput(), fixedDependencies());
 
@@ -81,14 +109,43 @@ implementedTest("creates the exact lower-case five-minute personal-sign message"
   assert.match(nonce, /^[A-Za-z0-9_-]{22}$/u);
 });
 
-implementedTest("rejects invalid addresses and creates only canonical lower-case challenges", async () => {
+coreTest("rejects invalid addresses and creates only canonical lower-case challenges", async () => {
   const api = await loadApi();
   for (const invalidAddress of ["0x7E5F4552091A69125D5DFCB7B8C2659029395BDF", "0x1234", "not-an-address"]) {
     await assert.rejects(api.createChallenge(challengeInput({ address: invalidAddress }), fixedDependencies()));
   }
 });
 
-implementedTest("rejects an altered challenge before signature verification", async () => {
+coreTest("uses the injected HMAC seam to seal and validate challenges", async () => {
+  const api = await loadApi();
+  const sealingHmac = countingHmac(7);
+  const sealingDependencies = fixedDependencies({ hmacSha256: sealingHmac.hmacSha256 });
+  const created = await api.createChallenge(challengeInput(), sealingDependencies);
+  assert.equal(sealingHmac.calls, 1, "challenge sealing must use the injected HMAC seam");
+
+  const matchingHmac = countingHmac(7);
+  const matchingDependencies = fixedDependencies({ hmacSha256: matchingHmac.hmacSha256 });
+  const accepted = await api.verifyChallenge({
+    challengeCookie: created.cookie,
+    message: created.message,
+    signature: `0x${"11".repeat(65)}`,
+    origin,
+    env: challengeInput().env,
+  }, matchingDependencies);
+  assert.equal(accepted.kind, "authenticated");
+  assert.ok(matchingHmac.calls >= 2, "verification must validate the challenge and seal the session");
+
+  const rejected = await api.verifyChallenge({
+    challengeCookie: created.cookie,
+    message: created.message,
+    signature: `0x${"11".repeat(65)}`,
+    origin,
+    env: challengeInput().env,
+  }, fixedDependencies({ hmacSha256: countingHmac(8).hmacSha256 }));
+  assert.deepEqual(rejected, { kind: "rejected" });
+});
+
+coreTest("rejects an altered challenge before signature verification", async () => {
   const api = await loadApi();
   const created = await api.createChallenge(challengeInput(), fixedDependencies());
   const dependencies = fixedDependencies();
@@ -105,7 +162,7 @@ implementedTest("rejects an altered challenge before signature verification", as
   assert.equal(dependencies.verifyMessageCalls, 0);
 });
 
-implementedTest("rejects an expired or cross-origin challenge without revealing why", async () => {
+coreTest("rejects an expired or cross-origin challenge without revealing why", async () => {
   const api = await loadApi();
   const created = await api.createChallenge(challengeInput(), fixedDependencies());
   for (const input of [
@@ -125,7 +182,7 @@ implementedTest("rejects an expired or cross-origin challenge without revealing 
   }
 });
 
-implementedTest("rejects malformed signatures and failed verification generically", async () => {
+coreTest("rejects malformed signatures and failed verification generically", async () => {
   const api = await loadApi();
   const created = await api.createChallenge(challengeInput(), fixedDependencies());
   const malformedDependencies = fixedDependencies();
@@ -147,7 +204,7 @@ implementedTest("rejects malformed signatures and failed verification genericall
   }, fixedDependencies({ verifyMessage: async () => false })), { kind: "rejected" });
 });
 
-implementedTest("issues sessions for verified challenges and rejects them after eight hours", async () => {
+coreTest("issues sessions for verified challenges and rejects them after eight hours", async () => {
   const api = await loadApi();
   const created = await api.createChallenge(challengeInput(), fixedDependencies());
   const verified = await api.verifyChallenge({
@@ -167,7 +224,7 @@ implementedTest("issues sessions for verified challenges and rejects them after 
   assert.equal(await api.readDashboardSession(verified.sessionCookie, challengeInput().env, nowMilliseconds + 28_800_001), null);
 });
 
-implementedTest("keeps sign-in limited to the accepted local authentication boundary", async () => {
+clientTest("keeps sign-in limited to the accepted local authentication boundary", async () => {
   const client = await readFile(clientUrl, "utf8");
   assert.match(client, /\breadCurrentSession\b/u);
   assert.match(client, /\bpersonal_sign\b/u);
@@ -177,7 +234,15 @@ implementedTest("keeps sign-in limited to the accepted local authentication boun
   assert.doesNotMatch(client, /\b(?:eth_send(?:Raw)?Transaction|send(?:Raw)?Transaction|transaction|relay|localStorage|sessionStorage|indexedDB|setTimeout|setInterval|discover(?:y)?|requestProvider)\b/u);
 });
 
-implementedTest("guards dashboard descendants on the server before rendering them", async () => {
+signInTest("redirects valid sessions and otherwise renders the public sign-in boundary", async () => {
+  const signIn = await readFile(signInUrl, "utf8");
+  assert.match(signIn, /\breadDashboardSession\b/u);
+  assert.match(signIn, /redirect\(\s*["']\/dashboard["']\s*\)/u);
+  assert.match(signIn, /\bWalletIsland\b/u);
+  assert.match(signIn, /heading\s*=\s*["']Sign in with MetaMask["']/u);
+});
+
+dashboardLayoutTest("guards dashboard descendants on the server before rendering them", async () => {
   const layout = await readFile(dashboardLayoutUrl, "utf8");
   assert.match(layout, /\breadDashboardSession\b/u);
   assert.match(layout, /\bcookies\(\)/u);
