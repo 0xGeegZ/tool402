@@ -35,6 +35,14 @@
   origin/secret configuration, wallet account request, signature, provider
   command, relay, transaction, payment, role, profile, balance, protected API,
   deployment, or live action is authorized by this intake.
+- S38_METAMASK_DASHBOARD_AUTH_READY: Independent readiness is clear at
+  `71a059caa525cbfa397f40f262b01207ba46dab7`, rebased on canonical
+  `ca80c6edddae09b0577678e4b61c63f87553321f`, after Web 362/362. S38-T010 is
+  `10-ready` with no active source/test reservation. A separate activation may
+  authorize only durable RED in the two new S38 auth tests; every production
+  source, dashboard wording amendment, configuration, wallet/account/signature,
+  provider command, relay, transaction, payment, deployment, and live action
+  remains prohibited.
 
 - S36_PROVIDER_SIGNATURE_HANDOFF_INTAKE: User-directed local POLISH intake.
   S36-T010 may make the existing actionable signature request discoverable

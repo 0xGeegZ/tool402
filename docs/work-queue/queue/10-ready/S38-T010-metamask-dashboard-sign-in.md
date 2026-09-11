@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: S15-T010 accepted, M50-T010 accepted, S24-T010 accepted.
   S26-T010 is not a dependency and remains an independent header-wallet slice.
 - Owner: the root owns this card, the UI manifest, catalog, ownership, state,
@@ -104,3 +104,12 @@ switch, transaction, typed-data signature, or relay action.
   queue records; independent task and module reviews remain required.
 - The branch may not alter any source until the root records an independent
   readiness review, test-only RED activation, and durable RED acceptance.
+
+## Readiness
+
+The independent [S38 readiness review](../../evidence/S38-T010-ready-review.md)
+is clear at control head `71a059caa525cbfa397f40f262b01207ba46dab7`, rebased on
+canonical `ca80c6edddae09b0577678e4b61c63f87553321f`, with the Web baseline
+green 362/362. S38-T010 is `10-ready` only. No test or source path is active;
+only a fresh independent activation may next authorize the two new RED test
+paths.
