@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: S15-T010 accepted, S16-T010 accepted.
 - Compatibility context: M49-T010 is accepted with no active reservation on
   this card's paths. M50 preserves its existing Stage-B revalidation behavior
@@ -79,6 +79,16 @@ event synchronization behavior. M50 does not create or advance S26.
 - The two existing target paths are present and the new focused test is absent.
 - The exact focused baseline, queue validation, whitespace validation, and the
   enabled local-reference guard are clear under Node 22.21.1.
+
+## Readiness review
+
+The independent [M50 readiness review](../../evidence/M50-T010-ready-review.md)
+is clear at clean control head `795a5c1`. S15-T010 and S16-T010 are accepted,
+M49-T010 is compatibility-only and accepted with no active reservation, and
+S26-T010 remains inbox-only. The three existing candidate paths are present,
+the new focused test is absent, and no source has changed. A separate fresh
+activation may authorize only the two durable test paths; all source remains
+prohibited until independent RED acceptance.
 
 ## Verification
 

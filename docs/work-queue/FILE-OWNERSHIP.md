@@ -1262,8 +1262,9 @@ Its candidate surface is exactly
 `apps/web/src/components/wallet/wallet-connect.tsx`,
 `apps/web/tests/wallet-state.test.mjs`, and new
 `apps/web/tests/wallet-session-sync.test.mjs`. It has no active source or test
-reservation until a fresh independent readiness review and separate test-only
-RED activation accept it. S26-T010 is inbox-only and explicitly excludes
+reservation until a separate test-only RED activation. The independent
+readiness review at `795a5c1` is clear and M50-T010 is `10-ready`; it reserves
+no source or test path yet. S26-T010 is inbox-only and explicitly excludes
 `metamask-provider.ts`; it must preserve M50's accepted event behavior if it
 later rebases its shared-session redesign. M50 does not own or amend
 `wallet-state.ts`, deploy-stage signing, command/relay code, configuration,

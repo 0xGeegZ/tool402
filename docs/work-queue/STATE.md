@@ -420,3 +420,9 @@ No secrets, account keys, or private evidence belong in this file.
   until independent readiness and test-only RED activation; no wallet
   permission, account selection, signature, relay, transaction, or live action
   is authorized by this intake.
+- M50_WALLET_SESSION_SYNC_READY: The independent review at `795a5c1` is clear:
+  M50-T010 is `10-ready` with no active source or test reservation. S15/S16
+  are accepted, M49 is compatibility-only and accepted, and S26 remains
+  inbox-only. A separate root activation may authorize only the two named
+  durable RED tests; no wallet/account action, signature, relay, transaction,
+  or live behavior is authorized.
