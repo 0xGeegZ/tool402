@@ -204,7 +204,7 @@
   RED activation are accepted.
 - S35_PUBLIC_DOCUMENTATION_EXPANSION_READY: Independent readiness at
   `4c5770c8a5cefc9fa1a1c31cbe8fac7b9e9fd62d` is clear. S31/S34 are accepted,
-  all five future sources and the new test are absent, existing Docs home,
+  all four future sources and the new test are absent, existing Docs home,
   footer, and static test are present, the current Docs baseline passes 5/5,
   and no active ownership collision exists. S35-T010 is 10-ready only; a
   separate activation may reserve its two declared test paths for RED.
