@@ -115,6 +115,8 @@ implementedTest("composes the accepted wallet island, signature dialog, and stag
   assert.match(island, /<SignatureDialog\b[^>]*\bonResult=/u);
   assert.match(island, /<ProviderDeployStages\b[^>]*\bonActivate=/u);
   assert.match(island, /<ProviderDeployStages\b[^>]*\benabledStage=/u);
+  assert.match(island, /<WorldIssuerVerification\b[^>]*\bonVerified=/u);
+  assert.match(island, /actionableStage === 3 && !worldVerified/u);
 });
 
 implementedTest("keeps stage state session-only and truthful with no persistence, retry, environment, or transport", async () => {

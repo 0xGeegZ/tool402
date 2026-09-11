@@ -29,7 +29,11 @@ test("creates a short-lived staging request and binds a tamper-evident browser s
   assert.equal(request.app_id, env.WORLD_APP_ID);
   assert.equal(request.action, "issuer-publish");
   assert.equal(request.environment, "staging");
-  assert.equal(typeof request.rp_context.sig, "string");
+  assert.equal(request.rp_context.rp_id, env.WORLD_RP_ID);
+  assert.equal(typeof request.rp_context.signature, "string");
+  assert.equal(typeof request.rp_context.nonce, "string");
+  assert.equal(typeof request.rp_context.created_at, "number");
+  assert.equal(typeof request.rp_context.expires_at, "number");
   const cookie = await world.createWorldIssuerCookie(address, env, 1_000);
   assert.equal(await world.hasWorldIssuerCookie(cookie, address, env, 1_001), true);
   assert.equal(await world.hasWorldIssuerCookie(cookie, "0x8ba1f109551bd432803012645ac136ddd64dba72", env, 1_001), false);

@@ -57,11 +57,18 @@ async function cookieMac(signingKey: string, payload: string): Promise<string> {
 export function createWorldRequest(address: unknown, env: WorldEnvironment) {
   const config = configuration(env);
   if (!config || !isCanonicalWorldAddress(address)) return null;
+  const signature = signRequest({ signingKeyHex: config.signingKey, action: WORLD_ISSUER_ACTION, ttl: WORLD_ISSUER_CONTEXT_SECONDS });
   return {
     app_id: config.appId,
     action: WORLD_ISSUER_ACTION,
     environment: config.environment,
-    rp_context: signRequest({ signingKeyHex: config.signingKey, action: WORLD_ISSUER_ACTION, ttl: WORLD_ISSUER_CONTEXT_SECONDS }),
+    rp_context: {
+      rp_id: config.rpId,
+      nonce: signature.nonce,
+      created_at: signature.createdAt,
+      expires_at: signature.expiresAt,
+      signature: signature.sig,
+    },
   };
 }
 
