@@ -335,7 +335,7 @@ function ReviewStep({ values, onEdit }: { values: WizardValues; onEdit: (step: n
         <div className="border-b border-border">
           {groups.map(({ step, rows }) => (
             <details key={step} open className="group border-t border-border">
-              <summary className="cursor-pointer list-none py-3 text-sm font-medium text-foreground marker:content-none [&::-webkit-details-marker]:hidden">
+              <summary className="list-none py-3 text-sm font-medium text-foreground marker:content-none [&::-webkit-details-marker]:hidden">
                 <span className="flex items-center justify-between gap-3">
                   <span>{providerDeploySteps[step].label}</span>
                   <span className="text-xs font-medium text-muted-foreground group-open:hidden">Show</span>
