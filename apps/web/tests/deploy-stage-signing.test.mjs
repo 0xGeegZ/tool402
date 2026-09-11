@@ -20,6 +20,7 @@ async function readIsland() {
 async function signingIslandHarness(values) {
   const slots = [];
   let cursor = 0;
+  let session = { state: { kind: "disconnected" }, provider: null };
   const imports = {
     react: {
       useState(initial) {
@@ -40,7 +41,7 @@ async function signingIslandHarness(values) {
     "../../../lib/wallet/command-bridge.ts": await import("../src/lib/wallet/command-bridge.ts"),
     "../../../lib/ats/stage-b-ats-create-execution-projection.ts": await import("../src/lib/ats/stage-b-ats-create-execution-projection.ts"),
     "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
-    "../../wallet/wallet-connect": { WalletIsland: "WalletIsland" },
+    "../../wallet/wallet-session": { useWalletSession: () => session },
     "./ats-create-configuration": await import("../src/components/provider/deploy/ats-create-configuration.ts"),
     "./directory-record-literal": await import("../src/components/provider/deploy/directory-record-literal.ts"),
     "./provider-deploy-stages": { ProviderDeployStages: "ProviderDeployStages" },
@@ -67,12 +68,14 @@ async function signingIslandHarness(values) {
       cursor = 0;
       return module.exports.DeployStageSigning({ values });
     },
-    connect(tree) {
-      const wallet = elements(tree).find((element) => element.type === "WalletIsland");
-      const reporter = wallet.props.children({
-        address: "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+    connect() {
+      session = {
+        state: { kind: "connected", address: "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf" },
         provider: { request() { assert.fail("local construction failure must not request the wallet"); } },
-      });
+      };
+      const reporter = elements(this.render()).find(
+        (element) => typeof element.type === "function" && element.type.name === "SessionReporter",
+      );
       reporter.type(reporter.props);
     },
   };
@@ -98,7 +101,7 @@ implementedTest("composes the accepted wallet island, signature dialog, and stag
   const island = await readIsland();
 
   assert.match(island, /^["']use client["'];/u);
-  assert.match(island, /import\s*\{[^}]*\bWalletIsland\b[^}]*\}\s+from\s+["']\.\.\/\.\.\/wallet\/wallet-connect["']/u);
+  assert.match(island, /import\s*\{[^}]*\buseWalletSession\b[^}]*\}\s+from\s+["']\.\.\/\.\.\/wallet\/wallet-session["']/u);
   assert.match(island, /import\s*\{[^}]*\bSignatureDialog\b[^}]*\}\s+from\s+["']\.\.\/\.\.\/wallet\/signature-dialog["']/u);
   assert.match(island, /import\s*\{[^}]*\bProviderDeployStages\b[^}]*\}\s+from\s+["']\.\/provider-deploy-stages["']/u);
   assert.match(island, /import\s*\{[^}]*\bbuildStageSignatureRequest\b[^}]*\}\s+from\s+["'][^"']*lib\/wallet\/command-bridge(?:\.ts)?["']/u);
@@ -109,7 +112,7 @@ implementedTest("composes the accepted wallet island, signature dialog, and stag
   const activate = island.slice(island.indexOf("function activate"), island.indexOf("function finish"));
   assert.match(activate, /\bbuildStageSignatureRequest\s*\(/u);
   assert.doesNotMatch(activate, /\bprojection\s*:/u, "the signing island must not pass a stage-2 projection");
-  assert.equal((island.match(/<WalletIsland\b/gu) ?? []).length, 1);
+  assert.equal((island.match(/useWalletSession\(\)/gu) ?? []).length, 1);
   assert.equal((island.match(/<SignatureDialog\b/gu) ?? []).length, 1);
   assert.match(island, /<SignatureDialog\b[^>]*\bonResult=/u);
   assert.match(island, /<ProviderDeployStages\b[^>]*\bonActivate=/u);
@@ -149,7 +152,7 @@ implementedTest("keeps a rejected local request out of the dialog and stage resu
     risks: campaignFixture.risks.join("\n"),
   };
   const validHarness = await signingIslandHarness(values);
-  validHarness.connect(validHarness.render());
+  validHarness.connect();
   const validStages = elements(validHarness.render()).find((element) => element.type === "ProviderDeployStages");
   validStages.props.onActivate(0);
   const validTree = validHarness.render();
@@ -158,7 +161,7 @@ implementedTest("keeps a rejected local request out of the dialog and stage resu
 
   for (const invalidValue of [{ qualifyingResource: "" }, { quickPrice: "0" }]) {
     const harness = await signingIslandHarness({ ...values, ...invalidValue });
-    harness.connect(harness.render());
+    harness.connect();
     const before = harness.render();
     const stages = elements(before).find((element) => element.type === "ProviderDeployStages");
     assert.equal(stages.props.enabledStage, 0);

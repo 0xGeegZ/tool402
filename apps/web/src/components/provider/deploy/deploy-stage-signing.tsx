@@ -8,8 +8,9 @@ import {
   type CampaignReviewValues,
   type StageSignatureRequest,
 } from "../../../lib/wallet/command-bridge.ts";
+import { isIssuerAdvisory } from "../../../lib/wallet/wallet-state.ts";
 import { SignatureDialog, type SignatureResult } from "../../wallet/signature-dialog";
-import { WalletIsland, type WalletSession } from "../../wallet/wallet-connect";
+import { useWalletSession, type WalletSession } from "../../wallet/wallet-session";
 import { createStageBAtsCreateExecutionProjection } from "../../../lib/ats/stage-b-ats-create-execution-projection.ts";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { directoryRecordLiteral, isDirectoryRecordComplete } from "./directory-record-literal";
@@ -46,6 +47,15 @@ export function DeployStageSigning({
   values: CampaignReviewValues;
   children: ReactNode;
 }) {
+  const wallet = useWalletSession();
+  const executionProjection = createStageBAtsCreateExecutionProjection();
+  const issuerEvmAddress = executionProjection.issuerEvmAddress.toLowerCase();
+  const connectedAddress = wallet.state.kind === "connected" && wallet.provider !== null ? wallet.state.address : null;
+  const notIssuer = connectedAddress !== null && isIssuerAdvisory(connectedAddress, issuerEvmAddress);
+  const walletSession: WalletSession | null =
+    connectedAddress !== null && !notIssuer && wallet.provider !== null
+      ? { provider: wallet.provider, address: connectedAddress }
+      : null;
   const [session, setSession] = useState<WalletSession | null>(null);
   const [candidate, setCandidate] = useState<AtsCreateCandidate | null>(null);
   const candidateRef = useRef<AtsCreateCandidate | null>(null);
@@ -53,7 +63,6 @@ export function DeployStageSigning({
   const [attemptPublicId, setAttemptPublicId] = useState<string | null>(null);
   const [request, setRequest] = useState<StageSignatureRequest | null>(null);
   const [constructionError, setConstructionError] = useState<string | null>(null);
-  const executionProjection = createStageBAtsCreateExecutionProjection();
   const states = providerDeployStageStates(atsCreateConfiguration, {
     connected: session !== null,
     results,
@@ -107,13 +116,14 @@ export function DeployStageSigning({
   return (
     <div className="space-y-8">
       <div data-ui="provider-review-wallet-context" className={session === null ? "grid gap-4 sm:grid-cols-2" : "hidden"}>
-        <WalletIsland approvedIssuerAddress={executionProjection.issuerEvmAddress} heading="Issuer wallet" className="space-y-3 rounded-card border border-border bg-card p-5 shadow-none">
-          {(walletSession) => (
-            <SessionReporter session={walletSession} onSession={setSession}>
-              {null}
-            </SessionReporter>
-          )}
-        </WalletIsland>
+        <section aria-labelledby="provider-review-issuer-wallet" className="space-y-3 rounded-card border border-border bg-card p-5 shadow-none">
+          <h2 id="provider-review-issuer-wallet" className="text-base font-semibold tracking-tight">Issuer wallet</h2>
+          <p className="text-sm leading-6 text-muted-foreground">
+            {notIssuer
+              ? `Connected as ${connectedAddress}, which is not the approved issuer ${issuerEvmAddress}. Switch to the issuer account in MetaMask. The server decides authority; this is only a local hint.`
+              : "Connect MetaMask from the header to sign."}
+          </p>
+        </section>
         <section className="rounded-card border border-border bg-card p-5 shadow-none">
           <h2 className="text-base font-semibold tracking-tight">What signing does</h2>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
@@ -121,6 +131,11 @@ export function DeployStageSigning({
           </p>
         </section>
       </div>
+      {walletSession !== null ? (
+        <SessionReporter session={walletSession} onSession={setSession}>
+          {null}
+        </SessionReporter>
+      ) : null}
       {children}
       <section aria-labelledby="deploy-stage-signing-title" data-ui="provider-deploy-signing" className="space-y-4 rounded-field border bg-muted/30 p-4 shadow-none">
         <div className="space-y-1">
@@ -128,7 +143,7 @@ export function DeployStageSigning({
           <h2 id="deploy-stage-signing-title" className="text-lg font-semibold">Sign the deployment stages</h2>
           <p className="max-w-prose text-sm leading-6 text-muted-foreground">
             {session === null
-              ? "Connect MetaMask above on Hedera Testnet to enable the first stage that needs a signature."
+              ? "Connect MetaMask on Hedera Testnet from the header to enable the first stage that needs a signature."
               : "The connected wallet enables the next local signature request. Stage results live only in this browser session and return to their resting state on reload. A connected wallet is not an authority, a signature is not an accepted command, and a relayed ACCEPTED is a backend admission and not an on-chain fact."}
           </p>
         </div>
