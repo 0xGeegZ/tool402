@@ -19,7 +19,6 @@ import {
   type AtsCreateCandidate,
   type ProviderDeployStageState,
 } from "./provider-deploy-state";
-import { WorldIssuerVerification } from "./world-issuer-verification";
 
 const finalPhases: ReadonlySet<SignatureResult["phase"]> = new Set(["complete", "rejected", "failed", "unknown"]);
 
@@ -52,7 +51,6 @@ export function DeployStageSigning({
   const [attemptPublicId, setAttemptPublicId] = useState<string | null>(null);
   const [request, setRequest] = useState<StageSignatureRequest | null>(null);
   const [constructionError, setConstructionError] = useState<string | null>(null);
-  const [worldVerified, setWorldVerified] = useState(false);
   const executionProjection = createStageBAtsCreateExecutionProjection();
   const states = providerDeployStageStates(atsCreateConfiguration, {
     connected: session !== null,
@@ -63,10 +61,9 @@ export function DeployStageSigning({
   const visibleStates = request
     ? states.map((stage, index) => (index === request.stage ? { kind: "in_progress" as const } : stage))
     : states;
-  const actionableStage = session !== null && request === null
+  const enabledStage = session !== null && request === null
     ? states.findIndex((stage) => stage.kind === "actionable")
     : -1;
-  const enabledStage = actionableStage === 3 && !worldVerified ? -1 : actionableStage;
 
   function activate(stage: number) {
     if (request !== null || stage !== enabledStage) return;
@@ -120,7 +117,6 @@ export function DeployStageSigning({
         <WalletIsland approvedIssuerAddress={executionProjection.issuerEvmAddress}>
           {(walletSession) => (
             <SessionReporter session={walletSession} onSession={setSession}>
-              <WorldIssuerVerification address={walletSession.address} onVerified={() => setWorldVerified(true)} />
               {request ? <SignatureDialog provider={walletSession.provider} request={request} onResult={finish} /> : null}
             </SessionReporter>
           )}
