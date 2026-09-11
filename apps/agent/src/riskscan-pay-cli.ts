@@ -285,12 +285,12 @@ async function payment(): Promise<void> {
           return response;
         }
         return new Proxy(response, {
-          get(targetResponse, property, receiver) {
+          get(targetResponse, property) {
             if (property === "json") return async () => {
               phase.current = "result";
               return targetResponse.json();
             };
-            return Reflect.get(targetResponse, property, receiver);
+            return Reflect.get(targetResponse, property, targetResponse);
           },
         });
       } catch {
