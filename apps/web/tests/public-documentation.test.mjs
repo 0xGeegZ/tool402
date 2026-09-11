@@ -124,11 +124,43 @@ test("keeps the guides static, flat, focusable, and free of public-capability cl
     sources.riskScanGuide,
     sources.providerGuide,
   ].join("\n");
+  const declaredHrefLiterals = new Set([
+    "/docs/riskscan",
+    "/docs/providers",
+    "/explore/riskscan",
+    "/explore/riskscan/tool-loop",
+    "/demo",
+    "/provider",
+    "/provider/deploy",
+    "#scope",
+    "#request-shape",
+    "#result-boundary",
+    "#local-routes",
+    "#provider-preview",
+    "#five-steps",
+    "#control-boundary",
+    "#local-next-steps",
+  ]);
+  const hrefLiterals = [
+    ...docs.matchAll(/\bhref:\s*["']([^"']+)["']/g),
+    ...docs.matchAll(/\bhref\s*=\s*["']([^"']+)["']/g),
+  ].map(([, href]) => href);
+  const docsWithoutFrozenProviderLabels = docs
+    .replaceAll("Pricing and target agent customers", "")
+    .replaceAll("Funding and revenue-note terms", "");
 
-  assert.doesNotMatch(docs, /["']use client["']|\bfetch\s*\(|process\.env|localStorage|sessionStorage|indexedDB/i);
+  assert.ok(hrefLiterals.every((href) => declaredHrefLiterals.has(href)));
+  assert.doesNotMatch(
+    docs,
+    /["']use client["']|\bfetch\s*\(|process\.env|localStorage|sessionStorage|indexedDB|\b(?:useState|useEffect|useReducer|useRef|useMemo|useCallback)\b|\b(?:axios|ky|useSWR|useQuery|useMutation|trpc|convex)\b|\b(?:analytics|gtag|posthog|segment)\b/i,
+  );
   assert.doesNotMatch(docs, /<(?:button|form|input|select|textarea)\b/i);
-  assert.doesNotMatch(docs, /(?:https?:\/\/|mailto:|target\s*=|href\s*=\s*["']\/\/)/i);
-  assert.doesNotMatch(docs, /\b(?:is live|is available|has raised|generates revenue|pays out|delivers returns)\b/i);
+  assert.doesNotMatch(docs, /(?:https?:\/\/|mailto:|target\s*=\s*["']_blank["']|href\s*=\s*["']\/\/)/i);
+  assert.doesNotMatch(docs, /(?:next\/image|<img\b|<Image\b|\bsrc\s*=|\burl\()/i);
+  assert.doesNotMatch(
+    docsWithoutFrozenProviderLabels,
+    /\b(?:metric|metrics|price|pricing|payment|transaction|deployment|deployed|live|availability|funding|revenue|payout|return|asset|campaign|is available|has raised|generates revenue|pays out|delivers returns)\b/i,
+  );
   assert.match(docs, /\bshadow-none\b/);
   assert.match(docs, /\blg:sticky\b/);
   assert.match(docs, /\bfocus-visible:outline\b/);
