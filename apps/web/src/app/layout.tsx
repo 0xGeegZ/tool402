@@ -26,19 +26,12 @@ export default function RootLayout({
       <body className="min-h-svh bg-background text-foreground antialiased">
         <WalletSessionProvider>
         <div data-ui-shell="s00" className="min-h-svh">
-          <div className="border-b border-border text-center">
-            <p className="flex min-h-7 items-center justify-center gap-1.5 bg-warning px-4 py-1 text-[11px] font-medium leading-4 text-warning-foreground">
-              <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="size-3">
+          <div className="border-b border-brand-purple/20 bg-brand-purple/[0.07] text-center">
+            <p className="flex min-h-9 items-center justify-center gap-2 px-4 py-1.5 text-[10px] font-semibold leading-4 text-foreground sm:text-[11px]">
+              <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" className="size-3.5 shrink-0 text-brand-purple">
                 <path d="M3 12.5h10M4.5 10V6.5m3.5 3.5V3.5m3.5 6.5V5" strokeLinecap="round" />
               </svg>
-              Hedera testnet · tool previews are not live offerings.
-            </p>
-            <p className="flex min-h-6 items-center justify-center gap-1 border-t border-border bg-muted px-4 py-1 text-[11px] leading-4 text-muted-foreground">
-              <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-3">
-                <path d="M6 2h4M8 2v4l3.5 5.25A1.7 1.7 0 0 1 10.1 14H5.9a1.7 1.7 0 0 1-1.4-2.75L8 6V2Z" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M6.2 10h3.6" strokeLinecap="round" />
-              </svg>
-              Local routes are descriptive and labelled with their current boundaries.
+              <span><span className="text-brand-purple">Hedera testnet preview</span><span className="mx-1.5 text-muted-foreground">·</span>Tool previews are not live offerings.</span>
             </p>
           </div>
           <header aria-label="Tool402" className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
