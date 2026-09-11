@@ -9,6 +9,13 @@
   creates no generic listing, and grants no wallet, signature, command, relay,
   transaction, deployment, or live authority.
 
+- S42_DASHBOARD_CAMPAIGN_CONTINUATION_READY: At control head
+  `7b748286389d66904320b7b33e64a175325f80e5`, the declared paths were absent
+  and unowned, and the full Web baseline passed under Node 22.21.1 (422 pass,
+  1 skipped). Node 20 cannot load the repository's existing TypeScript test
+  imports and is not a valid runner. S42-T010 is `10-ready`; only a separate
+  user-directed activation may reserve its focused test for durable RED.
+
 - M53_STAGE_B_FACTORY_RECEIPT_LOG_SELECTION_ACTIVATION: The confirmed first
   ATS_CREATE receipt has one valid fixed-Factory `BondDeployed` event alongside
   98 unrelated receipt logs. M53-T010 records the narrow local decoder

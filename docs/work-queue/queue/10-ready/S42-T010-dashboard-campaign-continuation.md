@@ -3,14 +3,14 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: none. S42 consumes the already-merged dashboard-session and
   offering-projection read boundaries without modifying their active source or
   test paths; S24-T010's historical dashboard restriction is superseded only
   by the explicit state decision for this card.
 - Owner: the root owns this card, specification, queue records, implementation,
   validation, and integration. No source or test path is active while this card
-  remains in `00-inbox`.
+  remains in `10-ready`.
 - Human actions: a real wallet connection and dashboard sign-in remain
   user-initiated. This card does not request either action and creates no
   signature, command, relay, transaction, deployment, or live authority.
@@ -33,7 +33,7 @@ The minimum implementation contract is
 
 ## Candidate source and test boundary
 
-A later readiness, RED, and GREEN cycle may reserve only:
+A later RED and GREEN cycle may reserve only:
 
 - `apps/web/src/lib/dashboard-campaign.ts`;
 - `apps/web/src/components/dashboard/dashboard-campaign.tsx`;
@@ -45,13 +45,21 @@ public RiskScan projection reader. It may not amend the dashboard auth
 protocol, session layout gate, wallet session, public APIs, Convex schema or
 functions, provider deploy state, package files, or lockfile.
 
+## Readiness
+
+At control head `7b748286389d66904320b7b33e64a175325f80e5`, the root confirmed
+that all candidate paths are absent, no active card owns them, and the full Web
+baseline is green under Node 22.21.1 (422 pass, 1 skipped). The Node 20 runner
+cannot load the existing TypeScript test imports and is not a valid baseline.
+S42-T010 is ready only; a separate owner-directed activation may reserve the
+focused test for durable RED. Production source remains prohibited.
+
 ## Acceptance requirements
 
-Before source work, the card/specification/catalog/state are committed, a
-focused baseline is green, and the root records readiness plus a test-only RED
-activation. A durable RED must prove that a matching signer produces the
-campaign view model and that an absent, malformed, or different signer cannot
-produce one. Only then may the declared source paths be activated.
+Before source work, the root records a test-only RED activation. A durable RED
+must prove that a matching signer produces the campaign view model and that an
+absent, malformed, or different signer cannot produce one. Only then may the
+declared source paths be activated.
 
 Acceptance requires focused and complete Web validation, lint, production
 build, queue/reference/whitespace checks, a non-signing browser confirmation,
