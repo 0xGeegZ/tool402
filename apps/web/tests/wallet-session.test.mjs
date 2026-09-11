@@ -105,7 +105,7 @@ implementedTest("exports the fixed session API and throws outside the provider",
 
   const tree = api.WalletSessionProvider({ children: "shell" });
   assert.equal(tree.type, "WalletSessionContext.Provider");
-  assert.deepEqual(tree.props.value.state, { kind: "disconnected" });
+  assert.deepEqual({ ...tree.props.value.state }, { kind: "disconnected" });
   assert.equal(tree.props.value.provider, null);
   for (const method of ["connect", "switchChain", "disconnect"]) {
     assert.equal(typeof tree.props.value[method], "function");

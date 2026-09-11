@@ -8,6 +8,8 @@ import { DashboardNavigation } from "../components/auth/dashboard-navigation";
 import { DemoTourBar } from "../components/demo/demo-tour-bar";
 import { LocalNavigation } from "../components/discovery/local-navigation";
 import { Logo } from "../components/tool402/logo";
+import { WalletIsland } from "../components/wallet/wallet-connect";
+import { WalletSessionProvider } from "../components/wallet/wallet-session";
 
 export const metadata: Metadata = {
   title: "Tool402",
@@ -22,6 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-svh bg-background text-foreground antialiased">
+        <WalletSessionProvider>
         <div data-ui-shell="s00" className="min-h-svh">
           <div className="border-b border-border text-center">
             <p className="flex min-h-7 items-center justify-center gap-1.5 bg-warning px-4 py-1 text-[11px] font-medium leading-4 text-warning-foreground">
@@ -43,10 +46,11 @@ export default function RootLayout({
               <Link href="/" aria-label="Tool402 home" className="shrink-0">
                 <Logo />
               </Link>
-              <div className="flex items-center justify-end gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 <Suspense fallback={<LocalNavigation />}>
                   <DashboardNavigation />
                 </Suspense>
+                <WalletIsland />
                 <Link href="/provider/deploy" className="hidden min-h-9 touch-target items-center rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:inline-flex">
                   Prepare a tool
                 </Link>
@@ -62,6 +66,7 @@ export default function RootLayout({
             <NuqsAdapter>{children}</NuqsAdapter>
           </div>
         </div>
+        </WalletSessionProvider>
       </body>
     </html>
   );
