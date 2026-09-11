@@ -44,6 +44,11 @@ other source/test path, route behavior, API/Agent/Core/Backend, configuration,
 MCP, wallet/provider/payment, command, transaction, deployment, and
 live-capability path remains prohibited.
 
+D-S35-010-005 records `apps/web/tests/product-landing.test.mjs` only as a
+candidate for an exact footer-link expectation correction. It is unreserved
+and prohibited pending fresh independent scope acceptance; all source and
+other test paths remain as D-S35-010-004 declares.
+
 M00-T070 reserves its card, qualification matrix, STATE.md, HUMAN-ACTIONS.md, DECISIONS.md, TASK-CATALOG.md, and AI_USAGE.md to the root integrator. M00-T080 reserves its card, STATE.md, FILE-OWNERSHIP.md, TASK-CATALOG.md, DECISIONS.md, HUMAN-ACTIONS.md, AI_USAGE.md, ORCHESTRATOR-RUNBOOK.md, and WORKTREE-POLICY.md to the root integrator.
 
 P00-T010 reserves its card, docs/product/OVERVIEW.md, STATE.md, TASK-CATALOG.md, FILE-OWNERSHIP.md, DECISIONS.md, and AI_USAGE.md to the root integrator.

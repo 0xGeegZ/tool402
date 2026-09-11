@@ -36,6 +36,13 @@ API/Agent/Core/Backend,
 configuration, MCP, wallet, provider, payment, command, transaction,
 deployment, or live-capability path is in scope.
 
+## Footer-test candidate
+
+D-S35-010-005 records only a candidate correction in
+`apps/web/tests/product-landing.test.mjs`. Its two exhaustive footer-link
+expectations and direct API-endpoint denial may change only after a fresh
+independent scope review accepts that exact test scope.
+
 ## Verification
 
 Final acceptance requires focused RED/GREEN evidence, Web typecheck/test/lint,

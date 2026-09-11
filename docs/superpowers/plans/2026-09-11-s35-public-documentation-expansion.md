@@ -109,6 +109,11 @@ git commit -m "docs: add API reference and FAQ"
 - Modify: `apps/web/tests/documentation-expansion.test.mjs`
 - Modify: `apps/web/tests/public-documentation.test.mjs`
 
+`apps/web/tests/product-landing.test.mjs` is a later candidate only if the
+complete Web suite proves that its exhaustive footer map cannot recognize the
+three real Docs routes. A fresh independent scope review must authorize the
+exact assertion correction before that test changes.
+
 **Interfaces:**
 - Consumes: `/docs`, `/docs/api`, and `/docs/faq` as committed local routes.
 - Produces: Two Docs-home cards and a three-link Docs footer navigation group.

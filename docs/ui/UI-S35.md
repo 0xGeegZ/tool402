@@ -20,6 +20,11 @@ The slice may amend only:
 - `apps/web/tests/documentation-expansion.test.mjs` (new); and
 - `apps/web/tests/public-documentation.test.mjs`.
 
+The existing `apps/web/tests/product-landing.test.mjs` is a candidate only
+under D-S35-010-005. It must not change until an independent scope review
+authorizes its two exhaustive footer-link assertions and its direct API-route
+denial to recognize the three new Docs routes.
+
 The only new route targets are `/docs/api` and `/docs/faq`. The new static
 links may target only `/docs`, `/docs/api`, and `/docs/faq`.
 

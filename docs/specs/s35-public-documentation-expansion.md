@@ -52,5 +52,9 @@ payment-success claims.
 - GREEN tests prove local-only hrefs, factual API/FAQ boundaries, no MCP
   wording, no interactive/runtime surface, visible focus, and no prohibited
   positive capability claim.
+- If the existing exhaustive landing-footer test must reflect the three new
+  real Docs links, amend only its expected local-link map and direct API-route
+  denial after a separate independent scope review. It must continue to reject
+  external and direct `/api/` endpoint links.
 - Verify focused tests, Web typecheck/test/lint, queue/whitespace checks, and
   1440px/390px browser captures before independent task and module review.
