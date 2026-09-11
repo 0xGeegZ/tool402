@@ -43,10 +43,17 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
       useEffect(effect, dependencies) {
         const index = cursor++;
         const previous = slots[index];
-        const changed = previous === undefined || dependencies.some((dependency, dependencyIndex) => !Object.is(dependency, previous.dependencies[dependencyIndex]));
-        if (!changed) return;
-        previous?.cleanup?.();
-        slots[index] = { dependencies, cleanup: effect() };
+        const changed = !previous
+          || !Array.isArray(dependencies)
+          || dependencies.length !== previous.dependencies.length
+          || dependencies.some((dependency, dependencyIndex) => dependency !== previous.dependencies[dependencyIndex]);
+        if (changed) {
+          previous?.cleanup?.();
+          slots[index] = {
+            dependencies: Array.isArray(dependencies) ? [...dependencies] : [],
+            cleanup: effect(),
+          };
+        }
       },
     },
     "react/jsx-runtime": jsxRuntime,
@@ -54,6 +61,11 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
     "../../../lib/provider-campaign-resume.ts": {
       loadProviderCampaignResume() {
         return { then(resolve) { resolve(resume); } };
+      },
+    },
+    "../../../lib/provider-directory-configuration-client.ts": {
+      loadProviderDirectoryConfiguration() {
+        return { then(resolve) { resolve(null); } };
       },
     },
     "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },

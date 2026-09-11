@@ -29,6 +29,12 @@ export const directoryRecordLiteral: DirectoryRecordLiteral = Object.freeze({
   status: "active",
 });
 
+export function completeDirectoryRecordLiteral(
+  configuration: Readonly<{ x402Endpoint: string; clearingAccount: string }>,
+): CompleteDirectoryRecordLiteral {
+  return Object.freeze({ ...directoryRecordLiteral, ...configuration });
+}
+
 export function missingDirectoryRecordFields(
   record: DirectoryRecordLiteral,
 ): readonly MissingDirectoryRecordField[] {

@@ -10,10 +10,16 @@ import {
 } from "../../../lib/wallet/command-bridge.ts";
 import { SignatureDialog, type SignatureResult } from "../../wallet/signature-dialog";
 import { loadProviderCampaignResume } from "../../../lib/provider-campaign-resume.ts";
+import { loadProviderDirectoryConfiguration } from "../../../lib/provider-directory-configuration-client.ts";
 import { connectedWalletSession, useWalletSession, type WalletSession } from "../../wallet/wallet-session";
 import { Button } from "../../ui/button";
 import { atsCreateConfiguration } from "./ats-create-configuration";
-import { directoryRecordLiteral, isDirectoryRecordComplete } from "./directory-record-literal";
+import {
+  completeDirectoryRecordLiteral,
+  directoryRecordLiteral,
+  isDirectoryRecordComplete,
+  type DirectoryRecordLiteral,
+} from "./directory-record-literal";
 import { ProviderGlyph } from "./provider-icon";
 import { ProviderDeployStages } from "./provider-deploy-stages";
 import {
@@ -51,6 +57,7 @@ export function DeployStageSigning({
   const session: WalletSession | null = connectedWalletSession(wallet);
   const [candidate, setCandidate] = useState<AtsCreateCandidate | null>(null);
   const [results, setResults] = useState<readonly (ProviderDeployStageState | undefined)[]>([]);
+  const [directoryRecord, setDirectoryRecord] = useState<DirectoryRecordLiteral>(directoryRecordLiteral);
   const [attemptPublicId, setAttemptPublicId] = useState<string | null>(null);
   const [request, setRequest] = useState<StageSignatureRequest | null>(null);
   const [constructionError, setConstructionError] = useState<string | null>(null);
@@ -59,7 +66,7 @@ export function DeployStageSigning({
     connected: session !== null,
     results,
     candidate,
-    recordComplete: isDirectoryRecordComplete(directoryRecordLiteral),
+    recordComplete: isDirectoryRecordComplete(directoryRecord),
   });
   const visibleStates = request
     ? states.map((stage, index) => (index === request.stage ? { kind: "in_progress" as const } : stage))
@@ -74,12 +81,14 @@ export function DeployStageSigning({
       setResults([]);
       setAttemptPublicId(null);
       setCandidate(null);
+      setDirectoryRecord(directoryRecordLiteral);
       setResumePending(false);
       return () => { cancelled = true; };
     }
     setResults([]);
     setAttemptPublicId(null);
     setCandidate(null);
+    setDirectoryRecord(directoryRecordLiteral);
     setResumePending(true);
     void loadProviderCampaignResume(session.address).then((resume) => {
       if (cancelled) return;
@@ -93,6 +102,10 @@ export function DeployStageSigning({
       }
       setResumePending(false);
     });
+    void loadProviderDirectoryConfiguration().then((directoryConfiguration) => {
+      if (cancelled || directoryConfiguration === null) return;
+      setDirectoryRecord(completeDirectoryRecordLiteral(directoryConfiguration));
+    });
     return () => { cancelled = true; };
   }, [session?.address, onResume]);
 
@@ -105,7 +118,7 @@ export function DeployStageSigning({
         values,
         attemptPublicId,
         candidate,
-        record: directoryRecordLiteral,
+        record: directoryRecord,
         nowMilliseconds: Date.now(),
       });
       setConstructionError(null);
