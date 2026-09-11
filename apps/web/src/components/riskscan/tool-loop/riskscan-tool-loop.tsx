@@ -71,6 +71,7 @@ export function RiskScanToolLoop() {
           <div className="grid gap-5 sm:grid-cols-2">
             <label className="block space-y-2">
               <span className="text-sm font-semibold">Request reference</span>
+              <span className="text-xs leading-5 text-muted-foreground">A caller-generated identifier for this request.</span>
               <input
                 name="requestRef"
                 required
@@ -81,6 +82,7 @@ export function RiskScanToolLoop() {
             </label>
             <label className="block space-y-2">
               <span className="text-sm font-semibold">Subject reference</span>
+              <span className="text-xs leading-5 text-muted-foreground">The subject the bounded assessment is about.</span>
               <input
                 name="subjectRef"
                 required
@@ -91,6 +93,7 @@ export function RiskScanToolLoop() {
             </label>
             <label className="block space-y-2 sm:col-span-2">
               <span className="text-sm font-semibold">Request context</span>
+              <span className="text-xs leading-5 text-muted-foreground">Describe what the agent is asking RiskScan to assess.</span>
               <textarea
                 name="context"
                 required
@@ -127,7 +130,7 @@ export function RiskScanToolLoop() {
           <div className="flex flex-col gap-4 rounded-card border border-border bg-secondary/55 p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="max-w-md text-sm leading-6 text-muted-foreground">A payment challenge does not mean a payment, result, or verification has occurred.</p>
             <Button type="submit" disabled={state.kind === "submitting"} className="shrink-0">
-              Check ToolLoop availability
+              Inspect request boundary
             </Button>
           </div>
           <ToolLoopOutcome state={state} />
