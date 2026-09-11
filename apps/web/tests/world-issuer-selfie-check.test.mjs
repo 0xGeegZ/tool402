@@ -126,6 +126,44 @@ test("rejects a malformed request address before attempting World configuration"
   assert.deepEqual(await response.json(), { error: "invalid_request" });
 });
 
+test("rejects null or non-object World request and verification payloads without forwarding", async () => {
+  const requestRoute = await loadRoute(fileURLToPath(requestRouteUrl));
+  const verifyRoute = await loadRoute(fileURLToPath(verifyRouteUrl));
+  const originalFetch = globalThis.fetch;
+  let forwarded = 0;
+  globalThis.fetch = async () => {
+    forwarded += 1;
+    return new Response("{}", { status: 200 });
+  };
+  try {
+    await withConfiguredEnvironment(async () => {
+      const requestResponse = await requestRoute.POST(new Request("http://localhost/api/world/request", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "null",
+      }));
+      const nullVerifyResponse = await verifyRoute.POST(new Request("http://localhost/api/world/verify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "null",
+      }));
+      const emptyProofResponse = await verifyRoute.POST(new Request("http://localhost/api/world/verify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ address: "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf", idkitResponse: null }),
+      }));
+
+      for (const response of [requestResponse, nullVerifyResponse, emptyProofResponse]) {
+        assert.equal(response.status, 400);
+        assert.deepEqual(await response.json(), { error: "invalid_request" });
+      }
+    });
+    assert.equal(forwarded, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("forwards the opaque World result unchanged and emits only the scoped issuer session cookie", async () => {
   const originalFetch = globalThis.fetch;
   const calls = [];
