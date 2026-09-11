@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
 import { Button } from "../ui/button";
@@ -47,6 +48,7 @@ async function postJson(path: string, body: object): Promise<unknown> {
 }
 
 function MetaMaskSignInButton({ session }: { session: WalletSession }) {
+  const router = useRouter();
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const inProgress = useRef(false);
@@ -88,7 +90,7 @@ function MetaMaskSignInButton({ session }: { session: WalletSession }) {
         throw new Error("verification rejected");
       }
 
-      window.location.assign("/dashboard");
+      router.replace("/dashboard");
     } catch {
       setFailure(failureMessage);
     } finally {
