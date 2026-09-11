@@ -28,8 +28,8 @@
   is authorized.
 - S38_METAMASK_DASHBOARD_AUTH_INTAKE: User-directed CORE_P0 intake. S38-T010
   owns only the UI-S38 sealed MetaMask challenge/session proposal and has no
-  active source or test reservation. S15/M50/S24 are accepted, S26 remains an
-  independent inbox card, and the exact canonical Web baseline is green at
+  active source or test reservation. S15/M50/S24 are accepted, S26 is an
+  independent active client-session card, and the exact canonical Web baseline is green at
   362/362. A fresh independent readiness review and a separate test-only RED
   activation are required before any auth test or source path changes. No
   origin/secret configuration, wallet account request, signature, provider
@@ -72,11 +72,20 @@
   or test reservation and grants no wallet, signature, authority, relay,
   payment, transaction, ATS, deployment, or live action.
 - S36_PROVIDER_SIGNATURE_HANDOFF_ACTIVATION: At clean `6f40b95`, S29 and M50
-  are accepted and released; S26/S27 are inbox-only; the two S36 targets are
+  are accepted and released; S26/S27 were inbox-only; the two S36 targets are
   disjoint; and the focused RED has exactly one absence failure. S36-T010 is
   `20-active` only for its two UI-S36 paths. It may reuse the existing stage
   callback but may not change command, wallet/provider, relay, authority,
   records, API, payment, transaction, ATS, deployment, or live behavior.
+
+- S26_ROOT_INTEGRATION_ACTIVATION: The repository owner explicitly directed
+  the root to merge PR #63 (`work/wallet-session`) into this branch. At
+  `f8f12637ce4554418a920b7816259a41ca3730bb`, S26-T010 moves to `20-active`
+  for its manifest-declared shared-session/header/wizard/backer/test paths.
+  M49 and S18 are accepted; no issuer-specific client-side authority gate or
+  display is in scope. S26 final acceptance still requires its declared
+  browser evidence and independent review; this records no wallet request,
+  signature, transaction, deployment, or live authority.
 
 - HA_PUBLIC_DEPLOYMENT_RECONCILIATION: `D-HA-PUBLIC-DEPLOY-001-001` and
   docs/work-queue/evidence/HA-PUBLIC-DEPLOY-001-review.md supersede solely

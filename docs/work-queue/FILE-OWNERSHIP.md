@@ -1063,20 +1063,21 @@ The selected official Factory artifact and viem seam, every package/lockfile,
 SDK/browser compatibility, M47 path, provider, wallet, RPC, transaction,
 candidate, deployment, and live path remain excluded.
 
-S26-T010 is an `00-inbox` POLISH card with no active source reservation. Its
-proposed new paths are `apps/web/src/components/wallet/wallet-session.tsx` and
+S26-T010 is a `20-active` POLISH card under the repository owner's direct
+integration instruction for PR #63 at `f8f12637`. Its active paths are
+`apps/web/src/components/wallet/wallet-session.tsx` and
 `apps/web/tests/wallet-session.test.mjs`; its root-only integration reservations
 are `apps/web/src/components/wallet/wallet-connect.tsx`, the header block and
 shell wrapper in `apps/web/src/app/layout.tsx`, the wallet block in
 `apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, the
-conditional accepted `apps/web/src/components/backing/backing-flow.tsx` island
-mount, and only the named assertions in
+accepted `apps/web/src/components/backing/backing-flow.tsx` island mount, and
+only the named assertions in
 `apps/web/tests/deploy-stage-signing.test.mjs`,
 `apps/web/tests/static-shell.test.mjs`, and
-`apps/web/tests/shell-accessibility.test.mjs`. M49-T010 retains CORE_P0
-precedence over the shared signing-island path: S26 may not activate or amend
-it until M49 is accepted and S26 is freshly rebased. S26 adds no current wallet
-permission, provider request, signature, transaction, or live authority.
+`apps/web/tests/shell-accessibility.test.mjs`. M49-T010 is accepted and the
+integration is rebased on its interface. S26 uses the shared connected provider
+without an issuer-specific local authority display or gate. S26 adds no current
+wallet permission, provider request, signature, transaction, or live authority.
 
 S38-T010 is an `00-inbox` CORE_P0 authentication card with no active source or
 test reservation. Its eight proposed new source paths are

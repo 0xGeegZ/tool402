@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 20-active
 - Dependencies: M02-T020 accepted, S15-T010 accepted, S16-T010 accepted,
   S21-T010 accepted; the root sequences this card after S25-T010 (shell
   header) is integrated. S18-T010 does not block the card: if it is accepted
@@ -108,3 +108,20 @@ exclusions govern; this card does not restate them.
   integration decision, and every queue record. The branch is mirrored as a
   pull request for human visibility only; nothing from it reaches `main`
   outside the root's integration decision.
+
+## Root integration activation
+
+- At `f8f12637ce4554418a920b7816259a41ca3730bb`, the repository owner
+  explicitly directed the root to integrate `work/wallet-session` (PR #63)
+  into this S38 branch. The root records S26 as `20-active` only for the
+  manifest's declared wallet-session, header, deploy-signing, backing-flow,
+  and named-test surfaces. M49-T010 and S18-T010 are accepted, so the
+  conditional amendments are eligible.
+- The integration preserves UI-S26's client-state-only boundary: no caller
+  supplies an approved issuer address and a connected header session does not
+  create authority. The deploy view must use the shared connected provider
+  without an issuer-specific local gate or display.
+- Final S26 acceptance remains separate: it requires the declared desktop and
+  390px connected-header/wizard browser evidence plus fresh task and module
+  review. No wallet request, signature, transaction, deployment, or live
+  action is authorized by this activation.
