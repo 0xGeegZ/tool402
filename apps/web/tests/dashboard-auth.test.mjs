@@ -79,7 +79,8 @@ function tamper(cookie) {
 }
 
 async function sealFixture(text) {
-  const encoded = Buffer.from(text).toString("base64url");
+  const payloadBytes = new TextEncoder().encode(text);
+  const encoded = Buffer.from(payloadBytes).toString("base64url");
   const key = await crypto.subtle.importKey(
     "raw",
     Buffer.from(secret, "hex"),
@@ -87,7 +88,7 @@ async function sealFixture(text) {
     false,
     ["sign"],
   );
-  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(encoded)));
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, payloadBytes));
   return `${encoded}.${Buffer.from(mac).toString("base64url")}`;
 }
 
@@ -156,6 +157,18 @@ coreTest("uses the injected HMAC seam to seal and validate challenges", async ()
     env: challengeInput().env,
   }, fixedDependencies({ hmacSha256: countingHmac(8).hmacSha256 }));
   assert.deepEqual(rejected, { kind: "rejected" });
+});
+
+coreTest("seals the canonical UTF-8 JSON payload before base64url encoding", async () => {
+  const api = await loadApi();
+  let signedValue = "";
+  await api.createChallenge(challengeInput(), fixedDependencies({
+    hmacSha256: async (_key, value) => {
+      signedValue = new TextDecoder().decode(value);
+      return Uint8Array.from({ length: 32 }, () => 7);
+    },
+  }));
+  assert.equal(signedValue, `{"v":1,"address":"${address}","nonce":"AAECAwQFBgcICQoLDA0ODw","issuedAt":"2026-09-11T12:00:00.000Z","expiresAt":"2026-09-11T12:05:00.000Z","origin":"${origin}"}`);
 });
 
 coreTest("rejects an altered challenge before signature verification", async () => {
@@ -354,6 +367,7 @@ signInTest("redirects valid sessions and otherwise renders the public sign-in bo
   const signIn = await readFile(signInUrl, "utf8");
   assert.match(signIn, /\breadDashboardSession\b/u);
   assert.match(signIn, /\bcookies\(\)/u);
+  assert.match(signIn, /\bSuspense\b/u);
   assert.match(signIn, /__Host-tool402-dashboard-session/u);
   assert.match(signIn, /redirect\(\s*["']\/dashboard["']\s*\)/u);
   assert.match(signIn, /\bMetaMaskDashboardSignIn\b/u);
@@ -363,6 +377,7 @@ dashboardLayoutTest("guards dashboard descendants on the server before rendering
   const layout = await readFile(dashboardLayoutUrl, "utf8");
   assert.match(layout, /\breadDashboardSession\b/u);
   assert.match(layout, /\bcookies\(\)/u);
+  assert.match(layout, /\bSuspense\b/u);
   assert.match(layout, /__Host-tool402-dashboard-session/u);
   assert.match(layout, /redirect\(\s*["']\/sign-in["']\s*\)/u);
   assert.match(layout, /return\s+children/u);

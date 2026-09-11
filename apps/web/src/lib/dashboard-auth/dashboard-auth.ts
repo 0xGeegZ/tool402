@@ -94,8 +94,9 @@ async function defaultHmacSha256(key: Uint8Array, value: Uint8Array): Promise<Ui
 }
 
 async function seal(payload: ChallengePayload | SessionPayload, configuration: Configuration, dependencies: AuthDependencies): Promise<string> {
-  const encoded = encodeBase64Url(new TextEncoder().encode(JSON.stringify(payload)));
-  const mac = await (dependencies.hmacSha256 ?? defaultHmacSha256)(configuration.secret, new TextEncoder().encode(encoded));
+  const payloadBytes = new TextEncoder().encode(JSON.stringify(payload));
+  const encoded = encodeBase64Url(payloadBytes);
+  const mac = await (dependencies.hmacSha256 ?? defaultHmacSha256)(configuration.secret, payloadBytes);
   return `${encoded}.${encodeBase64Url(mac)}`;
 }
 
@@ -144,7 +145,7 @@ async function unseal<T extends ChallengePayload | SessionPayload>(cookie: strin
   if (payloadBytes === null || receivedMac === null || receivedMac.byteLength !== 32) return null;
   let expectedMac: Uint8Array;
   try {
-    expectedMac = await (dependencies.hmacSha256 ?? defaultHmacSha256)(configuration.secret, new TextEncoder().encode(parts[0]));
+    expectedMac = await (dependencies.hmacSha256 ?? defaultHmacSha256)(configuration.secret, payloadBytes);
   } catch {
     return null;
   }
@@ -219,7 +220,7 @@ export async function verifyChallenge(
   return { kind: "authenticated", sessionCookie: await seal(session, configuration, dependencies) };
 }
 
-export async function readDashboardSession(cookie: string | undefined, env: DashboardAuthEnvironment, now: number = Date.now()): Promise<Readonly<{ address: string; issuedAt: string; expiresAt: string }> | null> {
+export async function readDashboardSession(cookie: string | null, env: DashboardAuthEnvironment, now: number = Date.now()): Promise<Readonly<{ address: string; issuedAt: string; expiresAt: string }> | null> {
   const configuration = readConfiguration(env);
   if (configuration === null || typeof cookie !== "string") return null;
   const payload = await unseal(cookie, configuration, {}, parseSessionPayload);
