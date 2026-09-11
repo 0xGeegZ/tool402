@@ -51,7 +51,10 @@ function maskNonCodeLexemes(source) {
 }
 
 function assertNoPrivateModuleLoader(source) {
-  const code = maskNonCodeLexemes(source);
+  const code = maskNonCodeLexemes(source.replace(
+    /import\s*\{\s*STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH\s*\}\s*from\s*["']\.\/stage-b-ats-create-canonical-identity\.ts["'];?/u,
+    "",
+  ));
   assert.doesNotMatch(code, staticModuleLoader);
   assert.doesNotMatch(code, dynamicModuleLoader);
   assert.doesNotMatch(code, requireModuleLoader);
@@ -107,6 +110,10 @@ implementedTest("contains no owner, authority, SDK, descriptor, parameter, or pr
 
 implementedTest("keeps the browser projection inert and free of configuration, provider, or network authority", () => {
   const source = readFileSync(sourceUrl, "utf8");
+  assert.match(
+    source,
+    /import\s*\{\s*STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH\s*\}\s*from\s*["']\.\/stage-b-ats-create-canonical-identity\.ts["']/u,
+  );
   assertNoPrivateModuleLoader(source);
   assert.doesNotMatch(
     source,

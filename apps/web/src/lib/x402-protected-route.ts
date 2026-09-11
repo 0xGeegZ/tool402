@@ -14,6 +14,7 @@ import type {
 } from "@tool402/core";
 import type { NextRequest, NextResponse as NextResponseType } from "next/server";
 
+import { readBoundedRequestJson } from "./bounded-request-json.ts";
 import { recordRiskScanVerifiedSettlement } from "./riskscan-settlement-evidence.ts";
 
 const require = createRequire(import.meta.url);
@@ -356,13 +357,17 @@ interface RiskScanQuickEvaluation {
 async function evaluateRiskScanQuick(
   request: NextRequest,
 ): Promise<RiskScanQuickEvaluation> {
-  let input: unknown;
-
-  try {
-    input = await request.json();
-  } catch {
-    return { response: invalidRiskScanRequestResponse() };
+  const body = await readBoundedRequestJson(request);
+  if (body.kind === "too_large") {
+    return {
+      response: NextResponse.json(
+        { error: "riskscan_request_too_large" },
+        { status: 413 },
+      ),
+    };
   }
+  if (body.kind === "invalid") return { response: invalidRiskScanRequestResponse() };
+  const input = body.value;
 
   const { assessRiskScanQuick } = loadRiskScanQuick();
   let assessment: ReturnType<typeof assessRiskScanQuick>;
