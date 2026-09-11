@@ -1063,20 +1063,131 @@ The selected official Factory artifact and viem seam, every package/lockfile,
 SDK/browser compatibility, M47 path, provider, wallet, RPC, transaction,
 candidate, deployment, and live path remain excluded.
 
-S26-T010 is an `00-inbox` POLISH card with no active source reservation. Its
-proposed new paths are `apps/web/src/components/wallet/wallet-session.tsx` and
+S26-T010 is a `20-active` POLISH card under the repository owner's direct
+integration instruction for PR #63 at `f8f12637`. Its active paths are
+`apps/web/src/components/wallet/wallet-session.tsx` and
 `apps/web/tests/wallet-session.test.mjs`; its root-only integration reservations
 are `apps/web/src/components/wallet/wallet-connect.tsx`, the header block and
 shell wrapper in `apps/web/src/app/layout.tsx`, the wallet block in
 `apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, the
-conditional accepted `apps/web/src/components/backing/backing-flow.tsx` island
-mount, and only the named assertions in
+accepted `apps/web/src/components/backing/backing-flow.tsx` island mount, and
+only the named assertions in
 `apps/web/tests/deploy-stage-signing.test.mjs`,
 `apps/web/tests/static-shell.test.mjs`, and
-`apps/web/tests/shell-accessibility.test.mjs`. M49-T010 retains CORE_P0
-precedence over the shared signing-island path: S26 may not activate or amend
-it until M49 is accepted and S26 is freshly rebased. S26 adds no current wallet
-permission, provider request, signature, transaction, or live authority.
+`apps/web/tests/shell-accessibility.test.mjs`; plus shared-session-only
+assertions in `apps/web/tests/backing-route.test.mjs` (S18),
+`apps/web/tests/wallet-session-sync.test.mjs` (M50),
+`apps/web/tests/wallet-state.test.mjs` (S15), and
+`apps/web/tests/provider-deploy-visual-reconciliation.test.mjs` (S29).
+M49-T010 is accepted and the
+integration is rebased on its interface. S26 uses the shared connected provider
+without an issuer-specific local authority display or gate. S26 adds no current
+wallet permission, provider request, signature, transaction, or live authority.
+The root additionally reserves only the connected-address badge wrapper in
+`apps/web/src/components/wallet/wallet-connect.tsx` and its
+`apps/web/tests/wallet-session.test.mjs` assertion for the owner-directed
+internal `/dashboard` navigation. It neither reads nor grants the separate S38
+signed dashboard session.
+
+The owner-directed deploy-form amendment further reserves only the existing
+`deploy-stage-signing.tsx` signing block and its existing
+`deploy-stage-signing.test.mjs` assertion to render one explicit shared-session
+`Connect MetaMask` action while the session is `disconnected`. It may call the
+accepted session `connect()` only from that button click; it creates no second
+session and changes no provider discovery, account request, chain switch,
+signature, authority, transaction, or live boundary.
+
+S40-T010 is an `20-active` CORE_P0 authentication card. Its eight declared
+source paths are
+`apps/web/src/lib/dashboard-auth/dashboard-auth.ts`,
+`apps/web/src/lib/dashboard-auth/dashboard-auth-routes.ts`,
+`apps/web/src/app/api/auth/metamask/challenge/route.ts`,
+`apps/web/src/app/api/auth/metamask/verify/route.ts`,
+`apps/web/src/app/api/auth/logout/route.ts`,
+`apps/web/src/components/auth/metamask-dashboard-sign-in.tsx`,
+`apps/web/src/app/sign-in/page.tsx`,
+`apps/web/src/app/dashboard/layout.tsx`, and
+`apps/web/src/components/auth/dashboard-navigation.tsx`; its two new focused tests are
+`apps/web/tests/dashboard-auth.test.mjs` and
+`apps/web/tests/dashboard-auth-routes.test.mjs`. The root-only integration
+reservation is limited to the `Guest dashboard` eyebrow in
+`apps/web/src/app/dashboard/page.tsx` and its two matching wording assertions
+in `apps/web/tests/dashboard-workspace-reconciliation.test.mjs`, plus the
+subsequently owner-authorized header navigation slot in
+`apps/web/src/app/layout.tsx` and LocalNavigation link-list/prop contract.
+
+S38 consumes UI-S15 and M50 without changing their wallet selection,
+chain-gate, passive session, command, relay, or provider-event paths. S26 is
+not a dependency: except for the owner-authorized authenticated-navigation
+slot, S38 must not amend `apps/web/src/app/layout.tsx`,
+`apps/web/src/components/wallet/wallet-connect.tsx`, or
+`apps/web/src/components/wallet/wallet-session.tsx`. Nested dashboard pages,
+workspace components, public APIs, packages, lockfile, configuration files,
+and every account/profile/balance/role/allowlist/payment/transaction/deployment
+path are excluded. No S38 source or test path is active until fresh independent
+readiness and test-only RED activation are recorded.
+
+Independent durable RED acceptance at `5a7ca33bd23e3877f77798a8b3490d643eb9a154`
+now authorizes only S38's eight declared source paths and its root-reserved
+dashboard eyebrow plus the two matching wording assertions. They must land in
+the plan's staged order; no other source/test path, configuration, wallet or
+account action, signature, relay, transaction, payment, deployment, or live
+boundary is transferred.
+
+User-directed S38 navigation amendment: after durable RED, the root reserves
+`apps/web/src/components/auth/dashboard-navigation.tsx`, the header-navigation
+slot of `apps/web/src/app/layout.tsx`, and only the link list/prop contract of
+`apps/web/src/components/discovery/local-navigation.tsx`, alongside matching
+`apps/web/tests/dashboard-auth.test.mjs` assertions and the exact
+navigation/auth reconciliation assertions in
+`apps/web/tests/guided-demo-route.test.mjs`,
+`apps/web/tests/landing-explore.test.mjs`,
+`apps/web/tests/workspace-shell.test.mjs`, and
+`apps/web/tests/static-shell.test.mjs`. The boundary reads only a validated
+S38 `HttpOnly` session on the server and supplies a Dashboard link inside
+Suspense; it may not read, mount, modify, or infer state from S26/UI-S15 wallet
+code. This narrowly supersedes the earlier S38 exclusion of the root header,
+not any other S26 reservation.
+
+User-directed S38 environment-template amendment: the root additionally
+reserves `.env.example` and `apps/web/.env.example` only as documentation for
+the two fixed dashboard-auth keys. They contain no secret, do not configure a
+running environment, and do not authorize TLS trust, wallet permission,
+signature, transaction, deployment, or any live action. This narrowly
+supersedes the configuration-file exclusion only for those templates.
+
+User-directed S38 Vercel Preview-origin amendment: the root additionally
+reserves the declared auth sources and focused auth tests to derive an origin
+only from the Vercel system `VERCEL_URL` when `VERCEL_ENV=preview` and the
+explicit dashboard-auth origin is absent. The same canonical validation still
+applies; no request host, production, development, secret, wallet, or live
+authority is added.
+
+User-directed S38 wallet-session preservation amendment: the root additionally
+reserves only `apps/web/src/components/auth/metamask-dashboard-sign-in.tsx`
+and its existing `apps/web/tests/dashboard-auth.test.mjs` assertion to use the
+fixed internal App Router transition after verified sign-in. It preserves the
+already-mounted S26 session for that navigation only; it does not persist or
+rehydrate wallet data, read a wallet, discover a provider, alter the server
+cookie guard, or add any wallet, account, signature, transaction, deployment,
+or live authority.
+
+S41-T010 is an `00-inbox` CORE_P0 follow-up with no active source or test
+reservation. S40 acceptance is an explicit activation gate while the card is
+still speculative. After that gate and its own independent readiness/activation
+cycle, it may reserve only the exact closed-path Core ingress envelope and
+focused Core test, Backend expected-path verifier and focused Backend test,
+capability-aware `commandAuthorities` schema/normalizer/admission seams, a
+dedicated HMAC-private Convex provisioning handler, the shared Web HMAC relay
+and its test, the server-only S40 verification handoff, and the narrowly
+necessary `/provider/deploy` route/command-bridge/signing-state paths for a
+server-derived personal sandbox subject. It must add matching focused
+Core/Backend/Web contracts. The shared `riskscan_revenue_note_demo` subject,
+ATS configuration and Stage-B modules, manual issuer authority, wallet session
+and header controls, packages, lockfiles, payment/transaction code, public
+APIs, and all unlisted paths remain excluded. S41's only capability is a
+durable `offering.create` result in `DRAFT`; it may not authorize any on-chain
+action.
 
 S27-T010 is an `00-inbox` POLISH card with no active source reservation. Its
 proposed new test is `apps/web/tests/deploy-wizard-stepper.test.mjs`; its

@@ -26,6 +26,68 @@
   six declared Backend/Web GREEN paths are active, and no wallet,
   authority, signature, relay, Stage-B, transaction, candidate, or live action
   is authorized.
+- S41_SANDBOX_ISSUER_ONBOARDING_INTAKE: User-directed CORE_P0 follow-up to
+  S40. It is `00-inbox` and has no active source or test reservation. Its
+  fixed outcome is a deterministic wallet-isolated sandbox `ISSUER`, with one
+  personal subject and explicit `offering.create` capability, provisioned only
+  after a successful S40 signature and before the dashboard session is issued.
+  S41 cannot begin until S40 is accepted and a fresh independent readiness/
+  activation/RED cycle records exact paths. It grants no shared ATS subject,
+  ATS preparation, candidate attachment, directory publication, payment,
+  transaction, asset, deployment, or live authority.
+
+- S40_METAMASK_DASHBOARD_AUTH_INTAKE: User-directed CORE_P0 intake. S40-T010
+  owns only the sealed MetaMask challenge/session proposal in
+  `docs/specs/metamask-dashboard-sign-in.md` and has no
+  active source or test reservation. S15/M50/S24 are accepted, S26 is an
+  independent active client-session card, and the exact canonical Web baseline is green at
+  362/362. A fresh independent readiness review and a separate test-only RED
+  activation are required before any auth test or source path changes. No
+  origin/secret configuration, wallet account request, signature, provider
+  command, relay, transaction, payment, role, profile, balance, protected API,
+  deployment, or live action is authorized by this intake.
+- S40_METAMASK_DASHBOARD_AUTH_READY: Independent readiness is clear at
+  `71a059caa525cbfa397f40f262b01207ba46dab7`, rebased on canonical
+  `ca80c6edddae09b0577678e4b61c63f87553321f`, after Web 362/362. S40-T010 is
+  `10-ready` with no active source/test reservation. A separate activation may
+  authorize only durable RED in the two new S38 auth tests; every production
+  source, dashboard wording amendment, configuration, wallet/account/signature,
+  provider command, relay, transaction, payment, deployment, and live action
+  remains prohibited.
+- S40_METAMASK_DASHBOARD_AUTH_ACTIVATION: Independent activation is clear at
+  `473b4edd346ce45249c257e36432684b1429112f`. S40-T010 is `20-active` only
+  for durable RED in `apps/web/tests/dashboard-auth.test.mjs` and
+  `apps/web/tests/dashboard-auth-routes.test.mjs`. Every production source,
+  dashboard wording/test amendment, configuration, wallet account/signature,
+  provider command, relay, transaction, payment, deployment, and live action
+  remains prohibited pending independent RED acceptance.
+- S40_METAMASK_DASHBOARD_AUTH_RED_ACCEPTANCE: Independent re-review accepts
+  durable RED `5a7ca33bd23e3877f77798a8b3490d643eb9a154`: one intended absence
+  failure names all eight source paths and twenty staged contracts skip. Only
+  the eight declared auth sources and the root-reserved Dashboard eyebrow plus
+  its two matching wording assertions are eligible for staged GREEN. No other
+  source/test path, configuration, wallet account/signature, provider command,
+  relay, transaction, payment, deployment, or live action is authorized.
+
+- S40_AUTHENTICATED_NAVIGATION_AMENDMENT: The repository owner explicitly
+  requires a Dashboard main-menu link after a valid signed dashboard session.
+  The root reserves only a new server auth-navigation boundary, the existing
+  root header navigation slot, the LocalNavigation link-list/prop contract,
+  and matching auth assertions. The decision remains server-side and inside
+  Suspense; it grants no wallet state, signature, configuration, API, or S26
+  header-wallet authority.
+
+- S40_ENVIRONMENT_TEMPLATE_AMENDMENT: The repository owner explicitly
+  requested `.env.example` at the root and its Web counterpart. The two files
+  are reserved as documentation-only templates for the fixed dashboard-auth
+  keys; they do not configure a runtime, contain a secret, or authorize TLS
+  trust, wallet permission, signature, transaction, deployment, or live action.
+
+- S40_VERCEL_PREVIEW_ORIGIN_AMENDMENT: The repository owner explicitly
+  requires ephemeral Vercel previews to derive their exact canonical origin
+  from `VERCEL_URL` only when `VERCEL_ENV=preview` and the explicit origin is
+  absent. The configured secret remains required; development, production, and
+  request-derived hosts remain fail-closed.
 
 - S36_PROVIDER_SIGNATURE_HANDOFF_INTAKE: User-directed local POLISH intake.
   S36-T010 may make the existing actionable signature request discoverable
@@ -33,11 +95,28 @@
   or test reservation and grants no wallet, signature, authority, relay,
   payment, transaction, ATS, deployment, or live action.
 - S36_PROVIDER_SIGNATURE_HANDOFF_ACTIVATION: At clean `6f40b95`, S29 and M50
-  are accepted and released; S26/S27 are inbox-only; the two S36 targets are
+  are accepted and released; S26/S27 were inbox-only; the two S36 targets are
   disjoint; and the focused RED has exactly one absence failure. S36-T010 is
   `20-active` only for its two UI-S36 paths. It may reuse the existing stage
   callback but may not change command, wallet/provider, relay, authority,
   records, API, payment, transaction, ATS, deployment, or live behavior.
+
+- S26_ROOT_INTEGRATION_ACTIVATION: The repository owner explicitly directed
+  the root to merge PR #63 (`work/wallet-session`) into this branch. At
+  `f8f12637ce4554418a920b7816259a41ca3730bb`, S26-T010 moves to `20-active`
+  for its manifest-declared shared-session/header/wizard/backer/test paths.
+  M49 and S18 are accepted; no issuer-specific client-side authority gate or
+  display is in scope. The reserved S18/M50/S15/S29 assertion-only amendments
+  move each accepted seam from a local island to the one shared session and do
+  not change its behavior. S26 final acceptance still requires its declared
+  browser evidence and independent review; this records no wallet request,
+  signature, transaction, deployment, or live authority.
+- S26_CONNECTED_BADGE_NAVIGATION: The repository owner directs the compact
+  connected-address badge to link internally to `/dashboard`. The root reserves
+  only its wrapper and matching wallet-session assertion. This navigation does
+  not read or create an S38 signed session and is never proof of authority;
+  `/dashboard` remains server-guarded and redirects unsigned users to
+  `/sign-in`.
 
 - HA_PUBLIC_DEPLOYMENT_RECONCILIATION: `D-HA-PUBLIC-DEPLOY-001-001` and
   docs/work-queue/evidence/HA-PUBLIC-DEPLOY-001-review.md supersede solely
@@ -589,3 +668,18 @@ No secrets, account keys, or private evidence belong in this file.
   without invoking Connect, signature, relay, or transaction behavior.
   M50-T010 moves to `60-done`; its source/test reservations are released and
   all wallet/live gates remain unchanged.
+
+- S26_DEPLOY_FORM_CONNECT_AMENDMENT: 2026-09-11. The repository owner directs
+  the existing last deploy/signing form to render one explicit shared-session
+  `Connect MetaMask` action only while the wallet kind is `disconnected`. The
+  action may call the accepted `connect()` handler only from the user's click;
+  it adds no second session, automatic discovery, account request, chain
+  switch, signature, authority, transaction, deployment, or live behavior.
+
+- S38_WALLET_SESSION_PRESERVATION_AMENDMENT: 2026-09-11. The repository owner
+  directs successful sign-in to use the fixed internal App Router dashboard
+  transition instead of a full-document reload, preserving the mounted shared
+  wallet session for that navigation. The sealed `HttpOnly` cookie remains the
+  sole durable authorization decision. No storage, automatic wallet discovery,
+  account request, signature, wallet-state mutation, transaction, deployment,
+  or live behavior is authorized.

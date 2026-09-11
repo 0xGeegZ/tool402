@@ -66,24 +66,33 @@ unreachable, exactly as the accepted UI-S15 rule states; the badge branch
 exists only so the closed union is handled. The accepted
 UI-S15 sentence for the current kind renders in one visually hidden
 `aria-live="polite"` region so the "not an authority" copy stays available to
-assistive technology. No disconnect control is rendered; MetaMask itself
-revokes the site. The control has no icon set, popover, menu, or external
-link. `app/layout.tsx` wraps the shell in `WalletSessionProvider` and renders
+assistive technology. Both address badges are internal links to `/dashboard`;
+they are navigation only, not authentication or authority proof. A connected
+but unsigned visitor is intentionally sent to the S38 `/sign-in` surface,
+which must explain that one safe authentication signature is the remaining
+step before the dashboard opens. The server dashboard guard remains the sole
+access decision and redirects unless the separate signed S38 session is valid.
+No disconnect control is rendered; MetaMask itself revokes the site.
+The control has no icon set, popover, menu, or external link. `app/layout.tsx` wraps the shell in `WalletSessionProvider` and renders
 the control immediately after `LocalNavigation` inside the existing header
 row.
 
 ## Wizard contract
 
 `deploy-stage-signing.tsx` drops its `Wallet` heading, address badge, state
-sentence, and connect, retry, and disconnect buttons. It reads
-`useWalletSession()`: while the kind is not `connected`, it renders one
-sentence `Connect MetaMask from the header to sign.` and keeps every stage
-control disabled; when `connected`, it passes the session provider and address
-to the existing `SessionReporter` and renders `SignatureDialog` exactly as
-today. Stage sequencing, signature phases, relay outcomes, and the truth-first
-paragraph beginning `Connect MetaMask on Hedera Testnet to enable the first
-stage` are unchanged except that its first sentence points to the header. The
-wizard passes no approved issuer address, as today.
+sentence, retry, and disconnect buttons. It reads `useWalletSession()`: while
+the kind is `disconnected`, the final deploy/signing form renders one labelled
+`Connect MetaMask` section with one `Connect MetaMask` button. Its explicit
+user click calls the shared `connect()` action; it does not discover, connect,
+or request anything during rendering. The section says `Connect MetaMask on
+Hedera Testnet to enable the first signing step.` and every stage control stays
+disabled until the shared session becomes `connected`. Other non-connected
+kinds retain their disabled controls without an additional form action. When
+`connected`, the form does not render the connection section, passes the
+session provider and address to the existing `SessionReporter`, and renders
+`SignatureDialog` exactly as today. Stage sequencing, signature phases, relay
+outcomes, and the truth-first paragraph are otherwise unchanged. The wizard
+passes no approved issuer address, as today.
 
 ## Explicit exclusions
 

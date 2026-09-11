@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 20-active
 - Dependencies: M02-T020 accepted, S15-T010 accepted, S16-T010 accepted,
   S21-T010 accepted; the root sequences this card after S25-T010 (shell
   header) is integrated. S18-T010 does not block the card: if it is accepted
@@ -108,3 +108,60 @@ exclusions govern; this card does not restate them.
   integration decision, and every queue record. The branch is mirrored as a
   pull request for human visibility only; nothing from it reaches `main`
   outside the root's integration decision.
+
+## Root integration activation
+
+- At `f8f12637ce4554418a920b7816259a41ca3730bb`, the repository owner
+  explicitly directed the root to integrate `work/wallet-session` (PR #63)
+  into this S38 branch. The root records S26 as `20-active` only for the
+  manifest's declared wallet-session, header, deploy-signing, backing-flow,
+  and named-test surfaces, plus only the assertion seams in
+  `apps/web/tests/backing-route.test.mjs` (S18),
+  `apps/web/tests/wallet-session-sync.test.mjs` (M50),
+  `apps/web/tests/wallet-state.test.mjs` (S15), and
+  `apps/web/tests/provider-deploy-visual-reconciliation.test.mjs` (S29).
+  M49-T010 and S18-T010 are accepted, so the conditional amendments are
+  eligible.
+- The integration preserves UI-S26's client-state-only boundary: no caller
+  supplies an approved issuer address and a connected header session does not
+  create authority. The deploy view must use the shared connected provider
+  without an issuer-specific local gate or display.
+- The repository owner additionally directs each connected-address badge to
+  navigate internally to `/dashboard`. This reserves only the badge wrapper
+  in `apps/web/src/components/wallet/wallet-connect.tsx` and its assertion in
+  `apps/web/tests/wallet-session.test.mjs`. It neither creates an S38 session
+  nor reads one on the client; the server guard remains the sole dashboard
+  access decision and redirects unsigned users to `/sign-in`.
+- The root also reserves only the shared-session composition assertions in
+  `apps/web/tests/backing-route.test.mjs` (accepted S18 flow),
+  `apps/web/tests/wallet-session-sync.test.mjs` (accepted M50 passive-event
+  harness), `apps/web/tests/wallet-state.test.mjs` (accepted UI-S15 state
+  contract), and `apps/web/tests/provider-deploy-visual-reconciliation.test.mjs`
+  (accepted S29 presentation). They may change only from a second local
+  island to the one shared session, and may not alter their owning behavior.
+- Final S26 acceptance remains separate: it requires the declared desktop and
+  390px connected-header/wizard browser evidence plus fresh task and module
+  review. No wallet request, signature, transaction, deployment, or live
+  action is authorized by this activation.
+
+## User-directed deploy-form connection amendment
+
+- The repository owner directs that the last deploy/signing form surface an
+  actionable shared-session `Connect MetaMask` section when, and only when,
+  the wallet kind is `disconnected`. This amends only the existing reserved
+  deploy-signing block and its existing focused assertion seam.
+- The button invokes the already accepted `connect()` action only after its
+  explicit click. It neither creates a second wallet session nor discovers a
+  provider, requests an account, switches a chain, signs, or grants authority
+  during render. Connected and other non-connected states retain the existing
+  shared-session behavior.
+
+## User-directed deploy-form copy correction
+
+- The repository owner found the inherited passive aside sentence `Connect
+  MetaMask to sign.` alongside the actionable disconnected-wallet section.
+  The existing reserved deploy-signing block and focused test may remove that
+  redundant sentence only. The actionable `provider-deploy-connect` section
+  remains the sole disconnected-wallet instruction and control; the signing
+  explanation card, wallet behavior, authority boundaries, and layout stay
+  unchanged.

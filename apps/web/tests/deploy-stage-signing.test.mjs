@@ -20,6 +20,12 @@ async function readIsland() {
 async function signingIslandHarness(values) {
   const slots = [];
   let cursor = 0;
+  let connectionRequests = 0;
+  let session = {
+    state: { kind: "disconnected" },
+    provider: null,
+    async connect() { connectionRequests += 1; },
+  };
   const imports = {
     react: {
       useState(initial) {
@@ -38,14 +44,22 @@ async function signingIslandHarness(values) {
     },
     "react/jsx-runtime": jsxRuntime,
     "../../../lib/wallet/command-bridge.ts": await import("../src/lib/wallet/command-bridge.ts"),
-    "../../../lib/ats/stage-b-ats-create-execution-projection.ts": await import("../src/lib/ats/stage-b-ats-create-execution-projection.ts"),
     "../../../lib/provider-campaign-resume.ts": {
       loadProviderCampaignResume() {
         return { then(resolve) { resolve(null); } };
       },
     },
     "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
-    "../../wallet/wallet-connect": { WalletIsland: "WalletIsland" },
+    "../../wallet/wallet-session": {
+      useWalletSession: () => session,
+      connectedWalletSession(wallet) {
+        return wallet.state.kind === "connected" && wallet.provider !== null
+          ? { provider: wallet.provider, address: wallet.state.address }
+          : null;
+      },
+    },
+    "../../ui/button": { Button: "Button" },
+    "../../ui/status": { Status: "Status" },
     "./ats-create-configuration": await import("../src/components/provider/deploy/ats-create-configuration.ts"),
     "./directory-record-literal": await import("../src/components/provider/deploy/directory-record-literal.ts"),
     "./provider-deploy-stages": { ProviderDeployStages: "ProviderDeployStages" },
@@ -72,14 +86,15 @@ async function signingIslandHarness(values) {
       cursor = 0;
       return module.exports.DeployStageSigning({ values });
     },
-    connect(tree) {
-      const wallet = elements(tree).find((element) => element.type === "WalletIsland");
-      const reporter = wallet.props.children({
-        address: "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+    connect() {
+      session = {
+        state: { kind: "connected", address: "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf" },
         provider: { request() { assert.fail("local construction failure must not request the wallet"); } },
-      });
-      reporter.type(reporter.props);
+        async connect() { connectionRequests += 1; },
+      };
+      this.render();
     },
+    connectionRequests() { return connectionRequests; },
   };
 }
 
@@ -103,7 +118,7 @@ implementedTest("composes the accepted wallet island, signature dialog, and stag
   const island = await readIsland();
 
   assert.match(island, /^["']use client["'];/u);
-  assert.match(island, /import\s*\{[^}]*\bWalletIsland\b[^}]*\}\s+from\s+["']\.\.\/\.\.\/wallet\/wallet-connect["']/u);
+  assert.match(island, /import\s*\{[^}]*\buseWalletSession\b[^}]*\}\s+from\s+["']\.\.\/\.\.\/wallet\/wallet-session["']/u);
   assert.match(island, /import\s*\{[^}]*\bSignatureDialog\b[^}]*\}\s+from\s+["']\.\.\/\.\.\/wallet\/signature-dialog["']/u);
   assert.match(island, /import\s*\{[^}]*\bProviderDeployStages\b[^}]*\}\s+from\s+["']\.\/provider-deploy-stages["']/u);
   assert.match(island, /import\s*\{[^}]*\bbuildStageSignatureRequest\b[^}]*\}\s+from\s+["'][^"']*lib\/wallet\/command-bridge(?:\.ts)?["']/u);
@@ -114,7 +129,7 @@ implementedTest("composes the accepted wallet island, signature dialog, and stag
   const activate = island.slice(island.indexOf("function activate"), island.indexOf("function finish"));
   assert.match(activate, /\bbuildStageSignatureRequest\s*\(/u);
   assert.doesNotMatch(activate, /\bprojection\s*:/u, "the signing island must not pass a stage-2 projection");
-  assert.equal((island.match(/<WalletIsland\b/gu) ?? []).length, 1);
+  assert.equal((island.match(/useWalletSession\(\)/gu) ?? []).length, 1);
   assert.equal((island.match(/<SignatureDialog\b/gu) ?? []).length, 1);
   assert.match(island, /<SignatureDialog\b[^>]*\bonResult=/u);
   assert.match(island, /<ProviderDeployStages\b[^>]*\bonActivate=/u);
@@ -139,7 +154,8 @@ implementedTest("keeps stage state session-only and truthful with no persistence
 implementedTest("holds the M49 candidate in this session and passes one stable action controller through the stage view", async () => {
   const island = await readIsland();
 
-  assert.match(island, /\buseRef\b/u, "the action controller must survive rerenders");
+  assert.match(island, /setCandidate\(\(current\) => current \?\? nextCandidate\)/u, "the first candidate must survive rerenders");
+  assert.doesNotMatch(island, /\buseRef\b/u, "candidate state must not be mirrored in a ref");
   assert.match(island, /\bsetCandidate\b/u, "a verified candidate belongs only to this browser session");
   assert.match(island, /useState<AtsCreateCandidate \| null>/u);
   assert.doesNotMatch(island, /(?:external\.attachCandidate|eth_signTypedData_v4)/u);
@@ -154,8 +170,7 @@ implementedTest("keeps a rejected local request out of the dialog and stage resu
     risks: campaignFixture.risks.join("\n"),
   };
   const validHarness = await signingIslandHarness(values);
-  validHarness.connect(validHarness.render());
-  await Promise.resolve();
+  validHarness.connect();
   const validStages = elements(validHarness.render()).find((element) => element.type === "ProviderDeployStages");
   validStages.props.onActivate(0);
   const validTree = validHarness.render();
@@ -164,8 +179,7 @@ implementedTest("keeps a rejected local request out of the dialog and stage resu
 
   for (const invalidValue of [{ qualifyingResource: "" }, { quickPrice: "0" }]) {
     const harness = await signingIslandHarness({ ...values, ...invalidValue });
-    harness.connect(harness.render());
-    await Promise.resolve();
+    harness.connect();
     const before = harness.render();
     const stages = elements(before).find((element) => element.type === "ProviderDeployStages");
     assert.equal(stages.props.enabledStage, 0);
@@ -184,4 +198,50 @@ implementedTest("keeps a rejected local request out of the dialog and stage resu
     assert.match(visibleText(feedback), /review|check|correct|fix|update/i);
     assert.doesNotMatch(visibleText(feedback), /RangeError|TypeError|qualifyingResource|quickPrice|canonical|idempotency/u);
   }
+});
+implementedTest("uses the shared connected session without an issuer-specific local gate", async () => {
+  const { campaignFixture } = await import("../src/components/provider/deploy/campaign-fixture.ts");
+  const values = {
+    ...campaignFixture,
+    targetAgentCustomers: campaignFixture.targetAgentCustomers.join("\n"),
+    useOfFunds: campaignFixture.useOfFunds.join("\n"),
+    risks: campaignFixture.risks.join("\n"),
+  };
+  const harness = await signingIslandHarness(values);
+  harness.connect("0x7e5f4552091a69125d5dfcb7b8c2659029395bdf");
+  const tree = harness.render();
+  const stages = elements(tree).find((element) => element.type === "ProviderDeployStages");
+
+  assert.equal(stages.props.enabledStage, 0);
+  assert.match(await readIsland(), /connectedWalletSession\(wallet\)/u);
+  const island = await readIsland();
+  assert.doesNotMatch(island, /\b(?:isIssuerAdvisory|issuerEvmAddress|notIssuer|approved issuer)\b/u);
+});
+
+implementedTest("offers one explicit deploy-form MetaMask connection while the shared session is disconnected", async () => {
+  const { campaignFixture } = await import("../src/components/provider/deploy/campaign-fixture.ts");
+  const values = {
+    ...campaignFixture,
+    targetAgentCustomers: campaignFixture.targetAgentCustomers.join("\n"),
+    useOfFunds: campaignFixture.useOfFunds.join("\n"),
+    risks: campaignFixture.risks.join("\n"),
+  };
+  const harness = await signingIslandHarness(values);
+  const disconnectedTree = harness.render();
+  const connectSection = elements(disconnectedTree).find((element) => element.props["data-ui"] === "provider-deploy-connect");
+
+  assert.ok(connectSection, "the final deploy form must offer a disconnected wallet action");
+  assert.match(visibleText(connectSection), /Connect MetaMask on Hedera Testnet to enable the first signing step\./u);
+  assert.doesNotMatch(visibleText(disconnectedTree), /Connect MetaMask to sign\./u);
+  const connectButton = elements(connectSection).find((element) => element.type === "Button" && visibleText(element) === "Connect MetaMask");
+  assert.ok(connectButton, "the deploy-form section must expose one labelled connect button");
+  connectButton.props.onClick();
+  assert.equal(harness.connectionRequests(), 1, "only the explicit button click may invoke the shared connect action");
+
+  harness.connect();
+  assert.equal(
+    elements(harness.render()).some((element) => element.props["data-ui"] === "provider-deploy-connect"),
+    false,
+    "the deploy-form action must disappear once the shared session is connected",
+  );
 });
