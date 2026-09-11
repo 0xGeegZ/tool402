@@ -7,6 +7,7 @@ import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { DetailList } from "../ui/detail-list";
 import { SignatureDialog, type SignatureResult } from "../wallet/signature-dialog";
 import { WalletIsland, type WalletSession } from "../wallet/wallet-connect";
 import {
@@ -127,14 +128,16 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
           <CardDescription>Fixed by the offering. A material change needs a separately signed offering version.</CardDescription>
         </CardHeader>
         <CardContent>
-          <dl className="grid gap-3 text-sm sm:grid-cols-2">
-            <div><dt className="text-muted-foreground">Unit price</dt><dd>{formatHbar(offering.terms.noteUnitPriceTinybars)}</dd></div>
-            <div><dt className="text-muted-foreground">Minimum</dt><dd>{offering.terms.minimumPurchaseUnits.toString()} units</dd></div>
-            <div><dt className="text-muted-foreground">Payout cap</dt><dd>{formatHbar(offering.terms.payoutCapTinybars)}</dd></div>
-            <div><dt className="text-muted-foreground">Terms version</dt><dd>{offering.terms.version}</dd></div>
-            <div><dt className="text-muted-foreground">Maturity</dt><dd>{offering.maturityAt}</dd></div>
-            <div><dt className="text-muted-foreground">Units requested</dt><dd>{committed !== null ? committed.units.toString() : validation.ok ? validation.units.toString() : "—"}</dd></div>
-          </dl>
+          <DetailList
+            items={[
+              ["Unit price", formatHbar(offering.terms.noteUnitPriceTinybars)],
+              ["Minimum", `${offering.terms.minimumPurchaseUnits.toString()} units`],
+              ["Payout cap", formatHbar(offering.terms.payoutCapTinybars)],
+              ["Terms version", offering.terms.version],
+              ["Maturity", offering.maturityAt],
+              ["Units requested", committed !== null ? committed.units.toString() : validation.ok ? validation.units.toString() : "—"],
+            ]}
+          />
           <p className="mt-4 text-sm text-muted-foreground">
             A disclosed {formatShare(offering.terms.reserveShareBps)}% of qualifying usage revenue funds capped distributions under the offering terms. This is not a projected return. No payout amount or timeline is promised.
           </p>

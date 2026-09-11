@@ -7,6 +7,7 @@ import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Field, textInputClass } from "../../ui/field";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
+import { DetailList } from "../../ui/detail-list";
 import { Status, StatusRegion, statusToneForOutcome } from "../../ui/status";
 import {
   nativeQuoteCompatibilityOutcomeMessage,
@@ -24,20 +25,14 @@ function NativeQuoteCompatibilityOutcome({ state }: { state: NativeQuoteCompatib
         {message}
       </Status>}
       {state.kind === "eligible" ? (
-        <dl className="grid gap-2 sm:grid-cols-3">
-          <div>
-            <dt className="font-medium text-foreground">Network</dt>
-            <dd>{state.network}</dd>
-          </div>
-          <div>
-            <dt className="font-medium text-foreground">Asset</dt>
-            <dd>{state.asset}</dd>
-          </div>
-          <div>
-            <dt className="font-medium text-foreground">Atomic amount</dt>
-            <dd>{state.amount.toString()}</dd>
-          </div>
-        </dl>
+        <DetailList
+          columns={3}
+          items={[
+            ["Network", state.network],
+            ["Asset", state.asset],
+            ["Atomic amount", state.amount.toString()],
+          ]}
+        />
       ) : null}
     </StatusRegion>
   );
