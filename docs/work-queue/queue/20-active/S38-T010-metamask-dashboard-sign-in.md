@@ -125,3 +125,15 @@ the existing dashboard wording amendment, configuration/environment value,
 wallet account request/signature, provider command, relay, transaction,
 payment, deployment, and live action remains prohibited pending independent
 RED acceptance.
+
+## RED acceptance
+
+The independent [S38 durable RED review](../../evidence/S38-T010-red-review.md)
+is clear at `5a7ca33bd23e3877f77798a8b3490d643eb9a154`. The focused RED contract
+has exactly one source-absence failure covering all eight declared S38 sources
+and twenty staged skips. The card may now implement only its eight declared
+production source paths and the root-reserved dashboard eyebrow plus two
+matching wording assertions in the plan's staged order. Every other path and
+every configuration/environment value, real wallet account request/signature,
+provider command, relay, transaction, payment, deployment, and live action
+remains prohibited.

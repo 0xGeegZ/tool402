@@ -50,6 +50,13 @@
   dashboard wording/test amendment, configuration, wallet account/signature,
   provider command, relay, transaction, payment, deployment, and live action
   remains prohibited pending independent RED acceptance.
+- S38_METAMASK_DASHBOARD_AUTH_RED_ACCEPTANCE: Independent re-review accepts
+  durable RED `5a7ca33bd23e3877f77798a8b3490d643eb9a154`: one intended absence
+  failure names all eight source paths and twenty staged contracts skip. Only
+  the eight declared auth sources and the root-reserved Dashboard eyebrow plus
+  its two matching wording assertions are eligible for staged GREEN. No other
+  source/test path, configuration, wallet account/signature, provider command,
+  relay, transaction, payment, deployment, or live action is authorized.
 
 - S36_PROVIDER_SIGNATURE_HANDOFF_INTAKE: User-directed local POLISH intake.
   S36-T010 may make the existing actionable signature request discoverable

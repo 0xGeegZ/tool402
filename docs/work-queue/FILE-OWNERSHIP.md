@@ -1104,6 +1104,13 @@ and every account/profile/balance/role/allowlist/payment/transaction/deployment
 path are excluded. No S38 source or test path is active until fresh independent
 readiness and test-only RED activation are recorded.
 
+Independent durable RED acceptance at `5a7ca33bd23e3877f77798a8b3490d643eb9a154`
+now authorizes only S38's eight declared source paths and its root-reserved
+dashboard eyebrow plus the two matching wording assertions. They must land in
+the plan's staged order; no other source/test path, configuration, wallet or
+account action, signature, relay, transaction, payment, deployment, or live
+boundary is transferred.
+
 S27-T010 is an `00-inbox` POLISH card with no active source reservation. Its
 proposed new test is `apps/web/tests/deploy-wizard-stepper.test.mjs`; its
 root-only integration reservations are the `StepProgress` function, caption,
