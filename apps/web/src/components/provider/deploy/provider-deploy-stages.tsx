@@ -215,7 +215,7 @@ export function ProviderDeployStages({
           <div className="space-y-1">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">Next action</p>
             <p className="font-medium text-foreground">Stage {enabledStage + 1}: {activeDefinition.label}</p>
-            <p className="text-sm leading-6 text-muted-foreground">Open the existing signature request. Nothing is recorded unless the relay reports acceptance.</p>
+            <p className="max-w-prose text-sm leading-6 text-muted-foreground">Open the existing signature request. Nothing is recorded unless the relay reports acceptance.</p>
           </div>
           <Button type="button" onClick={() => onActivate?.(enabledStage)} className="w-full sm:w-auto">
             {activeControl.label}

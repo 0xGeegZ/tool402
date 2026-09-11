@@ -281,7 +281,7 @@ function ReviewStep({ values }: { values: WizardValues }) {
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Review</p>
           <h2 id="provider-deploy-review" className="text-2xl font-semibold tracking-tight">Check the prepared details</h2>
-          <p className="text-sm leading-6 text-muted-foreground">Nothing is sent until you request and confirm a signature below. The values above remain a local, editable preview.</p>
+          <p className="max-w-prose text-sm leading-6 text-muted-foreground">Nothing is sent until you request and confirm a signature below. The values above remain a local, editable preview.</p>
         </div>
         <dl className="grid gap-3 rounded-field border bg-muted/30 p-4 text-sm sm:grid-cols-2">
           {reviewRows.map(([label, value]) => (

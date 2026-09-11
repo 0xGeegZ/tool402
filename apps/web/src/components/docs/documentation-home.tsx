@@ -52,7 +52,7 @@ export function DocumentationHome() {
         <div className="max-w-2xl space-y-2">
           <Badge variant="outline" className="border-border bg-background">Current local guides</Badge>
           <h2 id="documentation-guides" className="text-2xl font-bold tracking-tight sm:text-3xl">Choose a guide</h2>
-          <p className="text-base leading-7 text-muted-foreground">
+          <p className="max-w-prose text-base leading-7 text-muted-foreground">
             These pages describe the current RiskScan and Provider surfaces without adding a new product path.
           </p>
         </div>
@@ -64,7 +64,7 @@ export function DocumentationHome() {
                 <Badge variant="outline" className="w-fit border-border bg-secondary/50">{guide.eyebrow}</Badge>
                 <div className="space-y-2">
                   <h3 className="text-xl font-bold tracking-tight">{guide.title}</h3>
-                  <p className="text-sm leading-6 text-muted-foreground">{guide.description}</p>
+                  <p className="max-w-prose text-sm leading-6 text-muted-foreground">{guide.description}</p>
                 </div>
               </CardHeader>
               <CardContent className="mt-auto pt-2">
