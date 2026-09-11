@@ -33,13 +33,14 @@ test("presents the guest workspace as a dashboard rather than a preview", async 
   assert.doesNotMatch(navigation, /<(?:a|button)\b/i);
 });
 
-test("preserves the current four-entry local navigation", async () => {
+test("preserves the current five-entry local navigation", async () => {
   const navigation = await readAppFile("src/components/discovery/local-navigation.tsx");
 
   const links = [...navigation.matchAll(/\{ href: "([^"]+)", label: "([^"]+)" \}/g)].map(([, href, label]) => ({ href, label }));
   assert.deepEqual(links, [
     { href: "/explore", label: "Explore tools" },
     { href: "/#how-it-works", label: "How it works" },
+    { href: "/docs", label: "Docs" },
     { href: "/demo", label: "Guided demo" },
     { href: "/provider", label: "Campaign" },
   ]);
