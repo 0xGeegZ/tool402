@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 
-const steps = [
+export const steps = [
   { href: "/", title: "Product overview", observation: "Read the product overview and continue to Explore." },
   { href: "/explore", title: "Explore assessments", observation: "Find the RiskScan entry and its local discovery surface." },
   { href: "/explore/riskscan", title: "Read RiskScan", observation: "Review the Quick input, result, and configuration boundaries." },
