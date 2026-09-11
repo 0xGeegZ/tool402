@@ -116,7 +116,14 @@ test("keeps the Provider guide within the current preview boundary", async (t) =
 test("keeps the guides static, flat, focusable, and free of public-capability claims", async (t) => {
   const sources = await readDocumentationSources(t);
   if (!sources) return;
-  const docs = [sources.home, sources.riskScanGuide, sources.providerGuide].join("\n");
+  const docs = [
+    sources.homePage,
+    sources.riskScanPage,
+    sources.providerPage,
+    sources.home,
+    sources.riskScanGuide,
+    sources.providerGuide,
+  ].join("\n");
 
   assert.doesNotMatch(docs, /["']use client["']|\bfetch\s*\(|process\.env|localStorage|sessionStorage|indexedDB/i);
   assert.doesNotMatch(docs, /<(?:button|form|input|select|textarea)\b/i);
