@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: S20-T010, S23-T010, S25-T010, and S31-T010 accepted.
 - Owner: The root owns queue records, the UI ledger, decisions, reviews,
   commits, and pushes. Candidate implementation paths are exactly those
@@ -35,6 +35,15 @@ No test or source path is authorized by this intake. A later activation may
 authorize only the two focused test paths for durable RED. Only a fresh
 independent RED review may authorize minimal presentation GREEN in the exact
 UI-S33 path set.
+
+## Ready authority
+
+Independent readiness review is clear at
+dec98bb22fc8a3e2403a426fa5639130bb053cf4: every dependency is accepted,
+there is no active source collision, all five existing targets are present, the
+new visual test is absent, and the Node 22.21.1 Explore baseline passes 1/1.
+S33-T010 moves to 10-ready only. A separate independent activation is still
+required before either test path can enter durable RED.
 
 ## Verification
 

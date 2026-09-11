@@ -1213,3 +1213,7 @@ No target is active until a fresh independent readiness review and separate
 RED activation. The Directory island, navigation, shared/global CSS, route
 behavior, API/data, client state, wallet/provider/payment, transaction,
 deployment, and every live boundary remain excluded.
+
+Independent readiness at dec98bb22fc8a3e2403a426fa5639130bb053cf4 is clear.
+S33-T010 is 10-ready with no active source or test reservation; a separate
+activation may grant only its two named focused tests for durable RED.
