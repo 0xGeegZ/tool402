@@ -240,21 +240,46 @@ function readServerNow(milliseconds: number): { readonly text: string; readonly 
   }
 }
 
-function serializedCommand(command: {
-  readonly version: 1;
-  readonly type: "external.prepare" | "offering.create" | "directory.publish";
-  readonly chainId: 296;
-  readonly canonicalSignerAddress: string;
-  readonly nonce: string;
-  readonly issuedAt: string;
-  readonly expiresAt: string;
-  readonly payloadHash: string;
-  readonly replayIdentity: string;
-  readonly principalPublicId: string;
-  readonly role: "ISSUER" | "BACKER";
-  readonly authorityVersion: string;
-  readonly payload: unknown;
-}) {
+type SerializedCommand = Exclude<NormalizedCommand, { readonly type: "external.attachCandidate" }>;
+type OfferingCreateCommand = Extract<NormalizedCommand, { readonly type: "offering.create" }>;
+
+function serializedOfferingCreatePayload(payload: OfferingCreateCommand["payload"]) {
+  return {
+    schemaVersion: payload.schemaVersion,
+    offeringPublicId: payload.offeringPublicId,
+    offeringVersion: payload.offeringVersion,
+    subjectPublicId: payload.subjectPublicId,
+    definition: {
+      schemaVersion: payload.definition.schemaVersion,
+      terms: {
+        version: payload.definition.terms.version,
+        fundingTargetTinybars: payload.definition.terms.fundingTargetTinybars.toString(),
+        noteUnitPriceTinybars: payload.definition.terms.noteUnitPriceTinybars.toString(),
+        maximumNoteUnits: payload.definition.terms.maximumNoteUnits.toString(),
+        minimumPurchaseUnits: payload.definition.terms.minimumPurchaseUnits.toString(),
+        reserveShareBps: payload.definition.terms.reserveShareBps.toString(),
+        issuerShareBps: payload.definition.terms.issuerShareBps.toString(),
+        platformFeeBps: payload.definition.terms.platformFeeBps.toString(),
+        payoutCapTinybars: payload.definition.terms.payoutCapTinybars.toString(),
+      },
+      maturityAt: payload.definition.maturityAt,
+      qualifyingResource: payload.definition.qualifyingResource,
+    },
+    narrative: {
+      title: payload.narrative.title,
+      customerProblem: payload.narrative.customerProblem,
+      customerUseCases: [...payload.narrative.customerUseCases],
+      useOfFunds: [...payload.narrative.useOfFunds],
+      risks: [...payload.narrative.risks],
+    },
+    advertisedQuickPriceTinybars: payload.advertisedQuickPriceTinybars.toString(),
+    advertisedStandardPriceTinybars: payload.advertisedStandardPriceTinybars.toString(),
+    idempotencyKey: payload.idempotencyKey,
+    expiresAt: payload.expiresAt,
+  };
+}
+
+function serializedCommand(command: SerializedCommand) {
   return {
     version: command.version,
     type: command.type,
@@ -268,7 +293,9 @@ function serializedCommand(command: {
     principalPublicId: command.principalPublicId,
     role: command.role,
     authorityVersion: command.authorityVersion,
-    payload: command.payload,
+    payload: command.type === "offering.create"
+      ? serializedOfferingCreatePayload(command.payload)
+      : command.payload,
   };
 }
 
