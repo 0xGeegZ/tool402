@@ -5,6 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const sourceUrl = new URL("../src/lib/dashboard-campaign.ts", import.meta.url);
+const componentUrl = new URL("../src/components/dashboard/dashboard-campaign.tsx", import.meta.url);
 const sourcePath = fileURLToPath(sourceUrl);
 const componentUrl = new URL("../src/components/dashboard/dashboard-campaign.tsx", import.meta.url);
 const dashboardPageUrl = new URL("../src/app/dashboard/page.tsx", import.meta.url);
@@ -80,4 +81,10 @@ implementedTest("renders one local empty card when the signed session has no cam
   assert.match(source, /There is no RiskScan campaign associated with this signed dashboard session\./u);
   assert.match(source, /href="\/provider\/deploy"[^>]*>Prepare a tool</u);
   assert.match(source, /href="\/explore\/riskscan"[^>]*>Explore RiskScan</u);
+});
+
+implementedTest("uses the configured session cookie name when it reads the dashboard campaign", async () => {
+  const source = await readFile(componentUrl, "utf8");
+  assert.match(source, /\breadDashboardSessionCookieName\b/u);
+  assert.doesNotMatch(source, /const\s+sessionCookieName\s*=\s*["']__Host-tool402-dashboard-session/u);
 });

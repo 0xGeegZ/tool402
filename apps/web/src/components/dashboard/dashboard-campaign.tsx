@@ -1,18 +1,17 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 
-import { readDashboardSession } from "../../lib/dashboard-auth/dashboard-auth";
+import { readDashboardSession, readDashboardSessionCookieName } from "../../lib/dashboard-auth/dashboard-auth";
 import { readDashboardCampaign, riskScanOfferingPublicId } from "../../lib/dashboard-campaign";
 import { readProviderProjections } from "../../lib/offering-projection";
 import { Badge } from "../ui/badge";
 import { buttonVariants } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 
-const sessionCookieName = "__Host-tool402-dashboard-session";
-
 export async function DashboardCampaign() {
+  const sessionCookieName = readDashboardSessionCookieName(process.env);
   const session = await readDashboardSession(
-    (await cookies()).get(sessionCookieName)?.value ?? null,
+    sessionCookieName === null ? null : (await cookies()).get(sessionCookieName)?.value ?? null,
     process.env,
   );
   if (session === null) return null;
