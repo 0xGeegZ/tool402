@@ -7,11 +7,11 @@ import { PageHeader } from "../ui/page-header";
 const questions = [
   {
     question: "What is Tool402?",
-    answer: "Tool402 is a Hedera testnet prototype for agent tool discovery. An agent can find a capability, encounter an explicit 402 payment challenge, and receive a bounded result when the configured payment boundary is satisfied.",
+    answer: "Tool402 is a Hedera testnet prototype for agent tool discovery. An agent can find a capability and inspect the current local route boundary. A configured 402 response is not evidence that payment completed.",
   },
   {
     question: "How does the Tool402 flow work?",
-    answer: "The intended flow is Discover → Request → 402 Payment Required → payment proof → settlement verification → bounded result. Each step is shown only when the current route can support it.",
+    answer: "The current route flow is Discover → Request → 402 Payment Required → inspect the boundary → choose a local next step. A route does not turn a payment requirement into proof of settlement.",
   },
   {
     question: "What does RiskScan Quick assess?",
@@ -19,7 +19,7 @@ const questions = [
   },
   {
     question: "What is x402?",
-    answer: "x402 is the payment boundary used by a tool to say that payment is required before access. Receiving a 402 challenge alone does not prove that payment completed.",
+    answer: "x402 is the payment boundary used by a tool to say that payment is required before access. Receiving a 402 challenge alone is not proof of a completed payment.",
   },
   {
     question: "Does the Provider path deploy an ATS asset?",

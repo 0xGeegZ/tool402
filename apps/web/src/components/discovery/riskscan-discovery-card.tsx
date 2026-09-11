@@ -19,7 +19,7 @@ export function RiskScanDiscoveryCard() {
               </svg>
             </span>
             <div className="flex flex-wrap justify-end gap-2">
-              <Badge variant="secondary">Inspection available</Badge>
+              <Badge variant="secondary">In discovery</Badge>
               <Badge variant="outline">Risk assessment</Badge>
             </div>
           </div>
