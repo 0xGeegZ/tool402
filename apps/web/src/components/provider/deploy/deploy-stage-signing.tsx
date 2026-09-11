@@ -28,11 +28,20 @@ export function DeployStageSigning({
   children,
   footer,
   reviewing = true,
+  renderReview,
 }: {
   values: CampaignReviewValues;
-  children: ReactNode;
+  children?: ReactNode;
   footer?: ReactNode;
   reviewing?: boolean;
+  renderReview?: (layout: {
+    connect: ReactNode;
+    resumeNotice: ReactNode;
+    constructionNotice: ReactNode;
+    stages: ReactNode;
+    dialog: ReactNode;
+    footer: ReactNode;
+  }) => ReactNode;
 }) {
   const wallet = useWalletSession();
   const session: WalletSession | null = connectedWalletSession(wallet);
@@ -117,6 +126,22 @@ export function DeployStageSigning({
     setCandidate((current) => current ?? nextCandidate);
   }
 
+  const connect = wallet.state.kind === "disconnected" ? (
+    <section data-ui="provider-deploy-connect" aria-labelledby="provider-deploy-connect-title" className="rounded-control border border-border bg-card p-4 shadow-none sm:p-5">
+      <h2 id="provider-deploy-connect-title" className="text-sm font-semibold">Connect MetaMask</h2>
+      <p className="mt-2 text-[13px] leading-5 text-muted-foreground">Connect MetaMask on Hedera Testnet to enable the first signing step.</p>
+      <Button className="mt-3" onClick={() => { void wallet.connect(); }}>Connect MetaMask</Button>
+    </section>
+  ) : null;
+  const resumeNotice = session !== null && resumePending ? <p role="status" aria-live="polite" className="text-[13px] leading-5 text-muted-foreground">Checking the existing durable campaign before enabling any signature.</p> : null;
+  const constructionNotice = reviewing && constructionError ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null;
+  const stages = reviewing ? <ProviderDeployStages states={visibleStates} projection={atsCreateConfiguration} enabledStage={enabledStage} onActivate={activate} session={session} candidate={candidate} onCandidate={receiveCandidate} /> : null;
+  const dialog = reviewing && request && session ? <SignatureDialog provider={session.provider} request={request} onResult={finish} onCancel={() => finish({ phase: "rejected", outcome: null })} /> : null;
+
+  if (renderReview) {
+    return renderReview({ connect, resumeNotice, constructionNotice, stages, dialog, footer });
+  }
+
   return (
     <div className="grid gap-5 sm:gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-start">
       <aside data-ui="provider-review-wallet-context" className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1">
@@ -124,17 +149,11 @@ export function DeployStageSigning({
       </aside>
       <div data-ui="provider-deploy-signing" className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-1">
         {children}
-        {wallet.state.kind === "disconnected" ? (
-          <section data-ui="provider-deploy-connect" aria-labelledby="provider-deploy-connect-title" className="rounded-control border border-border bg-card p-4 shadow-none sm:p-5">
-            <h2 id="provider-deploy-connect-title" className="text-sm font-semibold">Connect MetaMask</h2>
-            <p className="mt-2 text-[13px] leading-5 text-muted-foreground">Connect MetaMask on Hedera Testnet to enable the first signing step.</p>
-            <Button className="mt-3" onClick={() => { void wallet.connect(); }}>Connect MetaMask</Button>
-          </section>
-        ) : null}
-        {session !== null && resumePending ? <p role="status" aria-live="polite" className="text-[13px] leading-5 text-muted-foreground">Checking the existing durable campaign before enabling any signature.</p> : null}
-        {reviewing && constructionError ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null}
-        {reviewing ? <ProviderDeployStages states={visibleStates} projection={atsCreateConfiguration} enabledStage={enabledStage} onActivate={activate} session={session} candidate={candidate} onCandidate={receiveCandidate} /> : null}
-        {reviewing && request && session ? <SignatureDialog provider={session.provider} request={request} onResult={finish} onCancel={() => finish({ phase: "rejected", outcome: null })} /> : null}
+        {connect}
+        {resumeNotice}
+        {constructionNotice}
+        {stages}
+        {dialog}
         {footer}
       </div>
     </div>

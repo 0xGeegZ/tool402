@@ -17,7 +17,7 @@ async function readIsland() {
   return readFile(join(appRoot, islandPath), "utf8");
 }
 
-async function signingIslandHarness(values) {
+async function signingIslandHarness(values, renderReview) {
   const slots = [];
   let cursor = 0;
   let connectionRequests = 0;
@@ -84,7 +84,7 @@ async function signingIslandHarness(values) {
   return {
     render() {
       cursor = 0;
-      return module.exports.DeployStageSigning({ values });
+      return module.exports.DeployStageSigning({ values, renderReview });
     },
     connect() {
       session = {
@@ -159,6 +159,34 @@ implementedTest("holds the M49 candidate in this session and passes one stable a
   assert.match(island, /\bsetCandidate\b/u, "a verified candidate belongs only to this browser session");
   assert.match(island, /useState<AtsCreateCandidate \| null>/u);
   assert.doesNotMatch(island, /(?:external\.attachCandidate|eth_signTypedData_v4)/u);
+});
+
+implementedTest("passes the connected wallet and stage controls to an embedded review layout", async () => {
+  const values = {
+    toolName: "RiskScan",
+    customerProblem: "Tool operators need a bounded way to assess request risk before they continue a workflow.",
+    qualifyingResource: "riskscan-local-assessment",
+    quickPrice: "0.1",
+    standardPrice: "0.1",
+    targetAgentCustomers: "Security-oriented agent operators",
+    useOfFunds: "Maintain the local assessment workflow and provider documentation.",
+    risks: "Testnet terms do not promise yield, principal, or return.",
+  };
+  let embeddedLayout = null;
+  const harness = await signingIslandHarness(values, (layout) => {
+    embeddedLayout = layout;
+    return [layout.wallet, layout.stages];
+  });
+
+  const beforeConnection = harness.render();
+  assert.ok(embeddedLayout, "the embedded review must receive the real wallet control");
+  assert.equal(elements(beforeConnection).filter((element) => element.type === "WalletIsland").length, 1);
+
+  harness.connect(beforeConnection);
+  await Promise.resolve();
+  const afterConnection = harness.render();
+  const stages = elements(afterConnection).find((element) => element.type === "ProviderDeployStages");
+  assert.equal(stages.props.enabledStage, 0, "the embedded stage list must receive the connected wallet session");
 });
 
 implementedTest("keeps a rejected local request out of the dialog and stage results with actionable feedback", async () => {
