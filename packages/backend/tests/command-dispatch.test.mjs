@@ -490,6 +490,25 @@ implementedTest("routes signed offering.create and directory.publish through the
   }
 });
 
+implementedTest("serializes normalized offering monetary quantities as decimal strings before Convex admission", async () => {
+  const { handleCommandIngressForTest } = await import(dispatchUrl);
+  const payload = offeringCreatePayload();
+  const transport = await signedTransport("offering.create", payload);
+  const ingress = await signedIngressRequest(transport);
+  const state = commandContext({
+    mutationResult: { status: "NEW", targetId: "offerings:private", state: "DRAFT" },
+  });
+  const seamState = testSeams({ key: ingress.key, type: "offering.create", payload });
+
+  const response = await handleCommandIngressForTest(state.ctx, ingress.request, seamState.seams);
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(await responseJson(response), { outcome: "ACCEPTED", publicId: payload.offeringPublicId });
+  assert.equal(state.mutations.length, 1);
+  assert.equal(state.mutations[0].name, "offerings:admitOfferingCreate");
+  assert.deepEqual(state.mutations[0].args.payload, payload);
+});
+
 implementedTest("fails closed before replay, authority, or admission when required production ingress configuration is absent, malformed, or mismatched", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now: serverNowMilliseconds });
   const { handleCommandIngress } = await import(dispatchUrl);
