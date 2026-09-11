@@ -411,3 +411,12 @@
 - M38_RED_ACCEPTANCE: 2026-09-08T22:17:00Z. Independent re-review at pushed `fb95e731dfff85145ed50bd0be28ee087a0173d7` is clear. Under Node 22.21.1, offering-create, directory-publish, and attach-candidate each fail exactly once only for their declared absent source module and skip their GREEN checks. The complete contracts cover descriptor-safe closed roots, delegated local parsers, canonical bytes, exact candidate transaction types, and optional address shape. Only the three declared Core source modules and narrow append-only barrel amendment are eligible; no command, wallet, provider, network, storage, ATS, transaction, deployment, or live behavior is authorized.
 
 No secrets, account keys, or private evidence belong in this file.
+
+- M50_WALLET_SESSION_SYNC_INTAKE: M50-T010 is a new `00-inbox` CORE_P0
+  correction for stale displayed MetaMask account/chain state after a native
+  session-change event. Its sole candidate surface is the native provider seam,
+  the existing wallet island, and two focused test paths. S26-T010 remains
+  inbox-only and has no active collision. No test or source path is active
+  until independent readiness and test-only RED activation; no wallet
+  permission, account selection, signature, relay, transaction, or live action
+  is authorized by this intake.
