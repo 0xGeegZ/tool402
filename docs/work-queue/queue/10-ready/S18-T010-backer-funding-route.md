@@ -3,7 +3,7 @@
 ## State
 
 - Tier: PRIZE_OPTIONAL
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M02-T020 accepted, M11-T020 accepted, M16-T010 accepted, M18-T010 accepted, M29-T010 accepted, S15-T010 (this batch), M40-T010 (this batch), M43-T010 (this batch)
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
@@ -168,3 +168,11 @@ card does not restate them.
   integration decision, and every queue record. The branch is mirrored as a
   pull request for human visibility only; nothing from it reaches `main`
   outside the root's integration decision.
+
+## Readiness
+
+The independent [S18 readiness review](../../evidence/S18-T010-ready-review.md)
+is clear at canonical `e54ed962d7cb381208bf5006ffd26039aa20a1d6`.
+S18-T010 is ready only for a separate root activation of the two declared
+test paths. No source, wallet, signature, relay, payment, transaction, or live
+authority is active.
