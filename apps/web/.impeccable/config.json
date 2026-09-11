@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "src/components/ui/state-panel.tsx"
+        ],
+        "createdAt": "2026-09-11T14:50:19.453Z",
+        "reason": "Agent: StatePanel illustration is a prop-driven decorative slot; src arrives from the caller and tests/state-panel.test.mjs pins the img"
+      }
+    ]
+  }
+}
