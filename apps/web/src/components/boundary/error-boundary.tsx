@@ -28,7 +28,7 @@ export function ErrorBoundary({ reset }: ErrorBoundaryProps) {
           <Button onClick={reset}>Try again</Button>
           <Link
             href="/"
-            className="inline-flex min-h-10 items-center rounded-control border border-border px-4 text-sm font-medium transition-colors hover:bg-muted"
+            className="inline-flex min-h-10 touch-target items-center rounded-control border border-border px-4 text-sm font-medium transition-colors hover:bg-muted"
           >
             Return home
           </Link>

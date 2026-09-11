@@ -149,7 +149,7 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
         <CardContent className="space-y-4">
           <label className="block space-y-2 text-sm">
             <span className="font-medium">Units</span>
-            <input name="units" inputMode="numeric" value={unitsInput} disabled={locked} aria-invalid={!validation.ok} aria-describedby="backing-units-message" onChange={(event: ChangeEvent<HTMLInputElement>) => setUnitsInput(event.target.value)} className="block w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2" />
+            <input name="units" inputMode="numeric" value={unitsInput} disabled={locked} aria-invalid={!validation.ok} aria-describedby="backing-units-message" onChange={(event: ChangeEvent<HTMLInputElement>) => setUnitsInput(event.target.value)} className="block w-full rounded-control border border-border bg-background px-3 py-2" />
           </label>
           <p id="backing-units-message" className="text-sm text-muted-foreground">{validation.ok ? "Whole units within the offering bounds." : validation.message}</p>
           <p className="text-sm">Amount: {committed !== null ? formatHbar(committed.tinybars) : validation.ok ? formatHbar(validation.units * offering.terms.noteUnitPriceTinybars) : "—"}</p>

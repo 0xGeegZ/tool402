@@ -11,7 +11,7 @@ export function LandingHero() {
         <div className="max-w-2xl space-y-6">
           <div aria-label="Tool402 status" className="flex flex-wrap gap-2">
             <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-brand-green/30 bg-brand-green/10 px-3 text-xs font-medium text-brand-green">
-              <span aria-hidden="true" className="flex size-4 items-center justify-center rounded-full bg-brand-green text-[10px] font-bold text-white">H</span>
+              <span aria-hidden="true" className="flex size-4 items-center justify-center rounded-full bg-brand-green text-[11px] font-bold text-white">H</span>
               Hedera testnet preview
             </span>
             <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-border bg-card px-3 text-xs font-medium text-muted-foreground">
@@ -48,19 +48,18 @@ export function LandingHero() {
               width={1024}
               height={1024}
               priority
-              unoptimized
               sizes="(min-width: 1024px) 24rem, (min-width: 640px) 24rem, calc(100vw - 3rem)"
               className="size-full scale-110 object-cover"
             />
           </div>
           <div className="absolute -left-2 top-2 z-20 w-52 rounded-card border border-border/80 bg-card/95 p-3.5 shadow-lg backdrop-blur sm:-left-6 sm:top-6 sm:w-60 sm:p-4">
-            <span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">RiskScan</span>
+            <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">RiskScan</span>
             <span className="mt-1 block text-lg font-bold tracking-tight">Campaign preparation</span>
             <span aria-hidden="true" className="mt-3 block h-1.5 overflow-hidden rounded-full bg-secondary"><span className="block h-full w-1/4 rounded-full bg-brand-purple" /></span>
             <span className="mt-2 block text-[11px] text-muted-foreground">Testnet · not live</span>
           </div>
           <div className="absolute -right-2 bottom-2 z-20 rounded-card border border-border bg-card p-3 shadow-md sm:-right-4 sm:bottom-8 sm:p-3.5">
-            <span className="block text-[10px] font-semibold uppercase tracking-wide text-brand-purple">402 boundary</span>
+            <span className="block text-[11px] font-semibold uppercase tracking-wide text-brand-purple">402 boundary</span>
             <span className="mt-1 flex items-center gap-2 text-sm font-semibold"><svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="size-4"><rect x="3.5" y="7" width="9" height="6.5" rx="1.25" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" strokeLinecap="round" /></svg>Payment Required</span>
           </div>
         </div>
