@@ -3,10 +3,10 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 20-active
 - Dependencies: S29-T010 accepted, M50-T010 accepted.
 - Owner: The root owns queue state, catalog, ownership, decisions, review,
-  commits, and pushes. Candidate source paths are exactly the UI-S36 targets.
+  commits, and pushes. The active paths are exactly the UI-S36 targets.
 - Human actions: none. This local presentation work does not request a
   wallet, signature, authority change, relay, durable record, payment,
   transaction, ATS execution, deployment, or live action.
@@ -19,28 +19,18 @@ the static declined-signature explanation is visually prominent near the
 wallet panel. This small slice adds one explicit current-stage handoff that
 calls the existing activation callback. It changes discoverability only.
 
-The local implementation contract is the
-[UI-S36 Provider signature handoff manifest](../../../ui/UI-S36.md). It builds
-on accepted [UI-S29](../../../ui/UI-S29.md) presentation and accepted M50
-wallet-session synchronization.
-
-## Candidate ready requirements
-
-- The card, manifest, plan, catalog, ownership, State, decision, and ledger
-  row are committed before a source or test change.
-- S29-T010 and M50-T010 remain accepted with no active ownership reservation
-  on the two UI-S36 paths.
-- The new test is absent and the existing stages component is present.
+The local contract is [UI-S36](../../../ui/UI-S36.md). The readiness and
+activation review confirms accepted S29/M50 have no active reservation on the
+two UI-S36 targets. The durable RED test has one intended failure: the absent
+handoff region. It authorizes minimal GREEN only in the two declared paths.
 
 ## Verification
 
-- Durable test-only RED proves the handoff is absent.
-- Focused behavioral test proves the handoff calls the existing stage callback
-  once for the current actionable stage and does not exist in blocked or
-  in-progress states.
+- The focused contract proves an actionable stage invokes the existing
+  callback exactly once and non-actionable states add no entry point.
 - Web typecheck/test/lint, root lint, queue/reference/whitespace validation,
   enabled guard, and a non-interacting browser render of `/provider/deploy`
-  are clear.
+  are required before review.
 
 ## Boundary
 
