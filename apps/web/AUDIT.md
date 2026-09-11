@@ -120,3 +120,18 @@ Heading order skips: 0 on every route. Unlabelled fields: 0. Images without alt:
 - Overlay counts for `/` were captured before #56; the post-merge landing was re-scanned with the CLI detector only.
 - Touch-target coverage under `pointer: coarse` cannot be measured in a desktop iframe; it was verified in compiled CSS at `e54ed96`.
 - Playwright is not installed in this repo; all browser evidence came through Chrome.
+
+## 11. Re-audit, same day
+
+Measured on a local integration of main `b65d831` with PRs #80, #85, #86 and #87. Full snapshot: `.impeccable/critique/2026-09-11T18-59-00Z__src-re-audit.md`.
+
+| | 1aef636 | tip |
+|---|---|---|
+| Technical health | 14/20 | 17/20 |
+| Design health | 25/40 | 30/40 |
+| Detector | 9 | 0 |
+| Tests | 11/350 failing | 374/374 passing |
+| Off-scale radii / 10px text / `unoptimized` / small brand-purple | 26 / 11 / 1 / 3 | 0 / 0 / 0 / 0 |
+| Live regions at load | 0 | present on every outcome island |
+
+Plan status: items 1, 3, 4, 5, 6, 7, 8, 9, 10, 11 done; item 2 superseded by #77; item 12 is this pass. One new P1: the `touch-target` utility is emitted before `min-h-*` and loses the cascade, so every Button is 32 to 40px under a coarse pointer. Next: `/impeccable adapt` for that, `/impeccable typeset` for the page-header descriptions still at `max-w-3xl`, then `harden` and `extract` follow-ups on the wizard once #88 (the wizard rebuild) lands.
