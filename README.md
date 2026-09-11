@@ -180,7 +180,10 @@ docs/work-queue  Local control-plane records and human-action gates
 
 ## Current limitations
 
-- No public deployment URL or public Agent CLI exercise is currently recorded.
+- Public RiskScan deployment: [https://tool402.vercel.app](https://tool402.vercel.app)
+  serves source commit `5de50e0ae045b60e6091877b7092d38b55178975`; only
+  nonpayable public smokes are recorded. The Consumer Agent CLI paid exercise
+  remains pending.
 - EntityCheck is implemented as a protected endpoint but is not yet in the
   canonical Tool Directory; its live source configuration is pending.
 - Stage B is pending: no live revenue note, ATS asset, provider transaction,

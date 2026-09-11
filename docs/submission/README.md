@@ -11,7 +11,7 @@ Do not create duplicate facts elsewhere before they are verified.
 
 | Token | Replace only with |
 | --- | --- |
-| `<FINAL_PUBLIC_URL>` | The public HTTPS host and deployed commit recorded for the gated testnet service. |
+| [https://tool402.vercel.app](https://tool402.vercel.app) | Deployed from `5de50e0ae045b60e6091877b7092d38b55178975`; nonpayable public smoke only. |
 | `<FINAL_X402_TRANSACTION>` | The one redacted, independently checkable Hedera-testnet transaction reference from the Consumer Agent exercise. |
 | `<FINAL_ATS_TRANSACTION>` | The verified Hedera-testnet `deployBond` transaction reference after Stage B; leave unchanged if Stage B is not completed. |
 | `<FINAL_VIDEO_URL>` | The published human-narrated video URL after its 2–4 minute duration is measured. |
