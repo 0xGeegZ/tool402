@@ -7,7 +7,7 @@ import { Button, buttonVariants } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../ui/card";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { campaignFixture } from "./campaign-fixture";
-import { DeployStageSigning } from "./deploy-stage-signing";
+import { ProviderDeployStages } from "./provider-deploy-stages";
 import {
   acknowledgementCopy,
   canAdvance,
@@ -285,37 +285,28 @@ function TermsStep({
 }
 
 function ReviewStep({ values }: { values: WizardValues }) {
-  const reviewRows = [
-    ["Tool", values.toolName],
-    ["Category", values.category],
-    ["Resource", values.qualifyingResource],
-    ["Quick display price", `${values.quickPrice} HBAR`],
-    ["Standard display price", `${values.standardPrice} HBAR`],
-  ] as const;
+  const reviewRows = [["Tool name", values.toolName], ["Category", values.category], ["Qualifying resource", values.qualifyingResource], ["Quick display price", `${values.quickPrice} HBAR`], ["Standard price (HBAR)", `${values.standardPrice} HBAR`], ["Target agent customers", values.targetCustomers], ["Capability summary", values.capabilitySummary], ["Funding terms", values.useOfFunds]] as const;
+  const stageStates = [{ kind: "done" as const, detail: "Create and record the tool offering in a local projection." }, { kind: "blocked" as const, detail: "Generate the asset and metadata for the revenue note." }, { kind: "unavailable" as const, detail: "Create the revenue note in MetaMask and attach the returned candidate." }, { kind: "blocked" as const, detail: "Submit the tool and revenue note to the Tool402 directory." }];
 
   return (
-    <DeployStageSigning values={values}>
-      <section aria-labelledby="provider-deploy-review" className="space-y-4">
-        <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Review</p>
-          <h2 id="provider-deploy-review" className="text-2xl font-semibold tracking-tight">Check the prepared details</h2>
-          <p className="max-w-prose text-sm leading-6 text-muted-foreground">Nothing is sent until you request and confirm a signature below. The values above remain a local, editable preview.</p>
+    <div className="space-y-4">
+      <section className="rounded-card border border-border bg-card p-5 shadow-none sm:p-6" aria-labelledby="wallet-title">
+        <div className="grid gap-5 lg:grid-cols-[1fr_0.8fr] lg:items-center">
+          <div className="flex gap-4"><div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-secondary text-xl text-primary" aria-hidden="true">▣</div><div><h2 id="wallet-title" className="text-lg font-bold">Connect your wallet</h2><p className="mt-1 text-sm leading-5 text-muted-foreground">A connected wallet only enables the next local signature request. It does not create, fund, or publish anything by itself.</p><Button type="button" className="mt-3 h-9 rounded-control px-4 text-sm">Connect MetaMask</Button></div></div>
+          <div className="rounded-field bg-secondary p-4"><p className="font-semibold">Your keys, your control</p><p className="mt-1 text-sm leading-5 text-muted-foreground">You authorize each step. Nothing is submitted to the network until you sign and confirm.</p></div>
         </div>
-        <dl className="grid gap-3 rounded-field border bg-muted/30 p-4 text-sm sm:grid-cols-2">
-          {reviewRows.map(([label, value]) => (
-            <div key={label} className="space-y-1">
-              <dt className="text-muted-foreground">{label}</dt>
-              <dd className="font-medium text-foreground">{value}</dd>
-            </div>
-          ))}
-        </dl>
       </section>
-    </DeployStageSigning>
+      <section className="rounded-card border border-border bg-card p-5 shadow-none sm:p-6" aria-labelledby="prepared-title">
+        <div className="flex items-start justify-between gap-4"><div className="flex gap-4"><div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-secondary text-xl text-primary" aria-hidden="true">▤</div><div><h2 id="prepared-title" className="text-lg font-bold">Prepared details</h2><p className="mt-1 text-sm leading-5 text-muted-foreground">Review the key details of your offering. These values remain editable until you sign.</p></div></div><Button type="button" variant="outline" className="hidden shrink-0 sm:inline-flex">Edit details</Button></div>
+        <dl className="mt-4 grid gap-x-8 gap-y-3 rounded-field border border-border bg-muted/30 p-3 text-sm sm:grid-cols-2">{reviewRows.map(([label, value]) => <div key={label} className="grid grid-cols-[minmax(7rem,0.8fr)_1.2fr] gap-2"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium text-foreground">{value}</dd></div>)}</dl>
+      </section>
+      <section className="rounded-card border border-border bg-card p-5 shadow-none sm:p-6" aria-labelledby="stages-title"><div className="flex gap-4"><div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-secondary text-xl text-primary" aria-hidden="true">▱</div><div><h2 id="stages-title" className="text-lg font-bold">Deployment stages</h2><p className="mt-1 text-sm leading-5 text-muted-foreground">Complete each stage in order. You&apos;ll be prompted to sign when required.</p></div></div><div className="mt-5"><ProviderDeployStages states={stageStates} /></div><p className="mt-4 rounded-field border border-border bg-muted/30 p-3 text-xs leading-5 text-muted-foreground">ⓘ A declined signature leaves its stage ready to try again. Nothing was recorded. This page never retries on its own.</p></section>
+    </div>
   );
 }
 
 export function ProviderDeployWizard() {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(4);
   const [values, setValues] = useState<WizardValues>(initialValues);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const fieldErrors = showValidationErrors ? providerDeployFieldErrors(values, currentStep) : emptyFieldErrors;
