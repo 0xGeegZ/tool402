@@ -2,8 +2,10 @@
 
 - M52_STAGE_B_ISSUER_ACCOUNT_SELECTION_INTAKE: User-directed CORE_P0
   correction. MetaMask may return more than one site-authorized account. The
-  readiness, activation, and RED reviews are clear. M52 may now make only the
-  narrow bridge/test correction for the fixed-issuer membership check; no provider request,
+  acceptance is clear at `dc5c0701`: the bridge accepts only a valid account
+  list containing the fixed issuer exactly once, while preserving every
+  transaction input and rejecting absent, duplicate, and malformed issuer
+  values before a send. No provider request,
   transaction, receipt, Mirror read, candidate, attachment, authority, or
   live action is authorized.
 
