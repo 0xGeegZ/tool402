@@ -156,6 +156,7 @@ implementedTest("renders the compact header control per session kind from the sh
   const source = await readAppFile(islandPath);
 
   assert.match(source, /^"use client";/u);
+  assert.match(source, /import Link from ["']next\/link["'];/u);
   assert.match(source, /import\s*\{\s*useWalletSession\s*\}\s+from\s+["']\.\/wallet-session["']/u);
   assert.doesNotMatch(source, /\buseState\b|\buseRef\b|\buseEffect\b/u, "the island holds no local session state");
   assert.doesNotMatch(source, /discoverMetaMaskProvider|connectWallet|readCurrentSession|recheckAfterSwitch/u);
@@ -183,6 +184,7 @@ implementedTest("renders the compact header control per session kind from the sh
     };
     const api = await loadClientModule(islandPath, {
       "react/jsx-runtime": jsxRuntime,
+      "next/link": { default: "Link" },
       "../ui/badge": { Badge: "Badge" },
       "../ui/button": { Button: "Button" },
       "./wallet-session": { useWalletSession: () => session },
@@ -202,6 +204,9 @@ implementedTest("renders the compact header control per session kind from the sh
       assert.equal(badges[0].props.variant, "secondary");
       assert.equal(badges[0].props.title, address);
       assert.equal(visibleText(badges[0]), "0xc89f…378e");
+      const dashboardLinks = elements(tree).filter((element) => element.type === "Link");
+      assert.equal(dashboardLinks.length, 1, `${state.kind} renders one dashboard link`);
+      assert.equal(dashboardLinks[0].props.href, "/dashboard");
       continue;
     }
 
