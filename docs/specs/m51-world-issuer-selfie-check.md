@@ -32,23 +32,27 @@ created.
 lowercase EVM `address`. It creates a five-minute RP context for the fixed
 `issuer-publish` action and returns the public IDKit request values. The
 client asks IDKit for the `selfieCheckLegacy` credential with that same address
-as its signal.
+as its signal and enables legacy proofs for that credential.
 
 `POST /api/world/verify` accepts the canonical address and the opaque IDKit
-result. It forwards that result unchanged to World v4 verification for the
-fixed RP id. On World success only, it writes a HttpOnly, Secure, SameSite=Lax
-cookie scoped to `/api/commands`, bound to the address and expiring after ten
-minutes. The cookie payload is MACed using a key derived from the RP private
-key with the fixed `tool402-world-session-v1` context. Neither raw proof nor
-nullifier is exposed by Tool402 or retained beyond World verification.
+result. Before forwarding it to World v4, the route requires a legacy
+`selfie` response and verifies that every response signal hash equals the
+expected hash of that exact canonical address. A mismatched or malformed
+result returns the closed verification failure without calling World. On World
+success only, it writes a HttpOnly, Secure, SameSite=Lax cookie scoped to
+`/api/commands`, bound to the address and expiring after ten minutes. The
+cookie payload is MACed using a key derived from the RP private key with the
+fixed `tool402-world-session-v1` context. Neither raw proof nor nullifier is
+exposed by Tool402 or retained beyond World verification.
 
 The command relay parses only enough JSON to identify a claimed
 `directory.publish` signer. It forwards that command only if the valid cookie
 is bound to that exact signer. The existing backend remains responsible for
 the EIP-712 signature, command authority, replay, and durable publication
 checks. A malformed, expired, wrong-address, or missing World cookie returns a
-closed `403 WORLD_VERIFICATION_REQUIRED` response without forwarding the body.
-All non-publication relay behaviour remains byte-for-byte compatible.
+closed `403 WORLD_VERIFICATION_REQUIRED` response without forwarding the body,
+including when the provider ingress configuration is unavailable. All
+non-publication relay behaviour remains byte-for-byte compatible.
 
 ## UI contract
 
