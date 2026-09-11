@@ -627,7 +627,6 @@ implementedTest("rejects non-canonical public hashes before any provider or Mirr
   assert.deepEqual(provider.calls, []);
   assert.deepEqual(mirror.calls, []);
 });
-
 implementedTest("recovers a confirmed Hedera long-zero issuer result", async () => {
   const log = createBondDeployedLog(factoryApi, projectionApi);
   const mirrorIssuer = "0x00000000000000000000000000000000009f29a7";
