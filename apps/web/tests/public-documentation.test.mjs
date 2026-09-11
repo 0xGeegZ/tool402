@@ -67,8 +67,8 @@ test("keeps the documentation entry and RiskScan guide factual and local", async
   if (!sources) return;
   const { home, riskScanGuide } = sources;
 
-  assert.equal((home.match(/<h1\b/g) ?? []).length, 1);
-  assert.equal((riskScanGuide.match(/<h1\b/g) ?? []).length, 1);
+  assert.match(home, /<PageHeader\b/);
+  assert.match(riskScanGuide, /<PageHeader\b/);
   assert.match(home, /href: "\/docs\/riskscan"/);
   assert.match(home, /href: "\/docs\/providers"/);
   assert.match(riskScanGuide, /GET \/api\/tools/);
@@ -93,7 +93,7 @@ test("keeps the Provider guide within the current preview boundary", async (t) =
   if (!sources) return;
   const { providerGuide } = sources;
 
-  assert.equal((providerGuide.match(/<h1\b/g) ?? []).length, 1);
+  assert.match(providerGuide, /<PageHeader\b/);
   for (const title of [
     "Tool details",
     "Interface and capability",
