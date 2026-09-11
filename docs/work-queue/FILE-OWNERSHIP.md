@@ -652,13 +652,12 @@ be accepted before M44 touches its declared action path. No other cross-card
 source overlap is authorized. Every card retains its explicit human-action and
 external-capability exclusions.
 
-S18-T010 is `20-active` at canonical `b5431a8cc85198ba2259e7478c36a50ff3ccd874`.
-Its exact future route, backing components, and focused tests are reserved for
-S18 alone. Only `apps/web/tests/backing-state.test.mjs` and
-`apps/web/tests/backing-route.test.mjs` are active for durable RED; every S18
-source path remains prohibited pending independent RED acceptance. The direct
-route must remain supplied-projection-only and unavailable while no separately
-accepted runtime boundary supplies a funding treasury.
+S18-T010 is accepted at source integration `3e437be3e5095a2e5f0c94422d35394842c7a445`.
+Its route, backing components, and focused tests have no continuing reservation.
+The direct route remains supplied-projection-only and unavailable while no
+separately accepted runtime boundary supplies an OPEN offering and explicit
+funding treasury. Its acceptance provisions neither an enabled `BACKER`
+authority nor an M40 treasury field.
 
 M44-T010's independently reviewed RED contract is accepted at `c5d2bf3`.
 Before any remaining M44 source, the root-owned next step may amend only

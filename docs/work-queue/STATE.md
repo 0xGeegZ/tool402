@@ -204,6 +204,13 @@
   RED acceptance. The current complete Web suite has eleven non-S18 baseline
   assertion failures from #56; they are recorded as unrelated and do not
   grant an S18 exception.
+- S18_BACKER_FUNDING_ACCEPTANCE: HI-012 records no enabled `BACKER` authority
+  and no M40 funding treasury, so S18 is accepted only as a supplied-projection
+  UI boundary. The independently reviewed lane integration `3e437be` passes
+  its focused twelve tests and Web typecheck. The direct route supplies `null`
+  and renders unavailable; no live funding, wallet use, transfer, allocation,
+  or authority is active. Any future caller must be separately accepted and
+  require an OPEN offering with an explicit lowercase EVM treasury.
 - S34_PUBLIC_DOCUMENTATION_READY: Independent readiness at
   `3f52a4941354321ed5d5dd57a0f44b93f72bce48` accepts the root-owned static
   documentation candidate. D-S34-010-001/002, UI-S34, the S34 specification,

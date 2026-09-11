@@ -3,7 +3,7 @@
 ## State
 
 - Tier: PRIZE_OPTIONAL
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T020 accepted, M11-T020 accepted, M16-T010 accepted, M18-T010 accepted, M29-T010 accepted, S15-T010 (this batch), M40-T010 (this batch), M43-T010 (this batch)
 - Owner: The root owns queue state, catalog, ownership, the UI slice ledger,
   decisions, reviews, commits, and pushes. Proposed implementation paths are
@@ -186,3 +186,21 @@ Only `apps/web/tests/backing-state.test.mjs` and
 The route, flow, state source, and every wallet, relay, payment, transaction,
 allocation, configuration, and live path remain prohibited pending independent
 RED acceptance.
+
+## HI-012 resolution and lane acceptance
+
+HI-012 is resolved without creating an enabled `BACKER` authority record and
+without adding an M40 funding-treasury field. Those are separate live/runtime
+decisions. This local slice may nevertheless ship because the direct route
+supplies `null` and therefore renders only `offering_unavailable` until a
+separately accepted caller supplies an explicit eligible projection and a
+lowercase EVM treasury address.
+
+The root independently reviewed the declared lane at
+`18de36f86dc80207d8d45e3a7fd9c5ce4844218d`. Its RED and GREEN sequence changes
+only the five paths owned by this card. The focused contract, Web typecheck,
+and boundary review are clear in
+[S18 lane review](../../evidence/S18-T010-lane-review.md). The card is accepted
+as a truthful local submission surface only. It does not authorize a
+projection reader, enabled `BACKER` authority, command admission, wallet use,
+transfer, allocation, or any live action.
