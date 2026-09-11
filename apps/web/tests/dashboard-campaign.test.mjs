@@ -42,6 +42,12 @@ implementedTest("returns the current RiskScan campaign only for its exact canoni
     href: "/provider/deploy",
   });
 
+  assert.deepEqual(readDashboardCampaign({ ...record, state: "OPEN" }, signer), {
+    title: "RiskScan",
+    state: "OPEN",
+    href: "/provider",
+  });
+
   for (const candidate of [
     { ...record, canonicalSignerAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
     { ...record, offeringPublicId: "another_campaign" },
@@ -95,4 +101,9 @@ implementedTest("labels deployed campaigns as a view instead of a resume action"
   assert.match(source, /View deployment/u);
   assert.match(source, /Resume deployment/u);
   assert.doesNotMatch(source, /Resume campaign/u);
+});
+
+implementedTest("sends deployed campaigns to the Provider status page", async () => {
+  const source = await readFile(sourceUrl, "utf8");
+  assert.match(source, /href:\s*["']\/provider["']/u);
 });

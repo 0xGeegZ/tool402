@@ -1,7 +1,7 @@
 export type DashboardCampaign = Readonly<{
   title: string;
   state: "DRAFT" | "ASSET_PENDING" | "READY" | "OPEN" | "CLOSED";
-  href: "/provider/deploy";
+  href: "/provider" | "/provider/deploy";
 }>;
 
 const canonicalAddressPattern = /^0x[0-9a-f]{40}$/u;
@@ -35,9 +35,10 @@ export function readDashboardCampaign(input: unknown, sessionSignerAddress: stri
     return null;
   }
 
+  const deployed = input.state === "OPEN" || input.state === "CLOSED";
   return Object.freeze({
     title: input.narrative.title,
     state: input.state as DashboardCampaign["state"],
-    href: "/provider/deploy",
+    href: deployed ? "/provider" : "/provider/deploy",
   });
 }

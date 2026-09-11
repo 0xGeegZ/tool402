@@ -261,6 +261,7 @@ implementedTest("gives each projection its own deadline and rejects bodies above
 implementedTest("renders only the fixed status regions, actions, evidence rows, and gated external link", async () => {
   const sources = await readSources();
   const page = sources["src/app/provider/page.tsx"];
+  assert.match(page, /readProviderProjections\(process\.env, globalThis\.fetch, ["']riskscan_revenue_note_demo["']\)/u);
   const status = sources["src/components/provider/status/provider-status.tsx"];
   const state = sources["src/components/provider/status/provider-status-state.ts"];
   const presentation = `${page}\n${status}\n${state}`;
