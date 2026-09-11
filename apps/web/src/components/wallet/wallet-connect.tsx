@@ -1,13 +1,15 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import {
   discoverMetaMaskProvider,
   type Eip1193Provider,
+  watchWalletSessionChanges,
 } from "../../lib/wallet/metamask-provider.ts";
 import {
   connectWallet,
+  readCurrentSession,
   recheckAfterSwitch,
   type WalletState,
 } from "../../lib/wallet/wallet-state.ts";
@@ -51,6 +53,24 @@ export function WalletIsland({
 }: WalletIslandProps) {
   const [state, setState] = useState<WalletState>({ kind: "disconnected" });
   const providerRef = useRef<Eip1193Provider | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
+  const provider = providerRef.current;
+
+  useEffect(() => {
+    if (provider === null) {
+      return;
+    }
+
+    const cleanup = watchWalletSessionChanges(provider, async () => {
+      setState({ kind: "connecting" });
+      const connection = await readCurrentSession(provider, approvedIssuerAddress);
+      if (providerRef.current === provider) {
+        setState(connection.state);
+      }
+    });
+    cleanupRef.current = cleanup;
+    return cleanup;
+  }, [approvedIssuerAddress, provider]);
 
   async function connect() {
     setState({ kind: "connecting" });
@@ -77,11 +97,11 @@ export function WalletIsland({
   }
 
   function disconnect() {
+    cleanupRef.current?.();
+    cleanupRef.current = null;
     providerRef.current = null;
     setState({ kind: "disconnected" });
   }
-
-  const provider = providerRef.current;
 
   return (
     <section
