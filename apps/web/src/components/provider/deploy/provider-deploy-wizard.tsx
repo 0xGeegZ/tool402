@@ -40,7 +40,7 @@ type WizardValues = {
   acknowledgement: boolean;
 };
 
-const inputClassName = "min-h-11 w-full rounded-field border bg-background px-3 py-2 text-sm text-foreground shadow-none transition-colors placeholder:text-muted-foreground focus:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+const inputClassName = "min-h-11 w-full rounded-[calc(var(--radius)*0.75)] border bg-background px-3 py-2 text-sm text-foreground shadow-none transition-colors placeholder:text-muted-foreground focus:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const fieldLabelClassName = "space-y-2 text-sm font-medium text-foreground";
 const fieldHintClassName = "text-sm leading-6 text-muted-foreground";
 const fieldErrorClassName = "text-sm leading-6 text-destructive";
@@ -79,8 +79,8 @@ function StepProgress({
   onStepSelect: (step: number) => void;
 }) {
   return (
-    <nav aria-label="Provider deploy progress" data-ui="provider-deploy-progress" className="rounded-field border bg-muted/40 p-1">
-      <ol className="grid grid-cols-5 gap-1">
+    <nav aria-label="Provider deploy progress" data-ui="provider-deploy-progress">
+      <ol className="grid gap-2 sm:grid-cols-5 sm:gap-3">
         {providerDeploySteps.map((step, index) => {
           const isCurrent = index === currentStep;
           const isComplete = index < currentStep;
@@ -93,12 +93,10 @@ function StepProgress({
                 disabled={index >= currentStep}
                 onClick={() => onStepSelect(index)}
                 title={step.label}
-                className={`grid w-full min-w-0 gap-1 rounded-tile border px-1 py-2 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 ${isCurrent ? "border-primary bg-primary text-primary-foreground" : isComplete ? "border-border bg-secondary text-secondary-foreground hover:border-primary" : "border-border bg-background text-muted-foreground"}`}
+                className={`flex w-full items-center gap-3 border-t-4 px-1 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100 sm:grid sm:gap-1 sm:text-left ${isCurrent ? "border-primary text-foreground" : isComplete ? "border-primary/40 text-foreground" : "border-muted text-muted-foreground"}`}
               >
-                <span className="mx-auto flex size-7 items-center justify-center rounded-full border border-current text-xs font-semibold">
-                  {index + 1}
-                </span>
-                <span className="hidden truncate text-xs font-medium sm:block">{step.label}</span>
+                <span className="hidden text-[11px] font-medium sm:block">{index + 1}</span>
+                <span className="truncate text-xs font-medium">{step.label}</span>
               </button>
             </li>
           );
@@ -106,50 +104,7 @@ function StepProgress({
       </ol>
     </nav>
   );
-}
-
-function PrepareFlowMap({ currentStep }: { currentStep: number }) {
-  const flowCards = [
-    { eyebrow: "1 · Provider · web", title: "Open the prepared offering", detail: "Edit the local fixture first. No command is sent from this step.", state: "browser draft only" },
-    { eyebrow: "2 · MetaMask", title: "Connect on Hedera Testnet", detail: "One EIP-6963 wallet provider is required before signature handoff.", state: "wallet island" },
-    { eyebrow: "3 · BFF · Convex", title: "Sign the offering command", detail: "The server verifies signer, nonce, expiry, and payload hash before admission.", state: "offering.create" },
-    { eyebrow: "4 · BFF · Convex", title: "Prepare the revenue note", detail: "The ATS_CREATE attempt remains pending until its candidate receipt exists.", state: "PREPARED · ASSET_PENDING" },
-    { eyebrow: "5 · Hedera", title: "Create the note asset", detail: "Human wallet action on testnet; the returned transaction and EVM address become the candidate.", state: "transaction receipt" },
-    { eyebrow: "6 · Convex", title: "Attach the candidate", detail: "The candidate is attached to the prepared attempt; no silent retry is inferred.", state: "attempt submitted" },
-    { eyebrow: "7 · Mirror Node", title: "Independent verification", detail: "Network, factory target, and resolver checks must agree before readiness.", state: "confirmed · ready" },
-    { eyebrow: "8 · BFF · Convex", title: "Publish the directory version", detail: "The directory version becomes active only after the preceding evidence is accepted.", state: "directory active" },
-    { eyebrow: "9 · Hedera", title: "Lifecycle: whitelist and issue", detail: "The provider status surface owns the post-publish allocation lifecycle.", state: "offering open" },
-  ] as const;
-
-  return (
-    <section aria-labelledby="prepare-flow-map-title" className="space-y-4 rounded-[calc(var(--radius)*1.25)] border bg-card/70 p-5 shadow-sm sm:p-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-2">
-          <Badge variant="secondary">Hybrid D · persist before sign</Badge>
-          <h2 id="prepare-flow-map-title" className="text-2xl font-semibold tracking-tight sm:text-3xl">Prepare the tool: who signs what, and where truth lives</h2>
-          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">Editable intent comes first. Wallet signatures are isolated to the review stage, while accepted records and verified receipts remain the authority for each transition.</p>
-        </div>
-        <div className="flex flex-wrap gap-2 text-xs"><Badge variant="outline">Provider · MetaMask</Badge><Badge variant="outline">BFF · Convex</Badge><Badge variant="outline">Hedera testnet</Badge></div>
-      </div>
-      <div className="flex flex-wrap items-center gap-2 rounded-[calc(var(--radius)*0.9)] border bg-background px-4 py-3 text-xs">
-        <span className="font-medium text-muted-foreground">Offering state</span>
-        {(["DRAFT", "ASSET_PENDING", "READY", "OPEN"] as const).map((state, index) => <span key={state} className="flex items-center gap-2"><Badge variant={index === 0 && currentStep === 0 ? "default" : "secondary"}>{state}</Badge>{index < 3 ? <span aria-hidden="true" className="text-muted-foreground">›</span> : null}</span>)}
-        <span className="ml-auto text-muted-foreground">Directory: DRAFT → PUBLISH · attempt: PREPARED → SUBMITTED → CONFIRMED</span>
-      </div>
-      <div className="overflow-x-auto pb-1">
-        <ol className="grid min-w-[1060px] grid-cols-9 gap-3">
-          {flowCards.map((card, index) => <li key={card.title} className="relative min-w-0 rounded-[calc(var(--radius)*0.9)] border bg-background p-4 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{card.eyebrow}</p>
-            <p className="mt-3 text-sm font-semibold leading-5 text-foreground">{card.title}</p>
-            <p className="mt-2 text-xs leading-5 text-muted-foreground">{card.detail}</p>
-            <p className={`mt-4 font-mono text-[10px] font-semibold ${index === 0 && currentStep === 0 ? "text-primary" : "text-muted-foreground"}`}>{card.state}</p>
-            {index < flowCards.length - 1 ? <span aria-hidden="true" className="absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 text-lg text-muted-foreground lg:block">→</span> : null}
-          </li>)}
-        </ol>
-      </div>
-    </section>
-  );
-}
+} 
 
 function Field({
   label,
@@ -216,7 +171,7 @@ function InterfaceStep({ values, fieldErrors, onTextChange }: {
       <Field label="Capability summary" hint="Describe the bounded capability in clear terms.">
         <textarea className={`${inputClassName} min-h-32 resize-y`} value={values.capabilitySummary} onChange={onTextChange("capabilitySummary")} />
       </Field>
-      <div className="rounded-field border bg-muted/50 p-4">
+      <div className="rounded-[calc(var(--radius)*0.75)] border bg-muted/50 p-4">
         <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Fixed capability</p>
         <p className="mt-2 font-mono text-sm text-foreground">{campaignFixture.capability}</p>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">This directory capability is read-only in the prepared fixture.</p>
@@ -278,7 +233,7 @@ function TermsStep({
           <textarea aria-invalid={fieldErrors.risks ? true : undefined} aria-describedby={fieldErrors.risks ? fieldErrorId("risks") : undefined} className={`${fieldClassName(fieldErrors.risks)} min-h-32 resize-y`} value={values.risks} onChange={onTextChange("risks")} />
         </Field>
       </div>
-      <section aria-labelledby="provider-deploy-terms" className="rounded-field border bg-muted/40 p-4">
+      <section aria-labelledby="provider-deploy-terms" className="rounded-[calc(var(--radius)*0.75)] border bg-muted/40 p-4">
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Read-only terms v1</p>
           <h2 id="provider-deploy-terms" className="text-lg font-semibold">Funding and revenue-note terms</h2>
@@ -292,7 +247,7 @@ function TermsStep({
           ))}
         </dl>
       </section>
-      <section aria-labelledby="provider-deploy-configuration" className="rounded-field border bg-background p-4">
+      <section aria-labelledby="provider-deploy-configuration" className="rounded-[calc(var(--radius)*0.75)] border bg-background p-4">
         <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Local configuration projection</p>
         <h2 id="provider-deploy-configuration" className="mt-1 text-lg font-semibold">Revenue note context</h2>
         {configurationRows.length > 0 ? (
@@ -306,7 +261,7 @@ function TermsStep({
           </dl>
         ) : <p className="mt-3 text-sm text-muted-foreground">Not configured. No projection is available to display.</p>}
       </section>
-      <label className="flex items-start gap-3 rounded-field border bg-background p-4 text-sm leading-6">
+      <label className="flex items-start gap-3 rounded-[calc(var(--radius)*0.75)] border bg-background p-4 text-sm leading-6">
         <input className="mt-1 size-4 shrink-0 accent-[var(--primary)]" type="checkbox" checked={values.acknowledgement} onChange={onAcknowledgementChange} />
         <span>{acknowledgementCopy}</span>
       </label>
@@ -331,7 +286,7 @@ function ReviewStep({ values }: { values: WizardValues }) {
           <h2 id="provider-deploy-review" className="text-2xl font-semibold tracking-tight">Check the prepared details</h2>
           <p className="text-sm leading-6 text-muted-foreground">Nothing is sent until you request and confirm a signature below. The values above remain a local, editable preview.</p>
         </div>
-        <dl className="grid gap-3 rounded-field border bg-muted/30 p-4 text-sm sm:grid-cols-2">
+        <dl className="grid gap-3 rounded-[calc(var(--radius)*0.75)] border bg-muted/30 p-4 text-sm sm:grid-cols-2">
           {reviewRows.map(([label, value]) => (
             <div key={label} className="space-y-1">
               <dt className="text-muted-foreground">{label}</dt>
@@ -425,24 +380,22 @@ export function ProviderDeployWizard() {
         </div>
       </div>
 
-      <PrepareFlowMap currentStep={currentStep} />
-
       <Card className="overflow-hidden shadow-sm">
-        <CardHeader className="space-y-5 border-b bg-muted/20 p-5 sm:p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{stepCaption(currentStep)}</p>
-              <CardTitle>{currentDefinition?.label}</CardTitle>
+        <CardHeader className="space-y-5 border-b bg-card p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Step {currentStep + 1} of {providerDeploySteps.length} · {currentDefinition?.label}</p>
+              <CardTitle className="text-2xl sm:text-3xl">{currentDefinition?.label}</CardTitle>
               <CardDescription>Complete this local preview, then review the next bounded step.</CardDescription>
             </div>
-            <Badge variant="outline" className="w-fit">{currentStep + 1} / {providerDeploySteps.length}</Badge>
+            <Badge variant="outline" className="shrink-0">{currentStep + 1} / {providerDeploySteps.length}</Badge>
           </div>
           <StepProgress currentStep={currentStep} onStepSelect={returnToStep} />
         </CardHeader>
         <form onSubmit={onSubmit}>
-          <CardContent className="space-y-6">
+          <CardContent className="p-5 sm:p-8">
             {renderCurrentStep()}
-            {validationMessage ? <p aria-live="polite" className="rounded-field border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
+            {validationMessage ? <p aria-live="polite" className="mt-6 rounded-[calc(var(--radius)*0.75)] border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
           </CardContent>
           <CardFooter className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Button type="button" variant="ghost" disabled={!canGoBack(currentStep)} onClick={() => returnToStep(Math.max(0, currentStep - 1))}>
