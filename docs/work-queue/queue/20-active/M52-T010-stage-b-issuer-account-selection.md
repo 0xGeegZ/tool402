@@ -22,13 +22,13 @@ The implementation contract is [M52 Stage-B issuer account selection](../../../s
 The [M52 readiness review](../../evidence/M52-T010-ready-review.md) and
 [M52 activation review](../../evidence/M52-T010-activation-review.md) are clear.
 
-## RED scope
+## RED acceptance and GREEN authorization
 
-Only `apps/web/tests/stage-b-browser-provider-bridge.test.mjs` is authorized
-for durable injected-fake RED. The RED must prove that one fixed issuer among
-other valid accounts reaches the existing fixed-send boundary, while absent or
-duplicate issuer entries reject before any send. All production source remains
-prohibited until a fresh RED review accepts the test contract.
+The [M52 RED review](../../evidence/M52-T010-red-review.md) is clear. Its
+single intended failure proves that the existing strict array-length guard
+rejects a valid MetaMask account set containing the issuer once. The minimal
+GREEN scope is exactly `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`
+and `apps/web/tests/stage-b-browser-provider-bridge.test.mjs`.
 
 ## Boundary
 

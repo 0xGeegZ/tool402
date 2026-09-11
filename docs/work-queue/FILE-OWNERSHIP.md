@@ -6,7 +6,7 @@ M52-T010 is a root-owned `20-active` CORE_P0 correction. It owns its card,
 specification, queue/review records, and only the future candidate paths
 `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts` and
 `apps/web/tests/stage-b-browser-provider-bridge.test.mjs`. No candidate path
-source remains prohibited until a fresh RED review. M52 may only replace the strict one-account condition with exact
+GREEN is restricted to its bridge/test pair after the accepted RED review. M52 may only replace the strict one-account condition with exact
 fixed-issuer membership; provider, wallet, transaction, receipt, Mirror,
 candidate, attachment, authority, deployment, and every live path remain
 excluded.

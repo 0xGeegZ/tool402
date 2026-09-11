@@ -2,8 +2,8 @@
 
 - M52_STAGE_B_ISSUER_ACCOUNT_SELECTION_INTAKE: User-directed CORE_P0
   correction. MetaMask may return more than one site-authorized account. The
-  readiness and activation reviews are clear. M52 may now create only its
-  narrow injected-fake RED contract for the fixed-issuer membership check; no provider request,
+  readiness, activation, and RED reviews are clear. M52 may now make only the
+  narrow bridge/test correction for the fixed-issuer membership check; no provider request,
   transaction, receipt, Mirror read, candidate, attachment, authority, or
   live action is authorized.
 

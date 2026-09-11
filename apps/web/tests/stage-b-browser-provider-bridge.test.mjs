@@ -323,6 +323,46 @@ implementedTest("rejects a valid but unauthorized wallet account before a send",
   assert.equal(mirror.calls.length, 0);
 });
 
+implementedTest("accepts the fixed issuer once among other valid MetaMask accounts", async () => {
+  const provider = fakeProvider({
+    accounts: [
+      checksummedIssuer,
+      "0x1111111111111111111111111111111111111111",
+      "0x2222222222222222222222222222222222222222",
+    ],
+  });
+  const mirror = responseQueue([]);
+
+  const outcome = await createBridge(api, provider, mirror.fetch).execute();
+
+  assert.equal(outcome.kind, "submission_unknown");
+  assert.deepEqual(provider.calls.map(({ method }) => method), ["eth_chainId", "eth_accounts", "eth_sendTransaction", "eth_getTransactionReceipt"]);
+  assert.equal(provider.calls.find(({ method }) => method === "eth_sendTransaction")?.params[0].from, issuer);
+  assert.equal(mirror.calls.length, 0);
+});
+
+implementedTest("rejects duplicate issuer entries before a send", async () => {
+  const provider = fakeProvider({ accounts: [checksummedIssuer, issuer] });
+  const mirror = responseQueue([]);
+
+  const outcome = await createBridge(api, provider, mirror.fetch).execute();
+
+  assert.equal(outcome.kind, "rejected");
+  assert.deepEqual(provider.calls.map(({ method }) => method), ["eth_chainId", "eth_accounts"]);
+  assert.equal(mirror.calls.length, 0);
+});
+
+implementedTest("rejects a malformed account entry before a send", async () => {
+  const provider = fakeProvider({ accounts: [checksummedIssuer, "not-an-address"] });
+  const mirror = responseQueue([]);
+
+  const outcome = await createBridge(api, provider, mirror.fetch).execute();
+
+  assert.equal(outcome.kind, "rejected");
+  assert.deepEqual(provider.calls.map(({ method }) => method), ["eth_chainId", "eth_accounts"]);
+  assert.equal(mirror.calls.length, 0);
+});
+
 implementedTest("normalizes a valid EIP-55 account and releases only a pre-hash rejection for a later explicit click", async () => {
   let sends = 0;
   const provider = fakeProvider({
