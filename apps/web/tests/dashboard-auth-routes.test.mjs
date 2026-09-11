@@ -85,8 +85,11 @@ routesTest("rejects invalid challenge and verification requests before side effe
     requestWithoutOrigin("/api/auth/metamask/challenge", JSON.stringify({ address })),
     post("/api/auth/metamask/challenge", { address }, { headers: { origin: "https://other.tool402.example" } }),
     post("/api/auth/metamask/challenge", { address }, { headers: { "content-type": "text/plain" } }),
+    post("/api/auth/metamask/challenge", { address }, { headers: { "content-type": "application/json; charset=utf-8" } }),
     post("/api/auth/metamask/challenge", { address, extra: true }),
     rawPost("/api/auth/metamask/challenge", JSON.stringify({ address: 42 })),
+    rawPost("/api/auth/metamask/challenge", "[\"not an object\"]"),
+    rawPost("/api/auth/metamask/challenge", "{not-json}"),
   ];
   let challengeCalls = 0;
   for (const request of challengeRequests) {
@@ -107,8 +110,11 @@ routesTest("rejects invalid challenge and verification requests before side effe
     requestWithoutOrigin("/api/auth/metamask/verify", JSON.stringify({ message, signature: `0x${"11".repeat(65)}` }), { headers: { cookie: `__Host-tool402-dashboard-challenge=${challengeCookie}` } }),
     post("/api/auth/metamask/verify", { message, signature: `0x${"11".repeat(65)}` }, { headers: { origin: "https://other.tool402.example", cookie: `__Host-tool402-dashboard-challenge=${challengeCookie}` } }),
     post("/api/auth/metamask/verify", { message, signature: `0x${"11".repeat(65)}` }, { headers: { "content-type": "text/plain", cookie: `__Host-tool402-dashboard-challenge=${challengeCookie}` } }),
+    post("/api/auth/metamask/verify", { message, signature: `0x${"11".repeat(65)}` }, { headers: { "content-type": "application/json; charset=utf-8", cookie: `__Host-tool402-dashboard-challenge=${challengeCookie}` } }),
     post("/api/auth/metamask/verify", { message, signature: `0x${"11".repeat(65)}`, extra: true }, { headers: { cookie: `__Host-tool402-dashboard-challenge=${challengeCookie}` } }),
     rawPost("/api/auth/metamask/verify", JSON.stringify({ message, signature: 42 }), { headers: { cookie: `__Host-tool402-dashboard-challenge=${challengeCookie}` } }),
+    rawPost("/api/auth/metamask/verify", "[\"not an object\"]", { headers: { cookie: `__Host-tool402-dashboard-challenge=${challengeCookie}` } }),
+    rawPost("/api/auth/metamask/verify", "{not-json}", { headers: { cookie: `__Host-tool402-dashboard-challenge=${challengeCookie}` } }),
   ];
   let verifierCalls = 0;
   for (const request of verificationRequests) {
@@ -122,6 +128,20 @@ routesTest("rejects invalid challenge and verification requests before side effe
     assert.doesNotMatch(cookieValues(response).join("\n"), /__Host-tool402-dashboard-session=/u);
   }
   assert.equal(verifierCalls, 0);
+});
+
+routesTest("returns not configured without cookies for every auth route", async () => {
+  const routes = await loadRoutes();
+  const requests = [
+    routes.handleVerifyPost(post("/api/auth/metamask/verify", { message: "anything", signature: `0x${"11".repeat(65)}` }), {}),
+    routes.handleLogoutPost(post("/api/auth/logout", {}), {}),
+  ];
+  for (const response of await Promise.all(requests)) {
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { outcome: "not_configured" });
+    assert.equal(response.headers.get("cache-control"), "no-store");
+    assert.deepEqual(cookieValues(response), []);
+  }
 });
 
 routesTest("clears the challenge and returns only generic rejection after verification fails", async () => {
