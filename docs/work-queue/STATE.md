@@ -43,6 +43,13 @@
   source, dashboard wording amendment, configuration, wallet/account/signature,
   provider command, relay, transaction, payment, deployment, and live action
   remains prohibited.
+- S38_METAMASK_DASHBOARD_AUTH_ACTIVATION: Independent activation is clear at
+  `473b4edd346ce45249c257e36432684b1429112f`. S38-T010 is `20-active` only
+  for durable RED in `apps/web/tests/dashboard-auth.test.mjs` and
+  `apps/web/tests/dashboard-auth-routes.test.mjs`. Every production source,
+  dashboard wording/test amendment, configuration, wallet account/signature,
+  provider command, relay, transaction, payment, deployment, and live action
+  remains prohibited pending independent RED acceptance.
 
 - S36_PROVIDER_SIGNATURE_HANDOFF_INTAKE: User-directed local POLISH intake.
   S36-T010 may make the existing actionable signature request discoverable

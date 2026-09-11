@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: S15-T010 accepted, M50-T010 accepted, S24-T010 accepted.
   S26-T010 is not a dependency and remains an independent header-wallet slice.
 - Owner: the root owns this card, the UI manifest, catalog, ownership, state,
@@ -113,3 +113,15 @@ canonical `ca80c6edddae09b0577678e4b61c63f87553321f`, with the Web baseline
 green 362/362. S38-T010 is `10-ready` only. No test or source path is active;
 only a fresh independent activation may next authorize the two new RED test
 paths.
+
+## RED activation
+
+The independent [S38 activation review](../../evidence/S38-T010-activation-review.md)
+is clear at control head `473b4edd346ce45249c257e36432684b1429112f`.
+S38-T010 is `20-active` only for durable RED in
+`apps/web/tests/dashboard-auth.test.mjs` and
+`apps/web/tests/dashboard-auth-routes.test.mjs`. Every production source path,
+the existing dashboard wording amendment, configuration/environment value,
+wallet account request/signature, provider command, relay, transaction,
+payment, deployment, and live action remains prohibited pending independent
+RED acceptance.
