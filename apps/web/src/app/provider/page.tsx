@@ -17,13 +17,9 @@ export default function ProviderPage() {
         <PageHeader
           eyebrow="Tool operator"
           title="Provider status"
-          description="Read the current local offering records without advancing either one."
-          actions={[
-            { href: "/provider/deploy", label: "Prepare an offering" },
-            { href: "/explore/riskscan", label: "Explore RiskScan" },
-          ]}
+          description="Read the local offering and directory records without advancing them."
         />
-        <Suspense fallback={<p className="text-sm text-muted-foreground">Loading admitted records.</p>}><ProviderStatusRegions /></Suspense>
+        <Suspense fallback={<p aria-live="polite" className="text-sm text-muted-foreground">Loading admitted records.</p>}><ProviderStatusRegions /></Suspense>
       </main>
       <LandingFooter />
     </>

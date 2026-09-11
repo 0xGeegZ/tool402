@@ -269,6 +269,7 @@ implementedTest("renders only the fixed status regions, actions, evidence rows, 
   assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
   assert.match(page, /<PageHeader\b[^>]*title="Provider status"/);
   assert.equal((page.match(/<Suspense\b/g) ?? []).length, 1);
+  assert.match(page, /aria-live=["']polite["']/);
   assert.doesNotMatch(page, /["']use client["']|\bfetch\s*\(|set(?:Timeout|Interval)\s*\(/);
   for (const text of [
     "Prepare the revenue note asset",
@@ -304,7 +305,6 @@ implementedTest("presents unavailable provider data as an actionable workspace w
   assert.match(status, /bg-secondary/);
   assert.match(status, /Offering record/);
   assert.match(status, /Directory record/);
-  assert.match(status, /Provider action/);
   assert.match(status, /Prepare an offering/);
   assert.doesNotMatch(status, /funding raised|units issued|paid task|balance|Live testnet|Connected/i);
 });
@@ -312,13 +312,16 @@ implementedTest("presents unavailable provider data as an actionable workspace w
 implementedTest("derives the fixed region order, next actions, evidence cells, and Hashscan gate from admitted projection data", async () => {
   const state = await import(new URL("../src/components/provider/status/provider-status-state.ts", import.meta.url).href);
   assert.deepEqual(state.providerStatusRegionOrder, [
-    "state ribbon",
-    "next action",
+    "status block",
     "deployment evidence table",
-    "active terms card",
-    "active directory card",
-    "signer card",
+    "active terms",
+    "active directory",
+    "signer",
   ]);
+  const format = await import(new URL("../src/lib/hbar-format.ts", import.meta.url).href);
+  assert.equal(format.formatHbar(1000n), "0.00001 HBAR");
+  assert.equal(format.formatHbar(125000000000n), "1,250 HBAR");
+  assert.equal(format.formatShare(1250n), "12.5");
   assert.deepEqual(
     ["DRAFT", "ASSET_PENDING", "READY", "OPEN", "CLOSED"].map((value) => state.nextProviderAction(value)),
     [

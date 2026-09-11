@@ -1,12 +1,11 @@
 import type { OfferingRecord, OfferingState } from "../../../lib/offering-projection";
 
 export const providerStatusRegionOrder = [
-  "state ribbon",
-  "next action",
+  "status block",
   "deployment evidence table",
-  "active terms card",
-  "active directory card",
-  "signer card",
+  "active terms",
+  "active directory",
+  "signer",
 ] as const;
 
 export function nextProviderAction(state: OfferingState) {
