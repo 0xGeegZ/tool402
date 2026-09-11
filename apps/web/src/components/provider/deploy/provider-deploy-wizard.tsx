@@ -1,12 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
-import { formatHbar, formatShare, groupThousands } from "../../../lib/hbar-format";
-import { createStageBAtsCreateExecutionProjection } from "../../../lib/ats/stage-b-ats-create-execution-projection.ts";
+import { useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Badge } from "../../ui/badge";
 import { Button, buttonVariants } from "../../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../ui/card";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { campaignFixture } from "./campaign-fixture";
 import { DeployStageSigning } from "./deploy-stage-signing";
@@ -16,6 +14,7 @@ import {
   canGoBack,
   providerDeployCategories,
   providerDeployFieldErrors,
+  providerDeployStages,
   providerDeploySteps,
   revenueNoteConfigurationRows,
   stepCaption,
@@ -39,31 +38,11 @@ type WizardValues = {
   acknowledgement: boolean;
 };
 
-const inputClassName = "min-h-10 w-full rounded-control border border-border bg-background px-3 py-2 text-sm text-foreground shadow-none transition-colors placeholder:text-muted-foreground hover:border-foreground/20 focus:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&[readonly]]:bg-muted [&[readonly]]:text-muted-foreground";
-const monoValueClassName = "font-mono tabular-nums tracking-[-0.02em]";
-const fieldHintClassName = "text-[13px] leading-5 text-muted-foreground";
-const fieldErrorClassName = "text-[13px] leading-5 text-destructive-foreground";
+const inputClassName = "min-h-11 w-full rounded-field border border-border bg-background px-3 py-2 text-sm text-foreground shadow-none transition-colors placeholder:text-muted-foreground hover:border-foreground/20 focus:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+const fieldLabelClassName = "space-y-2 text-sm font-medium text-foreground";
+const fieldHintClassName = "text-sm leading-6 text-muted-foreground";
+const fieldErrorClassName = "text-sm leading-6 text-destructive";
 const emptyFieldErrors: ProviderDeployFieldErrors = Object.freeze({});
-const tinybarsPerHbar = 100_000_000n;
-
-function wholeHbar(value: string): string {
-  return formatHbar(BigInt(value) * tinybarsPerHbar);
-}
-
-function shortAddress(address: string): string {
-  return `${address.slice(0, 6)}…${address.slice(-4)}`;
-}
-
-const routing = termsV1Economics.revenueRouting;
-const routingShort = `${formatShare(BigInt(routing.operatorBps))} / ${formatShare(BigInt(routing.backerReserveBps))} / ${formatShare(BigInt(routing.feeBps))}`;
-const termsEconomicsRows = [
-  ["Funding target", wholeHbar(termsV1Economics.fundingTargetHbar)],
-  ["Note unit price", wholeHbar(termsV1Economics.noteUnitPriceHbar)],
-  ["Maximum note units", groupThousands(termsV1Economics.maximumNoteUnits)],
-  ["Minimum purchase", `${termsV1Economics.minimumPurchaseUnits} units`],
-  ["Revenue routing", `${formatShare(BigInt(routing.operatorBps))}% operator / ${formatShare(BigInt(routing.backerReserveBps))}% backer reserve / ${formatShare(BigInt(routing.feeBps))}% fee`],
-  ["Payout cap and maturity", `${wholeHbar(termsV1Economics.payoutCapHbar)} · until ${termsV1Economics.maturityDate}`],
-] as const;
 
 function initialValues(): WizardValues {
   return {
@@ -87,34 +66,7 @@ function fieldErrorId(field: ProviderDeployValidationField): string {
 }
 
 function fieldClassName(error: string | undefined): string {
-  return error ? `${inputClassName} border-destructive-foreground focus:border-destructive-foreground` : inputClassName;
-}
-
-function ArrowLeftIcon() {
-  return (
-    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M19 12H5" />
-      <path d="m12 19-7-7 7-7" />
-    </svg>
-  );
-}
-
-function ArrowRightIcon() {
-  return (
-    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 12h14" />
-      <path d="m12 5 7 7-7 7" />
-    </svg>
-  );
-}
-
-function FlaskIcon() {
-  return (
-    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 3h6" />
-      <path d="M10 3v6.5L4.5 19a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L14 9.5V3" />
-    </svg>
-  );
+  return error ? `${inputClassName} border-destructive focus:border-destructive` : inputClassName;
 }
 
 function StepProgress({
@@ -125,30 +77,40 @@ function StepProgress({
   onStepSelect: (step: number) => void;
 }) {
   return (
-    <nav aria-label="Provider deploy progress" data-ui="provider-deploy-progress" className="flex flex-col gap-2">
-      <ol className="flex gap-1.5 sm:gap-2">
+    <nav aria-label="Provider deploy progress" data-ui="provider-deploy-progress" className="overflow-x-auto pb-1">
+      <ol className="flex min-w-[720px] items-start">
         {providerDeploySteps.map((step, index) => {
           const isCurrent = index === currentStep;
-          const reached = index <= currentStep;
+          const isComplete = index < currentStep;
           return (
-            <li key={step.label} className="min-w-0 flex-1">
-              <button
-                type="button"
-                aria-label={`Return to step ${index + 1}: ${step.label}`}
-                aria-current={isCurrent ? "step" : undefined}
-                disabled={index >= currentStep}
-                onClick={() => onStepSelect(index)}
-                className="flex w-full flex-col gap-2 rounded-tile text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100"
-              >
-                <span aria-hidden="true" className={`h-1.5 w-full rounded-full ${reached ? "bg-brand-purple" : "bg-muted"}`} />
-                <span className={`hidden text-xs font-medium leading-4 sm:block ${isCurrent ? "text-foreground" : "text-muted-foreground"}`}>{step.label}</span>
+            <li key={step.label} className="flex min-w-0 flex-1 items-start">
+              <button type="button" aria-label={`Return to step ${index + 1}: ${step.label}`} aria-current={isCurrent ? "step" : undefined} disabled={index >= currentStep} onClick={() => onStepSelect(index)} className="group flex min-w-0 flex-col items-center gap-2 text-center disabled:cursor-default">
+                <span aria-hidden="true" className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ring-4 ring-background transition-colors ${isCurrent || isComplete ? "bg-primary text-primary-foreground" : "border-2 border-primary/40 bg-card text-primary"}`}>{isComplete ? "✓" : index + 1}</span>
+                <span className={`text-[11px] font-medium leading-4 ${isCurrent || isComplete ? "text-foreground" : "text-muted-foreground"}`}>{step.label}</span>
               </button>
+              {index < providerDeploySteps.length - 1 ? <span aria-hidden="true" className={`mt-3 h-0.5 flex-1 ${index < currentStep ? "bg-primary" : "bg-primary/25"}`} /> : null}
             </li>
           );
         })}
       </ol>
-      <p className="text-[13px] font-medium text-muted-foreground">{stepCaption(currentStep)}</p>
+      <p className="mt-3 text-xs font-medium text-muted-foreground">{stepCaption(currentStep)}</p>
     </nav>
+  );
+}
+
+function CampaignSummary({ values }: { values: WizardValues }) {
+  return (
+    <aside className="h-fit rounded-panel border border-border bg-card p-5 shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_8%,transparent)] lg:sticky lg:top-5" aria-labelledby="campaign-summary-title">
+      <h2 id="campaign-summary-title" className="text-lg font-bold tracking-tight">Campaign summary</h2>
+      <div className="mt-4 flex items-center gap-3 border-b border-border pb-4">
+        <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-2xl" aria-hidden="true">▣</div>
+        <div><p className="font-bold">{values.toolName}</p><p className="text-xs leading-5 text-muted-foreground">Local risk assessment for tool requests.</p></div>
+      </div>
+      <dl className="grid gap-3 border-b border-border py-4 text-sm"><div className="flex justify-between gap-3"><dt className="text-muted-foreground">Category</dt><dd className="font-medium">{values.category}</dd></div><div className="flex justify-between gap-3"><dt className="text-muted-foreground">Capability</dt><dd className="max-w-[13rem] text-right font-medium">{campaignFixture.capability}</dd></div><div className="flex justify-between gap-3"><dt className="text-muted-foreground">Quick price</dt><dd className="font-medium">{values.quickPrice} HBAR</dd></div><div className="flex justify-between gap-3"><dt className="text-muted-foreground">Standard price</dt><dd className="font-medium">{values.standardPrice} HBAR</dd></div></dl>
+      <section className="border-b border-border py-4"><h3 className="font-bold">Funding &amp; revenue-note terms</h3><p className="mt-3 text-sm leading-6 text-muted-foreground">Use of funds</p><p className="text-sm leading-6">{values.useOfFunds.split("\\n")[0]}</p><p className="mt-3 text-sm leading-6 text-muted-foreground">Risks</p><p className="text-sm leading-6">{values.risks.split("\\n")[0]}</p><a href="#terms" className="mt-4 inline-block text-sm font-semibold text-primary">View full terms →</a></section>
+      <section className="border-b border-border py-4"><h3 className="font-bold">What happens next</h3><ol className="mt-3 grid gap-3 text-sm leading-5 text-muted-foreground"><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary text-xs text-primary">1</span>You connect your wallet and review the details</li><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary text-xs text-primary">2</span>You sign each deployment stage in order</li><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary text-xs text-primary">3</span>A revenue note is created on Hedera testnet</li><li><span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-primary text-xs text-primary">4</span>Your tool is published to the Tool402 directory</li></ol></section>
+      <section className="pt-4"><h3 className="font-bold">Security &amp; scope</h3><p className="mt-3 text-sm leading-6 text-muted-foreground">Nothing is created, funded, or published until the required signatures and receipts exist. This is a testnet prototype.</p><div className="mt-4 rounded-field bg-secondary p-3 text-sm leading-5"><strong>Testnet prototype</strong><br /><span className="text-muted-foreground">Local routes are descriptive and labelled with their current boundaries.</span></div></section>
+    </aside>
   );
 }
 
@@ -166,93 +128,85 @@ function Field({
   children: ReactNode;
 }) {
   return (
-    <label className="block text-sm text-foreground">
-      <span className="mb-2 block font-medium">{label}</span>
+    <label className={fieldLabelClassName}>
+      <span>{label}</span>
       {children}
-      {error && errorId ? <span id={errorId} className={`mt-1.5 block ${fieldErrorClassName}`}>{error}</span> : hint ? <span className={`mt-1.5 block ${fieldHintClassName}`}>{hint}</span> : null}
+      {error && errorId ? <span id={errorId} className={fieldErrorClassName}>{error}</span> : hint ? <span className={fieldHintClassName}>{hint}</span> : null}
     </label>
   );
 }
 
-function StepCard({ title, help, children }: { title: string; help: string; children: ReactNode }) {
-  return (
-    <Card className="rounded-control border border-border bg-card shadow-none">
-      <CardHeader className="gap-1 p-4 pb-0 sm:p-5 sm:pb-0">
-        <CardTitle className="text-lg font-bold tracking-[-0.01em] sm:text-[22px] sm:leading-7">{title}</CardTitle>
-        <CardDescription className="text-[13px] leading-5">{help}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4 p-4 pt-5 sm:p-5">{children}</CardContent>
-    </Card>
-  );
-}
-
-type TextChange = (field: Exclude<keyof WizardValues, "category" | "acknowledgement">) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-
 function ToolDetailsStep({ values, fieldErrors, onTextChange, onCategoryChange }: {
   values: WizardValues;
   fieldErrors: ProviderDeployFieldErrors;
-  onTextChange: TextChange;
+  onTextChange: (field: Exclude<keyof WizardValues, "category" | "acknowledgement">) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onCategoryChange: (event: ChangeEvent<HTMLSelectElement>) => void;
 }) {
   return (
-    <StepCard title="Tool details" help="Tell backers what the tool does and which agents pay for it. Prefilled from the fixture; every field is editable.">
+    <div className="grid gap-5 sm:grid-cols-2">
       <Field label="Tool name" hint="Up to 100 UTF-8 bytes." error={fieldErrors.toolName} errorId={fieldErrorId("toolName")}>
         <input aria-invalid={fieldErrors.toolName ? true : undefined} aria-describedby={fieldErrors.toolName ? fieldErrorId("toolName") : undefined} className={fieldClassName(fieldErrors.toolName)} value={values.toolName} onChange={onTextChange("toolName")} />
       </Field>
-      <Field label="Category">
+      <Field label="Category" hint="The directory uses this fixed selection.">
         <select className={inputClassName} value={values.category} onChange={onCategoryChange}>
-          {providerDeployCategories.map((category) => <option key={category} value={category}>{category.charAt(0).toUpperCase() + category.slice(1)}</option>)}
+          {providerDeployCategories.map((category) => <option key={category} value={category}>{category}</option>)}
         </select>
       </Field>
-      <Field label="One-liner" hint="The first line agents and backers see in Explore.">
-        <input className={inputClassName} value={values.oneLiner} onChange={onTextChange("oneLiner")} />
-      </Field>
-      <Field label="Customer problem" hint="Up to 1,000 UTF-8 bytes." error={fieldErrors.customerProblem} errorId={fieldErrorId("customerProblem")}>
-        <textarea aria-invalid={fieldErrors.customerProblem ? true : undefined} aria-describedby={fieldErrors.customerProblem ? fieldErrorId("customerProblem") : undefined} className={`${fieldClassName(fieldErrors.customerProblem)} min-h-22 resize-y`} value={values.customerProblem} onChange={onTextChange("customerProblem")} />
-      </Field>
-    </StepCard>
+      <div className="sm:col-span-2">
+        <Field label="One-liner" hint="A concise explanation for the local directory card.">
+          <input className={inputClassName} value={values.oneLiner} onChange={onTextChange("oneLiner")} />
+        </Field>
+      </div>
+      <div className="sm:col-span-2">
+        <Field label="Customer problem" hint="Up to 1,000 UTF-8 bytes." error={fieldErrors.customerProblem} errorId={fieldErrorId("customerProblem")}>
+          <textarea aria-invalid={fieldErrors.customerProblem ? true : undefined} aria-describedby={fieldErrors.customerProblem ? fieldErrorId("customerProblem") : undefined} className={`${fieldClassName(fieldErrors.customerProblem)} min-h-32 resize-y`} value={values.customerProblem} onChange={onTextChange("customerProblem")} />
+        </Field>
+      </div>
+    </div>
   );
 }
 
 function InterfaceStep({ values, fieldErrors, onTextChange }: {
   values: WizardValues;
   fieldErrors: ProviderDeployFieldErrors;
-  onTextChange: TextChange;
+  onTextChange: (field: Exclude<keyof WizardValues, "category" | "acknowledgement">) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }) {
   return (
-    <StepCard title="Interface and capability" help="The qualifying resource is the exact x402-gated route agents pay for. Directory copy never overrides the live 402 challenge.">
-      <Field label="Qualifying resource" error={fieldErrors.qualifyingResource} errorId={fieldErrorId("qualifyingResource")}>
-        <input aria-invalid={fieldErrors.qualifyingResource ? true : undefined} aria-describedby={fieldErrors.qualifyingResource ? fieldErrorId("qualifyingResource") : undefined} className={`${fieldClassName(fieldErrors.qualifyingResource)} ${monoValueClassName}`} value={values.qualifyingResource} onChange={onTextChange("qualifyingResource")} />
+    <div className="space-y-5">
+      <Field label="Qualifying resource" hint="Name the local resource that anchors this capability." error={fieldErrors.qualifyingResource} errorId={fieldErrorId("qualifyingResource")}>
+        <input aria-invalid={fieldErrors.qualifyingResource ? true : undefined} aria-describedby={fieldErrors.qualifyingResource ? fieldErrorId("qualifyingResource") : undefined} className={fieldClassName(fieldErrors.qualifyingResource)} value={values.qualifyingResource} onChange={onTextChange("qualifyingResource")} />
       </Field>
-      <Field label="Capability" hint="Fixed by the accepted directory record schema.">
-        <input className={`${inputClassName} ${monoValueClassName}`} value={campaignFixture.capability} readOnly />
+      <Field label="Capability summary" hint="Describe the bounded capability in clear terms.">
+        <textarea className={`${inputClassName} min-h-32 resize-y`} value={values.capabilitySummary} onChange={onTextChange("capabilitySummary")} />
       </Field>
-      <Field label="Capability summary">
-        <textarea className={`${inputClassName} min-h-22 resize-y`} value={values.capabilitySummary} onChange={onTextChange("capabilitySummary")} />
-      </Field>
-    </StepCard>
+      <div className="rounded-field border bg-muted/50 p-4">
+        <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Fixed capability</p>
+        <p className="mt-2 font-mono text-sm text-foreground">{campaignFixture.capability}</p>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">This directory capability is read-only in the prepared fixture.</p>
+      </div>
+    </div>
   );
 }
 
 function PricingStep({ values, fieldErrors, onTextChange }: {
   values: WizardValues;
   fieldErrors: ProviderDeployFieldErrors;
-  onTextChange: TextChange;
+  onTextChange: (field: Exclude<keyof WizardValues, "category" | "acknowledgement">) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }) {
   return (
-    <StepCard title="Pricing and target agent customers" help="Per-task prices are advertised tiers. The live 402 requirements remain the only payment authority.">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Quick price per task (HBAR)" hint="0.1 HBAR is the largest accepted advertised price." error={fieldErrors.quickPrice} errorId={fieldErrorId("quickPrice")}>
-          <input inputMode="decimal" aria-invalid={fieldErrors.quickPrice ? true : undefined} aria-describedby={fieldErrors.quickPrice ? fieldErrorId("quickPrice") : undefined} className={`${fieldClassName(fieldErrors.quickPrice)} ${monoValueClassName}`} value={values.quickPrice} onChange={onTextChange("quickPrice")} />
+    <div className="space-y-5">
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="Quick price (HBAR)" hint="0.1 HBAR is the largest accepted advertised price." error={fieldErrors.quickPrice} errorId={fieldErrorId("quickPrice")}>
+          <input inputMode="decimal" aria-invalid={fieldErrors.quickPrice ? true : undefined} aria-describedby={fieldErrors.quickPrice ? fieldErrorId("quickPrice") : undefined} className={fieldClassName(fieldErrors.quickPrice)} value={values.quickPrice} onChange={onTextChange("quickPrice")} />
         </Field>
-        <Field label="Standard price per task (HBAR)" hint="Display price only; the payment challenge remains authoritative." error={fieldErrors.standardPrice} errorId={fieldErrorId("standardPrice")}>
-          <input inputMode="decimal" aria-invalid={fieldErrors.standardPrice ? true : undefined} aria-describedby={fieldErrors.standardPrice ? fieldErrorId("standardPrice") : undefined} className={`${fieldClassName(fieldErrors.standardPrice)} ${monoValueClassName}`} value={values.standardPrice} onChange={onTextChange("standardPrice")} />
+        <Field label="Standard price (HBAR)" hint="Display price only; the payment challenge remains authoritative." error={fieldErrors.standardPrice} errorId={fieldErrorId("standardPrice")}>
+          <input inputMode="decimal" aria-invalid={fieldErrors.standardPrice ? true : undefined} aria-describedby={fieldErrors.standardPrice ? fieldErrorId("standardPrice") : undefined} className={fieldClassName(fieldErrors.standardPrice)} value={values.standardPrice} onChange={onTextChange("standardPrice")} />
         </Field>
       </div>
       <Field label="Target agent customers" hint="One use case per line, from one through six items." error={fieldErrors.targetAgentCustomers} errorId={fieldErrorId("targetAgentCustomers")}>
-        <textarea aria-invalid={fieldErrors.targetAgentCustomers ? true : undefined} aria-describedby={fieldErrors.targetAgentCustomers ? fieldErrorId("targetAgentCustomers") : undefined} className={`${fieldClassName(fieldErrors.targetAgentCustomers)} min-h-22 resize-y`} value={values.targetAgentCustomers} onChange={onTextChange("targetAgentCustomers")} />
+        <textarea aria-invalid={fieldErrors.targetAgentCustomers ? true : undefined} aria-describedby={fieldErrors.targetAgentCustomers ? fieldErrorId("targetAgentCustomers") : undefined} className={`${fieldClassName(fieldErrors.targetAgentCustomers)} min-h-32 resize-y`} value={values.targetAgentCustomers} onChange={onTextChange("targetAgentCustomers")} />
       </Field>
-    </StepCard>
+    </div>
   );
 }
 
@@ -264,78 +218,99 @@ function TermsStep({
 }: {
   values: WizardValues;
   fieldErrors: ProviderDeployFieldErrors;
-  onTextChange: TextChange;
+  onTextChange: (field: Exclude<keyof WizardValues, "category" | "acknowledgement">) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onAcknowledgementChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
   const configurationRows = revenueNoteConfigurationRows(atsCreateConfiguration);
+  const economics = [
+    ["Funding target", `${termsV1Economics.fundingTargetHbar} HBAR`],
+    ["Note unit price", `${termsV1Economics.noteUnitPriceHbar} HBAR`],
+    ["Maximum note units", termsV1Economics.maximumNoteUnits],
+    ["Minimum purchase", `${termsV1Economics.minimumPurchaseUnits} units`],
+    ["Revenue routing", "80% operator / 20% backer reserve / 0% fee"],
+    ["Payout cap and maturity", `${termsV1Economics.payoutCapHbar} HBAR until ${termsV1Economics.maturityDate}`],
+  ] as const;
 
   return (
-    <StepCard title="Funding and revenue-note terms" help="Economics are fixed for this offering version. A material change creates a new version with a fresh signature.">
-      <div className="grid gap-4 sm:grid-cols-2">
-        {termsEconomicsRows.map(([label, value]) => (
-          <Field key={label} label={label}>
-            <input className={`${inputClassName} ${monoValueClassName}`} value={value} readOnly />
-          </Field>
-        ))}
-      </div>
-      <div className="flex flex-col gap-3">
+    <div className="space-y-6">
+      <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Use of funds" hint="One item per line, from one through six items." error={fieldErrors.useOfFunds} errorId={fieldErrorId("useOfFunds")}>
-          <textarea aria-invalid={fieldErrors.useOfFunds ? true : undefined} aria-describedby={fieldErrors.useOfFunds ? fieldErrorId("useOfFunds") : undefined} className={`${fieldClassName(fieldErrors.useOfFunds)} min-h-22 resize-y`} value={values.useOfFunds} onChange={onTextChange("useOfFunds")} />
+          <textarea aria-invalid={fieldErrors.useOfFunds ? true : undefined} aria-describedby={fieldErrors.useOfFunds ? fieldErrorId("useOfFunds") : undefined} className={`${fieldClassName(fieldErrors.useOfFunds)} min-h-32 resize-y`} value={values.useOfFunds} onChange={onTextChange("useOfFunds")} />
         </Field>
         <Field label="Risks" hint="One item per line, from one through six items." error={fieldErrors.risks} errorId={fieldErrorId("risks")}>
-          <textarea aria-invalid={fieldErrors.risks ? true : undefined} aria-describedby={fieldErrors.risks ? fieldErrorId("risks") : undefined} className={`${fieldClassName(fieldErrors.risks)} min-h-22 resize-y`} value={values.risks} onChange={onTextChange("risks")} />
+          <textarea aria-invalid={fieldErrors.risks ? true : undefined} aria-describedby={fieldErrors.risks ? fieldErrorId("risks") : undefined} className={`${fieldClassName(fieldErrors.risks)} min-h-32 resize-y`} value={values.risks} onChange={onTextChange("risks")} />
         </Field>
       </div>
-      <div className="flex flex-col gap-2 rounded-control bg-muted px-4 py-3">
-        <span className="text-[13px] font-semibold">ATS revenue note (fixed parameters)</span>
-        {configurationRows.length > 0 ? (
-          <dl className="grid gap-x-4 gap-y-1 text-[13px] sm:grid-cols-[auto_minmax(0,1fr)]">
-            {configurationRows.map((row) => (
-              <div key={row.label} className="contents">
-                <dt className="text-muted-foreground">{row.label}</dt>
-                <dd className={`break-all ${monoValueClassName}`}>{row.value}</dd>
-              </div>
-            ))}
-          </dl>
-        ) : <p className="text-[13px] text-muted-foreground">Not configured. No projection is available to display.</p>}
-      </div>
-      <label className="flex items-start gap-3 text-sm leading-6">
+      <section aria-labelledby="provider-deploy-terms" className="rounded-field border bg-muted/40 p-4">
+        <div className="space-y-1">
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Read-only terms v1</p>
+          <h2 id="provider-deploy-terms" className="text-lg font-semibold">Funding and revenue-note terms</h2>
+        </div>
+        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+          {economics.map(([label, value]) => (
+            <div key={label} className="space-y-1">
+              <dt className="text-muted-foreground">{label}</dt>
+              <dd className="font-medium text-foreground">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+      <details className="rounded-field border bg-background">
+        <summary className="cursor-pointer list-none p-4 marker:content-none [&::-webkit-details-marker]:hidden">
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Local configuration projection</p>
+          <span className="mt-1 flex items-center justify-between gap-3">
+            <span className="text-lg font-semibold">Revenue note context</span>
+            <span className="text-sm text-muted-foreground">{configurationRows.length > 0 ? `${configurationRows.length} values · show` : "Not configured · show"}</span>
+          </span>
+        </summary>
+        <div className="border-t px-4 pb-4">
+          {configurationRows.length > 0 ? (
+            <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+              {configurationRows.map((row) => (
+                <div key={row.label} className="space-y-1">
+                  <dt className="text-muted-foreground">{row.label}</dt>
+                  <dd className="break-words font-mono text-xs text-foreground">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : <p className="mt-3 text-sm text-muted-foreground">Not configured. No projection is available to display.</p>}
+        </div>
+      </details>
+      <label className="flex items-start gap-3 rounded-field border bg-background p-4 text-sm leading-6">
         <input className="mt-1 size-4 shrink-0 accent-[var(--primary)]" type="checkbox" checked={values.acknowledgement} onChange={onAcknowledgementChange} />
         <span>{acknowledgementCopy}</span>
       </label>
-    </StepCard>
+    </div>
   );
 }
 
 function ReviewStep({ values }: { values: WizardValues }) {
-  const issuer = createStageBAtsCreateExecutionProjection().issuerEvmAddress;
-  const note = atsCreateConfiguration.revenueNote;
-  const rows: readonly (readonly [string, string, boolean])[] = [
-    ["Tool", values.toolName, false],
-    ["Qualifying resource", values.qualifyingResource, true],
-    ["Advertised tiers", `quick ${values.quickPrice} · standard ${values.standardPrice} HBAR`, true],
-    ["Funding target · unit price", `${wholeHbar(termsV1Economics.fundingTargetHbar)} · ${wholeHbar(termsV1Economics.noteUnitPriceHbar)}`, true],
-    ["Revenue routing", `${routingShort} · cap ${wholeHbar(termsV1Economics.payoutCapHbar)} · maturity ${termsV1Economics.maturityDate}`, true],
-    ["Revenue note", `${note.symbol} · ${note.numberOfUnits} units · factory ${atsCreateConfiguration.factoryHederaId}`, true],
-    ["Issuer wallet", `${shortAddress(issuer)} (configured issuer)`, true],
-    ["Subject · version", `${atsCreateConfiguration.subjectPublicId} · ${atsCreateConfiguration.offeringVersion}`, true],
-  ];
+  const reviewRows = [
+    ["Tool", values.toolName],
+    ["Category", values.category],
+    ["Resource", values.qualifyingResource],
+    ["Quick display price", `${values.quickPrice} HBAR`],
+    ["Standard display price", `${values.standardPrice} HBAR`],
+  ] as const;
 
   return (
-    <Card className="rounded-control border border-border bg-card shadow-none">
-        <CardHeader className="gap-1 p-4 sm:p-5">
-          <CardTitle className="text-lg font-bold tracking-[-0.01em] sm:text-[22px] sm:leading-7">Review and sign</CardTitle>
-          <CardDescription className="text-[13px] leading-5">Each stage below needs its own wallet signature. The exact canonical payload is shown before you sign.</CardDescription>
-        </CardHeader>
-        <dl className="border-t border-border">
-        {rows.map(([label, value, mono]) => (
-          <div key={label} className="flex items-start justify-between gap-3 border-t border-border px-4 py-2.5 text-[13px] first:border-t-0 sm:gap-4 sm:px-5 sm:py-3 sm:text-sm">
-            <dt className="shrink-0 text-muted-foreground">{label}</dt>
-            <dd className={`min-w-0 break-words text-right ${mono ? monoValueClassName : "font-medium"}`}>{value}</dd>
-          </div>
-        ))}
+    <DeployStageSigning values={values}>
+      <section aria-labelledby="provider-deploy-review" className="space-y-4">
+        <div className="space-y-1">
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Review</p>
+          <h2 id="provider-deploy-review" className="text-2xl font-semibold tracking-tight">Check the prepared details</h2>
+          <p className="max-w-prose text-sm leading-6 text-muted-foreground">Nothing is sent until you request and confirm a signature below. The values above remain a local, editable preview.</p>
+        </div>
+        <dl className="grid gap-3 rounded-field border bg-muted/30 p-4 text-sm sm:grid-cols-2">
+          {reviewRows.map(([label, value]) => (
+            <div key={label} className="space-y-1">
+              <dt className="text-muted-foreground">{label}</dt>
+              <dd className="font-medium text-foreground">{value}</dd>
+            </div>
+          ))}
         </dl>
-    </Card>
+      </section>
+    </DeployStageSigning>
   );
 }
 
@@ -347,14 +322,7 @@ export function ProviderDeployWizard() {
   const validationMessage = Object.keys(fieldErrors).length > 0
     ? "Correct the fields marked invalid before continuing."
     : null;
-  const lastStep = providerDeploySteps.length - 1;
-  const stepRef = useRef<HTMLDivElement>(null);
-  const announcedStep = useRef(currentStep);
-  useEffect(() => {
-    if (announcedStep.current === currentStep) return;
-    announcedStep.current = currentStep;
-    stepRef.current?.focus();
-  }, [currentStep]);
+  const currentDefinition = providerDeploySteps[currentStep];
 
   function changeText(field: Exclude<keyof WizardValues, "category" | "acknowledgement">) {
     return (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -385,7 +353,7 @@ export function ProviderDeployWizard() {
     }
     if (!canAdvance(currentStep, values)) return;
     setShowValidationErrors(false);
-    setCurrentStep((step) => Math.min(step + 1, lastStep));
+    setCurrentStep((step) => Math.min(step + 1, providerDeploySteps.length - 1));
   }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -401,57 +369,31 @@ export function ProviderDeployWizard() {
         return <InterfaceStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} />;
       case 2:
         return <PricingStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} />;
-      default:
+      case 3:
         return <TermsStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} onAcknowledgementChange={changeAcknowledgement} />;
+      default:
+        return <ReviewStep values={values} />;
     }
   }
 
-  const footer = (
-    <div className="flex items-center justify-between gap-3 border-t border-border pt-5 sm:pt-6">
-      <Button type="button" variant="ghost" className="gap-2" disabled={!canGoBack(currentStep)} onClick={() => returnToStep(Math.max(0, currentStep - 1))}>
-        <ArrowLeftIcon />
-        Back
-      </Button>
-      {currentStep < lastStep ? (
-        <Button type="submit" className="gap-2" disabled={!canAdvance(currentStep, values)}>
-          Continue
-          <ArrowRightIcon />
-        </Button>
-      ) : (
-        <Link href="/provider" className={buttonVariants({ variant: "outline" })}>
-          Open provider status
-        </Link>
-      )}
-    </div>
-  );
-
   return (
-    <main className="mx-auto flex w-full max-w-[1088px] flex-col gap-5 pb-12 sm:gap-8 sm:pb-20" data-ui="provider-deploy-surface">
-      <header data-ui="provider-deploy-identity" className="flex flex-col gap-2.5 sm:gap-3">
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
-          <Badge className="gap-1.5 bg-warning uppercase text-warning-foreground">
-            <FlaskIcon />
-            Prepared / demo data fixture
-          </Badge>
-          <Badge variant="secondary">Hedera testnet · chain 296</Badge>
-          <Badge variant="outline">Terms v1 · fixed</Badge>
-        </div>
-        <h1 className="text-[26px] font-semibold leading-[1.15] tracking-[-0.02em] text-foreground sm:text-4xl sm:leading-[1.1]">Deploy the RiskScan campaign</h1>
-        <p className="hidden max-w-[720px] text-base text-muted-foreground sm:block">
-          Review every field of the prepared offering, then authorize each step with your MetaMask issuer wallet. Nothing is created, funded, or published until the named signature and receipt exist.
-        </p>
+    <main className="mx-auto max-w-6xl px-4 pb-10 sm:px-6 sm:pb-14" data-ui="provider-deploy-surface">
+      <header data-ui="provider-deploy-identity" className="pt-6 lg:pt-8">
+        <div className="flex flex-wrap gap-2"><Badge variant="outline" className="rounded-full border-warning/40 bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning-foreground">Prepared / demo data fixture</Badge><Badge variant="outline" className="rounded-full border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-foreground">Hedera testnet · chain 296</Badge><Badge variant="outline" className="rounded-full border-border bg-secondary px-2 py-0.5 text-[11px] font-medium text-foreground">Terms v1 · fixed</Badge></div>
+        <h1 className="mt-4 text-3xl font-bold tracking-[-0.05em] text-foreground sm:text-4xl">Deploy the RiskScan campaign</h1>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">Review every field of the prepared offering, then authorize each step with your issuer wallet. Nothing is created, funded, or published until the named signature and receipt exist.</p>
       </header>
-
-      <StepProgress currentStep={currentStep} onStepSelect={returnToStep} />
-
-      <form data-ui="provider-deploy-form" onSubmit={onSubmit}>
-        <div ref={stepRef} tabIndex={-1} aria-label={stepCaption(currentStep)} data-ui="provider-deploy-workspace" className="scroll-mt-24 outline-none">
-          <DeployStageSigning values={values} footer={footer} reviewing={currentStep === lastStep}>
-            {currentStep === lastStep ? <ReviewStep values={values} /> : renderCurrentStep()}
-            {validationMessage ? <p aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}
-          </DeployStageSigning>
-        </div>
-      </form>
+      <div className="mt-7"><StepProgress currentStep={currentStep} onStepSelect={returnToStep} /></div>
+      <div data-ui="provider-deploy-workspace" className="mt-7 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_326px]">
+        <section data-ui="provider-deploy-form">
+          <Card className="overflow-hidden rounded-card border border-border bg-card shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_5%,transparent)]">
+            <CardHeader className="space-y-1 px-5 pb-2 pt-5 sm:px-6 sm:pt-6"><CardTitle className="text-xl tracking-tight sm:text-2xl">{currentDefinition?.label}</CardTitle><CardDescription className="text-xs leading-5">Complete the prepared fields for this step. Every value remains editable until review.</CardDescription></CardHeader>
+            <form onSubmit={onSubmit}><CardContent className="px-5 py-5 sm:px-6 sm:py-6">{renderCurrentStep()}{validationMessage ? <p aria-live="polite" className="mt-6 rounded-field border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{validationMessage}</p> : null}</CardContent><CardFooter className="flex flex-col-reverse gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"><Button type="button" variant="ghost" className="justify-start px-2 text-sm" disabled={!canGoBack(currentStep)} onClick={() => returnToStep(Math.max(0, currentStep - 1))}>Back</Button>{currentStep < providerDeploySteps.length - 1 ? <Button type="submit" className="h-10 rounded-control px-5 text-sm" disabled={!canAdvance(currentStep, values)}>Continue <span aria-hidden="true">→</span></Button> : <Link href="/provider" className={buttonVariants({ variant: "outline", size: "md" })}>Back to the provider workspace</Link>}</CardFooter></form>
+          </Card>
+        </section>
+        <CampaignSummary values={values} />
+      </div>
     </main>
   );
 }
+
