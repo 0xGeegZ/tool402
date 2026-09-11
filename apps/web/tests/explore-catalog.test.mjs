@@ -147,23 +147,24 @@ test("defines the two-entry static Explore catalog without interactive controls"
     },
   ]);
 
-  assert.match(source, /\{\s*CATALOG\.length\s*\}\s*tools/);
-  assert.match(source, /\bCategory\b/);
-  assert.match(source, /\bStatus\b/);
-  assert.match(source, /\bAccess\b/);
-  assert.match(source, /\bAll tools\b/);
-  assert.match(source, /CATALOG\.map\(\s*tool\s*=>\s*tool\[field\]\s*\)/);
-  assert.match(source, /CATALOG\.filter\(\s*tool\s*=>\s*tool\[field\]\s*===\s*value\s*\)\.length/);
-  assert.match(source, /\.filter\(\s*\(?\s*row\s*\)?\s*=>\s*row\.count\s*>\s*0\s*\)/);
+  assert.match(source, /\{\s*CATALOG\.length\s*\}\s*current tools/);
+  assert.match(source, /\bCurrent catalogue\b/);
+  assert.match(source, /\bStatic marketplace view\b/);
+  assert.match(source, /\bCurrent routes, with no simulated availability or pricing\./);
   assert.match(source, /More tools to come/);
   assert.match(source, /New tools appear here once their journey is accepted\./);
   assert.match(source, /<RiskScanDiscoveryCard\s*\/>/);
   assert.match(source, /<EntityCheckDiscoveryCard\s*\/>/);
-  assert.match(source, /<aside className="rounded-\[calc\(var\(--radius\)\*2\)\] border bg-card px-5 py-4 shadow-none">/);
-  assert.match(source, /lg:flex-row lg:items-center lg:justify-between/);
-  assert.match(source, /flex flex-wrap gap-x-5 gap-y-4 lg:justify-end/);
+  assert.match(source, /<section className="space-y-5" aria-label="Current tool catalogue">/);
+  assert.match(source, /<div className="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">/);
+  assert.match(source, /grid gap-5 md:grid-cols-2 xl:grid-cols-3/);
   assert.match(source, /\bmin-w-0\b/);
-  assert.match(source, /\bsm:grid-cols-2\b/);
+  assert.doesNotMatch(source, /\bFILTER_GROUPS\b/);
+  assert.doesNotMatch(source, /\bcountsFor\b/);
+  assert.doesNotMatch(source, /\bCategory\b/);
+  assert.doesNotMatch(source, /\bStatus\b/);
+  assert.doesNotMatch(source, /\bAccess\b/);
+  assert.doesNotMatch(source, /\bAll tools\b/);
   assert.deepEqual(jsxViolations(sourceFile), []);
   assert.doesNotMatch(source, /["']use client["']/);
   assert.doesNotMatch(source, /\b(?:useState|useEffect|useMemo|fetch|localStorage|sessionStorage)\b/);
