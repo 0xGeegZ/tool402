@@ -74,9 +74,10 @@ export function AtsCreateAction({
         disabled={!enabled}
         data-ats-contracts-bundle="loaded"
         onClick={requestCandidate}
-        variant="outline"
+        size="sm"
+        className="w-full sm:w-auto"
       >
-        Create revenue note in MetaMask
+        Create in MetaMask
       </Button>
       {feedback ? <p role="status" aria-live="polite" className="text-sm text-muted-foreground">{feedback}</p> : null}
       {!feedback && sessionChanged.current ? <p role="status" aria-live="polite" className="text-sm text-muted-foreground">The wallet session changed. Reload before choosing any new action.</p> : null}

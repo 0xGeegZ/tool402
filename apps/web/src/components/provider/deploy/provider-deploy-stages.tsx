@@ -13,6 +13,34 @@ import {
   type ProviderDeployStageState,
 } from "./provider-deploy-state";
 
+const stageCopy = [
+  { description: "EIP-712 offering.create → server verifies → the draft offering is recorded.", label: "Sign offering.create", done: "Signed" },
+  { description: "external.prepare(ATS_CREATE) is persisted before any wallet transaction.", label: "Sign external.prepare", done: "Prepared" },
+  { description: "Bond.create via the ATS SDK in MetaMask, then attach the returned candidate.", label: "Create in MetaMask", done: "Attached" },
+  { description: "directory.publish activates version v1. The offering becomes OPEN.", label: "Sign directory.publish", done: "Active" },
+] as const;
+
+const offeringStates = [
+  { label: "NOT STARTED", className: "bg-muted text-muted-foreground" },
+  { label: "DRAFT", className: "bg-secondary text-secondary-foreground" },
+  { label: "ASSET_PENDING", className: "bg-warning text-warning-foreground" },
+  { label: "READY", className: "bg-success text-success-foreground" },
+  { label: "OPEN", className: "bg-brand-green text-white" },
+] as const;
+
+const stageChipClassName: Record<ProviderDeployStageKind, string> = {
+  blocked: "bg-muted text-muted-foreground",
+  actionable: "bg-secondary text-secondary-foreground",
+  in_progress: "bg-warning text-warning-foreground",
+  done: "bg-success text-success-foreground",
+  unavailable: "bg-warning text-warning-foreground",
+  unsupported_type: "bg-destructive text-destructive-foreground",
+  rejected: "bg-destructive text-destructive-foreground",
+  replayed: "bg-warning text-warning-foreground",
+  conflict: "bg-destructive text-destructive-foreground",
+  unknown: "bg-destructive text-destructive-foreground",
+};
+
 const stageStatusCopy: Record<ProviderDeployStageKind, string> = {
   blocked: "Blocked",
   actionable: "Needs signature",
@@ -65,7 +93,7 @@ function StageCommand({
 
   if ("substeps" in definition) {
     return (
-      <ol className="space-y-3 border-l border-border pl-4 text-sm text-muted-foreground">
+      <ol className="flex flex-col gap-2 text-[13px] leading-5 text-muted-foreground">
         {definition.substeps.map((substep, substepIndex) => (
           <li key={substep.label} className="space-y-1">
             <p className="font-medium text-foreground">{substepIndex + 1}. {substep.label}</p>
@@ -86,10 +114,10 @@ function StageCommand({
   }
 
   return (
-    <p className="font-mono text-xs text-muted-foreground">
+    <span className="font-mono text-xs text-muted-foreground">
       {definition.commandType}
       {"operationKind" in definition ? ` · ${definition.operationKind}` : ""}
-    </p>
+    </span>
   );
 }
 
@@ -97,7 +125,7 @@ function ConfigurationContext({ projection, stageIndex }: { projection?: AtsCrea
   if (!projection || stageIndex !== 1) return null;
 
   return (
-    <dl className="grid gap-2 rounded-field bg-muted/60 p-3 text-xs sm:grid-cols-2">
+    <dl className="grid gap-2 rounded-control bg-muted px-3 py-2.5 text-xs sm:grid-cols-2">
       <div className="space-y-1">
         <dt className="text-muted-foreground">Factory identifier</dt>
         <dd className="font-mono text-foreground">{projection.factoryHederaId}</dd>
@@ -143,84 +171,66 @@ export function ProviderDeployStages({
     ? providerDeployStageControl(enabledStage, activeStage, true)
     : null;
   const firstOpenStage = visibleStates.findIndex((stage) => stage.kind !== "done");
-  const focusedStage = enabledStage >= 0 ? enabledStage : firstOpenStage >= 0 ? firstOpenStage : providerDeployStages.length - 1;
+  const doneCount = firstOpenStage >= 0 ? firstOpenStage : providerDeployStages.length;
+  const focusedStage = enabledStage >= 0 ? enabledStage : Math.min(doneCount, providerDeployStages.length - 1);
+  const focused = visibleStates[focusedStage] ?? { kind: "blocked" as const };
+  const offering = offeringStates[doneCount] ?? offeringStates[0];
   const walletNeeded = (index: number, stage: ProviderDeployStageState) => session === null && index === 0 && stage.kind === "unavailable";
   const describe = (index: number, stage: ProviderDeployStageState) =>
-    walletNeeded(index, stage) ? "Connect MetaMask above to request this signature." : stage.detail ?? stageStatusDescription[stage.kind];
-  const focused = visibleStates[focusedStage] ?? { kind: "blocked" as const };
+    walletNeeded(index, stage) ? "Connect MetaMask to request this signature." : stage.detail ?? stageStatusDescription[stage.kind];
 
   return (
-    <div data-ui="provider-deploy-stages" className="space-y-4">
+    <Card data-ui="provider-deploy-stages" className="rounded-control border border-border bg-card shadow-none">
       <p aria-live="polite" className="sr-only">
         {`Stage ${focusedStage + 1}, ${providerDeployStages[focusedStage].label}: ${describe(focusedStage, focused)}`}
       </p>
-      <ol aria-label="Deployment stages" className="border-y border-border">
+      <CardHeader className="flex flex-row items-center justify-between gap-3 p-4 sm:p-5">
+        <div className="flex flex-col gap-1">
+          <CardTitle className="text-base font-semibold sm:text-lg">Deployment stages</CardTitle>
+          <CardDescription className="hidden text-[13px] leading-5 sm:block">Persist before sign. A wallet callback is never success; each stage closes only on a verified record.</CardDescription>
+        </div>
+        <Badge className={`shrink-0 font-mono ${offering.className}`}>{offering.label}</Badge>
+      </CardHeader>
+      <ol className="border-t border-border">
         {providerDeployStages.map((definition, index) => {
           const stage = visibleStates[index] ?? { kind: "blocked" as const };
           const control = providerDeployStageControl(index, stage, enabledStage === index);
           const controlDescriptionId = `provider-deploy-stage-${index + 1}-control-description`;
-          const numeral = String(index + 1).padStart(2, "0");
-          const showControl = session !== null && !(activeControl && index === enabledStage);
-          const badge = (
-            <Badge variant={stage.kind === "done" ? "default" : "outline"} className="w-fit shrink-0">
-              {walletNeeded(index, stage) ? "Wallet needed" : stageStatusCopy[stage.kind]}
-            </Badge>
-          );
-          if (index !== focusedStage) {
-            return (
-              <li key={definition.label} className="flex items-center gap-3 border-b border-border py-3 last:border-b-0">
-                <span aria-hidden="true" className="w-6 shrink-0 font-mono text-xs text-muted-foreground">{numeral}</span>
-                <span className="min-w-0 flex-1 text-sm font-medium text-foreground">{definition.label}</span>
-                {badge}
-              </li>
-            );
-          }
+          const copy = stageCopy[index] ?? stageCopy[0];
+          const done = stage.kind === "done";
+          const isHandoff = activeControl !== null && index === enabledStage;
+          const chipLabel = walletNeeded(index, stage) ? "Wallet needed" : stage.kind === "unavailable" && stage.detail ? "Unavailable" : stageStatusCopy[stage.kind];
+          const showControl = index !== 2 || stage.kind !== "unavailable";
+          const detail = stage.detail ?? (stage.kind === "done" || stage.kind === "blocked" || stage.kind === "actionable" || stage.kind === "unavailable" ? undefined : stageStatusDescription[stage.kind]);
           return (
-            <li key={definition.label} className="border-b border-border py-3 last:border-b-0">
-              <Card className="shadow-none">
-                <CardHeader className="gap-3 sm:flex sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="flex items-baseline gap-3">
-                      <span aria-hidden="true" className="font-mono text-sm text-muted-foreground">{numeral}</span>
-                      <span>{definition.label}</span>
-                    </CardTitle>
-                    <CardDescription>{describe(index, stage)}</CardDescription>
-                  </div>
-                  {badge}
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <StageCommand index={index} session={session} stageTwoDone={stageTwoDone} candidate={candidate} onCandidate={onCandidate} />
-                  <ConfigurationContext projection={projection} stageIndex={index} />
-                  {showControl ? (
-                    <>
-                      <p id={controlDescriptionId} className="text-sm leading-6 text-muted-foreground">
-                        {control.description}
-                      </p>
-                      <Button type="button" aria-describedby={controlDescriptionId} disabled={control.disabled} onClick={() => onActivate?.(index)} variant={control.disabled ? "outline" : "primary"} className="w-full sm:w-auto">
-                        {control.label}
-                      </Button>
-                    </>
-                  ) : null}
-                </CardContent>
-              </Card>
+            <li key={definition.label} className="grid grid-cols-[28px_minmax(0,1fr)] items-start gap-x-2.5 gap-y-2.5 border-t border-border px-4 py-3.5 first:border-t-0 sm:grid-cols-[40px_minmax(0,1fr)_auto] sm:gap-4 sm:px-5 sm:py-4">
+              <span aria-hidden="true" className={`flex size-7 items-center justify-center rounded-full text-xs font-semibold sm:size-8 sm:text-[13px] ${done ? "bg-brand-green text-white" : "bg-muted text-foreground"}`}>{index + 1}</span>
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold">{definition.label}</span>
+                  <Badge className={stageChipClassName[stage.kind]}>{chipLabel}</Badge>
+                </div>
+                <span className="text-[13px] leading-5 text-muted-foreground">{copy.description}</span>
+                <StageCommand index={index} session={session} stageTwoDone={stageTwoDone} candidate={candidate} onCandidate={onCandidate} />
+                <ConfigurationContext projection={projection} stageIndex={index} />
+                {detail ? <span className="break-all font-mono text-xs text-foreground">{detail}</span> : null}
+                <p id={controlDescriptionId} className="sr-only">{describe(index, stage)} {control.description}</p>
+              </div>
+              {showControl ? (
+                <div data-ui={isHandoff ? "provider-signature-handoff" : undefined} className="col-span-2 flex flex-col gap-1.5 sm:col-span-1 sm:items-end">
+                  <Button type="button" size="sm" aria-describedby={controlDescriptionId} disabled={control.disabled} onClick={() => onActivate?.(index)} variant={done ? "outline" : "primary"} className="w-full sm:w-auto">
+                    {done ? copy.done : copy.label}
+                    {control.disabled ? <span className="sr-only"> ({control.label})</span> : null}
+                  </Button>
+                </div>
+              ) : null}
             </li>
           );
         })}
       </ol>
-      {activeControl && activeDefinition ? (
-        <div data-ui="provider-signature-handoff" className="sticky bottom-3 z-10 flex flex-col gap-3 rounded-control border border-primary/30 bg-card p-3 shadow-md sm:flex-row sm:items-center sm:justify-between sm:pl-4">
-          <p className="text-sm text-foreground">
-            <span className="font-medium">Next: </span>
-            <span className="font-mono text-xs text-muted-foreground">{String(enabledStage + 1).padStart(2, "0")}</span> {activeDefinition.label}
-          </p>
-          <Button type="button" onClick={() => onActivate?.(enabledStage)} className="w-full sm:w-auto">
-            {activeControl.label}
-          </Button>
-        </div>
-      ) : null}
-      <p className="max-w-prose text-sm leading-6 text-muted-foreground">
+      <p className="border-t border-border px-4 py-3 text-[13px] leading-5 text-muted-foreground sm:px-5">
         A declined signature leaves its stage ready to try again. Nothing was recorded, and this page never retries on its own.
       </p>
-    </div>
+    </Card>
   );
 }

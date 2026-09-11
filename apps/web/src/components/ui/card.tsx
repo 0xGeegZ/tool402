@@ -2,7 +2,7 @@ import type * as React from "react";
 
 import { cn } from "./cn";
 
-type CardProps = React.ComponentPropsWithoutRef<"section">;
+type CardProps = React.ComponentProps<"section">;
 type CardSectionProps = React.ComponentPropsWithoutRef<"div">;
 
 export function Card({ className, ...props }: CardProps) {

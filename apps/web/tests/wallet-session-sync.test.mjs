@@ -273,7 +273,7 @@ test("keeps the newest session event state when an older account read resolves l
   const harness = await walletIslandHarness(fake.provider);
 
   const connect = elements(harness.render()).find(
-    (element) => element.type === "Button" && visibleText(element) === "Connect MetaMask",
+    (element) => element.type === "Button" && visibleText(element).trim() === "Connect MetaMask",
   );
   assert.notEqual(connect, undefined);
   await connect.props.onClick();
@@ -305,7 +305,7 @@ test("invalidates a pending session read when the subscription effect cleans up"
   const harness = await walletIslandHarness(fake.provider);
 
   const connect = elements(harness.render()).find(
-    (element) => element.type === "Button" && visibleText(element) === "Connect MetaMask",
+    (element) => element.type === "Button" && visibleText(element).trim() === "Connect MetaMask",
   );
   assert.notEqual(connect, undefined);
   await connect.props.onClick();
