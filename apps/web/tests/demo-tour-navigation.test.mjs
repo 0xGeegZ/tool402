@@ -10,6 +10,8 @@ test("keeps tour redirects fixed and preserves editable demo selection in step l
 
   await t.test("only a scalar 1 selects the dashboard tour destination", () => {
     assert.equal(dashboardTourHref("1"), "/dashboard?tour=1");
+    assert.equal(dashboardTourHref("1", "provider-sign-in"), "/dashboard?tour=1&demoStep=provider-sign-in");
+    assert.equal(dashboardTourHref("1", "unknown-step"), "/dashboard?tour=1");
     for (const value of [undefined, null, "", "0", "true", "unknown", 1, true, ["1"], ["1", "1"], "https://evil.example", "//evil.example", { tour: "1" }]) {
       assert.equal(dashboardTourHref(value), "/dashboard");
     }

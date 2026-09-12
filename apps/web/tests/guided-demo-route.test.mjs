@@ -10,6 +10,7 @@ const pagePath = "src/app/demo/page.tsx";
 const stepsPath = "src/components/demo/guided-demo-steps.tsx";
 const controlPath = "src/components/demo/demo-control-room.ts";
 const roomPath = "src/components/demo/recording-control-room.tsx";
+const runbookPath = join(appRoot, "../../docs/submission/release-rehearsal-runbook.md");
 
 async function readAppFile(path) {
   return readFile(join(appRoot, path), "utf8");
@@ -54,5 +55,19 @@ test("keeps guide presentation free of environment, storage, automatic action, a
   assert.match(source, /NOT AVAILABLE/);
   assert.match(source, /allocation pending/i);
   assert.match(room, /navigator\.clipboard\.writeText/);
+  assert.match(room, /typeof navigator\.clipboard\?\.writeText !== "function"/);
+  assert.match(room, /Copy unavailable/);
+  assert.match(room, /RISKSCAN_PAY_OUTCOME paid/);
+  assert.match(room, /RISKSCAN_PAY_SETTLEMENT <non-empty-safe-settlement-reference>/);
+  assert.match(room, /RISKSCAN_PAY_DIAGNOSTIC PAID/);
   assert.doesNotMatch(room, /PRIVATE_KEY\s*=/);
+});
+
+test("keeps the release runbook aligned with the B03 terminal contract", async () => {
+  const runbook = await readFile(runbookPath, "utf8");
+  assert.match(runbook, /RISKSCAN_PAY_DIAGNOSTIC PREFLIGHT_GUARD_REACHED/);
+  assert.match(runbook, /RISKSCAN_PAY_OUTCOME paid/);
+  assert.match(runbook, /RISKSCAN_PAY_SETTLEMENT <non-empty-safe-settlement-reference>/);
+  assert.match(runbook, /RISKSCAN_PAY_DIAGNOSTIC PAID/);
+  assert.match(runbook, /not repeated for a recording retake/i);
 });

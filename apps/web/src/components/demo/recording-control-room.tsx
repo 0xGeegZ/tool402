@@ -8,6 +8,8 @@ import { recordingReadiness, recordingSteps, recordingTourHref, type RecordingSt
 
 const preflightCommand = "export RISKSCAN_PAY_SERVICE_BASE_URL='https://tool402.vercel.app'\nexport RISKSCAN_PAY_INPUT_JSON='{\"requestRef\":\"b03-release-001\",\"subjectRef\":\"tool402-release\",\"context\":\"One authorized Hedera-testnet RiskScan exercise\",\"declarations\":{\"identity\":true,\"pricing\":true,\"limitations\":true,\"evidence\":true}}'\nexport RISKSCAN_PAY_POLICY_JSON='{\"network\":\"hedera:testnet\",\"asset\":\"0.0.0\",\"maximumAmount\":\"100000\"}'\nnpm run riskscan:pay --workspace=@tool402/agent -- --preflight";
 const paidCommand = ": \"$" + "{RISKSCAN_PAY_PAYER_ACCOUNT_ID:?set privately in ignored runtime configuration}\"\n: \"$" + "{RISKSCAN_PAY_PAYER_PRIVATE_KEY:?set privately in ignored runtime configuration}\"\nnpm run riskscan:pay --workspace=@tool402/agent";
+const expectedPreflight = "RISKSCAN_PAY_DIAGNOSTIC PREFLIGHT_GUARD_REACHED";
+const expectedPaidResult = "RISKSCAN_PAY_OUTCOME paid\nRISKSCAN_PAY_SETTLEMENT <non-empty-safe-settlement-reference>\nRISKSCAN_PAY_DIAGNOSTIC PAID";
 
 function tone(status: RecordingStatus): string {
   if (status === "READY") return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700";
@@ -17,12 +19,22 @@ function tone(status: RecordingStatus): string {
 }
 
 function CopyCommandButton({ label, value }: { label: string; value: string }) {
-  const [copied, setCopied] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "unavailable">("idle");
+  async function copy(): Promise<void> {
+    if (typeof navigator === "undefined" || typeof navigator.clipboard?.writeText !== "function") {
+      setCopyStatus("unavailable");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("unavailable");
+    }
+  }
   return (
-    <Button type="button" variant="outline" onClick={() => {
-      void navigator.clipboard.writeText(value).then(() => setCopied(true)).catch(() => setCopied(false));
-    }}>
-      {copied ? "Copied" : label}
+    <Button type="button" variant="outline" onClick={() => { void copy(); }}>
+      {copyStatus === "copied" ? "Copied" : copyStatus === "unavailable" ? "Copy unavailable" : label}
     </Button>
   );
 }
@@ -66,7 +78,7 @@ export function RecordingControlRoom() {
           </div>
           <div className="rounded-control bg-muted p-4">
             <p className="font-semibold">SHOW</p>
-            <p className="mt-2 text-sm leading-6">Expected preflight: RISKSCAN_PAY_DIAGNOSTIC PREFLIGHT_GUARD_REACHED. Expected paid result: RISKSCAN_PAY_OUTCOME paid, settlement reference, and RISKSCAN_PAY_DIAGNOSTIC PAID.</p>
+            <p className="mt-2 text-sm leading-6">Expected preflight:</p><pre className="mt-1 overflow-x-auto text-xs leading-5">{expectedPreflight}</pre><p className="mt-3 text-sm leading-6">Expected paid result:</p><pre className="mt-1 overflow-x-auto text-xs leading-5">{expectedPaidResult}</pre>
           </div>
         </div>
         <div className="mt-4 grid gap-3 lg:grid-cols-2">

@@ -921,7 +921,9 @@ No secrets, account keys, or private evidence belong in this file.
   PR #109 to turn the existing demo route and tour presentation into a
   recording control room. The root owns only its declared demo presentation,
   safe command-copy, pure explorer-link, focused-test, runbook, and queue
-  paths. It may not alter wallet, M55, M56, ATS, World, Agent, API, backend,
+  paths. The validated tour `demoStep` may pass through the existing sign-in
+  dashboard redirect only; that wiring may not alter authentication, wallet,
+  session, or authorization behavior. It may not alter M55, M56, ATS, World, Agent, API, backend,
   configuration, transaction, deployment, or proof semantics. Missing evidence
   must render as required, optional, or unavailable rather than green.
 

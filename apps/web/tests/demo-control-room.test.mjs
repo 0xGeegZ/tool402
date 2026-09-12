@@ -36,6 +36,7 @@ test("defines a stable, non-mutating recording itinerary with truthful evidence 
   assert.ok(recordingSteps.every((step) => step.do.length > 0 && step.say.length > 0 && step.show.length > 0));
   assert.equal(recordingSteps.find((step) => step.id === "consumer-agent")?.wallet, "Human Ops payer");
   assert.equal(recordingSteps.find((step) => step.id === "backing")?.wallet, "BACKER");
+  assert.equal(recordingSteps.find((step) => step.id === "provider-sign-in")?.href, "/sign-in");
   assert.match(recordingSteps.find((step) => step.id === "backing")?.show ?? "", /allocation pending/i);
   assert.deepEqual(recordingReadiness.map((item) => item.status), [
     "ACTION REQUIRED",

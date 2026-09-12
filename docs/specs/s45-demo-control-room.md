@@ -24,7 +24,7 @@ an existing product projection.
 
 The B03 command card contains exactly the public-safe command template and
 expected terminal lines from HA-B03-AGENT-PAYMENT-001. It must not contain
-payer values, a header, or a payload. With no verified settlement reference,
+payer values, a signed header, or a signed payment payload. With no verified settlement reference,
 it says NOT AVAILABLE and does not render a HashScan action.
 
 ## Explorer links
@@ -54,8 +54,10 @@ safe public evidence seam.
 S45 owns this specification, its queue/root records, the existing demo page,
 guided-step, tour-bar, and tour-navigation sources, new demo-only client
 controls and pure HashScan-link utility, the existing guided/tour tests, and
-new focused demo-control-room and HashScan-link tests. It may update the
-release rehearsal runbook to exactly match the guide.
+new focused demo-control-room and HashScan-link tests. It may preserve the
+validated stable tour step through the existing sign-in/dashboard redirect
+without changing authentication, wallet, or signing behavior. It may update
+the release rehearsal runbook to exactly match the guide.
 
 It excludes every Provider, wallet, M55, M56/backing, ATS verification, World,
 Agent, API, backend, environment, deployment, and transaction source. A later

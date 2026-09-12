@@ -418,7 +418,7 @@ clientTest("keeps sign-in limited to the accepted local authentication boundary"
   assert.match(client, /aria-live\s*=\s*["']polite["']/u);
   assert.match(client, /import\s*\{\s*useRouter\s*\}\s+from\s+["']next\/navigation["']/u);
   assert.match(client, /const router = useRouter\(\)/u);
-  assert.match(client, /router\.replace\(dashboardTourHref\(tour\)\)/u);
+  assert.match(client, /router\.replace\(dashboardTourHref\(tour, demoStep\)\)/u);
   assert.doesNotMatch(client, /window\.location/u);
   assert.doesNotMatch(client, /\b(?:eth_send(?:Raw)?Transaction|send(?:Raw)?Transaction|transaction|relay|localStorage|sessionStorage|indexedDB|setTimeout|setInterval|discover(?:y)?|requestProvider)\b/u);
 });
@@ -429,9 +429,10 @@ signInTest("redirects valid sessions and otherwise renders the public sign-in bo
   assert.match(signIn, /\bcookies\(\)/u);
   assert.match(signIn, /\bSuspense\b/u);
   assert.match(signIn, /\breadDashboardSessionCookieName\b/u);
-  assert.match(signIn, /redirect\(dashboardTourHref\(tour\)\)/u);
+  assert.match(signIn, /redirect\(dashboardTourHref\(tour, demoStep\)\)/u);
   assert.match(signIn, /requestedTour === "1"/u);
-  assert.match(signIn, /<MetaMaskDashboardSignIn tour=\{tour\}/u);
+  assert.match(signIn, /requestedDemoStep/u);
+  assert.match(signIn, /<MetaMaskDashboardSignIn tour=\{tour\} demoStep=\{demoStep\}/u);
   assert.match(signIn, /\bMetaMaskDashboardSignIn\b/u);
   assert.match(signIn, /Unlock your dashboard/u);
 });

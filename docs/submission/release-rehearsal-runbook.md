@@ -50,6 +50,15 @@ output is RISKSCAN_PAY_DIAGNOSTIC PREFLIGHT_GUARD_REACHED. A paid command is
 not repeated for a recording retake. A HashScan action appears only when a real
 verified settlement identifier is available.
 
+Expected successful paid output, shown only after one authorized successful
+request, is:
+
+```text
+RISKSCAN_PAY_OUTCOME paid
+RISKSCAN_PAY_SETTLEMENT <non-empty-safe-settlement-reference>
+RISKSCAN_PAY_DIAGNOSTIC PAID
+```
+
 ## Retake rules
 
 - Narration/UI mistake: restart the guide only. It changes no product state.

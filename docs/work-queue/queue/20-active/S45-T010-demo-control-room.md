@@ -13,6 +13,11 @@ RED/GREEN implementation in the current PR. It reserves only the declared demo
 sources, demo-only utility/controls, focused demo tests, release rehearsal
 runbook, and root queue records.
 
+The accepted tour-navigation boundary may pass a validated stable `demoStep`
+through the existing sign-in/dashboard redirect. It must not change the
+authentication challenge, verification, wallet discovery, account selection,
+signing, session decision, or dashboard authorization behavior.
+
 S45 creates no wallet action, signature, payment, transaction, explorer
 identifier, ATS verification, World verification, backing allocation,
 configuration, deployment, or submission. It can present only existing
