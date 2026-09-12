@@ -1768,6 +1768,21 @@ implementedTest("returns only the highest sanitized offering projection and fail
   assert.equal(accessorReads, 0);
 });
 
+implementedTest("does not expose a selected provider-tool offering before it is OPEN or CLOSED", async (t) => {
+  const { offerings } = await loadOfferings(t);
+  const suffix = "ab".repeat(16);
+  const toolPublicId = `tool_${suffix}`;
+  const input = admissionInput({ payload: offeringPayload({
+    offeringPublicId: `offering_${suffix}`,
+    subjectPublicId: toolPublicId,
+  }) });
+  const db = database({ offerings: [offeringDocument(input, { state: "DRAFT" })] });
+  assert.equal(
+    await offerings.getPublicProjection._handler(db.ctx, { offeringPublicId: input.payload.offeringPublicId }),
+    null,
+  );
+});
+
 implementedTest("projects a durable ATS resume reference only from its exact linked PREPARED attempt", async (t) => {
   const { offerings } = await loadOfferings(t);
   const input = admissionInput();
