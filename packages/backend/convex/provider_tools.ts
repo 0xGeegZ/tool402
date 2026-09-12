@@ -305,8 +305,12 @@ export const allocateForIssuer = internalMutation({
       .withIndex("by_owner_and_chain_and_request", (query) => (
         query.eq("canonicalSignerAddress", args.canonicalSignerAddress).eq("chainId", 296).eq("requestId", args.requestId)
       )).take(2);
-    const replay = prior.length === 1 ? await project(ctx, prior[0]) : null;
-    if (replay !== null) return { outcome: "replayed" as const, tool: replay };
+    if (prior.length === 1) {
+      const replay = await project(ctx, prior[0]);
+      return replay === null
+        ? { outcome: "rejected" as const }
+        : { outcome: "replayed" as const, tool: replay };
+    }
     if (prior.length > 1) return { outcome: "rejected" as const };
 
     const createdAt = now();

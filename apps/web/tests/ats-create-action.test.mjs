@@ -25,6 +25,7 @@ function elements(node) {
 async function actionHarness() {
   const slots = [];
   let cursor = 0;
+  const fetchCalls = [];
   const bridge = await import("../src/lib/ats/stage-b-browser-provider-bridge.ts");
   const imports = {
     react: {
@@ -62,7 +63,10 @@ async function actionHarness() {
       return imports[specifier];
     },
     module,
-    fetch() { throw new Error("the regression harness must never use a live fetch"); },
+    fetch(...input) {
+      fetchCalls.push(input);
+      throw new Error("the regression harness must never use a live fetch");
+    },
     Promise,
     Object,
     Error,
@@ -72,6 +76,7 @@ async function actionHarness() {
       cursor = 0;
       return module.exports.AtsCreateAction(props);
     },
+    fetchCalls() { return fetchCalls; },
   };
 }
 
@@ -226,4 +231,127 @@ test("prefills recovery with the MetaMask hash when verification remains unknown
   const afterUnknown = harness.render(props);
   const recoveryInput = elements(afterUnknown).find((element) => element.props["data-stage-b-recovery-hash"] === "true");
   assert.equal(recoveryInput?.props.value, transactionHash);
+});
+
+test("retains an uncorroborated recovery hash for an explicit retry without sending another transaction", async () => {
+  const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const transactionHash = `0x${"2".repeat(64)}`;
+  const providerCalls = [];
+  const provider = {
+    async request({ method }) {
+      providerCalls.push(method);
+      assert.fail(`recovery must not request a wallet operation: ${method}`);
+    },
+  };
+  const harness = await actionHarness();
+  const props = {
+    session: { provider, address: issuer },
+    stageTwoDone: true,
+    hasCandidate: false,
+    onCandidate() { assert.fail("an uncorroborated hash must not attach a candidate"); },
+  };
+
+  const initial = harness.render(props);
+  const input = elements(initial).find((element) => element.props["data-stage-b-recovery-hash"] === "true");
+  assert.ok(input);
+  input.props.onChange({ target: { value: transactionHash } });
+
+  const first = harness.render(props);
+  const firstRecovery = elements(first).find((element) =>
+    element.type === "Button" && element.props.children === "Recover candidate from transaction hash",
+  );
+  assert.equal(firstRecovery?.props.disabled, false);
+  await firstRecovery.props.onClick();
+
+  const afterFirst = harness.render(props);
+  const retryInput = elements(afterFirst).find((element) => element.props["data-stage-b-recovery-hash"] === "true");
+  const retry = elements(afterFirst).find((element) =>
+    element.type === "Button" && element.props.children === "Recover candidate from transaction hash",
+  );
+  assert.equal(retryInput?.props.value, transactionHash);
+  assert.equal(retry?.props.disabled, false);
+  await retry.props.onClick();
+
+  assert.equal(harness.fetchCalls().length, 2);
+  assert.deepEqual(providerCalls.filter((method) => method === "eth_sendTransaction"), []);
+});
+
+test("mutually excludes create and recovery while the create read is in flight", async () => {
+  const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const transactionHash = `0x${"3".repeat(64)}`;
+  let settleChain;
+  const chainRead = new Promise((resolve) => { settleChain = resolve; });
+  const providerCalls = [];
+  const provider = {
+    async request({ method }) {
+      providerCalls.push(method);
+      if (method === "eth_chainId") return chainRead;
+      assert.fail(`the in-flight create must not reach ${method}`);
+    },
+  };
+  const harness = await actionHarness();
+  const props = {
+    session: { provider, address: issuer },
+    stageTwoDone: true,
+    hasCandidate: false,
+    onCandidate() { assert.fail("an unresolved create cannot attach a candidate"); },
+  };
+
+  const initial = harness.render(props);
+  const input = elements(initial).find((element) => element.props["data-stage-b-recovery-hash"] === "true");
+  assert.ok(input);
+  input.props.onChange({ target: { value: transactionHash } });
+  const armed = harness.render(props);
+  const create = elements(armed).find((element) => element.type === "Button" && element.props.children === "Create the note in MetaMask");
+  const recover = elements(armed).find((element) => element.type === "Button" && element.props.children === "Recover candidate from transaction hash");
+  assert.equal(create?.props.disabled, false);
+  assert.equal(recover?.props.disabled, false);
+
+  const creating = create.props.onClick();
+  const pending = harness.render(props);
+  const pendingCreate = elements(pending).find((element) => element.type === "Button" && element.props.children === "Create the note in MetaMask");
+  const pendingRecover = elements(pending).find((element) => element.type === "Button" && element.props.children === "Recover candidate from transaction hash");
+  assert.equal(pendingCreate?.props.disabled, true);
+  assert.equal(pendingRecover?.props.disabled, true);
+  await pendingRecover.props.onClick();
+  assert.deepEqual(harness.fetchCalls(), []);
+
+  settleChain("0x0");
+  await creating;
+  assert.deepEqual(providerCalls, ["eth_chainId"]);
+  assert.deepEqual(providerCalls.filter((method) => method === "eth_sendTransaction"), []);
+});
+
+test("does not clear submitted-state protection when an equivalent configuration object is recreated", async () => {
+  const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const transactionHash = `0x${"4".repeat(64)}`;
+  const { createStageBAtsCreateExecutionProjection } = await import("../src/lib/ats/stage-b-ats-create-execution-projection.ts");
+  const configuration = createStageBAtsCreateExecutionProjection().configuration;
+  const provider = {
+    async request({ method }) {
+      if (method === "eth_chainId") return "0x128";
+      if (method === "eth_accounts") return [issuer];
+      if (method === "eth_sendTransaction") return transactionHash;
+      if (method === "eth_getTransactionReceipt") return null;
+      assert.fail(`unexpected provider request: ${method}`);
+    },
+  };
+  const harness = await actionHarness();
+  const initialProps = {
+    session: { provider, address: issuer },
+    selectedTool: true,
+    selectedToolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    configuration,
+    stageTwoDone: true,
+    hasCandidate: false,
+    onCandidate() { assert.fail("an unverified transaction must not attach a candidate"); },
+  };
+  const initial = harness.render(initialProps);
+  const create = elements(initial).find((element) => element.type === "Button" && element.props.children === "Create the note in MetaMask");
+  assert.ok(create);
+  await create.props.onClick();
+
+  const replacement = harness.render({ ...initialProps, configuration: structuredClone(configuration) });
+  const replacementCreate = elements(replacement).find((element) => element.type === "Button" && element.props.children === "Create the note in MetaMask");
+  assert.equal(replacementCreate?.props.disabled, true);
 });

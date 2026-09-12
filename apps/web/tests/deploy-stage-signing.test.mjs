@@ -80,8 +80,11 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
     },
     "../../../lib/provider-tool-deployment-client.ts": {
       loadProviderToolDeployment() {
+        if (options.deploymentError) {
+          return { then() { return { catch(reject) { reject(options.deploymentError); } }; } };
+        }
         const deployment = typeof options.deployment === "function" ? options.deployment() : options.deployment ?? null;
-        return { then(resolve) { resolve(deployment); } };
+        return { then(resolve) { resolve(deployment); return { catch() {} }; } };
       },
     },
     "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
@@ -148,6 +151,7 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
     seedSelectedStageThreeCandidate() {
       this.seedStageThreeCandidate();
       slots[7] = { display: imports["./ats-create-configuration"].atsCreateConfiguration };
+      slots[8] = "ASSET_PENDING";
     },
     connectionRequests() { return connectionRequests; },
   };
@@ -245,6 +249,76 @@ implementedTest("hides the embedded MetaMask action after the shared session con
   const stages = elements(afterConnection).find((element) => element.type === "ProviderDeployStages");
   assert.equal(embeddedLayout.connect, null, "the embedded MetaMask action must disappear when the shared session is active");
   assert.equal(stages.props.enabledStage, 0, "the embedded stage list must receive the connected wallet session");
+});
+
+implementedTest("keeps selected-tool Stage 1 unavailable when its owner-scoped deployment is absent", async () => {
+  const values = {
+    toolName: "RiskScan",
+    customerProblem: "Tool operators need a bounded way to assess request risk before they continue a workflow.",
+    qualifyingResource: "riskscan-local-assessment",
+    quickPrice: "0.1",
+    standardPrice: "0.1",
+    targetAgentCustomers: "Security-oriented agent operators",
+    useOfFunds: "Maintain the local assessment workflow and provider documentation.",
+    risks: "Testnet terms do not promise yield, principal, or return.",
+  };
+  const harness = await signingIslandHarness(values, undefined, null, undefined, {
+    selectedToolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    deployment: null,
+  });
+
+  harness.connect();
+  const stages = elements(harness.render()).find((element) => element.type === "ProviderDeployStages");
+  assert.equal(stages.props.enabledStage, -1, "a null selected deployment must not enable a new Stage 1 signature");
+});
+
+implementedTest("does not reopen Stage 1 for a successfully loaded closed selected tool", async () => {
+  const values = {
+    toolName: "RiskScan",
+    customerProblem: "Tool operators need a bounded way to assess request risk before they continue a workflow.",
+    qualifyingResource: "riskscan-local-assessment",
+    quickPrice: "0.1",
+    standardPrice: "0.1",
+    targetAgentCustomers: "Security-oriented agent operators",
+    useOfFunds: "Maintain the local assessment workflow and provider documentation.",
+    risks: "Testnet terms do not promise yield, principal, or return.",
+  };
+  const harness = await signingIslandHarness(values, undefined, null, undefined, {
+    selectedToolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    deployment: {
+      ats: null,
+      state: "CLOSED",
+      title: "Closed RiskScan",
+      atsAttemptPublicId: null,
+      atsCandidate: null,
+      durableValues: null,
+    },
+  });
+
+  harness.connect();
+  const stages = elements(harness.render()).find((element) => element.type === "ProviderDeployStages");
+  assert.equal(stages.props.enabledStage, -1, "a closed tool must not offer a new first-stage signature");
+});
+
+implementedTest("keeps selected-tool Stage 1 unavailable when its owner-scoped deployment read fails", async () => {
+  const values = {
+    toolName: "RiskScan",
+    customerProblem: "Tool operators need a bounded way to assess request risk before they continue a workflow.",
+    qualifyingResource: "riskscan-local-assessment",
+    quickPrice: "0.1",
+    standardPrice: "0.1",
+    targetAgentCustomers: "Security-oriented agent operators",
+    useOfFunds: "Maintain the local assessment workflow and provider documentation.",
+    risks: "Testnet terms do not promise yield, principal, or return.",
+  };
+  const harness = await signingIslandHarness(values, undefined, null, undefined, {
+    selectedToolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    deploymentError: new Error("read failed"),
+  });
+
+  harness.connect();
+  const stages = elements(harness.render()).find((element) => element.type === "ProviderDeployStages");
+  assert.equal(stages.props.enabledStage, -1, "a failed selected deployment read must not enable a new Stage 1 signature");
 });
 
 implementedTest("notifies the wizard when a connected issuer has a durable campaign to resume", async () => {

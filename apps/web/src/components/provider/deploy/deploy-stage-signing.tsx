@@ -12,7 +12,7 @@ import {
 import { SignatureDialog, type SignatureResult } from "../../wallet/signature-dialog";
 import { loadProviderCampaignResume } from "../../../lib/provider-campaign-resume.ts";
 import { loadProviderDirectoryConfiguration } from "../../../lib/provider-directory-configuration-client.ts";
-import { loadProviderToolDeployment, type ProviderToolDurableValues } from "../../../lib/provider-tool-deployment-client.ts";
+import { loadProviderToolDeployment, type ProviderToolDeployment, type ProviderToolDurableValues } from "../../../lib/provider-tool-deployment-client.ts";
 import type { ProviderToolAtsStageProjection } from "../../../lib/ats/provider-tool-ats-projection.ts";
 import { connectedWalletSession, useWalletSession, type WalletSession } from "../../wallet/wallet-session";
 import { Button } from "../../ui/button";
@@ -78,6 +78,7 @@ export function DeployStageSigning({
   const [constructionError, setConstructionError] = useState<string | null>(null);
   const [resumePending, setResumePending] = useState(false);
   const [selectedAts, setSelectedAts] = useState<ProviderToolAtsStageProjection | null>(null);
+  const [selectedDeploymentState, setSelectedDeploymentState] = useState<ProviderToolDeployment["state"] | null>(null);
   const [selectedRefresh, setSelectedRefresh] = useState(0);
   const currentSigningContext = useRef<SigningContext>({ selectedToolPublicId, address: session?.address });
   const activeRequestContext = useRef<SigningContext | null>(null);
@@ -97,8 +98,13 @@ export function DeployStageSigning({
   const visibleStates = request
     ? states.map((stage, index) => (index === request.stage ? { kind: "in_progress" as const } : stage))
     : states;
-  const enabledStage = session !== null && request === null && !resumePending
-    ? states.findIndex((stage) => stage.kind === "actionable")
+  const firstActionableStage = states.findIndex((stage) => stage.kind === "actionable");
+  const selectedStageCanBeEnabled = selectedToolPublicId === undefined
+    || (selectedDeploymentState === "ALLOCATED"
+      ? firstActionableStage === 0
+      : selectedDeploymentState !== null && selectedDeploymentState !== "CLOSED" && firstActionableStage > 0);
+  const enabledStage = session !== null && request === null && !resumePending && selectedStageCanBeEnabled
+    ? firstActionableStage
     : -1;
 
   useEffect(() => {
@@ -112,6 +118,7 @@ export function DeployStageSigning({
       setDirectoryRecord(initialDirectoryRecord);
       setResumePending(false);
       setSelectedAts(null);
+      setSelectedDeploymentState(null);
       return () => { cancelled = true; };
     }
     activeRequestContext.current = null;
@@ -122,6 +129,7 @@ export function DeployStageSigning({
     setDirectoryRecord(initialDirectoryRecord);
     setResumePending(true);
     setSelectedAts(null);
+    setSelectedDeploymentState(null);
     if (selectedToolPublicId === undefined) {
       void loadProviderCampaignResume(session.address).then((resume) => {
         if (cancelled) return;
@@ -139,8 +147,6 @@ export function DeployStageSigning({
         }
         setResumePending(false);
       });
-    } else {
-      setResumePending(false);
     }
     void loadProviderDirectoryConfiguration().then((directoryConfiguration) => {
       if (cancelled || directoryConfiguration === null) return;
@@ -148,39 +154,45 @@ export function DeployStageSigning({
     });
     if (selectedToolPublicId !== undefined) {
       void loadProviderToolDeployment(selectedToolPublicId).then((deployment) => {
-        if (cancelled || deployment === null) return;
-        setSelectedAts(deployment.ats);
-        onRecoveredToolTitle?.(deployment.title);
-        if (deployment.durableValues !== null) onRecoveredDurableValues?.(deployment.durableValues);
-        if (deployment.state === "DRAFT") {
-          setResults([{ kind: "done", detail: "Recovered from this tool's durable offering record." }]);
-          onResume?.();
-        } else if (deployment.state === "ASSET_PENDING" && deployment.atsAttemptPublicId !== null) {
-          const recovered: ProviderDeployStageState[] = [
-            { kind: "done", detail: "Recovered from this tool's durable offering record." },
-            { kind: "done", detail: "Recovered from this tool's durable prepared attempt." },
-          ];
-          if (deployment.atsCandidate !== null) {
-            recovered.push({
-              kind: "actionable",
-              detail: "Recheck the attached receipt. This sends no wallet transaction; directory publication stays blocked until durable corroboration.",
-            });
+        if (cancelled) return;
+        if (deployment !== null) {
+          setSelectedDeploymentState(deployment.state);
+          setSelectedAts(deployment.ats);
+          onRecoveredToolTitle?.(deployment.title);
+          if (deployment.durableValues !== null) onRecoveredDurableValues?.(deployment.durableValues);
+          if (deployment.state === "DRAFT") {
+            setResults([{ kind: "done", detail: "Recovered from this tool's durable offering record." }]);
+            onResume?.();
+          } else if (deployment.state === "ASSET_PENDING" && deployment.atsAttemptPublicId !== null) {
+            const recovered: ProviderDeployStageState[] = [
+              { kind: "done", detail: "Recovered from this tool's durable offering record." },
+              { kind: "done", detail: "Recovered from this tool's durable prepared attempt." },
+            ];
+            if (deployment.atsCandidate !== null) {
+              recovered.push({
+                kind: "actionable",
+                detail: "Recheck the attached receipt. This sends no wallet transaction; directory publication stays blocked until durable corroboration.",
+              });
+            }
+            setResults(recovered);
+            setAttemptPublicId(deployment.atsAttemptPublicId);
+            setCandidate(deployment.atsCandidate);
+            onResume?.();
+          } else if (deployment.state === "READY") {
+            setResults([
+              { kind: "done", detail: "Recovered from this tool's durable offering record." },
+              { kind: "done", detail: "Recovered from this tool's durable prepared attempt." },
+              { kind: "done", detail: "Recovered from this tool's corroborated receipt." },
+            ]);
+            onResume?.();
+          } else if (deployment.state === "OPEN") {
+            setResults([{ kind: "done" }, { kind: "done" }, { kind: "done" }, { kind: "done", detail: "This tool is already published." }]);
+            onResume?.();
           }
-          setResults(recovered);
-          setAttemptPublicId(deployment.atsAttemptPublicId);
-          setCandidate(deployment.atsCandidate);
-          onResume?.();
-        } else if (deployment.state === "READY") {
-          setResults([
-            { kind: "done", detail: "Recovered from this tool's durable offering record." },
-            { kind: "done", detail: "Recovered from this tool's durable prepared attempt." },
-            { kind: "done", detail: "Recovered from this tool's corroborated receipt." },
-          ]);
-          onResume?.();
-        } else if (deployment.state === "OPEN") {
-          setResults([{ kind: "done" }, { kind: "done" }, { kind: "done" }, { kind: "done", detail: "This tool is already published." }]);
-          onResume?.();
         }
+        setResumePending(false);
+      }).catch(() => {
+        if (!cancelled) setResumePending(false);
       });
     }
     return () => { cancelled = true; };

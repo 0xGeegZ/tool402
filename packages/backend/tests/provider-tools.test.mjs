@@ -209,6 +209,18 @@ implementedTest("allocates once for one current issuer and replays the same owne
   assert.equal(Object.hasOwn(db.writes[0], "state"), false);
 });
 
+implementedTest("rejects an invalid prior allocation without inserting another tool", async () => {
+  const { allocateForIssuer } = await import(sourceUrl.href);
+  const invalidPrior = tool({ subjectPublicId: `tool_${"cd".repeat(16)}` });
+  const db = database({ authorities: [authority()], tools: [invalidPrior] });
+
+  assert.deepEqual(
+    await allocateForIssuer._handler(db.ctx, { canonicalSignerAddress, requestId }),
+    { outcome: "rejected" },
+  );
+  assert.equal(db.writes.length, 0);
+});
+
 implementedTest("rejects revoked, non-issuer, and ambiguous authorities without allocating", async () => {
   const { allocateForIssuer } = await import(sourceUrl.href);
   for (const authorities of [
