@@ -20,6 +20,7 @@ test("declares the strict Next workspace boundary", async () => {
     "@tool402/agent": "file:../agent",
     "@tool402/core": "file:../../packages/core",
     "@hashgraph/asset-tokenization-contracts": "8.0.0",
+    "@worldcoin/idkit": "4.2.3",
     "@x402/core": "2.25.0",
     "@x402/evm": "2.25.0",
     "@x402/hedera": "2.25.0",
