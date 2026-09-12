@@ -3,35 +3,58 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
-import { useWalletSession } from "../wallet/wallet-session";
+import {
+  discoverMetaMaskProvider,
+  watchWalletSessionChanges,
+  type Eip1193Provider,
+} from "../../lib/wallet/metamask-provider";
+import { readCurrentSession } from "../../lib/wallet/wallet-state";
 
-export function DashboardSessionSync() {
+export function DashboardSessionSync({ address }: { readonly address: string }) {
   const router = useRouter();
-  const { state } = useWalletSession();
-  const observedIdentity = useRef(false);
   const logoutStarted = useRef(false);
 
   useEffect(() => {
-    if (state.kind === "connected" || state.kind === "not_issuer") {
-      observedIdentity.current = true;
-      logoutStarted.current = false;
-      return;
-    }
-    if (state.kind !== "disconnected" || !observedIdentity.current || logoutStarted.current) {
-      return;
-    }
+    let active = true;
+    let stopWatching = () => {};
 
-    observedIdentity.current = false;
-    logoutStarted.current = true;
-    void fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "same-origin",
-    }).then((response) => {
-      if (response.status !== 204) return;
-      router.replace("/sign-in");
-      router.refresh();
-    }).catch(() => undefined);
-  }, [router, state.kind]);
+    const logout = () => {
+      if (!active || logoutStarted.current) return;
+      logoutStarted.current = true;
+      void fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "same-origin",
+      }).then((response) => {
+        if (!active || response.status !== 204) return;
+        router.replace("/sign-in");
+        router.refresh();
+      }).catch(() => undefined);
+    };
+
+    const settle = async (provider: Eip1193Provider) => {
+      const { state } = await readCurrentSession(provider);
+      if (!active) return;
+      if (state.kind === "connected" && state.address === address) return;
+      logout();
+    };
+
+    void discoverMetaMaskProvider(window).then((selection) => {
+      if (!active) return;
+      if (selection.kind !== "provider") {
+        logout();
+        return;
+      }
+      stopWatching = watchWalletSessionChanges(selection.provider, () => {
+        void settle(selection.provider);
+      });
+      void settle(selection.provider);
+    }).catch(() => logout());
+
+    return () => {
+      active = false;
+      stopWatching();
+    };
+  }, [address, router]);
 
   return null;
 }
