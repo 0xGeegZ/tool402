@@ -42,6 +42,17 @@
   it supersedes historical S11 copy only in its declared scope. No source is
   changed before readiness and RED; wallet and deployment authority is unchanged.
 
+- S43_PROVIDER_COMMAND_CENTER_INTAKE: The repository owner requested a new
+  isolated presentational redesign of the existing loaded `/provider` route.
+  S43-T010 is in `00-inbox`: its committed specification and UI manifest lock
+  the command-center composition, and its only future source paths are the
+  provider page, provider status component/state, and focused provider-status
+  test. It creates no new read, state, wallet/provider, command, transaction,
+  deployment, or live authority.
+- S43_LOCAL_RECORDS: `docs/specs/s43-provider-command-center.md` and
+  `docs/ui/UI-S43.md` are S43's canonical implementation-local specification
+  and UI manifest; its bounded ledger row is in `docs/ui/IMPORT-LEDGER.md`.
+
 - S29_POST_ACCEPTANCE_REVIEW_FIX: The repository owner explicitly directs the
   two confirmed Provider deploy review corrections on PR #82. The root may
   amend only `provider-deploy-wizard.tsx`, `deploy-stage-signing.tsx`, the new

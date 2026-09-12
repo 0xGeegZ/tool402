@@ -969,6 +969,8 @@ branch is unreviewed and has no ownership or implementation authority. No client
 state, timer, command, write, Mirror/chain read, wallet, provider, payment,
 transaction, deployment, or live path is authorized.
 
+S43-T010 is a root-controlled `00-inbox` POLISH record for the isolated Provider command-center redesign. Its future implementation is limited to `apps/web/src/app/provider/page.tsx`, `apps/web/src/components/provider/status/provider-status.tsx`, `apps/web/src/components/provider/status/provider-status-state.ts`, and `apps/web/tests/provider-status.test.mjs`; the card, local specification, and UI manifest are its queue records. It owns no projection reader, API, shell, wallet/session, dependency, asset, configuration, or external behavior. The existing S17 reader, closed outcomes, evidence values, Hashscan gate, local links, and live-boundary exclusions remain unchanged.
+
 S21-T010 is a root-controlled `60-done` CORE_P0 record. Its historical
 source was integrated at `48421352607a00c1a73f593dcc48160fac771e6a`; that is
 not acceptance evidence. The corrective record
