@@ -2,6 +2,8 @@ export const coreFoundation = {
   packageName: "@tool402/core",
 } as const;
 
+export { createProviderToolIdentity, parseProviderToolId } from "./provider-tool-identity.ts";
+export type { ProviderToolIdentity } from "./provider-tool-identity.ts";
 export { parseIngressEnvelope } from "./ingress-envelope.ts";
 export type { IngressEnvelope } from "./ingress-envelope.ts";
 export { parseExternalPreparePayload } from "./external-prepare-payload.ts";

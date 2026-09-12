@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 
 import { isUserRejection } from "../../lib/wallet/metamask-provider.ts";
 import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
@@ -17,6 +17,7 @@ import {
   createBackingIntent,
   formatHbar,
   formatShare,
+  isCurrentBackingIntent,
   paymentTinybars,
   readBackingOffering,
   transferRequest,
@@ -44,7 +45,7 @@ function describeView(view: BackingView): string {
     case "prepared":
       return `The funding command was accepted. Send exactly ${formatHbar(view.intent.tinybars)} from MetaMask. A signature is not a payment.`;
     case "payment_submitted":
-      return `Transfer ${view.transactionHash} was submitted from MetaMask. It is not confirmed here, and units are allocated only after the issuer signs.`;
+      return `Payment submitted — allocation pending. Transaction ${view.transactionHash} was submitted from MetaMask. It is not confirmed here.`;
     case "payment_outcome_unknown":
     case "refused":
       return view.message;
@@ -68,6 +69,7 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
   const [request, setRequest] = useState<BackingIntent | null>(null);
   const [transferring, setTransferring] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const sendingRef = useRef(false);
   const validation = validateUnits(offering, unitsInput);
   const label = backingLifecycleLabels[view.kind];
   const committed = request ?? ("intent" in view ? view.intent : null);
@@ -91,12 +93,20 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
   }
 
   async function send() {
-    if (session === null || view.kind !== "prepared" || transferring) return;
+    if (session === null || view.kind !== "prepared" || transferring || sendingRef.current) return;
+    sendingRef.current = true;
     setTransferring(true);
     setNotice(null);
+    if (!isCurrentBackingIntent(offering, view.intent)) {
+      setNotice("The accepted funding intent no longer matches the offering. Nothing was sent.");
+      sendingRef.current = false;
+      setTransferring(false);
+      return;
+    }
     const current = await readCurrentSession(session.provider);
     if (current.state.kind !== "connected" || current.state.address !== session.address) {
       setNotice("MetaMask's account or network changed after connecting. Reconnect on Hedera Testnet before sending; nothing was sent.");
+      sendingRef.current = false;
       setTransferring(false);
       return;
     }
@@ -112,6 +122,7 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
     } catch {
       setView(viewAfterTransfer(view, { kind: "no_hash" }));
     }
+    if (result.kind === "declined") sendingRef.current = false;
     setTransferring(false);
   }
 

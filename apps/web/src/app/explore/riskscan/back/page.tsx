@@ -1,6 +1,13 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { BackingFlow } from "../../../../components/backing/backing-flow";
+import { loadRiskScanBackingProjection } from "../../../../lib/riskscan-backing-projection";
+
+async function BackingFlowRegion() {
+  const projection = await loadRiskScanBackingProjection(process.env, globalThis.fetch);
+  return <BackingFlow projection={projection} />;
+}
 
 export default function RiskScanBackPage() {
   return (
@@ -15,7 +22,9 @@ export default function RiskScanBackPage() {
             Request note units and fund them from MetaMask on Hedera Testnet. The issuer allocates units separately.
           </p>
         </header>
-        <BackingFlow projection={null} />
+        <Suspense fallback={<BackingFlow projection={null} />}>
+          <BackingFlowRegion />
+        </Suspense>
       </article>
     </main>
   );

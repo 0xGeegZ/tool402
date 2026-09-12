@@ -75,7 +75,8 @@ test("selects one closed, editable ToolLoop demo fixture without a pre-submit re
     flow,
     /\{demoMode\s*===\s*["']tool-loop["']\s*\?\s*<[^>]*aria-live=["']polite["'][^>]*>[\s\S]{0,240}?Demo values loaded\. Review before checking\.[\s\S]{0,240}?<\/[^>]+>\s*:\s*null\}/,
   );
-  assert.match(guidedSteps, /href:\s*["']\/explore\/riskscan\/tool-loop\?demo=tool-loop["']/);
+  assert.match(guidedSteps, /recordingSteps/);
+  assert.match(guidedSteps, /recordingTourHref\(step\.href, step\.id\)/);
   assert.doesNotMatch(flow, /\b(?:useQueryStates|useSearchParams|URLSearchParams|location\.search|router\.query)\b/);
   assert.doesNotMatch(flow, /\bsetDemoMode\b|\bfetch\b/);
 });

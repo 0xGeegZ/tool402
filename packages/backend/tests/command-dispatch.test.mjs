@@ -287,9 +287,10 @@ function authorityFor(type, payload) {
   };
 }
 
-function commandContext({ mutationResult, mutationResults, mutationError, queryResult, queryError } = {}) {
+function commandContext({ mutationResult, mutationResults, mutationError, queryResult, queryError, scheduleError } = {}) {
   const mutations = [];
   const queries = [];
+  const schedules = [];
   const queuedMutationResults = mutationResults === undefined ? null : [...mutationResults];
   const forbidden = () => {
     throw new Error("unexpected external operation");
@@ -309,9 +310,16 @@ function commandContext({ mutationResult, mutationResults, mutationError, queryR
         return queryResult;
       },
       runAction: forbidden,
-      scheduler: { runAfter: forbidden, runAt: forbidden },
+      scheduler: {
+        async runAfter(delay, reference, args) {
+          if (scheduleError !== undefined) throw scheduleError;
+          schedules.push({ delay, name: getFunctionName(reference), args: structuredClone(args) });
+        },
+        runAt: forbidden,
+      },
       db: forbidden,
     },
+    schedules,
   };
 }
 
@@ -384,6 +392,85 @@ test("requires the three declared M41 command-ingress source modules", () => {
   for (const path of sourcePaths) {
     assert.equal(existsSync(path), true, `missing declared M41 source module: ${path}`);
   }
+});
+
+implementedTest("projects only the exact allocated subject into command normalization authority", async () => {
+  const { readCommandAuthorities } = await import(replayUrl);
+  const suffix = "a".repeat(32);
+  const subjectPublicId = `tool_${suffix}`;
+  const offeringPublicId = `offering_${suffix}`;
+  const currentAuthority = authorityFor("offering.create", {
+    ...offeringCreatePayload(),
+    subjectPublicId: "riskscan_revenue_note_demo",
+  });
+  currentAuthority.ownedSubjectPublicIds = ["riskscan_revenue_note_demo"];
+  const providerTool = {
+    _id: "providerTools:A",
+    _creationTime: 1,
+    toolPublicId: subjectPublicId,
+    subjectPublicId,
+    offeringPublicId,
+    serviceId: subjectPublicId,
+    serviceSlug: `tool-${suffix}`,
+    canonicalSignerAddress,
+    chainId: 296,
+    principalPublicId: currentAuthority.principalPublicId,
+    authorityVersion: currentAuthority.authorityVersion,
+    requestId: "00000000-0000-4000-8000-000000000000",
+    offeringVersion: 1,
+    directoryVersion: 1,
+    createdAt: 1n,
+  };
+  const rows = { commandAuthorities: [currentAuthority], providerTools: [providerTool] };
+  const reads = [];
+  const ctx = {
+    db: {
+      query(table) {
+        return {
+          withIndex(index, select) {
+            const filters = [];
+            const range = { eq(field, value) { filters.push([field, value]); return range; } };
+            select(range);
+            return {
+              async take(limit) {
+                assert.equal(limit, 2);
+                reads.push({ table, index, filters });
+                return rows[table].filter((row) => filters.every(([field, value]) => row[field] === value));
+              },
+            };
+          },
+        };
+      },
+    },
+  };
+
+  assert.deepEqual(
+    await readCommandAuthorities._handler(ctx, {
+      chainId: 296,
+      canonicalSignerAddress,
+      selection: { subjectPublicId, offeringPublicId },
+    }),
+    [{ ...currentAuthority, ownedSubjectPublicIds: [subjectPublicId] }],
+  );
+  assert.deepEqual(reads.map(({ table, index }) => ({ table, index })), [
+    { table: "commandAuthorities", index: "by_chain_id_and_canonical_signer_address" },
+    { table: "providerTools", index: "by_tool_public_id" },
+  ]);
+
+  assert.deepEqual(
+    await readCommandAuthorities._handler(ctx, {
+      chainId: 296,
+      canonicalSignerAddress,
+      selection: { subjectPublicId, offeringPublicId: `offering_${"b".repeat(32)}` },
+    }),
+    [],
+    "swapped allocated identity must not normalize",
+  );
+  assert.deepEqual(
+    await readCommandAuthorities._handler(ctx, { chainId: 296, canonicalSignerAddress }),
+    [currentAuthority],
+    "legacy authority projection must remain byte-compatible",
+  );
 });
 
 implementedTest("exports the closed command-dispatch surface and keeps the direct-test entrypoint out of the HTTP router", async () => {
@@ -931,7 +1018,40 @@ implementedTest("maps M43 attachment results through the existing public respons
       authorityVersion: "authority-v1",
       replayIdentity: walletReplayIdentity,
     }, name);
+    assert.deepEqual(state.schedules, name === "ATTACHED" || name === "ALREADY_ATTACHED"
+      ? [{
+        delay: 0,
+        name: "ats_receipt_verification:verifyAtsCandidateReceipt",
+        args: { attemptId: "externalPrepareCommandAttempts:private" },
+      }]
+      : [], name);
     assert.equal(Object.hasOwn(body, "publicId"), expected.outcome !== "REJECTED", name);
+  }
+});
+
+implementedTest("keeps a scheduler failure retryable through a fresh ALREADY_ATTACHED receipt signature", async () => {
+  const { handleCommandIngressForTest } = await import(dispatchUrl);
+  const payload = attachCandidatePayload();
+
+  for (const [result, scheduleError, expected] of [
+    [{ status: "ATTACHED", attemptId: "externalPrepareCommandAttempts:private", state: "SUBMITTED" }, new Error("scheduler unavailable"), { outcome: "ACCEPTED", publicId: payload.attemptPublicId }],
+    [{ status: "ALREADY_ATTACHED", attemptId: "externalPrepareCommandAttempts:private", state: "SUBMITTED" }, undefined, { outcome: "REPLAYED", publicId: payload.attemptPublicId }],
+  ]) {
+    const transport = await signedTransport("external.attachCandidate", payload);
+    const ingress = await signedIngressRequest(transport);
+    const state = commandContext({ mutationResult: result, scheduleError });
+    const seamState = testSeams({ key: ingress.key, type: "external.attachCandidate", payload });
+    const response = await handleCommandIngressForTest(state.ctx, ingress.request, seamState.seams);
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(await responseJson(response), expected);
+    assert.deepEqual(state.schedules, scheduleError === undefined
+      ? [{
+        delay: 0,
+        name: "ats_receipt_verification:verifyAtsCandidateReceipt",
+        args: { attemptId: "externalPrepareCommandAttempts:private" },
+      }]
+      : []);
   }
 });
 

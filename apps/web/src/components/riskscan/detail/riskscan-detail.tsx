@@ -8,6 +8,7 @@ import type {
 import { Badge } from "../../ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
 import { PageHeader } from "../../ui/page-header";
+import type { BackingProjection } from "../../backing/backing-state";
 
 const requestFields = [
   ["requestRef", "A nonblank reference for the assessment."],
@@ -57,7 +58,7 @@ function FieldGroup({
   );
 }
 
-export function RiskScanDetail() {
+export function RiskScanDetail({ projection }: { projection: BackingProjection | null }) {
   return (
     <article className="space-y-10">
       <div className="space-y-5">
@@ -80,10 +81,16 @@ export function RiskScanDetail() {
               eyebrow="Read-only detail"
               title="RiskScan"
               description="A bounded Quick assessment that makes caller-reported disclosure gaps visible."
-              actions={[
-                { href: "/explore/riskscan/try", label: "Try RiskScan" },
-                { href: "/explore/riskscan/tool-loop", label: "Explore RiskScan ToolLoop" },
-              ]}
+              actions={projection === null
+                ? [
+                  { href: "/explore/riskscan/try", label: "Try RiskScan" },
+                  { href: "/explore/riskscan/tool-loop", label: "Explore RiskScan ToolLoop" },
+                ]
+                : [
+                  { href: "/explore/riskscan/try", label: "Try RiskScan" },
+                  { href: "/explore/riskscan/tool-loop", label: "Explore RiskScan ToolLoop" },
+                  { href: "/explore/riskscan/back", label: "Back this tool" },
+                ]}
             />
             <p className="text-sm text-muted-foreground">Current local route · Risk assessment</p>
           </div>

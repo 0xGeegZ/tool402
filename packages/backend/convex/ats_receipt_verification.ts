@@ -12,6 +12,7 @@ import {
   createBoundedMirrorTransactionReader,
   verifyMirrorTransactionReceipt,
 } from "../src/ats/mirror-transaction-verifier.ts";
+import { createBoundedProviderToolReceiptReader } from "../src/ats/provider-tool-receipt-reader.ts";
 
 type VerificationContext = {
   readonly attemptId: GenericId<"externalPrepareCommandAttempts">;
@@ -22,6 +23,7 @@ type VerificationContext = {
   readonly expectedTarget: string;
   readonly candidateTransactionId?: string;
   readonly candidateEvmAddress?: string;
+  readonly selectedProviderTool: boolean;
 };
 type MirrorReaderResult =
   | { readonly status: "DOCUMENT"; readonly document: unknown }
@@ -47,6 +49,10 @@ type VerificationSeams = {
     expectation: MirrorExpectation,
     document: unknown,
   ) => MirrorVerification;
+  readonly readProviderToolReceipt: (candidateTransactionId: string) => Promise<
+    | { readonly status: "DOCUMENTS"; readonly transaction: unknown; readonly receipt: unknown }
+    | { readonly status: "UNKNOWN" }
+  >;
 };
 type ActionContext = GenericActionCtx<GenericDataModel>;
 type ActionArguments = {
@@ -54,6 +60,7 @@ type ActionArguments = {
 };
 
 const mirrorNodeBaseUrl = "https://testnet.mirrornode.hedera.com/api/v1/";
+const rpcNodeBaseUrl = "https://testnet.hashio.io/api";
 const readVerificationContextReference = makeFunctionReference<
   "query",
   ActionArguments,
@@ -67,15 +74,24 @@ const recordOutcomeReference = makeFunctionReference<
   },
   unknown
 >("ats_candidate_receipts:recordAtsCandidateOutcome");
+const corroborateSelectedProviderToolAtsReceiptReference = makeFunctionReference<"mutation">(
+  "ats_candidate_receipts:corroborateSelectedProviderToolAtsReceipt",
+);
 
 function createProductionSeams(): VerificationSeams {
   const reader = createBoundedMirrorTransactionReader({
     mirrorNodeBaseUrl,
     fetch,
   });
+  const providerToolReader = createBoundedProviderToolReceiptReader({
+    mirrorNodeBaseUrl,
+    rpcNodeBaseUrl,
+    fetch,
+  });
   return {
     readMirrorTransaction: (candidateTransactionId) => reader(candidateTransactionId),
     verifyMirrorTransactionReceipt,
+    readProviderToolReceipt: (candidateTransactionId) => providerToolReader(candidateTransactionId),
   };
 }
 
@@ -94,11 +110,24 @@ async function verifyReceipt(
   ) {
     return { outcome: "NOT_ELIGIBLE" };
   }
+  const seams = injectedSeams ?? createProductionSeams();
+  if (context.operationKind === "ATS_CREATE" && context.selectedProviderTool) {
+    const documents = await seams.readProviderToolReceipt(context.candidateTransactionId);
+    if (documents.status !== "DOCUMENTS") return { outcome: "OUTCOME_UNKNOWN" };
+    const corroborated = await ctx.runMutation(corroborateSelectedProviderToolAtsReceiptReference, {
+      attemptId: args.attemptId,
+      transaction: documents.transaction,
+      receipt: documents.receipt,
+    }) as { readonly status?: unknown };
+    if (corroborated?.status === "CONFIRMED" || corroborated?.status === "ALREADY_CONFIRMED") {
+      return { outcome: "CONFIRMED" };
+    }
+    return { outcome: corroborated?.status === "REJECTED" ? "REJECTED" : "OUTCOME_UNKNOWN" };
+  }
   if (context.operationKind !== "HEDERA_FUNDING") {
     return { outcome: "NOT_CONFIGURED" };
   }
 
-  const seams = injectedSeams ?? createProductionSeams();
   const readerResult = await seams.readMirrorTransaction(context.candidateTransactionId);
   let outcome: "CONFIRMED" | "OUTCOME_UNKNOWN" | "REJECTED";
   if (readerResult.status !== "DOCUMENT") {

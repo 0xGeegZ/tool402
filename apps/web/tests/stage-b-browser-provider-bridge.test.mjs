@@ -8,6 +8,8 @@ import { runInNewContext } from "node:vm";
 import { encodeAbiParameters, encodeEventTopics, isAddress } from "viem";
 import typescript from "typescript";
 
+import { createProviderToolAtsConfiguration } from "../../../packages/backend/src/ats/provider-tool-ats-configuration.ts";
+
 const require = createRequire(import.meta.url);
 const factoryArtifact = require(
   "@hashgraph/asset-tokenization-contracts/artifacts/contracts/factory/Factory.sol/Factory.json",
@@ -126,8 +128,21 @@ async function withJsonParse(parse, operation) {
   }
 }
 
-function createBridge(api, provider, fetch, wait = async () => {}) {
-  return api.createStageBBrowserProviderBridge({ provider, fetch, wait });
+function createBridge(api, provider, fetch, wait = async () => {}, configuration) {
+  return api.createStageBBrowserProviderBridge({ provider, fetch, wait, ...(configuration === undefined ? {} : { configuration }) });
+}
+
+function selectedConfiguration(suffix, title = "Same RiskScan Title") {
+  return createProviderToolAtsConfiguration({
+    toolPublicId: `tool_${suffix}`,
+    subjectPublicId: `tool_${suffix}`,
+    title,
+    canonicalSignerAddress: issuer,
+  }).atsCreateConfiguration;
+}
+
+function factoryCalldata(configuration) {
+  return factoryApi.encodeFactoryDeployBond(factoryApi.buildFactoryDeployBondRequest(configuration, { issuerEvmAddress: issuer }));
 }
 
 function createBondDeployedLog(factoryApi, projectionApi, emitter = factory, address = bondAddress) {
@@ -156,8 +171,25 @@ function mirrorContractResult(log, overrides = {}) {
     to: factory,
     timestamp,
     logs: [log],
+    function_parameters: factoryCalldata(projectionApi.createStageBAtsCreateExecutionProjection().configuration),
     ...overrides,
   };
+}
+
+function mirrorCandidateResponses({ hash = transactionHash, input, log }) {
+  return [
+    jsonResponse(mirrorContractResult(log, { hash, function_parameters: input })),
+    jsonResponse({
+      transactions: [{
+        name: "ETHEREUMTRANSACTION",
+        result: "SUCCESS",
+        nonce: 0,
+        consensus_timestamp: timestamp,
+        transaction_id: rawTransactionId,
+      }],
+    }),
+    jsonResponse(mirrorContractResult(log, { hash, function_parameters: input })),
+  ];
 }
 
 function accessorBackedRecord(record, field, reads) {
@@ -610,6 +642,64 @@ implementedTest("recovers a corroborated candidate from an explicit public hash 
   assertMirrorRequestShape(mirror.calls);
 });
 
+implementedTest("rejects a recovered Factory transaction whose documented function parameters belong to another selected tool", async () => {
+  const suffixA = "a".repeat(32);
+  const suffixB = "b".repeat(32);
+  const configurationA = selectedConfiguration(suffixA);
+  const configurationB = selectedConfiguration(suffixB);
+  const calldataA = factoryCalldata(configurationA);
+  const calldataB = factoryCalldata(configurationB);
+  const log = createBondDeployedLog(factoryApi, projectionApi);
+
+  assert.notEqual(calldataA, calldataB, "equal editable titles must still bind distinct selected-tool calldata");
+
+  for (const [configuration, input, expectedKind] of [
+    [configurationA, calldataA, "candidate"],
+    [configurationB, calldataB, "candidate"],
+    [configurationB, calldataA, "submission_unknown"],
+    [configurationA, calldataB, "submission_unknown"],
+  ]) {
+    const provider = fakeProvider();
+    const mirror = responseQueue(mirrorCandidateResponses({ input, log }));
+    const outcome = await createBridge(api, provider, mirror.fetch, async () => {}, configuration).recover(transactionHash);
+
+    assert.equal(outcome.kind, expectedKind);
+    assert.deepEqual(provider.calls, [], "read-only recovery must never use MetaMask or eth_sendTransaction");
+    if (expectedKind === "submission_unknown") assert.deepEqual(outcome, { kind: "submission_unknown", transactionHash });
+  }
+});
+
+implementedTest("keeps the sent hash pending when Mirror function parameters do not match the selected tool", async () => {
+  const configurationA = selectedConfiguration("a".repeat(32));
+  const configurationB = selectedConfiguration("b".repeat(32));
+  const log = createBondDeployedLog(factoryApi, projectionApi);
+  const provider = fakeProvider({
+    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+  });
+  const mirror = responseQueue(mirrorCandidateResponses({ input: factoryCalldata(configurationA), log }));
+
+  const outcome = await createBridge(api, provider, mirror.fetch, async () => {}, configurationB).execute();
+
+  assert.deepEqual(outcome, { kind: "submission_unknown", transactionHash });
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
+  assert.equal(Object.hasOwn(outcome, "candidate"), false);
+  assert.equal(mirror.calls.length, 1, "the selected calldata mismatch stops before candidate resolution can continue");
+});
+
+implementedTest("keeps recovery pending when the documented transaction function parameters are unavailable", async () => {
+  const log = createBondDeployedLog(factoryApi, projectionApi);
+  const unavailable = mirrorContractResult(log);
+  delete unavailable.function_parameters;
+  const provider = fakeProvider();
+  const mirror = responseQueue([jsonResponse(unavailable)]);
+
+  const outcome = await createBridge(api, provider, mirror.fetch).recover(transactionHash);
+
+  assert.deepEqual(outcome, { kind: "submission_unknown", transactionHash });
+  assert.deepEqual(provider.calls, []);
+  assert.equal(mirror.calls.length, 1);
+});
+
 implementedTest("rejects non-canonical public hashes before any provider or Mirror read", async () => {
   const provider = fakeProvider();
   const mirror = responseQueue([]);
@@ -768,6 +858,10 @@ implementedTest("rejects or ignores caller-supplied routing and transaction over
   const outcome = await bridge.execute();
   const send = provider.calls.find(({ method }) => method === "eth_sendTransaction");
 
+  if (outcome.kind === "rejected") {
+    assert.equal(send, undefined, "a malformed selected-tool configuration must fail before any send");
+    return;
+  }
   assert.equal(outcome.kind, "submission_unknown");
   assert.deepEqual(send?.params, [{
     from: issuer,

@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { keccak256, stringToHex } from "viem";
 
+import { createProviderToolAtsConfiguration } from "../src/ats/provider-tool-ats-configuration.ts";
+
 const moduleUrl = new URL("../convex/external_prepare_command_admission.ts", import.meta.url);
 const atomicMutationSourceDeclared = readFileSync(moduleUrl, "utf8").includes(
   "admitAtsCreateAndMarkAssetPending",
@@ -106,6 +108,171 @@ function claim(overrides = {}) {
   return {
     _id: "externalPrepareCommandReplayClaims:existing", _creationTime: now - 500,
     replayIdentity: input().replayIdentity, outcome: "NEW", attemptId, claimedAt: 1n, ...overrides,
+  };
+}
+
+function selectedAtsCreateInput(suffix, nonce = "CCCCCCCCCCCCCCCCCCCCCg") {
+  const args = m47AtsCreateInput();
+  const toolPublicId = `tool_${suffix}`;
+  const configuration = createProviderToolAtsConfiguration({
+    toolPublicId,
+    subjectPublicId: toolPublicId,
+    title: "RiskScan Revenue Note",
+    canonicalSignerAddress: args.canonicalSignerAddress,
+  });
+  args.nonce = nonce;
+  args.replayIdentity = `tool402:wallet-command:v1:296:${args.canonicalSignerAddress}:${nonce}`;
+  args.payload = {
+    ...args.payload,
+    subjectPublicId: toolPublicId,
+    expectedTarget: configuration.atsCreateConfiguration.expectedTarget,
+    canonicalParametersHash: configuration.canonicalParametersHash,
+    idempotencyKey: nonce,
+  };
+  args.payloadHash = hashPayload(args.payload);
+  return args;
+}
+
+function selectedProviderTool(args, suffix = args.payload.subjectPublicId.slice("tool_".length)) {
+  const toolPublicId = `tool_${suffix}`;
+  return {
+    _id: `providerTools:${suffix}`,
+    _creationTime: now - 1_000,
+    toolPublicId,
+    subjectPublicId: toolPublicId,
+    offeringPublicId: `offering_${suffix}`,
+    serviceId: toolPublicId,
+    serviceSlug: `tool-${suffix}`,
+    canonicalSignerAddress: args.canonicalSignerAddress,
+    chainId: 296,
+    principalPublicId: args.principalPublicId,
+    authorityVersion: args.authorityVersion,
+    requestId: "00000000-0000-4000-8000-000000000000",
+    offeringVersion: 1,
+    directoryVersion: 1,
+    createdAt: 1n,
+  };
+}
+
+function selectedOffering(args, suffix, overrides = {}) {
+  return {
+    _id: `offerings:${suffix}`,
+    _creationTime: now - 1_000,
+    offeringPublicId: `offering_${suffix}`,
+    subjectPublicId: `tool_${suffix}`,
+    canonicalSignerAddress: args.canonicalSignerAddress,
+    principalPublicId: args.principalPublicId,
+    authorityVersion: args.authorityVersion,
+    payloadHash: `0x${"d".repeat(64)}`,
+    idempotencyKey: "BBBBBBBBBBBBBBBBBBBBBQ",
+    advertisedQuickPriceTinybars: "10",
+    advertisedStandardPriceTinybars: "25",
+    version: 1,
+    acceptedAt: 1n,
+    updatedAt: 1n,
+    definition: {
+      schemaVersion: 1,
+      terms: {
+        version: "riskscan-revenue-note-v1",
+        fundingTargetTinybars: "1000",
+        noteUnitPriceTinybars: "10",
+        maximumNoteUnits: "100",
+        minimumPurchaseUnits: "1",
+        reserveShareBps: "2000",
+        issuerShareBps: "8000",
+        platformFeeBps: "0",
+        payoutCapTinybars: "1500",
+      },
+      maturityAt: "2026-12-31T00:00:00.000Z",
+      qualifyingResource: "riskscan.quick",
+    },
+    narrative: {
+      title: "RiskScan Revenue Note",
+      customerProblem: "Teams need a bounded signal before an EVM contract interaction.",
+      customerUseCases: ["Inspect a contract before use"],
+      useOfFunds: ["Maintain the RiskScan service"],
+      risks: ["Testnet-only demonstration"],
+    },
+    state: "DRAFT",
+    ...overrides,
+  };
+}
+
+function selectedAtomicDatabase({
+  args,
+  offerings,
+  providerTools = [selectedProviderTool(args)],
+  claims = [],
+  attempts = [],
+}) {
+  const rows = {
+    commandAuthorities: [authority(args)],
+    providerTools: structuredClone(providerTools),
+    offerings: structuredClone(offerings),
+    externalPrepareCommandReplayClaims: structuredClone(claims),
+    externalPrepareCommandAttempts: structuredClone(attempts),
+  };
+  const writes = [];
+  const forbidden = () => { throw new Error("unexpected database or external operation"); };
+  const db = {
+    query(table) {
+      assert.ok(Object.hasOwn(rows, table), `unexpected table: ${table}`);
+      return {
+        withIndex(_index, select) {
+          const filters = [];
+          const range = {
+            eq(field, value) {
+              filters.push([field, value]);
+              return range;
+            },
+          };
+          select(range);
+          return {
+            async take(limit) {
+              assert.equal(limit, 2);
+              return rows[table]
+                .filter((row) => filters.every(([field, value]) => row[field] === value))
+                .slice(0, limit);
+            },
+          };
+        },
+      };
+    },
+    async insert(table, document) {
+      assert.ok([
+        "externalPrepareCommandAttempts",
+        "externalPrepareCommandReplayClaims",
+      ].includes(table));
+      const id = table === "externalPrepareCommandAttempts"
+        ? "externalPrepareCommandAttempts:selected"
+        : `externalPrepareCommandReplayClaims:${rows[table].length}`;
+      const stored = { ...structuredClone(document), _id: id, _creationTime: now };
+      rows[table].push(stored);
+      writes.push({ kind: "insert", table, id, document: structuredClone(document) });
+      return id;
+    },
+    async get(id) {
+      return Object.values(rows).flat().find((row) => row._id === id) ?? null;
+    },
+    async patch(id, document) {
+      const stored = rows.offerings.find((row) => row._id === id);
+      assert.notEqual(stored, undefined, `missing offering: ${id}`);
+      Object.assign(stored, structuredClone(document));
+      writes.push({ kind: "patch", id, document: structuredClone(document) });
+    },
+    replace: forbidden,
+    delete: forbidden,
+  };
+  return {
+    rows,
+    writes,
+    ctx: {
+      db,
+      runAction: forbidden,
+      runMutation: forbidden,
+      runQuery: forbidden,
+      scheduler: { runAfter: forbidden, runAt: forbidden },
+    },
   };
 }
 
@@ -596,6 +763,61 @@ atomicTest("admits the fixed M42/M47 tuple through M33 to replay lookup without 
     "commandAuthorities",
     "externalPrepareCommandReplayClaims",
   ]);
+});
+
+atomicTest("keeps selected Tool B atomic admission and command replay isolated from Tool A", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now });
+  const { admitAtsCreateAndMarkAssetPending: atomic } = await import(moduleUrl);
+  const suffixA = "a".repeat(32);
+  const suffixB = "b".repeat(32);
+  const argsB = selectedAtsCreateInput(suffixB);
+  const db = selectedAtomicDatabase({
+    args: argsB,
+    providerTools: [
+      selectedProviderTool(argsB, suffixA),
+      selectedProviderTool(argsB, suffixB),
+    ],
+    offerings: [
+      selectedOffering(argsB, suffixA),
+      selectedOffering(argsB, suffixB),
+    ],
+  });
+
+  assert.deepEqual(
+    await atomic._handler(db.ctx, argsB),
+    {
+      status: "NEW",
+      attemptId: "externalPrepareCommandAttempts:selected",
+      state: "PREPARED",
+    },
+  );
+  assert.equal(db.rows.offerings[0].state, "DRAFT", "Tool A must remain unlinked");
+  assert.equal(db.rows.offerings[0].atsAttemptId, undefined);
+  assert.equal(db.rows.offerings[1].state, "ASSET_PENDING");
+  assert.equal(
+    db.rows.offerings[1].atsAttemptId,
+    "externalPrepareCommandAttempts:selected",
+  );
+
+  const writesAfterAdmission = db.writes.length;
+  assert.deepEqual(
+    await atomic._handler(db.ctx, argsB),
+    { status: "COMMAND_REPLAYED" },
+  );
+  assert.equal(db.writes.length, writesAfterAdmission);
+
+  db.rows.offerings[0].state = "ASSET_PENDING";
+  db.rows.offerings[0].atsAttemptId = "externalPrepareCommandAttempts:selected";
+  db.rows.offerings[1].state = "DRAFT";
+  delete db.rows.offerings[1].atsAttemptId;
+  await assert.rejects(
+    () => atomic._handler(db.ctx, argsB),
+    TypeError,
+    "Tool B replay must reject an attempt attached to Tool A",
+  );
+  assert.equal(db.writes.length, writesAfterAdmission);
+  assert.equal(db.rows.offerings[0].subjectPublicId, `tool_${suffixA}`);
+  assert.equal(db.rows.offerings[1].subjectPublicId, `tool_${suffixB}`);
 });
 
 atomicTest("rejects M42/M47 payload and authority-context drift before replay or durable activity", async (t) => {

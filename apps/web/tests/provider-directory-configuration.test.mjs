@@ -28,6 +28,23 @@ implementedTest("derives the public RiskScan endpoint and approved clearing acco
   }
 });
 
+implementedTest("uses an explicit HTTPS provider endpoint without changing dashboard sign-in origin", async () => {
+  const { readProviderDirectoryConfiguration } = await import(sourceUrl.href);
+  assert.deepEqual(readProviderDirectoryConfiguration({
+    TOOL402_DASHBOARD_AUTH_ORIGIN: "http://localhost:3000",
+    TOOL402_PROVIDER_X402_ENDPOINT: "https://provider.example.test/x402",
+    TOOL402_CLEARING_ACCOUNT_ID: "0.0.10403477",
+  }), {
+    x402Endpoint: "https://provider.example.test/x402",
+    clearingAccount: "0.0.10403477",
+  });
+  assert.equal(readProviderDirectoryConfiguration({
+    TOOL402_DASHBOARD_AUTH_ORIGIN: "http://localhost:3000",
+    TOOL402_PROVIDER_X402_ENDPOINT: "http://provider.example.test/x402",
+    TOOL402_CLEARING_ACCOUNT_ID: "0.0.10403477",
+  }), null);
+});
+
 implementedTest("refuses malformed or non-public directory configuration", async () => {
   const { readProviderDirectoryConfiguration } = await import(sourceUrl.href);
 
