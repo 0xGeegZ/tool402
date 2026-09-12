@@ -5,7 +5,7 @@
 - Tier: CORE_P0
 - Queue state: 00-inbox
 - Dependencies: S18-T010, S21-T010, M40-T010, M41-T010, and M50-T010 accepted.
-- Owner: root owns control records, shared server/authority/page/detail/flow paths, reviews, integration, and commits. The delegated lane owns only `backing-state.ts` and one new backing-state test after reservation.
+- Owner: root owns the complete M56 control and implementation slice: control records, server/authority/page/detail/flow paths, tests, reviews, integration, and commits.
 - Human actions: one separately accepted/revoked BACKER authority and one explicit testnet transfer are Human Ops actions.
 
 ## Purpose and root paths
@@ -16,9 +16,10 @@ S18 already implements local units → HEDERA_FUNDING → explicit transfer → 
 - `apps/web/src/app/explore/riskscan/back/page.tsx`;
 - `apps/web/src/components/riskscan/detail/riskscan-detail.tsx`;
 - `apps/web/src/components/backing/backing-flow.tsx`;
-- `apps/web/tests/backing-demo-projection.test.mjs` (new); and constrained route/detail assertions.
+- `apps/web/tests/backing-demo-projection.test.mjs` (new); and
+- `apps/web/tests/backing-demo-route.test.mjs` (new).
 
-The root also reserves `packages/backend/convex/schema.ts`, `packages/backend/src/ingress/authenticated-wallet-command-normalizer.ts`, `packages/backend/convex/external_prepare_command_admission.ts`, and their exact durable schema/normalizer/admission tests. The delegated lane is only `apps/web/src/components/backing/backing-state.ts` plus new `apps/web/tests/backing-demo-state.test.mjs`; it cannot overlap S26's backing-flow mount or route assertions. No allocation, directory, ATS candidate, package, lockfile, or generic wallet path is in scope.
+The root also reserves `packages/backend/convex/schema.ts`, `packages/backend/src/ingress/authenticated-wallet-command-normalizer.ts`, `packages/backend/convex/external_prepare_command_admission.ts`, and new `packages/backend/tests/backing-funding-authority.test.mjs`. M56 changes no S26-owned test or backing-state path. No allocation, directory, ATS candidate, package, lockfile, or generic wallet path is in scope.
 
 ## Contract
 
