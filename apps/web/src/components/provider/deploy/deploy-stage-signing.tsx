@@ -106,22 +106,26 @@ export function DeployStageSigning({
     setDirectoryRecord(initialDirectoryRecord);
     setResumePending(true);
     setSelectedAts(null);
-    void loadProviderCampaignResume(session.address).then((resume) => {
-      if (cancelled) return;
-      if (resume !== null) {
-        const recovered: ProviderDeployStageState[] = [
-          { kind: "done", detail: "Recovered from the durable offering record." },
-          { kind: "done", detail: "Recovered from the durable prepared attempt." },
-        ];
-        if (resume.kind === "READY") {
-          recovered.push({ kind: "done", detail: "Recovered from the durable candidate attachment." });
+    if (selectedToolPublicId === undefined) {
+      void loadProviderCampaignResume(session.address).then((resume) => {
+        if (cancelled) return;
+        if (resume !== null) {
+          const recovered: ProviderDeployStageState[] = [
+            { kind: "done", detail: "Recovered from the durable offering record." },
+            { kind: "done", detail: "Recovered from the durable prepared attempt." },
+          ];
+          if (resume.kind === "READY") {
+            recovered.push({ kind: "done", detail: "Recovered from the durable candidate attachment." });
+          }
+          setResults(recovered);
+          if (resume.kind === "ASSET_PENDING") setAttemptPublicId(resume.attemptPublicId);
+          onResume?.();
         }
-        setResults(recovered);
-        if (resume.kind === "ASSET_PENDING") setAttemptPublicId(resume.attemptPublicId);
-        onResume?.();
-      }
+        setResumePending(false);
+      });
+    } else {
       setResumePending(false);
-    });
+    }
     void loadProviderDirectoryConfiguration().then((directoryConfiguration) => {
       if (cancelled || directoryConfiguration === null) return;
       setDirectoryRecord(completeDirectoryRecordLiteral({ ...initialDirectoryRecord, ...directoryConfiguration }));

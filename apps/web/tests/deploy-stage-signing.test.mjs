@@ -40,6 +40,16 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
         if (!(index in slots)) slots[index] = { current: initial };
         return slots[index];
       },
+      useMemo(factory, dependencies) {
+        const index = cursor++;
+        const previous = slots[index];
+        const changed = !previous
+          || !Array.isArray(dependencies)
+          || dependencies.length !== previous.dependencies.length
+          || dependencies.some((dependency, dependencyIndex) => dependency !== previous.dependencies[dependencyIndex]);
+        if (changed) slots[index] = { dependencies: Array.isArray(dependencies) ? [...dependencies] : [], value: factory() };
+        return slots[index].value;
+      },
       useEffect(effect, dependencies) {
         const index = cursor++;
         const previous = slots[index];
@@ -65,6 +75,11 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
     },
     "../../../lib/provider-directory-configuration-client.ts": {
       loadProviderDirectoryConfiguration() {
+        return { then(resolve) { resolve(null); } };
+      },
+    },
+    "../../../lib/provider-tool-deployment-client.ts": {
+      loadProviderToolDeployment() {
         return { then(resolve) { resolve(null); } };
       },
     },
