@@ -197,3 +197,23 @@ implementedTest("rejects a provider-tool response larger than the internal 64 Ki
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), { outcome: "rejected" });
 });
+
+implementedTest("forwards a signed selected-tool deployment read only to the protected deployment query", async () => {
+  const { handleProviderSessionIngressForTest } = await import(ingressUrl.href);
+  const toolPublicId = `tool_${"ab".repeat(16)}`;
+  const { request, key } = await signedRequest(JSON.stringify({
+    type: "deployment", canonicalSignerAddress, toolPublicId, sessionExpiresAt: "2026-01-01T08:00:00.000Z",
+  }));
+  const reads = [];
+  const response = await handleProviderSessionIngressForTest({}, request, {
+    nowMilliseconds: () => 1_735_689_600_000,
+    resolveIngressKey: () => key,
+    claimReplay: () => "claimed",
+    allocate: async () => { throw new Error("must not allocate"); },
+    list: async () => { throw new Error("must not list"); },
+    read: async () => { throw new Error("must not use summary read"); },
+    deployment: async (input) => { reads.push(input); return { tool: { toolPublicId }, atsCreateConfigurationJson: null }; },
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(reads, [{ canonicalSignerAddress, toolPublicId }]);
+});

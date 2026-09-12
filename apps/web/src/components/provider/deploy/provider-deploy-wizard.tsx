@@ -291,13 +291,15 @@ function TermsStep({
   fieldErrors,
   onTextChange,
   onAcknowledgementChange,
+  selectedToolPublicId,
 }: {
   values: WizardValues;
   fieldErrors: ProviderDeployFieldErrors;
   onTextChange: TextChange;
   onAcknowledgementChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  selectedToolPublicId?: string;
 }) {
-  const configurationRows = revenueNoteConfigurationRows(atsCreateConfiguration);
+  const configurationRows = revenueNoteConfigurationRows(selectedToolPublicId === undefined ? atsCreateConfiguration : undefined);
 
   return (
     <StepCard title="Funding and revenue-note terms" help="Economics are fixed for this offering version. A material change creates a new version with a fresh signature.">
@@ -327,7 +329,7 @@ function TermsStep({
               </div>
             ))}
           </dl>
-        ) : <p className="text-[13px] text-muted-foreground">Not configured. No projection is available to display.</p>}
+        ) : <p className="text-[13px] text-muted-foreground">The selected tool&apos;s ATS configuration is derived only after its offering is recorded.</p>}
       </div>
       <label className="flex items-start gap-3 text-sm leading-6">
         <input className="mt-1 size-4 shrink-0 accent-[var(--primary)]" type="checkbox" checked={values.acknowledgement} onChange={onAcknowledgementChange} />
@@ -441,7 +443,7 @@ export function ProviderDeployWizard({ selectedToolPublicId }: { selectedToolPub
       case 2:
         return <PricingStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} />;
       default:
-        return <TermsStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} onAcknowledgementChange={changeAcknowledgement} />;
+        return <TermsStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} onAcknowledgementChange={changeAcknowledgement} selectedToolPublicId={selectedToolPublicId} />;
     }
   }
 

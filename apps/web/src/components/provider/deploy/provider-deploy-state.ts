@@ -294,7 +294,7 @@ export type ProviderDeployStageState = Readonly<{
 export type AtsCreateConfigurationProjection = Readonly<{
   network: "hedera:testnet";
   chainId: 296;
-  subjectPublicId: "riskscan_revenue_note_demo";
+  subjectPublicId: string;
   offeringVersion: "ats_demo_v1";
   registryRevision: string;
   operationKind: "ATS_CREATE";

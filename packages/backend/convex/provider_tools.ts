@@ -9,6 +9,7 @@ import {
 import { v } from "convex/values";
 import { createProviderToolIdentity, parseProviderToolId } from "@tool402/core";
 import { createStageBIssuerAtsCreateAuthority } from "../src/ats/stage-b-issuer-ats-create-authority.ts";
+import { createProviderToolAtsConfiguration } from "../src/ats/provider-tool-ats-configuration.ts";
 import type schema from "./schema.ts";
 
 const internalMutation: MutationBuilder<DataModelFromSchemaDefinition<typeof schema>, "internal"> = internalMutationGeneric;
@@ -29,6 +30,10 @@ const toolValidator = v.object({
   title: v.string(),
   state: stateValidator,
 });
+const deploymentValidator = v.object({
+  tool: toolValidator,
+  atsCreateConfigurationJson: v.union(v.string(), v.null()),
+});
 type ToolState = "ALLOCATED" | "DRAFT" | "ASSET_PENDING" | "READY" | "OPEN" | "CLOSED";
 type ToolIdentityProjection = Readonly<{
   toolPublicId: string;
@@ -47,6 +52,10 @@ type ToolProjection = Readonly<{
   title: string;
   state: ToolState;
 }> & ToolIdentityProjection;
+type ToolDeploymentProjection = Readonly<{
+  tool: ToolProjection;
+  atsCreateConfigurationJson: string | null;
+}>;
 type DatabaseContext = Pick<GenericQueryCtx<DataModelFromSchemaDefinition<typeof schema>>, "db">;
 
 const defaultTitle = "RiskScan";
@@ -135,6 +144,26 @@ async function project(ctx: DatabaseContext, value: unknown): Promise<ToolProjec
   return projection(offering.narrative.title, offering.state);
 }
 
+async function projectDeployment(ctx: DatabaseContext, value: unknown): Promise<ToolDeploymentProjection | null> {
+  const allocation = projectAllocation(value);
+  const tool = await project(ctx, value);
+  if (allocation === null || tool === null) return null;
+  if (tool.state === "ALLOCATED") {
+    return Object.freeze({ tool, atsCreateConfigurationJson: null });
+  }
+  try {
+    const configuration = createProviderToolAtsConfiguration({
+      toolPublicId: allocation.toolPublicId,
+      subjectPublicId: allocation.subjectPublicId,
+      title: tool.title,
+      canonicalSignerAddress: allocation.canonicalSignerAddress,
+    });
+    return Object.freeze({ tool, atsCreateConfigurationJson: JSON.stringify(configuration.atsCreateConfiguration) });
+  } catch {
+    return null;
+  }
+}
+
 function randomIdentity() {
   const entropy = globalThis.crypto?.getRandomValues(new Uint8Array(16));
   return entropy instanceof Uint8Array && entropy.byteLength === 16
@@ -219,5 +248,18 @@ export const readOwnedTool = internalQuery({
       .take(2);
     if (rows.length !== 1 || rows[0]?.canonicalSignerAddress !== args.canonicalSignerAddress) return null;
     return project(ctx, rows[0]);
+  },
+});
+
+export const readOwnedToolDeployment = internalQuery({
+  args: { canonicalSignerAddress: v.string(), toolPublicId: v.string() },
+  returns: v.union(deploymentValidator, v.null()),
+  handler: async (ctx, args) => {
+    if (!addressPattern.test(args.canonicalSignerAddress) || parseProviderToolId(args.toolPublicId) === null) return null;
+    const rows = await ctx.db.query("providerTools")
+      .withIndex("by_tool_public_id", (query) => query.eq("toolPublicId", args.toolPublicId))
+      .take(2);
+    if (rows.length !== 1 || rows[0]?.canonicalSignerAddress !== args.canonicalSignerAddress) return null;
+    return projectDeployment(ctx, rows[0]);
   },
 });

@@ -11,6 +11,7 @@ type ForwardInput = Readonly<{
   requestId?: string;
   cursor?: string | null;
   toolPublicId?: string;
+  deploymentToolPublicId?: string;
   sessionExpiresAt: string;
 }>;
 type Dependencies = Readonly<{
@@ -158,9 +159,11 @@ async function forwardAssertion(input: ForwardInput, env: DashboardAuthEnvironme
     const configuration = ingressConfiguration(env);
     if (configuration === null) return json({ outcome: "not_configured" }, 503);
     const payload = input.requestId === undefined
-      ? input.toolPublicId === undefined
-        ? { type: "list", canonicalSignerAddress: input.canonicalSignerAddress, cursor: input.cursor ?? null, sessionExpiresAt: input.sessionExpiresAt }
-        : { type: "read", canonicalSignerAddress: input.canonicalSignerAddress, toolPublicId: input.toolPublicId, sessionExpiresAt: input.sessionExpiresAt }
+      ? input.deploymentToolPublicId !== undefined
+        ? { type: "deployment", canonicalSignerAddress: input.canonicalSignerAddress, toolPublicId: input.deploymentToolPublicId, sessionExpiresAt: input.sessionExpiresAt }
+        : input.toolPublicId === undefined
+          ? { type: "list", canonicalSignerAddress: input.canonicalSignerAddress, cursor: input.cursor ?? null, sessionExpiresAt: input.sessionExpiresAt }
+          : { type: "read", canonicalSignerAddress: input.canonicalSignerAddress, toolPublicId: input.toolPublicId, sessionExpiresAt: input.sessionExpiresAt }
       : { type: "allocate", canonicalSignerAddress: input.canonicalSignerAddress, requestId: input.requestId, sessionExpiresAt: input.sessionExpiresAt };
     const bytes = new TextEncoder().encode(JSON.stringify(payload));
     const digest = Buffer.from(new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", toArrayBuffer(bytes)))).toString("hex");
@@ -202,6 +205,36 @@ export async function handleProviderToolsRequest(request: Request, env: Dashboar
       ? await forward({ canonicalSignerAddress: session.address, requestId: parsedBody!.requestId, sessionExpiresAt: session.expiresAt })
       : await forward({ canonicalSignerAddress: session.address, ...readInput!, sessionExpiresAt: session.expiresAt });
     return boundedResponse(upstream);
+  } catch {
+    return json({ outcome: "unavailable" }, 503);
+  }
+}
+
+export async function handleProviderToolDeploymentRequest(
+  request: Request,
+  env: DashboardAuthEnvironment,
+  toolPublicId: string,
+  dependencies: Dependencies = {},
+): Promise<Response> {
+  if (request.method !== "GET" || !toolIdPattern.test(toolPublicId)) return json({ outcome: "rejected" }, 401);
+  try {
+    if (new URL(request.url).search !== "") return json({ outcome: "rejected" }, 401);
+  } catch {
+    return json({ outcome: "rejected" }, 401);
+  }
+  const sessionRequest = sessionInput(request, env);
+  if (sessionRequest === null) return json({ outcome: "rejected" }, 401);
+  const readSession = dependencies.readSession ?? ((cookie) => readDashboardSession(cookie, env));
+  let session: Session | null;
+  try { session = await readSession(sessionRequest.cookie); } catch { session = null; }
+  if (session === null) return json({ outcome: "rejected" }, 401);
+  const forward = dependencies.forward ?? ((input) => forwardAssertion(input, env));
+  try {
+    return boundedResponse(await forward({
+      canonicalSignerAddress: session.address,
+      deploymentToolPublicId: toolPublicId,
+      sessionExpiresAt: session.expiresAt,
+    }));
   } catch {
     return json({ outcome: "unavailable" }, 503);
   }

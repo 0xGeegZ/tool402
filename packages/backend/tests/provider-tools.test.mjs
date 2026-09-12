@@ -142,6 +142,7 @@ implementedTest("exposes internal owner-scoped allocation and reads without a pu
     "allocateForIssuer",
     "listOwnedTools",
     "readOwnedTool",
+    "readOwnedToolDeployment",
   ]);
   assert.equal(providerTools.allocateForIssuer.isInternal, true);
   assert.equal(providerTools.allocateForIssuer.isMutation, true);
@@ -149,6 +150,8 @@ implementedTest("exposes internal owner-scoped allocation and reads without a pu
   assert.equal(providerTools.listOwnedTools.isQuery, true);
   assert.equal(providerTools.readOwnedTool.isInternal, true);
   assert.equal(providerTools.readOwnedTool.isQuery, true);
+  assert.equal(providerTools.readOwnedToolDeployment.isInternal, true);
+  assert.equal(providerTools.readOwnedToolDeployment.isQuery, true);
   for (const operation of Object.values(providerTools)) {
     assert.equal(operation.isPublic, undefined);
   }
@@ -395,4 +398,44 @@ implementedTest("uses the indexed opaque cursor to page every owner-scoped tool"
     }],
     nextCursor: null,
   });
+});
+
+implementedTest("returns ATS configuration only from the exact durable selected-tool offering", async () => {
+  const { readOwnedToolDeployment } = await import(sourceUrl.href);
+  const mine = tool();
+  const allocated = await readOwnedToolDeployment._handler(
+    database({ tools: [mine] }).ctx,
+    { canonicalSignerAddress, toolPublicId: mine.toolPublicId },
+  );
+  assert.deepEqual(allocated, {
+    tool: {
+      toolPublicId: mine.toolPublicId,
+      subjectPublicId: mine.subjectPublicId,
+      offeringPublicId: mine.offeringPublicId,
+      serviceId: mine.serviceId,
+      serviceSlug: mine.serviceSlug,
+      title: "RiskScan",
+      state: "ALLOCATED",
+    },
+    atsCreateConfigurationJson: null,
+  });
+
+  const admitted = offeringFor(mine, { narrative: { title: "Second RiskScan" } });
+  const deployment = await readOwnedToolDeployment._handler(
+    database({ tools: [mine], offerings: [admitted] }).ctx,
+    { canonicalSignerAddress, toolPublicId: mine.toolPublicId },
+  );
+  assert.equal(deployment.tool.state, "DRAFT");
+  const configuration = JSON.parse(deployment.atsCreateConfigurationJson);
+  assert.equal(configuration.subjectPublicId, mine.toolPublicId);
+  assert.equal(configuration.parameters.name, "Second RiskScan");
+
+  const mismatched = offeringFor(mine, { principalPublicId: "different_principal" });
+  assert.equal(
+    await readOwnedToolDeployment._handler(
+      database({ tools: [mine], offerings: [mismatched] }).ctx,
+      { canonicalSignerAddress, toolPublicId: mine.toolPublicId },
+    ),
+    null,
+  );
 });

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import {
   buildStageSignatureRequest,
+  providerDeploymentTarget,
   stageStateForSignatureResult,
   type CampaignReviewValues,
   type StageSignatureRequest,
@@ -11,11 +12,14 @@ import {
 import { SignatureDialog, type SignatureResult } from "../../wallet/signature-dialog";
 import { loadProviderCampaignResume } from "../../../lib/provider-campaign-resume.ts";
 import { loadProviderDirectoryConfiguration } from "../../../lib/provider-directory-configuration-client.ts";
+import { loadProviderToolDeployment } from "../../../lib/provider-tool-deployment-client.ts";
+import type { ProviderToolAtsStageProjection } from "../../../lib/ats/provider-tool-ats-projection.ts";
 import { connectedWalletSession, useWalletSession, type WalletSession } from "../../wallet/wallet-session";
 import { Button } from "../../ui/button";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import {
   completeDirectoryRecordLiteral,
+  directoryRecordForProviderTool,
   directoryRecordLiteral,
   isDirectoryRecordComplete,
   type DirectoryRecordLiteral,
@@ -64,7 +68,15 @@ export function DeployStageSigning({
   const [request, setRequest] = useState<StageSignatureRequest | null>(null);
   const [constructionError, setConstructionError] = useState<string | null>(null);
   const [resumePending, setResumePending] = useState(false);
-  const states = providerDeployStageStates(atsCreateConfiguration, {
+  const [selectedAts, setSelectedAts] = useState<ProviderToolAtsStageProjection | null>(null);
+  const [selectedRefresh, setSelectedRefresh] = useState(0);
+  const deploymentTarget = providerDeploymentTarget(selectedToolPublicId);
+  const projection = selectedToolPublicId === undefined ? atsCreateConfiguration : selectedAts?.display;
+  const initialDirectoryRecord = useMemo(
+    () => directoryRecordForProviderTool(selectedToolPublicId),
+    [selectedToolPublicId],
+  );
+  const states = providerDeployStageStates(projection, {
     connected: session !== null,
     results,
     candidate,
@@ -73,7 +85,7 @@ export function DeployStageSigning({
   const visibleStates = request
     ? states.map((stage, index) => (index === request.stage ? { kind: "in_progress" as const } : stage))
     : states;
-  const enabledStage = selectedToolPublicId === undefined && session !== null && request === null && !resumePending
+  const enabledStage = session !== null && request === null && !resumePending
     ? states.findIndex((stage) => stage.kind === "actionable")
     : -1;
 
@@ -83,15 +95,17 @@ export function DeployStageSigning({
       setResults([]);
       setAttemptPublicId(null);
       setCandidate(null);
-      setDirectoryRecord(directoryRecordLiteral);
+      setDirectoryRecord(initialDirectoryRecord);
       setResumePending(false);
+      setSelectedAts(null);
       return () => { cancelled = true; };
     }
     setResults([]);
     setAttemptPublicId(null);
     setCandidate(null);
-    setDirectoryRecord(directoryRecordLiteral);
+    setDirectoryRecord(initialDirectoryRecord);
     setResumePending(true);
+    setSelectedAts(null);
     void loadProviderCampaignResume(session.address).then((resume) => {
       if (cancelled) return;
       if (resume !== null) {
@@ -110,10 +124,15 @@ export function DeployStageSigning({
     });
     void loadProviderDirectoryConfiguration().then((directoryConfiguration) => {
       if (cancelled || directoryConfiguration === null) return;
-      setDirectoryRecord(completeDirectoryRecordLiteral(directoryConfiguration));
+      setDirectoryRecord(completeDirectoryRecordLiteral({ ...initialDirectoryRecord, ...directoryConfiguration }));
     });
+    if (selectedToolPublicId !== undefined) {
+      void loadProviderToolDeployment(selectedToolPublicId).then((deployment) => {
+        if (!cancelled) setSelectedAts(deployment?.ats ?? null);
+      });
+    }
     return () => { cancelled = true; };
-  }, [session?.address, onResume]);
+  }, [session?.address, onResume, initialDirectoryRecord, selectedToolPublicId, selectedRefresh]);
 
   function activate(stage: number) {
     if (request !== null || stage !== enabledStage) return;
@@ -126,6 +145,8 @@ export function DeployStageSigning({
         candidate,
         record: directoryRecord,
         nowMilliseconds: Date.now(),
+        deploymentTarget,
+        atsCreateCommand: selectedAts?.command,
       });
       setConstructionError(null);
       setRequest(nextRequest);
@@ -145,6 +166,9 @@ export function DeployStageSigning({
       return next;
     });
     if (request.stage === 1 && stageState.kind === "done") setAttemptPublicId(request.idempotencyKey);
+    if (request.stage === 0 && stageState.kind === "done" && selectedToolPublicId !== undefined) {
+      setSelectedRefresh((current) => current + 1);
+    }
     setRequest(null);
   }
 
@@ -169,9 +193,9 @@ export function DeployStageSigning({
   ) : null;
   const resumeNotice = session !== null && resumePending ? <p role="status" aria-live="polite" className="text-[13px] leading-5 text-muted-foreground">Checking the existing durable campaign before enabling any signature.</p> : null;
   const constructionNotice = selectedToolPublicId !== undefined
-    ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">The selected tool is isolated from the legacy signing path while its durable selected-tool stages load.</p>
+    ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">This tool has its own offering and directory identity. {selectedAts === null ? "ATS creation stays unavailable until its server-derived configuration is admitted." : "Its ATS configuration was derived from the admitted offering."}</p>
     : reviewing && constructionError ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null;
-  const stages = reviewing ? <ProviderDeployStages states={visibleStates} projection={atsCreateConfiguration} enabledStage={enabledStage} onActivate={activate} session={session} candidate={candidate} onCandidate={receiveCandidate} /> : null;
+  const stages = reviewing ? <ProviderDeployStages states={visibleStates} projection={projection} enabledStage={enabledStage} onActivate={activate} session={session} candidate={candidate} onCandidate={receiveCandidate} atsConfiguration={selectedAts?.configuration} selectedTool={selectedToolPublicId !== undefined} /> : null;
   const dialog = reviewing && request && session ? <SignatureDialog provider={session.provider} request={request} onResult={finish} onCancel={() => finish({ phase: "rejected", outcome: null })} /> : null;
 
   if (renderReview) {

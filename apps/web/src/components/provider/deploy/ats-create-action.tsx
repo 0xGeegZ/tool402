@@ -26,11 +26,15 @@ type StageBActionController = Readonly<{
 
 export function AtsCreateAction({
   session,
+  configuration,
+  selectedTool,
   stageTwoDone,
   hasCandidate,
   onCandidate,
 }: {
   session: WalletSession | null;
+  configuration?: unknown;
+  selectedTool: boolean;
   stageTwoDone: boolean;
   hasCandidate: boolean;
   onCandidate: (candidate: StageBCandidate) => void;
@@ -42,8 +46,8 @@ export function AtsCreateAction({
   const [recoveryHash, setRecoveryHash] = useState("");
   const [recoveryPending, setRecoveryPending] = useState(false);
 
-  if (controller.current === null && session !== null) {
-    const bridge = createStageBBrowserProviderBridge({ provider: session.provider, fetch });
+  if (controller.current === null && session !== null && (!selectedTool || configuration !== undefined)) {
+    const bridge = createStageBBrowserProviderBridge({ provider: session.provider, fetch, configuration });
     controller.current = Object.freeze({
       provider: session.provider,
       address: session.address,
@@ -57,7 +61,7 @@ export function AtsCreateAction({
     sessionChanged.current = true;
   }
 
-  const candidateActionAvailable = stageTwoDone && session !== null && !hasCandidate && !sessionChanged.current && controller.current !== null;
+  const candidateActionAvailable = stageTwoDone && session !== null && (!selectedTool || configuration !== undefined) && !hasCandidate && !sessionChanged.current && controller.current !== null;
   const enabled = candidateActionAvailable && !terminalOutcome;
   const recoveryEnabled = candidateActionAvailable && !recoveryPending && isCanonicalStageBTransactionHash(recoveryHash);
 

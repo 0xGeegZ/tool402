@@ -46,6 +46,8 @@ export type StageBBridgeOutcome =
 export interface StageBBridgeInput {
   readonly provider: StageBEip1193Provider;
   readonly fetch: (input: string, init: RequestInit) => Promise<unknown>;
+  /** A selected-tool value is authenticated server output and is revalidated before wallet use. */
+  readonly configuration?: unknown;
   readonly wait?: (milliseconds: number) => Promise<void>;
   readonly now?: () => number;
   readonly timers?: StageBDeadlineTimers;
@@ -516,7 +518,7 @@ async function resolveMirrorCandidate(
 }
 
 export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
-  const { provider, fetch: fetcher, wait = defaultWait, now = Date.now, timers = defaultTimers } = input;
+  const { provider, fetch: fetcher, configuration, wait = defaultWait, now = Date.now, timers = defaultTimers } = input;
   let inFlight = false;
   let recoveryInFlight = false;
   let terminal: StageBBridgeOutcome | null = null;
@@ -544,13 +546,16 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
       const accounts = await provider.request({ method: "eth_accounts" });
       if (!hasExactlyOneIssuerAccount(accounts)) return rejectedOutcome();
 
-      const projection = createStageBAtsCreateExecutionProjection();
+      const legacyProjection = configuration === undefined ? createStageBAtsCreateExecutionProjection() : null;
+      const configured = legacyProjection?.configuration ?? configuration;
       if (
-        projection.issuerEvmAddress !== issuer ||
-        projection.mirrorNodeBaseUrl !== mirrorBase ||
-        projection.configuration.canonicalParametersHash !== expectedHash
+        (legacyProjection !== null && (
+          legacyProjection.issuerEvmAddress !== issuer
+          || legacyProjection.mirrorNodeBaseUrl !== mirrorBase
+          || legacyProjection.configuration.canonicalParametersHash !== expectedHash
+        ))
       ) return rejectedOutcome();
-      const request = buildFactoryDeployBondRequest(projection.configuration, { issuerEvmAddress: projection.issuerEvmAddress });
+      const request = buildFactoryDeployBondRequest(configured, { issuerEvmAddress: issuer });
       const data = encodeFactoryDeployBond(request);
       let returnedHash: unknown;
       try {

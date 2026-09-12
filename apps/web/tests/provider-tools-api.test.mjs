@@ -41,6 +41,37 @@ implementedTest("exposes only the Next route methods and a server-only handler s
   const [server, route] = await Promise.all([import(serverUrl.href), import(routeUrl.href)]);
   assert.deepEqual(Object.keys(route).sort(), ["GET", "POST"]);
   assert.equal(typeof server.handleProviderToolsRequest, "function");
+  assert.equal(typeof server.handleProviderToolDeploymentRequest, "function");
+});
+
+implementedTest("forwards a selected-tool deployment read only after the dashboard session is accepted", async () => {
+  const { handleProviderToolDeploymentRequest } = await import(serverUrl.href);
+  const toolPublicId = `tool_${"ab".repeat(16)}`;
+  const forwarded = [];
+  const response = await handleProviderToolDeploymentRequest(
+    get(),
+    environment,
+    toolPublicId,
+    {
+      readSession: async () => ({
+        address: "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454",
+        issuedAt: "2026-09-12T10:00:00.000Z",
+        expiresAt: "2026-09-12T18:00:00.000Z",
+      }),
+      forward: async (input) => {
+        forwarded.push(input);
+        return new Response(JSON.stringify({ tool: { toolPublicId }, atsCreateConfigurationJson: null }), {
+          status: 200, headers: { "content-type": "application/json" },
+        });
+      },
+    },
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(forwarded, [{
+    canonicalSignerAddress: "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454",
+    deploymentToolPublicId: toolPublicId,
+    sessionExpiresAt: "2026-09-12T18:00:00.000Z",
+  }]);
 });
 
 implementedTest("rejects unauthenticated allocation before forwarding to the protected ingress", async () => {

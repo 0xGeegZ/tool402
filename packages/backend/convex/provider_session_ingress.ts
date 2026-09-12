@@ -19,7 +19,8 @@ type ToolRead = unknown | null;
 type ProviderToolRequest =
   | Readonly<{ type: "allocate"; canonicalSignerAddress: string; requestId: string; sessionExpiresAt: string }>
   | Readonly<{ type: "list"; canonicalSignerAddress: string; cursor: string | null; sessionExpiresAt: string }>
-  | Readonly<{ type: "read"; canonicalSignerAddress: string; toolPublicId: string; sessionExpiresAt: string }>;
+  | Readonly<{ type: "read"; canonicalSignerAddress: string; toolPublicId: string; sessionExpiresAt: string }>
+  | Readonly<{ type: "deployment"; canonicalSignerAddress: string; toolPublicId: string; sessionExpiresAt: string }>;
 type Seams = {
   readonly nowMilliseconds: () => number;
   readonly resolveIngressKey: (keyId: string) => CryptoKey | undefined;
@@ -27,11 +28,13 @@ type Seams = {
   readonly allocate: (input: { canonicalSignerAddress: string; requestId: string }) => Promise<Allocation>;
   readonly list: (input: { canonicalSignerAddress: string; cursor: string | null }) => Promise<ToolPage>;
   readonly read: (input: { canonicalSignerAddress: string; toolPublicId: string }) => Promise<ToolRead>;
+  readonly deployment: (input: { canonicalSignerAddress: string; toolPublicId: string }) => Promise<ToolRead>;
 };
 
 const allocateReference = makeFunctionReference<"mutation">("provider_tools:allocateForIssuer");
 const listReference = makeFunctionReference<"query">("provider_tools:listOwnedTools");
 const readReference = makeFunctionReference<"query">("provider_tools:readOwnedTool");
+const deploymentReference = makeFunctionReference<"query">("provider_tools:readOwnedToolDeployment");
 const claimReplayReference = makeFunctionReference<"mutation">("wallet_command_replay:claimIngressReplayIdentity");
 
 function response(body: unknown, status: number): Response {
@@ -145,6 +148,10 @@ function exactBody(bytes: Uint8Array): ProviderToolRequest | null {
       && typeof record.toolPublicId === "string" && /^tool_[0-9a-f]{32}$/u.test(record.toolPublicId)) {
       return { type: "read", canonicalSignerAddress: record.canonicalSignerAddress, toolPublicId: record.toolPublicId, sessionExpiresAt: record.sessionExpiresAt };
     }
+    if (record.type === "deployment" && JSON.stringify(Object.keys(record)) === JSON.stringify(["type", "canonicalSignerAddress", "toolPublicId", "sessionExpiresAt"])
+      && typeof record.toolPublicId === "string" && /^tool_[0-9a-f]{32}$/u.test(record.toolPublicId)) {
+      return { type: "deployment", canonicalSignerAddress: record.canonicalSignerAddress, toolPublicId: record.toolPublicId, sessionExpiresAt: record.sessionExpiresAt };
+    }
     return null;
   } catch { return null; }
 }
@@ -184,6 +191,9 @@ async function handle(ctx: ActionContext, request: Request, seams: Seams): Promi
     if (body.type === "list") {
       return response(await seams.list({ canonicalSignerAddress: body.canonicalSignerAddress, cursor: body.cursor }), 200);
     }
+    if (body.type === "deployment") {
+      return response(await seams.deployment({ canonicalSignerAddress: body.canonicalSignerAddress, toolPublicId: body.toolPublicId }), 200);
+    }
     return response(await seams.read({ canonicalSignerAddress: body.canonicalSignerAddress, toolPublicId: body.toolPublicId }), 200);
   } catch {
     return rejected();
@@ -210,6 +220,7 @@ export async function handleProviderSessionIngress(ctx: ActionContext, request: 
     allocate: (input) => ctx.runMutation(allocateReference, input) as Promise<Allocation>,
     list: (input) => ctx.runQuery(listReference, input) as Promise<ToolPage>,
     read: (input) => ctx.runQuery(readReference, input) as Promise<ToolRead>,
+    deployment: (input) => ctx.runQuery(deploymentReference, input) as Promise<ToolRead>,
   });
 }
 
