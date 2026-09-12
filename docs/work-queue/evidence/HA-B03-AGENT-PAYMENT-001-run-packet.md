@@ -25,6 +25,7 @@ export RISKSCAN_PAY_SERVICE_BASE_URL='https://tool402.vercel.app'
 export RISKSCAN_PAY_INPUT_JSON='{"requestRef":"b03-release-001","subjectRef":"tool402-release","context":"One authorized Hedera-testnet RiskScan exercise","declarations":{"identity":true,"pricing":true,"limitations":true,"evidence":true}}'
 export RISKSCAN_PAY_POLICY_JSON='{"network":"hedera:testnet","asset":"0.0.0","maximumAmount":"100000"}'
 export RISKSCAN_PAY_RECORDING_RUN_REF='b03-release-001'
+export RISKSCAN_PAY_SOURCE_VERSION='<submitted-source-sha>'
 node --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts --preflight
 ```
 

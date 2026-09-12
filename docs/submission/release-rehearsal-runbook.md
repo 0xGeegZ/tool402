@@ -53,6 +53,9 @@ the paid result has returned; if that write fails, retain the printed settlement
 reference and do not pay again. Use **Import Agent evidence** in `/demo` to load
 that one file. The page labels it as client-reported settlement/result evidence
 and renders a HashScan action as `Submitted — verification pending`.
+Set `RISKSCAN_PAY_RECORDING_RUN_REF='b03-release-001'` and
+`RISKSCAN_PAY_SOURCE_VERSION` to the submitted source SHA before preflight so
+the safe packet names both the run and the build that produced it.
 
 Expected direct-CLI successful paid output, shown only after one authorized
 successful request, is:
