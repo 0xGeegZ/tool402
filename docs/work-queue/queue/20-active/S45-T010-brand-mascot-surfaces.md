@@ -27,6 +27,10 @@ The corrected intake at `e5ed2304` passed a fresh independent review with no fin
 
 At ready control source `5780cee2`, the root activates only `apps/web/tests/brand-mascot-surfaces.test.mjs` for durable RED. Production source and generated assets remain prohibited until the focused contract fails only for the four missing surfaces and receives independent RED review.
 
+## RED acceptance
+
+Focused source `26cbf725` fails 6/6 only for the absent declared assets and surfaces. A fresh independent re-review returned `CLEAR` after the contract was hardened to verify actual transparent pixels, decorative accessibility, state-linked delayed reveal and cleanup, and reduced motion. The focused test is frozen. Minimal GREEN may change only the four declared PNGs, the Demo header, the Explore final CTA plus its exact prior contract reconciliation, only `ReviewStep` in the deploy wizard, the shared/root loading cue, the nine loader mounts, and the exact prior loading contract reconciliation.
+
 ## Boundary
 
 The slice is presentation-only except for the loader's cancellable 300 ms visual reveal timer and the one internal Explore link. It cannot change catalogue entries, dynamic deploy values, form progression, wallet/session/signing behavior, route skeleton order, network calls, storage, configuration, APIs, dependencies, backend code, deployment, or live evidence.

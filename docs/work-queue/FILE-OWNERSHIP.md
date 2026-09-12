@@ -1629,7 +1629,10 @@ mounts, the Demo header, the Explore final CTA, only `ReviewStep` in the deploy
 wizard, a focused test, and constrained Explore/loading test reconciliation.
 Fresh independent readiness is clear at corrected intake `e5ed2304`. At ready
 source `5780cee2`, only `apps/web/tests/brand-mascot-surfaces.test.mjs` is
-reserved for durable RED. All other candidate paths confer no ownership before
-RED acceptance. All catalogue data, dynamic form values,
+reserved for durable RED. Fresh independent RED acceptance at `26cbf725`
+freezes that test and reserves the four declared PNGs, Demo header, Explore
+final CTA, only deploy `ReviewStep`, the shared/root loader, nine loader mounts,
+and exact Explore/loading contract reconciliations for minimal GREEN. All
+catalogue data, dynamic form values,
 wallet/session/signing code, skeleton region order, runtime APIs,
 configuration, dependencies, and external/live behavior remain excluded.

@@ -1,5 +1,12 @@
 # Runtime queue state
 
+- S45_RED_ACCEPTANCE: Focused source `26cbf725` fails 6/6 only because the four
+  declared production surfaces are absent. A fresh independent re-review is
+  clear after verifying real PNG transparency, decorative accessibility, the
+  cancellable 300 ms reveal, and reduced motion. The test is frozen; S45 now
+  reserves only its declared assets, presentation sources, loader mounts, and
+  the exact Explore/loading contract reconciliations for minimal GREEN.
+
 - S45_RED_ACTIVATION: At ready control source `5780cee2`, the root activates
   only `apps/web/tests/brand-mascot-surfaces.test.mjs` for durable RED.
   Production source and generated assets remain prohibited until the focused
