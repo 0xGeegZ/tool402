@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 00-inbox
 - Dependencies: S11-T010 accepted, S14-T010 accepted, S20-T010 accepted, S29-T010 accepted, S33-T010 accepted, S43-T010 accepted.
 - Raised by: human operator, 2026-09-12. The request is to generate and integrate the four approved mascot compositions for Demo, Explore, Provider deploy review, and route loading.
 - Owner: root integrator. The root owns this card, specification, UI manifest, assets, tests, source integration, review records, validation, and draft PR.
@@ -15,9 +15,9 @@ The exact contract is defined by [`s45-brand-mascot-surfaces`](../../../specs/s4
 
 S45 owns its four new PNG assets, one new shared loading component, the new root loading fallback, the nine existing loading files only for adding the shared cue without changing their skeleton regions, the existing Demo page header, the existing Explore catalogue only for its final provider CTA, the existing Provider deploy wizard only inside `ReviewStep`, the new focused S45 test, and the exact superseded Explore/loading assertions required by those additions.
 
-## Activation
+## Intake
 
-The repository owner explicitly authorized implementation and a new draft PR. At the clean `origin/main` baseline `98cdbe29c59c44cc3145ddbef3615b985dfad45b`, the complete workspace suite passes under Node 22.21.1. S45 is active first for one durable focused RED contract. Production source and generated assets remain prohibited until the expected missing-surface failure is observed and independently reviewed.
+The repository owner explicitly authorized implementation and a new draft PR. At the clean `origin/main` baseline `98cdbe29c59c44cc3145ddbef3615b985dfad45b`, the complete workspace suite passes under Node 22.21.1. S45 begins in inbox pending an independent readiness review. No test, production source, or generated asset is active yet.
 
 ## Boundary
 

@@ -1,11 +1,16 @@
 # Runtime queue state
 
-- S45_BRAND_MASCOT_SURFACES_ACTIVATION: The owner requests four generated,
+- S45_INTAKE_CORRECTION: The initial S45 control commit incorrectly recorded
+  activation without the required inbox and ready transitions. That record is
+  superseded: S45 begins in `00-inbox`, with no active test, source, or asset
+  ownership. An independent readiness review must clear the committed scope
+  before a separate root activation can reserve durable RED.
+- S45_BRAND_MASCOT_SURFACES_INTAKE: The owner requests four generated,
   text-free Tool402 mascot assets integrated into the existing Demo, Explore,
   Provider deploy review, and route-loading surfaces in a new draft PR. At
   exact `origin/main` `98cdbe29`, the complete Node 22.21.1 workspace baseline
-  is green. S45-T010 is `20-active` only for its focused durable RED contract;
-  production source and assets require observed RED and independent review.
+  is green. S45-T010 is `00-inbox`; its proposed focused test and production
+  paths confer no ownership before readiness and a separate activation.
   The slice adds no data, wallet, command, payment, transaction, deployment,
   or live authority.
 
