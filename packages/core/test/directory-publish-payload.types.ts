@@ -34,7 +34,7 @@ const payload: DirectoryPublishPayload = parseDirectoryPublishPayload({
 });
 
 const record: AgentDirectoryRecordCandidate = payload.record;
-const serviceSlug: "riskscan" = payload.record.serviceSlug;
+const serviceSlug: "riskscan" | `tool-${string}` = payload.record.serviceSlug;
 const schemaVersion: 1 = payload.schemaVersion;
 const bytes: Uint8Array = canonicalDirectoryPublishPayloadBytes(payload);
 
