@@ -341,21 +341,28 @@ implementedTest("renders the S43 command center from the admitted campaign proje
 
   const stateModule = await import(new URL("../src/components/provider/status/provider-status-state.ts", import.meta.url).href);
   assert.equal(typeof stateModule.providerCampaignPresentation, "function");
+  const offeringCases = [
+    ["DRAFT", "Campaign in progress", "Offering admitted · DRAFT", "current"],
+    ["ASSET_PENDING", "Campaign in progress", "Offering admitted · ASSET_PENDING", "current"],
+    ["READY", "Campaign prepared", "Offering admitted · READY", "complete"],
+    ["OPEN", "Campaign ready", "Offering admitted · OPEN", "complete"],
+    ["CLOSED", "Campaign closed", "Offering admitted · CLOSED", "complete"],
+  ];
+  const cases = offeringCases.flatMap(([offeringState, heroTitle, offeringStage, offeringTone]) => [true, false].map((directoryLoaded) => ({
+    offeringState,
+    directoryLoaded,
+    expected: {
+      heroTitle,
+      offeringStage,
+      offeringTone,
+      directoryStage: directoryLoaded ? "Directory active" : "Directory unavailable",
+      directoryTone: directoryLoaded ? "complete" : "current",
+      issuanceStage: "Unavailable in this demo",
+    },
+  })));
   assert.deepEqual(
-    [
-      ["DRAFT", false],
-      ["ASSET_PENDING", false],
-      ["READY", true],
-      ["OPEN", true],
-      ["CLOSED", false],
-    ].map(([offeringState, directoryLoaded]) => stateModule.providerCampaignPresentation(offeringState, directoryLoaded)),
-    [
-      { heroTitle: "Campaign in progress", offeringStage: "Offering admitted · DRAFT", offeringTone: "current", directoryStage: "Directory unavailable", directoryTone: "current", issuanceStage: "Unavailable in this demo" },
-      { heroTitle: "Campaign in progress", offeringStage: "Offering admitted · ASSET_PENDING", offeringTone: "current", directoryStage: "Directory unavailable", directoryTone: "current", issuanceStage: "Unavailable in this demo" },
-      { heroTitle: "Campaign prepared", offeringStage: "Offering admitted · READY", offeringTone: "complete", directoryStage: "Directory active", directoryTone: "complete", issuanceStage: "Unavailable in this demo" },
-      { heroTitle: "Campaign ready", offeringStage: "Offering admitted · OPEN", offeringTone: "complete", directoryStage: "Directory active", directoryTone: "complete", issuanceStage: "Unavailable in this demo" },
-      { heroTitle: "Campaign closed", offeringStage: "Offering admitted · CLOSED", offeringTone: "complete", directoryStage: "Directory unavailable", directoryTone: "current", issuanceStage: "Unavailable in this demo" },
-    ],
+    cases.map(({ offeringState, directoryLoaded }) => stateModule.providerCampaignPresentation(offeringState, directoryLoaded)),
+    cases.map(({ expected }) => expected),
   );
   assert.deepEqual(stateModule.nextProviderAction("CLOSED"), { message: "None. The offering is closed.", href: null });
 });
