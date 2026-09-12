@@ -927,6 +927,15 @@ No secrets, account keys, or private evidence belong in this file.
   configuration, transaction, deployment, or proof semantics. Missing evidence
   must render as required, optional, or unavailable rather than green.
 
+- S45_DEMO_CONTROL_ROOM_ACCEPTANCE: Source delivery `b844ad60` is accepted
+  after the complete repository test suite, typecheck, web build, queue check,
+  non-signing desktop and 390px browser rehearsal, and fresh independent
+  specification and standards/security review. The `/demo` guide retains the
+  validation-only sign-in handoff and a return-to-guide control at every scene.
+  It performs no payment, signature, transaction, deployment, recording, or
+  submission; all unverified external evidence remains explicitly gated. See
+  docs/work-queue/evidence/S45-T010-final-review.md.
+
 - S38_WALLET_SESSION_PRESERVATION_AMENDMENT: 2026-09-11. The repository owner
   directs successful sign-in to use the fixed internal App Router dashboard
   transition instead of a full-document reload, preserving the mounted shared
