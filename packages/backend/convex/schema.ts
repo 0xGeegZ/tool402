@@ -41,6 +41,15 @@ export default defineSchema({
     .index("by_offering_public_id", ["offeringPublicId"])
     .index("by_owner_and_chain_and_request", ["canonicalSignerAddress", "chainId", "requestId"])
     .index("by_owner_and_chain_and_created", ["canonicalSignerAddress", "chainId", "createdAt"]),
+  providerToolReceiptBindings: defineTable({
+    network: v.literal("hedera:testnet"),
+    offeringId: v.id("offerings"),
+    offeringPublicId: v.string(),
+    attemptId: v.id("externalPrepareCommandAttempts"),
+    candidateTransactionId: v.string(),
+    assetEvmAddress: v.string(),
+  }).index("by_network_and_candidate_transaction_id", ["network", "candidateTransactionId"])
+    .index("by_network_and_asset_evm_address", ["network", "assetEvmAddress"]),
   externalPrepareCommandAttempts: defineTable({
     version: v.literal(1),
     type: v.literal("external.prepare"),

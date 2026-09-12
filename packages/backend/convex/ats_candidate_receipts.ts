@@ -23,6 +23,8 @@ import {
   readStoredRecord,
 } from "../src/offering-command-admission.ts";
 import { readAtsCreateReplayOffering } from "./offerings.ts";
+import { isSelectedProviderToolSubject } from "./provider_tool_authority.ts";
+import { claimAtsReceiptBinding } from "./provider_tool_receipts.ts";
 import type schema from "./schema.ts";
 
 type AttemptState =
@@ -438,6 +440,25 @@ async function readLinkedPendingAtsCreateOffering(
   return offering;
 }
 
+async function claimLegacyAtsReceiptBinding(
+  ctx: GenericMutationCtx<DataModelFromSchemaDefinition<typeof schema>>,
+  offering: NonNullable<Awaited<ReturnType<typeof readLinkedPendingAtsCreateOffering>>>,
+  attempt: StoredAttempt,
+  attachment: Attachment,
+): Promise<void> {
+  if (
+    attachment.candidateEvmAddress === undefined
+    || isSelectedProviderToolSubject(offering.subjectPublicId)
+  ) return;
+  await claimAtsReceiptBinding(ctx, {
+    offeringId: offering.offeringId,
+    offeringPublicId: offering.offeringPublicId ?? offering.offeringId,
+    attemptId: attempt.attemptId,
+    candidateTransactionId: attachment.candidateTransactionId,
+    assetEvmAddress: attachment.candidateEvmAddress,
+  });
+}
+
 export const attachAtsCandidateReceipt = internalMutation({
   args: {
     attemptPublicId: v.string(),
@@ -489,11 +510,14 @@ export const attachAtsCandidateReceipt = internalMutation({
         ) {
           const offering = await readLinkedPendingAtsCreateOffering(ctx, attempt, attachment, false);
           if (offering === null) return reject();
-          await ctx.db.patch(offering.offeringId, {
-            state: "READY",
-            atsAssetEvmAddress: attachment.candidateEvmAddress,
-            updatedAt: durableNow(),
-          });
+          if (!isSelectedProviderToolSubject(offering.subjectPublicId)) {
+            await claimLegacyAtsReceiptBinding(ctx, offering, attempt, attachment);
+            await ctx.db.patch(offering.offeringId, {
+              state: "READY",
+              atsAssetEvmAddress: attachment.candidateEvmAddress,
+              updatedAt: durableNow(),
+            });
+          }
           return {
             status: "ATTACHED" as const,
             attemptId: attempt.attemptId,
@@ -522,7 +546,8 @@ export const attachAtsCandidateReceipt = internalMutation({
         return reject();
       }
       const offering = await readLinkedPendingAtsCreateOffering(ctx, attempt, attachment, false);
-      if (offering !== null) {
+      if (offering !== null && !isSelectedProviderToolSubject(offering.subjectPublicId)) {
+        await claimLegacyAtsReceiptBinding(ctx, offering, attempt, attachment);
         await ctx.db.patch(offering.offeringId, {
           state: "READY",
           atsAssetEvmAddress: attachment.candidateEvmAddress,
@@ -558,7 +583,8 @@ export const attachAtsCandidateReceipt = internalMutation({
         ? {}
         : { candidateEvmAddress: attachment.candidateEvmAddress }),
     });
-    if (offering !== null) {
+    if (offering !== null && !isSelectedProviderToolSubject(offering.subjectPublicId)) {
+      await claimLegacyAtsReceiptBinding(ctx, offering, attempt, attachment);
       await ctx.db.patch(offering.offeringId, {
         state: "READY",
         atsAssetEvmAddress: attachment.candidateEvmAddress,
