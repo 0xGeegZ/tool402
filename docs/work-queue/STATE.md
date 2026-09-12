@@ -42,6 +42,8 @@
   it supersedes historical S11 copy only in its declared scope. No source is
   changed before readiness and RED; wallet and deployment authority is unchanged.
 
+- M56_BACKING_DEMO_MVP_INTAKE: The repository owner explicitly cuts backing to the existing S18 journey: one OPEN RiskScan projection, server-configured treasury, BACKER HEDERA_FUNDING prepare, explicit testnet transfer, and local payment-submitted/allocation-pending copy. M56 begins inbox-only; Human Ops retains authority provisioning, treasury configuration, transfer, evidence, and revocation. Allocation and optional Mirror confirmation are excluded.
+
 - S29_POST_ACCEPTANCE_REVIEW_FIX: The repository owner explicitly directs the
   two confirmed Provider deploy review corrections on PR #82. The root may
   amend only `provider-deploy-wizard.tsx`, `deploy-stage-signing.tsx`, the new

@@ -2,6 +2,8 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
+M56-T010 is a root-owned `00-inbox` CORE_P0 backing-demo successor. It owns control records, new server projection helper, back page, RiskScan detail entry point, and named focused tests after readiness/RED activation. The delegated lane may not alter these root paths; it remains limited to backing component/state and new backing tests. No schema, allocation, command admission, candidate, package, lockfile, or live action is reserved.
+
 M54-T010 is a root-owned `20-active` CORE_P0 candidate recovery correction. It
 owns its card, specification, queue/review records, integration, commits, and
 pushes, plus only `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`,
