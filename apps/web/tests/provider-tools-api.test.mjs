@@ -185,6 +185,58 @@ implementedTest("handles GET as an owner-scoped read without allocating", async 
   }]);
 });
 
+implementedTest("forwards an unparameterized GET as the first owner-scoped page", async () => {
+  const { handleProviderToolsRequest } = await import(serverUrl.href);
+  const forwarded = [];
+  const response = await handleProviderToolsRequest(get(), environment, {
+    readSession: async () => ({
+      address: "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454",
+      issuedAt: "2026-09-12T10:00:00.000Z",
+      expiresAt: "2026-09-12T18:00:00.000Z",
+    }),
+    forward: async (input) => {
+      forwarded.push(input);
+      return new Response(JSON.stringify({ tools: [], nextCursor: null }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    },
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(forwarded, [{
+    canonicalSignerAddress: "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454",
+    cursor: null,
+    sessionExpiresAt: "2026-09-12T18:00:00.000Z",
+  }]);
+});
+
+implementedTest("rejects every non-closed GET query shape before session or forwarding work", async () => {
+  const { handleProviderToolsRequest } = await import(serverUrl.href);
+  const toolPublicId = "tool_" + "ab".repeat(16);
+  const cases = [
+    "?unknown=value",
+    "?cursor=first&cursor=second",
+    `?tool=${toolPublicId}&tool=${toolPublicId}`,
+    `?cursor=first&tool=${toolPublicId}`,
+    "?cursor=",
+    "?tool=",
+    "?tool=not-a-tool",
+    `?cursor=${"x".repeat(1025)}`,
+  ];
+  for (const search of cases) {
+    let sessions = 0;
+    let forwarded = 0;
+    const response = await handleProviderToolsRequest(get(search), environment, {
+      readSession: async () => { sessions += 1; return null; },
+      forward: async () => { forwarded += 1; throw new Error("must not forward"); },
+    });
+    assert.equal(response.status, 401, search);
+    assert.deepEqual(await response.json(), { outcome: "rejected" }, search);
+    assert.equal(sessions, 0, search);
+    assert.equal(forwarded, 0, search);
+  }
+});
+
 implementedTest("rejects a cross-origin GET before reading the dashboard session", async () => {
   const { handleProviderToolsRequest } = await import(serverUrl.href);
   let sessions = 0;

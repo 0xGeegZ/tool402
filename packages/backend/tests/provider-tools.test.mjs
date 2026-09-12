@@ -119,6 +119,8 @@ function offeringFor(toolRecord, overrides = {}) {
     offeringPublicId: toolRecord.offeringPublicId,
     subjectPublicId: toolRecord.subjectPublicId,
     canonicalSignerAddress: toolRecord.canonicalSignerAddress,
+    principalPublicId: toolRecord.principalPublicId,
+    authorityVersion: toolRecord.authorityVersion,
     version: 1,
     narrative: { title: "Deployed RiskScan" },
     state: "DRAFT",
@@ -317,6 +319,56 @@ implementedTest("derives safe offering title and state instead of storing lifecy
   assert.deepEqual(
     await readOwnedTool._handler(db.ctx, { canonicalSignerAddress, toolPublicId: mine.toolPublicId }),
     page.tools[0],
+  );
+});
+
+implementedTest("fails closed when a matching offering diverges from its allocated ownership context", async () => {
+  const { listOwnedTools, readOwnedTool } = await import(sourceUrl.href);
+  const mine = tool();
+  const foreignSigner = "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454";
+  const corruptedOfferingIdentity = tool({ offeringPublicId: `offering_${"cd".repeat(16)}` });
+  const cases = [
+    ["principal", mine, offeringFor(mine, { principalPublicId: "different_principal" })],
+    ["authority version", mine, offeringFor(mine, { authorityVersion: "different_authority" })],
+    ["signer", mine, offeringFor(mine, { canonicalSignerAddress: foreignSigner })],
+    ["subject", mine, offeringFor(mine, { subjectPublicId: `tool_${"cd".repeat(16)}` })],
+    ["offering version", mine, offeringFor(mine, { version: 2 })],
+    ["offering identity", corruptedOfferingIdentity, offeringFor(corruptedOfferingIdentity)],
+  ];
+  for (const [label, allocatedTool, offering] of cases) {
+    const db = database({ tools: [allocatedTool], offerings: [offering] });
+    assert.deepEqual(
+      await listOwnedTools._handler(db.ctx, { canonicalSignerAddress, cursor: null }),
+      { tools: [], nextCursor: null },
+      label,
+    );
+    assert.equal(
+      await readOwnedTool._handler(db.ctx, { canonicalSignerAddress, toolPublicId: allocatedTool.toolPublicId }),
+      null,
+      label,
+    );
+  }
+});
+
+implementedTest("keeps an allocated tool allocated only while its matching offering is absent", async () => {
+  const { listOwnedTools, readOwnedTool } = await import(sourceUrl.href);
+  const mine = tool();
+  const db = database({ tools: [mine] });
+  const expected = {
+    toolPublicId: mine.toolPublicId,
+    subjectPublicId: mine.subjectPublicId,
+    offeringPublicId: mine.offeringPublicId,
+    serviceId: mine.serviceId,
+    serviceSlug: mine.serviceSlug,
+    title: "RiskScan",
+    state: "ALLOCATED",
+  };
+  assert.deepEqual(await listOwnedTools._handler(db.ctx, { canonicalSignerAddress, cursor: null }), {
+    tools: [expected], nextCursor: null,
+  });
+  assert.deepEqual(
+    await readOwnedTool._handler(db.ctx, { canonicalSignerAddress, toolPublicId: mine.toolPublicId }),
+    expected,
   );
 });
 

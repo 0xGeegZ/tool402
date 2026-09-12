@@ -37,6 +37,12 @@ type ToolIdentityProjection = Readonly<{
   serviceId: string;
   serviceSlug: string;
 }>;
+type ToolAllocation = Readonly<{
+  canonicalSignerAddress: string;
+  principalPublicId: string;
+  authorityVersion: string;
+  offeringVersion: 1;
+}> & ToolIdentityProjection;
 type ToolProjection = Readonly<{
   title: string;
   state: ToolState;
@@ -69,13 +75,15 @@ function isCurrentIssuer(value: unknown, address: string): value is {
     && record.ownedSubjectPublicIds[0] === planned.ownedSubjectPublicIds[0];
 }
 
-function projectIdentity(value: unknown): ToolIdentityProjection | null {
+function projectAllocation(value: unknown): ToolAllocation | null {
   if (value === null || typeof value !== "object") return null;
   const record = value as Record<string, unknown>;
   const toolPublicId = parseProviderToolId(record.toolPublicId);
   if (toolPublicId === null || record.subjectPublicId !== toolPublicId || typeof record.offeringPublicId !== "string"
     || typeof record.serviceId !== "string" || typeof record.serviceSlug !== "string"
-    || record.chainId !== 296
+    || typeof record.canonicalSignerAddress !== "string" || !addressPattern.test(record.canonicalSignerAddress) || typeof record.principalPublicId !== "string"
+    || record.principalPublicId.length === 0 || typeof record.authorityVersion !== "string"
+    || record.authorityVersion.length === 0 || record.chainId !== 296
     || record.offeringPublicId !== `offering_${toolPublicId.slice(5)}` || record.serviceId !== toolPublicId
     || record.serviceSlug !== `tool-${toolPublicId.slice(5)}` || record.offeringVersion !== 1 || record.directoryVersion !== 1) {
     return null;
@@ -86,6 +94,10 @@ function projectIdentity(value: unknown): ToolIdentityProjection | null {
     offeringPublicId: record.offeringPublicId,
     serviceId: record.serviceId,
     serviceSlug: record.serviceSlug,
+    canonicalSignerAddress: record.canonicalSignerAddress,
+    principalPublicId: record.principalPublicId,
+    authorityVersion: record.authorityVersion,
+    offeringVersion: 1,
   };
 }
 
@@ -94,20 +106,33 @@ function isOfferingState(value: unknown): value is Exclude<ToolState, "ALLOCATED
 }
 
 async function project(ctx: DatabaseContext, value: unknown): Promise<ToolProjection | null> {
-  const identity = projectIdentity(value);
-  if (identity === null) return null;
+  const allocation = projectAllocation(value);
+  if (allocation === null) return null;
   const offerings = await ctx.db.query("offerings")
     .withIndex("by_offering_public_id_and_version", (query) => (
-      query.eq("offeringPublicId", identity.offeringPublicId).eq("version", 1)
+      query.eq("offeringPublicId", allocation.offeringPublicId)
     )).take(2);
-  if (offerings.length === 0) return { ...identity, title: defaultTitle, state: "ALLOCATED" };
+  const projection = (title: string, state: ToolState): ToolProjection => ({
+    toolPublicId: allocation.toolPublicId,
+    subjectPublicId: allocation.subjectPublicId,
+    offeringPublicId: allocation.offeringPublicId,
+    serviceId: allocation.serviceId,
+    serviceSlug: allocation.serviceSlug,
+    title,
+    state,
+  });
+  if (offerings.length === 0) return projection(defaultTitle, "ALLOCATED");
   if (offerings.length !== 1 || offerings[0] === undefined) return null;
   const offering = offerings[0];
-  if (offering.subjectPublicId !== identity.subjectPublicId
-    || offering.canonicalSignerAddress !== (value as { canonicalSignerAddress?: unknown }).canonicalSignerAddress
+  if (offering.offeringPublicId !== allocation.offeringPublicId
+    || offering.version !== allocation.offeringVersion
+    || offering.subjectPublicId !== allocation.subjectPublicId
+    || offering.canonicalSignerAddress !== allocation.canonicalSignerAddress
+    || offering.principalPublicId !== allocation.principalPublicId
+    || offering.authorityVersion !== allocation.authorityVersion
     || typeof offering.narrative?.title !== "string" || offering.narrative.title.trim().length === 0
     || !isOfferingState(offering.state)) return null;
-  return { ...identity, title: offering.narrative.title, state: offering.state };
+  return projection(offering.narrative.title, offering.state);
 }
 
 function randomIdentity() {

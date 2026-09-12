@@ -120,6 +120,27 @@ function sessionInput(request: Request, env: DashboardAuthEnvironment): { cookie
   return cookie === null || cookie.length === 0 ? null : { cookie, origin };
 }
 
+function getInput(request: Request): Pick<ForwardInput, "cursor" | "toolPublicId"> | null {
+  let parameters: URLSearchParams;
+  try {
+    parameters = new URL(request.url).searchParams;
+  } catch {
+    return null;
+  }
+  const keys = [...parameters.keys()];
+  if (keys.length === 0) return { cursor: null };
+  if (keys.length !== 1) return null;
+  if (keys[0] === "cursor") {
+    const cursor = parameters.get("cursor");
+    return cursor !== null && cursor.length > 0 && cursor.length <= maximumRequestBytes ? { cursor } : null;
+  }
+  if (keys[0] === "tool") {
+    const toolPublicId = parameters.get("tool");
+    return toolPublicId !== null && toolIdPattern.test(toolPublicId) ? { toolPublicId } : null;
+  }
+  return null;
+}
+
 function ingressConfiguration(env: DashboardAuthEnvironment): { keyId: string; secret: Uint8Array; target: string } | null {
   const keyId = env.TOOL402_INGRESS_KEY_ID;
   const secret = env.TOOL402_INGRESS_SECRET;
@@ -160,20 +181,15 @@ async function forwardAssertion(input: ForwardInput, env: DashboardAuthEnvironme
 }
 
 export async function handleProviderToolsRequest(request: Request, env: DashboardAuthEnvironment, dependencies: Dependencies = {}): Promise<Response> {
+  const readInput = request.method === "GET" ? getInput(request) : undefined;
+  if (request.method === "GET" && readInput === null) return json({ outcome: "rejected" }, 401);
   const sessionRequest = sessionInput(request, env);
   if (sessionRequest === null) return json({ outcome: "rejected" }, 401);
   let parsedBody: { requestId: string } | null = null;
-  let cursor: string | null = null;
-  let toolPublicId: string | null = null;
   if (request.method === "POST") {
     parsedBody = await body(request);
     if (parsedBody === null) return json({ outcome: "rejected" }, 401);
-  } else if (request.method === "GET") {
-    const url = new URL(request.url);
-    cursor = url.searchParams.get("cursor");
-    toolPublicId = url.searchParams.get("tool");
-    if ((cursor !== null && (cursor.length === 0 || cursor.length > maximumRequestBytes)) || (toolPublicId !== null && !toolIdPattern.test(toolPublicId)) || (cursor !== null && toolPublicId !== null)) return json({ outcome: "rejected" }, 401);
-  } else {
+  } else if (readInput === undefined) {
     return json({ outcome: "rejected" }, 401);
   }
   const readSession = dependencies.readSession ?? ((cookie) => readDashboardSession(cookie, env));
@@ -184,9 +200,7 @@ export async function handleProviderToolsRequest(request: Request, env: Dashboar
   try {
     const upstream = request.method === "POST"
       ? await forward({ canonicalSignerAddress: session.address, requestId: parsedBody!.requestId, sessionExpiresAt: session.expiresAt })
-      : toolPublicId === null
-        ? await forward({ canonicalSignerAddress: session.address, cursor, sessionExpiresAt: session.expiresAt })
-        : await forward({ canonicalSignerAddress: session.address, toolPublicId, sessionExpiresAt: session.expiresAt });
+      : await forward({ canonicalSignerAddress: session.address, ...readInput!, sessionExpiresAt: session.expiresAt });
     return boundedResponse(upstream);
   } catch {
     return json({ outcome: "unavailable" }, 503);
