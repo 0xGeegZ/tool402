@@ -45,11 +45,11 @@ export async function DashboardCampaign() {
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <NewToolAction />
-              <Link href="/provider/deploy" className={buttonVariants({ size: "sm" })}>Prepare a tool</Link>
+              <Link href="/provider/deploy" className={buttonVariants({ variant: "outline", size: "lg", shape: "pill" })}>Prepare a tool</Link>
               <Link href="/explore/riskscan" className="text-sm font-semibold text-primary transition-colors hover:text-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Explore RiskScan</Link>
             </div>
           </CardContent>
-          <CardContent className="border-t pt-4"><p className="text-sm font-semibold">Your tools</p><ProviderToolList /></CardContent>
+          <CardContent className="space-y-3 border-t pt-4"><p className="text-sm font-semibold">Your tools</p><ProviderToolList /></CardContent>
         </Card>
       </section>
     );
@@ -66,17 +66,18 @@ export async function DashboardCampaign() {
       <Card className="rounded-card border-border bg-card shadow-none">
         <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
-            <p className="text-xs font-medium text-muted-foreground">Your campaign</p>
-            <h2 className="text-xl font-bold tracking-[-0.035em] text-foreground">{campaign.title}</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-xl font-bold tracking-[-0.035em] text-foreground">{campaign.title}</h2>
+              <Badge variant="secondary">{campaign.state}</Badge>
+            </div>
             <p className="text-sm leading-6 text-muted-foreground">{description}</p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-3">
-            <Badge variant="secondary">{campaign.state}</Badge>
-            <Link href={campaign.href} className={buttonVariants({ size: "sm" })}>{action}</Link>
-            <NewToolAction />
+            <Link href={campaign.href} className={buttonVariants({ size: "lg", shape: "pill" })}>{action}</Link>
+            <NewToolAction variant="outline" />
           </div>
         </CardContent>
-        <CardContent className="border-t pt-4"><p className="text-sm font-semibold">Your tools</p><ProviderToolList /></CardContent>
+        <CardContent className="space-y-3 border-t pt-4"><p className="text-sm font-semibold">Your tools</p><ProviderToolList /></CardContent>
       </Card>
     </section>
   );

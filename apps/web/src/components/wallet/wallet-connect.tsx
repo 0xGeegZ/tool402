@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
 import type { WalletState } from "../../lib/wallet/wallet-state.ts";
@@ -38,7 +39,8 @@ export function WalletIsland() {
   return (
     <div data-slot="wallet-island" className="flex items-center gap-2">
       {state.kind === "disconnected" ? (
-        <Button variant="outline" size="sm" className="whitespace-nowrap" onClick={() => connect()}>
+        <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap" onClick={() => connect()}>
+          <Image src="/brand/metamask-fox.svg" alt="" aria-hidden="true" width={18} height={18} />
           Connect MetaMask
         </Button>
       ) : null}

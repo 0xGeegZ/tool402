@@ -24,8 +24,8 @@ const outcomeSentences = {
 const activityLabels = {
   "offering.create": "Campaign created",
   "external.prepare": "Asset preparation",
-  "revenue note": "Revenue note recorded",
-  "directory.publish": "Added to directory",
+  "revenue note": "Revenue note",
+  "directory.publish": "Directory listing",
 } as const;
 
 const focusRing = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -54,6 +54,14 @@ function Icon({ kind }: { kind: IconKind }) {
 
 function IconTile({ kind }: { kind: IconKind }) {
   return <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-card bg-brand-purple/10 text-brand-purple"><Icon kind={kind} /></span>;
+}
+
+function formatUnits(value: string) {
+  return new Intl.NumberFormat("en-US").format(BigInt(value));
+}
+
+function sentence(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 function formatMaturity(value: string) {
@@ -99,16 +107,16 @@ function LoadedRegions({ offering, directoryOutcome }: { offering: OfferingRecor
         <section data-ui="provider-campaign-hero" aria-labelledby="provider-campaign-title" className="grid gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-center">
           <div className="py-2 sm:py-4">
             <div className="flex flex-wrap gap-2">
-              <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-brand-green/25 bg-brand-green/10 px-3 text-xs font-medium text-brand-green"><span aria-hidden="true" className="flex size-4 items-center justify-center rounded-full bg-brand-green text-[10px] font-bold text-white">H</span>Hedera testnet preview</span>
+              <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-brand-green/25 bg-brand-green/10 px-3 text-xs font-medium text-success-foreground"><span aria-hidden="true" className="flex size-4 items-center justify-center rounded-full bg-brand-green text-[10px] font-bold text-white">H</span>Hedera testnet preview</span>
               <Badge variant="outline" className="min-h-8 gap-2 border-destructive-foreground/50 bg-card px-3"><Icon kind="offline" />Not live</Badge>
               <Badge variant="outline" className="min-h-8 bg-card px-3">{offering.state}</Badge>
             </div>
             <h1 id="provider-campaign-title" className="mt-6 max-w-[43rem] text-5xl font-extrabold leading-[0.96] tracking-[-0.055em] sm:text-6xl lg:text-[4.85rem]">{presentation.heroTitle}</h1>
             <p className="mt-4 max-w-2xl text-xl leading-relaxed text-muted-foreground sm:text-2xl">{heroDescription}</p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Link className={buttonVariants({ size: "lg", shape: "pill", className: focusRing })} href="/explore/riskscan">Explore RiskScan <span aria-hidden="true" className="ml-2">→</span></Link>
-              {nextAction.href === null ? null : <Link className={buttonVariants({ variant: "outline", size: "lg", shape: "pill", className: `bg-card ${focusRing}` })} href={nextAction.href}>{nextAction.message}</Link>}
-              <NewToolAction />
+              {nextAction.href === null ? null : <Link className={buttonVariants({ size: "lg", shape: "pill", className: focusRing })} href={nextAction.href}>{nextAction.message}</Link>}
+              <Link className={buttonVariants({ variant: nextAction.href === null ? "primary" : "outline", size: "lg", shape: "pill", className: nextAction.href === null ? focusRing : `bg-card ${focusRing}` })} href="/explore/riskscan">Explore RiskScan <span aria-hidden="true" className="ml-2">→</span></Link>
+              <NewToolAction variant="outline" />
             </div>
           </div>
           <div aria-hidden="true" className="relative min-h-60 overflow-hidden rounded-panel border border-brand-purple/20 bg-[linear-gradient(135deg,color-mix(in_oklab,var(--secondary)_76%,white),color-mix(in_oklab,var(--brand-purple)_13%,white))] shadow-[0_24px_70px_-45px_color-mix(in_oklab,var(--brand-purple)_75%,transparent)] sm:min-h-72">
@@ -118,11 +126,11 @@ function LoadedRegions({ offering, directoryOutcome }: { offering: OfferingRecor
         </section>
 
         <section data-ui="provider-campaign-progress" aria-label="Campaign progress" className={`${cardClass} grid gap-4 p-4 sm:p-5 lg:grid-cols-[1fr_auto_1fr_auto_1fr] lg:items-center`}>
-          <div className="flex items-center gap-4">{stageCircle(presentation.offeringTone, 1)}<div><p className="font-bold">1. {presentation.offeringTitle}</p><p className="mt-0.5 text-sm text-muted-foreground">{presentation.offeringStage}</p></div></div>
+          <div className="flex items-center gap-4">{stageCircle(presentation.offeringTone, 1)}<div><p className="font-bold">{presentation.offeringTitle}</p><p className="mt-0.5 text-sm text-muted-foreground">{presentation.offeringStage}</p></div></div>
           <span aria-hidden="true" className="hidden h-px w-16 bg-brand-green lg:block xl:w-28" />
-          <div className="flex items-center gap-4">{stageCircle(presentation.directoryTone, 2)}<div><p className="font-bold">2. {presentation.directoryTitle}</p><p className="mt-0.5 text-sm text-muted-foreground">{presentation.directoryStage}</p>{directory === undefined ? <Outcome outcome={directoryOutcome} /> : null}</div></div>
+          <div className="flex items-center gap-4">{stageCircle(presentation.directoryTone, 2)}<div><p className="font-bold">{presentation.directoryTitle}</p>{directory === undefined ? <div className="mt-0.5"><Outcome outcome={directoryOutcome} /></div> : <p className="mt-0.5 text-sm text-muted-foreground">Directory v{directory.directoryVersion} · {directory.record.status}</p>}</div></div>
           <span aria-hidden="true" className="hidden h-px w-16 border-t border-dashed border-muted-foreground/40 lg:block xl:w-28" />
-          <div className="flex items-center gap-4"><span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-bold text-muted-foreground">3</span><div><p className="font-bold text-muted-foreground">3. Backer issuance</p><p className="mt-0.5 text-sm text-muted-foreground">{presentation.issuanceStage}</p></div></div>
+          <div className="flex items-center gap-4"><span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-bold text-muted-foreground">3</span><div><p className="font-bold text-muted-foreground">Backer issuance</p><p className="mt-0.5 text-sm text-muted-foreground">{presentation.issuanceStage}</p></div></div>
         </section>
 
         <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
@@ -132,7 +140,7 @@ function LoadedRegions({ offering, directoryOutcome }: { offering: OfferingRecor
               {rows.map((row, index) => <li key={row[0]} className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-[8rem_1.25rem_minmax(0,1fr)] sm:gap-4">
                 <time className="text-xs leading-5 text-muted-foreground sm:pt-0.5">{formatEvidenceTime(row[3])}</time>
                 <span aria-hidden="true" className="relative hidden justify-center sm:flex"><span className={`mt-1.5 size-3 rounded-full ${row[2] === "not recorded" ? "bg-muted-foreground/35" : "bg-brand-green"}`} />{index === rows.length - 1 ? null : <span className="absolute bottom-0 top-4 w-px bg-border" />}</span>
-                <div className="min-w-0 pb-5"><p className="font-bold">{activityLabels[row[0]]}</p><p className="mt-0.5 text-sm leading-5 text-muted-foreground">{row[2]}</p><p className="mt-1 break-words text-xs text-muted-foreground"><span className="font-mono text-foreground/70">{row[0]}</span> · {row[0] === "revenue note" && hashscanUrl !== null ? <a className={`break-all underline underline-offset-4 hover:text-foreground ${focusRing}`} href={hashscanUrl} rel="noreferrer">{row[1]} (leaving the site)</a> : row[1]}</p></div>
+                <div className="min-w-0 pb-5"><p className="font-bold">{activityLabels[row[0]]}</p><p className="mt-0.5 text-sm leading-5 text-muted-foreground">{sentence(row[2])}</p><p className="mt-1 break-words text-xs text-muted-foreground"><span className="font-mono text-foreground/70">{row[0]}</span>{row[1] === "not recorded" ? null : <> · {row[0] === "revenue note" && hashscanUrl !== null ? <a className={`underline underline-offset-4 hover:text-foreground ${focusRing}`} href={hashscanUrl} rel="noreferrer"><span className="break-all">{row[1]}</span> (leaving the site)</a> : row[1]}</>}</p></div>
               </li>)}
             </ol>
           </section>
@@ -140,24 +148,24 @@ function LoadedRegions({ offering, directoryOutcome }: { offering: OfferingRecor
           <section data-ui="provider-campaign-snapshot" aria-labelledby="provider-snapshot" className={`${cardClass} flex flex-col p-5 sm:p-6`}>
             <div className="flex items-center justify-between gap-4"><h2 id="provider-snapshot" className={headingClass}>Campaign snapshot</h2><Badge variant="secondary" className="px-3 py-1 text-primary">{campaignName}</Badge></div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <div className="flex items-center gap-4 rounded-card bg-secondary/55 p-4"><IconTile kind="coins" /><dl className="flex flex-col-reverse"><dt className="text-sm text-muted-foreground">HBAR unit price</dt><dd className="text-2xl font-extrabold tracking-tight">{formatHbar(BigInt(terms.noteUnitPriceTinybars)).replace(" HBAR", "")}</dd></dl></div>
-              <div className="flex items-center gap-4 rounded-card bg-secondary/55 p-4"><IconTile kind="target" /><dl className="flex flex-col-reverse"><dt className="text-sm text-muted-foreground">HBAR target</dt><dd className="text-2xl font-extrabold tracking-tight">{formatHbar(BigInt(terms.fundingTargetTinybars)).replace(" HBAR", "")}</dd></dl></div>
-              <div className="flex items-center gap-4 rounded-card bg-secondary/55 p-4"><IconTile kind="capacity" /><dl className="flex flex-col-reverse"><dt className="text-sm text-muted-foreground">max units</dt><dd className="text-2xl font-extrabold tracking-tight">{terms.maximumNoteUnits}</dd></dl></div>
-              <div className="flex items-center gap-4 rounded-card bg-secondary/55 p-4"><IconTile kind="calendar" /><dl className="flex flex-col-reverse"><dt className="text-sm text-muted-foreground">maturity</dt><dd className="text-xl font-extrabold tracking-tight">{formatMaturity(offering.definition.maturityAt)}</dd></dl></div>
+              <div className="flex items-center gap-4 rounded-card bg-secondary/55 p-4"><IconTile kind="coins" /><dl className="flex flex-col-reverse"><dt className="text-sm text-muted-foreground">Unit price (HBAR)</dt><dd className="text-2xl font-extrabold tracking-tight">{formatHbar(BigInt(terms.noteUnitPriceTinybars)).replace(" HBAR", "")}</dd></dl></div>
+              <div className="flex items-center gap-4 rounded-card bg-secondary/55 p-4"><IconTile kind="target" /><dl className="flex flex-col-reverse"><dt className="text-sm text-muted-foreground">Funding target (HBAR)</dt><dd className="text-2xl font-extrabold tracking-tight">{formatHbar(BigInt(terms.fundingTargetTinybars)).replace(" HBAR", "")}</dd></dl></div>
+              <div className="flex items-center gap-4 rounded-card bg-secondary/55 p-4"><IconTile kind="capacity" /><dl className="flex flex-col-reverse"><dt className="text-sm text-muted-foreground">Maximum units</dt><dd className="text-2xl font-extrabold tracking-tight">{formatUnits(terms.maximumNoteUnits)}</dd></dl></div>
+              <div className="flex items-center gap-4 rounded-card bg-secondary/55 p-4"><IconTile kind="calendar" /><dl className="flex flex-col-reverse"><dt className="text-sm text-muted-foreground">Maturity</dt><dd className="text-xl font-extrabold tracking-tight">{formatMaturity(offering.definition.maturityAt)}</dd></dl></div>
             </div>
-            <div className="mt-auto grid gap-3 pt-5 sm:grid-cols-2"><Link className={buttonVariants({ shape: "pill", className: focusRing })} href="/explore/riskscan">Explore RiskScan <span aria-hidden="true" className="ml-2">→</span></Link><ProviderTechnicalRecordControl label="View technical record" className={buttonVariants({ variant: "outline", shape: "pill", className: focusRing })} /></div>
+            <div className="mt-auto grid gap-3 pt-5 sm:grid-cols-2"><Link className={buttonVariants({ variant: "outline", shape: "pill", className: focusRing })} href="/explore/riskscan">Explore RiskScan <span aria-hidden="true" className="ml-2">→</span></Link><ProviderTechnicalRecordControl label="View technical record" className={buttonVariants({ variant: "outline", shape: "pill", className: focusRing })} /></div>
           </section>
         </div>
 
         <div data-ui="provider-supporting-cards" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <section className={`${cardClass} p-5`}><div className="flex items-center gap-3"><IconTile kind="coins" /><h2 className="text-base font-bold">Economics</h2></div><dl className="mt-4 grid grid-cols-2 gap-4"><div><dd className="font-bold">{formatHbar(BigInt(terms.noteUnitPriceTinybars))}</dd><dt className="text-xs text-muted-foreground">unit price</dt></div><div><dd className="font-bold">{formatHbar(BigInt(terms.fundingTargetTinybars))}</dd><dt className="text-xs text-muted-foreground">target</dt></div></dl></section>
-          <section className={`${cardClass} p-5`}><div className="flex items-center gap-3"><IconTile kind="capacity" /><h2 className="text-base font-bold">Capacity</h2></div><dl className="mt-4 grid grid-cols-2 gap-4"><div><dd className="font-bold">{terms.maximumNoteUnits}</dd><dt className="text-xs text-muted-foreground">max units</dt></div><div><dd className="font-bold">{terms.minimumPurchaseUnits}</dd><dt className="text-xs text-muted-foreground">minimum</dt></div></dl></section>
-          <section className={`${cardClass} p-5`}><div className="flex items-center gap-3"><IconTile kind="shield" /><h2 className="text-base font-bold">Governance</h2></div><dl className="mt-4 grid grid-cols-2 gap-4"><div><dd className="font-bold">{formatShare(BigInt(terms.issuerShareBps))}%</dd><dt className="text-xs text-muted-foreground">issuer share</dt></div><div><dd className="font-bold">{formatShare(BigInt(terms.reserveShareBps))}%</dd><dt className="text-xs text-muted-foreground">reserve share</dt></div></dl></section>
+          <section className={`${cardClass} p-5`}><div className="flex items-center gap-3"><IconTile kind="coins" /><h2 className="text-base font-bold">Economics</h2></div><dl className="mt-4 grid grid-cols-2 gap-4"><div><dd className="font-bold">{formatHbar(BigInt(terms.noteUnitPriceTinybars))}</dd><dt className="text-xs text-muted-foreground">Unit price</dt></div><div><dd className="font-bold">{formatHbar(BigInt(terms.fundingTargetTinybars))}</dd><dt className="text-xs text-muted-foreground">Funding target</dt></div></dl></section>
+          <section className={`${cardClass} p-5`}><div className="flex items-center gap-3"><IconTile kind="capacity" /><h2 className="text-base font-bold">Capacity</h2></div><dl className="mt-4 grid grid-cols-2 gap-4"><div><dd className="font-bold">{formatUnits(terms.maximumNoteUnits)}</dd><dt className="text-xs text-muted-foreground">Maximum units</dt></div><div><dd className="font-bold">{formatUnits(terms.minimumPurchaseUnits)}</dd><dt className="text-xs text-muted-foreground">Minimum purchase</dt></div></dl></section>
+          <section className={`${cardClass} p-5`}><div className="flex items-center gap-3"><IconTile kind="shield" /><h2 className="text-base font-bold">Governance</h2></div><dl className="mt-4 grid grid-cols-2 gap-4"><div><dd className="font-bold">{formatShare(BigInt(terms.issuerShareBps))}%</dd><dt className="text-xs text-muted-foreground">Issuer share</dt></div><div><dd className="font-bold">{formatShare(BigInt(terms.reserveShareBps))}%</dd><dt className="text-xs text-muted-foreground">Reserve share</dt></div></dl></section>
           <section className={`${cardClass} p-5`}><div className="flex items-center gap-3"><IconTile kind="document" /><h2 className="text-base font-bold">Trust details</h2></div>{directory === undefined ? <div className="mt-4"><Outcome outcome={directoryOutcome} /></div> : <dl className="mt-4 space-y-2 text-sm"><div className="flex justify-between gap-3 border-b pb-2"><dt>Directory</dt><dd className="text-muted-foreground">v{directory.directoryVersion}</dd></div><div className="flex justify-between gap-3 border-b pb-2"><dt>Signer</dt><dd className="text-success-foreground">Recorded</dd></div><div className="flex justify-between gap-3"><dt>Endpoint</dt><dd className="text-muted-foreground">Recorded</dd></div></dl>}</section>
         </div>
 
         <details id="technical-record" data-ui="provider-technical-record" className={`${cardClass} group scroll-mt-24 p-5 sm:p-6`}>
-          <summary className="flex list-none items-center justify-between gap-4 font-bold [&::-webkit-details-marker]:hidden"><span>Technical record</span><span aria-hidden="true" className="text-brand-purple transition-transform group-open:rotate-180">⌄</span></summary>
+          <summary className="flex list-none items-center justify-between gap-4 font-bold [&::-webkit-details-marker]:hidden"><span>Technical record</span><svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" className="size-5 shrink-0 text-brand-purple transition-transform group-open:rotate-180"><path d="m5 8 5 5 5-5" strokeLinecap="round" strokeLinejoin="round" /></svg></summary>
           <div className="mt-6 grid gap-8 border-t pt-6 lg:grid-cols-2">
             <section aria-labelledby="provider-terms"><h2 id="provider-terms" className="text-lg font-bold">Active terms <span className="sr-only">Economics Capacity Governance</span></h2><div className="mt-4"><DetailList columns={2} items={[["Funding target", formatHbar(BigInt(terms.fundingTargetTinybars))], ["Payout cap", formatHbar(BigInt(terms.payoutCapTinybars))], ["Unit price", formatHbar(BigInt(terms.noteUnitPriceTinybars))], ["Maximum units", terms.maximumNoteUnits], ["Minimum purchase units", terms.minimumPurchaseUnits], ["Reserve share", `${formatShare(BigInt(terms.reserveShareBps))}%`], ["Issuer share", `${formatShare(BigInt(terms.issuerShareBps))}%`], ["Platform fee", `${formatShare(BigInt(terms.platformFeeBps))}%`], ["Maturity", offering.definition.maturityAt], ["Qualifying resource", offering.definition.qualifyingResource], ["Advertised quick price", formatHbar(BigInt(offering.advertisedQuickPriceTinybars))], ["Advertised standard price", formatHbar(BigInt(offering.advertisedStandardPriceTinybars))]]} /></div><p className="mt-4 text-sm leading-6 text-muted-foreground">A material change needs a separately signed offering and directory version.</p></section>
             <section aria-labelledby="provider-directory"><h2 id="provider-directory" className="text-lg font-bold">Active directory</h2>{directory === undefined ? <div className="mt-4"><Outcome outcome={directoryOutcome} /></div> : <div className="mt-4"><DetailList columns={2} items={[["Service", directory.record.serviceSlug], ["Version", String(directory.directoryVersion)], ["Status", directory.record.status], ["Endpoint", directory.record.x402Endpoint], ["Clearing account", directory.record.clearingAccount]]} /></div>}<p className="mt-5 break-all font-mono text-sm">{offering.canonicalSignerAddress}</p><p className="mt-1 text-sm text-muted-foreground">Signer of the admitted command on chain 296.</p></section>

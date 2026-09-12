@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { parseProviderToolPage, type ProviderToolSummary } from "../../lib/provider-tools-client.ts";
 import { Badge } from "../ui/badge";
 import { buttonVariants } from "../ui/button";
+import { Status } from "../ui/status";
 
 const maximumTools = 50;
 
@@ -31,11 +32,13 @@ export function ProviderToolList() {
   const [tools, setTools] = useState<readonly ProviderToolSummary[] | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     void readPage(null).then((page) => {
       if (cancelled) return;
+      setUnavailable(page === null);
       const initial = page?.tools ?? [];
       setTools(initial);
       setNextCursor(initial.length >= maximumTools ? null : page?.nextCursor ?? null);
@@ -47,6 +50,7 @@ export function ProviderToolList() {
     if (nextCursor === null || loadingMore || tools === null || tools.length >= maximumTools) return;
     setLoadingMore(true);
     const page = await readPage(nextCursor);
+    setUnavailable(page === null);
     if (page !== null) {
       const next = appendTools(tools, page.tools);
       setTools(next);
@@ -55,10 +59,11 @@ export function ProviderToolList() {
     setLoadingMore(false);
   }
 
-  if (tools === null) return <p className="text-sm text-muted-foreground">Loading your tools…</p>;
-  if (tools.length === 0) return <p className="text-sm text-muted-foreground">No additional tools have been created yet.</p>;
+  if (tools === null) return <p role="status" className="text-sm text-muted-foreground">Loading your tools…</p>;
+  const notice = unavailable ? <Status tone="error">Your tools could not be loaded. Reload the page to try again.</Status> : null;
+  if (tools.length === 0) return notice ?? <p className="text-sm text-muted-foreground">No additional tools have been created yet.</p>;
   return (
-    <div className="mt-3 grid gap-3">
+    <div className="grid gap-3">
       <ul className="grid gap-3" aria-label="Your tools">
         {tools.map((tool) => (
           <li key={tool.toolPublicId} className="flex flex-wrap items-center justify-between gap-3 rounded-control border border-border bg-background p-3">
@@ -67,6 +72,7 @@ export function ProviderToolList() {
           </li>
         ))}
       </ul>
+      {notice}
       {nextCursor === null ? null : <button type="button" className={buttonVariants({ variant: "outline", size: "sm" })} disabled={loadingMore} onClick={() => void loadMore()}>{loadingMore ? "Loading…" : "Load more tools"}</button>}
     </div>
   );
