@@ -5,7 +5,7 @@
 - Tier: CORE_P0
 - Queue state: 00-inbox
 - Dependencies: S18-T010, S21-T010, M40-T010, M41-T010, and M50-T010 accepted.
-- Owner: root owns control records, shared server/page paths, reviews, integration, and commits. The delegated lane owns only backing component/state and new backing-specific test paths after reservation.
+- Owner: root owns control records, shared server/authority/page/detail/flow paths, reviews, integration, and commits. The delegated lane owns only `backing-state.ts` and one new backing-state test after reservation.
 - Human actions: one separately accepted/revoked BACKER authority and one explicit testnet transfer are Human Ops actions.
 
 ## Purpose and root paths
@@ -15,10 +15,11 @@ S18 already implements local units → HEDERA_FUNDING → explicit transfer → 
 - `apps/web/src/lib/backing-demo-projection.ts` (new);
 - `apps/web/src/app/explore/riskscan/back/page.tsx`;
 - `apps/web/src/components/riskscan/detail/riskscan-detail.tsx`;
+- `apps/web/src/components/backing/backing-flow.tsx`;
 - `apps/web/tests/backing-demo-projection.test.mjs` (new); and constrained route/detail assertions.
 
-The delegated lane remains within `apps/web/src/components/backing/**` plus new backing-specific tests. No schema, allocation, directory, command admission, ATS candidate, package, lockfile, or generic wallet path is in scope.
+The root also reserves `packages/backend/convex/schema.ts`, `packages/backend/src/ingress/authenticated-wallet-command-normalizer.ts`, `packages/backend/convex/external_prepare_command_admission.ts`, and their exact durable schema/normalizer/admission tests. The delegated lane is only `apps/web/src/components/backing/backing-state.ts` plus new `apps/web/tests/backing-demo-state.test.mjs`; it cannot overlap S26's backing-flow mount or route assertions. No allocation, directory, ATS candidate, package, lockfile, or generic wallet path is in scope.
 
 ## Contract
 
-The full local contract is [M56 Backing demo MVP](../../../specs/m56-backing-demo-mvp.md). The page may hand the existing flow only a server-derived fixed RiskScan OPEN projection plus configured treasury. A canonical MetaMask hash maps only to `payment_submitted` with the exact UI copy `Payment submitted — allocation pending.`
+The full local contract is [M56 Backing demo MVP](../../../specs/m56-backing-demo-mvp.md). The detail PageHeader receives exactly one third action `{ href: "/explore/riskscan/back", label: "Back this tool" }` and no data/mutation. The page may hand the existing flow only a server-derived fixed RiskScan OPEN projection plus configured treasury. A canonical MetaMask hash maps only to `payment_submitted` with the exact UI copy `Payment submitted — allocation pending.`

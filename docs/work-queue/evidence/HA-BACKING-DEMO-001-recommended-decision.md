@@ -4,7 +4,7 @@ Authorize one dedicated BACKER authority and at most one explicit HBAR testnet t
 
 - chain 296 and `HEDERA_FUNDING` only;
 - named RiskScan subject/authority version only;
-- one server-configured treasury EVM address, never inferred from issuer, Factory, or x402 recipient;
+- one canonical `fundingTreasuryAddress` stored on the dedicated authority row and matched by server projection/durable admission, never inferred from issuer, Factory, or x402 recipient;
 - Human Ops configures treasury outside tracked files, provisions/revokes authority, and executes the wallet transfer;
 - no `external.attachCandidate`, allocation, payout, refund, token ownership, retry, deployment, video, or submission authority.
 

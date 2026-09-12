@@ -10,6 +10,10 @@ The existing S18 funding flow receives one server-derived `OPEN` RiskScan offeri
 - Read `TOOL402_FUNDING_TREASURY_EVM_ADDRESS` only from a plain own server environment value and require a lower-case canonical EVM address.
 - Return `null` for absent, unavailable, malformed, non-OPEN, foreign, or misconfigured inputs. Never derive a treasury from issuer, Factory, x402, browser input, or a default.
 
+## Authority enforcement
+
+The durable BACKER authority record carries one canonical `fundingTreasuryAddress` in addition to its existing chain, signer, role, subject, and version fields. The authenticated normalizer and durable admission both require, for `HEDERA_FUNDING`, exact BACKER role, the named subject in `ownedSubjectPublicIds`, and exact equality of payload `expectedTarget` to that stored address. Missing, duplicate, malformed, foreign, or mismatched rows fail before any attempt/replay write. Other operations and ISSUER `external.attachCandidate` stay semantically unchanged.
+
 ## Human authority and exclusions
 
-Human Ops alone may provision one dedicated BACKER `commandAuthorities` row: chain 296, role BACKER, HEDERA_FUNDING only, named RiskScan subject/authority version, and the dedicated backer address; revoke it after the bounded rehearsal. This never broadens ISSUER `external.attachCandidate`. M56 adds no allocation, ownership, capacity, portfolio, payout, refund, revenue distribution, token transfer, durable contribution record, or server-side confirmation. Optional public Mirror proof is a separate successor and never blocks the MVP.
+Human Ops alone may provision one dedicated BACKER `commandAuthorities` row: chain 296, role BACKER, HEDERA_FUNDING only, named RiskScan subject/authority version, dedicated backer address, and canonical funding treasury; revoke it after the bounded rehearsal. This never broadens ISSUER `external.attachCandidate`. M56 adds no allocation, ownership, capacity, portfolio, payout, refund, revenue distribution, token transfer, durable contribution record, or server-side confirmation. Optional public Mirror proof is a separate successor and never blocks the MVP.
