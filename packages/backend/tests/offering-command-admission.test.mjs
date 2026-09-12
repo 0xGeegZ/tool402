@@ -930,6 +930,8 @@ implementedTest("registers the exact closed M40 admission, asset-seam, and publi
     "markAssetPending",
     "markAssetReady",
     "readAtsCreateReplayOffering",
+    "readSelectedAtsCreateConfigurationOffering",
+    "readSelectedAtsCreateCorroborationOffering",
   ]);
   for (const mutation of [
     offerings.admitOfferingCreate,

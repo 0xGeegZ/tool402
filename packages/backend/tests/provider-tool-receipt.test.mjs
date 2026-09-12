@@ -7,6 +7,10 @@ const sourceUrl = new URL("../src/ats/provider-tool-receipt.ts", import.meta.url
 const sourcePath = fileURLToPath(sourceUrl);
 const sourceExists = existsSync(sourcePath);
 const implementedTest = sourceExists ? test : test.skip;
+const expectationUrl = new URL("../src/ats/provider-tool-receipt-expectation.ts", import.meta.url);
+const expectationPath = fileURLToPath(expectationUrl);
+const expectationExists = existsSync(expectationPath);
+const implementedExpectationTest = expectationExists ? test : test.skip;
 
 const factory = "0xd1f118a40f3b02883d35909ef2517e7edd78379d";
 const sender = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
@@ -109,4 +113,45 @@ implementedTest("treats malformed and unavailable evidence as unknown rather tha
       { outcome: "UNKNOWN" },
     );
   }
+});
+
+test("requires the server-derived provider-tool receipt expectation before GREEN", () => {
+  assert.equal(expectationExists, true, `missing declared source module: ${expectationPath}`);
+});
+
+implementedExpectationTest("derives a distinct exact Factory calldata for equal-name selected tools", async () => {
+  const { createProviderToolAtsConfiguration } = await import("../src/ats/provider-tool-ats-configuration.ts");
+  const { createProviderToolReceiptExpectation } = await import(expectationUrl.href);
+  const first = createProviderToolAtsConfiguration({
+    toolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    subjectPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    title: "RiskScan",
+    canonicalSignerAddress: sender,
+  });
+  const second = createProviderToolAtsConfiguration({
+    toolPublicId: "tool_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    subjectPublicId: "tool_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    title: "RiskScan",
+    canonicalSignerAddress: sender,
+  });
+  const firstExpectation = createProviderToolReceiptExpectation({
+    configuration: first.atsCreateConfiguration,
+    transactionHash: hash,
+    asset,
+  });
+  const secondExpectation = createProviderToolReceiptExpectation({
+    configuration: second.atsCreateConfiguration,
+    transactionHash: hash,
+    asset,
+  });
+  assert.equal(firstExpectation.input.startsWith("0x"), true);
+  assert.notEqual(firstExpectation.input, secondExpectation.input);
+  assert.deepEqual(firstExpectation, expectation({ input: firstExpectation.input }));
+  const altered = structuredClone(first.atsCreateConfiguration);
+  altered.parameters.numberOfUnits = "999";
+  assert.deepEqual(createProviderToolReceiptExpectation({
+    configuration: altered,
+    transactionHash: hash,
+    asset,
+  }), firstExpectation, "rederivation ignores non-durable caller mutations");
 });

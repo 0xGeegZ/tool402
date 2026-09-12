@@ -229,6 +229,7 @@ test.before(async () => {
 implementedTest("exposes only closed internal receipt attachment, read-context, and outcome handlers", () => {
   assert.deepEqual(Object.keys(api).sort(), [
     "attachAtsCandidateReceipt",
+    "corroborateSelectedProviderToolAtsReceipt",
     "readAtsCandidateVerificationContext",
     "recordAtsCandidateOutcome",
   ]);
@@ -249,6 +250,11 @@ implementedTest("exposes only closed internal receipt attachment, read-context, 
   }));
   assert.deepEqual(JSON.parse(api.readAtsCandidateVerificationContext.exportArgs()), object({
     attemptId: id("externalPrepareCommandAttempts"),
+  }));
+  assert.deepEqual(JSON.parse(api.corroborateSelectedProviderToolAtsReceipt.exportArgs()), object({
+    attemptId: id("externalPrepareCommandAttempts"),
+    transaction: { type: "any" },
+    receipt: { type: "any" },
   }));
   assert.deepEqual(JSON.parse(api.recordAtsCandidateOutcome.exportArgs()), object({
     attemptId: id("externalPrepareCommandAttempts"),

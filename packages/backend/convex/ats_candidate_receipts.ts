@@ -22,9 +22,18 @@ import {
   isInt64,
   readStoredRecord,
 } from "../src/offering-command-admission.ts";
-import { readAtsCreateReplayOffering } from "./offerings.ts";
-import { isSelectedProviderToolSubject } from "./provider_tool_authority.ts";
+import {
+  readAtsCreateReplayOffering,
+  readSelectedAtsCreateCorroborationOffering,
+} from "./offerings.ts";
+import {
+  isSelectedProviderToolSubject,
+  resolveSelectedProviderToolSubject,
+} from "./provider_tool_authority.ts";
 import { claimAtsReceiptBinding } from "./provider_tool_receipts.ts";
+import { createProviderToolAtsConfiguration } from "../src/ats/provider-tool-ats-configuration.ts";
+import { createProviderToolReceiptExpectation } from "../src/ats/provider-tool-receipt-expectation.ts";
+import { verifyProviderToolReceipt } from "../src/ats/provider-tool-receipt.ts";
 import type schema from "./schema.ts";
 
 type AttemptState =
@@ -57,6 +66,7 @@ type StoredAttempt = {
   readonly network: "hedera:testnet";
   readonly chainId: 296;
   readonly expectedTarget: string;
+  readonly canonicalParametersHash: string;
   readonly idempotencyKey: string;
   readonly state: AttemptState;
   readonly candidateTransactionId?: string;
@@ -114,6 +124,7 @@ const attemptOptionalFields = [
 ] as const;
 const canonicalIdPattern = /^[A-Za-z0-9_-]{21}[AQgw]$/u;
 const canonicalSignerPattern = /^0x[0-9a-f]{40}$/u;
+const transactionHashPattern = /^0x[0-9a-f]{64}$/u;
 const mirrorTransactionIdPattern =
   /^0\.0\.(?:0|[1-9][0-9]*)-(?:0|[1-9][0-9]*)-[0-9]{9}$/u;
 const reconciliationInterval = 60_000n;
@@ -353,6 +364,7 @@ function readAttempt(input: unknown): StoredAttempt {
       network: payload.network,
       chainId: payload.chainId,
       expectedTarget: payload.expectedTarget,
+      canonicalParametersHash: payload.canonicalParametersHash,
       idempotencyKey: payload.idempotencyKey,
       state,
       ...(candidateTransactionId === undefined ? {} : { candidateTransactionId }),
@@ -361,6 +373,54 @@ function readAttempt(input: unknown): StoredAttempt {
   } catch {
     return reject();
   }
+}
+
+async function readSelectedProviderToolReceiptContext(
+  ctx: GenericMutationCtx<DataModelFromSchemaDefinition<typeof schema>>,
+  attempt: StoredAttempt,
+) {
+  if (
+    attempt.state !== "SUBMITTED"
+    || attempt.operationKind !== "ATS_CREATE"
+    || attempt.role !== "ISSUER"
+    || attempt.candidateTransactionId === undefined
+    || attempt.candidateEvmAddress === undefined
+    || !isSelectedProviderToolSubject(attempt.subjectPublicId)
+  ) return reject();
+  const authorities = await ctx.db.query("commandAuthorities")
+    .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+      query.eq("chainId", 296).eq("canonicalSignerAddress", attempt.canonicalSignerAddress)
+    ))
+    .take(2);
+  if (authorities.length !== 1) return reject();
+  const selected = await resolveSelectedProviderToolSubject(ctx, authorities[0], {
+    subjectPublicId: attempt.subjectPublicId,
+  });
+  const offerings = await ctx.db.query("offerings")
+    .withIndex("by_ats_attempt_id", (query) => query.eq("atsAttemptId", attempt.attemptId))
+    .take(2);
+  if (offerings.length !== 1) return reject();
+  const offering = readSelectedAtsCreateCorroborationOffering(offerings[0]);
+  if (
+    offering === null
+    || offering.atsAttemptId !== attempt.attemptId
+    || offering.offeringPublicId !== selected.offeringPublicId
+    || offering.subjectPublicId !== selected.subjectPublicId
+    || offering.canonicalSignerAddress !== attempt.canonicalSignerAddress
+    || offering.principalPublicId !== attempt.principalPublicId
+    || offering.authorityVersion !== attempt.authorityVersion
+  ) return reject();
+  const configuration = createProviderToolAtsConfiguration({
+    toolPublicId: selected.subjectPublicId,
+    subjectPublicId: offering.subjectPublicId,
+    title: offering.title,
+    canonicalSignerAddress: offering.canonicalSignerAddress,
+  });
+  if (
+    configuration.canonicalParametersHash !== attempt.canonicalParametersHash
+    || configuration.atsCreateConfiguration.expectedTarget !== attempt.expectedTarget
+  ) return reject();
+  return Object.freeze({ offering, configuration });
 }
 
 function revalidateReplayClaim(
@@ -402,6 +462,25 @@ function durableNow(): bigint {
   const now = Date.now();
   if (!Number.isSafeInteger(now) || now < 0) return reject();
   return BigInt(now);
+}
+
+function readCorroborationTransactionHash(input: unknown): string | null {
+  try {
+    if (input === null || typeof input !== "object" || Object.getPrototypeOf(input) !== Object.prototype) return null;
+    const descriptor = Reflect.getOwnPropertyDescriptor(input, "hash");
+    if (
+      descriptor === undefined
+      || descriptor.enumerable !== true
+      || !Object.hasOwn(descriptor, "value")
+      || Object.hasOwn(descriptor, "get")
+      || Object.hasOwn(descriptor, "set")
+      || typeof descriptor.value !== "string"
+      || !transactionHashPattern.test(descriptor.value)
+    ) return null;
+    return descriptor.value;
+  } catch {
+    return null;
+  }
 }
 
 function matchesAttachmentAttempt(attempt: StoredAttempt, attachment: Attachment): boolean {
@@ -630,6 +709,76 @@ export const readAtsCandidateVerificationContext = internalQuery({
         ? {}
         : { candidateEvmAddress: attempt.candidateEvmAddress }),
     };
+  },
+});
+
+/**
+ * Attach a selected tool's ATS asset only after a trusted caller supplies
+ * receipt documents matching the durable, server-rederived Factory calldata.
+ * This mutation intentionally performs no RPC work; a future reader may inject
+ * documents, while unavailable or malformed evidence leaves the offering pending.
+ */
+export const corroborateSelectedProviderToolAtsReceipt = internalMutation({
+  args: {
+    attemptId: v.id("externalPrepareCommandAttempts"),
+    transaction: v.any(),
+    receipt: v.any(),
+  },
+  returns: v.union(
+    v.object({ status: v.literal("CONFIRMED"), state: v.literal("READY") }),
+    v.object({ status: v.literal("ALREADY_CONFIRMED"), state: v.literal("READY") }),
+    v.object({ status: v.literal("REJECTED"), state: v.literal("ASSET_PENDING") }),
+    v.object({ status: v.literal("OUTCOME_UNKNOWN"), state: v.literal("ASSET_PENDING") }),
+  ),
+  handler: async (ctx, args) => {
+    const row = await ctx.db.get(args.attemptId);
+    if (row === null) return reject();
+    const attempt = readAttempt(row);
+    if (attempt.attemptId !== args.attemptId) return reject();
+    const context = await readSelectedProviderToolReceiptContext(ctx, attempt);
+    const transactionHash = readCorroborationTransactionHash(args.transaction);
+    if (transactionHash === null) {
+      return { status: "OUTCOME_UNKNOWN" as const, state: "ASSET_PENDING" as const };
+    }
+    const verification = verifyProviderToolReceipt({
+      expected: createProviderToolReceiptExpectation({
+        configuration: context.configuration.atsCreateConfiguration,
+        transactionHash,
+        asset: attempt.candidateEvmAddress as string,
+      }),
+      transaction: args.transaction,
+      receipt: args.receipt,
+    });
+    if (verification.outcome === "UNKNOWN") {
+      return { status: "OUTCOME_UNKNOWN" as const, state: "ASSET_PENDING" as const };
+    }
+    if (verification.outcome === "REJECTED") {
+      return { status: "REJECTED" as const, state: "ASSET_PENDING" as const };
+    }
+    if (context.offering.state === "READY") {
+      if (context.offering.atsAssetEvmAddress !== verification.asset) return reject();
+      await claimAtsReceiptBinding(ctx, {
+        offeringId: context.offering.offeringId,
+        offeringPublicId: context.offering.offeringPublicId,
+        attemptId: attempt.attemptId,
+        candidateTransactionId: attempt.candidateTransactionId as string,
+        assetEvmAddress: verification.asset,
+      });
+      return { status: "ALREADY_CONFIRMED" as const, state: "READY" as const };
+    }
+    await claimAtsReceiptBinding(ctx, {
+      offeringId: context.offering.offeringId,
+      offeringPublicId: context.offering.offeringPublicId,
+      attemptId: attempt.attemptId,
+      candidateTransactionId: attempt.candidateTransactionId as string,
+      assetEvmAddress: verification.asset,
+    });
+    await ctx.db.patch(context.offering.offeringId, {
+      state: "READY",
+      atsAssetEvmAddress: verification.asset,
+      updatedAt: durableNow(),
+    });
+    return { status: "CONFIRMED" as const, state: "READY" as const };
   },
 });
 

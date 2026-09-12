@@ -383,6 +383,46 @@ export function readSelectedAtsCreateConfigurationOffering(input: unknown): {
   }
 }
 
+/** Read the exact selected-tool offering that an ATS receipt may corroborate. */
+export function readSelectedAtsCreateCorroborationOffering(input: unknown): {
+  readonly offeringId: GenericId<"offerings">;
+  readonly offeringPublicId: string;
+  readonly subjectPublicId: string;
+  readonly canonicalSignerAddress: string;
+  readonly principalPublicId: string;
+  readonly authorityVersion: string;
+  readonly title: string;
+  readonly state: "ASSET_PENDING" | "READY";
+  readonly atsAttemptId: GenericId<"externalPrepareCommandAttempts">;
+  readonly atsAssetEvmAddress?: string;
+} | null {
+  try {
+    const offering = readSafeOffering(input);
+    if (
+      !isSelectedProviderToolSubject(offering.subjectPublicId)
+      || (offering.state !== "ASSET_PENDING" && offering.state !== "READY")
+      || offering.atsAttemptId === undefined
+      || offering.activeDirectoryVersionId !== undefined
+      || (offering.state === "ASSET_PENDING" && offering.atsAssetEvmAddress !== undefined)
+      || (offering.state === "READY" && offering.atsAssetEvmAddress === undefined)
+    ) return null;
+    return Object.freeze({
+      offeringId: offering.offeringId,
+      offeringPublicId: offering.offeringPublicId,
+      subjectPublicId: offering.subjectPublicId,
+      canonicalSignerAddress: offering.canonicalSignerAddress,
+      principalPublicId: offering.principalPublicId,
+      authorityVersion: offering.authorityVersion,
+      title: offering.narrative.title,
+      state: offering.state,
+      atsAttemptId: offering.atsAttemptId,
+      ...(offering.atsAssetEvmAddress === undefined ? {} : { atsAssetEvmAddress: offering.atsAssetEvmAddress }),
+    });
+  } catch {
+    return null;
+  }
+}
+
 function readSafePreparedAtsCreateAttempt(input: unknown) {
   const record = readStoredRecord(input, externalPrepareAttemptFields);
   if (
