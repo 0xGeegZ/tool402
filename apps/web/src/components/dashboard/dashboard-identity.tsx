@@ -10,12 +10,6 @@ const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep
 
 type IdentityState = "unverified" | "verified" | "unavailable";
 
-const worldTileClassNames: Record<IdentityState, string> = {
-  unverified: "bg-secondary text-primary",
-  verified: "bg-success text-success-foreground",
-  unavailable: "bg-secondary text-primary",
-};
-
 function shortenAddress(address: string): string {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
@@ -70,7 +64,7 @@ export async function DashboardIdentity() {
           </div>
 
           <div className="flex items-start gap-3 border-t border-border pt-4">
-            <span aria-hidden="true" className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-tile ${worldTileClassNames[state]}`}>
+            <span aria-hidden="true" className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-tile ${state !== "verified" ? "bg-secondary text-primary" : "bg-success text-success-foreground"}`}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="9" />
                 <path d="M3.6 9h16.8M3.6 15h16.8" />

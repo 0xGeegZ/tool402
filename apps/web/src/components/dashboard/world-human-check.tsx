@@ -65,7 +65,7 @@ export function WorldHumanCheck({ address }: { address: string }) {
       setAnnouncement(verified);
       return;
     }
-    setAnnouncement(response?.status === 503 ? unavailable : refused);
+    setAnnouncement(response !== null && response.status === 403 ? refused : unavailable);
     throw new Error("world_verification_failed");
   }
 
@@ -84,9 +84,7 @@ export function WorldHumanCheck({ address }: { address: string }) {
       <div>
         <Button size="sm" onClick={start}>Verify with World</Button>
       </div>
-      <div aria-live="polite">
-        {announcement === null ? null : <Status tone={announcement.tone}>{announcement.message}</Status>}
-      </div>
+      {announcement === null ? null : <Status tone={announcement.tone}>{announcement.message}</Status>}
       {request === null ? null : (
         <IDKitRequestWidget
           open={open}

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import {
   createHumanCookie,
   hasExpectedHumanSignal,
-  isCanonicalWorldAddress,
+  readWorldRequestContext,
   WORLD_HUMAN_COOKIE,
   WORLD_HUMAN_MAX_AGE_SECONDS,
   worldVerificationUrl,
@@ -19,12 +19,19 @@ function failureCode(body: string): string {
   return typeof code === "string" && code !== "" ? code : "unknown";
 }
 
+function isAcceptedByWorld(body: string): boolean {
+  let parsed: unknown;
+  try { parsed = JSON.parse(body); } catch { return false; }
+  return typeof parsed === "object" && parsed !== null && (parsed as { success?: unknown }).success === true;
+}
+
 export async function POST(request: Request) {
-  let body: unknown;
-  try { body = await request.json(); } catch { return NextResponse.json({ error: "invalid_request" }, { status: 400 }); }
-  if (typeof body !== "object" || body === null || Array.isArray(body)) return NextResponse.json({ error: "invalid_request" }, { status: 400 });
-  const { address, idkitResponse } = body as { address?: unknown; idkitResponse?: unknown };
-  if (!isCanonicalWorldAddress(address) || typeof idkitResponse !== "object" || idkitResponse === null || Array.isArray(idkitResponse)) return NextResponse.json({ error: "invalid_request" }, { status: 400 });
+  const context = await readWorldRequestContext(request, process.env);
+  if (context.kind === "unauthorized") return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (context.kind === "invalid") return NextResponse.json({ error: "invalid_request" }, { status: 400 });
+  const { address, body } = context;
+  const { idkitResponse } = body;
+  if (typeof idkitResponse !== "object" || idkitResponse === null || Array.isArray(idkitResponse)) return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   if (!hasExpectedHumanSignal(idkitResponse, address)) return NextResponse.json({ error: "world_verification_failed" }, { status: 403 });
 
   const url = worldVerificationUrl(process.env);
@@ -41,11 +48,12 @@ export async function POST(request: Request) {
     });
   } catch { return NextResponse.json({ error: "world_unavailable" }, { status: 502 }); }
 
-  if (!verified.ok) return NextResponse.json({ error: "world_verification_failed", code: failureCode(await verified.text()) }, { status: 403 });
+  const answer = await verified.text();
+  if (!verified.ok || !isAcceptedByWorld(answer)) return NextResponse.json({ error: "world_verification_failed", code: failureCode(answer) }, { status: 403 });
 
   const value = await createHumanCookie(address, process.env);
   if (value === null) return NextResponse.json({ error: "world_not_configured" }, { status: 503 });
   const response = NextResponse.json({ verified: true }, { headers: { "cache-control": "no-store" } });
-  response.cookies.set(WORLD_HUMAN_COOKIE, value, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: WORLD_HUMAN_MAX_AGE_SECONDS });
+  response.cookies.set(WORLD_HUMAN_COOKIE, value, { httpOnly: true, secure: true, sameSite: "strict", path: "/", maxAge: WORLD_HUMAN_MAX_AGE_SECONDS });
   return response;
 }

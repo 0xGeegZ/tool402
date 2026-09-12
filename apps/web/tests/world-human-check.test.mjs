@@ -7,6 +7,8 @@ import { runInNewContext } from "node:vm";
 import { hashSignal } from "@worldcoin/idkit/hashing";
 import typescript from "typescript";
 
+import { PROTECTED_JSON_MAX_BYTES } from "../src/lib/bounded-request-json.ts";
+
 const moduleUrl = new URL("../src/lib/world/human-check.ts", import.meta.url);
 const requestRouteUrl = new URL("../src/app/api/world/request/route.ts", import.meta.url);
 const verifyRouteUrl = new URL("../src/app/api/world/verify/route.ts", import.meta.url);
@@ -20,14 +22,38 @@ const implementedTest = declaredSourceUrls.every((url) => existsSync(url)) ? tes
 const address = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf";
 const otherAddress = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
 
+const authEnvironment = Object.freeze({
+  TOOL402_DASHBOARD_AUTH_ORIGIN: "https://tool402.example",
+  TOOL402_DASHBOARD_AUTH_SECRET: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+});
+
 const configuredEnvironment = Object.freeze({
   WORLD_APP_ID: "app_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   WORLD_RP_ID: "rp_aaaaaaaaaaaaaaaa",
   WORLD_RP_SIGNING_KEY: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   WORLD_ACTION: "issuer-publish",
   WORLD_ENVIRONMENT: "sandbox",
+  ...authEnvironment,
 });
 const configuredEnvironmentNames = Object.freeze(Object.keys(configuredEnvironment));
+
+const dashboardAuth = await import(new URL("../src/lib/dashboard-auth/dashboard-auth.ts", import.meta.url).href);
+
+async function sessionHeaderFor(sessionAddress) {
+  const challenge = await dashboardAuth.createChallenge({ address: sessionAddress, env: authEnvironment });
+  const verified = await dashboardAuth.verifyChallenge({
+    challengeCookie: challenge.cookie,
+    message: challenge.message,
+    signature: `0x${"a".repeat(130)}`,
+    origin: authEnvironment.TOOL402_DASHBOARD_AUTH_ORIGIN,
+    env: authEnvironment,
+  }, { verifyMessage: async () => true });
+  assert.equal(verified.kind, "authenticated");
+  return `__Host-tool402-dashboard-session=${verified.sessionCookie}`;
+}
+
+const sessionHeader = await sessionHeaderFor(address);
+const otherSessionHeader = await sessionHeaderFor(otherAddress);
 
 function boundResult(signalAddress) {
   return Object.freeze({
@@ -108,7 +134,7 @@ async function withCountedFetch(callback) {
   const calls = [];
   globalThis.fetch = async (url, init) => {
     calls.push({ url: String(url), init });
-    return new Response("{}", { status: 200, headers: { "content-type": "application/json" } });
+    return new Response(JSON.stringify({ success: true }), { status: 200, headers: { "content-type": "application/json" } });
   };
   try {
     return await callback(calls);
@@ -127,10 +153,13 @@ async function withWorldFailure(status, body, callback) {
   }
 }
 
-function requestOf(payload) {
-  return new Request("http://localhost/api/world/verify", {
+function requestOf(payload, options = {}) {
+  const { path = "/api/world/verify", cookie = sessionHeader } = options;
+  const headers = { "content-type": "application/json" };
+  if (cookie !== null) headers.cookie = cookie;
+  return new Request(`http://localhost${path}`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers,
     body: typeof payload === "string" ? payload : JSON.stringify(payload),
   });
 }
@@ -280,12 +309,8 @@ implementedTest("answers the unconfigured host with a closed 503 and never reach
   const verifyRoute = await loadRoute(verifyRouteUrl);
 
   await withCountedFetch(async (calls) => {
-    await withEnvironment({}, async () => {
-      const requestResponse = await requestRoute.POST(new Request("http://localhost/api/world/request", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ address }),
-      }));
+    await withEnvironment(authEnvironment, async () => {
+      const requestResponse = await requestRoute.POST(requestOf({ address }, { path: "/api/world/request" }));
       assert.equal(requestResponse.status, 503);
       assert.deepEqual(await requestResponse.json(), { error: "world_not_configured" });
 
@@ -305,9 +330,9 @@ implementedTest("rejects malformed request and verification payloads without for
   await withCountedFetch(async (calls) => {
     await withEnvironment(configuredEnvironment, async () => {
       const responses = [
-        await requestRoute.POST(new Request("http://localhost/api/world/request", { method: "POST", headers: { "content-type": "application/json" }, body: "null" })),
-        await requestRoute.POST(new Request("http://localhost/api/world/request", { method: "POST", headers: { "content-type": "application/json" }, body: "not json" })),
-        await requestRoute.POST(new Request("http://localhost/api/world/request", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ address: "0xNOT_AN_ADDRESS" }) })),
+        await requestRoute.POST(requestOf("null", { path: "/api/world/request" })),
+        await requestRoute.POST(requestOf("not json", { path: "/api/world/request" })),
+        await requestRoute.POST(requestOf(JSON.stringify({ address: "0xNOT_AN_ADDRESS" }), { path: "/api/world/request" })),
         await verifyRoute.POST(requestOf("null")),
         await verifyRoute.POST(requestOf({ address, idkitResponse: null })),
         await verifyRoute.POST(requestOf({ address: "0xNOT_AN_ADDRESS", idkitResponse: boundResult(address) })),
@@ -332,7 +357,7 @@ implementedTest("refuses a World result that is not bound to the requesting addr
       assert.deepEqual(await response.json(), { error: "world_verification_failed" });
       assert.equal(response.headers.get("set-cookie"), null);
     });
-    await withEnvironment({}, async () => {
+    await withEnvironment(authEnvironment, async () => {
       const response = await verifyRoute.POST(requestOf({ address, idkitResponse: { protocol_version: "4.0" } }));
       assert.equal(response.status, 403);
       assert.deepEqual(await response.json(), { error: "world_verification_failed" });
@@ -362,7 +387,7 @@ implementedTest("forwards the unmodified result to World v4 and emits only the b
       assert.match(cookie, /^tool402-world-human=/u);
       assert.match(cookie, /HttpOnly/iu);
       assert.match(cookie, /Secure/iu);
-      assert.match(cookie, /SameSite=Lax/iu);
+      assert.match(cookie, /SameSite=Strict/iu);
       assert.match(cookie, /Path=\/;/u);
       assert.match(cookie, new RegExp(`Max-Age=${world.WORLD_HUMAN_MAX_AGE_SECONDS}`, "u"));
       assert.doesNotMatch(cookie, /opaque-proof|opaque-nullifier|opaque-nonce/u);
@@ -498,4 +523,68 @@ implementedTest("mounts the identity card once on the dashboard before the campa
   assert.equal(page.indexOf("<DashboardIdentity") < page.indexOf("<DashboardCampaign"), true);
   assert.match(page, /title="Your campaign"/u);
   assert.match(page, /<DashboardCampaign\s*\/>/u);
+});
+
+implementedTest("serves only the signed-in browser and never an unauthenticated caller", async () => {
+  const requestRoute = await loadRoute(requestRouteUrl);
+  const verifyRoute = await loadRoute(verifyRouteUrl);
+  const idkitResponse = boundResult(address);
+
+  await withCountedFetch(async (calls) => {
+    await withEnvironment(configuredEnvironment, async () => {
+      const responses = [
+        await requestRoute.POST(requestOf({ address }, { path: "/api/world/request", cookie: null })),
+        await requestRoute.POST(requestOf({ address }, { path: "/api/world/request", cookie: otherSessionHeader })),
+        await requestRoute.POST(requestOf({ address }, { path: "/api/world/request", cookie: "__Host-tool402-dashboard-session=forged.value" })),
+        await verifyRoute.POST(requestOf({ address, idkitResponse }, { cookie: null })),
+        await verifyRoute.POST(requestOf({ address, idkitResponse }, { cookie: otherSessionHeader })),
+        await verifyRoute.POST(requestOf({ address, idkitResponse }, { cookie: "__Host-tool402-dashboard-session=forged.value" })),
+      ];
+
+      for (const response of responses) {
+        assert.equal(response.status, 401);
+        assert.deepEqual(await response.json(), { error: "unauthorized" });
+        assert.equal(response.headers.get("set-cookie"), null);
+      }
+    });
+    assert.equal(calls.length, 0);
+  });
+});
+
+implementedTest("refuses a verification body larger than the shared bound before forwarding", async () => {
+  const verifyRoute = await loadRoute(verifyRouteUrl);
+  const oversized = JSON.stringify({ address, idkitResponse: boundResult(address), padding: "a".repeat(PROTECTED_JSON_MAX_BYTES) });
+
+  await withCountedFetch(async (calls) => {
+    await withEnvironment(configuredEnvironment, async () => {
+      const response = await verifyRoute.POST(requestOf(oversized));
+
+      assert.equal(response.status, 400);
+      assert.deepEqual(await response.json(), { error: "invalid_request" });
+      assert.equal(response.headers.get("set-cookie"), null);
+    });
+    assert.equal(calls.length, 0);
+  });
+});
+
+implementedTest("mints the verified-human cookie only when World itself reports success", async () => {
+  const verifyRoute = await loadRoute(verifyRouteUrl);
+  const cases = [
+    ["{}", "unknown"],
+    [JSON.stringify({ success: false, code: "all_verifications_failed", results: [{ identifier: "selfie", code: "invalid_merkle_root" }] }), "invalid_merkle_root"],
+    [JSON.stringify({ success: "true" }), "unknown"],
+    ["not json at all", "unknown"],
+  ];
+
+  for (const [body, code] of cases) {
+    await withWorldFailure(200, body, async () => {
+      await withEnvironment(configuredEnvironment, async () => {
+        const response = await verifyRoute.POST(requestOf({ address, idkitResponse: boundResult(address) }));
+
+        assert.equal(response.status, 403, `accepted a World answer of ${body}`);
+        assert.deepEqual(await response.json(), { error: "world_verification_failed", code });
+        assert.equal(response.headers.get("set-cookie"), null);
+      });
+    });
+  }
 });

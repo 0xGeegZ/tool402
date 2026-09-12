@@ -34,6 +34,14 @@ would be indistinguishable from the key being absent.
 
 ## Request and verification contract
 
+Both World routes are for the signed-in browser only. Each one reads the
+dashboard session cookie first and returns `401 unauthorized` when there is no
+valid session, or when the session address is not the address in the body. The
+signing key must never become a public signature oracle, and a verification
+must belong to the account that is signed in. Each body is then read through
+the shared bounded JSON reader, so an oversized or malformed body returns
+`400 invalid_request` before anything is parsed or forwarded.
+
 `POST /api/world/request` accepts a JSON object carrying one canonical
 lowercase EVM `address`. It returns the public IDKit request values only: the
 app id, the action, the environment, and a five-minute RP context whose
@@ -52,7 +60,11 @@ bound to a different address proves nothing about this session.
 A result that passes the binding is forwarded byte-for-byte to
 `https://developer.world.org/api/v4/verify/{rp_id}` with a ten-second timeout.
 Response identifiers are never remapped. A transport failure returns
-`502 world_unavailable`. A non-2xx World response is read as text and parsed as
+`502 world_unavailable`. World's answer is read as text and accepted only when
+it parses as a JSON object whose top-level `success` is exactly `true`; a 2xx
+that does not say so is a failure like any other. The per-result `success`
+flags are deliberately not required, because no captured Selfie Check success
+body exists to confirm that they are present. A rejected answer is parsed as
 JSON where possible; the route returns `403` with a body of
 `{ "error": "world_verification_failed", "code": "<code>" }`, where the code is
 World's first per-result code, its top-level code, or `unknown`. The upstream
@@ -62,17 +74,19 @@ logged, or echoed anywhere.
 ## Cookie contract
 
 On World success only, the verify route sets one cookie named
-`tool402-world-human`: `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, and a
+`tool402-world-human`: `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/`, and a
 `Max-Age` of 2592000 seconds (30 days). Its value is a base64url payload and a
 base64url HMAC-SHA256 tag joined by a dot. The payload is
 `{ "v": 1, "address": <canonical address>, "verifiedAt": <epoch ms>,
 "expiresAt": <epoch ms> }` and the MAC key is derived by hashing
 `tool402-world-human-v1:<signing key>` with SHA-256.
 
-A read succeeds only when the MAC matches, the payload version is 1, the
+A read succeeds only when the MAC verifies, the payload version is 1, the
 address equals the address the caller asked about, and the expiry is in the
 future. Any other case reads as unverified. The cookie therefore binds the
 verification to one browser and one account, and it carries no proof material.
+The tag is checked with the Web Crypto HMAC verify operation rather than a
+string comparison, so a wrong tag costs the same time as a right one.
 
 ## UI contract
 
@@ -120,9 +134,14 @@ it renders is fixed copy in the shared `Status` primitive.
 | Verify route returned success | Success | Verified. Refreshing your identity card. |
 | Widget closed with no result | Warning | Verification did not complete. Try again when you are ready. |
 | Verify route returned 403 | Error | World could not verify this selfie check. Nothing was stored. |
-| Request or verify route returned 503 | Error | World verification is not available on this host. |
+| Any other verify route answer, including 401, 502 and 503 | Error | World verification is not available on this host. |
+| Request route answered anything but success | Error | World verification is not available on this host. |
 | IDKit error `credential_unavailable` or `feature_unavailable` | Error | Selfie Check is not enabled for this World app yet. |
 | Any other IDKit error | Error | World returned the error code, and nothing was stored. |
+
+Only the 403 row claims that World judged the check. A 502 means World was
+never reached and a 401 means the browser is no longer signed in, so neither
+may borrow World's verdict.
 
 The last two rows exist because the only runtime signal that Selfie Check is
 not enabled for an app is an IDKit error code. Discarding that code would make
@@ -133,7 +152,10 @@ a disabled feature flag indistinguishable from a user who changed their mind.
 Contract tests cover configuration fail-closed behaviour across each of the
 five names, canonical address validation, the signal binding, the cookie
 round trip including expiry, wrong-address and tampering cases, the verify
-route's forwarding and cookie emission, the shape of its 403 body, and source
+route's forwarding and cookie emission, the shape of its 403 body, the
+`401 unauthorized` answers for an absent, forged or foreign-address session,
+the bounded body limit, the refusal of a 2xx that does not report success, and
+source
 scans of the client component, the server card, and the dashboard page. No test
 asserts that a live World verification succeeds.
 
