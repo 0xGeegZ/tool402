@@ -30,7 +30,7 @@ test("loads one server-owned RiskScan backing projection before rendering the fl
   assert.match(page, /loadRiskScanBackingProjection\(process\.env, globalThis\.fetch\)/);
   assert.match(page, /<Suspense fallback=\{<BackingFlow projection=\{null\} \/>\}>/);
   assert.match(page, /<BackingFlow projection=\{projection\} \/>/);
-  assert.match(page, /href="\/explore\/riskscan"/);
+  assert.doesNotMatch(page, /href="\/explore\/riskscan"/);
 });
 
 test("consumes the shared wallet session, signature dialog, and relay without a second copy of any", async () => {

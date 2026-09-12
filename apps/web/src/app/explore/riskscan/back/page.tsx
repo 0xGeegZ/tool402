@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 
 import { BackingFlow } from "../../../../components/backing/backing-flow";
@@ -14,7 +13,6 @@ export default function RiskScanBackPage() {
     <main className="pb-6 sm:pb-12">
       <article className="mx-auto max-w-3xl space-y-8">
         <header className="space-y-3">
-          <Link href="/explore/riskscan" className="text-sm text-muted-foreground underline-offset-4 hover:underline">Back to RiskScan</Link>
           <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Back RiskScan</h1>
           <p className="text-lg leading-8 text-muted-foreground">
             Request note units and fund them from MetaMask on Hedera Testnet. The issuer allocates units separately.
