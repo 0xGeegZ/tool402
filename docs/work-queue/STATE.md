@@ -1,5 +1,10 @@
 # Runtime queue state
 
+- S43_RECORDING_DEMO_INTAKE: The owner requests a current six-screen recording
+  journey. S43-T010 is inbox-only under docs/specs/s43-recording-demo-journey.md;
+  it supersedes historical S11 copy only in its declared scope. No source is
+  changed before readiness and RED; wallet and deployment authority is unchanged.
+
 - S29_POST_ACCEPTANCE_REVIEW_FIX: The repository owner explicitly directs the
   two confirmed Provider deploy review corrections on PR #82. The root may
   amend only `provider-deploy-wizard.tsx`, `deploy-stage-signing.tsx`, the new

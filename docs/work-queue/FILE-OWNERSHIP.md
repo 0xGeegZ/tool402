@@ -1542,3 +1542,9 @@ reservations remain unchanged until root records release or exact scoped
 transfer/co-review, followed by independent readiness, activation, and RED
 acceptance. No source/test, authority provisioning, environment mutation,
 wallet, signature, transaction, deployment, or live-evidence action is active.
+
+S43-T010 reserves only its specification/card and root control during intake.
+Its proposed exact source/test boundary is in docs/specs/s43-recording-demo-journey.md.
+The sign-in page/component reservation is limited to the closed tour navigation
+handoff; S40 retains all auth protocol and session authority. No dashboard page,
+deploy logic, API, backend, dependency, or other active source is reserved.

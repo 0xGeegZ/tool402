@@ -309,3 +309,10 @@ Record only decisions made or adopted for this clean implementation repository. 
 | D-M51-010-006 | PUBLIC ADAPTER RED ACCEPTED AND GREEN AUTHORIZED | Scoped RED `2fde5b78a87c57a134a91a64455188a67c7dc0f6` changes only `packages/backend/tests/command-dispatch.test.mjs`; its one intended failure proves the existing public adapter rejects a valid canonical attempt reference after the query has succeeded, while malformed references remain rejected. Ruling: authorize only `packages/backend/convex/command_dispatch.ts` and its exact test for the minimal closed parser extension. It may validate and forward one canonical reference only; no other source, data mutation, wallet/provider request, signature, relay, authority, transaction, candidate, deployment, or live behavior is authorized. | M51-T010, S17-T010 | 2026-09-11T20:18:00Z |
 
 No decision is inferred from silence, model output, or a mock result.
+
+## D-S43-010-001 — Recording guide intake
+
+The owner requests demo consistency and existing form prefill reuse. Catalogue
+S43-T010 before activation, following docs/specs/s43-recording-demo-journey.md.
+This supersedes UI-S11 historical route/copy exclusions for the existing signed
+dashboard and campaign views only; it grants no external or wallet action.
