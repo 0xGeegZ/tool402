@@ -31,7 +31,7 @@ function requestId(): string | null {
   return typeof value === "string" ? value.toLowerCase() : null;
 }
 
-export function NewToolAction() {
+export function NewToolAction({ variant = "primary" }: { variant?: "primary" | "outline" } = {}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
@@ -77,7 +77,7 @@ export function NewToolAction() {
   }
 
   return <>
-    <button type="button" className={buttonVariants({ size: "lg", shape: "pill" })} onClick={() => { setOpen(true); setMessage(retryId === null ? null : "Retry the earlier creation request without creating another tool."); }}>
+    <button type="button" className={buttonVariants({ variant, size: "lg", shape: "pill" })} onClick={() => { setOpen(true); setMessage(retryId === null ? null : "Retry the earlier creation request without creating another tool."); }}>
       Deploy a new tool
     </button>
     {open ? <div role="dialog" aria-modal="true" aria-labelledby="new-tool-title" className="fixed inset-0 z-50 grid place-items-center bg-foreground/35 p-4" onKeyDown={(event) => {
