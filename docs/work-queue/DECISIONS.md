@@ -368,3 +368,16 @@ breakpoint, footer links, copy and routes. This layout-only amendment requires
 existing landing regression tests, desktop browser verification and independent
 review before acceptance. It grants no wallet, campaign, deployment, recording
 or merge authority.
+
+## D-S43-010-008 — Footer positioning acceptance
+
+Accept source `f248368f73035e1ffc2b96b76bbd253591caaf32`. It groups the
+existing decorative mascot with the Tool402 footer logo, retaining the asset,
+empty alternative text, `aria-hidden`, `sm` breakpoint, copy, links and routes.
+The first independent review identified a resting shadow inconsistent with the
+Flat Ledger Rule; the final source removes it. Landing checks pass 11/11,
+desktop browser verification shows the mascot beside the logo without overlap,
+and Next.js reports no compilation or runtime errors. A fresh independent
+final review is clean. Move S43 to 60-done and release the footer reservation;
+no merge, wallet, campaign, deployment, recording or live-action authority is
+granted.

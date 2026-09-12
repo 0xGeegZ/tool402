@@ -1,7 +1,7 @@
 # S43-T010 — Recording demo journey
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T040 accepted, S11-T010 accepted, S19-T010 accepted, S30-T010 accepted
 - Owner: root; current provided checkout, based on canonical main `5e863970935b074060b88d62a519102f2edfb9af`.
 - Human actions: real wallet signatures, funded actions, deployment and video recording remain human-owned.
@@ -76,3 +76,14 @@ owner-directed amendment. Existing asset, decorative alt text, visibility
 breakpoint, footer links, copy and routes remain unchanged. Existing landing
 tests, desktop browser verification and independent review are required before
 final acceptance. No merge or live-action authority is added.
+
+## Footer positioning acceptance
+
+Accept final source `f248368f73035e1ffc2b96b76bbd253591caaf32`. The mascot
+now shares the logo row in the first footer column without overlapping the
+introduction. The asset, empty alternative text, `aria-hidden`, `sm`
+breakpoint, copy, footer links and routes are unchanged. Landing checks pass
+11/11; desktop browser and Next.js checks are clear. The initial independent
+review identified the obsolete shadow, the final source removes it, and a fresh
+final independent review is clean. Release the footer reservation. Merge and
+all live actions remain human-owned.

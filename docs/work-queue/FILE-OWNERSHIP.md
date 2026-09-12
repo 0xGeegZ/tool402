@@ -1586,3 +1586,9 @@ the existing decorative mascot with the Tool402 logo. Existing asset, empty
 alternative text, breakpoint, footer links, copy, routes and all non-footer
 sources remain unchanged. Independent review and local browser verification
 precede release; no live-action authority is granted.
+
+D-S43-010-008 accepts footer source `f248368f` after landing checks, desktop
+browser/Next.js verification and a fresh independent final review. Release
+landing-footer.tsx; its existing asset, decorative accessibility, breakpoint,
+links, copy and routes remain unchanged. No merge, deployment or live-action
+authority is granted.

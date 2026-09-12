@@ -1,10 +1,12 @@
 # Runtime queue state
 
-- S43_FOOTER_POSITIONING: The owner requests moving the existing decorative
-  footer mascot beside the Tool402 logo in the first column. S43 reopens at
-  20-active for `landing-footer.tsx` only; links, copy, routes, visibility
-  breakpoint and all human-owned live actions remain unchanged. The local
-  specification records the layout-only scope and browser verification.
+- S43_FOOTER_POSITIONING_ACCEPTANCE: Source `f248368f` is accepted at 60-done.
+  The mascot is grouped with the Tool402 logo in the first footer column;
+  asset, decorative accessibility, breakpoint, links, copy and routes remain
+  unchanged. Landing checks pass 11/11; desktop browser and Next.js error
+  checks are clear. A review finding removed the now-unjustified shadow, and a
+  fresh independent final review is clean. The footer reservation is released;
+  no merge or live-action authority is added. See the S43 final-review record.
 
 - S43_FINAL_MAIN_INTEGRATION: Source `de30e189` on main `5f21fc90` is
   accepted at 60-done after the menu amendment and conflict resolution.

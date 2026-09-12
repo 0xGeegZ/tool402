@@ -125,3 +125,27 @@ diff against the main SHA above after all integration repairs:
 The root accepts the final source and releases all amended S43 reservations.
 Source review, local browser observations, hosted checks and live actions
 remain separate evidence boundaries.
+
+## Footer mascot positioning follow-up
+
+- Specification amendment: `46535182d40ed229137bf24c4ec8e5288507043d`.
+- Final source: `f248368f73035e1ffc2b96b76bbd253591caaf32`.
+
+The owner asked to group the existing decorative mascot with the Tool402 logo
+and first-column introduction. The footer now uses a shared flex row for logo
+and mascot instead of detached absolute placement. The local asset, empty alt
+text, `aria-hidden`, `sm` visibility breakpoint, footer copy, links and routes
+are unchanged. The mascot remains decorative and does not overlap the text.
+
+Desktop browser verification measured the logo at x=32 and mascot at x=121;
+the previous detached position was x=271. The browser shows the mascot beside
+the logo within the first column. Existing landing checks pass 11/11, and the
+Next.js development server reports no compilation, configuration or runtime
+errors. Whitespace validation passes.
+
+The first independent review identified the no-longer-needed resting shadow;
+the source removes it. A fresh final independent review at the final SHA found
+no actionable correctness, accessibility, responsive, style or specification
+issue, including compliance with the Flat Ledger Rule. The root accepts this
+layout-only follow-up and releases its single footer reservation. No wallet,
+campaign, transaction, deployment, recording or merge action was performed.
