@@ -22,8 +22,8 @@ external candidate attachment in this card.
 
 ## Proposed controls
 
-Any later readiness must establish the exact source/test reservation and a
-durable RED contract before implementation. It must retain S18's bigint money
+The active RED contract may establish the missing projection and presentation
+boundaries before implementation. It must retain S18's bigint money
 calculation, one user-clicked transfer, fresh account/chain read, shared
 signature/relay path, canonical transaction hash display, no automatic retry,
 and the truthful allocation-pending terminal state.

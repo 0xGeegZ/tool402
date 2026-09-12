@@ -14,6 +14,12 @@
   the exact RED contract before any source or test change; human runtime and
   live-action authority remain unchanged.
 
+- M56_RISKSCAN_BACKING_DEMO_MVP_ACTIVATION: M56-T010 moves from 10-ready to
+  20-active solely for a focused RED executable contract. Production source,
+  treasury configuration, BACKER authority, wallet action, signature,
+  transfer, deployment, and live proof remain prohibited until the RED result
+  is accepted.
+
 - S43_FOOTER_POSITIONING_ACCEPTANCE: Source `f248368f` is accepted at 60-done.
   The mascot is grouped with the Tool402 logo in the first footer column;
   asset, decorative accessibility, breakpoint, links, copy and routes remain

@@ -20,15 +20,17 @@ test("declares exactly the three backing source paths", () => {
   assert.deepEqual(sourcePaths.map((path) => existsSync(join(appRoot, path))), [true, true, true]);
 });
 
-test("renders one server route that hands the flow no projection of its own", async () => {
+test("loads one server-owned RiskScan backing projection before rendering the flow", async () => {
   const page = await readAppFile("src/app/explore/riskscan/back/page.tsx");
 
-  assert.doesNotMatch(page, /["']use client["']|\bfetch\s*\(|process\.env|readProviderProjections|offering-projection/);
+  assert.doesNotMatch(page, /["']use client["']|\bfetch\s*\(|TOOL402_FUNDING_EVM_ADDRESS/);
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
   assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
   assert.match(page, /import \{ BackingFlow \} from "[./]+\/components\/backing\/backing-flow"/);
-  assert.match(page, /<BackingFlow projection=\{null\} \/>/);
-  assert.doesNotMatch(page, /<Link\b|href=/);
+  assert.match(page, /loadRiskScanBackingProjection\(process\.env, globalThis\.fetch\)/);
+  assert.match(page, /<Suspense fallback=\{<BackingFlow projection=\{null\} \/>\}>/);
+  assert.match(page, /<BackingFlow projection=\{projection\} \/>/);
+  assert.match(page, /href="\/explore\/riskscan"/);
 });
 
 test("consumes the shared wallet session, signature dialog, and relay without a second copy of any", async () => {
@@ -39,6 +41,9 @@ test("consumes the shared wallet session, signature dialog, and relay without a 
   assert.match(flow, /import \{ SignatureDialog, type SignatureResult \} from "\.\.\/wallet\/signature-dialog"/);
   assert.equal((flow.match(/useWalletSession\(\)/g) ?? []).length, 1);
   assert.equal((flow.match(/<SignatureDialog\b/g) ?? []).length, 1);
+  assert.match(flow, /useRef/);
+  assert.match(flow, /isCurrentBackingIntent/);
+  assert.match(flow, /sendingRef\.current/);
   assert.doesNotMatch(flow, /approvedIssuerAddress|canonicalSignerAddress/);
   assert.doesNotMatch(flow, /discoverMetaMaskProvider|eth_requestAccounts|wallet_switchEthereumChain|eth_signTypedData|signCommand|createUnsignedCommand|relayCommandBody|\/api\/commands|createCommandNonce|keccak/);
   assert.equal((flow.match(/eth_sendTransaction/g) ?? []).length, 0);
@@ -60,6 +65,7 @@ test("renders the fixed copy and none of the canvas's sample or simulation conte
   assert.match(flow, /name="acknowledgement"/);
   assert.match(flow, /aria-live="polite"/);
   assert.match(flow, /disabled=\{/);
+  assert.match(flow, /Payment submitted — allocation pending\./);
 
   assert.doesNotMatch(sources, /Units you hold|View verified evidence|Live testnet|\(sample\)|sample|simulat|hashscan|units remain|raised|funded|balance|0\.0\.\d/i);
   assert.doesNotMatch(sources, /Connected\b/);

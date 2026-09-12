@@ -23,7 +23,9 @@ test("locks the read-only RiskScan detail boundary", async () => {
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
   assert.equal((detail.match(/<PageHeader\b/g) ?? []).length, 1);
-  assert.match(page, /<RiskScanDetail\s*\/>/);
+  assert.match(page, /loadRiskScanBackingProjection\(process\.env, globalThis\.fetch\)/);
+  assert.match(page, /<Suspense fallback=\{<RiskScanDetail projection=\{null\} \/>\}>/);
+  assert.match(page, /<RiskScanDetail projection=\{projection\}\s*\/>/);
   assert.match(detail, /<PageHeader\b[^>]*title="RiskScan"/);
   assert.match(detail, /lg:grid-cols-\[minmax\(0,1fr\)_22rem\]/);
   assert.match(detail, />\s*Current boundary\s*</);
@@ -41,12 +43,14 @@ test("locks the read-only RiskScan detail boundary", async () => {
   assert.match(discoveryCard, /href=["']\/explore\/riskscan["']/);
 
   const hrefs = [...sources.matchAll(/href=["']([^"']+)["']/g)].map(([, href]) => href);
-  assert.deepEqual(hrefs, ["/explore", "/explore/riskscan"]);
+  assert.deepEqual(hrefs, ["/explore", "/explore/riskscan/back", "/explore/riskscan"]);
   assert.match(detail, /href: "\/explore\/riskscan\/try", label: "Try RiskScan"/);
   assert.match(detail, /href: "\/explore\/riskscan\/tool-loop", label: "Explore RiskScan ToolLoop"/);
+  assert.match(detail, /Back this tool/);
+  assert.match(detail, /projection !== null/);
   assert.doesNotMatch(sources, /<(?:form|button|input|select|textarea)\b/i);
   assert.doesNotMatch(sources, /\bon[A-Z][A-Za-z]+\s*=|\baction\s*=/);
-  assert.doesNotMatch(sources, /["']use client["']|fetch\(|process\.env\b/i);
+  assert.doesNotMatch(`${detail}\n${discoveryCard}`, /["']use client["']|fetch\(|process\.env\b/i);
   assert.doesNotMatch(sources, /https?:\/\/|mailto:|target=/i);
   assert.doesNotMatch(sources, /\$\d|\b(?:price|cost|fee|amount)\b|\b(?:USD|USDC|EUR|ETH)\s*\d|\b\d+(?:\.\d+)?\s*(?:USD|USDC|EUR|ETH)\b/iu);
   assert.doesNotMatch(sources, /\b(?:request will be accepted|request accepted|guaranteed acceptance|submit request)\b/i);
