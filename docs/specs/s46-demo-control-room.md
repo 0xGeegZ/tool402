@@ -1,8 +1,8 @@
-# S45 demo control room
+# S46 demo control room
 
 ## Delivery boundary
 
-S45 turns the existing demo route and tour query presentation into the practical
+S46 turns the existing demo route and tour query presentation into the practical
 recording guide. It uses only existing routes and public or read-only truth
 already available to the browser. It pre-fills only the existing ToolLoop sample
 and Provider fixture; it never submits, signs, acknowledges, sends, fetches
@@ -53,7 +53,7 @@ safe public evidence seam.
 
 ## Owned paths
 
-S45 owns this specification, its queue/root records, the existing demo page,
+S46 owns this specification, its queue/root records, the existing demo page,
 guided-step, tour-bar, and tour-navigation sources, new demo-only client
 controls and pure HashScan-link utility, the existing guided/tour tests, and
 new focused demo-control-room and HashScan-link tests. It may preserve the

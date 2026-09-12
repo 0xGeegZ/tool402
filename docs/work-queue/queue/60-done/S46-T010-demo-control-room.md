@@ -1,14 +1,14 @@
-# S45-T010 — Demo control room
+# S46-T010 — Demo control room
 
 - Tier: POLISH
 - Queue state: 60-done
 - Dependencies: S43-T010 accepted, B03-T020 accepted, M56 current route
   integrated; no M55, ATS, World, or human action is a source dependency.
 - Owner: root, accepted after the independently reviewed source delivery at
-  `b844ad60` on PR #109.
+  `59ff318a` on PR #109.
 
-The local specification is S45 demo control room at
-docs/specs/s45-demo-control-room.md. The implementation reserves only the
+The local specification is S46 demo control room at
+docs/specs/s46-demo-control-room.md. The implementation reserves only the
 declared demo sources, demo-only utility/controls, focused demo tests, release
 rehearsal runbook, and root queue records.
 
@@ -26,7 +26,7 @@ remain excluded.
 
 ## Acceptance
 
-The source delivery at `b844ad60` is accepted following full repository tests,
+The source delivery at `59ff318a` is accepted following full repository tests,
 typecheck, web build, queue validation, focused local browser rehearsal at
 desktop and 390px widths, and two fresh independent reviews. The control room
 does not create a wallet action, signature, payment, transaction, explorer
@@ -35,4 +35,4 @@ configuration, deployment, recording, or submission. Missing evidence remains
 required, optional, or unavailable; it is never presented as a success.
 
 The final verification record is
-docs/work-queue/evidence/S45-T010-final-review.md.
+docs/work-queue/evidence/S46-T010-final-review.md.

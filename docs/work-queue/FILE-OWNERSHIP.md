@@ -1671,7 +1671,7 @@ may compose public route interfaces but does not own Provider, wallet, M55,
 M56/backing, ATS, World, Agent, API, backend or deployment source. No live
 action authority is granted.
 
-S45-T010 additionally reserves only the redirect query handling in
+S46-T010 additionally reserves only the redirect query handling in
 apps/web/src/app/sign-in/page.tsx and
 apps/web/src/components/auth/metamask-dashboard-sign-in.tsx, with matching
 apps/web/tests/dashboard-auth.test.mjs assertions. It may carry only a known

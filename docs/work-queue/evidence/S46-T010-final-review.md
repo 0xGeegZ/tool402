@@ -1,11 +1,11 @@
-# S45-T010 final review
+# S46-T010 final review
 
 ## Accepted source
 
-- Source delivery: `b844ad60` (`fix: Clarify evidence-gated tour transitions`)
+- Source delivery: `59ff318a` (`fix: Clarify evidence-gated tour transitions`)
 - Integration base: `origin/main` at
-  `00b80850b2eb839638eb851b7942241905be592c`
-- Scope: [S45 specification](../../specs/s45-demo-control-room.md), the S45
+  `f080d5b2a637a261758e40be720b9723b2595c28`
+- Scope: [S46 specification](../../specs/s46-demo-control-room.md), the S46
   completion card, the `/demo` control room and its explicitly reserved
   redirect-query handoff.
 
