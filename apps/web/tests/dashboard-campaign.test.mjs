@@ -7,12 +7,22 @@ import { fileURLToPath } from "node:url";
 const sourceUrl = new URL("../src/lib/dashboard-campaign.ts", import.meta.url);
 const sourcePath = fileURLToPath(sourceUrl);
 const componentUrl = new URL("../src/components/dashboard/dashboard-campaign.tsx", import.meta.url);
+const dashboardPageUrl = new URL("../src/app/dashboard/page.tsx", import.meta.url);
 const implementedTest = existsSync(sourcePath) ? test : test.skip;
 
 // This fails if the dashboard loses the ownership adapter that keeps another
 // wallet's durable campaign out of a valid signed session.
 test("requires the declared S42 dashboard campaign ownership adapter before GREEN", () => {
   assert.equal(existsSync(sourcePath), true, `missing declared S42 source path: ${sourcePath}`);
+});
+
+test("renders the signed campaign surface instead of the historical guest workspace", async () => {
+  const page = await readFile(dashboardPageUrl, "utf8");
+
+  assert.doesNotMatch(page, /WorkspaceShell/u);
+  assert.match(page, /title="Your campaign"/u);
+  assert.match(page, /associated with your signed dashboard session/u);
+  assert.match(page, /<DashboardCampaign\s*\/>/u);
 });
 
 implementedTest("returns the current RiskScan campaign only for its exact canonical session signer", async () => {
@@ -60,4 +70,14 @@ implementedTest("uses the campaign ownership allowlist as the dashboard projecti
   const source = await readFile(componentUrl, "utf8");
   assert.match(source, /import\s*\{\s*readDashboardCampaign\s*,\s*riskScanOfferingPublicId\s*\}/u);
   assert.doesNotMatch(source, /const\s+riskScanOfferingPublicId\s*=/u);
+});
+
+implementedTest("renders one local empty card when the signed session has no campaign", async () => {
+  const source = await readFile(componentUrl, "utf8");
+
+  assert.match(source, /if\s*\(campaign\s*===\s*null\)\s*\{\s*return\s*\(\s*<section[^>]*aria-label="No campaign yet"/su);
+  assert.match(source, />No campaign yet</u);
+  assert.match(source, /There is no RiskScan campaign associated with this signed dashboard session\./u);
+  assert.match(source, /href="\/provider\/deploy"[^>]*>Prepare a tool</u);
+  assert.match(source, /href="\/explore\/riskscan"[^>]*>Explore RiskScan</u);
 });

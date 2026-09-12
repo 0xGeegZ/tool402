@@ -170,11 +170,10 @@ test("maps only bounded native compatibility outcomes to fixed truthful presenta
   }
 });
 
-test("keeps the native compatibility page to one guest route, one client island, and constrained local navigation", async () => {
-  const [page, island, navigation] = await Promise.all([
+test("keeps the native compatibility page to one route and one client island", async () => {
+  const [page, island] = await Promise.all([
     readAppFile("src/app/dashboard/riskscan/compatibility/page.tsx"),
     readAppFile("src/components/riskscan/native-quote/riskscan-native-quote-compatibility.tsx"),
-    readAppFile("src/components/workspace/workspace-navigation.tsx"),
   ]);
 
   assert.doesNotMatch(page, /["']use client["']/);
@@ -198,10 +197,6 @@ test("keeps the native compatibility page to one guest route, one client island,
   assert.match(island, /nativeQuoteCompatibilityOutcomeMessage\(state\)/);
   assert.match(island, /<StatusRegion\b/);
   assert.equal((island.match(/\bevaluateDiscoveredRiskScanNativeQuote\b/g) ?? []).length, 2);
-
-  assert.match(navigation, /\{ href: "\/dashboard\/riskscan\/compatibility", label: "Native compatibility" \}/);
-  assert.match(navigation, /<Link\b[^>]*href=\{link\.href\}/);
-  assert.doesNotMatch(navigation, /<(?:a|button)\b/i);
 
   assert.doesNotMatch(island, /\/api\//);
   assert.doesNotMatch(island, /\b(?:Request|RequestInit|Headers)\b|\bfetch\s*\(/);

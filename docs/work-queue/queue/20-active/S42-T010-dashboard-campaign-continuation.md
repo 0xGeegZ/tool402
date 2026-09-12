@@ -28,6 +28,12 @@ The first slice intentionally covers the only current Provider campaign,
 state and offers the existing local Provider workspace as the continuation
 route. It does not claim that every possible future offering can be listed.
 
+The dashboard home replaces its historical guest workspace shell with this
+authenticated campaign surface. It does not mount the guest overview or local
+journey cards as a fallback. The obsolete unmounted workspace shell, overview,
+and navigation components, with their source-only historical tests, are
+removed. The existing child routes remain unchanged.
+
 The minimum implementation contract is
 `docs/specs/s42-dashboard-campaign-continuation.md`.
 
@@ -67,3 +73,34 @@ and that an absent, malformed, or different signer cannot produce one. S42 is
 read-only and server-rendered: no generic offering enumeration, address
 display, browser storage, wallet request, signature, command, relay,
 transaction, deployment, or external write is authorized.
+
+## Dynamic dashboard amendment
+
+The repository owner directs this follow-up after the durable campaign reader
+landed. The focused `dashboard-campaign.test.mjs` may define the contract that
+`/dashboard` describes the signed campaign surface. After that RED contract is
+observed, only `apps/web/src/app/dashboard/page.tsx` may remove the historical
+workspace mount. No child route, session/auth protocol, projection reader,
+wallet action, or external authority may change.
+
+## Obsolete workspace cleanup amendment
+
+The repository owner directs this follow-up after confirming that
+`WorkspaceShell`, `WorkspaceOverview`, and `WorkspaceNavigation` have no
+runtime consumer. The root may remove those three unmounted components and the
+obsolete tests that read their implementation directly. Existing child-route
+tests may stop reading `WorkspaceNavigation`, but must preserve their route and
+island assertions. This cleanup does not alter `/dashboard` behavior, local
+child routes, session/auth, projection reads, wallet actions, or external
+authority.
+
+## Empty campaign amendment
+
+The repository owner directs the signer-owned dashboard to render one static
+empty campaign card when the existing projection cannot yield that signer’s
+campaign. The focused `dashboard-campaign.test.mjs` may define this contract;
+after its expected RED result, only the already-reserved
+`apps/web/src/components/dashboard/dashboard-campaign.tsx` may render the
+card. It may use only the existing `/provider/deploy` and `/explore/riskscan`
+links. No new query, retry, wallet action, session behavior, provider command,
+or external authority is authorized.

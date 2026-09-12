@@ -149,12 +149,11 @@ test("assesses caller disclosures locally and maps only bounded preflight feedba
   );
 });
 
-test("keeps the guest preflight to one static route, one local Core island, and one constrained link", async () => {
-  const [page, island, state, navigation] = await Promise.all([
+test("keeps the preflight to one static route and one local Core island", async () => {
+  const [page, island, state] = await Promise.all([
     readAppFile("src/app/dashboard/riskscan/preflight/page.tsx"),
     readAppFile("src/components/riskscan/preflight/riskscan-quick-preflight.tsx"),
     readAppFile("src/components/riskscan/preflight/riskscan-quick-preflight-state.ts"),
-    readAppFile("src/components/workspace/workspace-navigation.tsx"),
   ]);
 
   assert.doesNotMatch(page, /["']use client["']/);
@@ -184,9 +183,6 @@ test("keeps the guest preflight to one static route, one local Core island, and 
   assert.equal((state.match(/\bassessRiskScanQuick\b/g) ?? []).length, 2);
   assert.match(state, /try\s*\{[\s\S]*?assessRiskScanQuick\(input\)/);
   assert.match(state, /catch \(error\)/);
-
-  assert.match(navigation, /\{ href: "\/dashboard\/riskscan\/preflight", label: "Quick preflight" \}/);
-  assert.match(navigation, /<Link\b[^>]*href=\{link\.href\}/);
 
   const localSources = [page, island, state].join("\n");
   assert.doesNotMatch(localSources, /@tool402\/agent|\/api\/|\bfetch\b|\b(?:RequestInit|Headers)\b|new URL\(/);

@@ -38,6 +38,26 @@
   `dashboard-campaign.ts`, its server component, dashboard page, and focused
   test. No other source/test path or live boundary expands.
 
+- S42_DYNAMIC_DASHBOARD_AMENDMENT: The repository owner directs the dashboard
+  home to stop mounting its historical Guest workspace now that S42 renders
+  the durable signer-owned campaign. The exact TDD scope is the S42 card,
+  specification, and `apps/web/tests/dashboard-campaign.test.mjs`, followed
+  by the dashboard page after its expected RED assertions. The obsolete
+  unmounted workspace shell, overview, navigation, and their source-only
+  historical tests are then removable; local child routes remain untouched.
+  No session, projection reader, wallet, signature, command, relay,
+  transaction, deployment, or external authority changes.
+
+- S42_EMPTY_CAMPAIGN_AMENDMENT: The repository owner directs one static empty
+  campaign card for a valid dashboard session when S42’s existing projection
+  cannot yield the signer-owned campaign. The focused
+  `apps/web/tests/dashboard-campaign.test.mjs` is active for its RED contract;
+  after the expected absence failure, only the existing
+  `apps/web/src/components/dashboard/dashboard-campaign.tsx` may render the
+  fixed local `/provider/deploy` and `/explore/riskscan` links. No additional
+  read, retry, session, wallet, command, transaction, deployment, or external
+  authority is authorized.
+
 - M54_STAGE_3_CANDIDATE_RECOVERY_ACTIVE: User-directed CORE_P0 correction.
   After a reload, the Provider screen must let a user explicitly revalidate a
   prior public Stage-B transaction hash and recover only a fully corroborated

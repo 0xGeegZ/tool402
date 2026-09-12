@@ -46,7 +46,7 @@ test("migrates only the declared headers and fixes the two page-level action set
     ["src/app/explore/page.tsx", "Explore tools"],
     ["src/app/explore/riskscan/try/page.tsx", "Try RiskScan"],
     ["src/app/explore/riskscan/tool-loop/page.tsx", "Run RiskScan through ToolLoop"],
-    ["src/app/dashboard/page.tsx", "Dashboard"],
+    ["src/app/dashboard/page.tsx", "Your campaign"],
     ["src/app/dashboard/riskscan/page.tsx", "RiskScan workbench"],
     ["src/app/dashboard/riskscan/preflight/page.tsx", "RiskScan Quick preflight"],
     ["src/app/dashboard/riskscan/compatibility/page.tsx", "Native quote compatibility"],

@@ -176,7 +176,7 @@ above after durable RED. The root reserves only the declared server boundary,
 the root header navigation slot, the existing local-navigation link list/prop,
 and matching assertions in `dashboard-auth.test.mjs`,
 `guided-demo-route.test.mjs`, `landing-explore.test.mjs`,
-`workspace-shell.test.mjs`, and `static-shell.test.mjs`. The root also keeps
+and `static-shell.test.mjs`. The root also keeps
 the existing `provider-deploy-visual-reconciliation.test.mjs` synchronized
 with the merged S26 header-session layout. It is staged after the
 server session reader and remains subject to the same no-wallet/no-live-action
