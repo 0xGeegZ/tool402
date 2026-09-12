@@ -82,3 +82,30 @@ M55 remains `20-active`. Tasks 2–6 still require their own documented scoped
 transfer/release, readiness, RED acceptance, implementation and review. This
 local Green acceptance is not browser proof of the new-tool button, a backend
 deployment, a wallet signature, or a testnet deployment.
+
+## PR #100 final merge-readiness addendum
+
+The final executable implementation reviewed for PR #100 is
+`ed28ce96a774f826169dfe3593eb4510eface037`, rebased on
+`origin/main` `f080d5b2a637a261758e40be720b9723b2595c28`. It preserves the
+Task 1 allocation/read acceptance above and includes the separately authorized
+Tasks 2–6 source slices; M55 remains `20-active` pending human-controlled
+runtime and live-testnet evidence.
+
+At that exact executable head under Node 22.21.1:
+
+- focused provider-tool and provider-session-ingress contracts passed 342/342;
+- focused web provider-tool, deployment-resume, signing-race, API, route, and
+  command contracts passed 481/481 (one existing skip);
+- `npm run typecheck`, `npm run lint`, `npm run queue:check`, and
+  `git diff --check` passed;
+- a fresh independent code/spec/security review found no actionable P1/P2.
+
+`npm test` on both that head and the exact current main has the same existing
+failure in `apps/web/tests/dashboard-auth.test.mjs`: the test rejects the
+`address` prop introduced by main's `DashboardSessionSync`. This PR does not
+touch that dashboard-auth path. `npm run build` on both heads stops first at
+the identical sandbox-only Turbopack error while processing `globals.css`
+(`creating new process` / `binding to a port` / `Operation not permitted`).
+Neither failure is attributed to this PR; a final Vercel Preview check remains
+separate deploy-environment evidence.
