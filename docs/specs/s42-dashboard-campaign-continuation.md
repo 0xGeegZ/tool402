@@ -20,10 +20,10 @@ configured, absent, unavailable, malformed, or belongs to another signer, the
 dashboard renders a static empty campaign card and does not substitute the
 historical guest workspace.
 
-The dashboard home is the authenticated campaign surface. Its existing guest
-workspace shell, overview, and local-journey cards are not mounted there. The
-legacy local child routes remain unchanged; this amendment neither removes nor
-changes those routes.
+The dashboard home is the authenticated campaign surface. Its obsolete guest
+workspace shell, overview, and local-journey navigation are removed rather
+than retained as unmounted code. The legacy local child routes remain
+unchanged; this amendment neither removes nor changes those routes.
 
 ## Empty campaign state
 

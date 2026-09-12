@@ -30,8 +30,9 @@ route. It does not claim that every possible future offering can be listed.
 
 The dashboard home replaces its historical guest workspace shell with this
 authenticated campaign surface. It does not mount the guest overview or local
-journey cards as a fallback. The existing child routes and their historical
-components remain unchanged.
+journey cards as a fallback. The obsolete unmounted workspace shell, overview,
+and navigation components, with their source-only historical tests, are
+removed. The existing child routes remain unchanged.
 
 The minimum implementation contract is
 `docs/specs/s42-dashboard-campaign-continuation.md`.
@@ -76,14 +77,22 @@ transaction, deployment, or external write is authorized.
 ## Dynamic dashboard amendment
 
 The repository owner directs this follow-up after the durable campaign reader
-landed. The focused `dashboard-campaign.test.mjs`, its matching page assertions
-in `dashboard-workspace-reconciliation.test.mjs`, and the page-independent
-legacy assertions in `workspace-shell.test.mjs` may define the contract that
-`/dashboard` does not import or render `WorkspaceShell` and describes the
-signed campaign surface. After that RED contract is observed, only
-`apps/web/src/app/dashboard/page.tsx` may remove that import and mount.
-No workspace component, child route, session/auth protocol, projection reader,
+landed. The focused `dashboard-campaign.test.mjs` may define the contract that
+`/dashboard` describes the signed campaign surface. After that RED contract is
+observed, only `apps/web/src/app/dashboard/page.tsx` may remove the historical
+workspace mount. No child route, session/auth protocol, projection reader,
 wallet action, or external authority may change.
+
+## Obsolete workspace cleanup amendment
+
+The repository owner directs this follow-up after confirming that
+`WorkspaceShell`, `WorkspaceOverview`, and `WorkspaceNavigation` have no
+runtime consumer. The root may remove those three unmounted components and the
+obsolete tests that read their implementation directly. Existing child-route
+tests may stop reading `WorkspaceNavigation`, but must preserve their route and
+island assertions. This cleanup does not alter `/dashboard` behavior, local
+child routes, session/auth, projection reads, wallet actions, or external
+authority.
 
 ## Empty campaign amendment
 

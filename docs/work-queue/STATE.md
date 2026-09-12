@@ -40,13 +40,12 @@
 
 - S42_DYNAMIC_DASHBOARD_AMENDMENT: The repository owner directs the dashboard
   home to stop mounting its historical Guest workspace now that S42 renders
-  the durable signer-owned campaign. The exact TDD scope is the S42 card and
-  specification, `apps/web/tests/dashboard-campaign.test.mjs`, and the
-  matching page assertions in `apps/web/tests/dashboard-workspace-reconciliation.test.mjs`,
-  and its page-independent legacy assertions in `apps/web/tests/workspace-shell.test.mjs`,
-  and then only `apps/web/src/app/dashboard/page.tsx` after their expected RED
-  assertions. The legacy workspace components and child routes remain
-  untouched. No session, projection reader, wallet, signature, command, relay,
+  the durable signer-owned campaign. The exact TDD scope is the S42 card,
+  specification, and `apps/web/tests/dashboard-campaign.test.mjs`, followed
+  by the dashboard page after its expected RED assertions. The obsolete
+  unmounted workspace shell, overview, navigation, and their source-only
+  historical tests are then removable; local child routes remain untouched.
+  No session, projection reader, wallet, signature, command, relay,
   transaction, deployment, or external authority changes.
 
 - S42_EMPTY_CAMPAIGN_AMENDMENT: The repository owner directs one static empty
