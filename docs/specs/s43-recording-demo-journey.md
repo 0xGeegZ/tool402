@@ -87,3 +87,8 @@ Update existing assertions before source, observe RED, then verify focused
 Web tests, typecheck, desktop/mobile navigation and footer accessibility.
 Obtain two fresh clean independent reviews for the resulting module head.
 The draft PR is authorized; merging and production deployment are not requested.
+
+The complete Web run found one additional historical assertion requiring Docs
+in the header. The same amendment permits replacing only that assertion in
+`apps/web/tests/public-documentation.test.mjs` with the existing footer Docs
+link requirement. Documentation content and routes stay unchanged.

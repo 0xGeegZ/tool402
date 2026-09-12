@@ -48,3 +48,7 @@ menu. The specification amendment reserves only the shared navigation list
 and its two existing test files. Reopen for this bounded RED/GREEN amendment;
 prior source acceptance is historical. Footer links and auth behavior remain
 unchanged. Draft publication is explicitly authorized, without merge authority.
+
+The full Web run at `2153f86f` passed 435 tests, skipped one historical check,
+and failed only public-documentation's obsolete Docs-in-header assertion.
+The specification admits its replacement with the preserved footer link.
