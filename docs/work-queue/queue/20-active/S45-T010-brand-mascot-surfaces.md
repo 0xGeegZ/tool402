@@ -13,7 +13,7 @@
 
 The exact contract is defined by [`s45-brand-mascot-surfaces`](../../../specs/s45-brand-mascot-surfaces.md) and [`UI-S45`](../../../ui/UI-S45.md).
 
-S45 owns its five PNG assets, one new shared loading component, the new root loading fallback, the nine existing loading files only for adding the shared cue without changing their skeleton regions, the existing Demo page header, the existing Explore catalogue only for its final provider CTA, the existing Provider deploy wizard only inside `ReviewStep`, the existing Dashboard campaign component only for its empty-state illustration, the focused S45 test, and the exact superseded Explore/loading assertions required by those additions.
+S45 owns its five PNG assets, one new shared loading component, the new root loading fallback, the eight non-Dashboard loading files only for adding the shared cue, the Dashboard loading file only for removing that cue and making its existing regions full width without reordering them, the existing Demo page header, the existing Explore catalogue only for its final provider CTA, the existing Provider deploy wizard only inside `ReviewStep`, the existing Dashboard campaign component only for its empty-state illustration, the focused S45 test, and the exact superseded Explore/loading assertions required by those additions.
 
 ## Intake
 
@@ -40,6 +40,13 @@ to the existing signed-dashboard empty card. The focused contract extension
 was observed RED for only the missing fifth asset and Dashboard mount before
 the local GREEN implementation. This refinement changes no session, ownership,
 wallet, campaign, link, or runtime behavior.
+
+## Dashboard loading refinement
+
+The human owner directs `/dashboard` to remove the compact mascot loader and
+use the full available route width for each existing skeleton region. The
+region order, static-only boundary, session, ownership, campaign, wallet, and
+runtime behavior remain unchanged.
 
 ## Boundary
 

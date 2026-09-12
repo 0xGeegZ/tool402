@@ -60,12 +60,13 @@ links, session gate, and campaign behavior remain unchanged.
 ### Route loading
 
 A shared `BrandRouteLoader` is mounted before the existing skeleton regions in
-all nine accepted route loading files plus a root loading fallback for routes
-without a nested loader. The component exposes immediate screen-reader loading
-copy but delays only its visible compact mascot card by 300 milliseconds. If
-the route resolves sooner, cleanup cancels the timer and the card never
-appears. Existing route-specific skeleton region order and dimensions remain
-unchanged.
+the eight non-Dashboard accepted route loading files plus a root loading
+fallback for routes without a nested loader. The component exposes immediate
+screen-reader loading copy but delays only its visible compact mascot card by
+300 milliseconds. If the route resolves sooner, cleanup cancels the timer and
+the card never appears. `/dashboard` intentionally renders no mascot cue: its
+four existing skeleton regions remain in the same order and each occupies the
+available route width.
 
 ## Accessibility and responsive rules
 

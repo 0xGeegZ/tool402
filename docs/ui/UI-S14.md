@@ -41,6 +41,10 @@ The loaders for `/explore/riskscan`, `/explore/riskscan/try`,
 element must therefore carry both `mx-auto` and `max-w-3xl`; a left-aligned
 placeholder would create a visible horizontal jump on wide screens.
 
+The `/dashboard` loader mirrors the full-width signed-dashboard card area: all
+four of its region wrappers must carry `w-full` and no `max-w-*` constraint.
+It intentionally does not mount the optional S45 mascot cue.
+
 The root route `/` is deliberately excluded: it is a static landing page with
 nothing to await, so a skeleton there would flash a placeholder over content
 that is already ready.

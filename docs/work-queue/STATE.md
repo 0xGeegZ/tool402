@@ -1,5 +1,12 @@
 # Runtime queue state
 
+- S45_DASHBOARD_LOADING_REFINEMENT: The owner authorizes only the
+  `/dashboard` loading fallback to remove its compact mascot cue and give its
+  four existing skeleton regions the full available width. Existing region
+  order and every session, ownership, campaign, wallet, and runtime boundary
+  remain unchanged. The S45 specification, manifest, ledger, active card, and
+  focused loading contracts are amended before RED.
+
 - S45_HUMAN_VISUAL_REFINEMENT: At PR source `6532a880`, the owner approves the
   exact Tool402 lockup on the existing Explore and deploy document props plus
   one transparent seated purple mascot in the signed-dashboard empty card.

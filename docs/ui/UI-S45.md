@@ -15,8 +15,9 @@ and meaningful route wait.
    `ReviewStep`.
 4. `/dashboard`: one decorative seated mascot inside the existing empty card.
 5. Loading: one shared compact mascot cue, visually revealed after 300 ms,
-   mounted before each unchanged route-specific skeleton sequence and used by
-   the root fallback.
+   mounted before each non-Dashboard route-specific skeleton sequence and used
+   by the root fallback. `/dashboard` intentionally has no cue and keeps a
+   full-width skeleton.
 
 ## Visual contract
 
