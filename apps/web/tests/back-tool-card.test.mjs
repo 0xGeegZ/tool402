@@ -38,6 +38,7 @@ test("renders the open variant's fixed copy from the accepted formatters", async
   assert.match(card, /\["Unit price", formatHbar\(offering\.terms\.noteUnitPriceTinybars\)\]/);
   assert.match(card, /\["Revenue share", `\$\{formatShare\(offering\.terms\.reserveShareBps\)\}%`\]/);
   assert.match(card, /\["Maturity", offering\.maturityAt\]/);
+  assert.match(card, /<Link[^>]*>\s*Back \{tool\}/);
   assert.match(card, /MetaMask · Hedera Testnet · one signature, one HBAR transfer\./);
   assert.match(card, /Terms \{offering\.terms\.version\} · not a projected return\. No payout amount or timeline is promised\./);
   assert.doesNotMatch(card, /Number\(|parseFloat|parseInt|toFixed/);
@@ -81,7 +82,7 @@ test("both detail asides mount the card once, first, with no projection", async 
     assert.match(detail, /<aside[^>]*>\s*<BackToolCard\b/, path);
   }
 
-  assert.match(riskscan, /<BackToolCard tool="RiskScan" href=\{"\/explore\/riskscan\/back"\} projection=\{null\} \/>/);
+  assert.match(riskscan, /<BackToolCard tool="RiskScan" href=\{?"\/explore\/riskscan\/back"\}? projection=\{null\} \/>/);
   assert.match(entitycheck, /<BackToolCard tool="EntityCheck France" projection=\{null\} \/>/);
   assert.doesNotMatch(entitycheck, /<BackToolCard[^>]*href/);
 });
