@@ -658,12 +658,19 @@ implementedTest("recovers a confirmed Hedera long-zero issuer result", async () 
 
 implementedTest("returns no candidate for an absent public transaction without using MetaMask", async () => {
   const provider = fakeProvider();
-  const mirror = responseQueue([new Response("", { status: 404 })]);
+  const mirror = responseQueue([
+    new Response("", { status: 404 }),
+    new Response("", { status: 404 }),
+    new Response("", { status: 404 }),
+  ]);
+  const waits = [];
 
-  const outcome = await createBridge(api, provider, mirror.fetch, { wait: async () => {} }).recover(transactionHash);
+  const outcome = await createBridge(api, provider, mirror.fetch, async (milliseconds) => { waits.push(milliseconds); }).recover(transactionHash);
 
   assert.deepEqual(outcome, { kind: "submission_unknown", transactionHash });
   assert.deepEqual(provider.calls, []);
+  assert.equal(mirror.calls.length, 3, "an absent public transaction uses every bounded Mirror observation");
+  assert.deepEqual(waits, [2000, 2000], "only the first two absent observations wait before the final result");
 });
 
 implementedTest("bounds all Mirror cycles to one five-second deadline through the injected timing seam", async () => {

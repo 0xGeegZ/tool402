@@ -57,8 +57,9 @@ export function AtsCreateAction({
     sessionChanged.current = true;
   }
 
-  const enabled = stageTwoDone && session !== null && !hasCandidate && !terminalOutcome && !sessionChanged.current && controller.current !== null;
-  const recoveryEnabled = stageTwoDone && session !== null && !hasCandidate && !recoveryPending && !sessionChanged.current && controller.current !== null && isCanonicalStageBTransactionHash(recoveryHash);
+  const candidateActionAvailable = stageTwoDone && session !== null && !hasCandidate && !sessionChanged.current && controller.current !== null;
+  const enabled = candidateActionAvailable && !terminalOutcome;
+  const recoveryEnabled = candidateActionAvailable && !recoveryPending && isCanonicalStageBTransactionHash(recoveryHash);
 
   async function requestCandidate() {
     if (!enabled || controller.current === null) return;

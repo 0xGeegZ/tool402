@@ -23,6 +23,7 @@ import {
 } from "./provider-deploy-state";
 
 const finalPhases: ReadonlySet<SignatureResult["phase"]> = new Set(["complete", "rejected", "failed", "unknown"]);
+const notConfiguredDetail = "The local relay declined before forwarding. Nothing left this host and nothing was recorded.";
 
 export function DeployStageSigning({
   values,
@@ -116,7 +117,9 @@ export function DeployStageSigning({
 
   function finish(result: SignatureResult) {
     if (request === null || !finalPhases.has(result.phase)) return;
-    const stageState = stageStateForSignatureResult(result);
+    const stageState = result.outcome === "not_configured"
+      ? { kind: "unavailable" as const, detail: notConfiguredDetail }
+      : stageStateForSignatureResult(result);
     setResults((previous) => {
       const next = [...previous];
       next[request.stage] = stageState;
