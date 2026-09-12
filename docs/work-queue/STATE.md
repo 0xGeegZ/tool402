@@ -1,5 +1,11 @@
 # Runtime queue state
 
+- S45_READY: Corrected intake source `e5ed2304` passed a fresh independent
+  readiness review with no finding. Accepted dependencies, exact candidate
+  paths, ownership isolation, loader timing, accessibility, and runtime
+  exclusions are clear. S45-T010 moves to `10-ready`; no RED, source, or asset
+  path is active until a separate root activation.
+
 - S45_INTAKE_CORRECTION: The initial S45 control commit incorrectly recorded
   activation without the required inbox and ready transitions. That record is
   superseded: S45 begins in `00-inbox`, with no active test, source, or asset

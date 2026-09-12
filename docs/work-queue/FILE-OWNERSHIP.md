@@ -1622,12 +1622,12 @@ landing-footer.tsx; its existing asset, decorative accessibility, breakpoint,
 links, copy and routes remain unchanged. No merge, deployment or live-action
 authority is granted.
 
-S45-T010 is a root-owned `00-inbox` POLISH record for the owner-approved mascot
+S45-T010 is a root-owned `10-ready` POLISH record for the owner-approved mascot
 expansion. Its specification proposes four exact new files under
 `apps/web/public/brand/`, a shared loading component, root/nested loading
 mounts, the Demo header, the Explore final CTA, only `ReviewStep` in the deploy
 wizard, a focused test, and constrained Explore/loading test reconciliation.
-These candidate paths confer no ownership before independent readiness and a
-separate root activation. All catalogue data, dynamic form values,
+Fresh independent readiness is clear at corrected intake `e5ed2304`. These
+candidate paths confer no ownership before a separate root activation. All catalogue data, dynamic form values,
 wallet/session/signing code, skeleton region order, runtime APIs,
 configuration, dependencies, and external/live behavior remain excluded.
