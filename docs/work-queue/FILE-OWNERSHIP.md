@@ -1548,3 +1548,6 @@ Its proposed exact source/test boundary is in docs/specs/s43-recording-demo-jour
 The sign-in page/component reservation is limited to the closed tour navigation
 handoff; S40 retains all auth protocol and session authority. No dashboard page,
 deploy logic, API, backend, dependency, or other active source is reserved.
+
+S43 readiness at `ea1ee2f8` is independently clear. Root activates only its
+five named test files; source remains frozen until observed RED acceptance.

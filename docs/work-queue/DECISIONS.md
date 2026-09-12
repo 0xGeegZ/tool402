@@ -316,3 +316,9 @@ The owner requests demo consistency and existing form prefill reuse. Catalogue
 S43-T010 before activation, following docs/specs/s43-recording-demo-journey.md.
 This supersedes UI-S11 historical route/copy exclusions for the existing signed
 dashboard and campaign views only; it grants no external or wallet action.
+
+## D-S43-010-002 — Readiness and RED activation
+
+Independent readiness at `ea1ee2f8` is clear: accepted dependencies and bounded
+root auth handoff reservation. Activate only the five named tests after a
+36-pass, one-skip focused baseline. Source remains frozen pending RED review.

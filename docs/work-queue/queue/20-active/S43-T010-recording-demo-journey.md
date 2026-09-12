@@ -1,7 +1,7 @@
 # S43-T010 — Recording demo journey
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 20-active
 - Dependencies: M01-T040 accepted, S11-T010 accepted, S19-T010 accepted, S30-T010 accepted
 - Owner: root; current provided checkout, based on canonical main `5e863970935b074060b88d62a519102f2edfb9af`.
 - Human actions: real wallet signatures, funded actions, deployment and video recording remain human-owned.
@@ -18,3 +18,9 @@ contains no unrelated uncommitted work; the previous local main commit is
 preserved. No new worktree, wallet action, payment, configuration or deployment
 is created. Readiness and RED precede implementation; independent task and
 two fresh clean module reviews precede acceptance.
+
+## Activation
+
+Independent readiness at `ea1ee2f8` is clear. Root passes through 10-ready
+and activates only the specified RED tests. Focused baseline: 36 passed,
+one historical absent-source check skipped, no failures under Node 22.21.1.

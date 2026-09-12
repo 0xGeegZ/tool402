@@ -1,5 +1,9 @@
 # Runtime queue state
 
+- S43_RECORDING_DEMO_ACTIVATION: Independent readiness at `ea1ee2f8` is clear;
+  the root passes S43 through 10-ready into 20-active for its specified RED
+  tests only. Baseline: 36 passed, one historical skip, no failures.
+
 - S43_RECORDING_DEMO_INTAKE: The owner requests a current six-screen recording
   journey. S43-T010 is inbox-only under docs/specs/s43-recording-demo-journey.md;
   it supersedes historical S11 copy only in its declared scope. No source is
