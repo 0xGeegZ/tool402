@@ -61,7 +61,10 @@ export function WorldHumanCheck({ address }: { address: string }) {
       credentials: "same-origin",
       cache: "no-store",
     }).catch(() => null);
-    if (response !== null && response.ok) return;
+    if (response !== null && response.ok) {
+      setAnnouncement(verified);
+      return;
+    }
     setAnnouncement(response?.status === 503 ? unavailable : refused);
     throw new Error("world_verification_failed");
   }
@@ -69,7 +72,7 @@ export function WorldHumanCheck({ address }: { address: string }) {
   function handleOpenChange(next: boolean) {
     setOpen(next);
     if (next) return;
-    setAnnouncement((current) => (current === waiting ? abandoned : current));
+    setAnnouncement((current) => (current !== null && current.tone === "working" ? abandoned : current));
   }
 
   function handleError(code: string) {

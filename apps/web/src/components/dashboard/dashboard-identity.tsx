@@ -8,7 +8,9 @@ import { WorldHumanCheck } from "./world-human-check";
 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-const worldTileClassNames = {
+type IdentityState = "unverified" | "verified" | "unavailable";
+
+const worldTileClassNames: Record<IdentityState, string> = {
   unverified: "bg-secondary text-primary",
   verified: "bg-success text-success-foreground",
   unavailable: "bg-secondary text-primary",
@@ -36,8 +38,9 @@ export async function DashboardIdentity() {
   const human = configured
     ? await readHumanVerification(cookieStore.get(WORLD_HUMAN_COOKIE)?.value ?? null, session.address, process.env)
     : null;
-  const state = configured ? (human === null ? "unverified" : "verified") : "unavailable";
+  const state: IdentityState = configured ? (human === null ? "unverified" : "verified") : "unavailable";
   const shortAddress = shortenAddress(session.address);
+  const passedOn = human === null ? "" : formatCheckDate(human.verifiedAt);
 
   return (
     <section aria-label="Your identity">
@@ -95,7 +98,7 @@ export async function DashboardIdentity() {
                       Verified human
                     </Badge>
                   </div>
-                  <p className="text-sm leading-6 text-muted-foreground">Selfie Check passed in the World App on {formatCheckDate(human?.verifiedAt ?? 0)}. It stays on this browser for 30 days and is bound to {shortAddress}.</p>
+                  <p className="text-sm leading-6 text-muted-foreground">Selfie Check passed in the World App on {passedOn}. It stays on this browser for 30 days and is bound to {shortAddress}.</p>
                   <p className="text-right text-xs text-muted-foreground">Not identity · not KYC</p>
                 </>
               ) : (

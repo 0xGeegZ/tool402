@@ -437,6 +437,8 @@ implementedTest("states one fixed sentence for every World outcome", async () =>
   }
 
   assert.match(source, /World returned \$\{[^}]+\}\. Nothing was stored\./u);
+  assert.equal((source.match(/setAnnouncement\(verified\)/gu) ?? []).length, 2, "the success state must be set when the verify route answers, not only when the widget closes");
+  assert.match(source, /current\.tone === "working" \? abandoned/u);
   assert.match(source, /credential_unavailable/u);
   assert.match(source, /feature_unavailable/u);
   for (const tone of ["working", "success", "warning", "error"]) {
