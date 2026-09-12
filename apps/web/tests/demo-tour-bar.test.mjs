@@ -43,3 +43,11 @@ test("mounts the tour bar once in the shell under a Suspense boundary", async ()
   assert.match(layout, /<Suspense\b[^>]*>\s*<DemoTourBar\s*\/>\s*<\/Suspense>/);
   assert.equal((layout.match(/<DemoTourBar\b/g) ?? []).length, 1);
 });
+
+
+test("keeps the dashboard handoff in the final step and retains demo defaults on exit", async () => {
+  const bar = await readAppFile(barPath);
+  assert.match(bar, /pathname === "\/dashboard" \? "\/sign-in" : pathname/);
+  assert.match(bar, /href=\{pathname === "\/dashboard" \? pathname : step\.href\}/);
+  assert.doesNotMatch(bar, /Tour complete/);
+});

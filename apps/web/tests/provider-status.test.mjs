@@ -371,3 +371,11 @@ implementedTest("derives the fixed region order, next actions, evidence cells, a
   }
   assert.equal(state.hashscanContractUrl("READY", undefined), null);
 });
+
+
+implementedTest("reads the current campaign shared with the signed dashboard", async () => {
+  const page = (await readSources())["src/app/provider/page.tsx"];
+  assert.match(page, /import\s*\{\s*riskScanOfferingPublicId\s*\}\s*from\s*["'][^"']*dashboard-campaign["']/);
+  assert.match(page, /readProviderProjections\(process\.env, globalThis\.fetch, riskScanOfferingPublicId\)/);
+  assert.doesNotMatch(page, /riskscan_offering_demo/);
+});
