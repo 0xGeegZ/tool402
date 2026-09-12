@@ -1581,20 +1581,23 @@ M50 does not own or amend
 `wallet-state.ts`, deploy-stage signing, command/relay code, configuration,
 packages, lockfiles, or any live path.
 
-M55-T010 is a root-owned `20-active` CORE_P0 new-provider-tool refinement for
-Task 1 durable RED only.
+M55-T010 is a root-owned `20-active` CORE_P0 new-provider-tool refinement with
+Task 1 Green accepted only for the exact allocation and protected owner-read
+paths recorded below.
 Its documentation scope is its card, `docs/specs/m55-provider-demo-attempt-restart.md`,
 `docs/superpowers/plans/2026-09-12-m55-deploy-another-tool.md`,
 `docs/work-queue/evidence/M55-T010-delegation.md`, its Task 1 readiness
 reviews, the product overview's M55 amendment, root queue/control records, and
 independent refinement review.
 The retained filenames do not preserve the superseded demo-attempt UX.
-The allocator design is selected in the spec; source readiness is not granted.
+The allocator design is selected in the spec; no source outside the accepted
+Task 1 paths is granted.
 The Tasks 2–6 plan candidate paths confer no ownership. M51/M53/M54/S26/S36/
 S42/B04 reservations remain unchanged until root records release or exact
 scoped transfer/co-review, followed by independent readiness, activation, and
-RED acceptance. No source/test, authority provisioning, environment mutation,
-wallet, signature, transaction, deployment, or live-evidence action is active.
+RED acceptance. No other source/test, authority provisioning, environment
+mutation, wallet, signature, transaction, deployment, or live-evidence action
+is active.
 
 S43-T010 reserves only its specification/card and root control during intake.
 Its proposed exact source/test boundary is in docs/specs/s43-recording-demo-journey.md.

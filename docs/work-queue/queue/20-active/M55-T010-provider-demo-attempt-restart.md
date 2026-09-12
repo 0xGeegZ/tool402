@@ -34,9 +34,9 @@ decisions do not depend on rediscovering the conversation.
   prerequisite behavior. Resolve active overlaps by final acceptance/release
   or a documented root-owned scoped transfer with co-review; never silently
   commandeer M51, M53, M54, S26, S36, S42, or B04 paths.
-- Record exact source/test ownership in this card and control records. Task 1
-  is the sole current `10-ready` reservation; Tasks 2–6 plan candidates are
-  not active reservations.
+- At Task 1 readiness, record exact source/test ownership in this card and
+  control records. That `10-ready` reservation was promoted to the accepted
+  Task 1 Green scope below; Tasks 2–6 plan candidates remain inactive.
 - Task 1 independent readiness is clear in
   [its review](../../evidence/M55-T010-task1-independent-readiness-review.md).
   The [test-only activation](../../evidence/M55-T010-task1-activation.md)
@@ -50,7 +50,7 @@ receive minimal Green implementation; all Task 2–6 paths remain excluded.
 The first independently reviewable slice is Task 1 only. Its exact candidate
 paths, retained predecessor owners, and the Tasks 2–6 block map are recorded
 in [the Task 1 readiness review](../../evidence/M55-T010-task1-readiness-review.md).
-Moving this card to `10-ready` may reserve only
+The historical move of this card to `10-ready` reserved only
 `provider-tool-identity.ts`, `provider-tool-identity.test.mjs`, Core's
 `index.ts`, `provider_tools.ts`, `provider_session_ingress.ts`, Backend
 `schema.ts`/`http.ts`, `provider-tools.test.mjs`,
