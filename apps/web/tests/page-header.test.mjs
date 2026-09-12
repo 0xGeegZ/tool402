@@ -50,7 +50,7 @@ test("migrates only the declared headers and fixes the two page-level action set
     ["src/app/dashboard/riskscan/page.tsx", "RiskScan workbench"],
     ["src/app/dashboard/riskscan/preflight/page.tsx", "RiskScan Quick preflight"],
     ["src/app/dashboard/riskscan/compatibility/page.tsx", "Native quote compatibility"],
-    ["src/app/demo/page.tsx", "Follow the Tool402 demo"],
+    ["src/app/demo/page.tsx", "Record the Tool402 story"],
     ["src/components/riskscan/detail/riskscan-detail.tsx", "RiskScan"],
   ];
 

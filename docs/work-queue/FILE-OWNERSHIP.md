@@ -1663,3 +1663,10 @@ The owner refinement at `6532a880` additionally reserves
 `apps/web/public/brand/dashboard-empty-mascot.png` and only the empty-state
 illustration region in `apps/web/src/components/dashboard/dashboard-campaign.tsx`;
 it does not reserve or change the component's session or ownership logic.
+
+S46-T010 owns only the demo control-room surface: the `/demo` page, the
+components under apps/web/src/components/demo, the demo-only HashScan-link
+utility, its focused tests and the matching submission rehearsal runbook. It
+may compose public route interfaces but does not own Provider, wallet, M55,
+M56/backing, ATS, World, Agent, API, backend or deployment source. No live
+action authority is granted.

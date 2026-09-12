@@ -1,59 +1,71 @@
-# Tool402 release rehearsal runbook
+# Tool402 recording rehearsal runbook
 
-## Status and recording limit
+## Single source of presenter instructions
 
-This is a conditional rehearsal plan, not proof that any live action happened.
-Target **3:30**; hard ceiling **5:00** under the current Hedera prize wording.
-The target also remains within the repository's older 2–4 minute action record.
-Do not extend the video to fill missing evidence.
+Open /demo and select **Start recording demo**. The route is the practical
+guide: it contains the same ordered steps, routes, wallet labels, narration,
+and evidence rules as this document. The guide is a rehearsal until every
+required item has independently checkable evidence.
 
-Before recording, fill this evidence ledger from independently checkable facts:
+Target edited duration is **3:30**. The hard ceiling is **5:00**. No retake
+authorizes a new payment, ATS transaction, signing action, or backing transfer.
 
-| Field | Value |
-| --- | --- |
-| Recorded commit / deployed web SHA | \`<FINAL_COMMIT_AND_DEPLOYED_SHA>\` |
-| Public host / backend deployment | \`<PUBLIC_HOST_AND_CONVEX_TARGET>\` |
-| Blocky402 payment settlement / finality link | \`<B03_SETTLEMENT_AND_LEDGER_LINK>\` |
-| ATS Factory transaction / verified asset / lifecycle transfer | \`<ATS_TX_ASSET_AND_TRANSFER_LINKS>\` |
-| World evidence | \`<WORLD_PROOF_OR_NOT_SHOWN>\` |
+## Current evidence gate
 
-## Timed sequence
-
-| Time | Scene, route, and operator | Repeatable? | Evidence gate / recovery |
-| --- | --- | --- | --- |
-| 0:00–0:20 | Product thesis on \`/\`; state Hedera testnet and bounded evidence. No wallet. | Yes | If deploy SHA is absent, stop recording. |
-| 0:20–0:40 | Discovery on \`/explore\` then \`/explore/riskscan\`; show capability, price, and limitations. No wallet. | Yes | Use current public directory only. |
-| 0:40–1:00 | Browser unsigned request on \`/explore/riskscan/try\`; show the \`402\` challenge, not a fabricated result. No wallet. | Yes | If host no longer returns matching 402, omit this scene and diagnose off-camera. |
-| 1:00–1:45 | Consumer Agent terminal evidence from repository root with the B03 fixed preflight and previous paid-result output. Human Ops payer only; never film a key. | Preflight yes; paid no | Without paid/finality evidence, skip the paid-result claim and do not issue another payment while recording. |
-| 1:45–2:30 | ATS configuration and verified issuance/lifecycle evidence at \`/provider?tool=<TOOL_PUBLIC_ID>\` or its selected resume route. ATS issuer only. | Reads yes; transaction no | Show only with Factory receipt, verified asset, and transfer evidence. Otherwise briefly state pending or omit. |
-| 2:30–3:00 | Selected backing presentation at \`/explore/riskscan/back\`; dedicated BACKER only with its own evidence. | View yes; funding no | A backing hash is not confirmation. Skip transaction claims without confirmed evidence. |
-| 3:00–3:20 | World result only on Yannick's integrated route with current proof-bound wallet evidence. | Depends on proof lifetime | Skip QR-only, expired, wrong-wallet, or unverified state. |
-| 3:20–3:30 | Evidence recap: public repository, commit, testnet links, limitations. No wallet. | Yes | Do not substitute placeholders for links. |
-
-## Exact B03 CLI scene
-
-Use the preflight command in
-[\`HA-B03-AGENT-PAYMENT-001-run-packet.md\`](../work-queue/evidence/HA-B03-AGENT-PAYMENT-001-run-packet.md)
-off-camera first. In the recording show only safe terminal lines and the
-already corroborated settlement reference. Never repeat the paid command for a
-retake; resume with existing terminal evidence and public finality.
-
-## Wallet/account matrix
-
-| Scene | Required identity | Never show |
+| Evidence | Current guide status | Recording rule |
 | --- | --- | --- |
-| Discovery and 402 | None | Wallet extension state |
-| B03 paid request | Dedicated disposable Hedera testnet payer | Key, seed, signed header, raw payment payload |
-| ATS issue/transfer | Verified ATS issuer on chain 296; named recipient is public only | Key, manual calldata, unverified candidate |
-| Backing | Dedicated BACKER authority/wallet | Funding secret or unconfirmed hash as success |
-| World | Current proof-bound World wallet | QR-only or expired proof as verification |
+| Public deployed build and discovery | ACTION REQUIRED | Confirm exact deployed SHA and public directory. |
+| Unsigned x402 boundary | ACTION REQUIRED | Show the real ToolLoop response. |
+| B03 Consumer Agent settlement | NOT AVAILABLE | Show the safe preflight only; do not imply payment or show an explorer link. |
+| ATS asset and lifecycle transfer | ACTION REQUIRED | Omit verified narration unless both receipts are independently accepted. |
+| Provider campaign/publication | ACTION REQUIRED | Use the current admitted Provider projection only. |
+| Backing | ACTION REQUIRED | Submitted means allocation pending. |
+| World | OPTIONAL | Omit unless current wallet/session has valid integrated proof. |
 
-## No-transaction recovery rules
+## Ordered recording walkthrough
 
-- Browser/route failure: refresh only read-only discovery or 402.
-- B03 interruption after any payment hash: do not rerun paid command; inspect
-  settlement/finality and use existing evidence.
-- ATS interruption after a transaction hash: do not send or attach again;
-  inspect receipt/Mirror and wait for the owning verification path.
-- Backing interruption after a hash: do not fund again; show pending or omit.
-- World interruption: reopen only a currently valid proof state; otherwise omit.
+| Step | Route | Wallet | Presenter action | Evidence to show |
+| --- | --- | --- | --- | --- |
+| 01 Introduce Tool402 | / | none | Explain the testnet product. | Product scope. |
+| 02 Discover RiskScan | /explore | none | Open RiskScan. | Listed capability, price, limitations. |
+| 03 x402 request boundary | /explore/riskscan/tool-loop?demo=tool-loop | none | Review existing sample, click Inspect request boundary. | Real 402 or truthful unavailable outcome. |
+| 04 Consumer Agent evidence | /demo | Human Ops payer | Run preflight; reuse a verified paid result if one exists. | Safe terminal lines; settlement link only after verification. |
+| 05 Provider sign-in | /sign-in | PROVIDER | Use the existing shared wallet control on Hedera Testnet. | Current wallet/session result. |
+| 06 Provider campaign | /provider/deploy | PROVIDER | Continue the existing RiskScan campaign. | Campaign summary. |
+| 07 Campaign terms | /provider/deploy | PROVIDER | Review prefilled content and terms. | Editable values; acknowledgement remains unchecked. |
+| 08 ATS deployment | /provider/deploy | PROVIDER | Continue only after real stage results. | Pending state or independently verified asset evidence. |
+| 09 ATS lifecycle | /demo | ATS issuer | Use the separately approved one-unit transfer only after preconditions. | Verified pre-state, receipt, post-state. |
+| 10 World | /demo | PROVIDER | Show only valid current-wallet proof. | Verified state or honest omission. |
+| 11 Publication | /provider | PROVIDER | Open admitted Provider status. | OPEN/Directory state when available. |
+| 12 Back RiskScan | /explore/riskscan/back | BACKER | Use existing amount; read acknowledgement before choosing. | Units, HBAR, unchecked acknowledgement. |
+| 13 Backing evidence | /explore/riskscan/back | BACKER | Never resend after a hash. | Submitted — allocation pending. |
+| 14 Repeatability | /dashboard | PROVIDER | Open signed dashboard. | Current campaign or empty state. |
+| 15 Evidence recap | /demo | none | Return to final recap. | Only independently supported evidence. |
+
+## B03 terminal scene
+
+The control room provides Copy preflight command and Copy paid-command template.
+It contains no payer key, signed header, or payment payload. Expected preflight
+output is RISKSCAN_PAY_DIAGNOSTIC PREFLIGHT_GUARD_REACHED. A paid command is
+not repeated for a recording retake. A HashScan action appears only when a real
+verified settlement identifier is available.
+
+## Retake rules
+
+- Narration/UI mistake: restart the guide only. It changes no product state.
+- B03 payment or ATS deployment already completed: reuse independently verified
+  evidence; do not send again.
+- Backing hash returned: show pending/explorer evidence if it exists; do not
+  blindly fund again.
+- Fresh Provider tool: use M55 only when it is integrated and selected by its
+  owner; existing tools remain intact.
+- World failure, expiry, QR-only result, or wrong wallet: omit the scene.
+
+## Final pre-recording checklist
+
+- [ ] Complete a no-transaction desktop rehearsal by following all 15 steps.
+- [ ] Confirm each planned scene has the exact evidence named above.
+- [ ] Measure the rehearsal and keep the edited recording below five minutes.
+- [ ] Run 390px sanity check; no guide button may be hidden or overflow.
+- [ ] Keep all private keys, signed payloads, headers, and funding secrets off
+  screen and outside the repository.
