@@ -270,6 +270,9 @@ and revalidates durable command/owner/preparation before atomic attachment.
   transaction/asset, concurrent A/B claims, and a revocation during network
   reads. None may advance a foreign/stale offering. Same-offering exact replay
   is idempotent in every legacy-replay repair branch.
+  Exercise all orders: legacy-first→new, new-first→legacy, and concurrent
+  legacy/new. Cover initial attachment, SUBMITTED retry, and command-replay
+  READY repair. Compare both offerings before/after a rejected conflict.
 - [ ] RED: provider or server timeout/malformed/oversized response and unknown
   receipt preserve pending state and never call eth_sendTransaction on retry.
 - [ ] Implement exact input/receipt checks in explicit browser recovery plus
@@ -280,7 +283,10 @@ and revalidates durable command/owner/preparation before atomic attachment.
   network/asset, including indexed legacy records. Canonicalize transaction
   aliases via corroborated EVM hash. Final transaction rechecks authority,
   signature/replay, offering and expected hash after the action's network read.
-  Guard all direct attachment/replay branches for allocated subjects.
+  Use the same atomic exclusivity guard in **every** direct attachment and
+  READY replay-repair branch, including legacy subjects. A legacy writer must
+  query the new receipt-binding indexes in the same transaction before any
+  asset/READY update, so OCC also prevents concurrent legacy/new claims.
 - [ ] Keep unknown evidence pending; no READY on a signed assertion alone.
   Preserve existing non-ATS verification and already admitted legacy rows.
 - [ ] Run receipt/admission/bridge suites, typechecks, independent review and

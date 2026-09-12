@@ -198,6 +198,12 @@ for multi-tool binding. A's deployment must never make B READY.
    to another offering, including legacy records. Add indexed durable receipt
    bindings for concurrency and indexed legacy checks; aliases must resolve to
    the canonical EVM hash. Same-offering exact replay remains idempotent.
+   Apply the shared exclusivity guard in **every** attachment and READY
+   replay-repair write, including the legacy path. Checking legacy rows only
+   when a new tool writes is insufficient: a later or concurrent legacy write
+   must also reject an asset/hash claimed by a new tool. Preserve already
+   admitted legacy rows and legitimate same-offering replays; this guard
+   narrowly supersedes historical acceptance of conflicting legacy writes.
 4. Only corroborated new-tool attachment advances to READY. Unavailable or
    ambiguous evidence leaves it pending. Retain recovery context; say
    attachment was not accepted, not that no deployment happened. Existing
@@ -257,7 +263,7 @@ with genuine dashboard sign-in and verified environment under root AGENTS.md.
 | A5 | Invalid session, foreign owner, sandbox/BACKER, revoked/duplicate/stale authority | No allocation/advancement; owner's history readable after revocation. |
 | A6 | Forged/cross-domain/stale/replayed session assertion | Reject before allocation; ordinary command relay cannot manufacture this assertion. |
 | A7 | A and B both DRAFT/ASSET_PENDING | B prepare links only B; altered IDs/configuration/replay cannot advance A. |
-| A8 | A's receipt for B, reused asset, concurrent attachment | B never READY; exact replay for the rightful offering remains idempotent. |
+| A8 | A's receipt for B; new-first→legacy, legacy-first→new, and concurrent asset/hash claims | No cross-offering binding in any write/replay branch; exact rightful replay remains idempotent. |
 | A9 | Wrong sender/chain/Factory/input/logs; unavailable reader | Pending/explicit failure; no false success or automatic transaction resend. |
 | A10 | B publishes after A | Separately ACTIVE identities; projections never mix evidence; legacy links work. |
 | A11 | Wallet/tool changes during asynchronous work | Discard stale reads, signature results, configuration, and candidates. |
