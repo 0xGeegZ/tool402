@@ -59,12 +59,14 @@ test("keeps the dashboard guest-only and free of unsupported state", async () =>
   );
 });
 
-test("adapts the reference dashboard hierarchy to the current guest workspace", async () => {
+test("keeps the legacy workspace components separate from the dashboard campaign surface", async () => {
   const [shell, overview, navigation] = await readWorkspaceSources();
   const dashboard = await readAppFile("src/app/dashboard/page.tsx");
 
   assert.match(dashboard, /eyebrow="Dashboard"/);
-  assert.match(dashboard, /Current local journeys/);
+  assert.match(dashboard, /title="Your campaign"/);
+  assert.match(dashboard, /associated with your signed dashboard session/);
+  assert.doesNotMatch(dashboard, /WorkspaceShell/);
   assert.match(shell, /space-y-8/);
   assert.match(overview, /Access/);
   assert.match(overview, /Current tool/);
@@ -85,7 +87,7 @@ test("gives the guest dashboard a compact factual summary and one featured start
   assert.match(overview, />\s*6 local routes\s*</);
   assert.match(overview, /min-h-24/);
   assert.doesNotMatch(overview, /min-h-28/);
-  assert.match(dashboard, /<PageHeader\b[^>]*title="Dashboard"/);
+  assert.match(dashboard, /<PageHeader\b[^>]*title="Your campaign"/);
   assert.match(shell, /space-y-8/);
   assert.match(navigation, /Start with RiskScan/);
   assert.match(navigation, /Inspect the current tool before choosing another local journey\./);

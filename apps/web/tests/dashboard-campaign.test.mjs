@@ -7,12 +7,22 @@ import { fileURLToPath } from "node:url";
 const sourceUrl = new URL("../src/lib/dashboard-campaign.ts", import.meta.url);
 const sourcePath = fileURLToPath(sourceUrl);
 const componentUrl = new URL("../src/components/dashboard/dashboard-campaign.tsx", import.meta.url);
+const dashboardPageUrl = new URL("../src/app/dashboard/page.tsx", import.meta.url);
 const implementedTest = existsSync(sourcePath) ? test : test.skip;
 
 // This fails if the dashboard loses the ownership adapter that keeps another
 // wallet's durable campaign out of a valid signed session.
 test("requires the declared S42 dashboard campaign ownership adapter before GREEN", () => {
   assert.equal(existsSync(sourcePath), true, `missing declared S42 source path: ${sourcePath}`);
+});
+
+test("renders the signed campaign surface instead of the historical guest workspace", async () => {
+  const page = await readFile(dashboardPageUrl, "utf8");
+
+  assert.doesNotMatch(page, /WorkspaceShell/u);
+  assert.match(page, /title="Your campaign"/u);
+  assert.match(page, /associated with your signed dashboard session/u);
+  assert.match(page, /<DashboardCampaign\s*\/>/u);
 });
 
 implementedTest("returns the current RiskScan campaign only for its exact canonical session signer", async () => {

@@ -12,18 +12,13 @@ function readAppFile(path) {
 
 const fabricatedWorkspaceState = /\bsigner\b|\b(?:authenticated|active)\s+session\b|\bsession\s+is\s+(?:active|authenticated)\b/i;
 
-test("presents the guest workspace as a dashboard rather than a preview", async () => {
-  const [page, shell, navigation, overview] = await Promise.all([
-    readAppFile("src/app/dashboard/page.tsx"),
+test("keeps the legacy guest workspace presentational", async () => {
+  const [shell, navigation, overview] = await Promise.all([
     readAppFile("src/components/workspace/workspace-shell.tsx"),
     readAppFile("src/components/workspace/workspace-navigation.tsx"),
     readAppFile("src/components/workspace/workspace-overview.tsx"),
   ]);
 
-  assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
-  assert.match(page, /<PageHeader\b[^>]*title="Dashboard"/);
-  assert.doesNotMatch(page, /Workspace preview/);
   assert.match(shell, /aria-label="Guest dashboard"/);
   assert.match(shell, /guest/i);
   assert.match(shell, /<Badge\b/);
