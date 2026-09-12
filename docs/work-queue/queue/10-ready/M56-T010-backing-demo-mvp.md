@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: S18-T010, S21-T010, M40-T010, M41-T010, and M50-T010 accepted.
 - Owner: root owns control records, all Backend authority paths, the one constrained S26 integration seam below, reviews, integration, and commits. The user-requested delegated lane owns the listed backing-specific Web/new-test paths after root records the authority control plane and a separate RED activation.
 - Human actions: one separately accepted/revoked BACKER authority and one explicit testnet transfer are Human Ops actions.
@@ -30,3 +30,11 @@ The root reserves `packages/backend/convex/schema.ts`, `packages/backend/convex/
 ## Contract
 
 The full local contract is [M56 Backing demo MVP](../../../specs/m56-backing-demo-mvp.md). The detail PageHeader receives exactly one third action `{ href: "/explore/riskscan/back", label: "Back this tool" }` and no data/mutation. The page may hand the existing flow only a server-derived fixed RiskScan OPEN projection plus configured treasury. A canonical MetaMask hash maps only to `payment_submitted`, is displayed as an unqualified transaction hash, and accompanies the exact UI copy `Payment submitted — allocation pending.`
+
+## Readiness
+
+The independent [M56 readiness review](../../evidence/M56-T010-ready-review.md) is
+clear at `10299ede`. M56 is ready only for a separate test-only RED activation.
+No source or test path is active, and no environment mutation, authority-row
+provisioning, signature, transaction, allocation, deployment, or live action is
+authorized by this transition.
