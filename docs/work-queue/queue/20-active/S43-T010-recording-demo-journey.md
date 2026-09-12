@@ -1,7 +1,7 @@
 # S43-T010 — Recording demo journey
 
 - Tier: POLISH
-- Queue state: 60-done
+- Queue state: 20-active
 - Dependencies: M01-T040 accepted, S11-T010 accepted, S19-T010 accepted, S30-T010 accepted
 - Owner: root; current provided checkout, based on canonical main `5e863970935b074060b88d62a519102f2edfb9af`.
 - Human actions: real wallet signatures, funded actions, deployment and video recording remain human-owned.
@@ -40,3 +40,11 @@ review and two fresh clean module generations. Evidence is recorded in
 [S43 final review](../../evidence/S43-T010-final-review.md). Source reservations
 are released. No real-wallet sign-in, transaction or public deployment is
 claimed; S40/S42 acceptance remains independent.
+
+## Navigation follow-up
+
+The owner requests the draft PR and removal of Docs/Campaign from the main
+menu. The specification amendment reserves only the shared navigation list
+and its two existing test files. Reopen for this bounded RED/GREEN amendment;
+prior source acceptance is historical. Footer links and auth behavior remain
+unchanged. Draft publication is explicitly authorized, without merge authority.

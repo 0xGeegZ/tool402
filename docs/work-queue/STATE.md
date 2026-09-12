@@ -1,5 +1,10 @@
 # Runtime queue state
 
+- S43_MENU_AMENDMENT: The owner authorizes a draft PR and removing only Docs
+  and Campaign from the shared main menu. S43 reopens at 20-active for the
+  exact navigation/test amendment in its specification. Footer routes, signed
+  Dashboard visibility and Prepare a tool remain unchanged; no merge authority.
+
 - S43_RECORDING_DEMO_ACCEPTANCE: Source `0a2554aa` is accepted at 60-done
   after Web 436 passed/one historical skip, typecheck/lint/queue/guard,
   Turbopack build, local browser checks and two fresh clean module reviews.

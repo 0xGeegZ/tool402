@@ -1559,3 +1559,8 @@ files permit only the closed tour handoff; all other S40/S42 paths stay frozen.
 S43-T010 is accepted at source `0a2554aa`; its exact reservations above are
 released after the local checks and two fresh clean module review generations
 recorded in docs/work-queue/evidence/S43-T010-final-review.md.
+
+S43's owner-directed menu follow-up reserves only local-navigation.tsx and
+the existing navigation assertions in landing-explore.test.mjs and
+guided-demo-route.test.mjs. Footer, layout, auth and every other source remain
+unchanged. This bounded amendment is defined in the S43 specification.

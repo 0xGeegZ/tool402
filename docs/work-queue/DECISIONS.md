@@ -335,3 +335,11 @@ Accept source `0a2554aa` after focused/full Web tests, typecheck, lint,
 queue/guard, production build, local browser checks and two independent fresh
 clean module review generations. Move S43 to 60-done and release ownership.
 The final-review record separates source, browser, wallet and deployment proof.
+
+## D-S43-010-005 — Owner-directed menu amendment and draft PR
+
+The owner explicitly authorizes a draft PR and removal of Docs/Campaign from
+the desktop/mobile main menu. Reopen S43 for the exact shared navigation list
+and its two existing test assertions. Preserve footer links, conditional
+Dashboard and the deployment CTA; retain test-first and independent review.
+This authorizes draft publication, not merge or production deployment.

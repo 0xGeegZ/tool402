@@ -70,3 +70,20 @@ reference guard, and production build. Exercise the local guide and tour,
 sample edits and navigation, signed-out final entry, and narrow/desktop layout
 in a browser. Real wallet signatures remain human-owned; report that evidence
 separately. Obtain independent task review and two fresh clean module reviews.
+
+## Owner-directed menu amendment
+
+The owner explicitly requests a draft PR containing S43 and removal of Docs
+and Campaign from the main menu because documentation remains in the footer
+and the signed Dashboard is the campaign entry. Reopen S43 only for
+`apps/web/src/components/discovery/local-navigation.tsx` and the corresponding
+existing navigation assertions in `apps/web/tests/landing-explore.test.mjs`
+and `apps/web/tests/guided-demo-route.test.mjs`.
+
+Remove only the two public menu entries on both desktop and mobile, which
+share the same list. Keep Explore tools, Guided demo, conditional signed
+Dashboard, the Prepare a tool CTA, all routes, and all footer links unchanged.
+Update existing assertions before source, observe RED, then verify focused
+Web tests, typecheck, desktop/mobile navigation and footer accessibility.
+Obtain two fresh clean independent reviews for the resulting module head.
+The draft PR is authorized; merging and production deployment are not requested.
