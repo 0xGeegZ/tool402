@@ -1551,3 +1551,7 @@ deploy logic, API, backend, dependency, or other active source is reserved.
 
 S43 readiness at `ea1ee2f8` is independently clear. Root activates only its
 five named test files; source remains frozen until observed RED acceptance.
+
+D-S43-010-003 authorizes the exact seven sources and five tests in the S43
+specification after independent RED acceptance at `92f75d6c`. The two sign-in
+files permit only the closed tour handoff; all other S40/S42 paths stay frozen.

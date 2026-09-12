@@ -1,5 +1,9 @@
 # Runtime queue state
 
+- S43_RECORDING_DEMO_GREEN: Independent RED review at `92f75d6c` accepts
+  32 passes, seven intended failures and one historical skip. Only the exact
+  sources/tests in the S43 specification are authorized for minimal GREEN.
+
 - S43_RECORDING_DEMO_ACTIVATION: Independent readiness at `ea1ee2f8` is clear;
   the root passes S43 through 10-ready into 20-active for its specified RED
   tests only. Baseline: 36 passed, one historical skip, no failures.

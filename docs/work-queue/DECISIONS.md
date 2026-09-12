@@ -322,3 +322,9 @@ dashboard and campaign views only; it grants no external or wallet action.
 Independent readiness at `ea1ee2f8` is clear: accepted dependencies and bounded
 root auth handoff reservation. Activate only the five named tests after a
 36-pass, one-skip focused baseline. Source remains frozen pending RED review.
+
+## D-S43-010-003 — GREEN scope
+
+The independent RED review at `92f75d6c` is clear. Authorize only the seven
+source paths and five tests in the S43 specification. Preserve all existing
+auth protocol, session gates, backend validation and human-owned actions.

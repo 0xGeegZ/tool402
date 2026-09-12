@@ -24,3 +24,10 @@ two fresh clean module reviews precede acceptance.
 Independent readiness at `ea1ee2f8` is clear. Root passes through 10-ready
 and activates only the specified RED tests. Focused baseline: 36 passed,
 one historical absent-source check skipped, no failures under Node 22.21.1.
+
+## GREEN authorization
+
+Independent RED review at `92f75d6c` is clear: 32 passed, seven intended
+failures, one historical skip. Only the exact specified sources and tests
+are now authorized for minimal GREEN; the auth protocol and all external
+authority remain unchanged.
