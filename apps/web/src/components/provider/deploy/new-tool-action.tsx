@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { buttonVariants } from "../../ui/button";
+import { Status, type StatusTone } from "../../ui/status";
 import { createProviderToolAllocationRequest, parseProviderToolAllocation } from "../../../lib/provider-tools-client";
 
 const retryStorageKey = "tool402:provider-tool-allocation-request-id";
@@ -36,7 +37,7 @@ export function NewToolAction({ variant = "primary" }: { variant?: "primary" | "
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [retryId, setRetryId] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ tone: StatusTone; text: string } | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -55,9 +56,9 @@ export function NewToolAction({ variant = "primary" }: { variant?: "primary" | "
 
   async function allocate() {
     const id = retryId ?? requestId();
-    if (id === null) { setMessage("A new tool could not be prepared in this browser."); return; }
+    if (id === null) { setMessage({ tone: "error", text: "A new tool could not be prepared in this browser." }); return; }
     const init = createProviderToolAllocationRequest(id);
-    if (init === null) { setMessage("A new tool could not be prepared."); return; }
+    if (init === null) { setMessage({ tone: "error", text: "A new tool could not be prepared." }); return; }
     persistRetryId(id);
     setPending(true);
     setMessage(null);
@@ -70,14 +71,14 @@ export function NewToolAction({ variant = "primary" }: { variant?: "primary" | "
       router.push(`/provider/deploy?tool=${encodeURIComponent(allocation.tool.toolPublicId)}`);
     } catch {
       setRetryId(id);
-      setMessage("The request was not confirmed. Retry uses the same request, so it will not create another tool.");
+      setMessage({ tone: "error", text: "Tool creation did not complete. Retry reuses the same request, so a second tool will not be created." });
     } finally {
       setPending(false);
     }
   }
 
   return <>
-    <button type="button" className={buttonVariants({ variant, size: "lg", shape: "pill" })} onClick={() => { setOpen(true); setMessage(retryId === null ? null : "Retry the earlier creation request without creating another tool."); }}>
+    <button type="button" className={buttonVariants({ variant, size: "lg", shape: "pill" })} onClick={() => { setOpen(true); setMessage(retryId === null ? null : { tone: "neutral", text: "An earlier creation request is still pending. Retry it without creating another tool." }); }}>
       Deploy a new tool
     </button>
     {open ? <div role="dialog" aria-modal="true" aria-labelledby="new-tool-title" className="fixed inset-0 z-50 grid place-items-center bg-foreground/35 p-4" onKeyDown={(event) => {
@@ -94,9 +95,9 @@ export function NewToolAction({ variant = "primary" }: { variant?: "primary" | "
         <h2 id="new-tool-title" className="text-2xl font-bold tracking-tight">Deploy a new tool?</h2>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">A separate tool will be created with prefilled details you can edit. Your existing tools and deployments remain unchanged.</p>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">Deployment requires new signatures and testnet transaction fees.</p>
-        {message === null ? null : <p role="status" className="mt-4 text-sm text-destructive">{message}</p>}
+        {message === null ? null : <Status tone={message.tone} className="mt-4">{message.text}</Status>}
         <div className="mt-6 flex flex-wrap justify-end gap-3">
-          <button type="button" className={buttonVariants({ variant: "outline", shape: "pill" })} disabled={pending} onClick={() => setOpen(false)}>Keep current tool</button>
+          <button type="button" className={buttonVariants({ variant: "outline", shape: "pill" })} disabled={pending} onClick={() => setOpen(false)}>Not now</button>
           <button data-autofocus type="button" className={buttonVariants({ shape: "pill" })} disabled={pending} onClick={() => void allocate()}>{pending ? "Creating…" : retryId === null ? "Create new tool" : "Retry creation"}</button>
         </div>
       </div>
