@@ -13,13 +13,12 @@ const assetPaths = [
   "public/brand/route-loader-trio.png",
   "public/brand/dashboard-empty-mascot.png",
 ];
-const nestedLoaders = [
+const nestedLoadersWithCue = [
   "src/app/explore/loading.tsx",
   "src/app/explore/riskscan/loading.tsx",
   "src/app/explore/entitycheck/loading.tsx",
   "src/app/explore/riskscan/try/loading.tsx",
   "src/app/explore/riskscan/tool-loop/loading.tsx",
-  "src/app/dashboard/loading.tsx",
   "src/app/dashboard/riskscan/loading.tsx",
   "src/app/dashboard/riskscan/compatibility/loading.tsx",
   "src/app/dashboard/riskscan/preflight/loading.tsx",
@@ -150,14 +149,22 @@ test("reveals one cancellable brand loading cue after 300 ms", async () => {
   assert.doesNotMatch(component, /\b(?:fetch|localStorage|sessionStorage|process\.env)\b/);
 });
 
-test("mounts the cue without changing route-specific skeleton order", async () => {
+test("mounts the cue before non-Dashboard route skeletons", async () => {
   const root = await readAppFile("src/app/loading.tsx");
   assert.match(root, /<BrandRouteLoader\s*\/>/);
 
-  for (const path of nestedLoaders) {
+  for (const path of nestedLoadersWithCue) {
     const source = await readAppFile(path);
     const cue = source.indexOf("<BrandRouteLoader />");
     const firstSkeleton = source.indexOf("data-skeleton-region");
     assert.ok(cue >= 0 && firstSkeleton > cue, `${path} must mount the cue before its skeleton regions`);
   }
+});
+
+test("keeps Dashboard loading cue-free with a full-width skeleton", async () => {
+  const dashboard = await readAppFile("src/app/dashboard/loading.tsx");
+
+  assert.doesNotMatch(dashboard, /BrandRouteLoader/);
+  assert.doesNotMatch(dashboard, /max-w-/);
+  assert.equal((dashboard.match(/className="[^"]*\bw-full\b[^"]*"/g) ?? []).length, 4);
 });
