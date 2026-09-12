@@ -430,7 +430,7 @@ signInTest("redirects valid sessions and otherwise renders the public sign-in bo
   assert.match(signIn, /\bSuspense\b/u);
   assert.match(signIn, /\breadDashboardSessionCookieName\b/u);
   assert.match(signIn, /redirect\(dashboardTourHref\(tour\)\)/u);
-  assert.match(signIn, /tour === "1"/u);
+  assert.match(signIn, /requestedTour === "1"/u);
   assert.match(signIn, /<MetaMaskDashboardSignIn tour=\{tour\}/u);
   assert.match(signIn, /\bMetaMaskDashboardSignIn\b/u);
   assert.match(signIn, /Unlock your dashboard/u);
