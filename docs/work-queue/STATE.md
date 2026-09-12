@@ -46,8 +46,9 @@
   isolated presentational redesign of the existing loaded `/provider` route.
   S43-T010 is in `20-active`: its committed specification and UI manifest lock
   the command-center composition, and its only future source paths are the
-  provider page, provider status component/state, and focused provider-status
-  test. It creates no new read, state, wallet/provider, command, transaction,
+  provider page, provider status component/state, generated provider hero
+  asset, and focused provider-status test. It creates no new read, state,
+  wallet/provider, command, transaction,
   deployment, or live authority.
 - S43_LOCAL_RECORDS: `docs/specs/s43-provider-command-center.md` and
   `docs/ui/UI-S43.md` are S43's canonical implementation-local specification
@@ -62,8 +63,10 @@
 - S43_PROVIDER_COMMAND_CENTER_RED_ACCEPTANCE: At
   `a8e9edd8dca707c25ccf46dd0d0ba11f5cbfe92f`, independent review accepted the
   5×2 offering/Directory matrix with one expected missing-command-center
-  presentation failure. GREEN may amend only the provider page, provider
-  status component/state, and focused test; every projection/API, session,
+  presentation failure. The owner-requested visual amendment at `37864045`
+  additionally reserves only `apps/web/public/brand/provider-campaign-duo.png`.
+  GREEN may amend only the provider page, provider status component/state,
+  generated asset, and focused test; every projection/API, session,
   wallet/provider, command, transaction, deployment, and live boundary stays
   excluded.
 

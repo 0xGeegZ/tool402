@@ -13,7 +13,7 @@
 
 Recompose the existing server-rendered loaded campaign view into a command center that makes campaign readiness, evidence, current terms, and trust details scannable. It may use the existing admitted projections and routes only. It does not change their reader, schemas, outcome unions, source calls, or content boundary.
 
-The local specification is [`s43-provider-command-center`](../../../specs/s43-provider-command-center.md) and the UI contract is [`UI-S43`](../../../ui/UI-S43.md). The future source paths are limited to `apps/web/src/app/provider/page.tsx`, `apps/web/src/components/provider/status/provider-status.tsx`, `apps/web/src/components/provider/status/provider-status-state.ts`, and `apps/web/tests/provider-status.test.mjs`.
+The local specification is [`s43-provider-command-center`](../../../specs/s43-provider-command-center.md) and the UI contract is [`UI-S43`](../../../ui/UI-S43.md). The future source paths are limited to `apps/web/src/app/provider/page.tsx`, `apps/web/src/components/provider/status/provider-status.tsx`, `apps/web/src/components/provider/status/provider-status-state.ts`, `apps/web/public/brand/provider-campaign-duo.png`, and `apps/web/tests/provider-status.test.mjs`.
 
 ## Ready and RED activation
 
@@ -31,8 +31,9 @@ the existing `CLOSED` no-control case, and the no-runtime boundary.
 
 Only `apps/web/src/app/provider/page.tsx`,
 `apps/web/src/components/provider/status/provider-status.tsx`,
-`apps/web/src/components/provider/status/provider-status-state.ts`, and the
-focused test may now change for minimal GREEN. Every reader, API, shell,
+`apps/web/src/components/provider/status/provider-status-state.ts`, the
+generated `apps/web/public/brand/provider-campaign-duo.png` illustration, and
+the focused test may now change for minimal GREEN. Every reader, API, shell,
 wallet/provider, command, transaction, deployment, and live path remains
 outside the scope.
 
