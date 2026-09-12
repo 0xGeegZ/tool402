@@ -61,6 +61,7 @@ type EvidenceExport = Readonly<{
 const safeReferencePattern = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,95}$/u;
 const sourceVersionPattern = /^[0-9a-f]{7,64}$/u;
 const b03RecordingRunRef = "b03-release-001";
+const b03ServiceOrigin = "https://tool402.vercel.app";
 
 function requiredEnvironmentValue(name: string): string | null {
   const value = process.env[name]?.trim();
@@ -78,6 +79,16 @@ function configuredRequestReference(): string | null {
       : null;
   } catch {
     return null;
+  }
+}
+
+function usesB03Service(): boolean {
+  const raw = requiredEnvironmentValue("RISKSCAN_PAY_SERVICE_BASE_URL");
+  if (raw === null) return false;
+  try {
+    return new URL(raw).origin === b03ServiceOrigin;
+  } catch {
+    return false;
   }
 }
 
@@ -174,10 +185,12 @@ function evidenceExport(argumentsList: readonly string[]): EvidenceExport | "inv
   const recordingRunRef = requiredEnvironmentValue("RISKSCAN_PAY_RECORDING_RUN_REF");
   const sourceVersion = requiredEnvironmentValue("RISKSCAN_PAY_SOURCE_VERSION");
   const requestReference = configuredRequestReference();
+  const isB03Run = recordingRunRef === b03RecordingRunRef;
+  const isB03Request = requestReference === b03RecordingRunRef;
   if ((!isExactExport && !isExactPreflightExport)
     || typeof outputPath !== "string" || outputPath.startsWith("-") || outputPath.length === 0 || outputPath.length > 1_024
     || recordingRunRef === null || !safeReferencePattern.test(recordingRunRef)
-    || (requestReference === b03RecordingRunRef && recordingRunRef !== b03RecordingRunRef)
+    || (usesB03Service() && isB03Run !== isB03Request)
     || sourceVersion === null || !sourceVersionPattern.test(sourceVersion)) return "invalid";
   try {
     const destination = lstatSync(outputPath, { throwIfNoEntry: false });

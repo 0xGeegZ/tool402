@@ -73,8 +73,8 @@ RISKSCAN_PAY_DIAGNOSTIC PAID
 ## Retake rules
 
 - Narration/UI mistake: restart the guide only. It changes no product state.
-- B03 payment or ATS deployment already completed: reuse independently verified
-  evidence; do not send again.
+- B03 payment or ATS deployment already completed: reuse the client-reported
+  B03 packet or independently verified ATS evidence; do not send again.
 - Backing hash returned: show pending/explorer evidence if it exists; do not
   blindly fund again.
 - Fresh Provider tool: use M55 only when it is integrated and selected by its

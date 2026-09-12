@@ -245,6 +245,7 @@ function runCliPreflight({
   signedRetryStatus = 200,
   terminalCatch = false,
   preflightInput = input,
+  b03InputOverride,
   extraArguments = [],
   b03Mode = false,
   paymentMode = defaultPayment,
@@ -254,7 +255,7 @@ function runCliPreflight({
   evidenceWriteFailure = false,
 } = {}) {
   const serviceBase = b03Mode ? b03Base : base;
-  const serviceInput = b03Mode ? b03Input : preflightInput;
+  const serviceInput = b03Mode ? b03InputOverride ?? b03Input : preflightInput;
   const servicePolicy = b03Mode ? b03Policy : preflightPolicy;
   const serviceDirectory = b03Mode ? b03Directory() : directory();
   const serviceRequirements = b03Mode ? b03Requirements() : requirements();
@@ -957,6 +958,30 @@ boundaryTest("rejects a mismatched recording run before reading a payer or start
       paymentMode: true,
       extraArguments: ["--evidence-output", output],
       recordingRunRef: "retake-2",
+      sourceVersion: "a".repeat(40),
+    });
+    assert.notEqual(error, null);
+    assert.equal(stderr, "RISKSCAN_PAY_CONFIGURATION_INVALID\n");
+    const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
+    assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC CONFIGURATION_INVALID"]);
+    assert.deepEqual(requests, []);
+    assert.deepEqual(boundaries, []);
+    assert.deepEqual(transportAttempts, []);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+boundaryTest("rejects a B03 recording run with a different request before reading a payer or starting payment", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "tool402-agent-evidence-request-"));
+  const output = join(directory, "evidence.json");
+  try {
+    const { error, stdout, stderr } = await runCliPreflight({
+      b03Mode: true,
+      b03InputOverride: { ...b03Input, requestRef: "retake-2" },
+      paymentMode: true,
+      extraArguments: ["--evidence-output", output],
+      recordingRunRef: "b03-release-001",
       sourceVersion: "a".repeat(40),
     });
     assert.notEqual(error, null);
