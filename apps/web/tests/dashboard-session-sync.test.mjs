@@ -33,6 +33,7 @@ async function loadSynchronizer({
   responseStatus = 204,
   reject = false,
   connections = [{ kind: "disconnected" }],
+  providerSelection = undefined,
 } = {}) {
   const { outputText } = typescript.transpileModule(await readFile(sourceUrl, "utf8"), {
     fileName: fileURLToPath(sourceUrl),
@@ -48,7 +49,7 @@ async function loadSynchronizer({
   const navigations = [];
   const listeners = [];
   const provider = {};
-  const wallet = { state: { kind: "disconnected" } };
+  const selection = providerSelection ?? { kind: "provider", provider };
   let cursor = 0;
   const react = {
     useRef(initial) {
@@ -87,11 +88,9 @@ async function loadSynchronizer({
               refresh: () => navigations.push(["refresh"]),
             }),
           };
-        case "../wallet/wallet-session":
-          return { useWalletSession: () => wallet };
         case "../../lib/wallet/metamask-provider":
           return {
-            discoverMetaMaskProvider: async () => ({ kind: "provider", provider }),
+            discoverMetaMaskProvider: async () => selection,
             watchWalletSessionChanges: (_provider, listener) => {
               listeners.push(listener);
               return () => {};
@@ -114,8 +113,7 @@ async function loadSynchronizer({
     requests,
     navigations,
     listeners,
-    render(address, state = wallet.state) {
-      wallet.state = state;
+    render(address) {
       cursor = 0;
       assert.equal(module.exports.DashboardSessionSync({ address }), null);
       for (const effect of effects) {
@@ -132,17 +130,21 @@ async function flushMicrotasks() {
   for (let index = 0; index < 8; index += 1) await Promise.resolve();
 }
 
+function assertLogout(harness) {
+  assert.deepEqual(harness.requests.map(([url, init]) => [url, { ...init }]), [["/api/auth/logout", {
+    method: "POST",
+    credentials: "same-origin",
+  }]]);
+  assert.deepEqual(harness.navigations, [["replace", "/sign-in"], ["refresh"]]);
+}
+
 implementedTest("logs out a restored dashboard session without a selected account", async () => {
   const harness = await loadSynchronizer();
 
   harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
 
-  assert.deepEqual(harness.requests.map(([url, init]) => [url, { ...init }]), [["/api/auth/logout", {
-    method: "POST",
-    credentials: "same-origin",
-  }]]);
-  assert.deepEqual(harness.navigations, [["replace", "/sign-in"], ["refresh"]]);
+  assertLogout(harness);
 
   harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
@@ -166,11 +168,25 @@ implementedTest("logs out after the selected MetaMask account changes", async ()
   harness.listeners[0]();
   await flushMicrotasks();
 
-  assert.deepEqual(harness.requests.map(([url, init]) => [url, { ...init }]), [["/api/auth/logout", {
-    method: "POST",
-    credentials: "same-origin",
-  }]]);
-  assert.deepEqual(harness.navigations, [["replace", "/sign-in"], ["refresh"]]);
+  assertLogout(harness);
+});
+
+implementedTest("logs out a restored dashboard session without a MetaMask provider", async () => {
+  const harness = await loadSynchronizer({ providerSelection: { kind: "no_provider" } });
+
+  harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
+  await flushMicrotasks();
+
+  assertLogout(harness);
+});
+
+implementedTest("logs out a restored dashboard session on the wrong chain", async () => {
+  const harness = await loadSynchronizer({ connections: [{ kind: "wrong_chain", chainId: "0x1" }] });
+
+  harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
+  await flushMicrotasks();
+
+  assertLogout(harness);
 });
 
 implementedTest("does not navigate when active-account logout is rejected or unavailable", async () => {
