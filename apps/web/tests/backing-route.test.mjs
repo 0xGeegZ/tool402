@@ -9,15 +9,17 @@ const appRoot = fileURLToPath(new URL("..", import.meta.url));
 const sourcePaths = [
   "src/app/explore/riskscan/back/page.tsx",
   "src/components/backing/backing-flow.tsx",
+  "src/components/backing/backing-presentation.ts",
   "src/components/backing/backing-state.ts",
+  "src/components/backing/backing-step-rail.tsx",
 ];
 
 function readAppFile(path) {
   return readFile(join(appRoot, path), "utf8");
 }
 
-test("declares exactly the three backing source paths", () => {
-  assert.deepEqual(sourcePaths.map((path) => existsSync(join(appRoot, path))), [true, true, true]);
+test("declares exactly the five backing source paths", () => {
+  assert.deepEqual(sourcePaths.map((path) => existsSync(join(appRoot, path))), [true, true, true, true, true]);
 });
 
 test("renders one server route that hands the flow no projection of its own", async () => {
@@ -28,7 +30,9 @@ test("renders one server route that hands the flow no projection of its own", as
   assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
   assert.match(page, /import \{ BackingFlow \} from "[./]+\/components\/backing\/backing-flow"/);
   assert.match(page, /<BackingFlow projection=\{null\} \/>/);
-  assert.doesNotMatch(page, /<Link\b|href=/);
+  assert.equal((page.match(/<Link\b/g) ?? []).length, 1);
+  assert.equal((page.match(/href=/g) ?? []).length, 1);
+  assert.match(page, /<Link\s+href="\/explore\/riskscan"[\s\S]*?>\s*Back to RiskScan\s*<\/Link>/);
 });
 
 test("consumes the shared wallet session, signature dialog, and relay without a second copy of any", async () => {
