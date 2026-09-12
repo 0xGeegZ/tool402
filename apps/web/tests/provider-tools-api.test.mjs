@@ -24,10 +24,10 @@ function post(body, headers = {}) {
   });
 }
 
-function get(search = "") {
+function get(search = "", headers = {}) {
   return new Request(`${origin}/api/provider/tools${search}`, {
     method: "GET",
-    headers: { origin },
+    headers: { cookie: "tool402-local-dashboard-session=sealed-session", ...headers },
   });
 }
 
@@ -78,6 +78,49 @@ implementedTest("rejects invalid origin and request shape before session or forw
     });
     assert.equal(response.status, 401);
     assert.deepEqual(await response.json(), { outcome: "rejected" });
+    assert.equal(sessions, 0);
+    assert.equal(forwarded, 0);
+  }
+});
+
+implementedTest("rejects a chunked oversized allocation before session or forwarding work", async () => {
+  const { handleProviderToolsRequest } = await import(serverUrl.href);
+  const request = new Request(`${origin}/api/provider/tools`, {
+    method: "POST",
+    headers: { origin, "content-type": "application/json" },
+    body: new ReadableStream({
+      start(controller) {
+        controller.enqueue(new Uint8Array(1025));
+        controller.close();
+      },
+    }),
+    duplex: "half",
+  });
+  let sessions = 0;
+  let forwarded = 0;
+  const response = await handleProviderToolsRequest(request, environment, {
+    readSession: async () => { sessions += 1; return null; },
+    forward: async () => { forwarded += 1; throw new Error("must not forward"); },
+  });
+  assert.equal(response.status, 401);
+  assert.deepEqual(await response.json(), { outcome: "rejected" });
+  assert.equal(sessions, 0);
+  assert.equal(forwarded, 0);
+});
+
+implementedTest("rejects duplicate dashboard cookies and invalid cursors before session or forwarding work", async () => {
+  const { handleProviderToolsRequest } = await import(serverUrl.href);
+  for (const request of [
+    post({ requestId }, { cookie: "tool402-local-dashboard-session=first; tool402-local-dashboard-session=second" }),
+    get("?cursor="),
+  ]) {
+    let sessions = 0;
+    let forwarded = 0;
+    const response = await handleProviderToolsRequest(request, environment, {
+      readSession: async () => { sessions += 1; return null; },
+      forward: async () => { forwarded += 1; throw new Error("must not forward"); },
+    });
+    assert.equal(response.status, 401);
     assert.equal(sessions, 0);
     assert.equal(forwarded, 0);
   }
@@ -142,6 +185,19 @@ implementedTest("handles GET as an owner-scoped read without allocating", async 
   }]);
 });
 
+implementedTest("rejects a cross-origin GET before reading the dashboard session", async () => {
+  const { handleProviderToolsRequest } = await import(serverUrl.href);
+  let sessions = 0;
+  let forwarded = 0;
+  const response = await handleProviderToolsRequest(get("", { origin: "https://other.example" }), environment, {
+    readSession: async () => { sessions += 1; return null; },
+    forward: async () => { forwarded += 1; throw new Error("must not forward"); },
+  });
+  assert.equal(response.status, 401);
+  assert.equal(sessions, 0);
+  assert.equal(forwarded, 0);
+});
+
 implementedTest("uses the protected GET tool selector without allocating", async () => {
   const { handleProviderToolsRequest } = await import(serverUrl.href);
   const toolPublicId = "tool_" + "ab".repeat(16);
@@ -167,4 +223,23 @@ implementedTest("uses the protected GET tool selector without allocating", async
     toolPublicId,
     sessionExpiresAt: "2026-09-12T18:00:00.000Z",
   }]);
+});
+
+implementedTest("bounds the relayed provider-tool response before returning it to the dashboard", async () => {
+  const { handleProviderToolsRequest } = await import(serverUrl.href);
+  const response = await handleProviderToolsRequest(post({ requestId }, {
+    cookie: "tool402-local-dashboard-session=sealed-session",
+  }), environment, {
+    readSession: async () => ({
+      address: "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454",
+      issuedAt: "2026-09-12T10:00:00.000Z",
+      expiresAt: "2026-09-12T18:00:00.000Z",
+    }),
+    forward: async () => new Response(JSON.stringify({ tool: { oversized: "x".repeat(65_537) } }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    }),
+  });
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { outcome: "unavailable" });
 });

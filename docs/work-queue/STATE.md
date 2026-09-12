@@ -533,6 +533,30 @@
 - M55_NEW_TOOL_REFINEMENT: The owner's issue #93 clarification replaces demo-attempt UX with explicit deployment of another independent tool, allowing identical prefilled values. The local spec, implementation plan, and delegation packet select authenticated allocation, per-tool ownership/configuration/receipt binding, independent Directory identities, and dashboard listing. M55 is `20-active` solely for Task 1 durable RED. Tasks 2–6 remain blocked until their M51/M53/M54/S26/S36/S42/B04 overlaps have an accepted release or exact scoped transfer/co-review; no source path is active.
 - M55_TASK1_READINESS: At `5f21fc90e1a927317665a1c1bf245eb0f9457cd5`, Task 1's twelve exact Core/Backend/Web allocation and protected-owner-read paths are absent or unreserved; Node 22.21.1 `npm ci`, root `npm test`, and `npm run queue:check` passed. An independent review is clear after correcting the four-test durable-RED scope and Task 5's retained M51 `command_dispatch.ts` collision. The user-directed root activation at `49e5b9d5` permits only durable RED in the four new focused Task 1 tests. No Task 1 source, environment, signature, transaction, deployment, or live action is authorized until independent RED acceptance.
 - M55_TASK1_RED_ACCEPTANCE: Fresh independent review accepts Task 1's durable RED: three Core missing exports, two Backend absent modules with thirteen dependent contracts skipped, and one Web absent module pair with six dependent contracts skipped. The accepted contracts cover identity allocation/replay/revocation/concurrency/collision, protected owner reads, domain-bound provider-session assertions, and dashboard-session POST/GET. Only the twelve exact Task 1 Core/Backend/Web paths may receive minimal Green; Tasks 2–6, every predecessor reservation, environment, signature, transaction, deployment, and live action remain excluded.
+
+- M55_TASK1_HTTP_ROUTE_TEST_INTAKE: Task 1's new fixed protected ingress route
+  makes M41's exact HTTP-route inventory fail. The only requested supplement is
+  its existing route-inventory test, to list `/internal/provider-tools` POST;
+  the test remains excluded until independent readiness and a root-owned
+  test-only activation are recorded. This is not a transfer of M41 command
+  behavior and grants no other M41/M55 source, environment, wallet, signature,
+  transaction, deployment, or live authority.
+
+- M55_TASK1_HTTP_ROUTE_TEST_ACTIVATION: Independent readiness reproduces only
+  the expected closed-inventory delta and clears the completed, unreserved M41
+  test for a root-owned one-entry expectation amendment. The existing route's
+  no-wildcard/no-OPTIONS/command/public assertions remain mandatory; no other
+  M41/M55 path or environment, wallet, signature, transaction, deployment, or
+  live authority is transferred.
+- M55_TASK1_GREEN_ACCEPTANCE: Task 1's identity allocator and protected
+  owner-read/list boundary are accepted after a fresh independent exact-head
+  review. The review confirmed strict POST Origin, ordinary authenticated GET
+  without Origin, explicit foreign-Origin rejection, the Stage-B issuer gate,
+  derived safe title/lifecycle projection, HMAC/replay/bounds, and no P0/P1/P2
+  finding. Node 22.21.1 focused 34/34, root test, typecheck, lint, queue and
+  whitespace checks pass. M55 remains `20-active`; no Task 2–6 path, UI,
+  environment, wallet, signature, transaction, deployment or live authority
+  is released. See `docs/work-queue/evidence/M55-T010-task1-green-review.md`.
 - M41_DELIVERY: accepted at `20983649632f4812d9ee045637eb183b3158cc38` as a local HTTP ingress, transport replay, atomic ATS_CREATE admission, and public-projection boundary only; it adds no configuration, key, publication, wallet, provider, SDK, transaction, deployment, or live authority.
 - CURRENT_TASK: B04-T010 (20-active) is the user-directed local security remediation. It authorizes only its eight named durable-RED tests; no source, payment, wallet, provider, transaction, deployment, or live capability is authorized.
 - B04_SECURITY_SCAN_REMEDIATION_ACTIVATION: Independent activation at `d5d4a384` confirms the exact eight RED tests are collision-free. B04-T010 is `20-active` only for those tests; source remains prohibited pending fresh RED acceptance.

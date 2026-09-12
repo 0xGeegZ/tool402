@@ -1690,12 +1690,16 @@ candidate paths are
 `packages/backend/tests/provider-session-ingress.test.mjs`,
 `apps/web/src/lib/provider-tools-server.ts`,
 `apps/web/src/app/api/provider/tools/route.ts`, and
-`apps/web/tests/provider-tools-api.test.mjs`.
+`apps/web/tests/provider-tools-api.test.mjs`. The M41-completed
+`packages/backend/tests/http-command-ingress.test.mjs` is additionally
+reserved only for its one `/internal/provider-tools` POST route-inventory
+expectation, as independently reviewed and activated in
+`docs/work-queue/evidence/M55-T010-task1-http-route-supplement.md`.
 They create no offering, campaign, ATS candidate, receipt, Directory record,
 or authority. They are the sole M55 reservation. The four new Task 1 test
 paths and the other eight declared Task 1 source paths are `20-active` for the
 minimal Green implementation accepted in
-`docs/work-queue/evidence/M55-T010-task1-red-review.md`. Tasks 2–6 remain
+`docs/work-queue/evidence/M55-T010-task1-green-review.md`. Tasks 2–6 remain
 blocked by M51/M53/M54/S26/S36/S42/B04 as mapped in
 `docs/work-queue/evidence/M55-T010-task1-readiness-review.md`; no active
 predecessor path is transferred by this candidate record.

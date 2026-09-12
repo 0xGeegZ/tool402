@@ -134,3 +134,66 @@ implementedTest("rejects stale, forged, changed, and expired assertions before a
     assert.equal(allocations, 0, name);
   }
 });
+
+implementedTest("rejects a wrong transport target and streamed oversized body before allocation", async () => {
+  const { handleProviderSessionIngressForTest } = await import(ingressUrl.href);
+  const { request, key } = await signedRequest();
+  const oversized = new ReadableStream({
+    start(controller) {
+      controller.enqueue(new Uint8Array(4097));
+      controller.close();
+    },
+  });
+  const cases = [
+    new Request("http://backend.test/internal/provider-tools", {
+      method: "POST", headers: request.headers, body: request.body, duplex: "half",
+    }),
+    new Request("https://backend.test/internal/provider-tools", {
+      method: "POST", headers: request.headers, body: oversized, duplex: "half",
+    }),
+  ];
+  for (const candidate of cases) {
+    let allocations = 0;
+    const response = await handleProviderSessionIngressForTest({}, candidate, {
+      nowMilliseconds: () => 1_735_689_600_000,
+      resolveIngressKey: () => key,
+      claimReplay: () => "claimed",
+      allocate: async () => { allocations += 1; return { outcome: "allocated" }; },
+    });
+    assert.equal(response.status, 401);
+    assert.equal(allocations, 0);
+  }
+});
+
+implementedTest("rejects overflowing timestamps and invalid keys before allocation", async () => {
+  const { handleProviderSessionIngressForTest } = await import(ingressUrl.href);
+  const tooLargeTimestamp = await signedRequest(undefined, "/internal/provider-tools", "9223372036854775808");
+  const valid = await signedRequest();
+  for (const [signed, resolveIngressKey] of [
+    [tooLargeTimestamp, () => tooLargeTimestamp.key],
+    [valid, () => ({})],
+  ]) {
+    let allocations = 0;
+    const response = await handleProviderSessionIngressForTest({}, signed.request, {
+      nowMilliseconds: () => 1_735_689_600_000,
+      resolveIngressKey,
+      claimReplay: () => "claimed",
+      allocate: async () => { allocations += 1; return { outcome: "allocated" }; },
+    });
+    assert.equal(response.status, 401);
+    assert.equal(allocations, 0);
+  }
+});
+
+implementedTest("rejects a provider-tool response larger than the internal 64 KiB bound", async () => {
+  const { handleProviderSessionIngressForTest } = await import(ingressUrl.href);
+  const { request, key } = await signedRequest();
+  const response = await handleProviderSessionIngressForTest({}, request, {
+    nowMilliseconds: () => 1_735_689_600_000,
+    resolveIngressKey: () => key,
+    claimReplay: () => "claimed",
+    allocate: async () => ({ outcome: "allocated", tool: { oversized: "x".repeat(65_537) } }),
+  });
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { outcome: "rejected" });
+});

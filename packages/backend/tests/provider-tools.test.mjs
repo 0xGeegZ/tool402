@@ -7,31 +7,34 @@ const sourceUrl = new URL("../convex/provider_tools.ts", import.meta.url);
 const schemaUrl = new URL("../convex/schema.ts", import.meta.url);
 const sourceExists = existsSync(fileURLToPath(sourceUrl));
 const implementedTest = sourceExists ? test : test.skip;
-const canonicalSignerAddress = "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454";
+const canonicalSignerAddress = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
 const requestId = "013d5c4d-21d9-4f02-a62b-47f49f3b17ad";
 
 function authority(overrides = {}) {
   return {
     _id: "commandAuthorities:issuer",
     _creationTime: 1,
-    principalPublicId: "principal_42",
+    principalPublicId: "tool402_ats_issuer_testnet_v1",
     canonicalSignerAddress,
     chainId: 296,
     role: "ISSUER",
-    ownedSubjectPublicIds: ["riskscan"],
-    authorityVersion: "authority-v1",
+    ownedSubjectPublicIds: ["riskscan_revenue_note_demo"],
+    authorityVersion: "ats_issuer_testnet_v1",
     enabled: true,
     ...overrides,
   };
 }
 
-function database({ authorities = [], tools = [], serializeSameRequestReads = false } = {}) {
+function database({ authorities = [], tools = [], offerings = [], serializeSameRequestReads = false } = {}) {
   const rows = {
     commandAuthorities: structuredClone(authorities),
     providerTools: structuredClone(tools),
+    offerings: structuredClone(offerings),
   };
   const writes = [];
   let sameRequestReads = 0;
+  let releaseConflictedRead;
+  const firstWrite = new Promise((resolve) => { releaseConflictedRead = resolve; });
   const ctx = {
     db: {
       query(table) {
@@ -49,12 +52,27 @@ function database({ authorities = [], tools = [], serializeSameRequestReads = fa
             const matches = () => rows[table].filter((row) => filters.every(([field, value]) => row[field] === value));
             return {
               async take(limit) {
-                if (serializeSameRequestReads && table === "providerTools" && index === "by_owner_and_request" && ++sameRequestReads === 2) {
-                  await Promise.resolve();
+                if (serializeSameRequestReads && table === "providerTools" && index === "by_owner_and_chain_and_request" && ++sameRequestReads === 2) {
+                  // Convex reruns a conflicting mutation after the first transaction commits.
+                  await firstWrite;
                 }
                 return matches().slice(0, limit);
               },
-              order() { return { async take(limit) { return matches().slice(0, limit); } }; },
+              order() {
+                return {
+                  async paginate({ cursor, numItems }) {
+                    const start = cursor === null ? 0 : Number.parseInt(cursor, 10);
+                    assert.ok(Number.isSafeInteger(start) && start >= 0);
+                    const rows = matches();
+                    const page = rows.slice(start, start + numItems);
+                    return {
+                      page,
+                      isDone: start + page.length >= rows.length,
+                      continueCursor: String(start + page.length),
+                    };
+                  },
+                };
+              },
             };
           },
         };
@@ -64,6 +82,7 @@ function database({ authorities = [], tools = [], serializeSameRequestReads = fa
         const row = { _id: `providerTools:${rows.providerTools.length}`, _creationTime: 1, ...structuredClone(document) };
         rows.providerTools.push(row);
         writes.push(row);
+        releaseConflictedRead();
         return row._id;
       },
     },
@@ -82,11 +101,27 @@ function tool(overrides = {}) {
     serviceId: `tool_${suffix}`,
     serviceSlug: `tool-${suffix}`,
     canonicalSignerAddress,
-    principalPublicId: "principal_42",
-    authorityVersion: "authority-v1",
+    chainId: 296,
+    principalPublicId: "tool402_ats_issuer_testnet_v1",
+    authorityVersion: "ats_issuer_testnet_v1",
     requestId,
-    state: "ALLOCATED",
+    offeringVersion: 1,
+    directoryVersion: 1,
     createdAt: 1n,
+    ...overrides,
+  };
+}
+
+function offeringFor(toolRecord, overrides = {}) {
+  return {
+    _id: `offerings:${toolRecord.toolPublicId}`,
+    _creationTime: 1,
+    offeringPublicId: toolRecord.offeringPublicId,
+    subjectPublicId: toolRecord.subjectPublicId,
+    canonicalSignerAddress: toolRecord.canonicalSignerAddress,
+    version: 1,
+    narrative: { title: "Deployed RiskScan" },
+    state: "DRAFT",
     ...overrides,
   };
 }
@@ -125,8 +160,9 @@ implementedTest("reserves a providerTools schema table with owner and request re
   assert.deepEqual(
     table.indexes.map(({ indexDescriptor, fields }) => [indexDescriptor, fields]).sort(),
     [
-      ["by_owner_and_created", ["canonicalSignerAddress", "createdAt"]],
-      ["by_owner_and_request", ["canonicalSignerAddress", "requestId"]],
+      ["by_offering_public_id", ["offeringPublicId"]],
+      ["by_owner_and_chain_and_created", ["canonicalSignerAddress", "chainId", "createdAt"]],
+      ["by_owner_and_chain_and_request", ["canonicalSignerAddress", "chainId", "requestId"]],
       ["by_tool_public_id", ["toolPublicId"]],
     ],
   );
@@ -147,8 +183,12 @@ implementedTest("allocates once for one current issuer and replays the same owne
   assert.equal(first.tool.offeringPublicId, `offering_${first.tool.toolPublicId.slice(5)}`);
   assert.equal(first.tool.serviceId, first.tool.toolPublicId);
   assert.equal(first.tool.serviceSlug, `tool-${first.tool.toolPublicId.slice(5)}`);
+  assert.equal(first.tool.title, "RiskScan");
   assert.equal(db.writes[0].canonicalSignerAddress, canonicalSignerAddress);
-  assert.equal(db.writes[0].state, "ALLOCATED");
+  assert.equal(db.writes[0].chainId, 296);
+  assert.equal(db.writes[0].offeringVersion, 1);
+  assert.equal(db.writes[0].directoryVersion, 1);
+  assert.equal(Object.hasOwn(db.writes[0], "state"), false);
 });
 
 implementedTest("rejects revoked, non-issuer, and ambiguous authorities without allocating", async () => {
@@ -156,7 +196,8 @@ implementedTest("rejects revoked, non-issuer, and ambiguous authorities without 
   for (const authorities of [
     [authority({ enabled: false })],
     [authority({ role: "BACKER" })],
-    [authority(), authority({ _id: "commandAuthorities:duplicate", principalPublicId: "principal_43" })],
+    [authority({ principalPublicId: "sandbox_issuer" })],
+    [authority(), authority({ _id: "commandAuthorities:duplicate" })],
   ]) {
     const db = database({ authorities });
     assert.deepEqual(
@@ -238,6 +279,7 @@ implementedTest("keeps every allocated tool owner-scoped while listing history a
       offeringPublicId: mine.offeringPublicId,
       serviceId: mine.serviceId,
       serviceSlug: mine.serviceSlug,
+      title: "RiskScan",
       state: "ALLOCATED",
     }],
     nextCursor: null,
@@ -253,4 +295,52 @@ implementedTest("keeps every allocated tool owner-scoped while listing history a
     await readOwnedTool._handler(db.ctx, { canonicalSignerAddress, toolPublicId: mine.toolPublicId }),
     page.tools[0],
   );
+});
+
+implementedTest("derives safe offering title and state instead of storing lifecycle on the tool", async () => {
+  const { listOwnedTools, readOwnedTool } = await import(sourceUrl.href);
+  const mine = tool();
+  const db = database({ tools: [mine], offerings: [offeringFor(mine, { state: "OPEN", narrative: { title: "Same-name RiskScan" } })] });
+  const page = await listOwnedTools._handler(db.ctx, { canonicalSignerAddress, cursor: null });
+  assert.deepEqual(page, {
+    tools: [{
+      toolPublicId: mine.toolPublicId,
+      subjectPublicId: mine.subjectPublicId,
+      offeringPublicId: mine.offeringPublicId,
+      serviceId: mine.serviceId,
+      serviceSlug: mine.serviceSlug,
+      title: "Same-name RiskScan",
+      state: "OPEN",
+    }],
+    nextCursor: null,
+  });
+  assert.deepEqual(
+    await readOwnedTool._handler(db.ctx, { canonicalSignerAddress, toolPublicId: mine.toolPublicId }),
+    page.tools[0],
+  );
+});
+
+implementedTest("uses the indexed opaque cursor to page every owner-scoped tool", async () => {
+  const { listOwnedTools } = await import(sourceUrl.href);
+  const tools = Array.from({ length: 21 }, (_, index) => tool({
+    suffix: index.toString(16).padStart(32, "0"),
+    requestId: `${index.toString(16).padStart(8, "0")}-21d9-4f02-a62b-47f49f3b17ad`,
+  }));
+  const db = database({ tools });
+  const first = await listOwnedTools._handler(db.ctx, { canonicalSignerAddress, cursor: null });
+  assert.equal(first.tools.length, 20);
+  assert.equal(first.nextCursor, "20");
+  const second = await listOwnedTools._handler(db.ctx, { canonicalSignerAddress, cursor: first.nextCursor });
+  assert.deepEqual(second, {
+    tools: [{
+      toolPublicId: tools[20].toolPublicId,
+      subjectPublicId: tools[20].subjectPublicId,
+      offeringPublicId: tools[20].offeringPublicId,
+      serviceId: tools[20].serviceId,
+      serviceSlug: tools[20].serviceSlug,
+      title: "RiskScan",
+      state: "ALLOCATED",
+    }],
+    nextCursor: null,
+  });
 });

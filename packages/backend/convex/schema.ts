@@ -23,6 +23,24 @@ export default defineSchema({
     replayIdentity: v.string(),
     claimedAt: v.int64(),
   }).index("by_replay_identity", ["replayIdentity"]),
+  providerTools: defineTable({
+    toolPublicId: v.string(),
+    subjectPublicId: v.string(),
+    offeringPublicId: v.string(),
+    serviceId: v.string(),
+    serviceSlug: v.string(),
+    canonicalSignerAddress: v.string(),
+    chainId: v.literal(296),
+    principalPublicId: v.string(),
+    authorityVersion: v.string(),
+    requestId: v.string(),
+    offeringVersion: v.literal(1),
+    directoryVersion: v.literal(1),
+    createdAt: v.int64(),
+  }).index("by_tool_public_id", ["toolPublicId"])
+    .index("by_offering_public_id", ["offeringPublicId"])
+    .index("by_owner_and_chain_and_request", ["canonicalSignerAddress", "chainId", "requestId"])
+    .index("by_owner_and_chain_and_created", ["canonicalSignerAddress", "chainId", "createdAt"]),
   externalPrepareCommandAttempts: defineTable({
     version: v.literal(1),
     type: v.literal("external.prepare"),

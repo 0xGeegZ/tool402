@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active (Task 1 durable RED only)
+- Queue state: 20-active (Task 1 Green accepted; Tasks 2–6 blocked)
 - Dependencies: none.
 - Owner: root integrator for documentation, readiness, path reservations,
   activation, review, integration, commits, and pushes.
@@ -59,6 +59,17 @@ Moving this card to `10-ready` may reserve only
 ATS, receipt, Directory, or UI path: each later plan task still requires an
 exact scoped transfer/release and its own readiness/RED cycle.
 
+The new protected route correctly causes M41's closed HTTP-route inventory to
+fail. Its existing test is not one of the twelve Task 1 paths. The independent
+review and root test-only activation in
+[the supplemental record](../../evidence/M55-T010-task1-http-route-supplement.md)
+authorize only its one expected-route entry; all its other M41 assertions and
+every other M41 path remain retained.
+
+Task 1 Green is accepted in [its exact-head review](../../evidence/M55-T010-task1-green-review.md).
+The accepted slice supplies allocation and protected owner reads only; it does
+not surface a dashboard button. Task 6 remains the separately gated UI slice.
+
 ## Completion
 
 The [refinement review](../../evidence/M55-T010-refinement-review.md) is clear
@@ -67,8 +78,10 @@ gate above remains mandatory for the implementation agent.
 
 Refinement is complete when packet/control records agree, reference/queue/
 whitespace checks pass, independent documentation review is clear, and docs
-are committed/pushed. This card is `20-active` only for Task 1 durable RED;
-the accepted RED review authorizes only the exact Task 1 Green paths.
+are committed/pushed. This card is `20-active`: Task 1 Green is accepted,
+while the remaining Tasks 2–6 retain their documented blocking ownership. The
+accepted Task 1 source is not evidence that the new-tool button or an
+end-to-end deployment is available.
 
 Implementation completion requires the plan's exact-head tests/reviews and
 separate browser, CI, deployment, and human-testnet evidence. A committed

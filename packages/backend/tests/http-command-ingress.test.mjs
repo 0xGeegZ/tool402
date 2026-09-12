@@ -141,6 +141,7 @@ implementedTest("registers exactly the protected command route and the two publi
   const routes = http.default.getRoutes().map(([path, method]) => [path, method]);
   assert.deepEqual(routes, [
     ["/internal/commands", "POST"],
+    ["/internal/provider-tools", "POST"],
     ["/public/directory/*", "GET"],
     ["/public/offerings/*", "GET"],
   ]);
