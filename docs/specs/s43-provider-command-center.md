@@ -41,6 +41,11 @@ no I/O and owns no runtime capability.
 
 The rail wraps into stacked stages at narrow widths. The activity list and snapshot use a single column below `lg`; their contents avoid fixed minimum widths and horizontal clipping. The supporting cards collapse from four columns to two and then one. Decorative artwork is `aria-hidden`; state is always conveyed by text, not colour alone.
 
+The earlier S25 generic-header and S28 distilled-report assertions are
+superseded only for `/provider`: the route owns one command-center hero and the
+loaded component owns the regions above. Other PageHeader consumers and shared
+primitive behavior remain unchanged.
+
 ## Exclusions
 
 No projection reader, API, session, wallet, data model, external request, command, signature, payment, chain, deployment, or live-operation behavior is modified.

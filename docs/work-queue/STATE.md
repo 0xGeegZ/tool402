@@ -47,7 +47,8 @@
   S43-T010 is in `20-active`: its committed specification and UI manifest lock
   the command-center composition, and its only future source paths are the
   provider page, provider status component/state, generated provider hero
-  asset, and focused provider-status test. It creates no new read, state,
+  asset, focused provider-status test, and the two superseded Provider-only
+  visual/header assertion surfaces. It creates no new read, state,
   wallet/provider, command, transaction,
   deployment, or live authority.
 - S43_LOCAL_RECORDS: `docs/specs/s43-provider-command-center.md` and
@@ -69,6 +70,12 @@
   generated asset, and focused test; every projection/API, session,
   wallet/provider, command, transaction, deployment, and live boundary stays
   excluded.
+- S43_PROVIDER_CONTRACT_RECONCILIATION: The GREEN full-suite run exposed the
+  prior S25 generic Provider header assertion and S28 distilled Provider report
+  assertion as incompatible with S43's already-specified single hero. Only the
+  Provider target assertions in `apps/web/tests/page-header.test.mjs` and the
+  Provider-only `apps/web/tests/provider-visual-reconciliation.test.mjs` may be
+  reconciled; other routes and shared components remain outside S43.
 
 - S29_POST_ACCEPTANCE_REVIEW_FIX: The repository owner explicitly directs the
   two confirmed Provider deploy review corrections on PR #82. The root may

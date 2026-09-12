@@ -19,6 +19,10 @@ The hero's decorative illustration is required, static, repository-owned, loaded
 
 Every displayed value comes from the existing loaded offering/directory projection or existing local route. The evidence row values and Hashscan link remain governed by UI-S17. `Not live` and issuance-unavailable copy are fixed truthfulness labels, not new state. A non-loaded directory stage renders its existing exact outcome sentence and cannot use a verified/complete treatment; the existing `CLOSED` next action has no control.
 
+This manifest supersedes UI-S25's Provider-only `PageHeader` assertion and
+UI-S28's Provider-only former report-shape assertion. It does not supersede
+their contracts for any other route or shared component.
+
 ## Breakpoints
 
 Desktop pairs activity/snapshot and shows four supporting cards. At narrow widths all regions are one column, the progress rail stacks, and no table or card may create horizontal overflow.
