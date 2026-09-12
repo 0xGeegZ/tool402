@@ -84,3 +84,14 @@ signed campaign surface. After that RED contract is observed, only
 `apps/web/src/app/dashboard/page.tsx` may remove that import and mount.
 No workspace component, child route, session/auth protocol, projection reader,
 wallet action, or external authority may change.
+
+## Empty campaign amendment
+
+The repository owner directs the signer-owned dashboard to render one static
+empty campaign card when the existing projection cannot yield that signer’s
+campaign. The focused `dashboard-campaign.test.mjs` may define this contract;
+after its expected RED result, only the already-reserved
+`apps/web/src/components/dashboard/dashboard-campaign.tsx` may render the
+card. It may use only the existing `/provider/deploy` and `/explore/riskscan`
+links. No new query, retry, wallet action, session behavior, provider command,
+or external authority is authorized.

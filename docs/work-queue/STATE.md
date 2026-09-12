@@ -49,6 +49,16 @@
   untouched. No session, projection reader, wallet, signature, command, relay,
   transaction, deployment, or external authority changes.
 
+- S42_EMPTY_CAMPAIGN_AMENDMENT: The repository owner directs one static empty
+  campaign card for a valid dashboard session when S42’s existing projection
+  cannot yield the signer-owned campaign. The focused
+  `apps/web/tests/dashboard-campaign.test.mjs` is active for its RED contract;
+  after the expected absence failure, only the existing
+  `apps/web/src/components/dashboard/dashboard-campaign.tsx` may render the
+  fixed local `/provider/deploy` and `/explore/riskscan` links. No additional
+  read, retry, session, wallet, command, transaction, deployment, or external
+  authority is authorized.
+
 - M54_STAGE_3_CANDIDATE_RECOVERY_ACTIVE: User-directed CORE_P0 correction.
   After a reload, the Provider screen must let a user explicitly revalidate a
   prior public Stage-B transaction hash and recover only a fully corroborated
