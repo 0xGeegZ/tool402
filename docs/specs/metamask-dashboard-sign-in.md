@@ -145,8 +145,9 @@ root-header `Suspense` boundary so Cache Components do not make the root shell
 dynamic; its fallback is the existing public menu without that link. This
 does not reuse wallet connection state, alter the S26 wallet/header contract,
 or expose an identity in the navigation. `POST /api/auth/logout` clears both
-cookie names and returns `204` with `Cache-Control: no-store`. A root-mounted
-client synchronizer consumes only the accepted shared wallet state. After it
+cookie names and returns `204` with `Cache-Control: no-store`. The authenticated
+navigation boundary mounts a client synchronizer that consumes only the
+accepted shared wallet state. After it
 has observed one settled wallet identity (`connected` or `not_issuer`), a later
 `disconnected` state sends exactly one same-origin logout request. On success
 it replaces the current route with `/sign-in` and refreshes the App Router so

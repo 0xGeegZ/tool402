@@ -911,7 +911,7 @@ No secrets, account keys, or private evidence belong in this file.
   directs the root to revoke the existing dashboard session when the accepted
   shared wallet state loses its selected account after one settled identity.
   The bounded amendment reserves a new auth synchronizer and focused test plus
-  its root-layout mount. It may call only same-origin `POST /api/auth/logout`,
+  its authenticated-navigation mount. It may call only same-origin `POST /api/auth/logout`,
   then replace with `/sign-in` and refresh after success. Initial disconnected,
   rejected-connect, connecting, and wrong-chain states do nothing. S26 and M50
   source remain unchanged; no provider request, signature, storage, retry,

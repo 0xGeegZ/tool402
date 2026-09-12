@@ -234,7 +234,8 @@ After observing that disconnecting MetaMask left an eight-hour dashboard
 session active, the repository owner directs the root to synchronize accepted
 wallet loss with the existing logout route. The root additionally reserves one
 new `dashboard-session-sync.tsx` client component, its focused
-`dashboard-session-sync.test.mjs` contract, and the root-layout mount point.
+`dashboard-session-sync.test.mjs` contract, and its mount inside the existing
+server-authenticated navigation boundary.
 After the shared wallet state has exposed one settled identity, a later
 `disconnected` state may send exactly one same-origin `POST /api/auth/logout`;
 after a successful response it replaces the route with `/sign-in` and refreshes

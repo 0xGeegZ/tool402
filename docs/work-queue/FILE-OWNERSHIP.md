@@ -1216,8 +1216,9 @@ User-directed S40 MetaMask sign-out synchronization amendment: the root
 additionally reserves new
 `apps/web/src/components/auth/dashboard-session-sync.tsx`, new
 `apps/web/tests/dashboard-session-sync.test.mjs`, and only the synchronizer
-import/mount in `apps/web/src/app/layout.tsx`. The component may consume the
-accepted shared wallet state, remember that one settled identity was observed,
+import/mount in the existing server-authenticated
+`apps/web/src/components/auth/dashboard-navigation.tsx` boundary. The component
+may consume the accepted shared wallet state, remember that one settled identity was observed,
 and on a later `disconnected` state call only same-origin
 `POST /api/auth/logout`. A successful response may replace the current route
 with `/sign-in` and refresh the App Router. It may not read cookies, inspect or
