@@ -2,6 +2,22 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
+M56-S26 scoped ownership transfer: because canonical main does not yet contain
+M56's card, specification, and catalog row, this is a conditional reservation,
+not active M56 ownership. It takes effect only when the rebased M56 integration
+PR commits those controls. It then transfers only `BackingForm`'s
+`useWalletSession`/`connectedWalletSession` composition and the
+`section[aria-labelledby="backing-status"]` composition in `backing-flow.tsx`,
+plus the matching shared-session assertions in `backing-route.test.mjs`. S26
+retains all other S26 selectors, assertions, and paths. M56 must
+preserve `useWalletSession`, `connectedWalletSession`, and the one shared
+session; it may not add `WalletIsland`, local duplicate wallet state, discovery,
+signature, authority, or other wallet behavior. The transfer excludes
+`wallet-session.tsx`, `wallet-connect.tsx`, layout/header, provider-deploy
+integration, the session state machine, and unrelated tests. M56 must rebase on
+this canonical record, run focused backing/S26 compatibility tests, and receive
+joint review before integration.
+
 M54-T010 is a root-owned `20-active` CORE_P0 candidate recovery correction. It
 owns its card, specification, queue/review records, integration, commits, and
 pushes, plus only `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`,

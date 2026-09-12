@@ -841,3 +841,18 @@ No secrets, account keys, or private evidence belong in this file.
   sole durable authorization decision. No storage, automatic wallet discovery,
   account request, signature, wallet-state mutation, transaction, deployment,
   or live behavior is authorized.
+
+- M56_S26_BACKING_COMPOSITION_TRANSFER: Because canonical main does not yet
+  contain M56's card, specification, and catalog row, this is a conditional
+  reservation, not active M56 ownership. It takes effect only in the rebased
+  M56 integration PR that commits those controls. It then transfers only
+  `BackingForm`'s `useWalletSession`/`connectedWalletSession` and
+  `section[aria-labelledby="backing-status"]` composition in `backing-flow.tsx`,
+  plus matching shared-session assertions in `backing-route.test.mjs`. S26
+  retains all other S26 selectors/assertions/paths. M56 must preserve
+  `useWalletSession`, `connectedWalletSession`, and one shared session, with no
+  WalletIsland, local duplicate state, discovery, signature, authority, or
+  other wallet behavior. M56 must rebase on this record, run focused backing/S26
+  compatibility tests, and receive joint review before integration. This neither
+  accepts S26 nor authorizes runtime configuration, authority provisioning,
+  transfer, deployment, or live action.
