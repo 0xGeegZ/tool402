@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 
 import { isUserRejection } from "../../lib/wallet/metamask-provider.ts";
 import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
@@ -15,6 +15,8 @@ import {
   createBackingIntent,
   formatHbar,
   formatShare,
+  isCurrentBackingIntent,
+  paymentTinybars,
   readBackingOffering,
   transferRequest,
   validateUnits,
@@ -36,7 +38,7 @@ function describeView(view: BackingView): string {
     case "prepared":
       return `The funding command was accepted. Send exactly ${formatHbar(view.intent.tinybars)} from MetaMask. A signature is not a payment.`;
     case "payment_submitted":
-      return `Transfer ${view.transactionHash} was submitted from MetaMask. It is not confirmed here, and units are allocated only after the issuer signs.`;
+      return `Payment submitted — allocation pending. Transaction ${view.transactionHash} was submitted from MetaMask. It is not confirmed here.`;
     case "payment_outcome_unknown":
     case "refused":
       return view.message;
@@ -58,6 +60,7 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
   const [request, setRequest] = useState<BackingIntent | null>(null);
   const [transferring, setTransferring] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const sendingRef = useRef(false);
   const validation = validateUnits(offering, unitsInput);
   const label = backingLifecycleLabels[view.kind];
   const committed = request ?? ("intent" in view ? view.intent : null);
@@ -80,12 +83,20 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
   }
 
   async function send() {
-    if (session === null || view.kind !== "prepared" || transferring) return;
+    if (session === null || view.kind !== "prepared" || transferring || sendingRef.current) return;
+    sendingRef.current = true;
     setTransferring(true);
     setNotice(null);
+    if (!isCurrentBackingIntent(offering, view.intent)) {
+      setNotice("The accepted funding intent no longer matches the offering. Nothing was sent.");
+      sendingRef.current = false;
+      setTransferring(false);
+      return;
+    }
     const current = await readCurrentSession(session.provider);
     if (current.state.kind !== "connected" || current.state.address !== session.address) {
       setNotice("MetaMask's account or network changed after connecting. Reconnect on Hedera Testnet before sending; nothing was sent.");
+      sendingRef.current = false;
       setTransferring(false);
       return;
     }
@@ -101,6 +112,7 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
     } catch {
       setView(viewAfterTransfer(view, { kind: "no_hash" }));
     }
+    if (result.kind === "declined") sendingRef.current = false;
     setTransferring(false);
   }
 
@@ -130,8 +142,8 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Choose units</CardTitle>
-          <CardDescription>Whole units only. The amount is the units multiplied by the unit price.</CardDescription>
+          <CardTitle>Choose amount</CardTitle>
+          <CardDescription>Whole note units at {formatHbar(offering.terms.noteUnitPriceTinybars)} each. Minimum {offering.terms.minimumPurchaseUnits.toString()} units.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <label className="block space-y-2 text-sm">
@@ -139,7 +151,7 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
             <input name="units" inputMode="numeric" value={unitsInput} disabled={locked} aria-invalid={!validation.ok} aria-describedby="backing-units-message" onChange={(event: ChangeEvent<HTMLInputElement>) => setUnitsInput(event.target.value)} className="block w-full rounded-control border border-border bg-background px-3 py-2" />
           </label>
           <p id="backing-units-message" className="text-sm text-muted-foreground">{validation.ok ? "Whole units within the offering bounds." : validation.message}</p>
-          <p className="text-sm">Amount: {committed !== null ? formatHbar(committed.tinybars) : validation.ok ? formatHbar(validation.units * offering.terms.noteUnitPriceTinybars) : "—"}</p>
+          <p className="text-sm">{committed !== null ? formatHbar(committed.tinybars) : validation.ok ? formatHbar(paymentTinybars(offering, validation.units)) : "—"} for {committed !== null ? committed.units.toString() : validation.ok ? validation.units.toString() : "—"} note units</p>
           <label className="flex items-start gap-3 text-sm">
             <input name="acknowledgement" type="checkbox" checked={acknowledged} disabled={locked} onChange={(event: ChangeEvent<HTMLInputElement>) => setAcknowledged(event.target.checked)} className="mt-1" />
             <span>I understand this is a testnet experiment with no real funds, that units are allocated only after the issuer signs, and that the payout cap is {formatHbar(offering.terms.payoutCapTinybars)}.</span>

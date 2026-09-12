@@ -1,5 +1,31 @@
 # Runtime queue state
 
+- M56_RISKSCAN_BACKING_DEMO_MVP_INTAKE: The repository owner requests a narrow
+  D-Day RiskScan backing proposal: one OPEN canonical offering, exact S18
+  intent, one explicit HBAR transfer, a canonical hash, and allocation pending.
+  M56-T010 begins in 00-inbox with its local specification only. No product
+  source, executable contract, treasury configuration, BACKER authority,
+  wallet action, signature, transfer, deployment, or live proof is authorized
+  until separate readiness and RED activation records are committed.
+
+- M56_RISKSCAN_BACKING_DEMO_MVP_READY: Dependencies S15, S18, M16, and M40 are
+  accepted; the canonical main baseline is clean and S18 is available for
+  narrow reuse. M56-T010 moves to 10-ready. A separate activation must reserve
+  the exact RED contract before any source or test change; human runtime and
+  live-action authority remain unchanged.
+
+- M56_RISKSCAN_BACKING_DEMO_MVP_ACTIVATION: M56-T010 moves from 10-ready to
+  20-active solely for a focused RED executable contract. Production source,
+  treasury configuration, BACKER authority, wallet action, signature,
+  transfer, deployment, and live proof remain prohibited until the RED result
+  is accepted.
+
+- M56_RISKSCAN_BACKING_DEMO_MVP_RED_ACCEPTANCE: The focused executable contract
+  at `27b0d762` records eleven intended absence failures and eight unchanged
+  passes against the exact implementation-free commit archive. M56 may now
+  amend only the source and test paths in its specification for minimal GREEN;
+  every shared and human runtime boundary remains unchanged.
+
 - S43_FOOTER_POSITIONING_ACCEPTANCE: Source `f248368f` is accepted at 60-done.
   The mascot is grouped with the Tool402 logo in the first footer column;
   asset, decorative accessibility, breakpoint, links, copy and routes remain

@@ -101,6 +101,9 @@ test("reads the offering terms through the accepted constructor and refuses anyt
 
   assert.equal(state.readBackingOffering(null), null);
   assert.equal(state.readBackingOffering(undefined), null);
+  for (const campaignState of ["DRAFT", "ASSET_PENDING", "READY", "CLOSED"]) {
+    assert.equal(state.readBackingOffering(record({ state: campaignState })), null, campaignState);
+  }
   assert.equal(state.readBackingOffering(record({ definition: { ...record().definition, terms: { ...termsV1, reserveShareBps: "1000", issuerShareBps: "9000" } } })), null);
   assert.equal(state.readBackingOffering(record({ definition: { ...record().definition, terms: { ...termsV1, noteUnitPriceTinybars: "1.5" } } })), null);
 });
@@ -229,6 +232,17 @@ test("orders the two confirmations and moves a returned hash only to payment_sub
   assert.equal(state.viewAfterSignature({ phase: "failed", outcome: null }, intent).kind, "choosing");
   assert.equal(state.viewAfterSignature({ phase: "complete", outcome: null }, intent).kind, "payment_outcome_unknown");
   assert.throws(() => state.viewAfterSignature({ phase: "waiting", outcome: null }, intent), TypeError);
+});
+
+test("rechecks the accepted intent before the one explicit transfer", async () => {
+  const state = await loadState();
+  const offering = state.readBackingOffering(record());
+  const intent = state.createBackingIntent(offering, 25n, nowMilliseconds, fixedBytes(4));
+
+  assert.equal(state.isCurrentBackingIntent(offering, intent), true);
+  assert.equal(state.isCurrentBackingIntent(offering, { ...intent, treasury: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }), false);
+  assert.equal(state.isCurrentBackingIntent(offering, { ...intent, tinybars: intent.tinybars + 1n }), false);
+  assert.equal(state.isCurrentBackingIntent(offering, { ...intent, weibarHex: "0x1" }), false);
 });
 
 test("retries nothing: an unknown wallet return, a transport failure, and an unexpected response reach the unknown kind", async () => {
