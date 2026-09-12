@@ -165,3 +165,19 @@ exclusions govern; this card does not restate them.
   remains the sole disconnected-wallet instruction and control; the signing
   explanation card, wallet behavior, authority boundaries, and layout stay
   unchanged.
+
+## User-directed deploy-form retry amendment
+
+- On 2026-09-12, the repository owner directs the existing
+  `provider-deploy-connect` section to remain visible when the accepted shared
+  wallet session reports `no_provider` or `multiple_providers`, rather than
+  only `disconnected`. In those two discovery-failure states its explicit
+  action is labelled `Retry`; the initial `disconnected` action remains
+  `Connect MetaMask`.
+- This narrowly supersedes the "only when ... `disconnected`" wording above
+  for those two closed failure states only. It reserves only
+  `apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, its
+  existing focused `apps/web/tests/deploy-stage-signing.test.mjs` seam, and
+  the existing shared-session assertion in `apps/web/tests/wallet-session.test.mjs`.
+  It does not change the session state union, discovery, account request,
+  chain switch, signing, authority, transaction, deployment, or live boundary.
