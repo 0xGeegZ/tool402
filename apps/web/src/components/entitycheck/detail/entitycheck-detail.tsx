@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BackToolCard } from "../../backing/back-tool-card";
 import { Badge } from "../../ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
 
@@ -49,12 +50,15 @@ export function EntityCheckDetail() {
           <h2 id="entitycheck-capability" className="text-2xl font-semibold tracking-tight">Counterparty verification</h2>
           <p className="leading-7 text-muted-foreground">Review the bounded inputs, outcomes, sources, and limitations before choosing another local route.</p>
         </div>
-        <Card className="rounded-panel shadow-none">
-          <CardHeader className="space-y-2">
-            <CardTitle>Descriptive detail</CardTitle>
-            <CardDescription>No request is made from this page.</CardDescription>
-          </CardHeader>
-        </Card>
+        <aside className="space-y-4">
+          <BackToolCard tool="EntityCheck France" projection={null} />
+          <Card className="rounded-panel shadow-none">
+            <CardHeader className="space-y-2">
+              <CardTitle>Descriptive detail</CardTitle>
+              <CardDescription>No request is made from this page.</CardDescription>
+            </CardHeader>
+          </Card>
+        </aside>
       </section>
 
       <section aria-labelledby="entitycheck-inputs" className="space-y-4">

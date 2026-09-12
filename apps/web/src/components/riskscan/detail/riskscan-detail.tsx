@@ -5,6 +5,7 @@ import type {
   RiskScanRequestInput,
 } from "@tool402/core";
 
+import { BackToolCard } from "../../backing/back-tool-card";
 import { Badge } from "../../ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
 import { PageHeader } from "../../ui/page-header";
@@ -138,6 +139,7 @@ export function RiskScanDetail() {
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-28">
+          <BackToolCard tool="RiskScan" href={"/explore/riskscan/back"} projection={null} />
           <Card className="rounded-panel">
             <CardHeader className="space-y-2">
               <CardTitle>Current boundary</CardTitle>
