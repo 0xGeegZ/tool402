@@ -51,7 +51,6 @@ test("migrates only the declared headers and fixes the two page-level action set
     ["src/app/dashboard/riskscan/preflight/page.tsx", "RiskScan Quick preflight"],
     ["src/app/dashboard/riskscan/compatibility/page.tsx", "Native quote compatibility"],
     ["src/app/demo/page.tsx", "Follow the Tool402 demo"],
-    ["src/app/provider/page.tsx", "Provider status"],
     ["src/components/riskscan/detail/riskscan-detail.tsx", "RiskScan"],
   ];
 
@@ -67,7 +66,9 @@ test("migrates only the declared headers and fixes the two page-level action set
     readAppFile("src/app/provider/page.tsx"),
     readAppFile("src/components/riskscan/detail/riskscan-detail.tsx"),
   ]);
-  assert.match(provider, /eyebrow="Tool operator"/);
+  assert.doesNotMatch(provider, /import \{ PageHeader \} from |<PageHeader\b/);
+  assert.match(provider, /aria-label="Tool operator Campaign status"/);
+  assert.doesNotMatch(provider, /<h1\b/);
   assert.doesNotMatch(provider, /actions=/);
   assert.match(detail, /href: "\/explore\/riskscan\/try", label: "Try RiskScan"/);
   assert.match(detail, /href: "\/explore\/riskscan\/tool-loop", label: "Explore RiskScan ToolLoop"/);

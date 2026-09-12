@@ -2,7 +2,6 @@ import { Suspense } from "react";
 
 import { LandingFooter } from "../../components/landing/landing-footer";
 import { ProviderStatus } from "../../components/provider/status/provider-status";
-import { PageHeader } from "../../components/ui/page-header";
 import { readProviderProjections } from "../../lib/offering-projection";
 import { riskScanOfferingPublicId } from "../../lib/dashboard-campaign";
 
@@ -14,14 +13,8 @@ async function ProviderStatusRegions() {
 export default function ProviderPage() {
   return (
     <>
-      <main className="space-y-10 pb-12 sm:space-y-12 sm:pb-20">
-        <PageHeader
-          eyebrow="Tool operator"
-          title="Campaign status"
-          description="Read the local offering and directory records without advancing them."
-          actions={[{ href: "/provider/deploy", label: "Open the deploy wizard" }, { href: "/explore/riskscan", label: "Explore RiskScan" }]}
-        />
-        <Suspense fallback={<p aria-live="polite" className="text-sm text-muted-foreground">Loading admitted records.</p>}><ProviderStatusRegions /></Suspense>
+      <main aria-label="Tool operator Campaign status" className="-mt-10">
+        <Suspense fallback={<p aria-live="polite" className="py-10 text-sm text-muted-foreground">Loading admitted records.</p>}><ProviderStatusRegions /></Suspense>
       </main>
       <LandingFooter />
     </>

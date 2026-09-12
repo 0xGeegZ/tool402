@@ -351,19 +351,21 @@ implementedTest("renders the S43 command center from the admitted campaign proje
   const stateModule = await import(new URL("../src/components/provider/status/provider-status-state.ts", import.meta.url).href);
   assert.equal(typeof stateModule.providerCampaignPresentation, "function");
   const offeringCases = [
-    ["DRAFT", "Campaign in progress", "Offering admitted · DRAFT", "current"],
-    ["ASSET_PENDING", "Campaign in progress", "Offering admitted · ASSET_PENDING", "current"],
-    ["READY", "Campaign prepared", "Offering admitted · READY", "complete"],
-    ["OPEN", "Campaign ready", "Offering admitted · OPEN", "complete"],
-    ["CLOSED", "Campaign closed", "Offering admitted · CLOSED", "complete"],
+    ["DRAFT", "Campaign in progress", "Offering admitted", "Offering admitted · DRAFT", "current"],
+    ["ASSET_PENDING", "Campaign in progress", "Offering admitted", "Offering admitted · ASSET_PENDING", "current"],
+    ["READY", "Campaign prepared", "Offering admitted", "Offering admitted · READY", "complete"],
+    ["OPEN", "Campaign ready", "Offering published", "Offering admitted · OPEN", "complete"],
+    ["CLOSED", "Campaign closed", "Offering closed", "Offering admitted · CLOSED", "complete"],
   ];
-  const cases = offeringCases.flatMap(([offeringState, heroTitle, offeringStage, offeringTone]) => [true, false].map((directoryLoaded) => ({
+  const cases = offeringCases.flatMap(([offeringState, heroTitle, offeringTitle, offeringStage, offeringTone]) => [true, false].map((directoryLoaded) => ({
     offeringState,
     directoryLoaded,
     expected: {
       heroTitle,
+      offeringTitle,
       offeringStage,
       offeringTone,
+      directoryTitle: directoryLoaded ? "Directory active" : "Directory unavailable",
       directoryStage: directoryLoaded ? "Directory active" : "Directory unavailable",
       directoryTone: directoryLoaded ? "complete" : "current",
       issuanceStage: "Unavailable in this demo",
@@ -373,7 +375,7 @@ implementedTest("renders the S43 command center from the admitted campaign proje
     cases.map(({ offeringState, directoryLoaded }) => stateModule.providerCampaignPresentation(offeringState, directoryLoaded)),
     cases.map(({ expected }) => expected),
   );
-  assert.deepEqual(stateModule.nextProviderAction("CLOSED"), { message: "None. The offering is closed.", href: null });
+  assert.deepEqual(stateModule.nextProviderAction("CLOSED"), { message: "Campaign closed", href: null });
 });
 
 implementedTest("derives the fixed region order, next actions, evidence cells, and Hashscan gate from admitted projection data", async () => {
@@ -409,13 +411,13 @@ implementedTest("derives the fixed region order, next actions, evidence cells, a
     atsAssetEvmAddress: "0x1111111111111111111111111111111111111111",
   }, {
     directoryVersion: 2,
-    record: { publishedAt: "2026-09-10T01:00:00.000Z" },
+    record: { publishedAt: "2026-09-10T01:00:00.000Z", serviceSlug: "dynamic-service" },
   });
   assert.deepEqual(rows, [
     ["offering.create", "riskscan_offering_demo v1", "signed command admitted", "2026-09-10T00:00:00.000Z"],
     ["external.prepare", "not recorded", "prepared attempt recorded", "not recorded"],
     ["revenue note", "0x1111111111111111111111111111111111111111", "address recorded", "not recorded"],
-    ["directory.publish", "riskscan v2", "a published directory version exists", "2026-09-10T01:00:00.000Z"],
+    ["directory.publish", "dynamic-service v2", "a published directory version exists", "2026-09-10T01:00:00.000Z"],
   ]);
   assert.deepEqual(
     state.providerEvidenceRows({

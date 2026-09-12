@@ -10,7 +10,7 @@ function readAppFile(path) {
   return readFile(join(appRoot, path), "utf8");
 }
 
-test("defines the distilled Provider overview: one status block, one primary action, data regions only when loaded", async () => {
+test("defines the Provider command center: one dynamic hero, scannable data regions, and a technical disclosure", async () => {
   const [page, status] = await Promise.all([
     readAppFile("src/app/provider/page.tsx"),
     readAppFile("src/components/provider/status/provider-status.tsx"),
@@ -18,38 +18,45 @@ test("defines the distilled Provider overview: one status block, one primary act
   const presentation = `${page}\n${status}`;
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
+  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 0);
   assert.match(page, /<LandingFooter\s*\/>/);
-  assert.match(page, /title="Provider status"/);
-  assert.match(page, /eyebrow="Tool operator"/);
+  assert.match(page, /aria-label="Tool operator Campaign status"/);
   assert.doesNotMatch(page, /actions=/);
-  assert.doesNotMatch(page, /Prepare an offering/);
 
-  assert.match(status, /data-ui=["']provider-status-block["']/);
-  assert.match(status, /aria-labelledby=["']provider-next-action["']/);
-  assert.equal((status.match(/Prepare an offering/g) ?? []).length, 1);
-  assert.equal((status.match(/href=["']\/provider\/deploy["']/g) ?? []).length, 1);
-  assert.match(status, /href=["']\/explore\/riskscan["']/);
-  assert.match(status, /href=["']\/docs\/providers["']/);
-  assert.match(status, /Offering record/);
-  assert.match(status, /Directory record/);
-  assert.doesNotMatch(status, /data-ui=["']provider-overview-state-grid["']/);
-  assert.doesNotMatch(status, /data-ui=["']provider-riskscan-offering-card["']/);
-  assert.doesNotMatch(status, /Local RiskScan offering path|Current scope|State ribbon/);
-  assert.doesNotMatch(status, /<Card\b/);
-  assert.match(status, /id=["']provider-evidence["']/);
-  assert.match(status, /<caption\b/);
-  for (const heading of ["Deployment evidence", "Active terms", "Active directory", "Signer"]) {
-    assert.match(status, new RegExp(`>\\s*${heading}\\s*<`));
-  }
-  assert.match(status, /offering === undefined \? null : <LoadedRegions\b/);
-  assert.match(status, /from ["']\.\.\/\.\.\/\.\.\/lib\/hbar-format["']/);
+  for (const region of [
+    "provider-command-center",
+    "provider-campaign-hero",
+    "provider-campaign-progress",
+    "provider-activity-timeline",
+    "provider-campaign-snapshot",
+    "provider-supporting-cards",
+    "provider-technical-record",
+  ]) assert.match(status, new RegExp(`data-ui=["']${region}["']`));
+  assert.match(status, /presentation\.heroTitle/);
+  assert.match(status, /presentation\.offeringTitle/);
+  assert.match(status, /presentation\.directoryTitle/);
+  assert.match(status, /nextAction = nextProviderAction\(offering\.state\)/);
+  assert.match(status, /nextAction\.href === null \? null : <Link/);
+  assert.match(status, /offering\.state === "OPEN" && directory !== undefined/);
   assert.match(status, /formatHbar\(BigInt\(/);
   assert.match(status, /formatShare\(BigInt\(/);
+  assert.match(status, /formatMaturity\(offering\.definition\.maturityAt\)/);
+  assert.match(status, /campaignName = offering\.narrative\.title/);
+  assert.match(status, /rows\.map\(/);
+  assert.equal((status.match(/href=["']\/provider\/deploy["']/g) ?? []).length, 1);
+  assert.match(status, /href=\{nextAction\.href\}/);
+  assert.match(status, /href=["']\/explore\/riskscan["']/);
+  assert.match(status, /src=["']\/brand\/provider-campaign-duo\.png["']/);
+  assert.match(status, /id=["']provider-evidence["']/);
+  assert.doesNotMatch(status, /<table\b|min-w-\[/);
+  for (const heading of ["Activity &amp; proof", "Campaign snapshot", "Economics", "Capacity", "Governance", "Trust details", "Technical record", "Active terms", "Active directory"]) {
+    assert.match(status, new RegExp(`>\\s*${heading}\\s*<`));
+  }
+  assert.match(status, /if \(offering !== undefined\) return <LoadedRegions\b/);
+  assert.match(status, /from ["']\.\.\/\.\.\/\.\.\/lib\/hbar-format["']/);
   assert.match(status, /<Status tone="warning">/);
   assert.match(status, /focus-visible:outline/);
 
-  assert.doesNotMatch(presentation, /\bshadow-(?:sm|md|lg|xl)\b/);
-  assert.doesNotMatch(presentation, /funding (?:modeled|raised)|position parts|paid tasks|usage revenue|account balance|portfolio|notifications|activity/i);
+  assert.doesNotMatch(presentation, /funding (?:modeled|raised)|position parts|paid tasks|usage revenue|account balance|portfolio|notifications/i);
   assert.doesNotMatch(presentation, /\b(?:live|published|active) offering\b/i);
 });
