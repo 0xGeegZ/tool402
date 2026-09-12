@@ -31,6 +31,12 @@ The visual treatment must retain the raw admitted offering state. It uses these 
 
 The directory stage is `Directory active` and complete only for a loaded directory projection. For every other directory outcome it says `Directory unavailable` and renders the existing exact outcome wording; it is not complete. The existing `CLOSED` next-action mapping remains the no-control case. `Backer issuance` always says `Unavailable in this demo` and is never a complete state.
 
+`provider-status-state.ts` exports the pure
+`providerCampaignPresentation(offeringState, directoryLoaded)` mapping used by
+the loaded view. It returns the hero title, an offering stage retaining the raw
+state, and directory/issuance stages with their textual treatment. It performs
+no I/O and owns no runtime capability.
+
 ## Responsive and accessibility rules
 
 The rail wraps into stacked stages at narrow widths. The activity list and snapshot use a single column below `sm`; cards retain labelled headings and the existing headings stay in document order. Decorative artwork is `aria-hidden`; state is always conveyed by text, not colour alone.

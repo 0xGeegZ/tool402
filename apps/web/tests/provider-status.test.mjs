@@ -336,8 +336,28 @@ implementedTest("renders the S43 command center from the admitted campaign proje
     "Trust details",
     "Not live",
   ]) assert.match(presentation, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-  assert.match(state, /providerCampaignPresentation/);
+  assert.doesNotMatch(presentation, /["']use client["']|\bfetch\s*\(|set(?:Timeout|Interval)\s*\(/);
   assert.doesNotMatch(presentation, /funding raised|units issued|paid task|balance|Live testnet|Connected|New offering version/i);
+
+  const stateModule = await import(new URL("../src/components/provider/status/provider-status-state.ts", import.meta.url).href);
+  assert.equal(typeof stateModule.providerCampaignPresentation, "function");
+  assert.deepEqual(
+    [
+      ["DRAFT", false],
+      ["ASSET_PENDING", false],
+      ["READY", true],
+      ["OPEN", true],
+      ["CLOSED", false],
+    ].map(([offeringState, directoryLoaded]) => stateModule.providerCampaignPresentation(offeringState, directoryLoaded)),
+    [
+      { heroTitle: "Campaign in progress", offeringStage: "Offering admitted · DRAFT", offeringTone: "current", directoryStage: "Directory unavailable", directoryTone: "current", issuanceStage: "Unavailable in this demo" },
+      { heroTitle: "Campaign in progress", offeringStage: "Offering admitted · ASSET_PENDING", offeringTone: "current", directoryStage: "Directory unavailable", directoryTone: "current", issuanceStage: "Unavailable in this demo" },
+      { heroTitle: "Campaign prepared", offeringStage: "Offering admitted · READY", offeringTone: "complete", directoryStage: "Directory active", directoryTone: "complete", issuanceStage: "Unavailable in this demo" },
+      { heroTitle: "Campaign ready", offeringStage: "Offering admitted · OPEN", offeringTone: "complete", directoryStage: "Directory active", directoryTone: "complete", issuanceStage: "Unavailable in this demo" },
+      { heroTitle: "Campaign closed", offeringStage: "Offering admitted · CLOSED", offeringTone: "complete", directoryStage: "Directory unavailable", directoryTone: "current", issuanceStage: "Unavailable in this demo" },
+    ],
+  );
+  assert.deepEqual(stateModule.nextProviderAction("CLOSED"), { message: "None. The offering is closed.", href: null });
 });
 
 implementedTest("derives the fixed region order, next actions, evidence cells, and Hashscan gate from admitted projection data", async () => {
