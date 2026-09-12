@@ -11,6 +11,7 @@ const stepsPath = "src/components/demo/guided-demo-steps.tsx";
 const controlPath = "src/components/demo/demo-control-room.ts";
 const roomPath = "src/components/demo/recording-control-room.tsx";
 const runbookPath = join(appRoot, "../../docs/submission/release-rehearsal-runbook.md");
+const b03PacketPath = join(appRoot, "../../docs/work-queue/evidence/HA-B03-AGENT-PAYMENT-001-run-packet.md");
 
 async function readAppFile(path) {
   return readFile(join(appRoot, path), "utf8");
@@ -70,4 +71,13 @@ test("keeps the release runbook aligned with the B03 terminal contract", async (
   assert.match(runbook, /RISKSCAN_PAY_SETTLEMENT <non-empty-safe-settlement-reference>/);
   assert.match(runbook, /RISKSCAN_PAY_DIAGNOSTIC PAID/);
   assert.match(runbook, /not repeated for a recording retake/i);
+  assert.match(runbook, /14 Repeatability \| \/sign-in, then \/dashboard/);
+});
+
+test("keeps the Human Ops B03 packet copyable and fail-closed", async () => {
+  const packet = await readFile(b03PacketPath, "utf8");
+  assert.doesNotMatch(packet, /\\`|\\\$\{/);
+  assert.match(packet, /\`\`\`sh/);
+  assert.match(packet, /: "\$\{RISKSCAN_PAY_PAYER_ACCOUNT_ID:\?set privately in ignored runtime configuration\}"/);
+  assert.match(packet, /: "\$\{RISKSCAN_PAY_PAYER_PRIVATE_KEY:\?set privately in ignored runtime configuration\}"/);
 });

@@ -39,7 +39,7 @@ authorizes a new payment, ATS transaction, signing action, or backing transfer.
 | 11 Publication | /provider | PROVIDER | Open admitted Provider status. | OPEN/Directory state when available. |
 | 12 Back RiskScan | /explore/riskscan/back | BACKER | Use existing amount; read acknowledgement before choosing. | Units, HBAR, unchecked acknowledgement. |
 | 13 Backing evidence | /explore/riskscan/back | BACKER | Never resend after a hash. | Submitted — allocation pending. |
-| 14 Repeatability | /dashboard | PROVIDER | Open signed dashboard. | Current campaign or empty state. |
+| 14 Repeatability | /sign-in, then /dashboard | PROVIDER | Open the signed dashboard through the existing sign-in route. | Current campaign or empty state. |
 | 15 Evidence recap | /demo | none | Return to final recap. | Only independently supported evidence. |
 
 ## B03 terminal scene

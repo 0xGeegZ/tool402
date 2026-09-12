@@ -18,6 +18,12 @@ through the existing sign-in/dashboard redirect. It must not change the
 authentication challenge, verification, wallet discovery, account selection,
 signing, session decision, or dashboard authorization behavior.
 
+The redirect-only exception reserves exactly
+`apps/web/src/app/sign-in/page.tsx`,
+`apps/web/src/components/auth/metamask-dashboard-sign-in.tsx`, and
+`apps/web/tests/dashboard-auth.test.mjs`; all other auth/wallet sources
+remain excluded.
+
 S45 creates no wallet action, signature, payment, transaction, explorer
 identifier, ATS verification, World verification, backing allocation,
 configuration, deployment, or submission. It can present only existing

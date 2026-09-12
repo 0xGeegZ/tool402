@@ -59,6 +59,14 @@ validated stable tour step through the existing sign-in/dashboard redirect
 without changing authentication, wallet, or signing behavior. It may update
 the release rehearsal runbook to exactly match the guide.
 
+That redirect-only exception is limited to
+`apps/web/src/app/sign-in/page.tsx`,
+`apps/web/src/components/auth/metamask-dashboard-sign-in.tsx`, and
+`apps/web/tests/dashboard-auth.test.mjs`. It passes only a known recording
+step to the existing internal dashboard destination. It does not alter the
+challenge, verifier, cookie, session, wallet, account, chain, signature, or
+authorization decision.
+
 It excludes every Provider, wallet, M55, M56/backing, ATS verification, World,
 Agent, API, backend, environment, deployment, and transaction source. A later
 owner may expose an exact safe evidence projection under its own authority.
