@@ -1,43 +1,51 @@
-# M55-T010 — Provider demo attempt restart
+# M55-T010 — Deploy another provider tool
 
 ## State
 
 - Tier: CORE_P0
 - Queue state: 00-inbox
 - Dependencies: none.
-- Owner: the root owns queue/control records, the implementation plan,
-  readiness, activation, RED/GREEN review, integration, commits, and pushes.
-- Human actions: no live attempt, signature, transaction, candidate,
-  publication, deployment, or other provider action is authorized by intake.
+- Owner: root integrator for documentation, readiness, path reservations,
+  activation, review, integration, commits, and pushes.
+- Human actions: documentation only in this refinement; no wallet, signature,
+  authority provisioning, transaction, environment deployment, or live action.
 
-## Purpose
+Dependencies here describe documentation intake, not source readiness.
+Resolve implementation prerequisites/overlaps through the startup gate first.
 
-Provide the Provider deployment wizard with an explicit, truthful recovery
-path for a failed demo take. The action starts a separate attempt; it is never
-a Clear, Reset, Cancel, Delete, or rollback control.
+## Purpose and packet
 
-## Local authority
+An authorized provider can deploy another tool, even with all prefilled fields
+unchanged, while earlier tools remain intact. This replaces the demo-attempt
+framing; the filename remains for reference compatibility.
 
-The minimum local contract is
-[M55 provider demo attempt restart](../../../specs/m55-provider-demo-attempt-restart.md).
+Read the [handoff](../../evidence/M55-T010-delegation.md) first, then the
+[specification](../../../specs/m55-provider-demo-attempt-restart.md) and
+[plan](../../../superpowers/plans/2026-09-12-m55-deploy-another-tool.md).
+They fix allocation authorization, selected-tool routes, ownership, ATS/receipt
+binding, Directory isolation, candidate paths, and acceptance A1–A12. Product
+decisions do not depend on rediscovering the conversation.
 
-The precise Backend, Convex, Web, API, and test paths must be declared only
-after the allocator authorization choice and a fresh M51-release review. This
-card deliberately reserves no source path at intake.
+## Candidate-ready requirements
 
-## Candidate ready requirements
+- Refresh exact head/base and preserve the already requested continuation,
+  local HTTP-auth, and root-env integrations.
+- Verify accepted foundation/validation/workspace/integration gates and
+  prerequisite behavior. Resolve active overlaps by final acceptance/release
+  or a documented root-owned scoped transfer with co-review; never silently
+  commandeer M51, M53, S26, S36, S42, or B04 paths.
+- Record exact source/test ownership in this card and control records;
+  candidate paths in the plan are not active reservations.
+- Obtain fresh independent readiness and root activation for RED only.
+  Review intended failures before authorizing the declared GREEN paths.
 
-- M51 is accepted and releases its `offerings`, offering projection, resume,
-  and deploy-signing reservations.
-- A committed implementation plan fixes the authenticated allocator, selected
-  attempt route shape, command-binding changes, and Directory listing policy.
-- The card, specification, catalog, ownership, State, and decision records
-  resolve together before any test or source change.
-- The declared paths are disjoint from every active lane.
+## Completion
 
-## Boundary
+Refinement is complete when packet/control records agree, reference/queue/
+whitespace checks pass, independent documentation review is clear, and docs
+are committed/pushed. This does not move the card to 10-ready, 20-active, or
+60-done.
 
-This intake adds no source, schema, query, mutation, endpoint, browser state,
-wallet request, signature, relay, transaction, candidate, publication,
-deployment, or live behavior. It does not authorize a browser-only durable
-write or any unauthenticated attempt allocator.
+Implementation completion requires the plan's exact-head tests/reviews and
+separate browser, CI, deployment, and human-testnet evidence. A committed
+specification is not proof that the new-tool button works.
