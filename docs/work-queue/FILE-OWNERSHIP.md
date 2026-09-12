@@ -1623,10 +1623,11 @@ links, copy and routes remain unchanged. No merge, deployment or live-action
 authority is granted.
 
 S45-T010 is a root-owned `20-active` POLISH record for the owner-approved mascot
-expansion. Its specification proposes four exact new files under
+expansion. Its current specification reserves five exact files under
 `apps/web/public/brand/`, a shared loading component, root/nested loading
 mounts, the Demo header, the Explore final CTA, only `ReviewStep` in the deploy
-wizard, a focused test, and constrained Explore/loading test reconciliation.
+wizard, the Dashboard campaign component only for its empty illustration, a
+focused test, and constrained Explore/loading test reconciliation.
 Fresh independent readiness is clear at corrected intake `e5ed2304`. At ready
 source `5780cee2`, only `apps/web/tests/brand-mascot-surfaces.test.mjs` is
 reserved for durable RED. Fresh independent RED acceptance at `26cbf725`
@@ -1636,3 +1637,7 @@ and exact Explore/loading contract reconciliations for minimal GREEN. All
 catalogue data, dynamic form values,
 wallet/session/signing code, skeleton region order, runtime APIs,
 configuration, dependencies, and external/live behavior remain excluded.
+The owner refinement at `6532a880` additionally reserves
+`apps/web/public/brand/dashboard-empty-mascot.png` and only the empty-state
+illustration region in `apps/web/src/components/dashboard/dashboard-campaign.tsx`;
+it does not reserve or change the component's session or ownership logic.

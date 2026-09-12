@@ -1,5 +1,12 @@
 # Runtime queue state
 
+- S45_HUMAN_VISUAL_REFINEMENT: At PR source `6532a880`, the owner approves the
+  exact Tool402 lockup on the existing Explore and deploy document props plus
+  one transparent seated purple mascot in the signed-dashboard empty card.
+  The focused extension is RED only for the missing fifth asset and Dashboard
+  mount. Existing session, ownership, wallet, campaign, link, and runtime
+  behavior remain excluded.
+
 - S45_RED_ACCEPTANCE: Focused source `26cbf725` fails 6/6 only because the four
   declared production surfaces are absent. A fresh independent re-review is
   clear after verifying real PNG transparency, decorative accessibility, the

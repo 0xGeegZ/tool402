@@ -11,6 +11,7 @@ const assetPaths = [
   "public/brand/explore-publish-trio.png",
   "public/brand/deploy-review-trio.png",
   "public/brand/route-loader-trio.png",
+  "public/brand/dashboard-empty-mascot.png",
 ];
 const nestedLoaders = [
   "src/app/explore/loading.tsx",
@@ -69,7 +70,7 @@ function hasTransparentPixel(source) {
   return rows.some((value, index) => index % 4 === 3 && value < 255);
 }
 
-test("ships four RGBA mascot assets with real transparency", async () => {
+test("ships five RGBA mascot assets with real transparency", async () => {
   await Promise.all(assetPaths.map((path) => access(join(appRoot, path))));
   const assets = await Promise.all(assetPaths.map((path) => readFile(join(appRoot, path))));
 
@@ -80,6 +81,16 @@ test("ships four RGBA mascot assets with real transparency", async () => {
     assert.equal(asset[28], 0, "PNG must not be interlaced");
     assert.equal(hasTransparentPixel(asset), true, "PNG must contain transparent pixels");
   }
+});
+
+test("adds one decorative mascot to the signed dashboard empty state", async () => {
+  const dashboard = await readAppFile("src/components/dashboard/dashboard-campaign.tsx");
+
+  assert.match(dashboard, /from "next\/image"/);
+  assert.match(dashboard, /data-ui="dashboard-empty-mascot"/);
+  assert.match(dashboard, /data-ui="dashboard-empty-mascot"[^>]*aria-hidden="true"/s);
+  assert.match(dashboard, /src="\/brand\/dashboard-empty-mascot\.png"[^>]*alt=""/s);
+  assert.equal((dashboard.match(/src="\/brand\/dashboard-empty-mascot\.png"/g) ?? []).length, 1);
 });
 
 test("adds the decorative guide trio beside the existing demo introduction", async () => {

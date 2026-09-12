@@ -13,7 +13,7 @@
 
 The exact contract is defined by [`s45-brand-mascot-surfaces`](../../../specs/s45-brand-mascot-surfaces.md) and [`UI-S45`](../../../ui/UI-S45.md).
 
-S45 owns its four new PNG assets, one new shared loading component, the new root loading fallback, the nine existing loading files only for adding the shared cue without changing their skeleton regions, the existing Demo page header, the existing Explore catalogue only for its final provider CTA, the existing Provider deploy wizard only inside `ReviewStep`, the new focused S45 test, and the exact superseded Explore/loading assertions required by those additions.
+S45 owns its five PNG assets, one new shared loading component, the new root loading fallback, the nine existing loading files only for adding the shared cue without changing their skeleton regions, the existing Demo page header, the existing Explore catalogue only for its final provider CTA, the existing Provider deploy wizard only inside `ReviewStep`, the existing Dashboard campaign component only for its empty-state illustration, the focused S45 test, and the exact superseded Explore/loading assertions required by those additions.
 
 ## Intake
 
@@ -30,6 +30,16 @@ At ready control source `5780cee2`, the root activates only `apps/web/tests/bran
 ## RED acceptance
 
 Focused source `26cbf725` fails 6/6 only for the absent declared assets and surfaces. A fresh independent re-review returned `CLEAR` after the contract was hardened to verify actual transparent pixels, decorative accessibility, state-linked delayed reveal and cleanup, and reduced motion. The focused test is frozen. Minimal GREEN may change only the four declared PNGs, the Demo header, the Explore final CTA plus its exact prior contract reconciliation, only `ReviewStep` in the deploy wizard, the shared/root loading cue, the nine loader mounts, and the exact prior loading contract reconciliation.
+
+## Human visual refinement
+
+At PR source `6532a880`, the human owner approved replacing only the blank
+document props in `explore-publish-trio.png` and `deploy-review-trio.png` with
+the exact Tool402 brand lockup, and adding one decorative seated purple mascot
+to the existing signed-dashboard empty card. The focused contract extension
+was observed RED for only the missing fifth asset and Dashboard mount before
+the local GREEN implementation. This refinement changes no session, ownership,
+wallet, campaign, link, or runtime behavior.
 
 ## Boundary
 

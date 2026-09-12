@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Extend the existing Tool402 mascot identity to four already-accepted product
+Extend the existing Tool402 mascot identity to five already-accepted product
 surfaces without changing their data, authority, navigation, or transaction
 contracts.
 
 ## Assets
 
-S45 adds four repository-owned, text-free PNG illustrations under
+S45 adds five repository-owned PNG illustrations under
 `apps/web/public/brand/`:
 
 - `demo-guide-trio.png`: the purple cube, gold coin, and coral robot guiding
@@ -17,12 +17,15 @@ S45 adds four repository-owned, text-free PNG illustrations under
   catalogue;
 - `deploy-review-trio.png`: the trio reviewing a prepared document;
 - `route-loader-trio.png`: a compact progress composition for delayed route
-  loading feedback.
+  loading feedback;
+- `dashboard-empty-mascot.png`: the seated purple mascot accompanying the
+  existing signed-dashboard empty state.
 
 Each image uses the accepted warm cream, purple, gold, coral, and green Tool402
-character language. Images contain no labels, numbers, status, campaign data,
-or action claims. Every image is decorative and rendered with an empty
-alternative text; adjacent HTML owns all meaning and controls.
+character language. The Explore and deploy document props may contain only the
+exact Tool402 brand lockup; images contain no other labels, numbers, status,
+campaign data, or action claims. Every image is decorative and rendered with
+an empty alternative text; adjacent HTML owns all meaning and controls.
 
 ## Surface composition
 
@@ -48,6 +51,12 @@ region and cannot read, replace, or freeze any dynamic form value. All wallet,
 signing, resume, configuration, and stage behavior remains byte-for-byte
 outside this presentation amendment.
 
+### Dashboard empty state
+
+The existing signed-dashboard empty card replaces its generic document icon
+with one seated purple mascot. Existing ownership filtering, empty-state copy,
+links, session gate, and campaign behavior remain unchanged.
+
 ### Route loading
 
 A shared `BrandRouteLoader` is mounted before the existing skeleton regions in
@@ -62,6 +71,7 @@ unchanged.
 
 - Generated images use `next/image`, empty alternative text, and
   `aria-hidden="true"` containers.
+- The dashboard empty card remains understandable without its mascot.
 - The Explore CTA remains understandable without the illustration.
 - The loader has one polite status label and its animated dots disable motion
   under `prefers-reduced-motion`.
