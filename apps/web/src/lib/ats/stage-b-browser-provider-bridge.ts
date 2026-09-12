@@ -343,13 +343,18 @@ function decodeSingleFactoryEvent(logs: unknown): string | null {
   }
 }
 
-function eligibleContractResult(value: unknown, transactionHash: string, expectedTimestamp?: string): { readonly timestamp: string; readonly evmAddress: string } | null {
+function eligibleContractResult(
+  value: unknown,
+  transactionHash: string,
+  expectedInput: string,
+  expectedTimestamp?: string,
+): { readonly timestamp: string; readonly evmAddress: string } | null {
   const fields = captureOwnEnumerableDataFields(
     value,
-    ["hash", "chain_id", "result", "status", "from", "to", "timestamp", "logs"],
+    ["hash", "chain_id", "result", "status", "from", "to", "timestamp", "logs", "function_parameters"],
   );
   if (fields === null) return null;
-  const [hash, resultChainId, resultValue, status, from, to, timestamp, logs] = fields;
+  const [hash, resultChainId, resultValue, status, from, to, timestamp, logs, functionParameters] = fields;
   if (
     hash !== transactionHash ||
     resultChainId !== chainId ||
@@ -357,6 +362,7 @@ function eligibleContractResult(value: unknown, transactionHash: string, expecte
     status !== "0x1" ||
     !isIssuerAddress(from) ||
     canonicalAddress(to) !== factory ||
+    functionParameters !== expectedInput ||
     typeof timestamp !== "string" ||
     !timestampPattern.test(timestamp) ||
     (expectedTimestamp !== undefined && timestamp !== expectedTimestamp)
@@ -471,6 +477,7 @@ async function resolveMirrorCandidate(
   now: () => number,
   timers: StageBDeadlineTimers,
   transactionHash: string,
+  expectedInput: string,
   expectedReceiptAddress?: string,
 ): Promise<StageBCandidate | null> {
   const deadline = deadlineFrom(now, mirrorObservationLimitMilliseconds);
@@ -482,7 +489,7 @@ async function resolveMirrorCandidate(
       return null;
     }
     if (first.kind !== "value") return null;
-    const firstResult = eligibleContractResult(first.value, transactionHash);
+    const firstResult = eligibleContractResult(first.value, transactionHash, expectedInput);
     if (firstResult === null) return null;
     const receiptAddress = expectedReceiptAddress ?? firstResult.evmAddress;
     if (firstResult.evmAddress !== receiptAddress) return null;
@@ -510,7 +517,7 @@ async function resolveMirrorCandidate(
       return null;
     }
     if (final.kind !== "value") return null;
-    const finalResult = eligibleContractResult(final.value, transactionHash, firstResult.timestamp);
+    const finalResult = eligibleContractResult(final.value, transactionHash, expectedInput, firstResult.timestamp);
     if (finalResult === null || finalResult.evmAddress !== receiptAddress) return null;
     return Object.freeze({ transactionId: normalizedTransactionId, evmAddress: receiptAddress });
   }
@@ -523,11 +530,30 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
   let recoveryInFlight = false;
   let terminal: StageBBridgeOutcome | null = null;
 
+  function expectedDeploymentInput(): string | null {
+    const legacyProjection = configuration === undefined ? createStageBAtsCreateExecutionProjection() : null;
+    const configured = legacyProjection?.configuration ?? configuration;
+    if (
+      legacyProjection !== null && (
+        legacyProjection.issuerEvmAddress !== issuer
+        || legacyProjection.mirrorNodeBaseUrl !== mirrorBase
+        || legacyProjection.configuration.canonicalParametersHash !== expectedHash
+      )
+    ) return null;
+    try {
+      return encodeFactoryDeployBond(buildFactoryDeployBondRequest(configured, { issuerEvmAddress: issuer }));
+    } catch {
+      return null;
+    }
+  }
+
   async function recover(transactionHash: string): Promise<StageBBridgeOutcome> {
     if (!isCanonicalStageBTransactionHash(transactionHash) || recoveryInFlight) return unknownOutcome();
     recoveryInFlight = true;
     try {
-      const candidate = await resolveMirrorCandidate(fetcher, wait, now, timers, transactionHash);
+      const expectedInput = expectedDeploymentInput();
+      if (expectedInput === null) return unknownOutcome(transactionHash);
+      const candidate = await resolveMirrorCandidate(fetcher, wait, now, timers, transactionHash, expectedInput);
       return candidate === null ? unknownOutcome(transactionHash) : Object.freeze({ kind: "candidate", candidate });
     } catch {
       return unknownOutcome(transactionHash);
@@ -546,17 +572,8 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
       const accounts = await provider.request({ method: "eth_accounts" });
       if (!hasExactlyOneIssuerAccount(accounts)) return rejectedOutcome();
 
-      const legacyProjection = configuration === undefined ? createStageBAtsCreateExecutionProjection() : null;
-      const configured = legacyProjection?.configuration ?? configuration;
-      if (
-        (legacyProjection !== null && (
-          legacyProjection.issuerEvmAddress !== issuer
-          || legacyProjection.mirrorNodeBaseUrl !== mirrorBase
-          || legacyProjection.configuration.canonicalParametersHash !== expectedHash
-        ))
-      ) return rejectedOutcome();
-      const request = buildFactoryDeployBondRequest(configured, { issuerEvmAddress: issuer });
-      const data = encodeFactoryDeployBond(request);
+      const data = expectedDeploymentInput();
+      if (data === null) return rejectedOutcome();
       let returnedHash: unknown;
       try {
         returnedHash = await provider.request({
@@ -610,7 +627,7 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
         terminal = unknownOutcome(transactionHash);
         return terminal;
       }
-      const candidate = await resolveMirrorCandidate(fetcher, wait, now, timers, hash, receiptAddress);
+      const candidate = await resolveMirrorCandidate(fetcher, wait, now, timers, hash, data, receiptAddress);
       terminal = candidate === null ? unknownOutcome(transactionHash) : Object.freeze({ kind: "candidate", candidate });
       return terminal;
     } catch {

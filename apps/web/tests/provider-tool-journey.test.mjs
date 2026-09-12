@@ -386,7 +386,7 @@ test("two identical forms reach independent OPEN tools through signed orchestrat
     return mounted.ready();
   }
 
-  async function allocateAndAttach(index) {
+  async function allocateAndAttach(index, attach = true) {
     const requestId = `013d5c4d-21d9-4f02-a62b-47f49f3b17a${index}`;
     const response = await fetch("/api/provider/tools", createProviderToolAllocationRequest(requestId));
     assert.equal(response.status, 200);
@@ -407,11 +407,12 @@ test("two identical forms reach independent OPEN tools through signed orchestrat
       const tx = selectedTransaction;
       if (url.pathname.endsWith("/transactions")) return json({ transactions: [{ name: "ETHEREUMTRANSACTION", result: "SUCCESS", nonce: 0, consensus_timestamp: tx.timestamp, transaction_id: tx.transactionId }] });
       assert.ok(url.pathname.endsWith(tx.hash) || url.pathname.endsWith(tx.transactionId));
-      return json({ hash: tx.hash, chain_id: "0x128", result: "SUCCESS", status: "0x1", from: issuer, to: factory, timestamp: tx.timestamp, logs: [tx.log] });
+      return json({ hash: tx.hash, chain_id: "0x128", result: "SUCCESS", status: "0x1", from: issuer, to: factory, timestamp: tx.timestamp, logs: [tx.log], function_parameters: tx.transaction.input });
     } });
     const created = await bridge.execute();
     assert.equal(created.kind, "candidate");
     const transaction = selectedTransaction;
+    if (!attach) return { tool, mounted, deployment, transaction };
     (await mounted.ready()).stages.props.onCandidate(created.candidate);
     await signStage(mounted, 2);
     assert.equal((await loadProviderToolDeployment(tool.toolPublicId)).state, "ASSET_PENDING");
@@ -495,7 +496,38 @@ test("two identical forms reach independent OPEN tools through signed orchestrat
   assert.equal((await loadProviderToolDeployment(a.tool.toolPublicId)).state, "ASSET_PENDING");
   await verifyAndPublish(a);
   const aRows = structuredClone(Object.values(state.rows).flat().filter((row) => row.offeringPublicId === a.tool.offeringPublicId || row.subjectPublicId === a.tool.subjectPublicId));
-  const b = await allocateAndAttach(2);
+  const b = await allocateAndAttach(2, false);
+  const bAttemptBeforeRecovery = structuredClone(state.rows.externalPrepareCommandAttempts.find((row) => row.subjectPublicId === b.tool.subjectPublicId));
+  const sendsBeforeWrongRecovery = walletCalls.filter((call) => call.method === "eth_sendTransaction").length;
+  const attachmentsBeforeWrongRecovery = wireCommands.filter(
+    ({ command }) => command.type === "external.attachCandidate",
+  ).length;
+  async function recoverCandidate(configuration, transaction) {
+    return createStageBBrowserProviderBridge({ provider, configuration, async fetch(input) {
+      const url = new URL(input);
+      assert.equal(url.origin + "/api/v1/", mirror);
+      if (url.pathname.endsWith("/transactions")) return json({ transactions: [{ name: "ETHEREUMTRANSACTION", result: "SUCCESS", nonce: 0, consensus_timestamp: transaction.timestamp, transaction_id: transaction.transactionId }] });
+      assert.ok(url.pathname.endsWith(transaction.hash) || url.pathname.endsWith(transaction.transactionId));
+      return json({ hash: transaction.hash, chain_id: "0x128", result: "SUCCESS", status: "0x1", from: issuer, to: factory, timestamp: transaction.timestamp, logs: [transaction.log], function_parameters: transaction.transaction.input });
+    } }).recover(transaction.hash);
+  }
+  assert.deepEqual(
+    await recoverCandidate(b.deployment.ats.configuration, a.transaction),
+    { kind: "submission_unknown", transactionHash: a.transaction.hash },
+    "B must reject A's valid Factory transaction before an attachment is recorded",
+  );
+  assert.equal(walletCalls.filter((call) => call.method === "eth_sendTransaction").length, sendsBeforeWrongRecovery, "read-only recovery must not send another transaction");
+  assert.deepEqual(state.rows.externalPrepareCommandAttempts.find((row) => row.subjectPublicId === b.tool.subjectPublicId), bAttemptBeforeRecovery, "wrong-hash recovery must leave B's attempt unchanged");
+  assert.equal(
+    wireCommands.filter(({ command }) => command.type === "external.attachCandidate").length,
+    attachmentsBeforeWrongRecovery,
+    "wrong-hash recovery must not issue an attachment command",
+  );
+  assert.equal(state.scheduled.length, 0, "wrong-hash recovery must not schedule server verification");
+  const ownRecoveredCandidate = await recoverCandidate(b.deployment.ats.configuration, b.transaction);
+  assert.equal(ownRecoveredCandidate.kind, "candidate", "B can subsequently recover its own transaction");
+  (await b.mounted.ready()).stages.props.onCandidate(ownRecoveredCandidate.candidate);
+  await signStage(b.mounted, 2);
   receiptAlias = a.transaction;
   assert.deepEqual(await state.verifyNext(), { outcome: "REJECTED" }, "A's independent receipt must never validate B");
   assert.equal((await loadProviderToolDeployment(b.tool.toolPublicId)).state, "ASSET_PENDING");
