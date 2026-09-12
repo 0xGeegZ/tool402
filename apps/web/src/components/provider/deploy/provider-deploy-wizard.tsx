@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import { campaignFixture } from "./campaign-fixture";
 import { DeployStageSigning } from "./deploy-stage-signing";
+import type { ProviderToolDurableValues } from "../../../lib/provider-tool-deployment-client.ts";
 import { ProviderGlyph, type ProviderIconKind } from "./provider-icon";
 import {
   acknowledgementCopy,
@@ -54,6 +55,10 @@ function wholeHbar(value: string): string {
 
 function shortAddress(address: string): string {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
+}
+
+function shortToolPublicId(toolPublicId: string): string {
+  return `${toolPublicId.slice(0, 13)}…${toolPublicId.slice(-6)}`;
 }
 
 const routing = termsV1Economics.revenueRouting;
@@ -218,16 +223,17 @@ function StepCard({ title, help, children }: { title: string; help: string; chil
 
 type TextChange = (field: Exclude<keyof WizardValues, "category" | "acknowledgement">) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 
-function ToolDetailsStep({ values, fieldErrors, onTextChange, onCategoryChange }: {
+function ToolDetailsStep({ values, fieldErrors, onTextChange, onCategoryChange, durableFieldsLocked }: {
   values: WizardValues;
   fieldErrors: ProviderDeployFieldErrors;
   onTextChange: TextChange;
   onCategoryChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+  durableFieldsLocked: boolean;
 }) {
   return (
     <StepCard title="Tool details" help="Tell backers what the tool does and which agents pay for it. Prefilled from the fixture; every field is editable.">
       <Field label="Tool name" hint="Up to 100 UTF-8 bytes." error={fieldErrors.toolName} errorId={fieldErrorId("toolName")}>
-        <input aria-invalid={fieldErrors.toolName ? true : undefined} aria-describedby={fieldErrors.toolName ? fieldErrorId("toolName") : undefined} className={fieldClassName(fieldErrors.toolName)} value={values.toolName} onChange={onTextChange("toolName")} />
+        <input readOnly={durableFieldsLocked} aria-invalid={fieldErrors.toolName ? true : undefined} aria-describedby={fieldErrors.toolName ? fieldErrorId("toolName") : undefined} className={fieldClassName(fieldErrors.toolName)} value={values.toolName} onChange={onTextChange("toolName")} />
       </Field>
       <Field label="Category">
         <select className={inputClassName} value={values.category} onChange={onCategoryChange}>
@@ -238,21 +244,22 @@ function ToolDetailsStep({ values, fieldErrors, onTextChange, onCategoryChange }
         <input className={inputClassName} value={values.oneLiner} onChange={onTextChange("oneLiner")} />
       </Field>
       <Field label="Customer problem" hint="Up to 1,000 UTF-8 bytes." error={fieldErrors.customerProblem} errorId={fieldErrorId("customerProblem")}>
-        <textarea aria-invalid={fieldErrors.customerProblem ? true : undefined} aria-describedby={fieldErrors.customerProblem ? fieldErrorId("customerProblem") : undefined} className={`${fieldClassName(fieldErrors.customerProblem)} min-h-22 resize-y`} value={values.customerProblem} onChange={onTextChange("customerProblem")} />
+        <textarea readOnly={durableFieldsLocked} aria-invalid={fieldErrors.customerProblem ? true : undefined} aria-describedby={fieldErrors.customerProblem ? fieldErrorId("customerProblem") : undefined} className={`${fieldClassName(fieldErrors.customerProblem)} min-h-22 resize-y`} value={values.customerProblem} onChange={onTextChange("customerProblem")} />
       </Field>
     </StepCard>
   );
 }
 
-function InterfaceStep({ values, fieldErrors, onTextChange }: {
+function InterfaceStep({ values, fieldErrors, onTextChange, durableFieldsLocked }: {
   values: WizardValues;
   fieldErrors: ProviderDeployFieldErrors;
   onTextChange: TextChange;
+  durableFieldsLocked: boolean;
 }) {
   return (
     <StepCard title="Interface and capability" help="The qualifying resource is the exact x402-gated route agents pay for. Directory copy never overrides the live 402 challenge.">
       <Field label="Qualifying resource" error={fieldErrors.qualifyingResource} errorId={fieldErrorId("qualifyingResource")}>
-        <input aria-invalid={fieldErrors.qualifyingResource ? true : undefined} aria-describedby={fieldErrors.qualifyingResource ? fieldErrorId("qualifyingResource") : undefined} className={`${fieldClassName(fieldErrors.qualifyingResource)} ${monoValueClassName}`} value={values.qualifyingResource} onChange={onTextChange("qualifyingResource")} />
+        <input readOnly={durableFieldsLocked} aria-invalid={fieldErrors.qualifyingResource ? true : undefined} aria-describedby={fieldErrors.qualifyingResource ? fieldErrorId("qualifyingResource") : undefined} className={`${fieldClassName(fieldErrors.qualifyingResource)} ${monoValueClassName}`} value={values.qualifyingResource} onChange={onTextChange("qualifyingResource")} />
       </Field>
       <Field label="Capability" hint="Fixed by the accepted directory record schema.">
         <input className={`${inputClassName} ${monoValueClassName}`} value={campaignFixture.capability} readOnly />
@@ -264,23 +271,24 @@ function InterfaceStep({ values, fieldErrors, onTextChange }: {
   );
 }
 
-function PricingStep({ values, fieldErrors, onTextChange }: {
+function PricingStep({ values, fieldErrors, onTextChange, durableFieldsLocked }: {
   values: WizardValues;
   fieldErrors: ProviderDeployFieldErrors;
   onTextChange: TextChange;
+  durableFieldsLocked: boolean;
 }) {
   return (
     <StepCard title="Pricing and target agent customers" help="Per-task prices are advertised tiers. The live 402 requirements remain the only payment authority.">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Quick price per task (HBAR)" hint="0.1 HBAR is the largest accepted advertised price." error={fieldErrors.quickPrice} errorId={fieldErrorId("quickPrice")}>
-          <input inputMode="decimal" aria-invalid={fieldErrors.quickPrice ? true : undefined} aria-describedby={fieldErrors.quickPrice ? fieldErrorId("quickPrice") : undefined} className={`${fieldClassName(fieldErrors.quickPrice)} ${monoValueClassName}`} value={values.quickPrice} onChange={onTextChange("quickPrice")} />
+          <input readOnly={durableFieldsLocked} inputMode="decimal" aria-invalid={fieldErrors.quickPrice ? true : undefined} aria-describedby={fieldErrors.quickPrice ? fieldErrorId("quickPrice") : undefined} className={`${fieldClassName(fieldErrors.quickPrice)} ${monoValueClassName}`} value={values.quickPrice} onChange={onTextChange("quickPrice")} />
         </Field>
         <Field label="Standard price per task (HBAR)" hint="Display price only; the payment challenge remains authoritative." error={fieldErrors.standardPrice} errorId={fieldErrorId("standardPrice")}>
-          <input inputMode="decimal" aria-invalid={fieldErrors.standardPrice ? true : undefined} aria-describedby={fieldErrors.standardPrice ? fieldErrorId("standardPrice") : undefined} className={`${fieldClassName(fieldErrors.standardPrice)} ${monoValueClassName}`} value={values.standardPrice} onChange={onTextChange("standardPrice")} />
+          <input readOnly={durableFieldsLocked} inputMode="decimal" aria-invalid={fieldErrors.standardPrice ? true : undefined} aria-describedby={fieldErrors.standardPrice ? fieldErrorId("standardPrice") : undefined} className={`${fieldClassName(fieldErrors.standardPrice)} ${monoValueClassName}`} value={values.standardPrice} onChange={onTextChange("standardPrice")} />
         </Field>
       </div>
       <Field label="Target agent customers" hint="One use case per line, from one through six items." error={fieldErrors.targetAgentCustomers} errorId={fieldErrorId("targetAgentCustomers")}>
-        <textarea aria-invalid={fieldErrors.targetAgentCustomers ? true : undefined} aria-describedby={fieldErrors.targetAgentCustomers ? fieldErrorId("targetAgentCustomers") : undefined} className={`${fieldClassName(fieldErrors.targetAgentCustomers)} min-h-22 resize-y`} value={values.targetAgentCustomers} onChange={onTextChange("targetAgentCustomers")} />
+        <textarea readOnly={durableFieldsLocked} aria-invalid={fieldErrors.targetAgentCustomers ? true : undefined} aria-describedby={fieldErrors.targetAgentCustomers ? fieldErrorId("targetAgentCustomers") : undefined} className={`${fieldClassName(fieldErrors.targetAgentCustomers)} min-h-22 resize-y`} value={values.targetAgentCustomers} onChange={onTextChange("targetAgentCustomers")} />
       </Field>
     </StepCard>
   );
@@ -291,13 +299,17 @@ function TermsStep({
   fieldErrors,
   onTextChange,
   onAcknowledgementChange,
+  selectedToolPublicId,
+  durableFieldsLocked,
 }: {
   values: WizardValues;
   fieldErrors: ProviderDeployFieldErrors;
   onTextChange: TextChange;
   onAcknowledgementChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  selectedToolPublicId?: string;
+  durableFieldsLocked: boolean;
 }) {
-  const configurationRows = revenueNoteConfigurationRows(atsCreateConfiguration);
+  const configurationRows = revenueNoteConfigurationRows(selectedToolPublicId === undefined ? atsCreateConfiguration : undefined);
 
   return (
     <StepCard title="Funding and revenue-note terms" help="Economics are fixed for this offering version. A material change creates a new version with a fresh signature.">
@@ -310,10 +322,10 @@ function TermsStep({
       </div>
       <div className="flex flex-col gap-3">
         <Field label="Use of funds" hint="One item per line, from one through six items." error={fieldErrors.useOfFunds} errorId={fieldErrorId("useOfFunds")}>
-          <textarea aria-invalid={fieldErrors.useOfFunds ? true : undefined} aria-describedby={fieldErrors.useOfFunds ? fieldErrorId("useOfFunds") : undefined} className={`${fieldClassName(fieldErrors.useOfFunds)} min-h-22 resize-y`} value={values.useOfFunds} onChange={onTextChange("useOfFunds")} />
+          <textarea readOnly={durableFieldsLocked} aria-invalid={fieldErrors.useOfFunds ? true : undefined} aria-describedby={fieldErrors.useOfFunds ? fieldErrorId("useOfFunds") : undefined} className={`${fieldClassName(fieldErrors.useOfFunds)} min-h-22 resize-y`} value={values.useOfFunds} onChange={onTextChange("useOfFunds")} />
         </Field>
         <Field label="Risks" hint="One item per line, from one through six items." error={fieldErrors.risks} errorId={fieldErrorId("risks")}>
-          <textarea aria-invalid={fieldErrors.risks ? true : undefined} aria-describedby={fieldErrors.risks ? fieldErrorId("risks") : undefined} className={`${fieldClassName(fieldErrors.risks)} min-h-22 resize-y`} value={values.risks} onChange={onTextChange("risks")} />
+          <textarea readOnly={durableFieldsLocked} aria-invalid={fieldErrors.risks ? true : undefined} aria-describedby={fieldErrors.risks ? fieldErrorId("risks") : undefined} className={`${fieldClassName(fieldErrors.risks)} min-h-22 resize-y`} value={values.risks} onChange={onTextChange("risks")} />
         </Field>
       </div>
       <div className="flex flex-col gap-2 rounded-control bg-muted px-4 py-3">
@@ -327,7 +339,7 @@ function TermsStep({
               </div>
             ))}
           </dl>
-        ) : <p className="text-[13px] text-muted-foreground">Not configured. No projection is available to display.</p>}
+        ) : <p className="text-[13px] text-muted-foreground">The selected tool&apos;s ATS configuration is derived only after its offering is recorded.</p>}
       </div>
       <label className="flex items-start gap-3 text-sm leading-6">
         <input className="mt-1 size-4 shrink-0 accent-[var(--primary)]" type="checkbox" checked={values.acknowledgement} onChange={onAcknowledgementChange} />
@@ -339,6 +351,7 @@ function TermsStep({
 
 function ReviewStep({
   values,
+  durableFieldsLocked,
   connect,
   resumeNotice,
   constructionNotice,
@@ -347,6 +360,7 @@ function ReviewStep({
   footer,
 }: {
   values: WizardValues;
+  durableFieldsLocked: boolean;
   connect: ReactNode;
   resumeNotice: ReactNode;
   constructionNotice: ReactNode;
@@ -362,7 +376,7 @@ function ReviewStep({
       <div data-ui="provider-deploy-review-art" aria-hidden="true" className="overflow-hidden rounded-panel border border-primary/15 bg-primary/[0.06] px-4 pt-4 sm:px-8">
         <Image src="/brand/deploy-review-trio.png" alt="" width={1536} height={1024} className="mx-auto h-auto max-h-64 w-full object-contain object-bottom" />
       </div>
-      <section className="rounded-card border border-primary/10 bg-card p-5 shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_6%,transparent)] sm:p-6" aria-labelledby="prepared-title"><div className="flex items-start justify-between gap-4"><div className="flex gap-4"><ProviderIcon kind="document" /><div><h2 id="prepared-title" className="text-lg font-bold">Prepared details</h2><p className="mt-1 text-sm leading-5 text-muted-foreground">Review the key details of your offering. These values remain editable until you sign.</p></div></div><Button type="button" variant="outline" className="hidden shrink-0 sm:inline-flex">Edit details</Button></div><dl className="mt-4 grid gap-x-8 gap-y-3 rounded-field border border-primary/10 bg-primary/[0.03] p-3 text-sm sm:grid-cols-2">{reviewRows.map(([label, value]) => <div key={label} className="grid grid-cols-[minmax(7rem,0.8fr)_1.2fr] gap-2"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium text-foreground">{value}</dd></div>)}</dl></section>
+      <section className="rounded-card border border-primary/10 bg-card p-5 shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_6%,transparent)] sm:p-6" aria-labelledby="prepared-title"><div className="flex items-start justify-between gap-4"><div className="flex gap-4"><ProviderIcon kind="document" /><div><h2 id="prepared-title" className="text-lg font-bold">Prepared details</h2><p className="mt-1 text-sm leading-5 text-muted-foreground">{durableFieldsLocked ? "The signed offering values below are restored from the durable record and cannot be changed." : "Review the key details of your offering. These values remain editable until you sign."}</p></div></div>{durableFieldsLocked ? null : <Button type="button" variant="outline" className="hidden shrink-0 sm:inline-flex">Edit details</Button>}</div><dl className="mt-4 grid gap-x-8 gap-y-3 rounded-field border border-primary/10 bg-primary/[0.03] p-3 text-sm sm:grid-cols-2">{reviewRows.map(([label, value]) => <div key={label} className="grid grid-cols-[minmax(7rem,0.8fr)_1.2fr] gap-2"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium text-foreground">{value}</dd></div>)}</dl></section>
       {resumeNotice}
       {constructionNotice}
       {stages}
@@ -372,9 +386,11 @@ function ReviewStep({
   );
 }
 
-export function ProviderDeployWizard() {
+export function ProviderDeployWizard({ selectedToolPublicId }: { selectedToolPublicId?: string }) {
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [values, setValues] = useState<WizardValues>(initialValues);
+  const [durableFieldsLocked, setDurableFieldsLocked] = useState(false);
+  const [selectedToolTitle, setSelectedToolTitle] = useState<string | null>(null);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const fieldErrors = showValidationErrors ? providerDeployFieldErrors(values, currentStep) : emptyFieldErrors;
   const validationMessage = Object.keys(fieldErrors).length > 0
@@ -389,6 +405,12 @@ export function ProviderDeployWizard() {
     announcedStep.current = currentStep;
     stepRef.current?.focus();
   }, [currentStep]);
+  useEffect(() => {
+    setValues(initialValues());
+    setDurableFieldsLocked(false);
+    setSelectedToolTitle(null);
+    setCurrentStep(0);
+  }, [selectedToolPublicId]);
 
   function changeText(field: Exclude<keyof WizardValues, "category" | "acknowledgement">) {
     return (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -416,6 +438,14 @@ export function ProviderDeployWizard() {
     setCurrentStep(lastStep);
   }, [lastStep]);
 
+  const recoverDurableValues = useCallback((recovered: ProviderToolDurableValues) => {
+    setValues((previous) => ({ ...previous, ...recovered }));
+    setDurableFieldsLocked(true);
+  }, []);
+  const recoverToolTitle = useCallback((title: string) => {
+    setSelectedToolTitle(title);
+  }, []);
+
   function moveForward() {
     const nextFieldErrors = providerDeployFieldErrors(values, currentStep);
     if (Object.keys(nextFieldErrors).length > 0) {
@@ -435,13 +465,13 @@ export function ProviderDeployWizard() {
   function renderCurrentStep() {
     switch (currentStep) {
       case 0:
-        return <ToolDetailsStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} onCategoryChange={changeCategory} />;
+        return <ToolDetailsStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} onCategoryChange={changeCategory} durableFieldsLocked={durableFieldsLocked} />;
       case 1:
-        return <InterfaceStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} />;
+        return <InterfaceStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} durableFieldsLocked={durableFieldsLocked} />;
       case 2:
-        return <PricingStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} />;
+        return <PricingStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} durableFieldsLocked={durableFieldsLocked} />;
       default:
-        return <TermsStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} onAcknowledgementChange={changeAcknowledgement} />;
+        return <TermsStep values={values} fieldErrors={fieldErrors} onTextChange={changeText} onAcknowledgementChange={changeAcknowledgement} selectedToolPublicId={selectedToolPublicId} durableFieldsLocked={durableFieldsLocked} />;
     }
   }
 
@@ -468,7 +498,8 @@ export function ProviderDeployWizard() {
     <main className="mx-auto max-w-6xl px-4 pb-10 sm:px-6 sm:pb-14" data-ui="provider-deploy-surface">
       <header data-ui="provider-deploy-identity" className="pt-6 lg:pt-8">
         <div className="flex flex-wrap gap-2"><Badge variant="outline" className="rounded-full border-warning/40 bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning-foreground">Prepared / demo data fixture</Badge><Badge variant="outline" className="rounded-full border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-foreground">Hedera testnet · chain 296</Badge><Badge variant="outline" className="rounded-full border-border bg-secondary px-2 py-0.5 text-[11px] font-medium text-foreground">Terms v1 · fixed</Badge></div>
-        <h1 className="mt-4 text-3xl font-bold tracking-[-0.05em] text-foreground sm:text-4xl">Deploy the RiskScan campaign</h1>
+        <h1 className="mt-4 text-3xl font-bold tracking-[-0.05em] text-foreground sm:text-4xl">{selectedToolPublicId === undefined ? "Deploy the RiskScan campaign" : "Deploy your tool"}</h1>
+        {selectedToolPublicId === undefined ? null : <p className="mt-2 text-xs text-muted-foreground"><span className="font-semibold text-foreground">{selectedToolTitle ?? "Loading selected tool…"}</span><span className="mx-2" aria-hidden="true">·</span><span className="font-mono">{shortToolPublicId(selectedToolPublicId)}</span></p>}
         <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">Review every field of the prepared offering, then authorize each step with your issuer wallet. Nothing is created, funded, or published until the named signature and receipt exist.</p>
       </header>
       <div className="mt-7"><StepProgress currentStep={currentStep} onStepSelect={returnToStep} /></div>
@@ -476,12 +507,15 @@ export function ProviderDeployWizard() {
         <div ref={stepRef} tabIndex={-1} aria-label={stepCaption(currentStep)} data-ui="provider-deploy-workspace" className="mt-7 outline-none">
           <DeployStageSigning
             values={values}
+            selectedToolPublicId={selectedToolPublicId}
             footer={footer}
             reviewing={currentStep === lastStep}
             onResume={resumeDurableCampaign}
+            onRecoveredDurableValues={recoverDurableValues}
+            onRecoveredToolTitle={recoverToolTitle}
             renderReview={(layout) => currentStep === lastStep ? (
               <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_326px]">
-                <section data-ui="provider-deploy-form"><ReviewStep values={values} {...layout} /></section>
+                <section data-ui="provider-deploy-form"><ReviewStep values={values} durableFieldsLocked={durableFieldsLocked} {...layout} /></section>
                 <CampaignSummary values={values} />
               </div>
             ) : (

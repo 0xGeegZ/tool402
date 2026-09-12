@@ -20,13 +20,17 @@ import {
   revalidateOfferingAuthority,
   revalidateWalletCommandReplayClaim,
 } from "../src/offering-command-admission.ts";
+import {
+  isSelectedProviderToolSubject,
+  resolveSelectedProviderToolSubject,
+} from "./provider_tool_authority.ts";
 import type { DirectoryCommandBinding } from "../src/offering-command-admission.ts";
 import type schema from "./schema.ts";
 
 const directoryRecordValidator = v.object({
   schemaVersion: v.literal(1),
   serviceId: v.string(),
-  serviceSlug: v.literal("riskscan"),
+  serviceSlug: v.string(),
   offeringPublicId: v.string(),
   offeringVersion: v.number(),
   capabilities: v.array(v.literal("evm-contract-risk-signals")),
@@ -131,7 +135,7 @@ interface StoredDirectory {
   readonly idempotencyKey: string;
   readonly offeringVersion: number;
   readonly directoryVersion: number;
-  readonly serviceSlug: "riskscan";
+  readonly serviceSlug: string;
   readonly record: ReturnType<typeof parseAgentDirectoryRecordCandidate>;
   readonly state: DirectoryState;
   readonly acceptedAt: bigint;
@@ -213,7 +217,7 @@ function readDirectory(input: unknown): StoredDirectory {
     !isDocumentId(record._id)
     || !isCanonicalHash(record.payloadHash)
     || !isCanonicalEvmAddress(record.canonicalSignerAddress)
-    || record.serviceSlug !== "riskscan"
+    || (record.serviceSlug !== "riskscan" && (typeof record.serviceSlug !== "string" || !/^tool-[0-9a-f]{32}$/u.test(record.serviceSlug)))
     || !isDirectoryState(record.state)
     || !isInt64(record.acceptedAt)
   ) return reject();
@@ -226,7 +230,7 @@ function readDirectory(input: unknown): StoredDirectory {
     idempotencyKey: payload.idempotencyKey,
     offeringVersion: payload.offeringVersion,
     directoryVersion: payload.directoryVersion,
-    serviceSlug: "riskscan",
+    serviceSlug: record.serviceSlug as string,
     record: payload.record,
     state: record.state,
     acceptedAt: record.acceptedAt,
@@ -256,6 +260,13 @@ function matchesOfferingContext(offering: StoredOffering, command: DirectoryComm
   return offering.canonicalSignerAddress === command.canonicalSignerAddress
     && offering.principalPublicId === command.principalPublicId
     && offering.authorityVersion === command.authorityVersion;
+}
+
+function matchesDirectoryService(offering: StoredOffering, command: DirectoryCommandBinding): boolean {
+  const { record } = command.payload;
+  if (!isSelectedProviderToolSubject(offering.subjectPublicId)) return record.serviceSlug === "riskscan";
+  const suffix = offering.subjectPublicId.slice("tool_".length);
+  return record.serviceId === offering.subjectPublicId && record.serviceSlug === `tool-${suffix}`;
 }
 
 function sameDirectoryRecord(
@@ -371,7 +382,14 @@ export const admitDirectoryPublish = internalMutation({
     if (offerings.length > 1) return reject();
     if (offerings.length === 0) return { status: "PRECONDITION_UNMET" as const };
     const offering = readOffering(offerings[0]);
-    if (!ownedSubjectPublicIds.includes(offering.subjectPublicId)) return reject();
+    if (isSelectedProviderToolSubject(offering.subjectPublicId)) {
+      const selected = await resolveSelectedProviderToolSubject(ctx, authorities[0], {
+        subjectPublicId: offering.subjectPublicId,
+        offeringPublicId: offering.offeringPublicId,
+      });
+      if (selected.subjectPublicId !== offering.subjectPublicId) return reject();
+    } else if (!ownedSubjectPublicIds.includes(offering.subjectPublicId)) return reject();
+    if (!matchesDirectoryService(offering, command)) return reject();
 
     const eligibleForNewPublish = isEligibleForNewPublish(offering, command);
     const eligibleForReplay = canSeekPublishedReplay(offering);
@@ -401,7 +419,7 @@ export const admitDirectoryPublish = internalMutation({
       }
       const activeDirectories = await ctx.db.query("directoryVersions")
         .withIndex("by_service_slug_and_state", (index) =>
-          index.eq("serviceSlug", "riskscan").eq("state", "ACTIVE"))
+          index.eq("serviceSlug", command.payload.record.serviceSlug).eq("state", "ACTIVE"))
         .take(2);
       if (activeDirectories.length > 1) return reject();
       const activeDirectory = activeDirectories.length === 1 ? readDirectory(activeDirectories[0]) : null;
@@ -430,7 +448,7 @@ export const admitDirectoryPublish = internalMutation({
 
     const activeDirectories = await ctx.db.query("directoryVersions")
       .withIndex("by_service_slug_and_state", (index) =>
-        index.eq("serviceSlug", "riskscan").eq("state", "ACTIVE"))
+        index.eq("serviceSlug", command.payload.record.serviceSlug).eq("state", "ACTIVE"))
       .take(2);
     if (activeDirectories.length > 1) return reject();
     const priorDirectory = activeDirectories.length === 1 ? readDirectory(activeDirectories[0]) : null;
@@ -443,7 +461,7 @@ export const admitDirectoryPublish = internalMutation({
       idempotencyKey: command.payload.idempotencyKey,
       offeringVersion: command.payload.offeringVersion,
       directoryVersion: command.payload.directoryVersion,
-      serviceSlug: "riskscan",
+      serviceSlug: command.payload.record.serviceSlug,
       record: {
         schemaVersion: command.payload.record.schemaVersion,
         serviceId: command.payload.record.serviceId,
@@ -485,14 +503,14 @@ export const admitDirectoryPublish = internalMutation({
 });
 
 export const getActive = query({
-  args: { serviceSlug: v.literal("riskscan") },
+  args: { serviceSlug: v.string() },
   returns: v.union(
     v.null(),
     v.object({
       offeringPublicId: v.string(),
       offeringVersion: v.number(),
       directoryVersion: v.number(),
-      serviceSlug: v.literal("riskscan"),
+      serviceSlug: v.string(),
       record: directoryRecordValidator,
       state: v.literal("ACTIVE"),
       acceptedAt: v.int64(),

@@ -2,6 +2,7 @@ import { parseHederaAccountId, type HederaAccountId } from "./value.ts";
 
 export type DirectoryCapability = "evm-contract-risk-signals";
 export type DirectoryTier = "quick" | "standard";
+export type DirectoryServiceSlug = "riskscan" | `tool-${string}`;
 
 export type AdvertisedDirectoryTiers =
   | readonly ["quick"]
@@ -11,7 +12,7 @@ export type AdvertisedDirectoryTiers =
 export interface AgentDirectoryRecordCandidate {
   readonly schemaVersion: 1;
   readonly serviceId: string;
-  readonly serviceSlug: "riskscan";
+  readonly serviceSlug: DirectoryServiceSlug;
   readonly offeringPublicId: string;
   readonly offeringVersion: number;
   readonly capabilities: readonly [DirectoryCapability];
@@ -45,6 +46,7 @@ const requiredFields: readonly string[] = [
   "publishedAt",
 ];
 const publicIdPattern = /^[A-Za-z0-9_-]{1,96}$/u;
+const allocatedToolServiceSlugPattern = /^tool-[0-9a-f]{32}$/u;
 const canonicalUtcMilliseconds =
   /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z$/u;
 
@@ -148,6 +150,12 @@ function parsePublicId(value: unknown): string {
   return value;
 }
 
+function parseServiceSlug(value: unknown): DirectoryServiceSlug {
+  if (value === "riskscan") return value;
+  if (typeof value === "string" && allocatedToolServiceSlugPattern.test(value)) return value as `tool-${string}`;
+  return rejectDirectoryRecord();
+}
+
 function parseAccount(value: unknown): HederaAccountId {
   if (typeof value !== "string" || value.length > 96) {
     return rejectDirectoryRecord();
@@ -232,7 +240,6 @@ export function parseAgentDirectoryRecordCandidate(
 
   if (
     schemaVersion !== 1 ||
-    serviceSlug !== "riskscan" ||
     typeof offeringVersion !== "number" ||
     !Number.isSafeInteger(offeringVersion) ||
     offeringVersion < 1 ||
@@ -245,10 +252,11 @@ export function parseAgentDirectoryRecordCandidate(
     return rejectDirectoryRecord();
   }
 
+  const parsedServiceSlug = parseServiceSlug(serviceSlug);
   const record: AgentDirectoryRecordCandidate = {
     schemaVersion,
     serviceId: parsePublicId(serviceId),
-    serviceSlug,
+    serviceSlug: parsedServiceSlug,
     offeringPublicId: parsePublicId(offeringPublicId),
     offeringVersion,
     capabilities: Object.freeze(["evm-contract-risk-signals"] as const),

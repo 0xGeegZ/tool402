@@ -23,27 +23,47 @@ type StageBActionController = Readonly<{
   execute: () => Promise<StageBBridgeOutcome>;
   recover: (transactionHash: string) => Promise<StageBBridgeOutcome>;
 }>;
+type ControllerContext = Readonly<{ selectedToolPublicId: string | undefined }>;
+
+function isSameControllerContext(left: ControllerContext, right: ControllerContext): boolean {
+  return left.selectedToolPublicId === right.selectedToolPublicId;
+}
 
 export function AtsCreateAction({
   session,
+  configuration,
+  selectedTool,
+  selectedToolPublicId,
   stageTwoDone,
   hasCandidate,
   onCandidate,
 }: {
   session: WalletSession | null;
+  configuration?: unknown;
+  selectedTool: boolean;
+  selectedToolPublicId?: string;
   stageTwoDone: boolean;
   hasCandidate: boolean;
   onCandidate: (candidate: StageBCandidate) => void;
 }) {
   const controller = useRef<StageBActionController | null>(null);
+  const controllerContext = useRef<ControllerContext>({ selectedToolPublicId });
+  const actionInFlight = useRef<ControllerContext | null>(null);
   const sessionChanged = useRef(false);
-  const [terminalOutcome, setTerminalOutcome] = useState(false);
+  const [terminalOutcome, setTerminalOutcome] = useState<ControllerContext | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [recoveryHash, setRecoveryHash] = useState("");
-  const [recoveryPending, setRecoveryPending] = useState(false);
+  const [recovery, setRecovery] = useState<Readonly<{ context: ControllerContext; hash: string; pending: boolean }> | null>(null);
+  const [, setInFlight] = useState<ControllerContext | null>(null);
 
-  if (controller.current === null && session !== null) {
-    const bridge = createStageBBrowserProviderBridge({ provider: session.provider, fetch });
+  if (controllerContext.current.selectedToolPublicId !== selectedToolPublicId) {
+    controller.current = null;
+    actionInFlight.current = null;
+    sessionChanged.current = false;
+    controllerContext.current = { selectedToolPublicId };
+  }
+
+  if (controller.current === null && session !== null && (!selectedTool || configuration !== undefined)) {
+    const bridge = createStageBBrowserProviderBridge({ provider: session.provider, fetch, configuration });
     controller.current = Object.freeze({
       provider: session.provider,
       address: session.address,
@@ -57,44 +77,74 @@ export function AtsCreateAction({
     sessionChanged.current = true;
   }
 
-  const candidateActionAvailable = stageTwoDone && session !== null && !hasCandidate && !sessionChanged.current && controller.current !== null;
-  const enabled = candidateActionAvailable && !terminalOutcome;
-  const recoveryEnabled = candidateActionAvailable && !recoveryPending && isCanonicalStageBTransactionHash(recoveryHash);
+  const terminalForCurrentContext = terminalOutcome !== null && isSameControllerContext(terminalOutcome, controllerContext.current);
+  const currentRecovery = recovery !== null && isSameControllerContext(recovery.context, controllerContext.current)
+    ? recovery
+    : null;
+  const inFlightForCurrentContext = actionInFlight.current !== null
+    && isSameControllerContext(actionInFlight.current, controllerContext.current);
+  const candidateActionAvailable = stageTwoDone && session !== null && (!selectedTool || configuration !== undefined) && !hasCandidate && !sessionChanged.current && controller.current !== null;
+  const enabled = candidateActionAvailable && !terminalForCurrentContext && !inFlightForCurrentContext;
+  const recoveryEnabled = candidateActionAvailable && !inFlightForCurrentContext && currentRecovery?.pending !== true && isCanonicalStageBTransactionHash(currentRecovery?.hash ?? "");
 
   async function requestCandidate() {
-    if (!enabled || controller.current === null) return;
-    const outcome = await controller.current.execute();
-    if (outcome.kind === "candidate") {
-      setTerminalOutcome(true);
-      onCandidate(outcome.candidate);
-      setFeedback("A local candidate was observed for this session. Attach it with the separate signature step.");
-      return;
-    }
-    if (outcome.kind === "submission_unknown") {
-      setTerminalOutcome(true);
-      if (outcome.transactionHash !== undefined) {
-        setRecoveryHash(outcome.transactionHash);
-        setFeedback("The submitted transaction hash is ready for public recovery. No second transaction was made.");
+    if (!enabled || controller.current === null || actionInFlight.current !== null) return;
+    const actionContext = controllerContext.current;
+    actionInFlight.current = actionContext;
+    setInFlight(actionContext);
+    try {
+      const outcome = await controller.current.execute();
+      if (controllerContext.current !== actionContext || sessionChanged.current) return;
+      if (outcome.kind === "candidate") {
+        setTerminalOutcome(controllerContext.current);
+        onCandidate(outcome.candidate);
+        setFeedback("A local candidate was observed for this session. Attach it with the separate signature step.");
         return;
       }
+      if (outcome.kind === "submission_unknown") {
+        setTerminalOutcome(controllerContext.current);
+        if (outcome.transactionHash !== undefined) {
+          setRecovery({ context: actionContext, hash: outcome.transactionHash, pending: false });
+          setFeedback("The submitted transaction hash is ready for public recovery. No second transaction was made.");
+          return;
+        }
+      }
+      setFeedback(outcome.kind === "rejected"
+        ? "The wallet did not approve this local request. Nothing was submitted."
+        : "The local result is unknown. Reload before choosing any new action; nothing is attached automatically.");
+    } finally {
+      if (actionInFlight.current === actionContext) {
+        actionInFlight.current = null;
+        if (isSameControllerContext(controllerContext.current, actionContext)) setInFlight(null);
+      }
     }
-    setFeedback(outcome.kind === "rejected"
-      ? "The wallet did not approve this local request. Nothing was submitted."
-      : "The local result is unknown. Reload before choosing any new action; nothing is attached automatically.");
   }
 
   async function recoverCandidate() {
-    if (!recoveryEnabled || controller.current === null) return;
-    setRecoveryPending(true);
-  const outcome = await controller.current.recover(recoveryHash);
-    setRecoveryPending(false);
-    if (outcome.kind === "candidate") {
-      setTerminalOutcome(true);
-      onCandidate(outcome.candidate);
-      setFeedback("The public transaction was corroborated. Attach the candidate with the separate signature step.");
-      return;
+    if (!recoveryEnabled || controller.current === null || actionInFlight.current !== null) return;
+    const actionContext = controllerContext.current;
+    const recoveryHash = currentRecovery?.hash;
+    if (recoveryHash === undefined) return;
+    actionInFlight.current = actionContext;
+    setInFlight(actionContext);
+    setRecovery({ context: actionContext, hash: recoveryHash, pending: true });
+    try {
+      const outcome = await controller.current.recover(recoveryHash);
+      if (controllerContext.current !== actionContext || sessionChanged.current) return;
+      if (outcome.kind === "candidate") {
+        setTerminalOutcome(controllerContext.current);
+        onCandidate(outcome.candidate);
+        setFeedback("The public transaction was corroborated. Attach the candidate with the separate signature step.");
+        return;
+      }
+      setRecovery({ context: actionContext, hash: recoveryHash, pending: false });
+      setFeedback("The public transaction could not be corroborated. No MetaMask request or new transaction was made.");
+    } finally {
+      if (actionInFlight.current === actionContext) {
+        actionInFlight.current = null;
+        if (isSameControllerContext(controllerContext.current, actionContext)) setInFlight(null);
+      }
     }
-    setFeedback("The public transaction could not be corroborated. No MetaMask request or new transaction was made.");
   }
 
   return (
@@ -116,10 +166,10 @@ export function AtsCreateAction({
             <input
               id="stage-b-recovery-hash"
               data-stage-b-recovery-hash="true"
-              value={recoveryHash}
-              onChange={(event) => setRecoveryHash(event.target.value)}
+              value={currentRecovery?.hash ?? ""}
+              onChange={(event) => setRecovery({ context: controllerContext.current, hash: event.target.value, pending: false })}
               placeholder="0x… transaction hash"
-              disabled={sessionChanged.current || recoveryPending}
+              disabled={sessionChanged.current || currentRecovery?.pending === true}
               className="h-9 rounded-control border border-input bg-background px-3 font-mono text-xs text-foreground"
             />
           </label>

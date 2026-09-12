@@ -9,6 +9,7 @@ import type { OfferingRecord, ProviderProjections } from "../../../lib/offering-
 import { formatHbar, formatShare } from "../../../lib/hbar-format";
 import { hashscanContractUrl, nextProviderAction, providerCampaignPresentation, providerEvidenceRows } from "./provider-status-state";
 import { ProviderTechnicalRecordControl } from "./provider-technical-record-control";
+import { NewToolAction } from "../deploy/new-tool-action";
 
 type Projection = ProviderProjections["offering"] | ProviderProjections["directory"];
 type IconKind = "coins" | "target" | "capacity" | "calendar" | "shield" | "document" | "offline";
@@ -107,6 +108,7 @@ function LoadedRegions({ offering, directoryOutcome }: { offering: OfferingRecor
             <div className="mt-7 flex flex-wrap gap-3">
               <Link className={buttonVariants({ size: "lg", shape: "pill", className: focusRing })} href="/explore/riskscan">Explore RiskScan <span aria-hidden="true" className="ml-2">→</span></Link>
               {nextAction.href === null ? null : <Link className={buttonVariants({ variant: "outline", size: "lg", shape: "pill", className: `bg-card ${focusRing}` })} href={nextAction.href}>{nextAction.message}</Link>}
+              <NewToolAction />
             </div>
           </div>
           <div aria-hidden="true" className="relative min-h-60 overflow-hidden rounded-panel border border-brand-purple/20 bg-[linear-gradient(135deg,color-mix(in_oklab,var(--secondary)_76%,white),color-mix(in_oklab,var(--brand-purple)_13%,white))] shadow-[0_24px_70px_-45px_color-mix(in_oklab,var(--brand-purple)_75%,transparent)] sm:min-h-72">

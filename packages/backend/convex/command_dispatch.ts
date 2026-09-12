@@ -11,8 +11,10 @@ import {
   normalizeClaimedWalletCommand,
 } from "../src/ingress/authenticated-wallet-command-normalizer.ts";
 import type {
+  ResolveWalletCommandAuthorities,
+} from "../src/ingress/authenticated-wallet-command-normalizer.ts";
+import type {
   CommandAuthorityRecord,
-  ResolveCommandAuthorities,
 } from "../src/ingress/authenticated-external-prepare-normalizer.ts";
 
 const maximumBodyBytes = 65_536;
@@ -39,7 +41,7 @@ type WriteOutcome =
 type IngressSeams = {
   readonly resolveIngressKey: ResolveProtectedIngressKey;
   readonly tryClaimReplay: TryClaimProtectedReplay;
-  readonly resolveCommandAuthorities: ResolveCommandAuthorities;
+  readonly resolveCommandAuthorities: ResolveWalletCommandAuthorities;
   readonly serverNowMilliseconds: () => number;
 };
 type NormalizedCommand = Exclude<
@@ -79,6 +81,9 @@ const admitDirectoryPublishReference = makeFunctionReference<"mutation">(
 );
 const attachAtsCandidateReceiptReference = makeFunctionReference<"mutation">(
   "ats_candidate_receipts:attachAtsCandidateReceipt",
+);
+const verifyAtsCandidateReceiptReference = makeFunctionReference<"action">(
+  "ats_receipt_verification:verifyAtsCandidateReceipt",
 );
 const getOfferingProjectionReference = makeFunctionReference<"query">(
   "offerings:getPublicProjection",
@@ -129,6 +134,20 @@ const commandDispatch: Readonly<Record<NormalizedCommand["type"], DispatchEntry>
         authorityVersion: command.authorityVersion,
         replayIdentity: command.replayIdentity,
       });
+      const attachmentStatus = result !== null && typeof result === "object"
+        ? Object.getOwnPropertyDescriptor(result, "status")?.value
+        : undefined;
+      if (attachmentStatus === "ATTACHED" || attachmentStatus === "ALREADY_ATTACHED") {
+        const attemptId = Object.getOwnPropertyDescriptor(result, "attemptId")?.value;
+        if (typeof attemptId === "string") {
+          try {
+            await ctx.scheduler.runAfter(0, verifyAtsCandidateReceiptReference, { attemptId });
+          } catch {
+            // A scheduling failure leaves the durable offering ASSET_PENDING. The
+            // signed attachment response must not claim corroboration succeeded.
+          }
+        }
+      }
       return mapAttachmentResult(result, command.payload.attemptPublicId);
     },
   }),
@@ -446,9 +465,9 @@ export async function handleCommandIngress(
       claimIngressReplayReference,
       { replayIdentity },
     ),
-    resolveCommandAuthorities: (chainId, canonicalSignerAddress) => ctx.runQuery(
+    resolveCommandAuthorities: (chainId, canonicalSignerAddress, selection) => ctx.runQuery(
       readCommandAuthoritiesReference,
-      { chainId, canonicalSignerAddress },
+      { chainId, canonicalSignerAddress, ...(selection === undefined ? {} : { selection }) },
     ) as Promise<readonly CommandAuthorityRecord[]>,
     serverNowMilliseconds: () => Date.now(),
   });
@@ -800,7 +819,7 @@ export async function handleActiveDirectory(
   } catch {
     return notFound();
   }
-  if (serviceSlug === undefined || serviceSlug !== "riskscan") return notFound();
+  if (serviceSlug === undefined || (serviceSlug !== "riskscan" && !/^tool-[0-9a-f]{32}$/u.test(serviceSlug))) return notFound();
   try {
     const result = await ctx.runQuery(getActiveDirectoryReference, { serviceSlug });
     if (result === null) return notFound();

@@ -294,7 +294,7 @@ export type ProviderDeployStageState = Readonly<{
 export type AtsCreateConfigurationProjection = Readonly<{
   network: "hedera:testnet";
   chainId: 296;
-  subjectPublicId: "riskscan_revenue_note_demo";
+  subjectPublicId: string;
   offeringVersion: "ats_demo_v1";
   registryRevision: string;
   operationKind: "ATS_CREATE";
@@ -348,7 +348,7 @@ export function providerDeployStageStates(
 
   const first = sessionStageState(session.results[0], undefined);
   const second = projection ? sessionStageState(session.results[1], first) : Object.freeze({ kind: "unavailable" as const });
-  const third = session.candidate || session.results[2]?.kind === "done"
+  const third = session.candidate || session.results[2] !== undefined
     ? sessionStageState(session.results[2], second)
     : Object.freeze({ kind: "unavailable" as const });
   const fourth = session.recordComplete
@@ -375,8 +375,10 @@ export function providerDeployStageControl(
   if (state.kind === "actionable" && signatureAvailable) {
     return Object.freeze({
       disabled: false,
-      label: "Request signature",
-      description: "Opens one signature request for this stage. Nothing is recorded unless the relay reports ACCEPTED.",
+      label: state.detail?.startsWith("Recheck") ? "Recheck receipt" : "Request signature",
+      description: state.detail?.startsWith("Recheck")
+        ? "Requests a signed receipt recheck only; it never submits a wallet transaction."
+        : "Opens one signature request for this stage. Nothing is recorded unless the relay reports ACCEPTED.",
     });
   }
 

@@ -23,6 +23,35 @@ export default defineSchema({
     replayIdentity: v.string(),
     claimedAt: v.int64(),
   }).index("by_replay_identity", ["replayIdentity"]),
+  providerTools: defineTable({
+    toolPublicId: v.string(),
+    subjectPublicId: v.string(),
+    offeringPublicId: v.string(),
+    serviceId: v.string(),
+    serviceSlug: v.string(),
+    canonicalSignerAddress: v.string(),
+    chainId: v.literal(296),
+    principalPublicId: v.string(),
+    authorityVersion: v.string(),
+    requestId: v.string(),
+    offeringVersion: v.literal(1),
+    directoryVersion: v.literal(1),
+    createdAt: v.int64(),
+  }).index("by_tool_public_id", ["toolPublicId"])
+    .index("by_offering_public_id", ["offeringPublicId"])
+    .index("by_owner_and_chain_and_request", ["canonicalSignerAddress", "chainId", "requestId"])
+    .index("by_owner_and_chain_and_created", ["canonicalSignerAddress", "chainId", "createdAt"]),
+  providerToolReceiptBindings: defineTable({
+    network: v.literal("hedera:testnet"),
+    offeringId: v.id("offerings"),
+    offeringPublicId: v.string(),
+    attemptId: v.id("externalPrepareCommandAttempts"),
+    candidateTransactionId: v.string(),
+    evmTransactionHash: v.optional(v.string()),
+    assetEvmAddress: v.string(),
+  }).index("by_network_and_candidate_transaction_id", ["network", "candidateTransactionId"])
+    .index("by_network_and_evm_transaction_hash", ["network", "evmTransactionHash"])
+    .index("by_network_and_asset_evm_address", ["network", "assetEvmAddress"]),
   externalPrepareCommandAttempts: defineTable({
     version: v.literal(1),
     type: v.literal("external.prepare"),
@@ -48,6 +77,7 @@ export default defineSchema({
     ),
     candidateTransactionId: v.optional(v.string()),
     candidateEvmAddress: v.optional(v.string()),
+    verifiedEvmTransactionHash: v.optional(v.string()),
     nextReconciliationAt: v.optional(v.int64()),
     acceptedAt: v.int64(),
   }).index("by_idempotency_key", ["idempotencyKey"]),
@@ -110,11 +140,11 @@ export default defineSchema({
     idempotencyKey: v.string(),
     offeringVersion: v.number(),
     directoryVersion: v.number(),
-    serviceSlug: v.literal("riskscan"),
+    serviceSlug: v.string(),
     record: v.object({
       schemaVersion: v.literal(1),
       serviceId: v.string(),
-      serviceSlug: v.literal("riskscan"),
+      serviceSlug: v.string(),
       offeringPublicId: v.string(),
       offeringVersion: v.number(),
       capabilities: v.array(v.literal("evm-contract-risk-signals")),

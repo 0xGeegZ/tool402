@@ -129,11 +129,12 @@ function offering(overrides = {}) {
   };
 }
 
-function database({ attempts = [attempt()], claims = [], offerings = [offering()] } = {}) {
+function database({ attempts = [attempt()], claims = [], offerings = [offering()], providerToolReceiptBindings = [] } = {}) {
   const rows = {
     externalPrepareCommandAttempts: attempts,
     walletCommandReplayClaims: claims,
     offerings,
+    providerToolReceiptBindings,
   };
   const reads = [];
   const writes = [];
@@ -168,10 +169,10 @@ function database({ attempts = [attempt()], claims = [], offerings = [offering()
     },
     async insert(table, document) {
       accesses.push({ kind: "insert", table });
-      assert.equal(table, "walletCommandReplayClaims");
       const copy = structuredClone(document);
-      const rowId = `walletCommandReplayClaims:${rows.walletCommandReplayClaims.length}`;
-      rows.walletCommandReplayClaims.push({ _id: rowId, _creationTime: 1, ...copy });
+      assert.ok(table === "walletCommandReplayClaims" || table === "providerToolReceiptBindings");
+      const rowId = `${table}:${rows[table].length}`;
+      rows[table].push({ _id: rowId, _creationTime: 1, ...copy });
       writes.push({ kind: "insert", table, document: copy, rowId });
       return rowId;
     },
@@ -213,6 +214,10 @@ function expectAttemptLookup(db) {
   });
 }
 
+function nonReceiptBindingWrites(db) {
+  return db.writes.filter((write) => write.table !== "providerToolReceiptBindings");
+}
+
 test("requires the declared internal ATS candidate receipt source module", () => {
   assert.equal(sourceExists, true, `missing declared source module: ${sourcePath}`);
 });
@@ -224,6 +229,7 @@ test.before(async () => {
 implementedTest("exposes only closed internal receipt attachment, read-context, and outcome handlers", () => {
   assert.deepEqual(Object.keys(api).sort(), [
     "attachAtsCandidateReceipt",
+    "corroborateSelectedProviderToolAtsReceipt",
     "readAtsCandidateVerificationContext",
     "recordAtsCandidateOutcome",
   ]);
@@ -244,6 +250,11 @@ implementedTest("exposes only closed internal receipt attachment, read-context, 
   }));
   assert.deepEqual(JSON.parse(api.readAtsCandidateVerificationContext.exportArgs()), object({
     attemptId: id("externalPrepareCommandAttempts"),
+  }));
+  assert.deepEqual(JSON.parse(api.corroborateSelectedProviderToolAtsReceipt.exportArgs()), object({
+    attemptId: id("externalPrepareCommandAttempts"),
+    transaction: { type: "any" },
+    receipt: { type: "any" },
   }));
   assert.deepEqual(JSON.parse(api.recordAtsCandidateOutcome.exportArgs()), object({
     attemptId: id("externalPrepareCommandAttempts"),
@@ -289,7 +300,8 @@ implementedTest("claims a fresh replay identity before the sole candidate patch 
 
   assert.deepEqual(result, { status: "ATTACHED", attemptId, state: "SUBMITTED" });
   expectAttemptLookup(db);
-  assert.deepEqual(db.writes, [
+  const writes = nonReceiptBindingWrites(db);
+  assert.deepEqual(writes, [
     {
       kind: "insert",
       table: "walletCommandReplayClaims",
@@ -299,7 +311,7 @@ implementedTest("claims a fresh replay identity before the sole candidate patch 
         commandType: "external.attachCandidate",
         outcome: "NEW",
         targetId: attemptId,
-        claimedAt: db.writes[0].document.claimedAt,
+        claimedAt: writes[0].document.claimedAt,
       },
     },
     {
@@ -317,11 +329,12 @@ implementedTest("claims a fresh replay identity before the sole candidate patch 
       patch: {
         state: "READY",
         atsAssetEvmAddress: candidateAddress,
-        updatedAt: db.writes[2].patch.updatedAt,
+        updatedAt: writes[2].patch.updatedAt,
       },
     },
   ]);
-  assert.equal(typeof db.writes[0].document.claimedAt, "bigint");
+  assert.equal(typeof writes[0].document.claimedAt, "bigint");
+  assert.equal(db.rows.providerToolReceiptBindings.length, 1);
 });
 
 implementedTest("promotes the exact linked offering to READY with the verified ATS_CREATE candidate", async () => {
@@ -335,6 +348,23 @@ implementedTest("promotes the exact linked offering to READY with the verified A
     updatedAt: db.rows.offerings[0].updatedAt,
   });
   assert.equal(typeof db.rows.offerings[0].updatedAt, "bigint");
+});
+
+implementedTest("keeps a selected provider tool pending until server corroboration", async () => {
+  const selected = offering({
+    offeringPublicId: "offering_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    subjectPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    state: "ASSET_PENDING",
+  });
+  const selectedAttempt = attempt({
+    subjectPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  });
+  const db = database({ attempts: [selectedAttempt], offerings: [selected] });
+
+  await api.attachAtsCandidateReceipt._handler(db.ctx, input());
+
+  assert.equal(db.rows.offerings[0].state, "ASSET_PENDING");
+  assert.equal(Object.hasOwn(db.rows.offerings[0], "atsAssetEvmAddress"), false);
 });
 
 implementedTest("returns a no-write already-attached result only for byte-identical stored candidates", async () => {
@@ -377,13 +407,14 @@ implementedTest("repairs a pending offering when a fresh attachment signature re
   );
 
   assert.deepEqual(result, { status: "ATTACHED", attemptId, state: "SUBMITTED" });
-  assert.deepEqual(db.writes, [{
+  const writes = nonReceiptBindingWrites(db);
+  assert.deepEqual(writes, [{
     kind: "patch",
     rowId: "offerings:pending",
     patch: {
       state: "READY",
       atsAssetEvmAddress: candidateAddress,
-      updatedAt: db.writes[0].patch.updatedAt,
+      updatedAt: writes[0].patch.updatedAt,
     },
   }]);
 });
@@ -410,13 +441,14 @@ implementedTest("repairs a claimed ATS_CREATE attachment when its exact pending 
     await api.attachAtsCandidateReceipt._handler(db.ctx, input()),
     { status: "ATTACHED", attemptId, state: "SUBMITTED" },
   );
-  assert.deepEqual(db.writes, [{
+  const writes = nonReceiptBindingWrites(db);
+  assert.deepEqual(writes, [{
     kind: "patch",
     rowId: "offerings:pending",
     patch: {
       state: "READY",
       atsAssetEvmAddress: candidateAddress,
-      updatedAt: db.writes[0].patch.updatedAt,
+      updatedAt: writes[0].patch.updatedAt,
     },
   }]);
 });
@@ -549,6 +581,7 @@ implementedTest("does not project a prototype-supplied candidate address from a 
       chainId: 296,
       expectedTarget,
       candidateTransactionId: "0.0.123@1735689600.123456789",
+      selectedProviderTool: false,
     });
     assert.equal(Object.hasOwn(context, "candidateEvmAddress"), false);
   } finally {
@@ -672,6 +705,7 @@ implementedTest("returns only the minimal verification context and terminalizes 
       expectedTarget,
       candidateTransactionId: "0.0.123@1735689600.123456789",
       candidateEvmAddress: candidateAddress,
+      selectedProviderTool: false,
     },
   );
 

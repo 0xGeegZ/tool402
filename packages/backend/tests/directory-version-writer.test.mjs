@@ -215,6 +215,7 @@ function database({
   claims = [],
   offerings = [],
   directoryVersions = [],
+  providerTools = [],
   directoryPatchRows = [],
 } = {}) {
   const rows = {
@@ -222,6 +223,7 @@ function database({
     walletCommandReplayClaims: [...claims],
     offerings: [...offerings],
     directoryVersions,
+    providerTools: [...providerTools],
   };
   const reads = [];
   const writes = [];
@@ -373,7 +375,7 @@ const id = (tableName) => ({ type: "id", tableName });
 const directoryRecordValidator = object({
   schemaVersion: literal(1),
   serviceId: string,
-  serviceSlug: literal("riskscan"),
+  serviceSlug: string,
   offeringPublicId: string,
   offeringVersion: number,
   capabilities: array(literal("evm-contract-risk-signals")),
@@ -416,7 +418,7 @@ const activeDirectoryProjectionValidator = object({
   offeringPublicId: string,
   offeringVersion: number,
   directoryVersion: number,
-  serviceSlug: literal("riskscan"),
+  serviceSlug: string,
   record: directoryRecordValidator,
   state: literal("ACTIVE"),
   acceptedAt: bigint,
@@ -507,7 +509,7 @@ implementedTest("registers the exact closed directory admission and public-proje
     }),
   );
   assert.deepEqual(JSON.parse(directory.getActive.exportArgs()), object({
-    serviceSlug: literal("riskscan"),
+    serviceSlug: string,
   }));
   assert.deepEqual(
     sortedReturnArms(JSON.parse(directory.getActive.exportReturns())),
@@ -991,6 +993,42 @@ implementedTest("fails closed on malformed, duplicate, or descriptor-backed refe
   assert.deepEqual(hostileActiveDb.reads, expectedDirectoryReads(directoryInput));
   assertNoDirectoryOrOfferingWrite(hostileActiveDb.writes);
   assert.equal(hostileActive.reads(), 0);
+});
+
+implementedTest("publishes an allocated tool without superseding the legacy RiskScan service", async (t) => {
+  const directory = await loadDirectory(t);
+  const suffix = "a".repeat(32);
+  const toolId = `tool_${suffix}`;
+  const input = admissionInput({
+    payload: directoryPayload({
+      offeringPublicId: `offering_${suffix}`,
+      record: {
+        ...directoryPayload().record,
+        serviceId: toolId,
+        serviceSlug: `tool-${suffix}`,
+        offeringPublicId: `offering_${suffix}`,
+      },
+    }),
+  });
+  const tool = {
+    _id: "providerTools:tool-a", _creationTime: 1n,
+    toolPublicId: toolId, subjectPublicId: toolId, offeringPublicId: input.payload.offeringPublicId,
+    serviceId: toolId, serviceSlug: `tool-${suffix}`, canonicalSignerAddress,
+    chainId: 296, principalPublicId: input.principalPublicId, authorityVersion: input.authorityVersion,
+    requestId: "11111111-1111-4111-8111-111111111111", offeringVersion: 1, directoryVersion: 1, createdAt: 1n,
+  };
+  const db = database({
+    authorities: [authority(input)],
+    offerings: [offeringDocument(input, { subjectPublicId: toolId })],
+    providerTools: [tool],
+    directoryVersions: (request) => request.filters.some(([field, value]) => field === "serviceSlug" && value === "riskscan")
+      ? [directoryDocument(admissionInput())]
+      : [],
+  });
+  const result = await directory.admitDirectoryPublish._handler(db.ctx, input);
+  assert.equal(result.status, "NEW");
+  assert.equal(db.writes.find((write) => write.table === "directoryVersions").document.serviceSlug, `tool-${suffix}`);
+  assert.equal(db.writes.some((write) => write.kind === "patch" && write.id === directoryId), false);
 });
 
 implementedTest("atomically publishes one ACTIVE directory version, supersedes the prior one, and opens its READY offering", async (t) => {

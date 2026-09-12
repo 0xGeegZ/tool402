@@ -1581,18 +1581,23 @@ M50 does not own or amend
 `wallet-state.ts`, deploy-stage signing, command/relay code, configuration,
 packages, lockfiles, or any live path.
 
-M55-T010 is a root-owned `00-inbox` CORE_P0 new-provider-tool refinement.
+M55-T010 is a root-owned `20-active` CORE_P0 new-provider-tool refinement with
+Task 1 Green accepted only for the exact allocation and protected owner-read
+paths recorded below.
 Its documentation scope is its card, `docs/specs/m55-provider-demo-attempt-restart.md`,
 `docs/superpowers/plans/2026-09-12-m55-deploy-another-tool.md`,
-`docs/work-queue/evidence/M55-T010-delegation.md`, the product overview's M55
-amendment, root queue/control records, and independent refinement review.
+`docs/work-queue/evidence/M55-T010-delegation.md`, its Task 1 readiness
+reviews, the product overview's M55 amendment, root queue/control records, and
+independent refinement review.
 The retained filenames do not preserve the superseded demo-attempt UX.
-The allocator design is selected in the spec; source readiness is not granted.
-The plan's candidate paths confer no ownership. M51/M53/M54/S26/S36/S42/B04
-reservations remain unchanged until root records release or exact scoped
-transfer/co-review, followed by independent readiness, activation, and RED
-acceptance. No source/test, authority provisioning, environment mutation,
-wallet, signature, transaction, deployment, or live-evidence action is active.
+The allocator design is selected in the spec; no source outside the accepted
+Task 1 paths is granted.
+The Tasks 2–6 plan candidate paths confer no ownership. M51/M53/M54/S26/S36/
+S42/B04 reservations remain unchanged until root records release or exact
+scoped transfer/co-review, followed by independent readiness, activation, and
+RED acceptance. No other source/test, authority provisioning, environment
+mutation, wallet, signature, transaction, deployment, or live-evidence action
+is active.
 
 S43-T010 reserves only its specification/card and root control during intake.
 Its proposed exact source/test boundary is in docs/specs/s43-recording-demo-journey.md.
@@ -1663,7 +1668,6 @@ The owner refinement at `6532a880` additionally reserves
 `apps/web/public/brand/dashboard-empty-mascot.png` and only the empty-state
 illustration region in `apps/web/src/components/dashboard/dashboard-campaign.tsx`;
 it does not reserve or change the component's session or ownership logic.
-
 S46-T010 owns only the demo control-room surface: the `/demo` page, the
 components under apps/web/src/components/demo, the demo-only HashScan-link
 utility, its focused tests and the matching submission rehearsal runbook. It
@@ -1678,3 +1682,38 @@ apps/web/tests/dashboard-auth.test.mjs assertions. It may carry only a known
 demoStep to the existing internal dashboard destination and must not alter the
 challenge, verifier, cookie, wallet, account, chain, signature, session, or
 authorization decision.
+
+M55-T010 Task 1 is the sole `20-active` slice at this control head. Its exact
+candidate paths are
+`packages/core/src/provider-tool-identity.ts`,
+`packages/core/test/provider-tool-identity.test.mjs`,
+`packages/core/src/index.ts`, `packages/backend/convex/provider_tools.ts`,
+`packages/backend/convex/provider_session_ingress.ts`, Backend `schema.ts` and
+`http.ts`, `packages/backend/tests/provider-tools.test.mjs`,
+`packages/backend/tests/provider-session-ingress.test.mjs`,
+`apps/web/src/lib/provider-tools-server.ts`,
+`apps/web/src/app/api/provider/tools/route.ts`, and
+`apps/web/tests/provider-tools-api.test.mjs`. The M41-completed
+`packages/backend/tests/http-command-ingress.test.mjs` is additionally
+reserved only for its one `/internal/provider-tools` POST route-inventory
+expectation, as independently reviewed and activated in
+`docs/work-queue/evidence/M55-T010-task1-http-route-supplement.md`.
+They create no offering, campaign, ATS candidate, receipt, Directory record,
+or authority. They are the sole M55 reservation. The four new Task 1 test
+paths and the other eight declared Task 1 source paths are `20-active` for the
+minimal Green implementation accepted in
+`docs/work-queue/evidence/M55-T010-task1-green-review.md`. Tasks 2–6 remain
+blocked by M51/M53/M54/S26/S36/S42/B04 as mapped in
+`docs/work-queue/evidence/M55-T010-task1-readiness-review.md`; no active
+predecessor path is transferred by this candidate record.
+
+M55-T010 Tasks 2–6 activation supersedes only the preceding statement that
+Task 1 is the sole active M55 source slice. The exact root-owned transfer is
+recorded in `docs/work-queue/evidence/M55-T010-tasks2-6-activation.md`: M55
+may amend only selected-provider-tool branches of the named M51/M53/M54/S26/
+S36/S42/B04 seams and the new M55 helpers/tests declared there. The legacy
+RiskScan branches, B04 bounded-input controls, M53 Factory-event selection,
+M54 explicit recovery, S26 shared-session control, S36 callback, and S42
+signer-exact read remain retained by their original owners. Every transferred
+seam requires joint compatibility review before integration; all other active
+reservations remain unchanged.

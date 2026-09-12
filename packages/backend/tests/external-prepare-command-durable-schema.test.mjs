@@ -57,7 +57,7 @@ test("declares exactly the three additive M32 tables with closed validators and 
         subjectPublicId: string, network: literal("hedera:testnet"), expectedTarget: string,
         canonicalParametersHash: string, idempotencyKey: string, expiresAt: string,
         state: union("PREPARED", "SUBMITTED", "CONFIRMED", "OUTCOME_UNKNOWN", "REJECTED"),
-        candidateTransactionId: optional(string), candidateEvmAddress: optional(string),
+        candidateTransactionId: optional(string), candidateEvmAddress: optional(string), verifiedEvmTransactionHash: optional(string),
         nextReconciliationAt: optional({ type: "bigint" }), acceptedAt: { type: "bigint" },
       }),
       indexes: [["by_idempotency_key", ["idempotencyKey"]]], searchIndexes: [], vectorIndexes: [],

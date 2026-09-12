@@ -528,9 +528,44 @@
   before compilation when its CSS helper is denied a local port bind.
 
 - PRODUCT_OVERVIEW: accepted as P00-T010
-- M55_REFINEMENT_REVIEWED: Fresh independent review accepts the documentation packet at `cdf7d84761d2d2b3d71eba53477127d771b3f685` after closing the legacy/new receipt-exclusivity ambiguity; no Critical or Important findings remain. Queue/reference checks and 36/36 queue-validator tests pass. M55 is ready for delegation only, remains `00-inbox`, and grants no source activation, predecessor release, deployment, or live authority. See the committed M55 refinement review and delegation packet.
+- M55_REFINEMENT_REVIEWED: Fresh independent review accepts the documentation packet at `cdf7d84761d2d2b3d71eba53477127d771b3f685` after closing the legacy/new receipt-exclusivity ambiguity; no Critical or Important findings remain. Queue/reference checks and 36/36 queue-validator tests pass. At that documentation head M55 remained `00-inbox`; D-M55-010-004 later moves only Task 1 to `10-ready`. It grants no source activation, predecessor release, deployment, or live authority. See the committed M55 refinement review and delegation packet.
 - CURRENT_MODULE: S13 outcome-feedback treatment is accepted at source commit `ece66c2fd7b2278ed0f801ad1febd478d9ddc39f`; S15 wallet-island/relay is accepted at `506f038fffb87739cc5fd302a30033b5c56d36ee`; S16 provider deploy wizard is accepted at `ed46ae18a08c859d5f2c94722ab84453ef674835`; M38 offering command payloads and M40 durable offering/Directory admission are accepted at `60-done`. HA-COMMAND-AUTHORITY-002, HA-ATS-RETARGET-001, HA-ATS-RUNTIME-BINDING-001, HA-ISSUER-ACCOUNT-001, and HA-CAMPAIGN-CONVEX-001 are accepted only as bounded local authority or human evidence. B03 Agent payment remains locally green and awaits its separate human-owned testnet exercise.
-- M55_NEW_TOOL_REFINEMENT: M55-T010 remains `00-inbox`, documentation-only. The owner's issue #93 clarification replaces demo-attempt UX with explicit deployment of another independent tool, allowing identical prefilled values. The local spec, implementation plan, and delegation packet select authenticated allocation, per-tool ownership/configuration/receipt binding, independent Directory identities, and dashboard listing. Root must resolve current M51/M53/M54/S26/S36/S42/B04 overlaps by acceptance/release or explicit scoped transfer/co-review, then record readiness, RED activation, and GREEN authority. No source reservation, environment mutation, signature, transaction, deployment, or live action is granted by refinement.
+- M55_NEW_TOOL_REFINEMENT: The owner's issue #93 clarification replaces demo-attempt UX with explicit deployment of another independent tool, allowing identical prefilled values. The local spec, implementation plan, and delegation packet select authenticated allocation, per-tool ownership/configuration/receipt binding, independent Directory identities, and dashboard listing. M55 is `20-active`: Task 1 Green is accepted only for its recorded allocation and protected owner-read paths. Tasks 2–6 remain blocked until their M51/M53/M54/S26/S36/S42/B04 overlaps have an accepted release or exact scoped transfer/co-review; no other source path is active.
+- M55_TASK1_READINESS: At `5f21fc90e1a927317665a1c1bf245eb0f9457cd5`, Task 1's twelve exact Core/Backend/Web allocation and protected-owner-read paths are absent or unreserved; Node 22.21.1 `npm ci`, root `npm test`, and `npm run queue:check` passed. An independent review is clear after correcting the four-test durable-RED scope and Task 5's retained M51 `command_dispatch.ts` collision. The user-directed root activation at `49e5b9d5` permits only durable RED in the four new focused Task 1 tests. No Task 1 source, environment, signature, transaction, deployment, or live action is authorized until independent RED acceptance.
+- M55_TASK1_RED_ACCEPTANCE: Fresh independent review accepts Task 1's durable RED: three Core missing exports, two Backend absent modules with thirteen dependent contracts skipped, and one Web absent module pair with six dependent contracts skipped. The accepted contracts cover identity allocation/replay/revocation/concurrency/collision, protected owner reads, domain-bound provider-session assertions, and dashboard-session POST/GET. Only the twelve exact Task 1 Core/Backend/Web paths may receive minimal Green; Tasks 2–6, every predecessor reservation, environment, signature, transaction, deployment, and live action remain excluded.
+
+- M55_TASK1_HTTP_ROUTE_TEST_INTAKE: Task 1's new fixed protected ingress route
+  makes M41's exact HTTP-route inventory fail. The only requested supplement is
+  its existing route-inventory test, to list `/internal/provider-tools` POST;
+  the test remains excluded until independent readiness and a root-owned
+  test-only activation are recorded. This is not a transfer of M41 command
+  behavior and grants no other M41/M55 source, environment, wallet, signature,
+  transaction, deployment, or live authority.
+
+- M55_TASK1_HTTP_ROUTE_TEST_ACTIVATION: Independent readiness reproduces only
+  the expected closed-inventory delta and clears the completed, unreserved M41
+  test for a root-owned one-entry expectation amendment. The existing route's
+  no-wildcard/no-OPTIONS/command/public assertions remain mandatory; no other
+  M41/M55 path or environment, wallet, signature, transaction, deployment, or
+  live authority is transferred.
+- M55_TASK1_GREEN_ACCEPTANCE: Task 1's identity allocator and protected
+  owner-read/list boundary are accepted after a fresh independent exact-head
+  review. The review confirmed strict POST Origin, ordinary authenticated GET
+  without Origin, explicit foreign-Origin rejection, the Stage-B issuer gate,
+  derived safe title/lifecycle projection, HMAC/replay/bounds, and no P0/P1/P2
+  finding. Node 22.21.1 focused 34/34, root test, typecheck, lint, queue and
+  whitespace checks pass. M55 remains `20-active`; no Task 2–6 path, UI,
+  environment, wallet, signature, transaction, deployment or live authority
+  is released. See `docs/work-queue/evidence/M55-T010-task1-green-review.md`.
+- M55_TASKS2_6_ACTIVATION: The repository owner explicitly authorized the
+  complete local delivery of Tasks 2–6. The root records only the selected
+  provider-tool branches transferred from M51/M53/M54/S26/S36/S42/B04 in
+  `docs/work-queue/evidence/M55-T010-tasks2-6-activation.md`; legacy RiskScan
+  and every predecessor's retained behavior stay owned and must receive joint
+  compatibility review. The activation permits serial TDD, source, tests,
+  queue/control commits and integration only. Wallet signatures, transactions,
+  Directory publication, authority/configuration mutation and every live action
+  remain human-only and excluded.
 - M41_DELIVERY: accepted at `20983649632f4812d9ee045637eb183b3158cc38` as a local HTTP ingress, transport replay, atomic ATS_CREATE admission, and public-projection boundary only; it adds no configuration, key, publication, wallet, provider, SDK, transaction, deployment, or live authority.
 - CURRENT_TASK: B04-T010 (20-active) is the user-directed local security remediation. It authorizes only its eight named durable-RED tests; no source, payment, wallet, provider, transaction, deployment, or live capability is authorized.
 - B04_SECURITY_SCAN_REMEDIATION_ACTIVATION: Independent activation at `d5d4a384` confirms the exact eight RED tests are collision-free. B04-T010 is `20-active` only for those tests; source remains prohibited pending fresh RED acceptance.

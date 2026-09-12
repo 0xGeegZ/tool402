@@ -12,12 +12,16 @@ import { keccak256, stringToHex } from "viem";
 
 const admissionUrl = new URL("../src/offering-command-admission.ts", import.meta.url);
 const offeringsUrl = new URL("../convex/offerings.ts", import.meta.url);
+const providerToolAuthorityUrl = new URL("../convex/provider_tool_authority.ts", import.meta.url);
 const schemaUrl = new URL("../convex/schema.ts", import.meta.url);
 const backendIndexUrl = new URL("../src/index.ts", import.meta.url);
 const admissionPath = fileURLToPath(admissionUrl);
 const offeringsPath = fileURLToPath(offeringsUrl);
+const providerToolAuthorityPath = fileURLToPath(providerToolAuthorityUrl);
 const sourcesExist = existsSync(admissionPath) && existsSync(offeringsPath);
 const implementedTest = sourcesExist ? test : test.skip;
+const selectedToolSourceExists = existsSync(providerToolAuthorityPath);
+const selectedToolTest = selectedToolSourceExists ? test : test.skip;
 const atomicHelperSourceDeclared = sourcesExist && readFileSync(offeringsPath, "utf8").includes(
   "linkAtsCreateAttemptToDraftOffering",
 );
@@ -131,6 +135,39 @@ function authority(input = admissionInput(), overrides = {}) {
   };
 }
 
+function providerTool(input, overrides = {}) {
+  const toolPublicId = input.payload.subjectPublicId;
+  const suffix = toolPublicId.slice("tool_".length);
+  return {
+    _id: `providerTools:${suffix}`,
+    _creationTime: durableNow - 2,
+    toolPublicId,
+    subjectPublicId: toolPublicId,
+    offeringPublicId: `offering_${suffix}`,
+    serviceId: toolPublicId,
+    serviceSlug: `tool-${suffix}`,
+    canonicalSignerAddress: input.canonicalSignerAddress,
+    chainId: 296,
+    principalPublicId: input.principalPublicId,
+    authorityVersion: input.authorityVersion,
+    requestId: "00000000-0000-4000-8000-000000000000",
+    offeringVersion: 1,
+    directoryVersion: 1,
+    createdAt: 1n,
+    ...overrides,
+  };
+}
+
+function selectedInput(suffix, overrides = {}) {
+  const { idempotencyKey = "BBBBBBBBBBBBBBBBBBBBBQ", ...commandOverrides } = overrides;
+  const payload = offeringPayload({
+    offeringPublicId: `offering_${suffix}`,
+    subjectPublicId: `tool_${suffix}`,
+    idempotencyKey,
+  });
+  return reboundInput(payload, commandOverrides);
+}
+
 function offeringDocument(input = admissionInput(), overrides = {}) {
   const payload = input.payload;
   return {
@@ -214,6 +251,7 @@ function database({
   claims = [],
   offerings = [],
   attempts = [],
+  providerTools = [],
   getRows = {},
   queryResults = {},
 } = {}) {
@@ -222,6 +260,7 @@ function database({
     walletCommandReplayClaims: [...claims],
     offerings: [...offerings],
     externalPrepareCommandAttempts: [...attempts],
+    providerTools: [...providerTools],
   };
   const reads = [];
   const writes = [];
@@ -278,7 +317,7 @@ function database({
       accesses.push(table);
       assert.ok(["offerings", "walletCommandReplayClaims"].includes(table), `unexpected insert: ${table}`);
       const id = table === "offerings"
-        ? offeringId
+        ? rows.offerings.length === 0 ? offeringId : `offerings:${rows.offerings.length}`
         : `walletCommandReplayClaims:${writes.length}`;
       const copy = structuredClone(document);
       writes.push({ kind: "insert", table, document: copy, id });
@@ -299,6 +338,7 @@ function database({
   };
 
   return {
+    rows,
     reads,
     writes,
     accesses,
@@ -310,6 +350,17 @@ function database({
       scheduler: { runAfter: forbidden, runAt: forbidden },
     },
   };
+}
+
+function useExactIndexRows(db, queryResults, tables) {
+  for (const [table, indexes] of Object.entries(tables)) {
+    for (const index of indexes) {
+      queryResults[`${table}:${index}`] = ({ filters }) => db.rows[table].filter(
+        (row) => row !== null && typeof row === "object"
+          && filters.every(([field, value]) => row[field] === value),
+      );
+    }
+  }
 }
 
 function atomicTransactionDatabase({ offerings = [] } = {}) {
@@ -584,6 +635,208 @@ test("requires the declared M40 offering command and Convex source modules", () 
   assert.equal(existsSync(offeringsPath), true, `missing declared source module: ${offeringsPath}`);
 });
 
+test("requires the private bounded selected-provider-tool authority resolver", () => {
+  assert.equal(
+    selectedToolSourceExists,
+    true,
+    `missing selected-provider-tool resolver: ${providerToolAuthorityPath}`,
+  );
+});
+
+selectedToolTest("admits equal-content tools independently and rejects selected identity or replay drift", async (t) => {
+  const { offerings } = await loadOfferings(t);
+  const suffixA = "a".repeat(32);
+  const suffixB = "b".repeat(32);
+  const inputA = selectedInput(suffixA);
+  const inputB = selectedInput(suffixB, {
+    nonce: "QQQQQQQQQQQQQQQQQQQQQQ",
+    replayIdentity: `tool402:wallet-command:v1:296:${canonicalSignerAddress}:QQQQQQQQQQQQQQQQQQQQQQ`,
+    idempotencyKey: "CCCCCCCCCCCCCCCCCCCCCg",
+  });
+  assert.deepEqual(inputA.payload.definition, inputB.payload.definition);
+  assert.deepEqual(inputA.payload.narrative, inputB.payload.narrative);
+  assert.equal(inputA.payload.advertisedQuickPriceTinybars, inputB.payload.advertisedQuickPriceTinybars);
+  assert.equal(inputA.payload.advertisedStandardPriceTinybars, inputB.payload.advertisedStandardPriceTinybars);
+
+  const current = authority(inputA, { ownedSubjectPublicIds: ["riskscan_revenue_note_demo"] });
+  const queryResults = {};
+  const db = database({
+    authorities: [current],
+    providerTools: [providerTool(inputA), providerTool(inputB)],
+    queryResults,
+  });
+  useExactIndexRows(db, queryResults, {
+    commandAuthorities: ["by_chain_id_and_canonical_signer_address"],
+    providerTools: ["by_tool_public_id"],
+    walletCommandReplayClaims: ["by_replay_identity"],
+    offerings: ["by_offering_public_id_and_version"],
+  });
+
+  assert.deepEqual(
+    await offerings.admitOfferingCreate._handler(db.ctx, inputA),
+    { status: "NEW", targetId: offeringId, state: "DRAFT" },
+  );
+  assert.deepEqual(
+    await offerings.admitOfferingCreate._handler(db.ctx, inputB),
+    { status: "NEW", targetId: "offerings:1", state: "DRAFT" },
+  );
+  const storedOfferings = db.rows.offerings.map(({ _id, ...row }) => ({ _id, ...row }));
+  assert.equal(storedOfferings.length, 2);
+  assert.equal(storedOfferings[0].offeringPublicId, inputA.payload.offeringPublicId);
+  assert.equal(storedOfferings[1].offeringPublicId, inputB.payload.offeringPublicId);
+
+  const beforeReload = structuredClone(db.rows.offerings[0]);
+  const reloadA = selectedInput(suffixA, {
+    nonce: "HHHHHHHHHHHHHHHHHHHHHw",
+    replayIdentity: `tool402:wallet-command:v1:296:${canonicalSignerAddress}:HHHHHHHHHHHHHHHHHHHHHw`,
+  });
+  assert.deepEqual(
+    await offerings.admitOfferingCreate._handler(db.ctx, reloadA),
+    { status: "IDEMPOTENCY_REPLAYED", targetId: offeringId, state: "DRAFT" },
+  );
+  assert.deepEqual(db.rows.offerings[0], beforeReload, "reload must not overwrite admitted fields");
+  assert.equal(db.rows.offerings.length, 2);
+
+  assert.deepEqual(
+    await offerings.admitOfferingCreate._handler(db.ctx, inputA),
+    { status: "COMMAND_REPLAYED" },
+  );
+  const driftedPayload = offeringPayload({
+    offeringPublicId: inputA.payload.offeringPublicId,
+    subjectPublicId: inputA.payload.subjectPublicId,
+    narrative: { ...inputA.payload.narrative, title: "Changed after admission" },
+  });
+  const driftedReplay = reboundInput(driftedPayload, {
+    nonce: inputA.nonce,
+    replayIdentity: inputA.replayIdentity,
+  });
+  await assert.rejects(
+    () => offerings.admitOfferingCreate._handler(db.ctx, driftedReplay),
+    TypeError,
+  );
+  assert.equal(db.rows.offerings.length, 2);
+
+  const rejected = [
+    [
+      "swapped offering",
+      reboundInput(offeringPayload({
+        offeringPublicId: inputB.payload.offeringPublicId,
+        subjectPublicId: inputA.payload.subjectPublicId,
+      })),
+      [providerTool(inputA), providerTool(inputB)],
+      current,
+    ],
+    [
+      "swapped subject",
+      reboundInput(offeringPayload({
+        offeringPublicId: inputA.payload.offeringPublicId,
+        subjectPublicId: inputB.payload.subjectPublicId,
+      })),
+      [providerTool(inputA), providerTool(inputB)],
+      current,
+    ],
+    ["fabricated tool", selectedInput("c".repeat(32)), [providerTool(inputA)], current],
+    [
+      "foreign owner",
+      inputA,
+      [providerTool(inputA, { canonicalSignerAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" })],
+      current,
+    ],
+    ["revoked authority", inputA, [providerTool(inputA)], { ...current, enabled: false }],
+    [
+      "changed authority",
+      inputA,
+      [providerTool(inputA)],
+      { ...current, authorityVersion: "authority-v2" },
+    ],
+  ];
+  for (const [name, command, providerTools, selectedAuthority] of rejected) {
+    const rejectedQueryResults = {};
+    const rejectedDb = database({
+      authorities: [selectedAuthority],
+      providerTools,
+      queryResults: rejectedQueryResults,
+    });
+    useExactIndexRows(rejectedDb, rejectedQueryResults, {
+      commandAuthorities: ["by_chain_id_and_canonical_signer_address"],
+      providerTools: ["by_tool_public_id"],
+      walletCommandReplayClaims: ["by_replay_identity"],
+      offerings: ["by_offering_public_id_and_version"],
+    });
+    await assert.rejects(
+      () => offerings.admitOfferingCreate._handler(rejectedDb.ctx, command),
+      TypeError,
+      name,
+    );
+    assert.deepEqual(rejectedDb.writes, [], name);
+  }
+});
+
+selectedToolTest("links preparation only to the selected tool after a fresh ownership check", async (t) => {
+  const { offerings } = await loadOfferings(t);
+  const inputA = selectedInput("a".repeat(32));
+  const inputB = selectedInput("b".repeat(32), { idempotencyKey: "CCCCCCCCCCCCCCCCCCCCCg" });
+  const draftA = offeringDocument(inputA, { _id: "offerings:A" });
+  const draftB = offeringDocument(inputB, { _id: "offerings:B" });
+  const current = authority(inputB, { ownedSubjectPublicIds: ["riskscan_revenue_note_demo"] });
+  const queryResults = {};
+  const db = database({
+    authorities: [current],
+    offerings: [draftA, draftB],
+    providerTools: [providerTool(inputA), providerTool(inputB)],
+    queryResults,
+  });
+  useExactIndexRows(db, queryResults, {
+    commandAuthorities: ["by_chain_id_and_canonical_signer_address"],
+    providerTools: ["by_tool_public_id"],
+    offerings: ["by_ats_create_draft_binding"],
+  });
+
+  await offerings.linkAtsCreateAttemptToDraftOffering(db.ctx, {
+    attemptId: atsAttemptId,
+    subjectPublicId: inputB.payload.subjectPublicId,
+    canonicalSignerAddress: inputB.canonicalSignerAddress,
+    principalPublicId: inputB.principalPublicId,
+    authorityVersion: inputB.authorityVersion,
+  });
+  assert.equal(db.writes.length, 1);
+  assert.deepEqual(db.writes[0], {
+    kind: "patch",
+    id: "offerings:B",
+    document: {
+      state: "ASSET_PENDING",
+      atsAttemptId,
+      updatedAt: db.writes[0].document.updatedAt,
+    },
+  });
+  assert.equal(db.rows.offerings[0].state, "DRAFT", "Tool A must remain unlinked");
+  assert.equal(db.rows.offerings[1].state, "ASSET_PENDING");
+
+  const revokedResults = {};
+  const revokedDb = database({
+    authorities: [{ ...current, enabled: false }],
+    offerings: [draftB],
+    providerTools: [providerTool(inputB)],
+    queryResults: revokedResults,
+  });
+  useExactIndexRows(revokedDb, revokedResults, {
+    commandAuthorities: ["by_chain_id_and_canonical_signer_address"],
+    providerTools: ["by_tool_public_id"],
+    offerings: ["by_ats_create_draft_binding"],
+  });
+  await assert.rejects(
+    () => offerings.linkAtsCreateAttemptToDraftOffering(revokedDb.ctx, {
+      attemptId: atsAttemptId,
+      subjectPublicId: inputB.payload.subjectPublicId,
+      canonicalSignerAddress: inputB.canonicalSignerAddress,
+      principalPublicId: inputB.principalPublicId,
+      authorityVersion: inputB.authorityVersion,
+    }),
+    TypeError,
+  );
+  assert.deepEqual(revokedDb.writes, []);
+});
+
 test("requires the M41 atomic DRAFT-offering linker and its exact additive lookup index", async () => {
   const offerings = await import(offeringsUrl);
   assert.equal(
@@ -677,6 +930,8 @@ implementedTest("registers the exact closed M40 admission, asset-seam, and publi
     "markAssetPending",
     "markAssetReady",
     "readAtsCreateReplayOffering",
+    "readSelectedAtsCreateConfigurationOffering",
+    "readSelectedAtsCreateCorroborationOffering",
   ]);
   for (const mutation of [
     offerings.admitOfferingCreate,
@@ -1351,27 +1606,18 @@ implementedTest("rejects every unsafe pending transition without a write", async
   assert.equal(accessorReads, 0);
 });
 
-implementedTest("moves exactly one indexed pending offering to READY with the verified canonical asset address", async (t) => {
+implementedTest("fails closed: markAssetReady has no receipt-proof authority", async (t) => {
   const { offerings } = await loadOfferings(t);
   const input = admissionInput();
   const pending = offeringDocument(input, { state: "ASSET_PENDING", atsAttemptId });
   const atsAssetEvmAddress = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
   const db = database({ offerings: [pending] });
 
-  assert.deepEqual(
-    await offerings.markAssetReady._handler(db.ctx, { attemptId: atsAttemptId, atsAssetEvmAddress }),
-    { offeringId, state: "READY" },
+  await assert.rejects(
+    offerings.markAssetReady._handler(db.ctx, { attemptId: atsAttemptId, atsAssetEvmAddress }),
   );
-  assert.deepEqual(db.reads, expectedReadyRead());
-  assert.equal(db.writes.length, 1);
-  assert.equal(db.writes[0].kind, "patch");
-  assert.equal(db.writes[0].id, offeringId);
-  assert.equal(typeof db.writes[0].document.updatedAt, "bigint");
-  assert.deepEqual(db.writes[0].document, {
-    state: "READY",
-    atsAssetEvmAddress,
-    updatedAt: db.writes[0].document.updatedAt,
-  });
+  assert.deepEqual(db.reads, []);
+  assert.deepEqual(db.writes, []);
 });
 
 implementedTest("rejects malformed address and every unsafe indexed ready transition without a write", async (t) => {
@@ -1425,7 +1671,7 @@ implementedTest("rejects malformed address and every unsafe indexed ready transi
       }),
       undefined,
     );
-    assert.deepEqual(db.reads, expectedReadyRead());
+    assert.deepEqual(db.reads, []);
     assert.deepEqual(db.writes, []);
   }
   assert.equal(accessorReads, 0);
@@ -1520,6 +1766,21 @@ implementedTest("returns only the highest sanitized offering projection and fail
     assert.deepEqual(db.writes, []);
   }
   assert.equal(accessorReads, 0);
+});
+
+implementedTest("does not expose a selected provider-tool offering before it is OPEN or CLOSED", async (t) => {
+  const { offerings } = await loadOfferings(t);
+  const suffix = "ab".repeat(16);
+  const toolPublicId = `tool_${suffix}`;
+  const input = admissionInput({ payload: offeringPayload({
+    offeringPublicId: `offering_${suffix}`,
+    subjectPublicId: toolPublicId,
+  }) });
+  const db = database({ offerings: [offeringDocument(input, { state: "DRAFT" })] });
+  assert.equal(
+    await offerings.getPublicProjection._handler(db.ctx, { offeringPublicId: input.payload.offeringPublicId }),
+    null,
+  );
 });
 
 implementedTest("projects a durable ATS resume reference only from its exact linked PREPARED attempt", async (t) => {
