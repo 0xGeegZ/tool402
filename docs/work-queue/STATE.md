@@ -59,6 +59,13 @@
   only `apps/web/tests/provider-status.test.mjs` for durable RED; production
   source remains prohibited until an independent review accepts its expected
   missing-command-center failure.
+- S43_PROVIDER_COMMAND_CENTER_RED_ACCEPTANCE: At
+  `a8e9edd8dca707c25ccf46dd0d0ba11f5cbfe92f`, independent review accepted the
+  5×2 offering/Directory matrix with one expected missing-command-center
+  presentation failure. GREEN may amend only the provider page, provider
+  status component/state, and focused test; every projection/API, session,
+  wallet/provider, command, transaction, deployment, and live boundary stays
+  excluded.
 
 - S29_POST_ACCEPTANCE_REVIEW_FIX: The repository owner explicitly directs the
   two confirmed Provider deploy review corrections on PR #82. The root may

@@ -21,6 +21,21 @@ The local specification, UI manifest, task catalogue, state, ownership, and ledg
 
 The repository owner explicitly requested implementation through the current isolated worktree. S43 is activated only for a durable RED amendment to `apps/web/tests/provider-status.test.mjs`: it must fail because the existing loaded view lacks the declared command-center regions. Production source stays prohibited until an independent RED review accepts that expected failure.
 
+## RED acceptance and GREEN boundary
+
+At `a8e9edd8dca707c25ccf46dd0d0ba11f5cbfe92f`, the focused Node 22.21.1
+contract has ten passes and one intended presentation failure for the absent
+`provider-command-center` marker. Independent review confirmed the contract
+covers all five offering states against both independent Directory outcomes,
+the existing `CLOSED` no-control case, and the no-runtime boundary.
+
+Only `apps/web/src/app/provider/page.tsx`,
+`apps/web/src/components/provider/status/provider-status.tsx`,
+`apps/web/src/components/provider/status/provider-status-state.ts`, and the
+focused test may now change for minimal GREEN. Every reader, API, shell,
+wallet/provider, command, transaction, deployment, and live path remains
+outside the scope.
+
 ## Boundary
 
 The page continues to render the current admitted projection as-is. Its existing `/provider/deploy`, `/explore/riskscan`, documentation, and Hashscan links retain their destinations. It may not create synthetic campaign values, claim an unavailable action occurred, use a wallet/provider, fetch a new resource, add state or timers, or change an API, package, configuration, backend, deployment, or financial path.
