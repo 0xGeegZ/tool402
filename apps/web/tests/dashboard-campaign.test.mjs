@@ -7,7 +7,6 @@ import { fileURLToPath } from "node:url";
 const sourceUrl = new URL("../src/lib/dashboard-campaign.ts", import.meta.url);
 const componentUrl = new URL("../src/components/dashboard/dashboard-campaign.tsx", import.meta.url);
 const sourcePath = fileURLToPath(sourceUrl);
-const componentUrl = new URL("../src/components/dashboard/dashboard-campaign.tsx", import.meta.url);
 const dashboardPageUrl = new URL("../src/app/dashboard/page.tsx", import.meta.url);
 const implementedTest = existsSync(sourcePath) ? test : test.skip;
 
