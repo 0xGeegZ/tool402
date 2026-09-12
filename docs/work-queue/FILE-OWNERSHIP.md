@@ -1706,3 +1706,14 @@ minimal Green implementation accepted in
 blocked by M51/M53/M54/S26/S36/S42/B04 as mapped in
 `docs/work-queue/evidence/M55-T010-task1-readiness-review.md`; no active
 predecessor path is transferred by this candidate record.
+
+M55-T010 Tasks 2–6 activation supersedes only the preceding statement that
+Task 1 is the sole active M55 source slice. The exact root-owned transfer is
+recorded in `docs/work-queue/evidence/M55-T010-tasks2-6-activation.md`: M55
+may amend only selected-provider-tool branches of the named M51/M53/M54/S26/
+S36/S42/B04 seams and the new M55 helpers/tests declared there. The legacy
+RiskScan branches, B04 bounded-input controls, M53 Factory-event selection,
+M54 explicit recovery, S26 shared-session control, S36 callback, and S42
+signer-exact read remain retained by their original owners. Every transferred
+seam requires joint compatibility review before integration; all other active
+reservations remain unchanged.

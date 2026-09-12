@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active (Task 1 Green accepted; Tasks 2–6 blocked)
+- Queue state: 20-active (Task 1 Green accepted; Tasks 2–6 activated for serial local delivery)
 - Dependencies: none.
 - Owner: root integrator for documentation, readiness, path reservations,
   activation, review, integration, commits, and pushes.
@@ -68,7 +68,10 @@ every other M41 path remain retained.
 
 Task 1 Green is accepted in [its exact-head review](../../evidence/M55-T010-task1-green-review.md).
 The accepted slice supplies allocation and protected owner reads only; it does
-not surface a dashboard button. Task 6 remains the separately gated UI slice.
+not surface a dashboard button. The owner-directed
+[Tasks 2–6 activation](../../evidence/M55-T010-tasks2-6-activation.md) now
+records the exact predecessor transfers, retained legacy branches, and required
+joint compatibility reviews for the remaining serial slices.
 
 ## Completion
 
@@ -78,8 +81,8 @@ gate above remains mandatory for the implementation agent.
 
 Refinement is complete when packet/control records agree, reference/queue/
 whitespace checks pass, independent documentation review is clear, and docs
-are committed/pushed. This card is `20-active`: Task 1 Green is accepted,
-while the remaining Tasks 2–6 retain their documented blocking ownership. The
+are committed/pushed. This card is `20-active`: Task 1 Green is accepted and
+Tasks 2–6 now proceed serially under the recorded narrow transfers. The
 accepted Task 1 source is not evidence that the new-tool button or an
 end-to-end deployment is available.
 

@@ -557,6 +557,15 @@
   whitespace checks pass. M55 remains `20-active`; no Task 2–6 path, UI,
   environment, wallet, signature, transaction, deployment or live authority
   is released. See `docs/work-queue/evidence/M55-T010-task1-green-review.md`.
+- M55_TASKS2_6_ACTIVATION: The repository owner explicitly authorized the
+  complete local delivery of Tasks 2–6. The root records only the selected
+  provider-tool branches transferred from M51/M53/M54/S26/S36/S42/B04 in
+  `docs/work-queue/evidence/M55-T010-tasks2-6-activation.md`; legacy RiskScan
+  and every predecessor's retained behavior stay owned and must receive joint
+  compatibility review. The activation permits serial TDD, source, tests,
+  queue/control commits and integration only. Wallet signatures, transactions,
+  Directory publication, authority/configuration mutation and every live action
+  remain human-only and excluded.
 - M41_DELIVERY: accepted at `20983649632f4812d9ee045637eb183b3158cc38` as a local HTTP ingress, transport replay, atomic ATS_CREATE admission, and public-projection boundary only; it adds no configuration, key, publication, wallet, provider, SDK, transaction, deployment, or live authority.
 - CURRENT_TASK: B04-T010 (20-active) is the user-directed local security remediation. It authorizes only its eight named durable-RED tests; no source, payment, wallet, provider, transaction, deployment, or live capability is authorized.
 - B04_SECURITY_SCAN_REMEDIATION_ACTIVATION: Independent activation at `d5d4a384` confirms the exact eight RED tests are collision-free. B04-T010 is `20-active` only for those tests; source remains prohibited pending fresh RED acceptance.
