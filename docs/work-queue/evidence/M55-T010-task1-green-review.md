@@ -86,26 +86,29 @@ deployment, a wallet signature, or a testnet deployment.
 ## PR #100 final merge-readiness addendum
 
 The final executable implementation reviewed for PR #100 is
-`ed28ce96a774f826169dfe3593eb4510eface037`, rebased on
-`origin/main` `f080d5b2a637a261758e40be720b9723b2595c28`. It preserves the
+`4327f3a1866487b6d97388076299c84791149b44`, rebased on
+`origin/main` `94c4bec1ddeff29bc86cf7b88b3cdaccb0837097`. It preserves the
 Task 1 allocation/read acceptance above and includes the separately authorized
 Tasks 2–6 source slices; M55 remains `20-active` pending human-controlled
 runtime and live-testnet evidence.
 
+The final remediation additionally makes selected-tool ATS receipt
+corroboration reachable after an attached candidate, reads only fixed Hedera
+testnet evidence, and keeps Directory publication blocked until the
+owner-scoped durable projection is `READY`. A submitted selected-tool attempt
+can be rehydrated and rechecked with its exact candidate; this is a new signed
+receipt check, never an asset-creation or wallet transaction replay.
+
 At that exact executable head under Node 22.21.1:
 
-- focused provider-tool and provider-session-ingress contracts passed 342/342;
-- focused web provider-tool, deployment-resume, signing-race, API, route, and
-  command contracts passed 481/481 (one existing skip);
-- `npm run typecheck`, `npm run lint`, `npm run queue:check`, and
-  `git diff --check` passed;
+- the focused selected-tool receipt, dispatch, owner-projection, deployment
+  client, signing, and stage-state contracts passed 99/99;
+- `npm test`, `npm run typecheck`, `npm run lint`, `npm run queue:check`, and
+  `git diff --check origin/main...HEAD` passed;
 - a fresh independent code/spec/security review found no actionable P1/P2.
 
-`npm test` on both that head and the exact current main has the same existing
-failure in `apps/web/tests/dashboard-auth.test.mjs`: the test rejects the
-`address` prop introduced by main's `DashboardSessionSync`. This PR does not
-touch that dashboard-auth path. `npm run build` on both heads stops first at
-the identical sandbox-only Turbopack error while processing `globals.css`
+`npm run build` on both that head and exact `origin/main` stops first at the
+identical sandbox-only Turbopack error while processing `globals.css`
 (`creating new process` / `binding to a port` / `Operation not permitted`).
 Neither failure is attributed to this PR; a final Vercel Preview check remains
 separate deploy-environment evidence.
