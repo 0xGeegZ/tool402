@@ -144,6 +144,26 @@ exclusions govern; this card does not restate them.
   review. No wallet request, signature, transaction, deployment, or live
   action is authorized by this activation.
 
+## M56 backing composition transfer
+
+The root transfers to M56 only the backing-specific composition amendment at
+the existing shared-session/wallet-mount seam in
+`apps/web/src/components/backing/backing-flow.tsx` and only the matching
+shared-session assertions in `apps/web/tests/backing-route.test.mjs`. S26
+retains every other portion of those files and all of its other declared paths.
+
+M56 must preserve `useWalletSession` and `connectedWalletSession`, the one
+shared session, and the existing no-local-wallet-state architecture. It may not
+reintroduce `WalletIsland`, duplicate wallet state, discovery, signatures,
+authority behavior, or any other wallet behavior. The transfer excludes
+`wallet-session.tsx`, `wallet-connect.tsx`, root layout/header, provider-deploy
+integration, the S26 session state machine, and every unrelated S26 test.
+
+Before M56 integration, its lane must rebase on the canonical main containing
+this record, run focused backing and S26 compatibility tests, and receive a
+joint M56/S26 review. This transfer does not accept S26 or authorize any live
+action.
+
 ## User-directed deploy-form connection amendment
 
 - The repository owner directs that the last deploy/signing form surface an

@@ -841,3 +841,14 @@ No secrets, account keys, or private evidence belong in this file.
   sole durable authorization decision. No storage, automatic wallet discovery,
   account request, signature, wallet-state mutation, transaction, deployment,
   or live behavior is authorized.
+
+- M56_S26_BACKING_COMPOSITION_TRANSFER: The root transfers from active S26 to
+  M56 only the backing-specific shared-session/wallet-mount composition seam in
+  `backing-flow.tsx` and matching shared-session assertions in
+  `backing-route.test.mjs`. S26 retains every other hunk/path. M56 must preserve
+  `useWalletSession`, `connectedWalletSession`, and one shared session, with no
+  WalletIsland, local duplicate state, discovery, signature, authority, or
+  other wallet behavior. M56 must rebase on this record, run focused backing/S26
+  compatibility tests, and receive joint review before integration. This neither
+  accepts S26 nor authorizes runtime configuration, authority provisioning,
+  transfer, deployment, or live action.
