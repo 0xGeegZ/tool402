@@ -52,7 +52,10 @@ test("keeps guide presentation free of environment and automatic action while al
   const [page, steps, room] = await Promise.all([readAppFile(pagePath), readAppFile(stepsPath), readAppFile(roomPath)]);
   const source = page + "\n" + steps + "\n" + room;
   assert.doesNotMatch(source, /\b(?:sessionStorage|indexedDB|process\.env|import\.meta\.env)\b/i);
-  assert.match(room, /readStoredDemoEvidence\(window\.localStorage\)/);
+  assert.match(room, /readStoredDemoEvidenceState\(window\.localStorage\)/);
+  assert.match(room, /tryWriteStoredDemoEvidence\(window\.localStorage, next\)/);
+  assert.match(room, /window\.addEventListener\("focus", refreshEvidence\)/);
+  assert.match(room, /Reload local evidence/);
   assert.match(room, /Import Agent evidence/);
   assert.match(room, /Export evidence summary/);
   assert.doesNotMatch(source, /\b(?:eth_sendTransaction|eth_signTypedData|wallet_switchEthereumChain|fetch\s*\()\b/);
@@ -64,6 +67,9 @@ test("keeps guide presentation free of environment and automatic action while al
   assert.match(room, /RISKSCAN_PAY_OUTCOME paid/);
   assert.match(room, /RISKSCAN_PAY_SETTLEMENT <non-empty-safe-settlement-reference>/);
   assert.match(room, /RISKSCAN_PAY_DIAGNOSTIC PAID/);
+  assert.match(room, /git rev-parse --verify HEAD/);
+  assert.doesNotMatch(room, /submitted-source-sha/);
+  assert.match(room, /Open Agent payment in HashScan/);
   assert.match(room, /node --experimental-strip-types apps\/agent\/src\/riskscan-pay-cli\.ts --preflight/);
   assert.doesNotMatch(room, /npm run riskscan:pay/);
   assert.doesNotMatch(room, /PRIVATE_KEY\s*=/);

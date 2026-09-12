@@ -53,9 +53,12 @@ the paid result has returned; if that write fails, retain the printed settlement
 reference and do not pay again. Use **Import Agent evidence** in `/demo` to load
 that one file. The page labels it as client-reported settlement/result evidence
 and renders a HashScan action as `Submitted — verification pending`.
-Set `RISKSCAN_PAY_RECORDING_RUN_REF='b03-release-001'` and
-`RISKSCAN_PAY_SOURCE_VERSION` to the submitted source SHA before preflight so
-the safe packet names both the run and the build that produced it.
+The copied preflight command derives `RISKSCAN_PAY_SOURCE_VERSION` with
+`git rev-parse --verify HEAD`; it identifies the local Agent checkout only.
+Record the deployed service SHA separately: it is not inferred from local CLI
+provenance. The CLI checks the output path and both identifiers before reading
+a payer or starting payment. An existing evidence file must be imported or
+inspected, never overwritten or replaced by another paid request.
 
 Expected direct-CLI successful paid output, shown only after one authorized
 successful request, is:

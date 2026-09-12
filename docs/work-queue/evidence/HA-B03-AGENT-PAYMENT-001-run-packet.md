@@ -25,7 +25,7 @@ export RISKSCAN_PAY_SERVICE_BASE_URL='https://tool402.vercel.app'
 export RISKSCAN_PAY_INPUT_JSON='{"requestRef":"b03-release-001","subjectRef":"tool402-release","context":"One authorized Hedera-testnet RiskScan exercise","declarations":{"identity":true,"pricing":true,"limitations":true,"evidence":true}}'
 export RISKSCAN_PAY_POLICY_JSON='{"network":"hedera:testnet","asset":"0.0.0","maximumAmount":"100000"}'
 export RISKSCAN_PAY_RECORDING_RUN_REF='b03-release-001'
-export RISKSCAN_PAY_SOURCE_VERSION='<submitted-source-sha>'
+export RISKSCAN_PAY_SOURCE_VERSION="$(git rev-parse --verify HEAD)"
 node --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts --preflight
 ```
 
@@ -44,6 +44,12 @@ key into shell history, a recording, ticket, or repository. Then run:
 : "${RISKSCAN_PAY_PAYER_PRIVATE_KEY:?set privately in ignored runtime configuration}"
 node --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts --evidence-output ./tool402-agent-evidence.json
 ```
+
+The CLI checks the export path, run reference, and local checkout SHA before
+it reads the payer configuration or starts a request. If the output file
+already exists, inspect/import that file instead of repeating payment. The
+local checkout SHA is not proof of the deployed Web or backend version; record
+the deployed service provenance separately in the release packet.
 
 The only successful direct-CLI terminal output is:
 

@@ -43,6 +43,20 @@ test("imports only an exact safe Agent evidence schema and never trusts an impor
   assert.equal(summary.agentPayment.verifiedOnHedera, false);
 });
 
+test("keeps a zero-padded Hedera nanoseconds value through import, storage, summary, and HashScan", async () => {
+  const { parseDemoEvidenceImport, readStoredDemoEvidence, summarizeDemoEvidence, writeStoredDemoEvidence } = await import(moduleUrl.href);
+  const safe = parseDemoEvidenceImport(JSON.stringify(agentEvidence({
+    payment: { ...agentEvidence().payment, settlementRef: "0.0.1002@1720000000.000000001" },
+  })));
+  assert.notEqual(safe, null);
+  let persisted = null;
+  const storage = { getItem: () => persisted, setItem: (_key, value) => { persisted = value; } };
+  writeStoredDemoEvidence(storage, [safe]);
+  const recovered = readStoredDemoEvidence(storage);
+  assert.equal(recovered[0].payment.settlementRef, "0.0.1002@1720000000.000000001");
+  assert.equal(summarizeDemoEvidence(recovered).agentPayment.hashscanUrl, "https://hashscan.io/testnet/transaction/0.0.1002-1720000000-000000001");
+});
+
 test("deduplicates a local retake summary and rejects wrong recording bindings, oversized, and secret-bearing imports", async () => {
   const { exportDemoEvidenceSummary, parseDemoEvidenceImport, mergeDemoEvidence, readStoredDemoEvidence, writeStoredDemoEvidence } = await import(moduleUrl.href);
   const safe = parseDemoEvidenceImport(JSON.stringify(agentEvidence()));
@@ -65,4 +79,15 @@ test("deduplicates a local retake summary and rejects wrong recording bindings, 
   assert.deepEqual(readStoredDemoEvidence(storage), [safe]);
   assert.deepEqual(parseDemoEvidenceImport(exportDemoEvidenceSummary([safe])), safe);
   assert.doesNotMatch(persisted, /private|context|assessment|signature|cookie/i);
+});
+
+test("reports unavailable storage without discarding an already imported safe packet", async () => {
+  const { readStoredDemoEvidenceState, reconcileStoredDemoEvidence, tryWriteStoredDemoEvidence } = await import(moduleUrl.href);
+  const safe = agentEvidence();
+  const writeFailure = { getItem: () => null, setItem: () => { throw new Error("storage denied"); } };
+  assert.equal(tryWriteStoredDemoEvidence(writeFailure, [safe]), false);
+  const readFailure = { getItem: () => { throw new Error("storage denied"); }, setItem() {} };
+  assert.deepEqual(readStoredDemoEvidenceState(readFailure), { kind: "unavailable", records: [] });
+  assert.deepEqual(reconcileStoredDemoEvidence([safe], { kind: "unavailable", records: [] }), { kind: "unavailable", records: [safe] });
+  assert.deepEqual(reconcileStoredDemoEvidence([safe], { kind: "available", records: [] }), { kind: "memory-only", records: [safe] });
 });

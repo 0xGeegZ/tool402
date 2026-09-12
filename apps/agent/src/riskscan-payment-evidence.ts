@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { parseHederaAccountId, parseHederaTransactionId } from "@tool402/core";
 
 type PaidOutcome = Readonly<{
   kind: "paid";
@@ -42,8 +43,6 @@ export type RiskScanPaymentEvidence = Readonly<{
   }>;
 }>;
 
-const accountPattern = /^(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)$/u;
-const settlementPattern = /^(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)@(?:[1-9][0-9]*)\.(?:0|[1-9][0-9]{0,8})$/u;
 const atomicAmountPattern = /^[1-9][0-9]*$/u;
 const safeReferencePattern = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,95}$/u;
 const sourceVersionPattern = /^[0-9a-f]{7,64}$/u;
@@ -57,7 +56,7 @@ function isPaidOutcome(value: unknown): value is PaidOutcome {
   if (typeof value !== "object" || value === null) return false;
   const outcome = value as Partial<PaidOutcome>;
   return outcome.kind === "paid"
-    && typeof outcome.settlementRef === "string" && settlementPattern.test(outcome.settlementRef)
+    && parseHederaTransactionId(outcome.settlementRef) !== undefined
     && typeof outcome.assessment === "object" && outcome.assessment !== null
     && typeof outcome.assessment.requestRef === "string" && safeReferencePattern.test(outcome.assessment.requestRef)
     && typeof outcome.assessment.subjectRef === "string"
@@ -66,9 +65,9 @@ function isPaidOutcome(value: unknown): value is PaidOutcome {
     && Array.isArray(outcome.assessment.reasons) && Array.isArray(outcome.assessment.limitations)
     && typeof outcome.quotedPayment === "object" && outcome.quotedPayment !== null
     && outcome.quotedPayment.network === "hedera:testnet"
-    && typeof outcome.quotedPayment.asset === "string" && accountPattern.test(outcome.quotedPayment.asset)
+    && parseHederaAccountId(outcome.quotedPayment.asset) !== undefined
     && typeof outcome.quotedPayment.amount === "string" && atomicAmountPattern.test(outcome.quotedPayment.amount)
-    && typeof outcome.quotedPayment.recipient === "string" && accountPattern.test(outcome.quotedPayment.recipient);
+    && parseHederaAccountId(outcome.quotedPayment.recipient) !== undefined;
 }
 
 export function createRiskScanPaymentEvidence(input: Readonly<{
@@ -81,7 +80,7 @@ export function createRiskScanPaymentEvidence(input: Readonly<{
 }>): RiskScanPaymentEvidence {
   if (!isPaidOutcome(input.outcome) || !(input.serviceBase instanceof URL) || !["http:", "https:"].includes(input.serviceBase.protocol)
     || input.serviceBase.username.length > 0 || input.serviceBase.password.length > 0
-    || typeof input.payerAccountId !== "string" || !accountPattern.test(input.payerAccountId)
+    || typeof input.payerAccountId !== "string" || parseHederaAccountId(input.payerAccountId) === undefined
     || typeof input.observedAt !== "string" || Number.isNaN(Date.parse(input.observedAt))) {
     throw new TypeError("invalid payment evidence input");
   }
@@ -108,13 +107,13 @@ export function createRiskScanPaymentEvidence(input: Readonly<{
     observedAt: input.observedAt,
     service: Object.freeze({ id: "riskscan.quick", host: input.serviceBase.hostname }),
     payment: Object.freeze({
-      network: "hedera:testnet",
+      network: "hedera:testnet" as const,
       asset: input.outcome.quotedPayment.asset,
       quotedAmount: input.outcome.quotedPayment.amount,
       settlementRef: input.outcome.settlementRef,
       payer: input.payerAccountId,
       recipient: input.outcome.quotedPayment.recipient,
-      settlementReportedBy: "facilitator-reported",
+      settlementReportedBy: "facilitator-reported" as const,
     }),
     result: Object.freeze({ requestRef: assessment.requestRef, digest, receivedAndValidatedByClient: true }),
   });

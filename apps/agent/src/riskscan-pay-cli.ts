@@ -1,5 +1,6 @@
 import { createRequire } from "node:module";
-import { writeFileSync } from "node:fs";
+import { accessSync, constants, lstatSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import { x402Client, x402HTTPClient } from "@x402/core/client";
 import { decodePaymentRequiredHeader } from "@x402/core/http";
 import type { SchemeNetworkClient } from "@x402/core/types";
@@ -51,6 +52,14 @@ type RuntimeConfiguration = ServiceConfiguration & {
 };
 
 type PaymentPhase = "initial_request" | "payment_payload" | "signed_retry" | "settlement" | "result" | "terminal";
+type EvidenceExport = Readonly<{
+  outputPath: string;
+  recordingRunRef: string;
+  sourceVersion: string;
+}>;
+
+const safeReferencePattern = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,95}$/u;
+const sourceVersionPattern = /^[0-9a-f]{7,64}$/u;
 
 function requiredEnvironmentValue(name: string): string | null {
   const value = process.env[name]?.trim();
@@ -136,15 +145,34 @@ function writeOutcome(outcome: RiskScanQuickPaymentOutcome): void {
   }
 }
 
-function evidenceOutputPath(argumentsList: readonly string[]): string | null {
-  const index = argumentsList.indexOf("--evidence-output");
-  if (index < 0 || index + 1 >= argumentsList.length) return null;
-  const value = argumentsList[index + 1];
-  return value.startsWith("-") || value.length === 0 || value.length > 1_024 ? null : value;
+function evidenceExport(argumentsList: readonly string[]): EvidenceExport | "invalid" | "exists" | undefined {
+  const indexes = argumentsList.reduce<number[]>((result, value, index) => value === "--evidence-output" ? [...result, index] : result, []);
+  if (indexes.length === 0) return undefined;
+  if (indexes.length !== 1) return "invalid";
+  const outputPath = argumentsList[indexes[0] + 1];
+  const recordingRunRef = requiredEnvironmentValue("RISKSCAN_PAY_RECORDING_RUN_REF");
+  const sourceVersion = requiredEnvironmentValue("RISKSCAN_PAY_SOURCE_VERSION");
+  if (typeof outputPath !== "string" || outputPath.startsWith("-") || outputPath.length === 0 || outputPath.length > 1_024
+    || recordingRunRef === null || !safeReferencePattern.test(recordingRunRef)
+    || sourceVersion === null || !sourceVersionPattern.test(sourceVersion)) return "invalid";
+  try {
+    const destination = lstatSync(outputPath, { throwIfNoEntry: false });
+    if (destination !== undefined) return destination.isFile() ? "exists" : "invalid";
+    const parent = lstatSync(dirname(outputPath));
+    if (!parent.isDirectory()) return "invalid";
+    accessSync(dirname(outputPath), constants.W_OK);
+  } catch {
+    return "invalid";
+  }
+  return Object.freeze({ outputPath, recordingRunRef, sourceVersion });
 }
 
 function writeEvidenceCaptureFailure(): void {
   process.stdout.write("RISKSCAN_PAY_EVIDENCE_CAPTURE_FAILED\n");
+}
+
+function writeExistingEvidenceNotice(): void {
+  process.stdout.write("RISKSCAN_PAY_EVIDENCE_EXISTS inspect_or_import_existing_file\n");
 }
 
 function writeDiagnostic(phase: Parameters<typeof diagnosticForRiskScanPayPhase>[0]): void {
@@ -266,7 +294,7 @@ function diagnosticForOutcome(
   return { phase: "initial_request" };
 }
 
-async function payment(): Promise<void> {
+async function payment(exportConfiguration: EvidenceExport | undefined): Promise<void> {
   const configuration = readRuntimeConfiguration();
   if (configuration === null) {
     writeNormalConfigurationFailure();
@@ -322,18 +350,17 @@ async function payment(): Promise<void> {
     configuration.policy,
   );
   writeOutcome(outcome);
-  const outputPath = evidenceOutputPath(process.argv);
-  if (outcome.kind === "paid" && outputPath !== null) {
+  if (outcome.kind === "paid" && exportConfiguration !== undefined) {
     try {
       const evidence = createRiskScanPaymentEvidence({
         outcome,
         serviceBase: configuration.serviceBase,
         payerAccountId: configuration.payerAccountId,
-        recordingRunRef: process.env.RISKSCAN_PAY_RECORDING_RUN_REF ?? null,
-        sourceVersion: process.env.RISKSCAN_PAY_SOURCE_VERSION ?? null,
+        recordingRunRef: exportConfiguration.recordingRunRef,
+        sourceVersion: exportConfiguration.sourceVersion,
         observedAt: new Date().toISOString(),
       });
-      writeRiskScanPaymentEvidence(evidence, outputPath, (path, body) => {
+      writeRiskScanPaymentEvidence(evidence, exportConfiguration.outputPath, (path, body) => {
         writeFileSync(path, body, { encoding: "utf8", flag: "wx" });
       });
       process.stdout.write("RISKSCAN_PAY_EVIDENCE_EXPORTED\n");
@@ -346,8 +373,20 @@ async function payment(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  const exportConfiguration = evidenceExport(process.argv);
+  if (exportConfiguration === "exists") {
+    writeExistingEvidenceNotice();
+    writeDiagnostic({ phase: "configuration" });
+    process.exitCode = 1;
+    return;
+  }
+  if (exportConfiguration === "invalid") {
+    writeNormalConfigurationFailure();
+    process.exitCode = 1;
+    return;
+  }
   if (process.argv.includes("--preflight")) return preflight();
-  return payment();
+  return payment(exportConfiguration);
 }
 
 void main().catch(() => {

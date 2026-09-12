@@ -15,7 +15,9 @@
 M57 owns only `apps/agent/src/riskscan-payment-evidence.ts`,
 `apps/agent/src/riskscan-pay-cli.ts`, their focused Agent tests, the existing
 demo control-room sources/tests, a new demo-only evidence model/test, the
-existing HashScan helper/test as needed, and synchronized release-runbook copy.
+existing HashScan helper/test as needed, the shared Core Hedera transaction-ID
+parser/test needed to keep the Agent and Web contracts identical, and
+synchronized release-runbook copy.
 It consumes the existing B03 `paid` outcome only after it returns; it neither
 changes payment retries nor exposes the x402 in-memory settlement sink.
 

@@ -13,6 +13,11 @@ verification.
 
 - The CLI export is opt-in (`--evidence-output PATH`) and is attempted only
   after the existing payment function has returned `kind: "paid"`.
+- When export is requested, the CLI validates the one output argument, a
+  locally-derived source SHA, the fixed recording-run identifier, and obvious
+  output-file/parent-directory errors before it reads payer configuration or
+  starts payment. Existing evidence files are never overwritten; their only
+  safe recovery is inspect/import, not another paid invocation.
 - Preflight never reads a signer or payer key and never writes successful
   payment evidence. Export failure is a separate closed diagnostic after the
   known settlement reference; it never invokes the payment flow again.
@@ -25,6 +30,13 @@ verification.
   Hedera testnet identifiers, and a 16 KiB file limit before retaining a
   packet. Imported assertions never yield `Verified on Hedera`; a client
   receipt yields `Settlement reported` and `Result received` only.
+- Hedera transaction identifiers use the shared Core parser. It preserves
+  account, seconds, and nanoseconds text exactly, including the SDK's
+  nine-digit zero-padded nanoseconds form; it accepts neither arbitrary IDs nor
+  unhandled scheduled/child variants.
+- Browser storage is convenience only. If it cannot be read or written, the
+  current tab retains the allowlisted in-memory packet, labels it memory-only,
+  and keeps its export action available without claiming reload persistence.
 - The browser performs no arbitrary imported URL fetch. It makes no permanent
   poller. A future read-only verifier may upgrade a previously retained
   canonical settlement reference through an explicit bounded refresh seam.
