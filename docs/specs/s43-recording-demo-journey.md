@@ -92,3 +92,15 @@ The complete Web run found one additional historical assertion requiring Docs
 in the header. The same amendment permits replacing only that assertion in
 `apps/web/tests/public-documentation.test.mjs` with the existing footer Docs
 link requirement. Documentation content and routes stay unchanged.
+
+## Main integration verification
+
+The owner explicitly requests resolving conflicts with main. Rebase onto
+`5f21fc90e1a927317665a1c1bf245eb0f9457cd5` while retaining its environment-selected
+cookies, local challenge envelope, provider changes, and M55 ownership.
+Reconcile the newly added Provider ID assertion with the shared constant.
+The complete suite also exposes main's unchanged signing-test fixture writing
+an attempt ID into the newly inserted directory-record state slot. Permit
+only correcting that fixture's attempt slot in
+`apps/web/tests/deploy-stage-signing.test.mjs`; retain every outcome assertion
+and change no production Deploy code.
