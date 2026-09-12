@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import {
   buildStageSignatureRequest,
@@ -12,7 +12,7 @@ import {
 import { SignatureDialog, type SignatureResult } from "../../wallet/signature-dialog";
 import { loadProviderCampaignResume } from "../../../lib/provider-campaign-resume.ts";
 import { loadProviderDirectoryConfiguration } from "../../../lib/provider-directory-configuration-client.ts";
-import { loadProviderToolDeployment } from "../../../lib/provider-tool-deployment-client.ts";
+import { loadProviderToolDeployment, type ProviderToolDurableValues } from "../../../lib/provider-tool-deployment-client.ts";
 import type { ProviderToolAtsStageProjection } from "../../../lib/ats/provider-tool-ats-projection.ts";
 import { connectedWalletSession, useWalletSession, type WalletSession } from "../../wallet/wallet-session";
 import { Button } from "../../ui/button";
@@ -34,6 +34,11 @@ import {
 
 const finalPhases: ReadonlySet<SignatureResult["phase"]> = new Set(["complete", "rejected", "failed", "unknown"]);
 const notConfiguredDetail = "The local relay declined before forwarding. Nothing left this host and nothing was recorded.";
+type SigningContext = Readonly<{ selectedToolPublicId: string | undefined; address: string | undefined }>;
+
+function isSameSigningContext(left: SigningContext, right: SigningContext): boolean {
+  return left.selectedToolPublicId === right.selectedToolPublicId && left.address === right.address;
+}
 
 export function DeployStageSigning({
   values,
@@ -43,6 +48,8 @@ export function DeployStageSigning({
   reviewing = true,
   renderReview,
   onResume,
+  onRecoveredDurableValues,
+  onRecoveredToolTitle,
 }: {
   values: CampaignReviewValues;
   selectedToolPublicId?: string;
@@ -58,6 +65,8 @@ export function DeployStageSigning({
     dialog: ReactNode;
     footer: ReactNode;
   }) => ReactNode;
+  onRecoveredDurableValues?: (values: ProviderToolDurableValues) => void;
+  onRecoveredToolTitle?: (title: string) => void;
 }) {
   const wallet = useWalletSession();
   const session: WalletSession | null = connectedWalletSession(wallet);
@@ -70,6 +79,9 @@ export function DeployStageSigning({
   const [resumePending, setResumePending] = useState(false);
   const [selectedAts, setSelectedAts] = useState<ProviderToolAtsStageProjection | null>(null);
   const [selectedRefresh, setSelectedRefresh] = useState(0);
+  const currentSigningContext = useRef<SigningContext>({ selectedToolPublicId, address: session?.address });
+  const activeRequestContext = useRef<SigningContext | null>(null);
+  currentSigningContext.current = { selectedToolPublicId, address: session?.address };
   const deploymentTarget = providerDeploymentTarget(selectedToolPublicId);
   const projection = selectedToolPublicId === undefined ? atsCreateConfiguration : selectedAts?.display;
   const initialDirectoryRecord = useMemo(
@@ -92,6 +104,8 @@ export function DeployStageSigning({
   useEffect(() => {
     let cancelled = false;
     if (session === null) {
+      activeRequestContext.current = null;
+      setRequest(null);
       setResults([]);
       setAttemptPublicId(null);
       setCandidate(null);
@@ -100,6 +114,8 @@ export function DeployStageSigning({
       setSelectedAts(null);
       return () => { cancelled = true; };
     }
+    activeRequestContext.current = null;
+    setRequest(null);
     setResults([]);
     setAttemptPublicId(null);
     setCandidate(null);
@@ -128,12 +144,14 @@ export function DeployStageSigning({
     }
     void loadProviderDirectoryConfiguration().then((directoryConfiguration) => {
       if (cancelled || directoryConfiguration === null) return;
-      setDirectoryRecord(completeDirectoryRecordLiteral({ ...initialDirectoryRecord, ...directoryConfiguration }));
+      setDirectoryRecord(completeDirectoryRecordLiteral(initialDirectoryRecord, directoryConfiguration));
     });
     if (selectedToolPublicId !== undefined) {
       void loadProviderToolDeployment(selectedToolPublicId).then((deployment) => {
         if (cancelled || deployment === null) return;
         setSelectedAts(deployment.ats);
+        onRecoveredToolTitle?.(deployment.title);
+        if (deployment.durableValues !== null) onRecoveredDurableValues?.(deployment.durableValues);
         if (deployment.state === "DRAFT") {
           setResults([{ kind: "done", detail: "Recovered from this tool's durable offering record." }]);
           onResume?.();
@@ -158,7 +176,7 @@ export function DeployStageSigning({
       });
     }
     return () => { cancelled = true; };
-  }, [session?.address, onResume, initialDirectoryRecord, selectedToolPublicId, selectedRefresh]);
+  }, [session?.address, onResume, onRecoveredDurableValues, onRecoveredToolTitle, initialDirectoryRecord, selectedToolPublicId, selectedRefresh]);
 
   function activate(stage: number) {
     if (request !== null || stage !== enabledStage) return;
@@ -175,6 +193,7 @@ export function DeployStageSigning({
         atsCreateCommand: selectedAts?.command,
       });
       setConstructionError(null);
+      activeRequestContext.current = currentSigningContext.current;
       setRequest(nextRequest);
     } catch {
       setConstructionError("Check the offering details and correct them before requesting a signature.");
@@ -182,7 +201,8 @@ export function DeployStageSigning({
   }
 
   function finish(result: SignatureResult) {
-    if (request === null || !finalPhases.has(result.phase)) return;
+    if (request === null || !finalPhases.has(result.phase) || activeRequestContext.current === null
+      || !isSameSigningContext(activeRequestContext.current, currentSigningContext.current)) return;
     const stageState = result.outcome === "not_configured"
       ? { kind: "unavailable" as const, detail: notConfiguredDetail }
       : stageStateForSignatureResult(result);
@@ -195,6 +215,7 @@ export function DeployStageSigning({
     if (request.stage === 0 && stageState.kind === "done" && selectedToolPublicId !== undefined) {
       setSelectedRefresh((current) => current + 1);
     }
+    activeRequestContext.current = null;
     setRequest(null);
   }
 
@@ -221,7 +242,7 @@ export function DeployStageSigning({
   const constructionNotice = selectedToolPublicId !== undefined
     ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">This tool has its own offering and directory identity. {selectedAts === null ? "ATS creation stays unavailable until its server-derived configuration is admitted." : "Its ATS configuration was derived from the admitted offering."}</p>
     : reviewing && constructionError ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null;
-  const stages = reviewing ? <ProviderDeployStages states={visibleStates} projection={projection} enabledStage={enabledStage} onActivate={activate} session={session} candidate={candidate} onCandidate={receiveCandidate} atsConfiguration={selectedAts?.configuration} selectedTool={selectedToolPublicId !== undefined} /> : null;
+  const stages = reviewing ? <ProviderDeployStages states={visibleStates} projection={projection} enabledStage={enabledStage} onActivate={activate} session={session} candidate={candidate} onCandidate={receiveCandidate} atsConfiguration={selectedAts?.configuration} selectedTool={selectedToolPublicId !== undefined} selectedToolPublicId={selectedToolPublicId} /> : null;
   const dialog = reviewing && request && session ? <SignatureDialog provider={session.provider} request={request} onResult={finish} onCancel={() => finish({ phase: "rejected", outcome: null })} /> : null;
 
   if (renderReview) {

@@ -35,6 +35,16 @@ const deploymentValidator = v.object({
   tool: toolValidator,
   atsCreateConfigurationJson: v.union(v.string(), v.null()),
   atsAttemptPublicId: v.union(v.string(), v.null()),
+  durableValues: v.union(v.object({
+    toolName: v.string(),
+    customerProblem: v.string(),
+    qualifyingResource: v.string(),
+    quickPriceTinybars: v.string(),
+    standardPriceTinybars: v.string(),
+    targetAgentCustomers: v.array(v.string()),
+    useOfFunds: v.array(v.string()),
+    risks: v.array(v.string()),
+  }), v.null()),
 });
 type ToolState = "ALLOCATED" | "DRAFT" | "ASSET_PENDING" | "READY" | "OPEN" | "CLOSED";
 type ToolIdentityProjection = Readonly<{
@@ -58,6 +68,17 @@ type ToolDeploymentProjection = Readonly<{
   tool: ToolProjection;
   atsCreateConfigurationJson: string | null;
   atsAttemptPublicId: string | null;
+  durableValues: ToolDurableValues | null;
+}>;
+type ToolDurableValues = Readonly<{
+  toolName: string;
+  customerProblem: string;
+  qualifyingResource: string;
+  quickPriceTinybars: string;
+  standardPriceTinybars: string;
+  targetAgentCustomers: string[];
+  useOfFunds: string[];
+  risks: string[];
 }>;
 type DatabaseContext = Pick<GenericQueryCtx<DataModelFromSchemaDefinition<typeof schema>>, "db">;
 
@@ -152,8 +173,14 @@ async function projectDeployment(ctx: DatabaseContext, value: unknown): Promise<
   const tool = await project(ctx, value);
   if (allocation === null || tool === null) return null;
   if (tool.state === "ALLOCATED") {
-    return Object.freeze({ tool, atsCreateConfigurationJson: null, atsAttemptPublicId: null });
+    return Object.freeze({ tool, atsCreateConfigurationJson: null, atsAttemptPublicId: null, durableValues: null });
   }
+  const offerings = await ctx.db.query("offerings")
+    .withIndex("by_offering_public_id_and_version", (query) => query.eq("offeringPublicId", allocation.offeringPublicId))
+    .take(2);
+  if (offerings.length !== 1 || offerings[0] === undefined) return null;
+  const durableValues = projectDurableValues(offerings[0]);
+  if (durableValues === null) return null;
   try {
     const configuration = createProviderToolAtsConfiguration({
       toolPublicId: allocation.toolPublicId,
@@ -163,10 +190,39 @@ async function projectDeployment(ctx: DatabaseContext, value: unknown): Promise<
     });
     const atsAttemptPublicId = await pendingAttemptPublicId(ctx, allocation, tool.state);
     if (tool.state === "ASSET_PENDING" && atsAttemptPublicId === null) return null;
-    return Object.freeze({ tool, atsCreateConfigurationJson: JSON.stringify(configuration.atsCreateConfiguration), atsAttemptPublicId });
+    return Object.freeze({ tool, atsCreateConfigurationJson: JSON.stringify(configuration.atsCreateConfiguration), atsAttemptPublicId, durableValues });
   } catch {
     return null;
   }
+}
+
+function projectDurableValues(value: unknown): ToolDurableValues | null {
+  if (value === null || typeof value !== "object") return null;
+  const offering = value as Record<string, unknown>;
+  const definition = offering.definition;
+  const narrative = offering.narrative;
+  if (definition === null || typeof definition !== "object" || narrative === null || typeof narrative !== "object") return null;
+  const fields = definition as Record<string, unknown>;
+  const copy = narrative as Record<string, unknown>;
+  const targetAgentCustomers = copy.customerUseCases;
+  const useOfFunds = copy.useOfFunds;
+  const risks = copy.risks;
+  if (typeof copy.title !== "string" || typeof copy.customerProblem !== "string" || typeof fields.qualifyingResource !== "string"
+    || typeof offering.advertisedQuickPriceTinybars !== "string" || typeof offering.advertisedStandardPriceTinybars !== "string"
+    || !/^\d+$/u.test(offering.advertisedQuickPriceTinybars) || !/^\d+$/u.test(offering.advertisedStandardPriceTinybars)
+    || !Array.isArray(targetAgentCustomers) || !targetAgentCustomers.every((item) => typeof item === "string")
+    || !Array.isArray(useOfFunds) || !useOfFunds.every((item) => typeof item === "string")
+    || !Array.isArray(risks) || !risks.every((item) => typeof item === "string")) return null;
+  return Object.freeze({
+    toolName: copy.title,
+    customerProblem: copy.customerProblem,
+    qualifyingResource: fields.qualifyingResource,
+    quickPriceTinybars: offering.advertisedQuickPriceTinybars,
+    standardPriceTinybars: offering.advertisedStandardPriceTinybars,
+    targetAgentCustomers: [...targetAgentCustomers],
+    useOfFunds: [...useOfFunds],
+    risks: [...risks],
+  });
 }
 
 async function pendingAttemptPublicId(

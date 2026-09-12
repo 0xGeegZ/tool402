@@ -316,6 +316,8 @@ implementedTest("renders the direct provider deploy route as a server page over 
   const fixture = sources["src/components/provider/deploy/campaign-fixture.ts"];
 
   assert.match(page, /import\s*\{\s*ProviderDeployWizard\s*\}\s+from\s+["'][^"']*provider-deploy-wizard["']/);
+  assert.match(page, /import\s*\{\s*notFound\s*\}\s+from\s+["']next\/navigation["']/);
+  assert.match(page, /parsedToolPublicId === null\) notFound\(\)/);
   assert.match(page, /<ProviderDeployWizard\s+selectedToolPublicId=\{selectedToolPublicId\}\s*\/>/);
   assert.doesNotMatch(page, /["']use client["']/);
   assert.match(fixture, /PREPARED\s*\/\s*DEMO DATA/);

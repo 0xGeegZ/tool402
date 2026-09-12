@@ -126,7 +126,16 @@ function offeringFor(toolRecord, overrides = {}) {
     principalPublicId: toolRecord.principalPublicId,
     authorityVersion: toolRecord.authorityVersion,
     version: 1,
-    narrative: { title: "Deployed RiskScan" },
+    definition: { qualifyingResource: "riskscan-local-assessment" },
+    narrative: {
+      title: "Deployed RiskScan",
+      customerProblem: "Assess request risk before continuing a workflow.",
+      customerUseCases: ["Security-oriented agent operators"],
+      useOfFunds: ["Maintain provider documentation."],
+      risks: ["Testnet terms promise no yield."],
+    },
+    advertisedQuickPriceTinybars: "10000000",
+    advertisedStandardPriceTinybars: "10000000",
     state: "DRAFT",
     ...overrides,
   };
@@ -423,9 +432,18 @@ implementedTest("returns ATS configuration only from the exact durable selected-
     },
     atsCreateConfigurationJson: null,
     atsAttemptPublicId: null,
+    durableValues: null,
   });
 
-  const admitted = offeringFor(mine, { narrative: { title: "Second RiskScan" } });
+  const admitted = offeringFor(mine, {
+    narrative: {
+      title: "Second RiskScan",
+      customerProblem: "Assess request risk before continuing a workflow.",
+      customerUseCases: ["Security-oriented agent operators"],
+      useOfFunds: ["Maintain provider documentation."],
+      risks: ["Testnet terms promise no yield."],
+    },
+  });
   const deployment = await readOwnedToolDeployment._handler(
     database({ tools: [mine], offerings: [admitted] }).ctx,
     { canonicalSignerAddress, toolPublicId: mine.toolPublicId },
@@ -434,6 +452,16 @@ implementedTest("returns ATS configuration only from the exact durable selected-
   const configuration = JSON.parse(deployment.atsCreateConfigurationJson);
   assert.equal(configuration.subjectPublicId, mine.toolPublicId);
   assert.equal(configuration.parameters.name, "Second RiskScan");
+  assert.deepEqual(deployment.durableValues, {
+    toolName: "Second RiskScan",
+    customerProblem: "Assess request risk before continuing a workflow.",
+    qualifyingResource: "riskscan-local-assessment",
+    quickPriceTinybars: "10000000",
+    standardPriceTinybars: "10000000",
+    targetAgentCustomers: ["Security-oriented agent operators"],
+    useOfFunds: ["Maintain provider documentation."],
+    risks: ["Testnet terms promise no yield."],
+  });
 
   const mismatched = offeringFor(mine, { principalPublicId: "different_principal" });
   assert.equal(

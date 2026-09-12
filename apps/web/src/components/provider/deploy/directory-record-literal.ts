@@ -42,9 +42,10 @@ export function directoryRecordForProviderTool(toolPublicId?: string): Directory
 }
 
 export function completeDirectoryRecordLiteral(
+  record: DirectoryRecordLiteral,
   configuration: Readonly<{ x402Endpoint: string; clearingAccount: string }>,
 ): CompleteDirectoryRecordLiteral {
-  return Object.freeze({ ...directoryRecordLiteral, ...configuration });
+  return Object.freeze({ ...record, ...configuration });
 }
 
 export function missingDirectoryRecordFields(

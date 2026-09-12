@@ -94,6 +94,7 @@ function StageCommand({
   candidate,
   atsConfiguration,
   selectedTool,
+  selectedToolPublicId,
   onCandidate,
 }: {
   index: number;
@@ -102,6 +103,7 @@ function StageCommand({
   candidate: AtsCreateCandidate | null;
   atsConfiguration?: unknown;
   selectedTool: boolean;
+  selectedToolPublicId?: string;
   onCandidate: (candidate: AtsCreateCandidate) => void;
 }) {
   const definition = providerDeployStages[index];
@@ -115,7 +117,7 @@ function StageCommand({
             <p className="font-medium text-foreground">{substepIndex + 1}. {substep.label}</p>
             {"returnsCandidate" in substep ? (
               <>
-                {index === 2 && substepIndex === 0 ? <AtsCreateAction session={session} configuration={atsConfiguration} selectedTool={selectedTool} stageTwoDone={stageTwoDone} hasCandidate={candidate !== null} onCandidate={onCandidate} /> : null}
+                {index === 2 && substepIndex === 0 ? <AtsCreateAction session={session} configuration={atsConfiguration} selectedTool={selectedTool} selectedToolPublicId={selectedToolPublicId} stageTwoDone={stageTwoDone} hasCandidate={candidate !== null} onCandidate={onCandidate} /> : null}
                 <p>The separately carded human action returns the candidate details required by the next sub-step.</p>
               </>
             ) : (
@@ -172,6 +174,7 @@ export function ProviderDeployStages({
   onCandidate = () => {},
   atsConfiguration,
   selectedTool,
+  selectedToolPublicId,
 }: {
   states: readonly ProviderDeployStageState[];
   projection?: AtsCreateConfigurationProjection;
@@ -182,6 +185,7 @@ export function ProviderDeployStages({
   onCandidate?: (candidate: AtsCreateCandidate) => void;
   atsConfiguration?: unknown;
   selectedTool: boolean;
+  selectedToolPublicId?: string;
 }) {
   const visibleStates = orderedStageStates(states);
   const stageTwoDone = visibleStates[1]?.kind === "done";
@@ -234,7 +238,7 @@ export function ProviderDeployStages({
                   <Badge className={stageChipClassName[stage.kind]}>{chipLabel}</Badge>
                 </div>
                 <span className="text-[13px] leading-5 text-muted-foreground">{copy.description}</span>
-                <StageCommand index={index} session={session} stageTwoDone={stageTwoDone} candidate={candidate} atsConfiguration={atsConfiguration} selectedTool={selectedTool} onCandidate={onCandidate} />
+                <StageCommand index={index} session={session} stageTwoDone={stageTwoDone} candidate={candidate} atsConfiguration={atsConfiguration} selectedTool={selectedTool} selectedToolPublicId={selectedToolPublicId} onCandidate={onCandidate} />
                 {detail ? <span className="break-all font-mono text-xs text-foreground">{detail}</span> : null}
                 <p id={controlDescriptionId} className="sr-only">{describe(index, stage)} {control.description}</p>
               </div>

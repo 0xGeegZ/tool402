@@ -60,6 +60,7 @@ export function parseProviderToolPage(input: unknown): Readonly<{
   const record = input as Record<string, unknown>;
   if (Reflect.ownKeys(record).length !== 2 || !Object.hasOwn(record, "tools") || !Object.hasOwn(record, "nextCursor") || !Array.isArray(record.tools)) return null;
   if (record.nextCursor !== null && (typeof record.nextCursor !== "string" || record.nextCursor.length === 0 || record.nextCursor.length > 1024)) return null;
+  if (record.tools.length > 20) return null;
   const tools = record.tools.map(parseProviderToolSummary);
   return tools.some((tool) => tool === null)
     ? null

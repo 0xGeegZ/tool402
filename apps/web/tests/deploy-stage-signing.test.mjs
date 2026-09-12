@@ -205,10 +205,12 @@ implementedTest("holds the M49 candidate in this session and passes one stable a
   const island = await readIsland();
 
   assert.match(island, /setCandidate\(\(current\) => current \?\? nextCandidate\)/u, "the first candidate must survive rerenders");
-  assert.doesNotMatch(island, /\buseRef\b/u, "candidate state must not be mirrored in a ref");
+  assert.doesNotMatch(island, /useRef<AtsCreateCandidate/u, "candidate state must not be mirrored in a ref");
   assert.match(island, /\bsetCandidate\b/u, "a verified candidate belongs only to this browser session");
   assert.match(island, /useState<AtsCreateCandidate \| null>/u);
   assert.doesNotMatch(island, /(?:external\.attachCandidate|eth_signTypedData_v4)/u);
+  assert.match(island, /activeRequestContext\.current = null;\s*setRequest\(null\)/u, "a tool or wallet change invalidates an in-flight signature");
+  assert.match(island, /isSameSigningContext\(activeRequestContext\.current, currentSigningContext\.current\)/u, "a stale signature result must not update the selected tool");
 });
 
 implementedTest("hides the embedded MetaMask action after the shared session connects", async () => {

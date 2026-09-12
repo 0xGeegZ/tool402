@@ -366,6 +366,12 @@ implementedTest("derives a selected tool directory identity without mutating the
   const selected = literal.directoryRecordForProviderTool(toolPublicId);
   assert.equal(selected.serviceId, toolPublicId);
   assert.equal(selected.serviceSlug, `tool-${"ef".repeat(16)}`);
+  const complete = literal.completeDirectoryRecordLiteral(selected, {
+    x402Endpoint: "https://api.tool402.test/riskscan",
+    clearingAccount: "0.0.4200",
+  });
+  assert.equal(complete.serviceId, toolPublicId);
+  assert.equal(complete.serviceSlug, `tool-${"ef".repeat(16)}`);
   assert.equal(literal.directoryRecordLiteral.serviceId, "riskscan");
   assert.throws(() => literal.directoryRecordForProviderTool("tool_invalid"), /invalid selected provider tool/u);
 });

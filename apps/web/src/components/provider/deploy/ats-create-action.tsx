@@ -23,11 +23,17 @@ type StageBActionController = Readonly<{
   execute: () => Promise<StageBBridgeOutcome>;
   recover: (transactionHash: string) => Promise<StageBBridgeOutcome>;
 }>;
+type ControllerContext = Readonly<{ selectedToolPublicId: string | undefined; configuration: unknown }>;
+
+function isSameControllerContext(left: ControllerContext, right: ControllerContext): boolean {
+  return left.selectedToolPublicId === right.selectedToolPublicId && left.configuration === right.configuration;
+}
 
 export function AtsCreateAction({
   session,
   configuration,
   selectedTool,
+  selectedToolPublicId,
   stageTwoDone,
   hasCandidate,
   onCandidate,
@@ -35,16 +41,23 @@ export function AtsCreateAction({
   session: WalletSession | null;
   configuration?: unknown;
   selectedTool: boolean;
+  selectedToolPublicId?: string;
   stageTwoDone: boolean;
   hasCandidate: boolean;
   onCandidate: (candidate: StageBCandidate) => void;
 }) {
   const controller = useRef<StageBActionController | null>(null);
+  const controllerContext = useRef<ControllerContext>({ selectedToolPublicId, configuration });
   const sessionChanged = useRef(false);
-  const [terminalOutcome, setTerminalOutcome] = useState(false);
+  const [terminalOutcome, setTerminalOutcome] = useState<ControllerContext | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [recoveryHash, setRecoveryHash] = useState("");
-  const [recoveryPending, setRecoveryPending] = useState(false);
+  const [recovery, setRecovery] = useState<Readonly<{ context: ControllerContext; hash: string; pending: boolean }> | null>(null);
+
+  if (controllerContext.current.selectedToolPublicId !== selectedToolPublicId || controllerContext.current.configuration !== configuration) {
+    controller.current = null;
+    sessionChanged.current = false;
+    controllerContext.current = { selectedToolPublicId, configuration };
+  }
 
   if (controller.current === null && session !== null && (!selectedTool || configuration !== undefined)) {
     const bridge = createStageBBrowserProviderBridge({ provider: session.provider, fetch, configuration });
@@ -61,23 +74,29 @@ export function AtsCreateAction({
     sessionChanged.current = true;
   }
 
+  const terminalForCurrentContext = terminalOutcome !== null && isSameControllerContext(terminalOutcome, controllerContext.current);
+  const currentRecovery = recovery !== null && isSameControllerContext(recovery.context, controllerContext.current)
+    ? recovery
+    : null;
   const candidateActionAvailable = stageTwoDone && session !== null && (!selectedTool || configuration !== undefined) && !hasCandidate && !sessionChanged.current && controller.current !== null;
-  const enabled = candidateActionAvailable && !terminalOutcome;
-  const recoveryEnabled = candidateActionAvailable && !recoveryPending && isCanonicalStageBTransactionHash(recoveryHash);
+  const enabled = candidateActionAvailable && !terminalForCurrentContext;
+  const recoveryEnabled = candidateActionAvailable && currentRecovery?.pending !== true && isCanonicalStageBTransactionHash(currentRecovery?.hash ?? "");
 
   async function requestCandidate() {
     if (!enabled || controller.current === null) return;
+    const actionContext = controllerContext.current;
     const outcome = await controller.current.execute();
+    if (controllerContext.current !== actionContext || sessionChanged.current) return;
     if (outcome.kind === "candidate") {
-      setTerminalOutcome(true);
+      setTerminalOutcome(controllerContext.current);
       onCandidate(outcome.candidate);
       setFeedback("A local candidate was observed for this session. Attach it with the separate signature step.");
       return;
     }
     if (outcome.kind === "submission_unknown") {
-      setTerminalOutcome(true);
+      setTerminalOutcome(controllerContext.current);
       if (outcome.transactionHash !== undefined) {
-        setRecoveryHash(outcome.transactionHash);
+        setRecovery({ context: actionContext, hash: outcome.transactionHash, pending: false });
         setFeedback("The submitted transaction hash is ready for public recovery. No second transaction was made.");
         return;
       }
@@ -89,11 +108,15 @@ export function AtsCreateAction({
 
   async function recoverCandidate() {
     if (!recoveryEnabled || controller.current === null) return;
-    setRecoveryPending(true);
-  const outcome = await controller.current.recover(recoveryHash);
-    setRecoveryPending(false);
+    const actionContext = controllerContext.current;
+    const recoveryHash = currentRecovery?.hash;
+    if (recoveryHash === undefined) return;
+    setRecovery({ context: actionContext, hash: recoveryHash, pending: true });
+    const outcome = await controller.current.recover(recoveryHash);
+    if (controllerContext.current !== actionContext || sessionChanged.current) return;
+    setRecovery(null);
     if (outcome.kind === "candidate") {
-      setTerminalOutcome(true);
+      setTerminalOutcome(controllerContext.current);
       onCandidate(outcome.candidate);
       setFeedback("The public transaction was corroborated. Attach the candidate with the separate signature step.");
       return;
@@ -120,10 +143,10 @@ export function AtsCreateAction({
             <input
               id="stage-b-recovery-hash"
               data-stage-b-recovery-hash="true"
-              value={recoveryHash}
-              onChange={(event) => setRecoveryHash(event.target.value)}
+              value={currentRecovery?.hash ?? ""}
+              onChange={(event) => setRecovery({ context: controllerContext.current, hash: event.target.value, pending: false })}
               placeholder="0x… transaction hash"
-              disabled={sessionChanged.current || recoveryPending}
+              disabled={sessionChanged.current || currentRecovery?.pending === true}
               className="h-9 rounded-control border border-input bg-background px-3 font-mono text-xs text-foreground"
             />
           </label>
