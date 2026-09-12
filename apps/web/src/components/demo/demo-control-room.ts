@@ -44,7 +44,7 @@ function knownStep(id: string): boolean {
 }
 
 export function recordingTourHref(href: string, stepId: string): string {
-  if (!knownStep(stepId) || !href.startsWith("/") || href.startsWith("//")) {
+  if (!knownStep(stepId) || !href.startsWith("/") || href.startsWith("//") || href.includes("\\")) {
     throw new TypeError("invalid recording step");
   }
   const separator = href.indexOf("?") === -1 ? "?" : "&";

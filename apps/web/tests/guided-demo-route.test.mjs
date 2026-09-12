@@ -61,6 +61,8 @@ test("keeps guide presentation free of environment, storage, automatic action, a
   assert.match(room, /RISKSCAN_PAY_OUTCOME paid/);
   assert.match(room, /RISKSCAN_PAY_SETTLEMENT <non-empty-safe-settlement-reference>/);
   assert.match(room, /RISKSCAN_PAY_DIAGNOSTIC PAID/);
+  assert.match(room, /node --experimental-strip-types apps\/agent\/src\/riskscan-pay-cli\.ts --preflight/);
+  assert.doesNotMatch(room, /npm run riskscan:pay/);
   assert.doesNotMatch(room, /PRIVATE_KEY\s*=/);
 });
 
@@ -80,4 +82,7 @@ test("keeps the Human Ops B03 packet copyable and fail-closed", async () => {
   assert.match(packet, /\`\`\`sh/);
   assert.match(packet, /: "\$\{RISKSCAN_PAY_PAYER_ACCOUNT_ID:\?set privately in ignored runtime configuration\}"/);
   assert.match(packet, /: "\$\{RISKSCAN_PAY_PAYER_PRIVATE_KEY:\?set privately in ignored runtime configuration\}"/);
+  assert.match(packet, /node --experimental-strip-types apps\/agent\/src\/riskscan-pay-cli\.ts --preflight/);
+  assert.match(packet, /node --experimental-strip-types apps\/agent\/src\/riskscan-pay-cli\.ts/);
+  assert.doesNotMatch(packet, /npm run riskscan:pay/);
 });

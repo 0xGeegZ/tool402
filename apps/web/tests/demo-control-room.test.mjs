@@ -53,4 +53,5 @@ test("defines a stable, non-mutating recording itinerary with truthful evidence 
   assert.equal(recordingTourHref("/provider/deploy?foo=bar", "provider-terms"), "/provider/deploy?foo=bar&tour=1&demoStep=provider-terms");
   assert.equal(recordingTourHref("/explore/riskscan/tool-loop?demo=tool-loop", "x402-boundary"), "/explore/riskscan/tool-loop?demo=tool-loop&tour=1&demoStep=x402-boundary");
   assert.throws(() => recordingTourHref("/provider", "unknown-step"), TypeError);
+  assert.throws(() => recordingTourHref("/\\\\evil.example", "provider-terms"), TypeError);
 });

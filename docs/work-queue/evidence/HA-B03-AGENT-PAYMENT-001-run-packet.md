@@ -24,10 +24,10 @@ after confirming it serves the submitted commit.
 export RISKSCAN_PAY_SERVICE_BASE_URL='https://tool402.vercel.app'
 export RISKSCAN_PAY_INPUT_JSON='{"requestRef":"b03-release-001","subjectRef":"tool402-release","context":"One authorized Hedera-testnet RiskScan exercise","declarations":{"identity":true,"pricing":true,"limitations":true,"evidence":true}}'
 export RISKSCAN_PAY_POLICY_JSON='{"network":"hedera:testnet","asset":"0.0.0","maximumAmount":"100000"}'
-npm run riskscan:pay --workspace=@tool402/agent -- --preflight
+node --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts --preflight
 ```
 
-Expected preflight exit status is `0`, with exactly:
+Expected direct-CLI preflight exit status is `0`, with exactly:
 
 ```text
 RISKSCAN_PAY_DIAGNOSTIC PREFLIGHT_GUARD_REACHED
@@ -40,10 +40,10 @@ key into shell history, a recording, ticket, or repository. Then run:
 ```sh
 : "${RISKSCAN_PAY_PAYER_ACCOUNT_ID:?set privately in ignored runtime configuration}"
 : "${RISKSCAN_PAY_PAYER_PRIVATE_KEY:?set privately in ignored runtime configuration}"
-npm run riskscan:pay --workspace=@tool402/agent
+node --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts
 ```
 
-The only successful terminal output is:
+The only successful direct-CLI terminal output is:
 
 ```text
 RISKSCAN_PAY_OUTCOME paid

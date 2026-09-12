@@ -6,8 +6,8 @@ import { useState } from "react";
 import { Button } from "../ui/button";
 import { recordingReadiness, recordingSteps, recordingTourHref, type RecordingStatus } from "./demo-control-room";
 
-const preflightCommand = "export RISKSCAN_PAY_SERVICE_BASE_URL='https://tool402.vercel.app'\nexport RISKSCAN_PAY_INPUT_JSON='{\"requestRef\":\"b03-release-001\",\"subjectRef\":\"tool402-release\",\"context\":\"One authorized Hedera-testnet RiskScan exercise\",\"declarations\":{\"identity\":true,\"pricing\":true,\"limitations\":true,\"evidence\":true}}'\nexport RISKSCAN_PAY_POLICY_JSON='{\"network\":\"hedera:testnet\",\"asset\":\"0.0.0\",\"maximumAmount\":\"100000\"}'\nnpm run riskscan:pay --workspace=@tool402/agent -- --preflight";
-const paidCommand = ": \"$" + "{RISKSCAN_PAY_PAYER_ACCOUNT_ID:?set privately in ignored runtime configuration}\"\n: \"$" + "{RISKSCAN_PAY_PAYER_PRIVATE_KEY:?set privately in ignored runtime configuration}\"\nnpm run riskscan:pay --workspace=@tool402/agent";
+const preflightCommand = "export RISKSCAN_PAY_SERVICE_BASE_URL='https://tool402.vercel.app'\nexport RISKSCAN_PAY_INPUT_JSON='{\"requestRef\":\"b03-release-001\",\"subjectRef\":\"tool402-release\",\"context\":\"One authorized Hedera-testnet RiskScan exercise\",\"declarations\":{\"identity\":true,\"pricing\":true,\"limitations\":true,\"evidence\":true}}'\nexport RISKSCAN_PAY_POLICY_JSON='{\"network\":\"hedera:testnet\",\"asset\":\"0.0.0\",\"maximumAmount\":\"100000\"}'\nnode --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts --preflight";
+const paidCommand = ": \"$" + "{RISKSCAN_PAY_PAYER_ACCOUNT_ID:?set privately in ignored runtime configuration}\"\n: \"$" + "{RISKSCAN_PAY_PAYER_PRIVATE_KEY:?set privately in ignored runtime configuration}\"\nnode --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts";
 const expectedPreflight = "RISKSCAN_PAY_DIAGNOSTIC PREFLIGHT_GUARD_REACHED";
 const expectedPaidResult = "RISKSCAN_PAY_OUTCOME paid\nRISKSCAN_PAY_SETTLEMENT <non-empty-safe-settlement-reference>\nRISKSCAN_PAY_DIAGNOSTIC PAID";
 

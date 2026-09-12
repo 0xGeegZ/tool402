@@ -45,13 +45,13 @@ authorizes a new payment, ATS transaction, signing action, or backing transfer.
 ## B03 terminal scene
 
 The control room provides Copy preflight command and Copy paid-command template.
-It contains no payer key, signed header, or payment payload. Expected preflight
-output is RISKSCAN_PAY_DIAGNOSTIC PREFLIGHT_GUARD_REACHED. A paid command is
+It contains no payer key, signed header, or payment payload. The direct CLI
+preflight output is exactly RISKSCAN_PAY_DIAGNOSTIC PREFLIGHT_GUARD_REACHED. A paid command is
 not repeated for a recording retake. A HashScan action appears only when a real
 verified settlement identifier is available.
 
-Expected successful paid output, shown only after one authorized successful
-request, is:
+Expected direct-CLI successful paid output, shown only after one authorized
+successful request, is:
 
 ```text
 RISKSCAN_PAY_OUTCOME paid
