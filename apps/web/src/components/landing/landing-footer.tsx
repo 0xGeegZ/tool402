@@ -10,7 +10,7 @@ export function LandingFooter() {
         <div className="max-w-xs space-y-3">
           <div className="flex items-center gap-3">
             <Logo className="h-7" />
-            <div aria-hidden="true" className="hidden size-16 overflow-hidden rounded-full border border-border bg-secondary/50 shadow-sm sm:block">
+            <div aria-hidden="true" className="hidden size-16 overflow-hidden rounded-full border border-border bg-secondary/50 sm:block">
               <Image src="/brand/mascot-flag.png" alt="" width={96} height={96} className="size-full scale-125 object-cover" />
             </div>
           </div>
