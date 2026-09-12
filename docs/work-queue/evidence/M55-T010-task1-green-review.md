@@ -112,3 +112,44 @@ identical sandbox-only Turbopack error while processing `globals.css`
 (`creating new process` / `binding to a port` / `Operation not permitted`).
 Neither failure is attributed to this PR; a final Vercel Preview check remains
 separate deploy-environment evidence.
+
+## PR #100 final multi-tool remediation addendum
+
+The final executable PR head is
+`b999435f156045290fb20a703acf7a34d40d4ec4`, based on exact `origin/main`
+`94c4bec1ddeff29bc86cf7b88b3cdaccb0837097`. This addendum does not move M55
+from `20-active` and does not assert any live action.
+
+The final changes make an existing invalid allocation replay reject rather
+than allocate a fresh identity; selected-tool reload keeps every action
+disabled unless the owner-scoped deployment projection is valid and usable;
+and ATS recovery retains an uncorroborated transaction hash while excluding a
+concurrent recovery/create send. The server-owned receipt action reads only
+the pinned Hedera testnet Mirror and Hashio endpoints before the durable
+corroboration mutation can make a selected tool `READY`.
+
+The end-to-end local acceptance at this head creates tools A and B from
+byte-identical editable form data through authenticated allocation, signed
+command ingress/dispatch, their independent ATS transactions, the scheduled
+server verification action, and independent Directory publication. It proves
+that A stays unchanged while B opens, rejects a receipt from A for B, and
+keeps a reloaded C pending until an explicit recheck succeeds without a
+second transaction. It uses no direct final-mutation success call. The only
+test substitution is a test-file-local typed-signature recovery adapter for
+the offline fixture key; production source has no such seam, and possession
+of the pinned issuer private key remains a human/live prerequisite.
+
+Under Node 22.21.1:
+
+- the new A/B/C acceptance passed 1/1; focused provider-tool, ATS action,
+  command-dispatch and receipt contracts passed 57/57;
+- `npm test`, `npm run typecheck`, `npm run lint`, `npm run queue:check`, the
+  M41 HTTP-route inventory, and `git diff --check origin/main...HEAD` passed;
+- the direct complete Web suite has one inherited failure at
+  `dashboard-auth.test.mjs:378` (508 pass, one skip, one fail); its source and
+  assertion are unchanged from the R1 base and this PR does not claim it
+  green;
+- `npm run build` fails on exact main and this exact head with the identical
+  sandbox-only Turbopack process/port failure at `globals.css`;
+- fresh independent task and final code/spec/security reviews found no
+  actionable finding; Vercel Preview is Ready for this exact head.
