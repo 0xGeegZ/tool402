@@ -8,6 +8,8 @@ import { readProviderProjections } from "../../lib/offering-projection";
 import { Badge } from "../ui/badge";
 import { buttonVariants } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
+import { NewToolAction } from "../provider/deploy/new-tool-action";
+import { ProviderToolList } from "./provider-tool-list";
 
 export async function DashboardCampaign() {
   const sessionCookieName = readDashboardSessionCookieName(process.env);
@@ -42,6 +44,7 @@ export async function DashboardCampaign() {
               <p className="text-sm leading-6 text-muted-foreground">There is no RiskScan campaign associated with this signed dashboard session.</p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4">
+              <NewToolAction />
               <Link href="/provider/deploy" className={buttonVariants({ size: "sm" })}>Prepare a tool</Link>
               <Link href="/explore/riskscan" className="text-sm font-semibold text-primary transition-colors hover:text-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Explore RiskScan</Link>
             </div>
@@ -69,8 +72,10 @@ export async function DashboardCampaign() {
           <div className="flex shrink-0 flex-wrap items-center gap-3">
             <Badge variant="secondary">{campaign.state}</Badge>
             <Link href={campaign.href} className={buttonVariants({ size: "sm" })}>{action}</Link>
+            <NewToolAction />
           </div>
         </CardContent>
+        <CardContent className="border-t pt-4"><p className="text-sm font-semibold">Your tools</p><ProviderToolList /></CardContent>
       </Card>
     </section>
   );

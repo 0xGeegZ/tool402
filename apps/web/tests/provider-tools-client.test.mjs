@@ -27,3 +27,11 @@ test("builds only a valid one-field allocation request", async () => {
   });
   assert.equal(createProviderToolAllocationRequest("bad"), null);
 });
+
+test("parses an owner-scoped tool page without accepting malformed items", async () => {
+  const { parseProviderToolPage } = await import(sourceUrl.href);
+  const page = { tools: [tool], nextCursor: null };
+  assert.deepEqual(parseProviderToolPage(page), page);
+  assert.equal(parseProviderToolPage({ tools: [{ ...tool, state: "UNKNOWN" }], nextCursor: null }), null);
+  assert.equal(parseProviderToolPage({ tools: [tool], nextCursor: "" }), null);
+});
