@@ -114,3 +114,8 @@ Permit only moving each existing cookie read ahead of that conditional in
 sessions, redirect targets, and session validation unchanged. The observed
 production-build failure is the RED reproduction; the same build must pass
 without auth configuration after the repair. Existing auth tests stay intact.
+
+The next build reaches the same inherited conditional-cookie path inside
+`apps/web/src/components/dashboard/dashboard-campaign.tsx`. Extend the exact
+cookie-store ordering repair to this third existing reader only; its campaign
+projection, signer matching, empty state and actions remain unchanged.
