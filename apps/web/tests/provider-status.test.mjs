@@ -131,6 +131,21 @@ implementedTest("keeps the two projection outcome unions closed and independent"
   }
 });
 
+implementedTest("uses the selected generated service slug instead of the global RiskScan directory", async () => {
+  const suffix = "a".repeat(32);
+  const toolId = `tool_${suffix}`;
+  const serviceSlug = `tool-${suffix}`;
+  const paths = [];
+  await projection.readProviderProjections(
+    { TOOL402_CONVEX_SITE_URL: "https://convex.example.test/" },
+    async (input) => { paths.push(input.pathname); return json(null, 404); },
+    `offering_${suffix}`,
+    serviceSlug,
+  );
+  assert.deepEqual(paths, [`/public/offerings/offering_${suffix}`, `/public/directory/${serviceSlug}/active`]);
+  assert.equal(toolId.startsWith("tool_"), true);
+});
+
 implementedTest("loads only a complete valid directory projection", async () => {
   const record = directoryRecord();
   const environment = { TOOL402_CONVEX_SITE_URL: "https://convex.example.test/" };

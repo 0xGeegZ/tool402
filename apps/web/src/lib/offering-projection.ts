@@ -291,22 +291,27 @@ export function isValidOfferingPublicId(offeringPublicId: string): boolean {
   return publicIdPattern.test(offeringPublicId);
 }
 
+export function isValidDirectoryServiceSlug(serviceSlug: string): boolean {
+  return serviceSlug === "riskscan" || /^tool-[0-9a-f]{32}$/u.test(serviceSlug);
+}
+
 export async function readProviderProjections(
   environment: NodeJS.ProcessEnv,
   fetcher: ProviderProjectionFetcher,
   offeringPublicId: string,
+  serviceSlug = "riskscan",
 ): Promise<ProviderProjections> {
   const source = providerSiteSource(environment);
   if (source === null || typeof fetcher !== "function") {
     return { offering: { outcome: "not_configured" }, directory: { outcome: "not_configured" } };
   }
-  if (!isValidOfferingPublicId(offeringPublicId)) {
+  if (!isValidOfferingPublicId(offeringPublicId) || !isValidDirectoryServiceSlug(serviceSlug)) {
     return { offering: { outcome: "unexpected_response" }, directory: { outcome: "unexpected_response" } };
   }
 
   const [offering, directory] = await Promise.all([
     readProjection(new URL(`/public/offerings/${offeringPublicId}`, source), fetcher, parseOfferingProjection, { outcome: "absent" }),
-    readProjection(new URL("/public/directory/riskscan/active", source), fetcher, parseDirectoryProjection, { outcome: "absent" }),
+    readProjection(new URL(`/public/directory/${serviceSlug}/active`, source), fetcher, parseDirectoryProjection, { outcome: "absent" }),
   ]);
   return { offering: offering as OfferingOutcome, directory: directory as DirectoryOutcome };
 }

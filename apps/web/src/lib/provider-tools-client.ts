@@ -1,0 +1,63 @@
+export type ProviderToolSummary = Readonly<{
+  toolPublicId: string;
+  subjectPublicId: string;
+  offeringPublicId: string;
+  serviceId: string;
+  serviceSlug: string;
+  title: string;
+  state: "ALLOCATED" | "DRAFT" | "ASSET_PENDING" | "READY" | "OPEN" | "CLOSED";
+}>;
+
+export type ProviderToolAllocation = Readonly<{
+  outcome: "allocated" | "replayed";
+  tool: ProviderToolSummary;
+}>;
+
+const toolIdPattern = /^tool_[0-9a-f]{32}$/u;
+const states = new Set<ProviderToolSummary["state"]>(["ALLOCATED", "DRAFT", "ASSET_PENDING", "READY", "OPEN", "CLOSED"]);
+
+function readTool(input: unknown): ProviderToolSummary | null {
+  if (input === null || typeof input !== "object" || Object.getPrototypeOf(input) !== Object.prototype) return null;
+  const record = input as Record<string, unknown>;
+  const fields = ["toolPublicId", "subjectPublicId", "offeringPublicId", "serviceId", "serviceSlug", "title", "state"];
+  if (Reflect.ownKeys(record).length !== fields.length || !fields.every((field) => Object.hasOwn(record, field))) return null;
+  const toolPublicId = record.toolPublicId;
+  if (typeof toolPublicId !== "string" || !toolIdPattern.test(toolPublicId)) return null;
+  const suffix = toolPublicId.slice("tool_".length);
+  if (
+    record.subjectPublicId !== toolPublicId
+    || record.offeringPublicId !== `offering_${suffix}`
+    || record.serviceId !== toolPublicId
+    || record.serviceSlug !== `tool-${suffix}`
+    || typeof record.title !== "string"
+    || !states.has(record.state as ProviderToolSummary["state"])
+  ) return null;
+  return Object.freeze({
+    toolPublicId,
+    subjectPublicId: toolPublicId,
+    offeringPublicId: record.offeringPublicId,
+    serviceId: toolPublicId,
+    serviceSlug: record.serviceSlug,
+    title: record.title,
+    state: record.state as ProviderToolSummary["state"],
+  });
+}
+
+export function parseProviderToolAllocation(input: unknown): ProviderToolAllocation | null {
+  if (input === null || typeof input !== "object" || Object.getPrototypeOf(input) !== Object.prototype) return null;
+  const record = input as Record<string, unknown>;
+  if (Reflect.ownKeys(record).length !== 2 || !Object.hasOwn(record, "outcome") || !Object.hasOwn(record, "tool")) return null;
+  if (record.outcome !== "allocated" && record.outcome !== "replayed") return null;
+  const tool = readTool(record.tool);
+  return tool === null ? null : Object.freeze({ outcome: record.outcome, tool });
+}
+
+export function createProviderToolAllocationRequest(requestId: string): RequestInit | null {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(requestId)) return null;
+  return Object.freeze({
+    method: "POST",
+    credentials: "same-origin",
+    headers: Object.freeze({ "content-type": "application/json" }),
+    body: JSON.stringify({ requestId }),
+  });
+}
