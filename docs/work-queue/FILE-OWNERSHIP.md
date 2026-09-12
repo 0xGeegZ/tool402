@@ -1225,6 +1225,15 @@ with `/sign-in` and refresh the App Router. It may not read cookies, inspect or
 trust native event payloads, discover/request an account, retry, store data,
 sign, relay, transact, deploy, or change S26/M50 source or tests.
 
+Review-driven S40 active-account binding amendment: within that same reserved
+synchronizer, focused test, and authenticated-navigation mount, the root may
+passively select the existing provider, read only `eth_chainId` and
+`eth_accounts`, and use M50's accepted account/chain watcher to compare the
+settled address with the server-validated session address. It may call the
+existing same-origin logout route once when the provider/account/chain is not
+an exact match. It may not request an account, sign, trust an event payload,
+store data, retry, relay, transact, deploy, or change S26/M50 source or tests.
+
 S41-T010 is an `00-inbox` CORE_P0 follow-up with no active source or test
 reservation. S40 acceptance is an explicit activation gate while the card is
 still speculative. After that gate and its own independent readiness/activation

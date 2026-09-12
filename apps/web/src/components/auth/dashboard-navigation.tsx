@@ -16,7 +16,7 @@ export async function DashboardNavigation() {
   return (
     <>
       <LocalNavigation showDashboard={session !== null} />
-      {session === null ? null : <DashboardSessionSync />}
+      {session === null ? null : <DashboardSessionSync address={session.address} />}
     </>
   );
 }

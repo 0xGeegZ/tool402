@@ -1,5 +1,15 @@
 # Runtime queue state
 
+- S40_ACTIVE_ACCOUNT_BINDING_REFINEMENT: A review-confirmed dashboard session
+  may survive a page reload or account switch because the prior synchronizer
+  watched only an already-connected shared session. The owner directs a
+  bounded repair inside the existing S40 synchronizer, test, and authenticated
+  navigation mount: passively settle the existing MetaMask provider and retain
+  the session only for the exact sealed-address/active-Hedera-account match;
+  otherwise call the existing logout route once. No account request,
+  signature, storage, retry, transaction, relay, deployment, or S26/M50
+  source change is authorized.
+
 - S45_DASHBOARD_LOADING_REFINEMENT: The owner authorizes only the
   `/dashboard` loading fallback to remove its compact mascot cue and give its
   four existing skeleton regions the full available width. Existing region
