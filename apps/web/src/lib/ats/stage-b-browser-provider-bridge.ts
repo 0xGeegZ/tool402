@@ -40,7 +40,7 @@ export type StageBCandidate = Readonly<{
 
 export type StageBBridgeOutcome =
   | Readonly<{ kind: "rejected" }>
-  | Readonly<{ kind: "submission_unknown" }>
+  | Readonly<{ kind: "submission_unknown"; transactionHash?: string }>
   | Readonly<{ kind: "candidate"; candidate: StageBCandidate }>;
 
 export interface StageBBridgeInput {
@@ -64,8 +64,8 @@ const defaultTimers: StageBDeadlineTimers = Object.freeze({
   },
 });
 
-function unknownOutcome(): StageBBridgeOutcome {
-  return Object.freeze({ kind: "submission_unknown" });
+function unknownOutcome(transactionHash?: string): StageBBridgeOutcome {
+  return Object.freeze({ kind: "submission_unknown", ...(transactionHash === undefined ? {} : { transactionHash }) });
 }
 
 function rejectedOutcome(): StageBBridgeOutcome {
@@ -74,6 +74,13 @@ function rejectedOutcome(): StageBBridgeOutcome {
 
 function canonicalAddress(value: unknown): string | null {
   return typeof value === "string" && isAddress(value) ? value.toLowerCase() : null;
+}
+
+const issuerMirrorAddress = "0x00000000000000000000000000000000009f29a7";
+
+function isIssuerAddress(value: unknown): boolean {
+  const address = canonicalAddress(value);
+  return address === issuer || address === issuerMirrorAddress;
 }
 
 function hasExactlyOneIssuerAccount(value: unknown): boolean {
@@ -87,8 +94,12 @@ function hasExactlyOneIssuerAccount(value: unknown): boolean {
   return issuerCount === 1;
 }
 
+export function isCanonicalStageBTransactionHash(value: unknown): value is string {
+  return typeof value === "string" && transactionHashPattern.test(value);
+}
+
 function canonicalTransactionHash(value: unknown): string | null {
-  return typeof value === "string" && transactionHashPattern.test(value) ? value : null;
+  return isCanonicalStageBTransactionHash(value) ? value : null;
 }
 
 function exactRecord(value: unknown): Record<string, unknown> | null {
@@ -342,7 +353,7 @@ function eligibleContractResult(value: unknown, transactionHash: string, expecte
     resultChainId !== chainId ||
     resultValue !== "SUCCESS" ||
     status !== "0x1" ||
-    canonicalAddress(from) !== issuer ||
+    !isIssuerAddress(from) ||
     canonicalAddress(to) !== factory ||
     typeof timestamp !== "string" ||
     !timestampPattern.test(timestamp) ||
@@ -458,7 +469,7 @@ async function resolveMirrorCandidate(
   now: () => number,
   timers: StageBDeadlineTimers,
   transactionHash: string,
-  receiptAddress: string,
+  expectedReceiptAddress?: string,
 ): Promise<StageBCandidate | null> {
   const deadline = deadlineFrom(now, mirrorObservationLimitMilliseconds);
   if (deadline === null) return null;
@@ -470,7 +481,9 @@ async function resolveMirrorCandidate(
     }
     if (first.kind !== "value") return null;
     const firstResult = eligibleContractResult(first.value, transactionHash);
-    if (firstResult === null || firstResult.evmAddress !== receiptAddress) return null;
+    if (firstResult === null) return null;
+    const receiptAddress = expectedReceiptAddress ?? firstResult.evmAddress;
+    if (firstResult.evmAddress !== receiptAddress) return null;
 
     const transactions = await responseJson(fetcher, transactionListUrl(firstResult.timestamp), deadline, now, timers);
     if (transactions.kind === "pending") return null;
@@ -505,13 +518,27 @@ async function resolveMirrorCandidate(
 export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
   const { provider, fetch: fetcher, wait = defaultWait, now = Date.now, timers = defaultTimers } = input;
   let inFlight = false;
+  let recoveryInFlight = false;
   let terminal: StageBBridgeOutcome | null = null;
+
+  async function recover(transactionHash: string): Promise<StageBBridgeOutcome> {
+    if (!isCanonicalStageBTransactionHash(transactionHash) || recoveryInFlight) return unknownOutcome();
+    recoveryInFlight = true;
+    try {
+      const candidate = await resolveMirrorCandidate(fetcher, wait, now, timers, transactionHash);
+      return candidate === null ? unknownOutcome(transactionHash) : Object.freeze({ kind: "candidate", candidate });
+    } catch {
+      return unknownOutcome(transactionHash);
+    } finally {
+      recoveryInFlight = false;
+    }
+  }
 
   async function execute(): Promise<StageBBridgeOutcome> {
     if (terminal !== null) return terminal;
     if (inFlight) return unknownOutcome();
     inFlight = true;
-    let hasTransactionHash = false;
+    let transactionHash: string | null = null;
     try {
       if (await provider.request({ method: "eth_chainId" }) !== chainId) return rejectedOutcome();
       const accounts = await provider.request({ method: "eth_accounts" });
@@ -541,12 +568,12 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
         terminal = unknownOutcome();
         return terminal;
       }
-      hasTransactionHash = true;
+      transactionHash = hash;
 
       let receiptAddress: string | null = null;
       const receiptDeadline = deadlineFrom(now, receiptObservationLimitMilliseconds);
       if (receiptDeadline === null) {
-        terminal = unknownOutcome();
+        terminal = unknownOutcome(transactionHash);
         return terminal;
       }
       for (let observation = 0; observation < receiptObservations; observation += 1) {
@@ -575,15 +602,15 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
         }
       }
       if (receiptAddress === null) {
-        terminal = unknownOutcome();
+        terminal = unknownOutcome(transactionHash);
         return terminal;
       }
       const candidate = await resolveMirrorCandidate(fetcher, wait, now, timers, hash, receiptAddress);
-      terminal = candidate === null ? unknownOutcome() : Object.freeze({ kind: "candidate", candidate });
+      terminal = candidate === null ? unknownOutcome(transactionHash) : Object.freeze({ kind: "candidate", candidate });
       return terminal;
     } catch {
-      if (hasTransactionHash) {
-        terminal = unknownOutcome();
+      if (transactionHash !== null) {
+        terminal = unknownOutcome(transactionHash);
         return terminal;
       }
       return rejectedOutcome();
@@ -592,5 +619,5 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
     }
   }
 
-  return Object.freeze({ execute });
+  return Object.freeze({ execute, recover });
 }

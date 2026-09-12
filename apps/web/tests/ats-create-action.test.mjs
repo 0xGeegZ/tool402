@@ -140,3 +140,91 @@ test("does not recreate a page-session controller after a returned hash when the
   assert.equal(calls.filter((call) => call.name === "first" && call.method === "eth_sendTransaction").length, 1);
   assert.equal(calls.filter((call) => call.name === "replacement" && call.method === "eth_sendTransaction").length, 0);
 });
+
+test("offers an explicit public-hash recovery control before any new transaction", async () => {
+  const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const calls = [];
+  const provider = {
+    async request({ method }) {
+      calls.push(method);
+      assert.fail(`recovery must not request the provider during render: ${method}`);
+    },
+  };
+  const harness = await actionHarness();
+
+  const tree = harness.render({
+    session: { provider, address: issuer },
+    stageTwoDone: true,
+    hasCandidate: false,
+    onCandidate() { assert.fail("rendering recovery must not create a candidate"); },
+  });
+
+  const recoveryInput = elements(tree).find((element) => element.props["data-stage-b-recovery-hash"] === "true");
+  const recoveryButton = elements(tree).find((element) =>
+    element.type === "Button" && element.props.children === "Recover candidate from transaction hash",
+  );
+
+  assert.ok(recoveryInput, "a reload must offer an explicit public-hash recovery input");
+  assert.ok(recoveryButton, "recovery must be an explicit click, not a mount effect");
+  assert.deepEqual(calls, []);
+});
+
+test("requires the supplied recovery hash to be canonical before enabling its explicit action", async () => {
+  const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const transactionHash = `0x${"1".repeat(64)}`;
+  const provider = {
+    async request({ method }) {
+      assert.fail(`invalid recovery input must not request the provider: ${method}`);
+    },
+  };
+  const harness = await actionHarness();
+  const props = {
+    session: { provider, address: issuer },
+    stageTwoDone: true,
+    hasCandidate: false,
+    onCandidate() { assert.fail("an invalid recovery hash cannot create a candidate"); },
+  };
+
+  const initial = harness.render(props);
+  const input = elements(initial).find((element) => element.props["data-stage-b-recovery-hash"] === "true");
+  assert.ok(input);
+  input.props.onChange({ target: { value: ` ${transactionHash}` } });
+
+  const invalid = harness.render(props);
+  const recoveryButton = elements(invalid).find((element) =>
+    element.type === "Button" && element.props.children === "Recover candidate from transaction hash",
+  );
+  assert.equal(recoveryButton?.props.disabled, true, "surrounding whitespace is not canonical input");
+});
+
+test("prefills recovery with the MetaMask hash when verification remains unknown", async () => {
+  const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const transactionHash = `0x${"1".repeat(64)}`;
+  const provider = {
+    async request({ method }) {
+      if (method === "eth_chainId") return "0x128";
+      if (method === "eth_accounts") return [issuer];
+      if (method === "eth_sendTransaction") return transactionHash;
+      if (method === "eth_getTransactionReceipt") return null;
+      assert.fail(`unexpected provider request: ${method}`);
+    },
+  };
+  const harness = await actionHarness();
+  const props = {
+    session: { provider, address: issuer },
+    stageTwoDone: true,
+    hasCandidate: false,
+    onCandidate() { assert.fail("an unverified transaction must not attach a candidate"); },
+  };
+
+  const initialTree = harness.render(props);
+  const createButton = elements(initialTree).find((element) =>
+    element.type === "Button" && element.props.children === "Create the note in MetaMask",
+  );
+  assert.ok(createButton);
+  await createButton.props.onClick();
+
+  const afterUnknown = harness.render(props);
+  const recoveryInput = elements(afterUnknown).find((element) => element.props["data-stage-b-recovery-hash"] === "true");
+  assert.equal(recoveryInput?.props.value, transactionHash);
+});

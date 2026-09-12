@@ -2,6 +2,17 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
+M54-T010 is a root-owned `20-active` CORE_P0 candidate recovery correction. It
+owns its card, specification, queue/review records, integration, commits, and
+pushes, plus only `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`,
+`apps/web/src/components/provider/deploy/ats-create-action.tsx`,
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`,
+`apps/web/src/components/provider/deploy/provider-deploy-state.ts`, and their
+four focused Web contracts. It may only recover a candidate from an explicit
+canonical public hash through existing bounded checks; it cannot send, sign,
+relay, attach, persist browser data, configure a runtime, or perform a live
+action. Stage 4 durable continuation remains outside M54.
+
 M53-T010 is a root-owned `20-active` CORE_P0 receipt-decoder correction. It
 owns its card, specification, and queue/review records. Root transferred the
 overlapping B04 reservation solely for

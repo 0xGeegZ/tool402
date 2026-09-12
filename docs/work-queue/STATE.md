@@ -38,6 +38,19 @@
   `dashboard-campaign.ts`, its server component, dashboard page, and focused
   test. No other source/test path or live boundary expands.
 
+- M54_STAGE_3_CANDIDATE_RECOVERY_ACTIVE: User-directed CORE_P0 correction.
+  After a reload, the Provider screen must let a user explicitly revalidate a
+  prior public Stage-B transaction hash and recover only a fully corroborated
+  session-local candidate. M54 preserves the separate attachment signature and
+  closed relay outcomes; it never auto-sends, signs, relays, attaches, stores,
+  or runs public reads automatically. M53 owns the bridge/test pair, M51/S26
+  own the signing island, S36 owns the stages component, and B04 owns the
+  overlapping state/test surface. M53's fixed-Factory receipt selection is
+  co-reviewed before M54; the root now owns only the declared recovery sources
+  and injected contracts. The recovery path remains explicit and read-only:
+  it cannot send, sign, relay, attach, persist, or run automatically. Stage 4
+  durable continuation remains separately excluded.
+
 - M53_STAGE_B_FACTORY_RECEIPT_LOG_SELECTION_ACTIVATION: The confirmed first
   ATS_CREATE receipt has one valid fixed-Factory `BondDeployed` event alongside
   98 unrelated receipt logs. M53-T010 records the narrow local decoder

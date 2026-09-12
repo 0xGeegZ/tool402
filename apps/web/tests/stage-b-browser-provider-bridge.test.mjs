@@ -342,6 +342,17 @@ implementedTest("accepts the fixed issuer once among other valid MetaMask accoun
   assert.equal(mirror.calls.length, 0);
 });
 
+implementedTest("retains the MetaMask hash when bounded verification is unknown", async () => {
+  const provider = fakeProvider({ receipt: null });
+  const mirror = responseQueue([]);
+
+  const outcome = await createBridge(api, provider, mirror.fetch).execute();
+
+  assert.deepEqual(outcome, { kind: "submission_unknown", transactionHash });
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
+  assert.equal(mirror.calls.length, 0);
+});
+
 implementedTest("rejects duplicate issuer entries before a send", async () => {
   const provider = fakeProvider({ accounts: [checksummedIssuer, issuer] });
   const mirror = responseQueue([]);
@@ -569,6 +580,90 @@ implementedTest("selects one Factory BondDeployed event among unrelated receipt 
   });
   assertMirrorRequestShape(mirror.calls);
   assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
+});
+
+implementedTest("recovers a corroborated candidate from an explicit public hash without using the provider", async () => {
+  const log = createBondDeployedLog(factoryApi, projectionApi);
+  const provider = fakeProvider();
+  const mirror = responseQueue([
+    new Response("", { status: 404 }),
+    jsonResponse(mirrorContractResult(log)),
+    jsonResponse({
+      transactions: [{
+        name: "ETHEREUMTRANSACTION",
+        result: "SUCCESS",
+        nonce: 0,
+        consensus_timestamp: timestamp,
+        transaction_id: rawTransactionId,
+      }],
+    }),
+    jsonResponse(mirrorContractResult(log)),
+  ]);
+
+  const outcome = await createBridge(api, provider, mirror.fetch).recover(transactionHash);
+
+  assert.deepEqual(outcome, {
+    kind: "candidate",
+    candidate: { transactionId: canonicalTransactionId, evmAddress: canonicalBondAddress },
+  });
+  assert.deepEqual(provider.calls, [], "public recovery must not read or send through MetaMask");
+  assertMirrorRequestShape(mirror.calls);
+});
+
+implementedTest("rejects non-canonical public hashes before any provider or Mirror read", async () => {
+  const provider = fakeProvider();
+  const mirror = responseQueue([]);
+
+  for (const invalidHash of [
+    ` ${transactionHash}`,
+    `${transactionHash} `,
+    transactionHash.toUpperCase(),
+    transactionHash.slice(0, -1),
+  ]) {
+    const outcome = await createBridge(api, provider, mirror.fetch).recover(invalidHash);
+    assert.deepEqual(outcome, { kind: "submission_unknown" });
+  }
+
+  assert.deepEqual(provider.calls, []);
+  assert.deepEqual(mirror.calls, []);
+});
+
+implementedTest("recovers a confirmed Hedera long-zero issuer result", async () => {
+  const log = createBondDeployedLog(factoryApi, projectionApi);
+  const mirrorIssuer = "0x00000000000000000000000000000000009f29a7";
+  const firstResult = mirrorContractResult(log, { from: mirrorIssuer });
+  const provider = fakeProvider();
+  const mirror = responseQueue([
+    jsonResponse(firstResult),
+    jsonResponse({
+      transactions: [{
+        name: "ETHEREUMTRANSACTION",
+        result: "SUCCESS",
+        nonce: 0,
+        consensus_timestamp: timestamp,
+        transaction_id: rawTransactionId,
+      }],
+    }),
+    jsonResponse(firstResult),
+  ]);
+
+  const outcome = await createBridge(api, provider, mirror.fetch).recover(transactionHash);
+
+  assert.deepEqual(outcome, {
+    kind: "candidate",
+    candidate: { transactionId: canonicalTransactionId, evmAddress: canonicalBondAddress },
+  });
+  assert.deepEqual(provider.calls, []);
+});
+
+implementedTest("returns no candidate for an absent public transaction without using MetaMask", async () => {
+  const provider = fakeProvider();
+  const mirror = responseQueue([new Response("", { status: 404 })]);
+
+  const outcome = await createBridge(api, provider, mirror.fetch, { wait: async () => {} }).recover(transactionHash);
+
+  assert.deepEqual(outcome, { kind: "submission_unknown", transactionHash });
+  assert.deepEqual(provider.calls, []);
 });
 
 implementedTest("bounds all Mirror cycles to one five-second deadline through the injected timing seam", async () => {
@@ -883,6 +978,14 @@ implementedTest("fails closed on every malformed first Mirror result without can
     assert.equal(Object.hasOwn(first, "candidate"), false, name);
     assert.equal(Object.hasOwn(first, "attach"), false, name);
     assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1, name);
+
+    const recoveryProvider = fakeProvider();
+    const recoveryMirror = responseQueue([makeResponse()]);
+    const recovered = await createBridge(api, recoveryProvider, recoveryMirror.fetch).recover(transactionHash);
+
+    assert.equal(recovered.kind, "submission_unknown", `${name}: public recovery`);
+    assert.equal(Object.hasOwn(recovered, "candidate"), false, `${name}: public recovery`);
+    assert.deepEqual(recoveryProvider.calls, [], `${name}: recovery must not use MetaMask`);
   }
 });
 
@@ -895,14 +998,14 @@ implementedTest("rejects an invalid returned Mirror transaction id and a final e
     "0x1111111111111111111111111111111111111111",
   );
   const vectors = [
-    ["invalid returned id", [
+    ["invalid returned id", () => [
       jsonResponse(mirrorContractResult(receiptLog)),
       jsonResponse({ transactions: [{
         name: "ETHEREUMTRANSACTION", result: "SUCCESS", nonce: 0,
         consensus_timestamp: timestamp, transaction_id: "not-a-hedera-id",
       }] }),
     ]],
-    ["final decoded address mismatch", [
+    ["final decoded address mismatch", () => [
       jsonResponse(mirrorContractResult(receiptLog)),
       jsonResponse({ transactions: [{
         name: "ETHEREUMTRANSACTION", result: "SUCCESS", nonce: 0,
@@ -912,11 +1015,11 @@ implementedTest("rejects an invalid returned Mirror transaction id and a final e
     ]],
   ];
 
-  for (const [name, responses] of vectors) {
+  for (const [name, makeResponses] of vectors) {
     const provider = fakeProvider({
       receipt: { transactionHash, status: "0x1", to: factory, logs: [receiptLog] },
     });
-    const mirror = responseQueue(responses);
+    const mirror = responseQueue(makeResponses());
     const bridge = createBridge(api, provider, mirror.fetch);
 
     const outcome = await bridge.execute();
@@ -924,6 +1027,14 @@ implementedTest("rejects an invalid returned Mirror transaction id and a final e
     assert.equal(outcome.kind, "submission_unknown", name);
     assert.equal(Object.hasOwn(outcome, "candidate"), false, name);
     assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1, name);
+
+    const recoveryProvider = fakeProvider();
+    const recoveryMirror = responseQueue(makeResponses());
+    const recovered = await createBridge(api, recoveryProvider, recoveryMirror.fetch).recover(transactionHash);
+
+    assert.equal(recovered.kind, "submission_unknown", `${name}: public recovery`);
+    assert.equal(Object.hasOwn(recovered, "candidate"), false, `${name}: public recovery`);
+    assert.deepEqual(recoveryProvider.calls, [], `${name}: recovery must not use MetaMask`);
   }
 });
 

@@ -102,6 +102,14 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
       };
       this.render();
     },
+    seedStageThreeCandidate() {
+      slots[0] = {
+        transactionId: "0.0.9213391-1789430400-000000001",
+        evmAddress: "0x52908400098527886e0f7030069857d2e4169ee7",
+      };
+      slots[1] = [{ kind: "done" }, { kind: "done" }];
+      slots[2] = "AAAAAAAAAAAAAAAAAAAAAA";
+    },
     connectionRequests() { return connectionRequests; },
   };
 }
@@ -260,6 +268,41 @@ implementedTest("keeps a rejected local request out of the dialog and stage resu
     assert.ok(feedback, "local request rejection must render accessible feedback");
     assert.match(visibleText(feedback), /review|check|correct|fix|update/i);
     assert.doesNotMatch(visibleText(feedback), /RangeError|TypeError|qualifyingResource|quickPrice|canonical|idempotency/u);
+  }
+});
+
+implementedTest("retains each closed relay outcome after its signature dialog is dismissed", async () => {
+  const { campaignFixture } = await import("../src/components/provider/deploy/campaign-fixture.ts");
+  const values = {
+    ...campaignFixture,
+    targetAgentCustomers: campaignFixture.targetAgentCustomers.join("\n"),
+    useOfFunds: campaignFixture.useOfFunds.join("\n"),
+    risks: campaignFixture.risks.join("\n"),
+  };
+
+  for (const { phase, outcome, kind } of [
+    { phase: "failed", outcome: "not_configured", kind: "unavailable" },
+    { phase: "unknown", outcome: "transport_failure", kind: "unknown" },
+    { phase: "unknown", outcome: "unexpected_response", kind: "unknown" },
+  ]) {
+    const harness = await signingIslandHarness(values);
+    harness.connect();
+    await Promise.resolve();
+    harness.seedStageThreeCandidate();
+    const before = harness.render();
+    const stages = elements(before).find((element) => element.type === "ProviderDeployStages");
+    assert.equal(stages.props.enabledStage, 2, "only Stage 3 is actionable after its durable predecessors and candidate are present");
+    stages.props.onActivate(2);
+
+    const pending = harness.render();
+    const dialog = elements(pending).find((element) => element.type === "SignatureDialog");
+    assert.ok(dialog, `${outcome} must be returned through the dialog`);
+    dialog.props.onResult({ phase, outcome });
+
+    const after = harness.render();
+    const afterStages = elements(after).find((element) => element.type === "ProviderDeployStages");
+    assert.equal(afterStages.props.states[2].kind, kind, `${outcome} must remain visible after dismissal`);
+    assert.equal(elements(after).some((element) => element.type === "SignatureDialog"), false);
   }
 });
 implementedTest("uses the shared connected session without an issuer-specific local gate", async () => {
