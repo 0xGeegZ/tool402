@@ -1565,9 +1565,17 @@ the existing navigation assertions in landing-explore.test.mjs and
 guided-demo-route.test.mjs. Footer, layout, auth and every other source remain
 unchanged. This bounded amendment is defined in the S43 specification.
 
-The S43 main-integration amendment reserves the two existing auth request
-boundaries, dashboard-navigation.tsx and dashboard/layout.tsx, solely to
+The S43 main-integration amendment reserves the three existing auth request
+boundaries, dashboard-navigation.tsx, dashboard/layout.tsx, and
+dashboard-campaign.tsx, solely to
 await their existing cookie store before the null-name branch. This fixes
 the reproduced unconfigured prerender failure; auth policy is unchanged.
 It also reserves the existing signing test's attempt-slot fixture and the
 Provider ID assertion reconciliation described in the S43 specification.
+
+D-S43-010-006 accepts final source `de30e189` on main `5f21fc90` after
+two fresh clean module generations and final validation. Release all S43
+reservations, including the shared navigation/tests, the three session readers
+dashboard-navigation.tsx, dashboard/layout.tsx and dashboard-campaign.tsx,
+and the integration test fixtures. Other lanes retain their existing authority;
+S43 acceptance grants no merge, deployment or live-action authority.

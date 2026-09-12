@@ -1,5 +1,15 @@
 # Runtime queue state
 
+- S43_FINAL_MAIN_INTEGRATION: Source `de30e189` on main `5f21fc90` is
+  accepted at 60-done after the menu amendment and conflict resolution.
+  Complete Web tests pass 450 with one historical skip; configuration-free
+  Turbopack build, TypeScript, lint, queue/reference/whitespace checks and two
+  fresh independent module generations are clear. The three session readers
+  retain main's auth policy while repairing their request-time cookie access.
+  All amended S43 reservations are released. Evidence distinguishes historical
+  browser observations from final-source checks. Draft PR only; no merge or
+  live-action authority. See docs/work-queue/evidence/S43-T010-final-review.md.
+
 - S43_MENU_AMENDMENT: The owner authorizes a draft PR and removing only Docs
   and Campaign from the shared main menu. S43 reopens at 20-active for the
   exact navigation/test amendment in its specification. Footer routes, signed

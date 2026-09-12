@@ -1,6 +1,12 @@
 # S43 recording journey verification
 
-## Immutable scope
+## Initial delivery before the main rebase
+
+The following scope, checks and browser observations describe the initial
+delivery. The final integration section below records the rebased source and
+the owner-directed menu amendment separately.
+
+### Immutable scope
 
 - Module base: `5e863970935b074060b88d62a519102f2edfb9af`.
 - Specification: `ea1ee2f8`; activation: `574e6fc6`.
@@ -69,3 +75,53 @@ at `0a2554aa233c5a403375c65ba111ad3b39d23a66`:
 The root accepts S43 as local source delivery only. Reviews, unit tests,
 browser observations, deployment, real-wallet actions and recording remain
 distinct evidence boundaries.
+
+## Final main integration and menu verification
+
+- Main and merge base: `5f21fc90e1a927317665a1c1bf245eb0f9457cd5`.
+- Final source: `de30e1898df6dc4f942d1caa5c93a8f0a44ccef1`.
+- The owner authorized the draft PR, shared-menu cleanup, and resolving main
+  conflicts. Only intended S43 commits remain above the refreshed main.
+
+The rebase preserves both M55 and S43 ownership, main's environment-selected
+cookie names and local challenge envelope, and the shared Provider campaign
+ID. Docs and Campaign are removed from the single desktop/mobile menu list;
+footer links, conditional signed Dashboard and Prepare a tool remain intact.
+
+Main integration exposed an existing Deploy test fixture assigning the attempt
+ID to the newly inserted directory-record state. Correcting the fixture to
+the fourth state slot preserves all outcome assertions and production code.
+The Provider assertion now follows the shared constant. The configuration-free
+build reproduced prerender failures in three session readers that could skip
+their dynamic cookie read before reading the time. Each existing cookie store
+is now awaited before the conditional lookup; selected names, null sessions,
+signer matching, redirects, projections and campaign actions remain unchanged.
+The specification amendments preceded these repairs.
+
+At the final source, using pinned Node 22.21.1:
+
+- Complete Web suite: 450 passed, zero failures, one historical skip.
+- Production Turbopack build without auth configuration passed, including its
+  TypeScript check. Standalone Web typecheck and root lint also passed during
+  rebase verification.
+- Queue/reference and whitespace checks passed; the local Git guard remained
+  enabled. The final documentation-only acceptance is checked separately.
+
+Before rebasing, additional browser checks verified both menus at desktop and
+390px widths, the mobile menu's Escape behavior, and preserved footer links.
+These extend the initial six-step journey evidence above; they are not a new
+authenticated or configured campaign run at the final source. No real wallet
+signature, payment, transaction or production deployment was performed.
+
+Two fresh independent module generations reviewed the entire final source
+diff against the main SHA above after all integration repairs:
+
+1. Generation one: zero actionable correctness, security or specification
+   findings; all three session-reader repairs and preserved main behavior
+   explicitly checked.
+2. Generation two: zero actionable Standards or Specification findings;
+   independently inspected the test/build logs and verified whitespace.
+
+The root accepts the final source and releases all amended S43 reservations.
+Source review, local browser observations, hosted checks and live actions
+remain separate evidence boundaries.

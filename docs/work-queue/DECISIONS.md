@@ -343,3 +343,18 @@ the desktop/mobile main menu. Reopen S43 for the exact shared navigation list
 and its two existing test assertions. Preserve footer links, conditional
 Dashboard and the deployment CTA; retain test-first and independent review.
 This authorizes draft publication, not merge or production deployment.
+
+## D-S43-010-006 — Final acceptance after main integration
+
+The owner explicitly requests resolving main conflicts. Accept final source
+`de30e1898df6dc4f942d1caa5c93a8f0a44ccef1` rebased on
+`5f21fc90e1a927317665a1c1bf245eb0f9457cd5`, preserving M55 ownership and
+main's environment-selected cookies and challenge envelope. The committed
+amendments cover the menu cleanup, Provider assertion, Deploy fixture slot,
+and three reproduced session-reader prerender repairs. Web tests pass 450
+with one historical skip; production build without auth configuration,
+TypeScript, lint, queue/reference and whitespace validation pass. Two fresh
+independent module generations are clean at the exact final source. Move S43
+to 60-done and release all amended reservations, including the third cookie
+reader dashboard-campaign.tsx. The final-review record separates historical
+browser validation from final-source checks; only draft publication is authorized.

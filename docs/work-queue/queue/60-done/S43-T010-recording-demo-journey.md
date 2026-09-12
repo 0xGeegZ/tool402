@@ -1,7 +1,7 @@
 # S43-T010 — Recording demo journey
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T040 accepted, S11-T010 accepted, S19-T010 accepted, S30-T010 accepted
 - Owner: root; current provided checkout, based on canonical main `5e863970935b074060b88d62a519102f2edfb9af`.
 - Human actions: real wallet signatures, funded actions, deployment and video recording remain human-owned.
@@ -52,3 +52,17 @@ unchanged. Draft publication is explicitly authorized, without merge authority.
 The full Web run at `2153f86f` passed 435 tests, skipped one historical check,
 and failed only public-documentation's obsolete Docs-in-header assertion.
 The specification admits its replacement with the preserved footer link.
+
+## Final acceptance after main integration
+
+Accept final source `de30e1898df6dc4f942d1caa5c93a8f0a44ccef1` on main
+`5f21fc90e1a927317665a1c1bf245eb0f9457cd5`. The owner-directed menu amendment,
+resolved conflicts, signing-test fixture correction and three cookie-store
+ordering repairs match the committed specification amendments. Complete Web
+tests pass 450 with one historical skip; the configuration-free production
+build, TypeScript, lint, queue/reference guard and whitespace checks pass.
+Two fresh independent module generations find no actionable issue at this
+exact source. Release all S43 reservations, including dashboard-campaign.tsx.
+Historical browser observations and final-source checks are distinguished in
+the final-review evidence. Draft PR publication is authorized; merge, wallet,
+funded actions, production deployment and recording remain human-owned.
