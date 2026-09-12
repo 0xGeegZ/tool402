@@ -34,7 +34,7 @@ import { BackingStepRail } from "./backing-step-rail";
 const finalPhases: ReadonlySet<SignatureResult["phase"]> = new Set(["complete", "rejected", "failed", "unknown"]);
 
 function chipClass(selected: boolean): string {
-  return `flex min-w-28 flex-col rounded-control border px-3 py-2 text-left text-sm focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary ${selected ? "border-primary bg-muted" : "border-border"}`;
+  return `flex min-w-28 flex-col items-start gap-1 rounded-control border px-3 py-2 text-left text-sm ${selected ? "border-primary bg-muted" : "border-border"}`;
 }
 
 function describeView(view: BackingView): string {
@@ -152,13 +152,13 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
             <div className="flex flex-wrap gap-2">
               {presets.map((units, index) => (
                 <label key={units.toString()} className={chipClass(preset === units)}>
-                  <input type="radio" name="units-preset" value={units.toString()} checked={preset === units} onChange={() => { setPreset(units); setUnitsInput(units.toString()); }} className="sr-only" />
+                  <input type="radio" name="units-preset" value={units.toString()} checked={preset === units} onChange={() => { setPreset(units); setUnitsInput(units.toString()); }} />
                   <span className="font-medium">{formatHbar(paymentTinybars(offering, units))}</span>
                   <span className="text-xs text-muted-foreground">{units.toString()} units{index === 0 ? " minimum" : ""}</span>
                 </label>
               ))}
               <label className={chipClass(preset === null)}>
-                <input type="radio" name="units-preset" value="custom" checked={preset === null} onChange={() => setPreset(null)} className="sr-only" />
+                <input type="radio" name="units-preset" value="custom" checked={preset === null} onChange={() => setPreset(null)} />
                 <span className="font-medium">Custom</span>
                 <span className="text-xs text-muted-foreground">{offering.terms.minimumPurchaseUnits.toString()} to {offering.terms.maximumNoteUnits.toString()} units</span>
               </label>
