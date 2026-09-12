@@ -280,8 +280,13 @@ implementedTest("retains each closed relay outcome after its signature dialog is
     risks: campaignFixture.risks.join("\n"),
   };
 
-  for (const { phase, outcome, kind } of [
-    { phase: "failed", outcome: "not_configured", kind: "unavailable" },
+  for (const { phase, outcome, kind, detail } of [
+    {
+      phase: "failed",
+      outcome: "not_configured",
+      kind: "unavailable",
+      detail: "The local relay declined before forwarding. Nothing left this host and nothing was recorded.",
+    },
     { phase: "unknown", outcome: "transport_failure", kind: "unknown" },
     { phase: "unknown", outcome: "unexpected_response", kind: "unknown" },
   ]) {
@@ -302,6 +307,7 @@ implementedTest("retains each closed relay outcome after its signature dialog is
     const after = harness.render();
     const afterStages = elements(after).find((element) => element.type === "ProviderDeployStages");
     assert.equal(afterStages.props.states[2].kind, kind, `${outcome} must remain visible after dismissal`);
+    if (detail !== undefined) assert.equal(afterStages.props.states[2].detail, detail, `${outcome} must retain its no-forward/no-record fact`);
     assert.equal(elements(after).some((element) => element.type === "SignatureDialog"), false);
   }
 });
