@@ -21,7 +21,7 @@
   is accepted.
 
 - M56_RISKSCAN_BACKING_DEMO_MVP_RED_ACCEPTANCE: The focused executable contract
-  at `2a6e38fa` records eleven intended absence failures and eight unchanged
+  at `27b0d762` records eleven intended absence failures and eight unchanged
   passes against the exact implementation-free commit archive. M56 may now
   amend only the source and test paths in its specification for minimal GREEN;
   every shared and human runtime boundary remains unchanged.
