@@ -358,3 +358,13 @@ independent module generations are clean at the exact final source. Move S43
 to 60-done and release all amended reservations, including the third cookie
 reader dashboard-campaign.tsx. The final-review record separates historical
 browser validation from final-source checks; only draft publication is authorized.
+
+## D-S43-010-007 — Owner-directed footer positioning
+
+The owner requests that the existing decorative footer mascot move beside the
+Tool402 logo and first-column introduction. Reopen S43 for
+`landing-footer.tsx` only. Preserve the local asset, decorative empty alt text,
+breakpoint, footer links, copy and routes. This layout-only amendment requires
+existing landing regression tests, desktop browser verification and independent
+review before acceptance. It grants no wallet, campaign, deployment, recording
+or merge authority.

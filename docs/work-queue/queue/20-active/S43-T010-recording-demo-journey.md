@@ -1,7 +1,7 @@
 # S43-T010 — Recording demo journey
 
 - Tier: POLISH
-- Queue state: 60-done
+- Queue state: 20-active
 - Dependencies: M01-T040 accepted, S11-T010 accepted, S19-T010 accepted, S30-T010 accepted
 - Owner: root; current provided checkout, based on canonical main `5e863970935b074060b88d62a519102f2edfb9af`.
 - Human actions: real wallet signatures, funded actions, deployment and video recording remain human-owned.
@@ -66,3 +66,13 @@ exact source. Release all S43 reservations, including dashboard-campaign.tsx.
 Historical browser observations and final-source checks are distinguished in
 the final-review evidence. Draft PR publication is authorized; merge, wallet,
 funded actions, production deployment and recording remain human-owned.
+
+## Footer positioning follow-up
+
+The owner requests moving the existing decorative footer mascot beside the
+Tool402 logo and introduction in the first column. This reopens S43 only for
+`apps/web/src/components/landing/landing-footer.tsx`, as specified in the
+owner-directed amendment. Existing asset, decorative alt text, visibility
+breakpoint, footer links, copy and routes remain unchanged. Existing landing
+tests, desktop browser verification and independent review are required before
+final acceptance. No merge or live-action authority is added.

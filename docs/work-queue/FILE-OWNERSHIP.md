@@ -1579,3 +1579,10 @@ reservations, including the shared navigation/tests, the three session readers
 dashboard-navigation.tsx, dashboard/layout.tsx and dashboard-campaign.tsx,
 and the integration test fixtures. Other lanes retain their existing authority;
 S43 acceptance grants no merge, deployment or live-action authority.
+
+D-S43-010-007 reopens S43 for the owner-directed footer positioning follow-up.
+It reserves only apps/web/src/components/landing/landing-footer.tsx to group
+the existing decorative mascot with the Tool402 logo. Existing asset, empty
+alternative text, breakpoint, footer links, copy, routes and all non-footer
+sources remain unchanged. Independent review and local browser verification
+precede release; no live-action authority is granted.

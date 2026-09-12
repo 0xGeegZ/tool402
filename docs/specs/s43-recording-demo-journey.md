@@ -119,3 +119,18 @@ The next build reaches the same inherited conditional-cookie path inside
 `apps/web/src/components/dashboard/dashboard-campaign.tsx`. Extend the exact
 cookie-store ordering repair to this third existing reader only; its campaign
 projection, signer matching, empty state and actions remain unchanged.
+
+## Owner-directed footer positioning follow-up
+
+The owner requests that the existing decorative flag mascot sit beside the
+Tool402 logo in the footer's first column. Reopen S43 only for
+`apps/web/src/components/landing/landing-footer.tsx`. Keep the existing local
+asset, empty alternative text, visibility breakpoint, footer links, copy and
+all routes unchanged. Replace the detached absolute placement with a shared
+logo-and-mascot row so the illustration does not overlap the introduction.
+
+The existing landing tests are the executable regression coverage for this
+layout-only adjustment. Verify the footer in a desktop browser, confirm the
+mascot remains decorative and near the logo, then obtain independent review.
+No wallet, session, campaign, transaction, deployment, or recording action is
+authorized.

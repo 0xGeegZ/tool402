@@ -1,5 +1,11 @@
 # Runtime queue state
 
+- S43_FOOTER_POSITIONING: The owner requests moving the existing decorative
+  footer mascot beside the Tool402 logo in the first column. S43 reopens at
+  20-active for `landing-footer.tsx` only; links, copy, routes, visibility
+  breakpoint and all human-owned live actions remain unchanged. The local
+  specification records the layout-only scope and browser verification.
+
 - S43_FINAL_MAIN_INTEGRATION: Source `de30e189` on main `5f21fc90` is
   accepted at 60-done after the menu amendment and conflict resolution.
   Complete Web tests pass 450 with one historical skip; configuration-free
