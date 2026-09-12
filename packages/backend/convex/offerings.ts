@@ -827,32 +827,10 @@ export const markAssetReady = internalMutation({
     offeringId: v.id("offerings"),
     state: v.literal("READY"),
   }),
-  handler: async (ctx, args) => {
-    const attemptId = opaqueId<"externalPrepareCommandAttempts">(args.attemptId);
-    if (!isCanonicalEvmAddress(args.atsAssetEvmAddress)) {
-      return reject();
-    }
-    const candidates = await ctx.db.query("offerings")
-      .withIndex("by_ats_attempt_id", (query) => query.eq("atsAttemptId", attemptId))
-      .take(2);
-    if (candidates.length !== 1) {
-      return reject();
-    }
-    const offering = readSafeOffering(candidates[0]);
-    if (
-      offering.state !== "ASSET_PENDING"
-      || offering.atsAttemptId !== attemptId
-      || offering.atsAssetEvmAddress !== undefined
-    ) {
-      return reject();
-    }
-    await ctx.db.patch(offering.offeringId, {
-      state: "READY" as const,
-      atsAssetEvmAddress: args.atsAssetEvmAddress,
-      updatedAt: durableNow(),
-    });
-    return { offeringId: offering.offeringId, state: "READY" as const };
-  },
+  // This historical seam receives neither corroborated receipt evidence nor a
+  // durable receipt reservation. Its direct READY transition is intentionally
+  // retired; ATS writers must use their corroboration-specific atomic path.
+  handler: async () => reject(),
 });
 
 export const getPublicProjection = publicQuery({

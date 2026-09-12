@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -12,6 +13,8 @@ const assetA = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const assetB = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 const candidateA = "0.0.123-1735689600-123456789";
 const candidateB = "0.0.124-1735689600-123456789";
+const transactionHashA = `0x${"1".repeat(64)}`;
+const transactionHashB = `0x${"2".repeat(64)}`;
 
 function binding(overrides = {}) {
   return {
@@ -19,6 +22,7 @@ function binding(overrides = {}) {
     offeringPublicId: "offering_a",
     attemptId: "externalPrepareCommandAttempts:A",
     candidateTransactionId: candidateA,
+    evmTransactionHash: transactionHashA,
     assetEvmAddress: assetA,
     ...overrides,
   };
@@ -63,6 +67,14 @@ test("requires the provider receipt-binding source module before GREEN", () => {
   assert.equal(sourceExists, true, `missing declared source module: ${sourcePath}`);
 });
 
+test("declares the canonical EVM transaction-hash reservation index", () => {
+  const schema = readFileSync(new URL("../convex/schema.ts", import.meta.url), "utf8");
+  assert.match(
+    schema,
+    /by_network_and_evm_transaction_hash"\s*,\s*\["network",\s*"evmTransactionHash"\]/u,
+  );
+});
+
 test.before(async () => {
   if (sourceExists) await import(sourceUrl.href);
 });
@@ -80,8 +92,9 @@ implementedTest("rejects cross-offering transaction or asset claims without a pa
   const { claimAtsReceiptBinding } = await import(sourceUrl.href);
   for (const contender of [
     binding({ offeringId: "offerings:B", offeringPublicId: "offering_b", attemptId: "externalPrepareCommandAttempts:B" }),
+    binding({ offeringId: "offerings:B", offeringPublicId: "offering_b", attemptId: "externalPrepareCommandAttempts:B", candidateTransactionId: candidateB, assetEvmAddress: assetB }),
     binding({ offeringId: "offerings:B", offeringPublicId: "offering_b", attemptId: "externalPrepareCommandAttempts:B", assetEvmAddress: assetB }),
-    binding({ offeringId: "offerings:B", offeringPublicId: "offering_b", attemptId: "externalPrepareCommandAttempts:B", candidateTransactionId: candidateB }),
+    binding({ offeringId: "offerings:B", offeringPublicId: "offering_b", attemptId: "externalPrepareCommandAttempts:B", candidateTransactionId: candidateB, evmTransactionHash: transactionHashB }),
   ]) {
     const db = database();
     await claimAtsReceiptBinding(db.ctx, binding());

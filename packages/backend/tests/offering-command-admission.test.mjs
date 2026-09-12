@@ -1606,27 +1606,18 @@ implementedTest("rejects every unsafe pending transition without a write", async
   assert.equal(accessorReads, 0);
 });
 
-implementedTest("moves exactly one indexed pending offering to READY with the verified canonical asset address", async (t) => {
+implementedTest("fails closed: markAssetReady has no receipt-proof authority", async (t) => {
   const { offerings } = await loadOfferings(t);
   const input = admissionInput();
   const pending = offeringDocument(input, { state: "ASSET_PENDING", atsAttemptId });
   const atsAssetEvmAddress = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
   const db = database({ offerings: [pending] });
 
-  assert.deepEqual(
-    await offerings.markAssetReady._handler(db.ctx, { attemptId: atsAttemptId, atsAssetEvmAddress }),
-    { offeringId, state: "READY" },
+  await assert.rejects(
+    offerings.markAssetReady._handler(db.ctx, { attemptId: atsAttemptId, atsAssetEvmAddress }),
   );
-  assert.deepEqual(db.reads, expectedReadyRead());
-  assert.equal(db.writes.length, 1);
-  assert.equal(db.writes[0].kind, "patch");
-  assert.equal(db.writes[0].id, offeringId);
-  assert.equal(typeof db.writes[0].document.updatedAt, "bigint");
-  assert.deepEqual(db.writes[0].document, {
-    state: "READY",
-    atsAssetEvmAddress,
-    updatedAt: db.writes[0].document.updatedAt,
-  });
+  assert.deepEqual(db.reads, []);
+  assert.deepEqual(db.writes, []);
 });
 
 implementedTest("rejects malformed address and every unsafe indexed ready transition without a write", async (t) => {
@@ -1680,7 +1671,7 @@ implementedTest("rejects malformed address and every unsafe indexed ready transi
       }),
       undefined,
     );
-    assert.deepEqual(db.reads, expectedReadyRead());
+    assert.deepEqual(db.reads, []);
     assert.deepEqual(db.writes, []);
   }
   assert.equal(accessorReads, 0);

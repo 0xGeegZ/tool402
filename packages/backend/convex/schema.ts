@@ -47,8 +47,10 @@ export default defineSchema({
     offeringPublicId: v.string(),
     attemptId: v.id("externalPrepareCommandAttempts"),
     candidateTransactionId: v.string(),
+    evmTransactionHash: v.optional(v.string()),
     assetEvmAddress: v.string(),
   }).index("by_network_and_candidate_transaction_id", ["network", "candidateTransactionId"])
+    .index("by_network_and_evm_transaction_hash", ["network", "evmTransactionHash"])
     .index("by_network_and_asset_evm_address", ["network", "assetEvmAddress"]),
   externalPrepareCommandAttempts: defineTable({
     version: v.literal(1),
@@ -75,6 +77,7 @@ export default defineSchema({
     ),
     candidateTransactionId: v.optional(v.string()),
     candidateEvmAddress: v.optional(v.string()),
+    verifiedEvmTransactionHash: v.optional(v.string()),
     nextReconciliationAt: v.optional(v.int64()),
     acceptedAt: v.int64(),
   }).index("by_idempotency_key", ["idempotencyKey"]),

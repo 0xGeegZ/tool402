@@ -11,6 +11,7 @@ type ReceiptBinding = Readonly<{
   offeringPublicId: string;
   attemptId: GenericId<"externalPrepareCommandAttempts">;
   candidateTransactionId: string;
+  evmTransactionHash?: string;
   assetEvmAddress: string;
 }>;
 
@@ -24,6 +25,7 @@ const transactionIdPattern =
   /^0\.0\.(?:0|[1-9][0-9]*)-(?:0|[1-9][0-9]*)-[0-9]{9}$/u;
 const hederaTransactionIdPattern =
   /^(0\.0\.(?:0|[1-9][0-9]*))@((?:0|[1-9][0-9]*)\.([0-9]{1,9}))$/u;
+const evmTransactionHashPattern = /^0x[0-9a-f]{64}$/u;
 
 function reject(): never {
   throw new RangeError("ATS receipt is already bound to another offering");
@@ -37,6 +39,10 @@ function canonicalCandidateTransactionId(value: unknown): string | null {
   return `${match[1]}-${match[2].replace(".", "-").padEnd(match[2].length + (9 - match[3].length), "0")}`;
 }
 
+function canonicalEvmTransactionHash(value: unknown): string | null {
+  return typeof value === "string" && evmTransactionHashPattern.test(value) ? value : null;
+}
+
 function readBinding(input: unknown): ReceiptBinding {
   try {
     const record = readStoredRecord(input, [
@@ -46,13 +52,17 @@ function readBinding(input: unknown): ReceiptBinding {
       "attemptId",
       "candidateTransactionId",
       "assetEvmAddress",
-    ], ["_id", "_creationTime"]);
+    ], ["evmTransactionHash", "_id", "_creationTime"]);
+    const evmTransactionHash = Object.hasOwn(record, "evmTransactionHash")
+      ? record.evmTransactionHash
+      : undefined;
     if (
       record.network !== network
       || typeof record.offeringId !== "string" || record.offeringId.length === 0
       || typeof record.offeringPublicId !== "string" || record.offeringPublicId.length === 0
       || typeof record.attemptId !== "string" || record.attemptId.length === 0
       || typeof record.candidateTransactionId !== "string" || !transactionIdPattern.test(record.candidateTransactionId)
+      || (evmTransactionHash !== undefined && canonicalEvmTransactionHash(evmTransactionHash) === null)
       || !isCanonicalEvmAddress(record.assetEvmAddress)
     ) return reject();
     return Object.freeze({
@@ -60,6 +70,7 @@ function readBinding(input: unknown): ReceiptBinding {
       offeringPublicId: record.offeringPublicId,
       attemptId: record.attemptId as GenericId<"externalPrepareCommandAttempts">,
       candidateTransactionId: record.candidateTransactionId,
+      ...(evmTransactionHash === undefined ? {} : { evmTransactionHash: evmTransactionHash as string }),
       assetEvmAddress: record.assetEvmAddress,
     });
   } catch {
@@ -83,8 +94,9 @@ function readClaimInput(input: unknown): ReceiptBinding {
     ] as const;
     const keys = Reflect.ownKeys(input);
     if (
-      keys.length !== fields.length
-      || keys.some((key) => typeof key !== "string" || !fields.includes(key as (typeof fields)[number]))
+      (keys.length !== fields.length && keys.length !== fields.length + 1)
+      || keys.some((key) => typeof key !== "string" || (key !== "evmTransactionHash" && !fields.includes(key as (typeof fields)[number])))
+      || fields.some((field) => !keys.includes(field))
     ) return reject();
     const values: Record<string, unknown> = {};
     for (const field of fields) {
@@ -102,12 +114,25 @@ function readClaimInput(input: unknown): ReceiptBinding {
     if (typeof values.offeringPublicId !== "string" || values.offeringPublicId.length === 0) return reject();
     if (typeof values.attemptId !== "string" || values.attemptId.length === 0) return reject();
     if (canonicalCandidateTransactionId(values.candidateTransactionId) === null) return reject();
+    const evmTransactionHashDescriptor = Reflect.getOwnPropertyDescriptor(input, "evmTransactionHash");
+    const evmTransactionHash = evmTransactionHashDescriptor === undefined
+      ? undefined
+      : (
+        evmTransactionHashDescriptor.enumerable !== true
+        || !Object.hasOwn(evmTransactionHashDescriptor, "value")
+        || Object.hasOwn(evmTransactionHashDescriptor, "get")
+        || Object.hasOwn(evmTransactionHashDescriptor, "set")
+          ? null
+          : canonicalEvmTransactionHash(evmTransactionHashDescriptor.value)
+      );
+    if (evmTransactionHash === null) return reject();
     if (!isCanonicalEvmAddress(values.assetEvmAddress)) return reject();
     return Object.freeze({
       offeringId: values.offeringId as GenericId<"offerings">,
       offeringPublicId: values.offeringPublicId,
       attemptId: values.attemptId as GenericId<"externalPrepareCommandAttempts">,
       candidateTransactionId: canonicalCandidateTransactionId(values.candidateTransactionId) as string,
+      ...(evmTransactionHash === undefined ? {} : { evmTransactionHash }),
       assetEvmAddress: values.assetEvmAddress,
     });
   } catch {
@@ -120,6 +145,7 @@ function isSameBinding(left: ReceiptBinding, right: ReceiptBinding): boolean {
     && left.offeringPublicId === right.offeringPublicId
     && left.attemptId === right.attemptId
     && left.candidateTransactionId === right.candidateTransactionId
+    && left.evmTransactionHash === right.evmTransactionHash
     && left.assetEvmAddress === right.assetEvmAddress;
 }
 
@@ -133,20 +159,27 @@ export async function claimAtsReceiptBinding(
   input: ReceiptBinding,
 ): Promise<"CLAIMED" | "REPLAYED"> {
   const binding = readClaimInput(input);
-  const [transactionRows, assetRows] = await Promise.all([
+  const [candidateRows, transactionRows, assetRows] = await Promise.all([
     ctx.db.query("providerToolReceiptBindings")
       .withIndex("by_network_and_candidate_transaction_id", (query) => (
         query.eq("network", network).eq("candidateTransactionId", binding.candidateTransactionId)
       ))
       .take(2),
+    binding.evmTransactionHash === undefined
+      ? Promise.resolve([])
+      : ctx.db.query("providerToolReceiptBindings")
+        .withIndex("by_network_and_evm_transaction_hash", (query) => (
+          query.eq("network", network).eq("evmTransactionHash", binding.evmTransactionHash)
+        ))
+        .take(2),
     ctx.db.query("providerToolReceiptBindings")
       .withIndex("by_network_and_asset_evm_address", (query) => (
         query.eq("network", network).eq("assetEvmAddress", binding.assetEvmAddress)
       ))
       .take(2),
   ]);
-  if (transactionRows.length > 1 || assetRows.length > 1) return reject();
-  const existing = [...transactionRows, ...assetRows].map(readBinding);
+  if (candidateRows.length > 1 || transactionRows.length > 1 || assetRows.length > 1) return reject();
+  const existing = [...candidateRows, ...transactionRows, ...assetRows].map(readBinding);
   if (existing.length === 0) {
     await ctx.db.insert("providerToolReceiptBindings", {
       network,
@@ -154,6 +187,7 @@ export async function claimAtsReceiptBinding(
       offeringPublicId: binding.offeringPublicId,
       attemptId: binding.attemptId,
       candidateTransactionId: binding.candidateTransactionId,
+      ...(binding.evmTransactionHash === undefined ? {} : { evmTransactionHash: binding.evmTransactionHash }),
       assetEvmAddress: binding.assetEvmAddress,
     });
     return "CLAIMED";

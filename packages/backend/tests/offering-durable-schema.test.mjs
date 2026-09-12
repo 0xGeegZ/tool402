@@ -340,6 +340,7 @@ const expectedM32 = {
       state: union("PREPARED", "SUBMITTED", "CONFIRMED", "OUTCOME_UNKNOWN", "REJECTED"),
       candidateTransactionId: optional(string),
       candidateEvmAddress: optional(string),
+      verifiedEvmTransactionHash: optional(string),
       nextReconciliationAt: optional(bigint),
       acceptedAt: bigint,
     }),

@@ -71,6 +71,7 @@ type StoredAttempt = {
   readonly state: AttemptState;
   readonly candidateTransactionId?: string;
   readonly candidateEvmAddress?: string;
+  readonly verifiedEvmTransactionHash?: string;
 };
 
 const operationKinds: readonly ExternalOperationKind[] = [
@@ -120,6 +121,7 @@ const attemptFields = [
 const attemptOptionalFields = [
   "candidateTransactionId",
   "candidateEvmAddress",
+  "verifiedEvmTransactionHash",
   "nextReconciliationAt",
 ] as const;
 const canonicalIdPattern = /^[A-Za-z0-9_-]{21}[AQgw]$/u;
@@ -306,6 +308,7 @@ function readAttempt(input: unknown): StoredAttempt {
       record,
       "nextReconciliationAt",
     );
+    const hasVerifiedEvmTransactionHash = Object.hasOwn(record, "verifiedEvmTransactionHash");
     const state = record.state;
     const candidateTransactionId = hasCandidateTransactionId
       ? record.candidateTransactionId
@@ -315,6 +318,9 @@ function readAttempt(input: unknown): StoredAttempt {
       : undefined;
     const nextReconciliationAt = hasNextReconciliationAt
       ? record.nextReconciliationAt
+      : undefined;
+    const verifiedEvmTransactionHash = hasVerifiedEvmTransactionHash
+      ? record.verifiedEvmTransactionHash
       : undefined;
     if (
       record.version !== 1
@@ -338,9 +344,12 @@ function readAttempt(input: unknown): StoredAttempt {
         && !isCanonicalEvmAddress(candidateEvmAddress))
       || (nextReconciliationAt !== undefined
         && !isInt64(nextReconciliationAt))
+      || (verifiedEvmTransactionHash !== undefined
+        && (typeof verifiedEvmTransactionHash !== "string" || !transactionHashPattern.test(verifiedEvmTransactionHash)))
       || (state === "PREPARED"
         ? hasCandidateTransactionId
           || hasCandidateEvmAddress
+          || hasVerifiedEvmTransactionHash
           || hasNextReconciliationAt
         : !hasCandidateTransactionId
           || candidateTransactionId === undefined
@@ -369,6 +378,7 @@ function readAttempt(input: unknown): StoredAttempt {
       state,
       ...(candidateTransactionId === undefined ? {} : { candidateTransactionId }),
       ...(candidateEvmAddress === undefined ? {} : { candidateEvmAddress }),
+      ...(verifiedEvmTransactionHash === undefined ? {} : { verifiedEvmTransactionHash }),
     });
   } catch {
     return reject();
@@ -736,10 +746,15 @@ export const corroborateSelectedProviderToolAtsReceipt = internalMutation({
     const attempt = readAttempt(row);
     if (attempt.attemptId !== args.attemptId) return reject();
     const context = await readSelectedProviderToolReceiptContext(ctx, attempt);
-    const transactionHash = readCorroborationTransactionHash(args.transaction);
-    if (transactionHash === null) {
+    const observedTransactionHash = readCorroborationTransactionHash(args.transaction);
+    if (observedTransactionHash === null) {
       return { status: "OUTCOME_UNKNOWN" as const, state: "ASSET_PENDING" as const };
     }
+    if (
+      attempt.verifiedEvmTransactionHash !== undefined
+      && attempt.verifiedEvmTransactionHash !== observedTransactionHash
+    ) return reject();
+    const transactionHash = attempt.verifiedEvmTransactionHash ?? observedTransactionHash;
     const verification = verifyProviderToolReceipt({
       expected: createProviderToolReceiptExpectation({
         configuration: context.configuration.atsCreateConfiguration,
@@ -762,8 +777,14 @@ export const corroborateSelectedProviderToolAtsReceipt = internalMutation({
         offeringPublicId: context.offering.offeringPublicId,
         attemptId: attempt.attemptId,
         candidateTransactionId: attempt.candidateTransactionId as string,
+        evmTransactionHash: verification.transactionHash,
         assetEvmAddress: verification.asset,
       });
+      if (attempt.verifiedEvmTransactionHash === undefined) {
+        await ctx.db.patch(attempt.attemptId, {
+          verifiedEvmTransactionHash: verification.transactionHash,
+        });
+      }
       return { status: "ALREADY_CONFIRMED" as const, state: "READY" as const };
     }
     await claimAtsReceiptBinding(ctx, {
@@ -771,7 +792,11 @@ export const corroborateSelectedProviderToolAtsReceipt = internalMutation({
       offeringPublicId: context.offering.offeringPublicId,
       attemptId: attempt.attemptId,
       candidateTransactionId: attempt.candidateTransactionId as string,
+      evmTransactionHash: verification.transactionHash,
       assetEvmAddress: verification.asset,
+    });
+    await ctx.db.patch(attempt.attemptId, {
+      verifiedEvmTransactionHash: verification.transactionHash,
     });
     await ctx.db.patch(context.offering.offeringId, {
       state: "READY",

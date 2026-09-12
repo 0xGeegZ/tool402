@@ -167,6 +167,8 @@ test("corroborates only independently encoded exact calldata and writes READY af
   assert.equal(db.rows.offerings[0].state, "READY");
   assert.equal(db.rows.offerings[0].atsAssetEvmAddress, asset);
   assert.equal(db.rows.providerToolReceiptBindings.length, 1);
+  assert.equal(db.rows.providerToolReceiptBindings[0].evmTransactionHash, transactionHash);
+  assert.equal(db.rows.externalPrepareCommandAttempts[0].verifiedEvmTransactionHash, transactionHash);
 });
 
 test("keeps selected offerings pending for UNKNOWN or mismatched evidence", async () => {
@@ -202,6 +204,24 @@ test("replays an exact verified receipt without a second READY write", async () 
     { status: "ALREADY_CONFIRMED", state: "READY" },
   );
   assert.equal(db.writes.length, writesBeforeReplay);
+});
+
+test("rejects a later alias carrying a different EVM transaction hash without writes", async () => {
+  const api = await import(sourceUrl.href);
+  const data = await fixture();
+  const db = database(data.rows);
+  await api.corroborateSelectedProviderToolAtsReceipt._handler(db.ctx, {
+    attemptId, transaction: data.transaction, receipt: data.receipt,
+  });
+  const writesBeforeConflict = db.writes.length;
+  const differentHash = `0x${"2".repeat(64)}`;
+  await assert.rejects(api.corroborateSelectedProviderToolAtsReceipt._handler(db.ctx, {
+    attemptId,
+    transaction: { ...data.transaction, hash: differentHash },
+    receipt: { ...data.receipt, transactionHash: differentHash },
+  }));
+  assert.equal(db.writes.length, writesBeforeConflict);
+  assert.equal(db.rows.externalPrepareCommandAttempts[0].verifiedEvmTransactionHash, transactionHash);
 });
 
 test("rejects a changed selected-tool authority before a receipt can promote", async () => {
