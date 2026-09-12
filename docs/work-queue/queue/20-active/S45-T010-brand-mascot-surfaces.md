@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: S11-T010 accepted, S14-T010 accepted, S20-T010 accepted, S29-T010 accepted, S33-T010 accepted, S43-T010 accepted.
 - Raised by: human operator, 2026-09-12. The request is to generate and integrate the four approved mascot compositions for Demo, Explore, Provider deploy review, and route loading.
 - Owner: root integrator. The root owns this card, specification, UI manifest, assets, tests, source integration, review records, validation, and draft PR.
@@ -22,6 +22,10 @@ The repository owner explicitly authorized implementation and a new draft PR. At
 ## Readiness
 
 The corrected intake at `e5ed2304` passed a fresh independent review with no finding. Dependencies, exact paths, collision boundaries, loader timing, accessibility, and runtime exclusions are clear. S45 moves to `10-ready`; a separate root activation is still required before durable RED.
+
+## RED activation
+
+At ready control source `5780cee2`, the root activates only `apps/web/tests/brand-mascot-surfaces.test.mjs` for durable RED. Production source and generated assets remain prohibited until the focused contract fails only for the four missing surfaces and receives independent RED review.
 
 ## Boundary
 

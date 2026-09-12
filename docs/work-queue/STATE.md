@@ -1,5 +1,11 @@
 # Runtime queue state
 
+- S45_RED_ACTIVATION: At ready control source `5780cee2`, the root activates
+  only `apps/web/tests/brand-mascot-surfaces.test.mjs` for durable RED.
+  Production source and generated assets remain prohibited until the focused
+  contract fails only for the declared missing surfaces and receives an
+  independent RED review.
+
 - S45_READY: Corrected intake source `e5ed2304` passed a fresh independent
   readiness review with no finding. Accepted dependencies, exact candidate
   paths, ownership isolation, loader timing, accessibility, and runtime
