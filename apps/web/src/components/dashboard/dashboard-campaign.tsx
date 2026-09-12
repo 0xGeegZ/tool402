@@ -2,13 +2,12 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { readDashboardSession } from "../../lib/dashboard-auth/dashboard-auth";
-import { readDashboardCampaign } from "../../lib/dashboard-campaign";
+import { readDashboardCampaign, riskScanOfferingPublicId } from "../../lib/dashboard-campaign";
 import { readProviderProjections } from "../../lib/offering-projection";
 import { Badge } from "../ui/badge";
 import { buttonVariants } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 
-const riskScanOfferingPublicId = "riskscan_revenue_note_demo";
 const sessionCookieName = "__Host-tool402-dashboard-session";
 
 export async function DashboardCampaign() {

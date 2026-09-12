@@ -12,7 +12,7 @@ const offeringStates = new Set<DashboardCampaign["state"]>([
   "OPEN",
   "CLOSED",
 ]);
-const riskScanOfferingPublicId = "riskscan_revenue_note_demo";
+export const riskScanOfferingPublicId = "riskscan_revenue_note_demo";
 
 function plainRecord(input: unknown): input is Record<string, unknown> {
   return input !== null && typeof input === "object" && Object.getPrototypeOf(input) === Object.prototype;
