@@ -66,11 +66,13 @@ export async function DashboardCampaign() {
       <Card className="rounded-card border-border bg-card shadow-none">
         <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
-            <h2 className="text-xl font-bold tracking-[-0.035em] text-foreground">{campaign.title}</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-xl font-bold tracking-[-0.035em] text-foreground">{campaign.title}</h2>
+              <Badge variant="secondary">{campaign.state}</Badge>
+            </div>
             <p className="text-sm leading-6 text-muted-foreground">{description}</p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-3">
-            <Badge variant="secondary">{campaign.state}</Badge>
             <Link href={campaign.href} className={buttonVariants({ size: "lg", shape: "pill" })}>{action}</Link>
             <NewToolAction variant="outline" />
           </div>
