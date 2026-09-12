@@ -860,6 +860,12 @@ export const getPublicProjection = publicQuery({
     ) {
       return reject();
     }
+    // Provider-tool lifecycle is owner-visible until directory publication. A
+    // syntactically selected subject never grants public draft/receipt access.
+    if (isSelectedProviderToolSubject(highest.subjectPublicId)
+      && highest.state !== "OPEN" && highest.state !== "CLOSED") {
+      return null;
+    }
     let atsAttemptPublicId: string | undefined;
     if (highest.state === "ASSET_PENDING") {
       if (highest.atsAttemptId === undefined) {
