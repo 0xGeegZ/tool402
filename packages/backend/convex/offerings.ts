@@ -354,6 +354,35 @@ export function readAtsCreateReplayOffering(input: unknown): {
   }
 }
 
+export function readSelectedAtsCreateConfigurationOffering(input: unknown): {
+  readonly offeringPublicId: string;
+  readonly subjectPublicId: string;
+  readonly canonicalSignerAddress: string;
+  readonly principalPublicId: string;
+  readonly authorityVersion: string;
+  readonly title: string;
+} | null {
+  try {
+    const offering = readSafeOffering(input);
+    if (
+      (offering.state !== "DRAFT" && offering.state !== "ASSET_PENDING")
+      || offering.atsAssetEvmAddress !== undefined
+      || offering.activeDirectoryVersionId !== undefined
+      || (offering.state === "DRAFT" && offering.atsAttemptId !== undefined)
+    ) return null;
+    return Object.freeze({
+      offeringPublicId: offering.offeringPublicId,
+      subjectPublicId: offering.subjectPublicId,
+      canonicalSignerAddress: offering.canonicalSignerAddress,
+      principalPublicId: offering.principalPublicId,
+      authorityVersion: offering.authorityVersion,
+      title: offering.narrative.title,
+    });
+  } catch {
+    return null;
+  }
+}
+
 function readSafePreparedAtsCreateAttempt(input: unknown) {
   const record = readStoredRecord(input, externalPrepareAttemptFields);
   if (

@@ -4,9 +4,11 @@ import { parseExternalPreparePayload, type ExternalPreparePayload } from "@tool4
 import { keccak256, stringToHex } from "viem";
 import { assertCurrentAtsPrepareAuthority } from "./ats_prepare_authority.ts";
 import { assertStageBAtsCreateRuntimeBinding } from "./stage_b_ats_create_runtime_binding.ts";
+import { createProviderToolAtsConfiguration } from "../src/ats/provider-tool-ats-configuration.ts";
 import {
   linkAtsCreateAttemptToDraftOffering,
   readAtsCreateReplayOffering,
+  readSelectedAtsCreateConfigurationOffering,
 } from "./offerings.ts";
 import {
   isSelectedProviderToolSubject,
@@ -219,6 +221,42 @@ async function revalidateSelectedPrepareAuthority(
   return selected;
 }
 
+async function assertSelectedAtsCreateConfiguration(
+  ctx: Parameters<typeof resolveSelectedProviderToolSubject>[0],
+  selected: Awaited<ReturnType<typeof revalidateSelectedPrepareAuthority>>,
+  command: ReturnType<typeof bindContext>,
+): Promise<void> {
+  const offerings = await ctx.db.query("offerings")
+    .withIndex("by_offering_public_id_and_version", (query) => (
+      query.eq("offeringPublicId", selected.offeringPublicId).eq("version", 1)
+    ))
+    .take(2);
+  if (offerings.length !== 1) return reject();
+  const offering = readSelectedAtsCreateConfigurationOffering(offerings[0]);
+  if (
+    offering === null
+    || offering.offeringPublicId !== selected.offeringPublicId
+    || offering.subjectPublicId !== selected.subjectPublicId
+    || offering.canonicalSignerAddress !== command.canonicalSignerAddress
+    || offering.principalPublicId !== command.principalPublicId
+    || offering.authorityVersion !== command.authorityVersion
+  ) return reject();
+  const configuration = createProviderToolAtsConfiguration({
+    toolPublicId: selected.subjectPublicId,
+    subjectPublicId: offering.subjectPublicId,
+    title: offering.title,
+    canonicalSignerAddress: offering.canonicalSignerAddress,
+  });
+  if (
+    command.payload.network !== configuration.atsCreateConfiguration.network
+    || command.payload.chainId !== configuration.atsCreateConfiguration.chainId
+    || command.payload.subjectPublicId !== configuration.atsCreateConfiguration.subjectPublicId
+    || command.payload.operationKind !== configuration.atsCreateConfiguration.operationKind
+    || command.payload.expectedTarget !== configuration.atsCreateConfiguration.expectedTarget
+    || command.payload.canonicalParametersHash !== configuration.canonicalParametersHash
+  ) return reject();
+}
+
 function revalidateClaim(input: unknown, replayIdentity: string): GenericId<"externalPrepareCommandAttempts"> | null {
   if (input === null || typeof input !== "object") return reject();
   const outcome = Object.getOwnPropertyDescriptor(input, "outcome")?.value;
@@ -330,15 +368,7 @@ export const admitAtsCreateAndMarkAssetPending = internalMutation({
       assertStageBAtsCreateRuntimeBinding(bound);
       assertCurrentAtsPrepareAuthority(bound.payload);
     } else {
-      const legacyConfigurationPayload = {
-        ...bound.payload,
-        subjectPublicId: "riskscan_revenue_note_demo",
-      } as const;
-      assertStageBAtsCreateRuntimeBinding({
-        ...bound,
-        payload: legacyConfigurationPayload,
-      });
-      assertCurrentAtsPrepareAuthority(legacyConfigurationPayload);
+      await assertSelectedAtsCreateConfiguration(ctx, selected, bound);
     }
 
     const claims = await ctx.db.query("externalPrepareCommandReplayClaims")

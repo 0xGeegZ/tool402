@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { keccak256, stringToHex } from "viem";
 
+import { createProviderToolAtsConfiguration } from "../src/ats/provider-tool-ats-configuration.ts";
+
 const moduleUrl = new URL("../convex/external_prepare_command_admission.ts", import.meta.url);
 const atomicMutationSourceDeclared = readFileSync(moduleUrl, "utf8").includes(
   "admitAtsCreateAndMarkAssetPending",
@@ -111,11 +113,20 @@ function claim(overrides = {}) {
 
 function selectedAtsCreateInput(suffix, nonce = "CCCCCCCCCCCCCCCCCCCCCg") {
   const args = m47AtsCreateInput();
+  const toolPublicId = `tool_${suffix}`;
+  const configuration = createProviderToolAtsConfiguration({
+    toolPublicId,
+    subjectPublicId: toolPublicId,
+    title: "RiskScan Revenue Note",
+    canonicalSignerAddress: args.canonicalSignerAddress,
+  });
   args.nonce = nonce;
   args.replayIdentity = `tool402:wallet-command:v1:296:${args.canonicalSignerAddress}:${nonce}`;
   args.payload = {
     ...args.payload,
-    subjectPublicId: `tool_${suffix}`,
+    subjectPublicId: toolPublicId,
+    expectedTarget: configuration.atsCreateConfiguration.expectedTarget,
+    canonicalParametersHash: configuration.canonicalParametersHash,
     idempotencyKey: nonce,
   };
   args.payloadHash = hashPayload(args.payload);
