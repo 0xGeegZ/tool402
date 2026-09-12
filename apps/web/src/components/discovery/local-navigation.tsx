@@ -9,9 +9,7 @@ import { createPortal } from "react-dom";
 
 const publicLinks = [
   { href: "/explore", label: "Explore tools" },
-  { href: "/docs", label: "Docs" },
   { href: "/demo", label: "Guided demo" },
-  { href: "/provider", label: "Campaign" },
 ] as const;
 
 const dashboardLink = { href: "/dashboard", label: "Dashboard" } as const;
