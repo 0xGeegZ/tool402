@@ -1564,3 +1564,10 @@ S43's owner-directed menu follow-up reserves only local-navigation.tsx and
 the existing navigation assertions in landing-explore.test.mjs and
 guided-demo-route.test.mjs. Footer, layout, auth and every other source remain
 unchanged. This bounded amendment is defined in the S43 specification.
+
+The S43 main-integration amendment reserves the two existing auth request
+boundaries, dashboard-navigation.tsx and dashboard/layout.tsx, solely to
+await their existing cookie store before the null-name branch. This fixes
+the reproduced unconfigured prerender failure; auth policy is unchanged.
+It also reserves the existing signing test's attempt-slot fixture and the
+Provider ID assertion reconciliation described in the S43 specification.

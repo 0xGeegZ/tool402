@@ -104,3 +104,13 @@ an attempt ID into the newly inserted directory-record state slot. Permit
 only correcting that fixture's attempt slot in
 `apps/web/tests/deploy-stage-signing.test.mjs`; retain every outcome assertion
 and change no production Deploy code.
+
+The rebased configuration-free production build fails because main's auth
+header skips `cookies()` when the cookie name is unavailable, then reads
+`Date.now()` during prerendering. The dashboard layout has the same path.
+Permit only moving each existing cookie read ahead of that conditional in
+`apps/web/src/components/auth/dashboard-navigation.tsx` and
+`apps/web/src/app/dashboard/layout.tsx`. Retain selected cookie names, null
+sessions, redirect targets, and session validation unchanged. The observed
+production-build failure is the RED reproduction; the same build must pass
+without auth configuration after the repair. Existing auth tests stay intact.
