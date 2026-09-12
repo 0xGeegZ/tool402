@@ -24,6 +24,10 @@ import {
   revalidateWalletCommandReplayClaim,
 } from "../src/offering-command-admission.ts";
 import type { OfferingCommandBinding } from "../src/offering-command-admission.ts";
+import {
+  isSelectedProviderToolSubject,
+  resolveSelectedProviderToolSubject,
+} from "./provider_tool_authority.ts";
 import type schema from "./schema.ts";
 
 const definitionValidator = v.object({
@@ -315,6 +319,7 @@ function readSafeOffering(input: unknown): SafeOffering {
 
 export function readAtsCreateReplayOffering(input: unknown): {
   readonly offeringId: GenericId<"offerings">;
+  readonly offeringPublicId?: string;
   readonly atsAttemptId: GenericId<"externalPrepareCommandAttempts">;
   readonly state: "ASSET_PENDING";
   readonly subjectPublicId: string;
@@ -334,6 +339,9 @@ export function readAtsCreateReplayOffering(input: unknown): {
     }
     return Object.freeze({
       offeringId: offering.offeringId,
+      ...(isSelectedProviderToolSubject(offering.subjectPublicId)
+        ? { offeringPublicId: offering.offeringPublicId }
+        : {}),
       atsAttemptId: offering.atsAttemptId,
       state: "ASSET_PENDING" as const,
       subjectPublicId: offering.subjectPublicId,
@@ -497,6 +505,27 @@ function matchesStoredOffering(
   );
 }
 
+async function revalidateSelectedOfferingAuthority(
+  ctx: GenericMutationCtx<DataModelFromSchemaDefinition<typeof schema>>,
+  currentAuthority: unknown,
+  command: OfferingCommandBinding,
+) {
+  if (!isSelectedProviderToolSubject(command.payload.subjectPublicId)) {
+    revalidateOfferingAuthority(currentAuthority, command, true);
+    return null;
+  }
+  const selected = await resolveSelectedProviderToolSubject(ctx, currentAuthority, {
+    subjectPublicId: command.payload.subjectPublicId,
+    offeringPublicId: command.payload.offeringPublicId,
+  });
+  revalidateOfferingAuthority(
+    { ...(currentAuthority as Record<string, unknown>), ownedSubjectPublicIds: [selected.subjectPublicId] },
+    command,
+    true,
+  );
+  return selected;
+}
+
 const internalMutation: MutationBuilder<
   DataModelFromSchemaDefinition<typeof schema>,
   "internal"
@@ -519,7 +548,7 @@ export const admitOfferingCreate = internalMutation({
     if (authorities.length !== 1) {
       return reject();
     }
-    revalidateOfferingAuthority(authorities[0], command, true);
+    const selected = await revalidateSelectedOfferingAuthority(ctx, authorities[0], command);
 
     const claims = await ctx.db.query("walletCommandReplayClaims")
       .withIndex("by_replay_identity", (query) => query.eq("replayIdentity", command.replayIdentity))
@@ -529,6 +558,16 @@ export const admitOfferingCreate = internalMutation({
     }
     if (claims.length === 1) {
       revalidateWalletCommandReplayClaim(claims[0], command.replayIdentity, command.type);
+      if (selected !== null) {
+        const targetId = claims[0]?.targetId;
+        if (typeof targetId !== "string") return reject();
+        const stored = readSafeOffering(await ctx.db.get(opaqueId<"offerings">(targetId)));
+        if (
+          stored.offeringPublicId !== selected.offeringPublicId
+          || stored.subjectPublicId !== selected.subjectPublicId
+          || !matchesStoredOffering(stored, command)
+        ) return reject();
+      }
       return { status: "COMMAND_REPLAYED" as const };
     }
 
@@ -655,6 +694,24 @@ export async function linkAtsCreateAttemptToDraftOffering(
     readonly authorityVersion: string;
   },
 ): Promise<void> {
+  let selectedOfferingPublicId: string | null = null;
+  if (isSelectedProviderToolSubject(binding.subjectPublicId)) {
+    const authorities = await ctx.db.query("commandAuthorities")
+      .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+        query.eq("chainId", 296).eq("canonicalSignerAddress", binding.canonicalSignerAddress)
+      ))
+      .take(2);
+    if (authorities.length !== 1) return reject();
+    const selected = await resolveSelectedProviderToolSubject(ctx, authorities[0], {
+      subjectPublicId: binding.subjectPublicId,
+    });
+    if (
+      selected.subjectPublicId !== binding.subjectPublicId
+      || (authorities[0]?.principalPublicId !== binding.principalPublicId)
+      || (authorities[0]?.authorityVersion !== binding.authorityVersion)
+    ) return reject();
+    selectedOfferingPublicId = selected.offeringPublicId;
+  }
   const candidates = await ctx.db.query("offerings")
     .withIndex("by_ats_create_draft_binding", (query) => (
       query
@@ -675,6 +732,8 @@ export async function linkAtsCreateAttemptToDraftOffering(
     || offering.atsAttemptId !== undefined
     || offering.atsAssetEvmAddress !== undefined
     || offering.activeDirectoryVersionId !== undefined
+    || (selectedOfferingPublicId !== null
+      && offering.offeringPublicId !== selectedOfferingPublicId)
     || offering.subjectPublicId !== binding.subjectPublicId
     || offering.canonicalSignerAddress !== binding.canonicalSignerAddress
     || offering.principalPublicId !== binding.principalPublicId

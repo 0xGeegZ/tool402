@@ -1811,6 +1811,74 @@ implementedTest("dispatches each signed M38 payload to exactly one closed comman
   }
 });
 
+implementedTest("binds allocated-tool normalization to one exact subject and offering selection", async () => {
+  const suffix = "a".repeat(32);
+  const subjectPublicId = `tool_${suffix}`;
+  const offeringPublicId = `offering_${suffix}`;
+  const selections = [];
+  const resolver = (chainId, signer, selection) => {
+    selections.push({ chainId, signer, selection });
+    if (
+      selection?.subjectPublicId !== subjectPublicId
+      || (selection.offeringPublicId !== undefined && selection.offeringPublicId !== offeringPublicId)
+    ) return [];
+    return [authorityFor(signer, "ISSUER", [subjectPublicId])];
+  };
+
+  const offeringPayload = offeringCreatePayload({ offeringPublicId, subjectPublicId });
+  const offeringCommand = await signedCommand(
+    "offering.create",
+    offeringPayload,
+    "OOOOOOOOOOOOOOOOOOOOOw",
+  );
+  const normalizedOffering = await api.normalizeClaimedWalletCommand(
+    await claimText(transportText(offeringCommand, offeringPayload)),
+    serverNow,
+    resolver,
+  );
+  assert.equal(normalizedOffering?.type, "offering.create");
+  assert.deepEqual(selections[0], {
+    chainId: 296,
+    signer: signingAddress,
+    selection: { subjectPublicId, offeringPublicId },
+  });
+
+  const preparePayload = externalPreparePayload({ subjectPublicId });
+  const prepareCommand = await signedExternalPrepareCommand(
+    preparePayload,
+    "PPPPPPPPPPPPPPPPPPPPPQ",
+  );
+  const normalizedPrepare = await api.normalizeClaimedWalletCommand(
+    await claimText(transportText(prepareCommand, preparePayload)),
+    serverNow,
+    resolver,
+  );
+  assert.equal(normalizedPrepare?.type, "external.prepare");
+  assert.deepEqual(selections[1], {
+    chainId: 296,
+    signer: signingAddress,
+    selection: { subjectPublicId },
+  });
+
+  const swappedPayload = offeringCreatePayload({
+    offeringPublicId: `offering_${"b".repeat(32)}`,
+    subjectPublicId,
+  });
+  const swappedCommand = await signedCommand(
+    "offering.create",
+    swappedPayload,
+    "RRRRRRRRRRRRRRRRRRRRRg",
+  );
+  assert.equal(
+    await api.normalizeClaimedWalletCommand(
+      await claimText(transportText(swappedCommand, swappedPayload)),
+      serverNow,
+      resolver,
+    ),
+    null,
+  );
+});
+
 implementedTest("returns only the required deferred ownership references for subjectless commands", async () => {
   const directoryPayload = directoryPublishPayload();
   const directoryCommand = await signedCommand(

@@ -11,8 +11,10 @@ import {
   normalizeClaimedWalletCommand,
 } from "../src/ingress/authenticated-wallet-command-normalizer.ts";
 import type {
+  ResolveWalletCommandAuthorities,
+} from "../src/ingress/authenticated-wallet-command-normalizer.ts";
+import type {
   CommandAuthorityRecord,
-  ResolveCommandAuthorities,
 } from "../src/ingress/authenticated-external-prepare-normalizer.ts";
 
 const maximumBodyBytes = 65_536;
@@ -39,7 +41,7 @@ type WriteOutcome =
 type IngressSeams = {
   readonly resolveIngressKey: ResolveProtectedIngressKey;
   readonly tryClaimReplay: TryClaimProtectedReplay;
-  readonly resolveCommandAuthorities: ResolveCommandAuthorities;
+  readonly resolveCommandAuthorities: ResolveWalletCommandAuthorities;
   readonly serverNowMilliseconds: () => number;
 };
 type NormalizedCommand = Exclude<
@@ -446,9 +448,9 @@ export async function handleCommandIngress(
       claimIngressReplayReference,
       { replayIdentity },
     ),
-    resolveCommandAuthorities: (chainId, canonicalSignerAddress) => ctx.runQuery(
+    resolveCommandAuthorities: (chainId, canonicalSignerAddress, selection) => ctx.runQuery(
       readCommandAuthoritiesReference,
-      { chainId, canonicalSignerAddress },
+      { chainId, canonicalSignerAddress, ...(selection === undefined ? {} : { selection }) },
     ) as Promise<readonly CommandAuthorityRecord[]>,
     serverNowMilliseconds: () => Date.now(),
   });

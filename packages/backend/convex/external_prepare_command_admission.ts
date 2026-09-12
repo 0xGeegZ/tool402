@@ -8,6 +8,10 @@ import {
   linkAtsCreateAttemptToDraftOffering,
   readAtsCreateReplayOffering,
 } from "./offerings.ts";
+import {
+  isSelectedProviderToolSubject,
+  resolveSelectedProviderToolSubject,
+} from "./provider_tool_authority.ts";
 import type schema from "./schema.ts";
 
 const contextValidators = {
@@ -200,7 +204,22 @@ function revalidateAuthority(input: unknown, command: ReturnType<typeof bindCont
   ) reject();
 }
 
-function revalidateClaim(input: unknown, replayIdentity: string): void {
+async function revalidateSelectedPrepareAuthority(
+  ctx: Parameters<typeof resolveSelectedProviderToolSubject>[0],
+  input: unknown,
+  command: ReturnType<typeof bindContext>,
+) {
+  const selected = await resolveSelectedProviderToolSubject(ctx, input, {
+    subjectPublicId: command.payload.subjectPublicId,
+  });
+  revalidateAuthority(
+    { ...(input as Record<string, unknown>), ownedSubjectPublicIds: [selected.subjectPublicId] },
+    command,
+  );
+  return selected;
+}
+
+function revalidateClaim(input: unknown, replayIdentity: string): GenericId<"externalPrepareCommandAttempts"> | null {
   if (input === null || typeof input !== "object") return reject();
   const outcome = Object.getOwnPropertyDescriptor(input, "outcome")?.value;
   const linked = outcome === "NEW" || outcome === "IDEMPOTENCY_REPLAYED";
@@ -213,6 +232,7 @@ function revalidateClaim(input: unknown, replayIdentity: string): void {
     || (!linked && outcome !== "IDEMPOTENCY_CONFLICT")
     || (linked && !isAttemptId(record.attemptId))
   ) reject();
+  return linked ? record.attemptId as GenericId<"externalPrepareCommandAttempts"> : null;
 }
 
 export const admitExternalPrepareCommand = internalMutation({
@@ -230,7 +250,10 @@ export const admitExternalPrepareCommand = internalMutation({
         query.eq("chainId", bound.chainId).eq("canonicalSignerAddress", bound.canonicalSignerAddress))
       .take(2);
     if (authorities.length !== 1) return reject();
-    revalidateAuthority(authorities[0], bound);
+    const selected = isSelectedProviderToolSubject(bound.payload.subjectPublicId)
+      ? await revalidateSelectedPrepareAuthority(ctx, authorities[0], bound)
+      : null;
+    if (selected === null) revalidateAuthority(authorities[0], bound);
     if (bound.payload.operationKind === "ATS_CREATE") return reject();
     assertCurrentAtsPrepareAuthority(bound.payload);
 
@@ -239,7 +262,11 @@ export const admitExternalPrepareCommand = internalMutation({
       .take(2);
     if (claims.length > 1) return reject();
     if (claims.length === 1) {
-      revalidateClaim(claims[0], replayIdentity);
+      const claimedAttemptId = revalidateClaim(claims[0], replayIdentity);
+      if (selected !== null) {
+        if (claimedAttemptId === null) return reject();
+        readAttempt(await ctx.db.get(claimedAttemptId), bound);
+      }
       return { status: "COMMAND_REPLAYED" as const };
     }
 
@@ -295,7 +322,10 @@ export const admitAtsCreateAndMarkAssetPending = internalMutation({
         query.eq("chainId", bound.chainId).eq("canonicalSignerAddress", bound.canonicalSignerAddress))
       .take(2);
     if (authorities.length !== 1) return reject();
-    revalidateAuthority(authorities[0], bound);
+    const selected = isSelectedProviderToolSubject(bound.payload.subjectPublicId)
+      ? await revalidateSelectedPrepareAuthority(ctx, authorities[0], bound)
+      : null;
+    if (selected === null) revalidateAuthority(authorities[0], bound);
     assertStageBAtsCreateRuntimeBinding(bound);
     assertCurrentAtsPrepareAuthority(bound.payload);
 
@@ -304,7 +334,26 @@ export const admitAtsCreateAndMarkAssetPending = internalMutation({
       .take(2);
     if (claims.length > 1) return reject();
     if (claims.length === 1) {
-      revalidateClaim(claims[0], replayIdentity);
+      const claimedAttemptId = revalidateClaim(claims[0], replayIdentity);
+      if (selected !== null) {
+        if (claimedAttemptId === null) return reject();
+        const stored = readAttempt(await ctx.db.get(claimedAttemptId), bound);
+        const offeringRows = await ctx.db.query("offerings")
+          .withIndex("by_ats_attempt_id", (query) => query.eq("atsAttemptId", stored.attemptId))
+          .take(2);
+        const offering = offeringRows.length === 1
+          ? readAtsCreateReplayOffering(offeringRows[0])
+          : null;
+        if (
+          offering === null
+          || offering.atsAttemptId !== stored.attemptId
+          || offering.subjectPublicId !== selected.subjectPublicId
+          || offering.offeringPublicId !== selected.offeringPublicId
+          || offering.canonicalSignerAddress !== bound.canonicalSignerAddress
+          || offering.principalPublicId !== bound.principalPublicId
+          || offering.authorityVersion !== bound.authorityVersion
+        ) return reject();
+      }
       return { status: "COMMAND_REPLAYED" as const };
     }
 
@@ -359,6 +408,7 @@ export const admitAtsCreateAndMarkAssetPending = internalMutation({
       || offering.atsAttemptId !== stored.attemptId
       || offering.state !== "ASSET_PENDING"
       || offering.subjectPublicId !== bound.payload.subjectPublicId
+      || (selected !== null && offering.offeringPublicId !== selected.offeringPublicId)
       || offering.canonicalSignerAddress !== bound.canonicalSignerAddress
       || offering.principalPublicId !== bound.principalPublicId
       || offering.authorityVersion !== bound.authorityVersion

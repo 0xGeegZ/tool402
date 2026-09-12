@@ -386,6 +386,85 @@ test("requires the three declared M41 command-ingress source modules", () => {
   }
 });
 
+implementedTest("projects only the exact allocated subject into command normalization authority", async () => {
+  const { readCommandAuthorities } = await import(replayUrl);
+  const suffix = "a".repeat(32);
+  const subjectPublicId = `tool_${suffix}`;
+  const offeringPublicId = `offering_${suffix}`;
+  const currentAuthority = authorityFor("offering.create", {
+    ...offeringCreatePayload(),
+    subjectPublicId: "riskscan_revenue_note_demo",
+  });
+  currentAuthority.ownedSubjectPublicIds = ["riskscan_revenue_note_demo"];
+  const providerTool = {
+    _id: "providerTools:A",
+    _creationTime: 1,
+    toolPublicId: subjectPublicId,
+    subjectPublicId,
+    offeringPublicId,
+    serviceId: subjectPublicId,
+    serviceSlug: `tool-${suffix}`,
+    canonicalSignerAddress,
+    chainId: 296,
+    principalPublicId: currentAuthority.principalPublicId,
+    authorityVersion: currentAuthority.authorityVersion,
+    requestId: "00000000-0000-4000-8000-000000000000",
+    offeringVersion: 1,
+    directoryVersion: 1,
+    createdAt: 1n,
+  };
+  const rows = { commandAuthorities: [currentAuthority], providerTools: [providerTool] };
+  const reads = [];
+  const ctx = {
+    db: {
+      query(table) {
+        return {
+          withIndex(index, select) {
+            const filters = [];
+            const range = { eq(field, value) { filters.push([field, value]); return range; } };
+            select(range);
+            return {
+              async take(limit) {
+                assert.equal(limit, 2);
+                reads.push({ table, index, filters });
+                return rows[table].filter((row) => filters.every(([field, value]) => row[field] === value));
+              },
+            };
+          },
+        };
+      },
+    },
+  };
+
+  assert.deepEqual(
+    await readCommandAuthorities._handler(ctx, {
+      chainId: 296,
+      canonicalSignerAddress,
+      selection: { subjectPublicId, offeringPublicId },
+    }),
+    [{ ...currentAuthority, ownedSubjectPublicIds: [subjectPublicId] }],
+  );
+  assert.deepEqual(reads.map(({ table, index }) => ({ table, index })), [
+    { table: "commandAuthorities", index: "by_chain_id_and_canonical_signer_address" },
+    { table: "providerTools", index: "by_tool_public_id" },
+  ]);
+
+  assert.deepEqual(
+    await readCommandAuthorities._handler(ctx, {
+      chainId: 296,
+      canonicalSignerAddress,
+      selection: { subjectPublicId, offeringPublicId: `offering_${"b".repeat(32)}` },
+    }),
+    [],
+    "swapped allocated identity must not normalize",
+  );
+  assert.deepEqual(
+    await readCommandAuthorities._handler(ctx, { chainId: 296, canonicalSignerAddress }),
+    [currentAuthority],
+    "legacy authority projection must remain byte-compatible",
+  );
+});
+
 implementedTest("exports the closed command-dispatch surface and keeps the direct-test entrypoint out of the HTTP router", async () => {
   const [dispatch, http] = await Promise.all([import(dispatchUrl), import(httpUrl)]);
   assert.deepEqual(Object.keys(dispatch).sort(), [
