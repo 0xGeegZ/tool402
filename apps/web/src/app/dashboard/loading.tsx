@@ -1,25 +1,23 @@
-import { BrandRouteLoader } from "../../components/ui/brand-route-loader";
 import { Skeleton } from "../../components/ui/skeleton";
 
 export default function Loading() {
   return (
     <main className="space-y-8 pb-6 sm:pb-12">
-      <BrandRouteLoader />
-      <div data-skeleton-region="heading" className="h-12 w-2/3 max-w-2xl">
+      <div data-skeleton-region="heading" className="h-12 w-full">
         <Skeleton />
       </div>
       <div
         data-skeleton-region="guest-context"
-        className="h-24 w-full max-w-2xl"
+        className="h-24 w-full"
       >
         <Skeleton />
       </div>
-      <div data-skeleton-region="overview" className="h-40 w-full max-w-2xl">
+      <div data-skeleton-region="overview" className="h-40 w-full">
         <Skeleton />
       </div>
       <div
         data-skeleton-region="navigation"
-        className="h-24 w-full max-w-2xl"
+        className="h-24 w-full"
       >
         <Skeleton />
       </div>
