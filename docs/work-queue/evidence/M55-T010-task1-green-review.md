@@ -46,6 +46,29 @@ Origin gate. It reproduced an authenticated same-origin GET without `Origin`
 as one session read and one forward, and confirmed an explicit foreign Origin
 rejects before session work. No P0/P1/P2 findings remain for Task 1 Green.
 
+## Final Task 1 remediation
+
+Implementation commit `c0caf21de8a01bc3c31d4b239e2b7d6ff50c2439` tightens the
+owner-read projection so a linked offering must match the allocated tool's
+offering ID/version, subject, canonical signer, principal, and authority
+version. A differing linked context fails closed and never becomes an
+`ALLOCATED` projection; `ALLOCATED` remains reserved for an absent matching
+offering. The dashboard GET parser now permits only no query, one `cursor`, or
+one `tool` selector before any dashboard-session read or protected forward.
+
+Under Node 22.21.1 at that implementation commit:
+
+- the focused Core, provider-tool, provider-session ingress, M41 route, and
+  provider-tools API contracts passed 46/46;
+- `npm test`, `npm run typecheck`, `npm run lint`, `npm run queue:check`, and
+  `git diff --check origin/main...HEAD` passed;
+- `npm run build` passed on exact `origin/main`
+  `98cdbe29c59c44cc3145ddbef3615b985dfad45b` and the implementation commit.
+
+POST retains its existing exact `{requestId}` JSON body. The Task 1 contract
+closes the body fields and byte limit but does not define a separate
+Content-Type rejection rule, so this remediation adds none.
+
 ## Remaining gate
 
 M55 remains `20-active`. Tasks 2–6 still require their own documented scoped
