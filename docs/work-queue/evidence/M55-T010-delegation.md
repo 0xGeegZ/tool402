@@ -9,7 +9,7 @@ their deployed records. This is not a reset or user-facing “demo attempt”.
 Read, in order:
 
 1. Root AGENTS.md and committed [STATE](../STATE.md).
-2. [M55 card](../queue/00-inbox/M55-T010-provider-demo-attempt-restart.md).
+2. [M55 card](../queue/10-ready/M55-T010-provider-demo-attempt-restart.md).
 3. [M55 behavioral specification](../../specs/m55-provider-demo-attempt-restart.md).
 4. [Implementation plan](../../superpowers/plans/2026-09-12-m55-deploy-another-tool.md).
 
@@ -21,8 +21,8 @@ repeat already settled product choices.
 
 Prepared from source head `4d1e27fcf9cfe2b3fd2f4a5010f3fbb738187037`,
 with refreshed main `5e863970935b074060b88d62a519102f2edfb9af`.
-Existing draft: repository PR #97,
-branch `feat/issue-93-provider-demo-attempts`.
+The documentation PR #97 is merged into `main`. M55 source implementation
+starts from current `main` in a new draft PR.
 The legacy branch/spec filenames are retained; their wording does not override
 the refined new-tool contract. Obtain current SHAs from Git/GitHub when starting.
 
@@ -32,8 +32,9 @@ dashboard auth/cookies, root environment loading, and status/action copy.
 Do not drop those changes, reapply them blindly, or present them as M55
 multi-tool implementation. At this snapshot the new-tool feature is absent.
 
-This handoff/refinement changes documentation only. M55 stays `00-inbox`;
-specification completion is not source activation or implementation completion.
+This handoff/refinement changes documentation only. M55 is `10-ready` solely
+for Task 1's allocation/owner-read candidate reservation; specification
+completion is not source activation or implementation completion.
 
 The [refinement review](M55-T010-refinement-review.md) records the two
 independent reviews and documentation checks. Its final verdict is ready for
@@ -116,7 +117,7 @@ check must never be reported as this completed scenario.
 
 ## Copyable delegation request
 
-> Implement M55 in the existing PR #97 from its current head. Start with
+> Implement M55 in a new draft PR from current `main`. Start with
 > docs/work-queue/evidence/M55-T010-delegation.md, then its specification and
 > plan. The requirement is to deploy another independent tool with the same
 > provider and optionally identical prefilled information, preserving every

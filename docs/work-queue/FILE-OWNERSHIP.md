@@ -1581,17 +1581,19 @@ M50 does not own or amend
 `wallet-state.ts`, deploy-stage signing, command/relay code, configuration,
 packages, lockfiles, or any live path.
 
-M55-T010 is a root-owned `00-inbox` CORE_P0 new-provider-tool refinement.
+M55-T010 is a root-owned `10-ready` CORE_P0 new-provider-tool refinement for
+Task 1 only.
 Its documentation scope is its card, `docs/specs/m55-provider-demo-attempt-restart.md`,
 `docs/superpowers/plans/2026-09-12-m55-deploy-another-tool.md`,
-`docs/work-queue/evidence/M55-T010-delegation.md`, the product overview's M55
-amendment, root queue/control records, and independent refinement review.
+`docs/work-queue/evidence/M55-T010-delegation.md`, its Task 1 readiness
+reviews, the product overview's M55 amendment, root queue/control records, and
+independent refinement review.
 The retained filenames do not preserve the superseded demo-attempt UX.
 The allocator design is selected in the spec; source readiness is not granted.
-The plan's candidate paths confer no ownership. M51/M53/M54/S26/S36/S42/B04
-reservations remain unchanged until root records release or exact scoped
-transfer/co-review, followed by independent readiness, activation, and RED
-acceptance. No source/test, authority provisioning, environment mutation,
+The Tasks 2–6 plan candidate paths confer no ownership. M51/M53/M54/S26/S36/
+S42/B04 reservations remain unchanged until root records release or exact
+scoped transfer/co-review, followed by independent readiness, activation, and
+RED acceptance. No source/test, authority provisioning, environment mutation,
 wallet, signature, transaction, deployment, or live-evidence action is active.
 
 S43-T010 reserves only its specification/card and root control during intake.
@@ -1663,7 +1665,6 @@ The owner refinement at `6532a880` additionally reserves
 `apps/web/public/brand/dashboard-empty-mascot.png` and only the empty-state
 illustration region in `apps/web/src/components/dashboard/dashboard-campaign.tsx`;
 it does not reserve or change the component's session or ownership logic.
-
 S46-T010 owns only the demo control-room surface: the `/demo` page, the
 components under apps/web/src/components/demo, the demo-only HashScan-link
 utility, its focused tests and the matching submission rehearsal runbook. It
@@ -1678,3 +1679,21 @@ apps/web/tests/dashboard-auth.test.mjs assertions. It may carry only a known
 demoStep to the existing internal dashboard destination and must not alter the
 challenge, verifier, cookie, wallet, account, chain, signature, session, or
 authorization decision.
+
+M55-T010 Task 1 is the sole `10-ready` slice at this control head. Its exact
+candidate paths are
+`packages/core/src/provider-tool-identity.ts`,
+`packages/core/test/provider-tool-identity.test.mjs`,
+`packages/core/src/index.ts`, `packages/backend/convex/provider_tools.ts`,
+`packages/backend/convex/provider_session_ingress.ts`, Backend `schema.ts` and
+`http.ts`, `packages/backend/tests/provider-tools.test.mjs`,
+`packages/backend/tests/provider-session-ingress.test.mjs`,
+`apps/web/src/lib/provider-tools-server.ts`,
+`apps/web/src/app/api/provider/tools/route.ts`, and
+`apps/web/tests/provider-tools-api.test.mjs`.
+They create no offering, campaign, ATS candidate, receipt, Directory record,
+or authority. They are now the sole M55 `10-ready` reservation and no source
+or test change is active until root RED activation. Tasks 2–6 remain blocked
+by M51/M53/M54/S26/S36/S42/B04 as mapped in
+`docs/work-queue/evidence/M55-T010-task1-readiness-review.md`; no active
+predecessor path is transferred by this candidate record.
