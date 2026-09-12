@@ -11,9 +11,10 @@ function readAppFile(path) {
 }
 
 test("defines the Provider command center: one dynamic hero, scannable data regions, and a technical disclosure", async () => {
-  const [page, status] = await Promise.all([
+  const [page, status, technicalRecordControl] = await Promise.all([
     readAppFile("src/app/provider/page.tsx"),
     readAppFile("src/components/provider/status/provider-status.tsx"),
+    readAppFile("src/components/provider/status/provider-technical-record-control.tsx"),
   ]);
   const presentation = `${page}\n${status}`;
 
@@ -47,6 +48,9 @@ test("defines the Provider command center: one dynamic hero, scannable data regi
   assert.match(status, /href=\{nextAction\.href\}/);
   assert.match(status, /href=["']\/explore\/riskscan["']/);
   assert.match(status, /src=["']\/brand\/provider-campaign-duo\.png["']/);
+  assert.match(status, /<Icon kind="offline" \/>Not live/);
+  assert.match(status, /<Badge variant="outline" className="[^"]*border-destructive-foreground\/50[^"]*"><Icon kind="offline" \/>Not live<\/Badge>/);
+  assert.doesNotMatch(status, /<Icon kind="document" \/>Not live/);
   assert.match(status, /id=["']provider-evidence["']/);
   assert.doesNotMatch(status, /<table\b|min-w-\[/);
   for (const heading of ["Activity &amp; proof", "Campaign snapshot", "Economics", "Capacity", "Governance", "Trust details", "Technical record", "Active terms", "Active directory"]) {
@@ -56,6 +60,12 @@ test("defines the Provider command center: one dynamic hero, scannable data regi
   assert.match(status, /from ["']\.\.\/\.\.\/\.\.\/lib\/hbar-format["']/);
   assert.match(status, /<Status tone="warning">/);
   assert.match(status, /focus-visible:outline/);
+  assert.match(technicalRecordControl, /^["']use client["'];/);
+  assert.match(technicalRecordControl, /document\.getElementById\("technical-record"\)/);
+  assert.match(technicalRecordControl, /instanceof HTMLDetailsElement/);
+  assert.match(technicalRecordControl, /details\.open = true/);
+  assert.match(technicalRecordControl, /details\.scrollIntoView\(\{ block: "start" \}\)/);
+  assert.doesNotMatch(technicalRecordControl, /useState|useEffect|fetch\(|localStorage|sessionStorage/);
 
   assert.doesNotMatch(presentation, /funding (?:modeled|raised)|position parts|paid tasks|usage revenue|account balance|portfolio|notifications/i);
   assert.doesNotMatch(presentation, /\b(?:live|published|active) offering\b/i);

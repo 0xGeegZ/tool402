@@ -311,7 +311,7 @@ implementedTest("presents unavailable provider data as an actionable workspace w
   assert.doesNotMatch(status, /funding raised|units issued|paid task|balance|Live testnet|Connected/i);
 });
 
-implementedTest("renders the S43 command center from the admitted campaign projection without new runtime authority", async () => {
+implementedTest("renders the S44 command center from the admitted campaign projection without new runtime authority", async () => {
   const sources = await readSources();
   const page = sources["src/app/provider/page.tsx"];
   const status = sources["src/components/provider/status/provider-status.tsx"];

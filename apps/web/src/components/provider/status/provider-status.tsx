@@ -8,9 +8,10 @@ import { Status } from "../../ui/status";
 import type { OfferingRecord, ProviderProjections } from "../../../lib/offering-projection";
 import { formatHbar, formatShare } from "../../../lib/hbar-format";
 import { hashscanContractUrl, nextProviderAction, providerCampaignPresentation, providerEvidenceRows } from "./provider-status-state";
+import { ProviderTechnicalRecordControl } from "./provider-technical-record-control";
 
 type Projection = ProviderProjections["offering"] | ProviderProjections["directory"];
-type IconKind = "coins" | "target" | "capacity" | "calendar" | "shield" | "document";
+type IconKind = "coins" | "target" | "capacity" | "calendar" | "shield" | "document" | "offline";
 
 const outcomeSentences = {
   not_configured: "No campaign backend is configured for this host.",
@@ -46,6 +47,7 @@ function Icon({ kind }: { kind: IconKind }) {
   if (kind === "capacity") return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={common}><path d="m12 3 7.5 4.25v9.5L12 21l-7.5-4.25v-9.5z" /><path d="m4.5 7.25 7.5 4.3 7.5-4.3M12 11.55V21" /></svg>;
   if (kind === "calendar") return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={common}><rect x="4" y="5.5" width="16" height="15" rx="2" /><path d="M8 3v5M16 3v5M4 10h16" strokeLinecap="round" /></svg>;
   if (kind === "shield") return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={common}><path d="M12 3 19 6v5c0 4.6-2.8 8.1-7 10-4.2-1.9-7-5.4-7-10V6z" /><path d="m9 12 2 2 4-4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+  if (kind === "offline") return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={common}><circle cx="12" cy="12" r="8" /><rect x="9" y="9" width="6" height="6" rx="1" /><path d="m5.7 5.7 12.6 12.6" strokeLinecap="round" /></svg>;
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={common}><path d="M6 3.5h8l4 4v13H6z" /><path d="M14 3.5v4h4M9 12h6M9 15.5h6" strokeLinecap="round" /></svg>;
 }
 
@@ -97,7 +99,7 @@ function LoadedRegions({ offering, directoryOutcome }: { offering: OfferingRecor
           <div className="py-2 sm:py-4">
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-brand-green/25 bg-brand-green/10 px-3 text-xs font-medium text-brand-green"><span aria-hidden="true" className="flex size-4 items-center justify-center rounded-full bg-brand-green text-[10px] font-bold text-white">H</span>Hedera testnet preview</span>
-              <Badge variant="outline" className="min-h-8 gap-2 bg-card px-3"><Icon kind="document" />Not live</Badge>
+              <Badge variant="outline" className="min-h-8 gap-2 border-destructive-foreground/50 bg-card px-3"><Icon kind="offline" />Not live</Badge>
               <Badge variant="outline" className="min-h-8 bg-card px-3">{offering.state}</Badge>
             </div>
             <h1 id="provider-campaign-title" className="mt-6 max-w-[43rem] text-5xl font-extrabold leading-[0.96] tracking-[-0.055em] sm:text-6xl lg:text-[4.85rem]">{presentation.heroTitle}</h1>
@@ -123,7 +125,7 @@ function LoadedRegions({ offering, directoryOutcome }: { offering: OfferingRecor
 
         <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
           <section data-ui="provider-activity-timeline" aria-labelledby="provider-evidence" className={`${cardClass} p-5 sm:p-6`}>
-            <div className="flex items-center justify-between gap-4"><h2 id="provider-evidence" className={headingClass}>Activity &amp; proof <span className="sr-only">Deployment evidence</span></h2><a href="#technical-record" className={buttonVariants({ variant: "outline", size: "sm", shape: "pill", className: focusRing })}>View all activity</a></div>
+            <div className="flex items-center justify-between gap-4"><h2 id="provider-evidence" className={headingClass}>Activity &amp; proof <span className="sr-only">Deployment evidence</span></h2><ProviderTechnicalRecordControl label="View all activity" className={buttonVariants({ variant: "outline", size: "sm", shape: "pill", className: focusRing })} /></div>
             <ol className="mt-6 space-y-0">
               {rows.map((row, index) => <li key={row[0]} className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-[8rem_1.25rem_minmax(0,1fr)] sm:gap-4">
                 <time className="text-xs leading-5 text-muted-foreground sm:pt-0.5">{formatEvidenceTime(row[3])}</time>
@@ -141,7 +143,7 @@ function LoadedRegions({ offering, directoryOutcome }: { offering: OfferingRecor
               <div className="flex items-center gap-4 rounded-card bg-secondary/55 p-4"><IconTile kind="capacity" /><dl className="flex flex-col-reverse"><dt className="text-sm text-muted-foreground">max units</dt><dd className="text-2xl font-extrabold tracking-tight">{terms.maximumNoteUnits}</dd></dl></div>
               <div className="flex items-center gap-4 rounded-card bg-secondary/55 p-4"><IconTile kind="calendar" /><dl className="flex flex-col-reverse"><dt className="text-sm text-muted-foreground">maturity</dt><dd className="text-xl font-extrabold tracking-tight">{formatMaturity(offering.definition.maturityAt)}</dd></dl></div>
             </div>
-            <div className="mt-auto grid gap-3 pt-5 sm:grid-cols-2"><Link className={buttonVariants({ shape: "pill", className: focusRing })} href="/explore/riskscan">Explore RiskScan <span aria-hidden="true" className="ml-2">→</span></Link><a className={buttonVariants({ variant: "outline", shape: "pill", className: focusRing })} href="#technical-record">View technical record</a></div>
+            <div className="mt-auto grid gap-3 pt-5 sm:grid-cols-2"><Link className={buttonVariants({ shape: "pill", className: focusRing })} href="/explore/riskscan">Explore RiskScan <span aria-hidden="true" className="ml-2">→</span></Link><ProviderTechnicalRecordControl label="View technical record" className={buttonVariants({ variant: "outline", shape: "pill", className: focusRing })} /></div>
           </section>
         </div>
 
