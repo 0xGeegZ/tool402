@@ -24,11 +24,12 @@ an authority record, `external.attachCandidate`, token action, refund, payout,
 or another project route. A returned transaction hash is shown only as
 `payment_submitted` with allocation pending.
 
-## RED activation
+## GREEN scope
 
-M56 may amend only its focused executable contract: the new projection and
-presentation tests plus the three existing backing/detail contract tests. All
-production source remains prohibited until the expected RED result is accepted.
+The RED contract is accepted. M56 owns only the exact source and test paths
+listed in its specification for minimal GREEN. The existing offering reader,
+wallet session, SignatureDialog, relay, and command admission remain shared and
+must not be modified.
 
 ## Shared boundaries
 

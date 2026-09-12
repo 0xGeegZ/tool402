@@ -20,6 +20,12 @@
   transfer, deployment, and live proof remain prohibited until the RED result
   is accepted.
 
+- M56_RISKSCAN_BACKING_DEMO_MVP_RED_ACCEPTANCE: The focused executable contract
+  at `74521d0c` records eleven intended absence failures and eight unchanged
+  passes against the exact implementation-free commit archive. M56 may now
+  amend only the source and test paths in its specification for minimal GREEN;
+  every shared and human runtime boundary remains unchanged.
+
 - S43_FOOTER_POSITIONING_ACCEPTANCE: Source `f248368f` is accepted at 60-done.
   The mascot is grouped with the Tool402 logo in the first footer column;
   asset, decorative accessibility, breakpoint, links, copy and routes remain

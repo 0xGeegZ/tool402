@@ -8,6 +8,7 @@ import type {
 import { Badge } from "../../ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
 import { PageHeader } from "../../ui/page-header";
+import type { BackingProjection } from "../../backing/backing-state";
 
 const requestFields = [
   ["requestRef", "A nonblank reference for the assessment."],
@@ -57,7 +58,7 @@ function FieldGroup({
   );
 }
 
-export function RiskScanDetail() {
+export function RiskScanDetail({ projection }: { projection: BackingProjection | null }) {
   return (
     <article className="space-y-10">
       <div className="space-y-5">
@@ -138,6 +139,15 @@ export function RiskScanDetail() {
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-28">
+          {projection !== null ? <Card className="rounded-panel border-brand-purple/30">
+            <CardHeader className="space-y-2">
+              <CardTitle>Back this tool</CardTitle>
+              <CardDescription>Choose note units and send HBAR on Hedera Testnet. Allocation is separate.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/explore/riskscan/back" className="text-sm font-medium text-primary underline-offset-4 hover:underline">Back this tool</Link>
+            </CardContent>
+          </Card> : null}
           <Card className="rounded-panel">
             <CardHeader className="space-y-2">
               <CardTitle>Current boundary</CardTitle>

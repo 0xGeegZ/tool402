@@ -746,12 +746,16 @@ separately accepted runtime boundary supplies an OPEN offering and explicit
 funding treasury. Its acceptance provisions neither an enabled `BACKER`
 authority nor an M40 treasury field.
 
-M56-T010 owns its active card and specification plus only its focused RED test
-contract. Production source is prohibited pending RED acceptance. The existing
-offering reader, dashboard campaign identity, wallet session, SignatureDialog,
-relay, command admission, treasury configuration, BACKER authority, wallet
-action, transaction, deployment, and live proof remain outside this activation
-scope.
+M56-T010 owns its active card and specification; new
+`apps/web/src/lib/riskscan-backing-projection.ts` and
+`apps/web/tests/riskscan-backing-projection.test.mjs`; and the exact backing
+route, backing flow/state/presentation/step rail, RiskScan detail page/component,
+and focused backing/presentation/detail tests named in its specification. It may consume, but must not
+modify, the existing offering reader, dashboard campaign identity, wallet
+session, SignatureDialog, relay, or command admission. The only runtime input
+is the server-owned `TOOL402_FUNDING_EVM_ADDRESS`; its value, BACKER authority
+provisioning, wallet action, transaction, deployment, and live proof remain
+outside this source scope.
 
 M44-T010's independently reviewed RED contract is accepted at `c5d2bf3`.
 Before any remaining M44 source, the root-owned next step may amend only
