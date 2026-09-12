@@ -917,6 +917,14 @@ No secrets, account keys, or private evidence belong in this file.
   it adds no second session, automatic discovery, account request, chain
   switch, signature, authority, transaction, deployment, or live behavior.
 
+- S45_DEMO_CONTROL_ROOM_ACTIVATION: The repository owner directly authorizes
+  PR #109 to turn the existing demo route and tour presentation into a
+  recording control room. The root owns only its declared demo presentation,
+  safe command-copy, pure explorer-link, focused-test, runbook, and queue
+  paths. It may not alter wallet, M55, M56, ATS, World, Agent, API, backend,
+  configuration, transaction, deployment, or proof semantics. Missing evidence
+  must render as required, optional, or unavailable rather than green.
+
 - S38_WALLET_SESSION_PRESERVATION_AMENDMENT: 2026-09-11. The repository owner
   directs successful sign-in to use the fixed internal App Router dashboard
   transition instead of a full-document reload, preserving the mounted shared
