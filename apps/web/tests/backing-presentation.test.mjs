@@ -131,6 +131,7 @@ test("lists what happens next only under the payment_submitted kind", async () =
   assert.match(flow, /Mirror Node records the transfer\. The request moves to allocation_pending\./);
   assert.match(flow, /The issuer signs the allocation\. Units are issued to the connected address\./);
   assert.equal((flow.match(/<ol\b/g) ?? []).length, 1);
+  assert.equal((flow.match(/<li\b/g) ?? []).length, 2);
 });
 
 test("carries none of the excluded literals in the presentation slice", async () => {
