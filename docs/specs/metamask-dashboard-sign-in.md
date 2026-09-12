@@ -144,10 +144,17 @@ mobile main menus only when it is valid. It must be wrapped in the existing
 root-header `Suspense` boundary so Cache Components do not make the root shell
 dynamic; its fallback is the existing public menu without that link. This
 does not reuse wallet connection state, alter the S26 wallet/header contract,
-or expose an identity in the navigation. `POST /api/auth/logout` clears both cookie
-names and returns `204` with `Cache-Control: no-store`. It provides a bounded
-server logout boundary only; this slice intentionally adds no header or
-dashboard logout control because that belongs with the later S26 header work.
+or expose an identity in the navigation. `POST /api/auth/logout` clears both
+cookie names and returns `204` with `Cache-Control: no-store`. A root-mounted
+client synchronizer consumes only the accepted shared wallet state. After it
+has observed one settled wallet identity (`connected` or `not_issuer`), a later
+`disconnected` state sends exactly one same-origin logout request. On success
+it replaces the current route with `/sign-in` and refreshes the App Router so
+the server session and authenticated navigation disappear together. Initial
+disconnected state, connect rejection, connecting, wrong-chain, and ordinary
+renders do not log out the dashboard. The synchronizer neither reads the
+`HttpOnly` cookie nor trusts an event payload; M50 remains responsible for
+passively deriving the settled wallet state from the selected provider.
 
 The dashboard title changes from `Guest dashboard` to `Dashboard` and keeps
 the existing factual local-journey copy. This change reflects the route guard
@@ -161,7 +168,8 @@ without inventing account-specific data or a claim of account authority.
 | no MetaMask, several MetaMask providers, declined account, or wrong chain | existing UI-S15 state and retry/switch controls; no auth request |
 | declined/invalid `personal_sign`, challenge failure, invalid cookie, expired value, wrong origin, or invalid session | generic `rejected` outcome or `/sign-in` redirect; no internal detail |
 | one successful signature | exactly one signed eight-hour session cookie and one navigation to `/dashboard` |
-| session expiration or signature tampering | redirect before dashboard content, clear invalid cookies only through an explicit logout or next successful verification |
+| session expiration or signature tampering | redirect before dashboard content, clear invalid cookies only through logout or next successful verification |
+| MetaMask removes the selected account after a settled wallet identity | one same-origin logout request, then replace with `/sign-in` and refresh after success |
 
 No automatic retry, provider discovery on render, storage API, timer,
 analytics, console logging, external fetch, payment, transaction, command
@@ -173,7 +181,8 @@ Preview origin derivation is allowed.
 The durable RED contract must cover configuration fail-closed behavior,
 canonical message construction, expiration, HMAC tampering, exact body and
 origin validation, invalid signature rejection, session verification, cookie
-attributes, dashboard layout guard, and the client method/endpoint boundary.
+attributes, dashboard layout guard, the client method/endpoint boundary, and
+one-shot dashboard logout after a settled wallet identity becomes disconnected.
 It must use injected clock, random-byte, and signature-verifier seams; no test
 may invoke a real wallet, account, or signature.
 

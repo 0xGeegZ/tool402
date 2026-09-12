@@ -1212,6 +1212,18 @@ rehydrate wallet data, read a wallet, discover a provider, alter the server
 cookie guard, or add any wallet, account, signature, transaction, deployment,
 or live authority.
 
+User-directed S40 MetaMask sign-out synchronization amendment: the root
+additionally reserves new
+`apps/web/src/components/auth/dashboard-session-sync.tsx`, new
+`apps/web/tests/dashboard-session-sync.test.mjs`, and only the synchronizer
+import/mount in `apps/web/src/app/layout.tsx`. The component may consume the
+accepted shared wallet state, remember that one settled identity was observed,
+and on a later `disconnected` state call only same-origin
+`POST /api/auth/logout`. A successful response may replace the current route
+with `/sign-in` and refresh the App Router. It may not read cookies, inspect or
+trust native event payloads, discover/request an account, retry, store data,
+sign, relay, transact, deploy, or change S26/M50 source or tests.
+
 S41-T010 is an `00-inbox` CORE_P0 follow-up with no active source or test
 reservation. S40 acceptance is an explicit activation gate while the card is
 still speculative. After that gate and its own independent readiness/activation
