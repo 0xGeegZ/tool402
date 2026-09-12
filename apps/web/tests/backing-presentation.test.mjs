@@ -106,8 +106,10 @@ test("reads the amount out through the accepted payment helpers", async () => {
   const flow = await readAppFile(flowPath);
 
   assert.match(flow, /\bpaymentTinybars\b[^\n]*from "\.\/backing-state"|paymentTinybars,/);
-  assert.match(flow, /\$\{formatHbar\(paymentTinybars\(offering, readoutUnits\)\)\} for \$\{readoutUnits\} note units/);
-  assert.match(flow, /readoutUnits === null \? "—"/);
+  assert.match(flow, /const readoutTinybars = committed !== null \? committed\.tinybars : validation\.ok \? paymentTinybars\(offering, validation\.units\) : null;/);
+  assert.match(flow, /\$\{formatHbar\(readoutTinybars\)\} for \$\{readoutUnits\} note units/);
+  assert.equal((flow.match(/formatHbar\(readoutTinybars\)/g) ?? []).length, 1);
+  assert.match(flow, /readoutTinybars === null \? "—"/);
   assert.match(flow, /<CardTitle>Choose amount<\/CardTitle>/);
 });
 

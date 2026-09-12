@@ -76,6 +76,7 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
   const locked = view.kind !== "choosing" || request !== null;
   const canPrepare = validation.ok && acknowledged && session !== null && !locked;
   const readoutUnits = committed !== null ? committed.units : validation.ok ? validation.units : null;
+  const readoutTinybars = committed !== null ? committed.tinybars : validation.ok ? paymentTinybars(offering, validation.units) : null;
 
   function prepare() {
     if (!validation.ok || !canPrepare) return;
@@ -182,7 +183,7 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
             </label>
             <p id="backing-units-message" className="mt-2 text-sm text-muted-foreground">{validation.ok ? "Whole units within the offering bounds." : validation.message}</p>
           </div>
-          <p className="text-base font-medium">{readoutUnits === null ? "—" : `${formatHbar(paymentTinybars(offering, readoutUnits))} for ${readoutUnits} note units`}</p>
+          <p className="text-base font-medium">{readoutTinybars === null ? "—" : `${formatHbar(readoutTinybars)} for ${readoutUnits} note units`}</p>
           <label className="flex items-start gap-3 text-sm">
             <input name="acknowledgement" type="checkbox" checked={acknowledged} disabled={locked} onChange={(event: ChangeEvent<HTMLInputElement>) => setAcknowledged(event.target.checked)} className="mt-1" />
             <span>I understand this is a testnet experiment with no real funds, that units are allocated only after the issuer signs, and that the payout cap is {formatHbar(offering.terms.payoutCapTinybars)}.</span>
