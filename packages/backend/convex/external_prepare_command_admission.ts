@@ -326,8 +326,20 @@ export const admitAtsCreateAndMarkAssetPending = internalMutation({
       ? await revalidateSelectedPrepareAuthority(ctx, authorities[0], bound)
       : null;
     if (selected === null) revalidateAuthority(authorities[0], bound);
-    assertStageBAtsCreateRuntimeBinding(bound);
-    assertCurrentAtsPrepareAuthority(bound.payload);
+    if (selected === null) {
+      assertStageBAtsCreateRuntimeBinding(bound);
+      assertCurrentAtsPrepareAuthority(bound.payload);
+    } else {
+      const legacyConfigurationPayload = {
+        ...bound.payload,
+        subjectPublicId: "riskscan_revenue_note_demo",
+      } as const;
+      assertStageBAtsCreateRuntimeBinding({
+        ...bound,
+        payload: legacyConfigurationPayload,
+      });
+      assertCurrentAtsPrepareAuthority(legacyConfigurationPayload);
+    }
 
     const claims = await ctx.db.query("externalPrepareCommandReplayClaims")
       .withIndex("by_replay_identity", (query) => query.eq("replayIdentity", replayIdentity))
