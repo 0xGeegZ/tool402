@@ -76,9 +76,11 @@ transaction, deployment, or external write is authorized.
 ## Dynamic dashboard amendment
 
 The repository owner directs this follow-up after the durable campaign reader
-landed. The focused `dashboard-campaign.test.mjs` may define the page-level
-contract that `/dashboard` does not import or render `WorkspaceShell` and
-describes the signed campaign surface. After that RED contract is observed,
-only `apps/web/src/app/dashboard/page.tsx` may remove that import and mount.
+landed. The focused `dashboard-campaign.test.mjs`, its matching page assertions
+in `dashboard-workspace-reconciliation.test.mjs`, and the page-independent
+legacy assertions in `workspace-shell.test.mjs` may define the contract that
+`/dashboard` does not import or render `WorkspaceShell` and describes the
+signed campaign surface. After that RED contract is observed, only
+`apps/web/src/app/dashboard/page.tsx` may remove that import and mount.
 No workspace component, child route, session/auth protocol, projection reader,
 wallet action, or external authority may change.

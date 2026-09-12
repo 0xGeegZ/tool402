@@ -41,11 +41,13 @@
 - S42_DYNAMIC_DASHBOARD_AMENDMENT: The repository owner directs the dashboard
   home to stop mounting its historical Guest workspace now that S42 renders
   the durable signer-owned campaign. The exact TDD scope is the S42 card and
-  specification, `apps/web/tests/dashboard-campaign.test.mjs`, and then only
-  `apps/web/src/app/dashboard/page.tsx` after its expected RED assertion. The
-  legacy workspace components and child routes remain untouched. No session,
-  projection reader, wallet, signature, command, relay, transaction,
-  deployment, or external authority changes.
+  specification, `apps/web/tests/dashboard-campaign.test.mjs`, and the
+  matching page assertions in `apps/web/tests/dashboard-workspace-reconciliation.test.mjs`,
+  and its page-independent legacy assertions in `apps/web/tests/workspace-shell.test.mjs`,
+  and then only `apps/web/src/app/dashboard/page.tsx` after their expected RED
+  assertions. The legacy workspace components and child routes remain
+  untouched. No session, projection reader, wallet, signature, command, relay,
+  transaction, deployment, or external authority changes.
 
 - M54_STAGE_3_CANDIDATE_RECOVERY_ACTIVE: User-directed CORE_P0 correction.
   After a reload, the Provider screen must let a user explicitly revalidate a
