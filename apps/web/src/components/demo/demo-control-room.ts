@@ -28,7 +28,7 @@ export const recordingSteps: readonly RecordingStep[] = Object.freeze([
   { id: "backing", href: "/explore/riskscan/back", title: "Back RiskScan", wallet: "BACKER", do: "Use the existing amount and read the acknowledgement before choosing it.", say: "The Backer signs intent first and explicitly submits the HBAR transfer second.", show: "Units, HBAR amount, unchecked acknowledgement, then allocation pending after submission.", nextAction: "Continue without funding" },
   { id: "backing-evidence", href: "/explore/riskscan/back", title: "Show backing evidence", wallet: "BACKER", do: "After a hash, do not send again. Use existing evidence if available.", say: "Payment submitted means allocation is pending until independent confirmation.", show: "Submitted — allocation pending." },
   { id: "dashboard", href: "/sign-in", title: "Show repeatability", wallet: "PROVIDER", do: "Open the signed dashboard through the existing sign-in route.", say: "The dashboard restores the campaign linked to the signed session without recreating it.", show: "The current campaign or honest empty state." },
-  { id: "evidence-recap", href: "/demo", title: "Final evidence recap", wallet: null, do: "Return to the control room and show only verified links.", say: "Every claim in this recording is tied to a real product state or public evidence.", show: "The final evidence recap." },
+  { id: "evidence-recap", href: "/demo", title: "Final evidence recap", wallet: null, do: "Return to the control room, show the submitted HashScan link and label it verification pending.", say: "Every claim in this recording is tied to a real product state or public evidence.", show: "The final evidence recap." },
 ]);
 
 export const recordingReadiness = Object.freeze([

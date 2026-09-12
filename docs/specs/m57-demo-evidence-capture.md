@@ -16,7 +16,8 @@ verification.
 - When export is requested, the CLI validates the one output argument, a
   locally-derived source SHA, the fixed recording-run identifier, and obvious
   output-file/parent-directory errors before it reads payer configuration or
-  starts payment. Existing evidence files are never overwritten; their only
+  starts payment. Unknown or duplicate export arguments fail at that same
+  boundary. Existing evidence files are never overwritten; their only
   safe recovery is inspect/import, not another paid invocation.
 - Preflight never reads a signer or payer key and never writes successful
   payment evidence. Export failure is a separate closed diagnostic after the

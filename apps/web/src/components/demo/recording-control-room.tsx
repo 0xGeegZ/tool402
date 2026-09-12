@@ -131,8 +131,8 @@ export function RecordingControlRoom() {
           </div>
         </div>
         <div className="mt-4 grid gap-3 lg:grid-cols-2">
-          <div className="rounded-control border border-border p-3"><pre className="overflow-x-auto text-xs leading-5">{preflightCommand}</pre><div className="mt-3"><CopyCommandButton label="Copy preflight command" value={preflightCommand} /></div></div>
-          <div className="rounded-control border border-border p-3"><pre className="overflow-x-auto text-xs leading-5">{paidCommand}</pre><div className="mt-3"><CopyCommandButton label="Copy paid-command template" value={paidCommand} /></div></div>
+          <div className="rounded-control border border-border p-3 min-w-0"><pre className="max-w-full overflow-x-auto text-xs leading-5">{preflightCommand}</pre><div className="mt-3"><CopyCommandButton label="Copy preflight command" value={preflightCommand} /></div></div>
+          <div className="rounded-control border border-border p-3 min-w-0"><pre className="max-w-full overflow-x-auto text-xs leading-5">{paidCommand}</pre><div className="mt-3"><CopyCommandButton label="Copy paid-command template" value={paidCommand} /></div></div>
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <input ref={inputRef} type="file" accept="application/json" className="sr-only" onChange={(event) => { void importEvidence(event.target.files?.[0]); event.target.value = ""; }} />

@@ -49,8 +49,8 @@ test("renders the shared fifteen-step itinerary with stable recording links", as
 });
 
 test("keeps guide presentation free of environment and automatic action while allowing local-only evidence retakes", async () => {
-  const [page, steps, room] = await Promise.all([readAppFile(pagePath), readAppFile(stepsPath), readAppFile(roomPath)]);
-  const source = page + "\n" + steps + "\n" + room;
+  const [page, steps, control, room] = await Promise.all([readAppFile(pagePath), readAppFile(stepsPath), readAppFile(controlPath), readAppFile(roomPath)]);
+  const source = page + "\n" + steps + "\n" + control + "\n" + room;
   assert.doesNotMatch(source, /\b(?:sessionStorage|indexedDB|process\.env|import\.meta\.env)\b/i);
   assert.match(room, /readStoredDemoEvidenceState\(window\.localStorage\)/);
   assert.match(room, /tryWriteStoredDemoEvidence\(window\.localStorage, next\)/);
@@ -70,6 +70,9 @@ test("keeps guide presentation free of environment and automatic action while al
   assert.match(room, /git rev-parse --verify HEAD/);
   assert.doesNotMatch(room, /submitted-source-sha/);
   assert.match(room, /Open Agent payment in HashScan/);
+  assert.match(source, /show the submitted HashScan link and label it verification pending/i);
+  assert.match(room, /rounded-control border border-border p-3 min-w-0/);
+  assert.match(room, /max-w-full overflow-x-auto text-xs leading-5/);
   assert.match(room, /node --experimental-strip-types apps\/agent\/src\/riskscan-pay-cli\.ts --preflight/);
   assert.doesNotMatch(room, /npm run riskscan:pay/);
   assert.doesNotMatch(room, /PRIVATE_KEY\s*=/);

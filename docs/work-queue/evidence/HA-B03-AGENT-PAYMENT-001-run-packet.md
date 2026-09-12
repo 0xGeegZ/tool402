@@ -48,6 +48,7 @@ node --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts --evidence-ou
 The CLI checks the export path, run reference, and local checkout SHA before
 it reads the payer configuration or starts a request. If the output file
 already exists, inspect/import that file instead of repeating payment. The
+copyable command permits no additional CLI arguments in export mode. The
 local checkout SHA is not proof of the deployed Web or backend version; record
 the deployed service provenance separately in the release packet.
 

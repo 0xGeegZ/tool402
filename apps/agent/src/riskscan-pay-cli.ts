@@ -150,9 +150,16 @@ function evidenceExport(argumentsList: readonly string[]): EvidenceExport | "inv
   if (indexes.length === 0) return undefined;
   if (indexes.length !== 1) return "invalid";
   const outputPath = argumentsList[indexes[0] + 1];
+  const suppliedArguments = argumentsList.slice(2);
+  const isExactExport = suppliedArguments.length === 2
+    && suppliedArguments[0] === "--evidence-output" && suppliedArguments[1] === outputPath;
+  const isExactPreflightExport = suppliedArguments.length === 3
+    && ((suppliedArguments[0] === "--preflight" && suppliedArguments[1] === "--evidence-output" && suppliedArguments[2] === outputPath)
+      || (suppliedArguments[0] === "--evidence-output" && suppliedArguments[1] === outputPath && suppliedArguments[2] === "--preflight"));
   const recordingRunRef = requiredEnvironmentValue("RISKSCAN_PAY_RECORDING_RUN_REF");
   const sourceVersion = requiredEnvironmentValue("RISKSCAN_PAY_SOURCE_VERSION");
-  if (typeof outputPath !== "string" || outputPath.startsWith("-") || outputPath.length === 0 || outputPath.length > 1_024
+  if ((!isExactExport && !isExactPreflightExport)
+    || typeof outputPath !== "string" || outputPath.startsWith("-") || outputPath.length === 0 || outputPath.length > 1_024
     || recordingRunRef === null || !safeReferencePattern.test(recordingRunRef)
     || sourceVersion === null || !sourceVersionPattern.test(sourceVersion)) return "invalid";
   try {

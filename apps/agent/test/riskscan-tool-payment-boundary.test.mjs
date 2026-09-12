@@ -925,6 +925,29 @@ boundaryTest("rejects a requested evidence destination before reading a payer or
   assert.deepEqual(transportAttempts, []);
 });
 
+boundaryTest("rejects unknown arguments in evidence-export mode before reading a payer or starting payment", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "tool402-agent-evidence-arguments-"));
+  const output = join(directory, "evidence.json");
+  try {
+    const { error, stdout, stderr } = await runCliPreflight({
+      b03Mode: true,
+      paymentMode: true,
+      extraArguments: ["--evidence-output", output, "--typo"],
+      recordingRunRef: "b03-release-001",
+      sourceVersion: "a".repeat(40),
+    });
+    assert.notEqual(error, null);
+    assert.equal(stderr, "RISKSCAN_PAY_CONFIGURATION_INVALID\n");
+    const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
+    assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC CONFIGURATION_INVALID"]);
+    assert.deepEqual(requests, []);
+    assert.deepEqual(boundaries, []);
+    assert.deepEqual(transportAttempts, []);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 boundaryTest("directs the operator to an existing evidence file before any payment boundary", async () => {
   const directory = await mkdtemp(join(tmpdir(), "tool402-agent-evidence-existing-"));
   const output = join(directory, "tool402-agent-evidence.json");
