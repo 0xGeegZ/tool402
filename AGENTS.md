@@ -17,6 +17,13 @@ Before implementing behavioral work, commit the minimum implementation-local spe
 
 Only dependency-satisfied cards with disjoint ownership may run in parallel. Do not begin product work until the local queue records the accepted foundation, validation, workspace, and reproducibility/integration gates required by that card.
 
+## Local runtime configuration
+
+- Never tell a user that a local dev server is ready until its target route answers and its required runtime configuration has been verified.
+- Before launching or reusing the web dev server, inspect the ignored local environment files without printing secrets. For the provider flow, verify the presence and consistency of `CONVEX_DEPLOYMENT`, `CONVEX_URL`, `CONVEX_SITE_URL`, and `TOOL402_CONVEX_SITE_URL`. For dashboard authentication, verify `TOOL402_DASHBOARD_AUTH_ORIGIN` and a valid `TOOL402_DASHBOARD_AUTH_SECRET`.
+- Dashboard sign-in is deliberately fail-closed: Preview and production require an exact canonical HTTPS origin and a 64-character lower-case hexadecimal secret. The only HTTP exception is the documented development-only loopback contract; it must match the server's exact `http://localhost:<port>` origin and use its own non-`__Host` cookie names.
+- When local dashboard sign-in is in scope, run the server with the exact configured scheme and origin, restart it after any environment change, and make a non-wallet request to the auth challenge route to distinguish a configured service from `503 not_configured`. Do not make wallet, signing, transaction, deployment, or other live actions while checking configuration.
+
 ## Local-reference boundary
 
 Every tracked document reference must resolve to a file committed in this repository at the same commit. Before each non-empty commit, keep the local Git-metadata guard enabled. Do not disable or bypass it.
