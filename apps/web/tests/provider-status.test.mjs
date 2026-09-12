@@ -6,6 +6,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const appRoot = fileURLToPath(new URL("..", import.meta.url));
+const campaignHeroAsset = join(appRoot, "public/brand/provider-campaign-duo.png");
 const sourcePaths = [
   "src/app/provider/page.tsx",
   "src/lib/offering-projection.ts",
@@ -267,8 +268,7 @@ implementedTest("renders only the fixed status regions, actions, evidence rows, 
   const presentation = `${page}\n${status}\n${state}`;
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
-  assert.match(page, /<PageHeader\b[^>]*title="Campaign status"/);
+  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 0);
   assert.equal((page.match(/<Suspense\b/g) ?? []).length, 1);
   assert.match(page, /aria-live=["']polite["']/);
   assert.doesNotMatch(page, /["']use client["']|\bfetch\s*\(|set(?:Timeout|Interval)\s*\(/);
@@ -319,7 +319,16 @@ implementedTest("renders the S43 command center from the admitted campaign proje
   const presentation = `${page}\n${status}\n${state}`;
 
   assert.match(status, /data-ui=["']provider-command-center["']/);
-  assert.match(page, /title="Campaign status"/);
+  assert.match(status, /data-ui=["']provider-campaign-hero["']/);
+  assert.match(status, /data-ui=["']provider-campaign-progress["']/);
+  assert.match(status, /data-ui=["']provider-activity-timeline["']/);
+  assert.match(status, /data-ui=["']provider-campaign-snapshot["']/);
+  assert.match(status, /data-ui=["']provider-supporting-cards["']/);
+  assert.match(status, /data-ui=["']provider-technical-record["']/);
+  assert.match(status, /import Image from ["']next\/image["']/);
+  assert.match(status, /src=["']\/brand\/provider-campaign-duo\.png["']/);
+  assert.equal(existsSync(campaignHeroAsset), true, "missing generated provider campaign hero asset");
+  assert.doesNotMatch(status, /<table\b|min-w-\[/u);
   for (const text of [
     "Campaign in progress",
     "Campaign prepared",
@@ -370,11 +379,12 @@ implementedTest("renders the S43 command center from the admitted campaign proje
 implementedTest("derives the fixed region order, next actions, evidence cells, and Hashscan gate from admitted projection data", async () => {
   const state = await import(new URL("../src/components/provider/status/provider-status-state.ts", import.meta.url).href);
   assert.deepEqual(state.providerStatusRegionOrder, [
-    "status block",
-    "deployment evidence table",
-    "active terms",
-    "active directory",
-    "signer",
+    "campaign hero",
+    "progress rail",
+    "activity timeline",
+    "campaign snapshot",
+    "supporting cards",
+    "technical record",
   ]);
   const format = await import(new URL("../src/lib/hbar-format.ts", import.meta.url).href);
   assert.equal(format.formatHbar(1000n), "0.00001 HBAR");
