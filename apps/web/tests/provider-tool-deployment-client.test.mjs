@@ -13,8 +13,9 @@ test("accepts only an exact selected-tool ATS configuration from the protected d
     toolPublicId, subjectPublicId: toolPublicId, title: "Second RiskScan", canonicalSignerAddress: signer,
   }).atsCreateConfiguration;
   const parsed = parseProviderToolDeployment({
-    tool: { toolPublicId, subjectPublicId: toolPublicId, offeringPublicId },
+    tool: { toolPublicId, subjectPublicId: toolPublicId, offeringPublicId, state: "DRAFT" },
     atsCreateConfigurationJson: JSON.stringify(configuration),
+    atsAttemptPublicId: null,
   }, toolPublicId);
   assert.equal(parsed?.ats?.command.subjectPublicId, toolPublicId);
   assert.equal(parsed?.ats?.display.revenueNote.name, "Second RiskScan");
@@ -25,11 +26,13 @@ test("fails closed for a mismatched tool or a tampered configuration", () => {
     toolPublicId, subjectPublicId: toolPublicId, title: "Second RiskScan", canonicalSignerAddress: signer,
   }).atsCreateConfiguration;
   assert.equal(parseProviderToolDeployment({
-    tool: { toolPublicId, subjectPublicId: toolPublicId, offeringPublicId: "offering_other" },
+    tool: { toolPublicId, subjectPublicId: toolPublicId, offeringPublicId: "offering_other", state: "DRAFT" },
     atsCreateConfigurationJson: JSON.stringify(configuration),
+    atsAttemptPublicId: null,
   }, toolPublicId), null);
   assert.equal(parseProviderToolDeployment({
-    tool: { toolPublicId, subjectPublicId: toolPublicId, offeringPublicId },
+    tool: { toolPublicId, subjectPublicId: toolPublicId, offeringPublicId, state: "DRAFT" },
     atsCreateConfigurationJson: JSON.stringify({ ...configuration, canonicalParametersHash: "0".repeat(64) }),
+    atsAttemptPublicId: null,
   }, toolPublicId), null);
 });

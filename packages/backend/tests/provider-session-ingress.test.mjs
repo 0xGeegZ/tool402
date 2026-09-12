@@ -212,7 +212,7 @@ implementedTest("forwards a signed selected-tool deployment read only to the pro
     allocate: async () => { throw new Error("must not allocate"); },
     list: async () => { throw new Error("must not list"); },
     read: async () => { throw new Error("must not use summary read"); },
-    deployment: async (input) => { reads.push(input); return { tool: { toolPublicId }, atsCreateConfigurationJson: null }; },
+    deployment: async (input) => { reads.push(input); return { tool: { toolPublicId }, atsCreateConfigurationJson: null, atsAttemptPublicId: null }; },
   });
   assert.equal(response.status, 200);
   assert.deepEqual(reads, [{ canonicalSignerAddress, toolPublicId }]);

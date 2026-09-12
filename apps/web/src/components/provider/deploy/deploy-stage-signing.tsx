@@ -132,7 +132,29 @@ export function DeployStageSigning({
     });
     if (selectedToolPublicId !== undefined) {
       void loadProviderToolDeployment(selectedToolPublicId).then((deployment) => {
-        if (!cancelled) setSelectedAts(deployment?.ats ?? null);
+        if (cancelled || deployment === null) return;
+        setSelectedAts(deployment.ats);
+        if (deployment.state === "DRAFT") {
+          setResults([{ kind: "done", detail: "Recovered from this tool's durable offering record." }]);
+          onResume?.();
+        } else if (deployment.state === "ASSET_PENDING" && deployment.atsAttemptPublicId !== null) {
+          setResults([
+            { kind: "done", detail: "Recovered from this tool's durable offering record." },
+            { kind: "done", detail: "Recovered from this tool's durable prepared attempt." },
+          ]);
+          setAttemptPublicId(deployment.atsAttemptPublicId);
+          onResume?.();
+        } else if (deployment.state === "READY") {
+          setResults([
+            { kind: "done", detail: "Recovered from this tool's durable offering record." },
+            { kind: "done", detail: "Recovered from this tool's durable prepared attempt." },
+            { kind: "done", detail: "Recovered from this tool's corroborated receipt." },
+          ]);
+          onResume?.();
+        } else if (deployment.state === "OPEN") {
+          setResults([{ kind: "done" }, { kind: "done" }, { kind: "done" }, { kind: "done", detail: "This tool is already published." }]);
+          onResume?.();
+        }
       });
     }
     return () => { cancelled = true; };

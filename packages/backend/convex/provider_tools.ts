@@ -7,6 +7,7 @@ import {
   type QueryBuilder,
 } from "convex/server";
 import { v } from "convex/values";
+import type { GenericId } from "convex/values";
 import { createProviderToolIdentity, parseProviderToolId } from "@tool402/core";
 import { createStageBIssuerAtsCreateAuthority } from "../src/ats/stage-b-issuer-ats-create-authority.ts";
 import { createProviderToolAtsConfiguration } from "../src/ats/provider-tool-ats-configuration.ts";
@@ -33,6 +34,7 @@ const toolValidator = v.object({
 const deploymentValidator = v.object({
   tool: toolValidator,
   atsCreateConfigurationJson: v.union(v.string(), v.null()),
+  atsAttemptPublicId: v.union(v.string(), v.null()),
 });
 type ToolState = "ALLOCATED" | "DRAFT" | "ASSET_PENDING" | "READY" | "OPEN" | "CLOSED";
 type ToolIdentityProjection = Readonly<{
@@ -55,6 +57,7 @@ type ToolProjection = Readonly<{
 type ToolDeploymentProjection = Readonly<{
   tool: ToolProjection;
   atsCreateConfigurationJson: string | null;
+  atsAttemptPublicId: string | null;
 }>;
 type DatabaseContext = Pick<GenericQueryCtx<DataModelFromSchemaDefinition<typeof schema>>, "db">;
 
@@ -149,7 +152,7 @@ async function projectDeployment(ctx: DatabaseContext, value: unknown): Promise<
   const tool = await project(ctx, value);
   if (allocation === null || tool === null) return null;
   if (tool.state === "ALLOCATED") {
-    return Object.freeze({ tool, atsCreateConfigurationJson: null });
+    return Object.freeze({ tool, atsCreateConfigurationJson: null, atsAttemptPublicId: null });
   }
   try {
     const configuration = createProviderToolAtsConfiguration({
@@ -158,10 +161,42 @@ async function projectDeployment(ctx: DatabaseContext, value: unknown): Promise<
       title: tool.title,
       canonicalSignerAddress: allocation.canonicalSignerAddress,
     });
-    return Object.freeze({ tool, atsCreateConfigurationJson: JSON.stringify(configuration.atsCreateConfiguration) });
+    const atsAttemptPublicId = await pendingAttemptPublicId(ctx, allocation, tool.state);
+    if (tool.state === "ASSET_PENDING" && atsAttemptPublicId === null) return null;
+    return Object.freeze({ tool, atsCreateConfigurationJson: JSON.stringify(configuration.atsCreateConfiguration), atsAttemptPublicId });
   } catch {
     return null;
   }
+}
+
+async function pendingAttemptPublicId(
+  ctx: DatabaseContext,
+  allocation: ToolAllocation,
+  state: ToolState,
+): Promise<string | null> {
+  if (state !== "ASSET_PENDING") return null;
+  const offerings = await ctx.db.query("offerings")
+    .withIndex("by_offering_public_id_and_version", (query) => query.eq("offeringPublicId", allocation.offeringPublicId))
+    .take(2);
+  if (offerings.length !== 1 || offerings[0] === undefined) return null;
+  const offering = offerings[0] as Record<string, unknown>;
+  if (typeof offering.atsAttemptId !== "string") return null;
+  const attempt = await ctx.db.get(offering.atsAttemptId as GenericId<"externalPrepareCommandAttempts">);
+  if (attempt === null || typeof attempt !== "object") return null;
+  const record = attempt as Record<string, unknown>;
+  return record.version === 1
+    && record.type === "external.prepare"
+    && record.chainId === 296
+    && record.operationKind === "ATS_CREATE"
+    && record.state === "PREPARED"
+    && record.subjectPublicId === allocation.subjectPublicId
+    && record.canonicalSignerAddress === allocation.canonicalSignerAddress
+    && record.principalPublicId === allocation.principalPublicId
+    && record.authorityVersion === allocation.authorityVersion
+    && typeof record.idempotencyKey === "string"
+    && /^[A-Za-z0-9_-]{21}[AQgw]$/u.test(record.idempotencyKey)
+    ? record.idempotencyKey
+    : null;
 }
 
 function randomIdentity() {

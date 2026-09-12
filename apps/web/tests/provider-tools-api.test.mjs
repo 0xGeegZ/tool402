@@ -60,7 +60,7 @@ implementedTest("forwards a selected-tool deployment read only after the dashboa
       }),
       forward: async (input) => {
         forwarded.push(input);
-        return new Response(JSON.stringify({ tool: { toolPublicId }, atsCreateConfigurationJson: null }), {
+        return new Response(JSON.stringify({ tool: { toolPublicId }, atsCreateConfigurationJson: null, atsAttemptPublicId: null }), {
           status: 200, headers: { "content-type": "application/json" },
         });
       },

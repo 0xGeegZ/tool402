@@ -25,11 +25,12 @@ function authority(overrides = {}) {
   };
 }
 
-function database({ authorities = [], tools = [], offerings = [], serializeSameRequestReads = false } = {}) {
+function database({ authorities = [], tools = [], offerings = [], attempts = [], serializeSameRequestReads = false } = {}) {
   const rows = {
     commandAuthorities: structuredClone(authorities),
     providerTools: structuredClone(tools),
     offerings: structuredClone(offerings),
+    externalPrepareCommandAttempts: structuredClone(attempts),
   };
   const writes = [];
   let sameRequestReads = 0;
@@ -84,6 +85,9 @@ function database({ authorities = [], tools = [], offerings = [], serializeSameR
         writes.push(row);
         releaseConflictedRead();
         return row._id;
+      },
+      async get(id) {
+        return rows.externalPrepareCommandAttempts.find((attempt) => attempt._id === id) ?? null;
       },
     },
   };
@@ -418,6 +422,7 @@ implementedTest("returns ATS configuration only from the exact durable selected-
       state: "ALLOCATED",
     },
     atsCreateConfigurationJson: null,
+    atsAttemptPublicId: null,
   });
 
   const admitted = offeringFor(mine, { narrative: { title: "Second RiskScan" } });
@@ -434,6 +439,34 @@ implementedTest("returns ATS configuration only from the exact durable selected-
   assert.equal(
     await readOwnedToolDeployment._handler(
       database({ tools: [mine], offerings: [mismatched] }).ctx,
+      { canonicalSignerAddress, toolPublicId: mine.toolPublicId },
+    ),
+    null,
+  );
+});
+
+implementedTest("recovers only the exact selected tool's durable prepared attempt", async () => {
+  const { readOwnedToolDeployment } = await import(sourceUrl.href);
+  const mine = tool();
+  const attemptId = "externalPrepareCommandAttempts:mine";
+  const attemptPublicId = "CCCCCCCCCCCCCCCCCCCCCg";
+  const pending = offeringFor(mine, { state: "ASSET_PENDING", atsAttemptId: attemptId });
+  const attempt = {
+    _id: attemptId,
+    version: 1, type: "external.prepare", chainId: 296, operationKind: "ATS_CREATE", state: "PREPARED",
+    subjectPublicId: mine.subjectPublicId, canonicalSignerAddress, principalPublicId: mine.principalPublicId,
+    authorityVersion: mine.authorityVersion, idempotencyKey: attemptPublicId,
+  };
+  const recovered = await readOwnedToolDeployment._handler(
+    database({ tools: [mine], offerings: [pending], attempts: [attempt] }).ctx,
+    { canonicalSignerAddress, toolPublicId: mine.toolPublicId },
+  );
+  assert.equal(recovered.tool.state, "ASSET_PENDING");
+  assert.equal(recovered.atsAttemptPublicId, attemptPublicId);
+
+  assert.equal(
+    await readOwnedToolDeployment._handler(
+      database({ tools: [mine], offerings: [pending], attempts: [{ ...attempt, subjectPublicId: `tool_${"cd".repeat(16)}` }] }).ctx,
       { canonicalSignerAddress, toolPublicId: mine.toolPublicId },
     ),
     null,
