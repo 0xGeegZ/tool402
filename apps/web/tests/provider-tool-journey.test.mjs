@@ -425,7 +425,7 @@ test("two identical forms reach independent OPEN tools through signed orchestrat
     const renderer = hooks();
     const list = loadSource("../src/components/dashboard/provider-tool-list.tsx", {
       react: renderer.react, "react/jsx-runtime": jsxRuntime, "next/link": { default: "Link" },
-      "../ui/badge": { Badge: "Badge" }, "../ui/button": { buttonVariants: () => "" },
+      "../ui/badge": { Badge: "Badge" }, "../ui/button": { buttonVariants: () => "" }, "../ui/status": { Status: "Status" },
     });
     const render = () => { renderer.reset(); return list.ProviderToolList(); };
     const tree = await settled(render, (node) => elements(node).some((item) => item.props["aria-label"] === "Your tools"));
