@@ -311,6 +311,35 @@ implementedTest("presents unavailable provider data as an actionable workspace w
   assert.doesNotMatch(status, /funding raised|units issued|paid task|balance|Live testnet|Connected/i);
 });
 
+implementedTest("renders the S43 command center from the admitted campaign projection without new runtime authority", async () => {
+  const sources = await readSources();
+  const page = sources["src/app/provider/page.tsx"];
+  const status = sources["src/components/provider/status/provider-status.tsx"];
+  const state = sources["src/components/provider/status/provider-status-state.ts"];
+  const presentation = `${page}\n${status}\n${state}`;
+
+  assert.match(status, /data-ui=["']provider-command-center["']/);
+  assert.match(page, /title="Campaign status"/);
+  for (const text of [
+    "Campaign in progress",
+    "Campaign prepared",
+    "Campaign ready",
+    "Campaign closed",
+    "Directory unavailable",
+    "Backer issuance",
+    "Unavailable in this demo",
+    "Activity & proof",
+    "Campaign snapshot",
+    "Economics",
+    "Capacity",
+    "Governance",
+    "Trust details",
+    "Not live",
+  ]) assert.match(presentation, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.match(state, /providerCampaignPresentation/);
+  assert.doesNotMatch(presentation, /funding raised|units issued|paid task|balance|Live testnet|Connected|New offering version/i);
+});
+
 implementedTest("derives the fixed region order, next actions, evidence cells, and Hashscan gate from admitted projection data", async () => {
   const state = await import(new URL("../src/components/provider/status/provider-status-state.ts", import.meta.url).href);
   assert.deepEqual(state.providerStatusRegionOrder, [
