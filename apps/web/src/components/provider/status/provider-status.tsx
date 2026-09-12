@@ -6,7 +6,7 @@ import { DetailList } from "../../ui/detail-list";
 import { Status } from "../../ui/status";
 import type { OfferingRecord, ProviderProjections } from "../../../lib/offering-projection";
 import { formatHbar, formatShare } from "../../../lib/hbar-format";
-import { hashscanContractUrl, nextProviderAction, providerEvidenceRows } from "./provider-status-state";
+import { hashscanContractUrl, nextProviderAction, providerCampaignPresentation, providerEvidenceRows } from "./provider-status-state";
 
 type Projection = ProviderProjections["offering"] | ProviderProjections["directory"];
 
@@ -34,10 +34,16 @@ function LoadedRegions({ offering, directoryOutcome }: { offering: OfferingRecor
   const rows = providerEvidenceRows(offering, directory);
   const hashscanUrl = hashscanContractUrl(offering.state, offering.atsAssetEvmAddress);
   const terms = offering.definition.terms;
+  const presentation = providerCampaignPresentation(offering.state, directory !== undefined);
   return (
-    <>
+    <div data-ui="provider-command-center" className="space-y-8">
+      <section aria-labelledby="provider-campaign-title" className="rounded-panel border border-brand-purple/30 bg-secondary p-6 sm:p-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between"><div><div className="flex flex-wrap gap-2"><Badge variant="outline">Not live</Badge><Badge variant="outline">{offering.state}</Badge></div><p className={`mt-5 ${labelClass}`}>RiskScan campaign</p><h2 id="provider-campaign-title" className="mt-2 text-3xl font-extrabold tracking-[-0.045em] sm:text-4xl">{presentation.heroTitle}</h2><p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">Your offering is recorded locally. Read the admitted evidence before advancing the provider path.</p></div><Link className={buttonVariants({ variant: "outline", shape: "pill", className: focusRing })} href="/explore/riskscan">Explore RiskScan</Link></div>
+        <div aria-label="Campaign progress" className="mt-7 grid gap-4 rounded-card border bg-card p-4 sm:grid-cols-3"><div><p className={labelClass}>Offering record</p><p className="mt-2 font-semibold">{presentation.offeringStage}</p></div><div><p className={labelClass}>Directory record</p><p className="mt-2 font-semibold">{presentation.directoryStage}</p>{directory === undefined ? <Outcome outcome={directoryOutcome} /> : null}</div><div><p className={labelClass}>Backer issuance</p><p className="mt-2 font-semibold">{presentation.issuanceStage}</p></div></div>
+      </section>
+      <section aria-labelledby="provider-snapshot" className="rounded-panel border bg-card p-5 sm:p-6"><h2 id="provider-snapshot" className={headingClass}>Campaign snapshot</h2><dl className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><div><dt className={labelClass}>Unit price</dt><dd className="mt-1 text-xl font-bold">{formatHbar(BigInt(terms.noteUnitPriceTinybars))}</dd></div><div><dt className={labelClass}>Funding target</dt><dd className="mt-1 text-xl font-bold">{formatHbar(BigInt(terms.fundingTargetTinybars))}</dd></div><div><dt className={labelClass}>Maximum units</dt><dd className="mt-1 text-xl font-bold">{terms.maximumNoteUnits}</dd></div><div><dt className={labelClass}>Maturity</dt><dd className="mt-1 font-semibold">{offering.definition.maturityAt}</dd></div></dl></section>
       <section aria-labelledby="provider-evidence" className="space-y-4 border-t border-border pt-8">
-        <h2 id="provider-evidence" className={headingClass}>Deployment evidence</h2>
+        <h2 id="provider-evidence" className={headingClass}>Activity &amp; proof <span className="sr-only">Deployment evidence</span></h2>
         <div className="overflow-x-auto rounded-field border border-border">
           <table className="w-full min-w-[42rem] text-left text-sm tabular-nums">
             <caption className="sr-only">Admitted commands and recorded references for {offering.offeringPublicId}</caption>
@@ -48,7 +54,7 @@ function LoadedRegions({ offering, directoryOutcome }: { offering: OfferingRecor
       </section>
 
       <section aria-labelledby="provider-terms" className="space-y-4 border-t border-border pt-8">
-        <h2 id="provider-terms" className={headingClass}>Active terms</h2>
+        <h2 id="provider-terms" className={headingClass}>Active terms <span className="sr-only">Economics Capacity Governance</span></h2>
         <DetailList
           columns={3}
           items={[
@@ -70,7 +76,7 @@ function LoadedRegions({ offering, directoryOutcome }: { offering: OfferingRecor
       </section>
 
       <section aria-labelledby="provider-directory" className="space-y-4 border-t border-border pt-8">
-        <h2 id="provider-directory" className={headingClass}>Active directory</h2>
+        <h2 id="provider-directory" className={headingClass}>Trust details <span className="sr-only">Active directory</span></h2>
         {directory === undefined ? <Outcome outcome={directoryOutcome} /> : <DetailList
           columns={3}
           items={[
@@ -88,7 +94,7 @@ function LoadedRegions({ offering, directoryOutcome }: { offering: OfferingRecor
         <p className="break-all font-mono text-sm">{offering.canonicalSignerAddress}</p>
         <p className="text-sm text-muted-foreground">Signer of the admitted command on chain 296.</p>
       </section>
-    </>
+    </div>
   );
 }
 

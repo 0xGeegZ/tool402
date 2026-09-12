@@ -268,7 +268,7 @@ implementedTest("renders only the fixed status regions, actions, evidence rows, 
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
   assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
-  assert.match(page, /<PageHeader\b[^>]*title="Provider status"/);
+  assert.match(page, /<PageHeader\b[^>]*title="Campaign status"/);
   assert.equal((page.match(/<Suspense\b/g) ?? []).length, 1);
   assert.match(page, /aria-live=["']polite["']/);
   assert.doesNotMatch(page, /["']use client["']|\bfetch\s*\(|set(?:Timeout|Interval)\s*\(/);
@@ -301,7 +301,7 @@ implementedTest("presents unavailable provider data as an actionable workspace w
   const page = sources["src/app/provider/page.tsx"];
   const status = sources["src/components/provider/status/provider-status.tsx"];
 
-  assert.match(page, /Provider status/);
+  assert.match(page, /Campaign status/);
   assert.match(page, /Tool operator/);
   assert.match(status, /bg-secondary/);
   assert.match(status, /Offering record/);
@@ -328,7 +328,7 @@ implementedTest("renders the S43 command center from the admitted campaign proje
     "Directory unavailable",
     "Backer issuance",
     "Unavailable in this demo",
-    "Activity & proof",
+    "Activity &amp; proof",
     "Campaign snapshot",
     "Economics",
     "Capacity",

@@ -8,6 +8,20 @@ export const providerStatusRegionOrder = [
   "signer",
 ] as const;
 
+type CampaignTone = "complete" | "current";
+
+export function providerCampaignPresentation(offeringState: OfferingState, directoryLoaded: boolean) {
+  const offering = {
+    DRAFT: { heroTitle: "Campaign in progress", offeringTone: "current" },
+    ASSET_PENDING: { heroTitle: "Campaign in progress", offeringTone: "current" },
+    READY: { heroTitle: "Campaign prepared", offeringTone: "complete" },
+    OPEN: { heroTitle: "Campaign ready", offeringTone: "complete" },
+    CLOSED: { heroTitle: "Campaign closed", offeringTone: "complete" },
+  } as const satisfies Record<OfferingState, { readonly heroTitle: string; readonly offeringTone: CampaignTone }>;
+  const current = offering[offeringState];
+  return { heroTitle: current.heroTitle, offeringStage: `Offering admitted · ${offeringState}`, offeringTone: current.offeringTone, directoryStage: directoryLoaded ? "Directory active" : "Directory unavailable", directoryTone: directoryLoaded ? "complete" as const : "current" as const, issuanceStage: "Unavailable in this demo" };
+}
+
 export function nextProviderAction(state: OfferingState) {
   const actions = {
     DRAFT: "Prepare the revenue note asset",

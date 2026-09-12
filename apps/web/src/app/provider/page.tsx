@@ -17,8 +17,9 @@ export default function ProviderPage() {
       <main className="space-y-10 pb-12 sm:space-y-12 sm:pb-20">
         <PageHeader
           eyebrow="Tool operator"
-          title="Provider status"
+          title="Campaign status"
           description="Read the local offering and directory records without advancing them."
+          actions={[{ href: "/provider/deploy", label: "Open the deploy wizard" }, { href: "/explore/riskscan", label: "Explore RiskScan" }]}
         />
         <Suspense fallback={<p aria-live="polite" className="text-sm text-muted-foreground">Loading admitted records.</p>}><ProviderStatusRegions /></Suspense>
       </main>
