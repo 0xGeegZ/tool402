@@ -41,6 +41,10 @@ decisions do not depend on rediscovering the conversation.
 
 ## Completion
 
+The [refinement review](../../evidence/M55-T010-refinement-review.md) is clear
+at `cdf7d847`: the documentation packet is ready for delegation. The startup
+gate above remains mandatory for the implementation agent.
+
 Refinement is complete when packet/control records agree, reference/queue/
 whitespace checks pass, independent documentation review is clear, and docs
 are committed/pushed. This does not move the card to 10-ready, 20-active, or

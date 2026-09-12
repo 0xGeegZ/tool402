@@ -35,6 +35,10 @@ multi-tool implementation. At this snapshot the new-tool feature is absent.
 This handoff/refinement changes documentation only. M55 stays `00-inbox`;
 specification completion is not source activation or implementation completion.
 
+The [refinement review](M55-T010-refinement-review.md) records the two
+independent reviews and documentation checks. Its final verdict is ready for
+delegation, not implementation/source readiness or live acceptance.
+
 ## Startup gate the receiving root owns
 
 1. Inspect local modifications and exact head/main/PR diff. Existing generated
