@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
 
@@ -27,12 +28,15 @@ export async function DashboardCampaign() {
       <section aria-label="No campaign yet">
         <Card className="rounded-card border-brand-purple/25 bg-brand-purple/5 shadow-none">
           <CardContent className="flex flex-col items-center gap-4 p-8 text-center sm:p-10">
-            <span aria-hidden="true" className="flex size-12 items-center justify-center rounded-tile border border-brand-purple/25 bg-background text-brand-purple">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-6">
-                <path d="M7 3.75h7.75L19.5 8.5v11.75H7V3.75Z" strokeLinejoin="round" />
-                <path d="M14.75 3.75V8.5h4.75M9.5 12h5M9.5 15.5h5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
+            <div data-ui="dashboard-empty-mascot" aria-hidden="true">
+              <Image
+                src="/brand/dashboard-empty-mascot.png"
+                alt=""
+                width={1024}
+                height={1024}
+                className="h-36 w-36 object-contain sm:h-40 sm:w-40"
+              />
+            </div>
             <div className="space-y-1">
               <h2 className="text-xl font-bold tracking-[-0.035em] text-foreground">No campaign yet</h2>
               <p className="text-sm leading-6 text-muted-foreground">There is no RiskScan campaign associated with this signed dashboard session.</p>
