@@ -29,9 +29,11 @@ it says NOT AVAILABLE and does not render a HashScan action.
 
 ## Explorer links
 
-One pure utility accepts only canonical lower-case EVM transaction hashes and
-EVM addresses and creates the current HashScan testnet transaction or contract
-URL. Invalid, unknown, or missing identifiers return null; no component
+One pure utility accepts only canonical lower-case EVM transaction hashes,
+canonical Hedera settlement references, and EVM addresses and creates the
+current HashScan testnet transaction or contract URL. A Hedera settlement
+reference is rendered as its fixed HashScan transaction-ID route. Invalid,
+unknown, or missing identifiers return null; no component
 concatenates a URL itself. A link opens a new tab with noopener noreferrer and
 has a specific accessible name. This card does not add a link to the M56
 submitted-hash state; that path remains M56-owned until its owner exposes a
