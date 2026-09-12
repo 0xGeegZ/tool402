@@ -386,7 +386,11 @@ dashboardNavigationTest("shows Dashboard only after server-side session validati
   assert.match(dashboardNavigation, /\breadDashboardSession\b/u);
   assert.match(dashboardNavigation, /\bLocalNavigation\b/u);
   assert.match(dashboardNavigation, /showDashboard\s*=\s*\{\s*session\s*!==\s*null\s*\}/u);
-  assert.doesNotMatch(dashboardNavigation, /\b(?:WalletIsland|useWalletSession|wallet-connect|wallet-session|address)\b/u);
+  assert.match(dashboardNavigation, /import\s*\{\s*DashboardSessionSync\s*\}\s*from\s*["'][^"']*dashboard-session-sync["']/u);
+  assert.match(dashboardNavigation, /session\s*===\s*null\s*\?\s*null\s*:\s*<DashboardSessionSync\s+address=\{session\.address\}\s*\/>/u);
+  assert.doesNotMatch(dashboardNavigation, /\b(?:WalletIsland|useWalletSession|wallet-connect|wallet-session|discoverMetaMaskProvider|readCurrentSession|watchWalletSessionChanges|eth_requestAccounts|eth_sendTransaction|personal_sign|eth_signTypedData_v4|window\.ethereum)\b/u);
+  assert.doesNotMatch(dashboardNavigation, /\b(?:provider|ethereum)\s*\.\s*request\s*\(/u);
+  assert.doesNotMatch(dashboardNavigation, /from\s*["'][^"']*\/wallet\//u);
 
   assert.match(rootLayout, /\bDashboardNavigation\b/u);
   assert.match(rootLayout, /<Suspense\s+fallback=\{\s*<LocalNavigation\s*\/>\s*\}>\s*<DashboardNavigation\s*\/>\s*<\/Suspense>/u);
