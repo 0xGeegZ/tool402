@@ -1,4 +1,5 @@
 import { createRequire } from "node:module";
+import { writeFileSync } from "node:fs";
 import { x402Client, x402HTTPClient } from "@x402/core/client";
 import { decodePaymentRequiredHeader } from "@x402/core/http";
 import type { SchemeNetworkClient } from "@x402/core/types";
@@ -8,6 +9,10 @@ import type { RiskScanQuickInput } from "@tool402/core";
 import {
   createRiskScanQuickPaymentAgent,
 } from "./riskscan-tool-payment.ts";
+import {
+  createRiskScanPaymentEvidence,
+  writeRiskScanPaymentEvidence,
+} from "./riskscan-payment-evidence.ts";
 import { discoverRiskScanQuick } from "./riskscan-tool-directory.ts";
 import {
   diagnosticForRiskScanPayPhase,
@@ -129,6 +134,17 @@ function writeOutcome(outcome: RiskScanQuickPaymentOutcome): void {
   if (outcome.kind === "paid") {
     process.stdout.write(`RISKSCAN_PAY_SETTLEMENT ${outcome.settlementRef}\n`);
   }
+}
+
+function evidenceOutputPath(argumentsList: readonly string[]): string | null {
+  const index = argumentsList.indexOf("--evidence-output");
+  if (index < 0 || index + 1 >= argumentsList.length) return null;
+  const value = argumentsList[index + 1];
+  return value.startsWith("-") || value.length === 0 || value.length > 1_024 ? null : value;
+}
+
+function writeEvidenceCaptureFailure(): void {
+  process.stdout.write("RISKSCAN_PAY_EVIDENCE_CAPTURE_FAILED\n");
 }
 
 function writeDiagnostic(phase: Parameters<typeof diagnosticForRiskScanPayPhase>[0]): void {
@@ -306,6 +322,25 @@ async function payment(): Promise<void> {
     configuration.policy,
   );
   writeOutcome(outcome);
+  const outputPath = evidenceOutputPath(process.argv);
+  if (outcome.kind === "paid" && outputPath !== null) {
+    try {
+      const evidence = createRiskScanPaymentEvidence({
+        outcome,
+        serviceBase: configuration.serviceBase,
+        payerAccountId: configuration.payerAccountId,
+        recordingRunRef: process.env.RISKSCAN_PAY_RECORDING_RUN_REF ?? null,
+        sourceVersion: process.env.RISKSCAN_PAY_SOURCE_VERSION ?? null,
+        observedAt: new Date().toISOString(),
+      });
+      writeRiskScanPaymentEvidence(evidence, outputPath, (path, body) => {
+        writeFileSync(path, body, { encoding: "utf8", flag: "wx" });
+      });
+      process.stdout.write("RISKSCAN_PAY_EVIDENCE_EXPORTED\n");
+    } catch {
+      writeEvidenceCaptureFailure();
+    }
+  }
   writeDiagnostic(diagnosticForOutcome(outcome, phase.current));
   if (outcome.kind !== "paid") process.exitCode = 1;
 }

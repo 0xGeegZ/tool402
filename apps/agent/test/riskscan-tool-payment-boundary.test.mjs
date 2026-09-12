@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { execFile } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -224,6 +226,7 @@ function runCliPreflight({
   signedRetryStatus = 200,
   terminalCatch = false,
   preflightInput = input,
+  extraArguments = [],
 } = {}) {
   const paymentRequired = {
     x402Version: 2,
@@ -329,7 +332,7 @@ function runCliPreflight({
   return new Promise((resolve) => {
     execFile(
       process.execPath,
-      ["--import", `data:text/javascript,${encodeURIComponent(loader)}`, "--experimental-strip-types", fileURLToPath(cliSource), ...(defaultPayment ? [] : ["--preflight"])],
+      ["--import", `data:text/javascript,${encodeURIComponent(loader)}`, "--experimental-strip-types", fileURLToPath(cliSource), ...(defaultPayment ? [] : ["--preflight"]), ...extraArguments],
       {
         cwd: fileURLToPath(new URL("../", import.meta.url)),
         env: {
@@ -494,8 +497,10 @@ boundaryTest("maps signer or SDK sentinels to a closed safe outcome without proc
 boundaryTest("keeps the CLI as the only runtime configuration edge and redacts a missing-config failure", async () => {
   const text = await readFile(cliSource, "utf8");
   assert.match(text, /process\.env/u);
+  assert.match(text, /import \{ writeFileSync \} from "node:fs"/u);
+  assert.match(text, /writeFileSync\(path, body, \{ encoding: "utf8", flag: "wx" \}\)/u);
   for (const forbidden of [
-    /(?:node:)?fs|child_process|worker_threads|localStorage|sessionStorage|indexedDB/u,
+    /child_process|worker_threads|localStorage|sessionStorage|indexedDB/u,
     /["'](?:node:)?(?:https?|http2|net|tls|dgram|undici)["']/u,
     /process\.getBuiltinModule/u,
     /console\.(?:log|info|warn|error|debug)\s*\([^)]*process\.env/u,
@@ -809,4 +814,52 @@ boundaryTest("preserves normal payment output and exit behavior while adding onl
     "payment_header",
     "settlement_decode",
   ]);
+});
+
+boundaryTest("keeps a completed payment single-shot when opt-in evidence storage fails", async () => {
+  const { error, stdout, stderr } = await runCliPreflight({
+    defaultPayment: true,
+    extraArguments: ["--evidence-output", "."],
+  });
+
+  assert.equal(error, null);
+  assert.equal(stderr, "");
+  const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
+  assert.deepEqual(diagnostic, [
+    "RISKSCAN_PAY_OUTCOME paid",
+    "RISKSCAN_PAY_SETTLEMENT 0.0.1@1.2",
+    "RISKSCAN_PAY_EVIDENCE_CAPTURE_FAILED",
+    "RISKSCAN_PAY_DIAGNOSTIC PAID",
+  ]);
+  assert.equal(requests.length, 3);
+  assert.deepEqual(transportAttempts, []);
+  assert.equal(boundaries.filter((item) => item === "payment_payload").length, 1);
+});
+
+boundaryTest("exports one sanitized packet after a paid result without another request", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "tool402-agent-evidence-"));
+  const output = join(directory, "evidence.json");
+  try {
+    const { error, stdout, stderr } = await runCliPreflight({
+      defaultPayment: true,
+      extraArguments: ["--evidence-output", output],
+    });
+    assert.equal(error, null);
+    assert.equal(stderr, "");
+    const { diagnostic, requests } = preflightTrace(stdout);
+    assert.deepEqual(diagnostic, [
+      "RISKSCAN_PAY_OUTCOME paid",
+      "RISKSCAN_PAY_SETTLEMENT 0.0.1@1.2",
+      "RISKSCAN_PAY_EVIDENCE_EXPORTED",
+      "RISKSCAN_PAY_DIAGNOSTIC PAID",
+    ]);
+    assert.equal(requests.length, 3);
+    const packet = JSON.parse(await readFile(output, "utf8"));
+    assert.equal(packet.kind, "tool402.agent-payment");
+    assert.equal(packet.payment.settlementRef, "0.0.1@1.2");
+    assert.equal(packet.result.receivedAndValidatedByClient, true);
+    assert.doesNotMatch(JSON.stringify(packet), /caller disclosure|private|signature|cookie/i);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });

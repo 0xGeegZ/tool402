@@ -1,18 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "../ui/button";
-import { recordingReadiness, recordingSteps, recordingTourHref, type RecordingStatus } from "./demo-control-room";
+import { recordingReadinessForEvidence, recordingSteps, recordingTourHref, type RecordingStatus } from "./demo-control-room";
+import {
+  exportDemoEvidenceSummary,
+  mergeDemoEvidence,
+  parseDemoEvidenceImport,
+  readStoredDemoEvidence,
+  summarizeDemoEvidence,
+  writeStoredDemoEvidence,
+  type AgentPaymentEvidence,
+} from "./demo-evidence";
 
-const preflightCommand = "export RISKSCAN_PAY_SERVICE_BASE_URL='https://tool402.vercel.app'\nexport RISKSCAN_PAY_INPUT_JSON='{\"requestRef\":\"b03-release-001\",\"subjectRef\":\"tool402-release\",\"context\":\"One authorized Hedera-testnet RiskScan exercise\",\"declarations\":{\"identity\":true,\"pricing\":true,\"limitations\":true,\"evidence\":true}}'\nexport RISKSCAN_PAY_POLICY_JSON='{\"network\":\"hedera:testnet\",\"asset\":\"0.0.0\",\"maximumAmount\":\"100000\"}'\nnode --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts --preflight";
-const paidCommand = ": \"$" + "{RISKSCAN_PAY_PAYER_ACCOUNT_ID:?set privately in ignored runtime configuration}\"\n: \"$" + "{RISKSCAN_PAY_PAYER_PRIVATE_KEY:?set privately in ignored runtime configuration}\"\nnode --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts";
+const preflightCommand = "export RISKSCAN_PAY_SERVICE_BASE_URL='https://tool402.vercel.app'\nexport RISKSCAN_PAY_INPUT_JSON='{\"requestRef\":\"b03-release-001\",\"subjectRef\":\"tool402-release\",\"context\":\"One authorized Hedera-testnet RiskScan exercise\",\"declarations\":{\"identity\":true,\"pricing\":true,\"limitations\":true,\"evidence\":true}}'\nexport RISKSCAN_PAY_POLICY_JSON='{\"network\":\"hedera:testnet\",\"asset\":\"0.0.0\",\"maximumAmount\":\"100000\"}'\nexport RISKSCAN_PAY_RECORDING_RUN_REF='b03-release-001'\nnode --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts --preflight";
+const paidCommand = ": \"$" + "{RISKSCAN_PAY_PAYER_ACCOUNT_ID:?set privately in ignored runtime configuration}\"\n: \"$" + "{RISKSCAN_PAY_PAYER_PRIVATE_KEY:?set privately in ignored runtime configuration}\"\nnode --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts --evidence-output ./tool402-agent-evidence.json";
 const expectedPreflight = "RISKSCAN_PAY_DIAGNOSTIC PREFLIGHT_GUARD_REACHED";
-const expectedPaidResult = "RISKSCAN_PAY_OUTCOME paid\nRISKSCAN_PAY_SETTLEMENT <non-empty-safe-settlement-reference>\nRISKSCAN_PAY_DIAGNOSTIC PAID";
+const expectedPaidResult = "RISKSCAN_PAY_OUTCOME paid\nRISKSCAN_PAY_SETTLEMENT <non-empty-safe-settlement-reference>\nRISKSCAN_PAY_EVIDENCE_EXPORTED\nRISKSCAN_PAY_DIAGNOSTIC PAID";
 
 function tone(status: RecordingStatus): string {
   if (status === "READY") return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700";
+  if (status === "Settlement reported") return "border-sky-500/30 bg-sky-500/10 text-sky-700";
   if (status === "OPTIONAL") return "border-sky-500/30 bg-sky-500/10 text-sky-700";
   if (status === "NOT AVAILABLE") return "border-border bg-muted text-muted-foreground";
   return "border-amber-500/30 bg-amber-500/10 text-amber-800";
@@ -41,6 +51,40 @@ function CopyCommandButton({ label, value }: { label: string; value: string }) {
 
 export function RecordingControlRoom() {
   const start = recordingSteps[0];
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [evidence, setEvidence] = useState<readonly AgentPaymentEvidence[]>([]);
+  const [importStatus, setImportStatus] = useState<"idle" | "imported" | "invalid">("idle");
+  function refreshEvidence(): void {
+    try { setEvidence(readStoredDemoEvidence(window.localStorage)); setImportStatus("idle"); } catch { setEvidence([]); }
+  }
+  useEffect(() => {
+    refreshEvidence();
+    window.addEventListener("focus", refreshEvidence);
+    return () => window.removeEventListener("focus", refreshEvidence);
+  }, []);
+  const summary = summarizeDemoEvidence(evidence).agentPayment;
+  const readiness = recordingReadinessForEvidence(evidence);
+  async function importEvidence(file: File | undefined): Promise<void> {
+    if (file === undefined || file.size > 16_384) { setImportStatus("invalid"); return; }
+    try {
+      const parsed = parseDemoEvidenceImport(await file.text());
+      if (parsed === null) { setImportStatus("invalid"); return; }
+      setEvidence((current) => {
+        const next = mergeDemoEvidence(current, parsed);
+        try { writeStoredDemoEvidence(window.localStorage, next); } catch { /* local persistence is optional */ }
+        return next;
+      });
+      setImportStatus("imported");
+    } catch { setImportStatus("invalid"); }
+  }
+  function exportSummary(): void {
+    try {
+      const blob = new Blob([exportDemoEvidenceSummary(evidence)], { type: "application/json" });
+      const href = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = href; link.download = "tool402-demo-evidence-summary.json"; link.click(); URL.revokeObjectURL(href);
+    } catch { setImportStatus("invalid"); }
+  }
   return (
     <div className="space-y-8">
       <section aria-labelledby="recording-readiness" className="rounded-panel border border-brand-purple/20 bg-brand-purple/5 p-5 sm:p-6">
@@ -55,7 +99,7 @@ export function RecordingControlRoom() {
           </Link>
         </div>
         <ul className="mt-5 grid gap-3 md:grid-cols-2">
-          {recordingReadiness.map((item) => (
+          {readiness.map((item) => (
             <li key={item.label} className="rounded-card border border-border bg-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-semibold">{item.label}</p>
@@ -85,7 +129,18 @@ export function RecordingControlRoom() {
           <div className="rounded-control border border-border p-3"><pre className="overflow-x-auto text-xs leading-5">{preflightCommand}</pre><div className="mt-3"><CopyCommandButton label="Copy preflight command" value={preflightCommand} /></div></div>
           <div className="rounded-control border border-border p-3"><pre className="overflow-x-auto text-xs leading-5">{paidCommand}</pre><div className="mt-3"><CopyCommandButton label="Copy paid-command template" value={paidCommand} /></div></div>
         </div>
-        <p className="mt-4 text-sm font-medium text-muted-foreground">Recorded payment evidence: NOT AVAILABLE. No explorer link is rendered until a real verified settlement reference is available.</p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <input ref={inputRef} type="file" accept="application/json" className="sr-only" onChange={(event) => { void importEvidence(event.target.files?.[0]); event.target.value = ""; }} />
+          <Button type="button" variant="outline" onClick={() => inputRef.current?.click()}>Import Agent evidence</Button>
+          <Button type="button" variant="outline" onClick={refreshEvidence}>Refresh evidence</Button>
+          <Button type="button" variant="outline" onClick={exportSummary} disabled={evidence.length === 0}>Export evidence summary</Button>
+          <span aria-live="polite" className="text-sm text-muted-foreground">{importStatus === "imported" ? "Evidence imported locally." : importStatus === "invalid" ? "Evidence import failed; no payment was retried." : "Local-only evidence survives this browser reload."}</span>
+        </div>
+        <div className="mt-4 rounded-control border border-border p-3 text-sm">
+          <p className="font-semibold">Recorded payment evidence: {summary.status}</p>
+          <p className="mt-1 text-muted-foreground">{summary.detail}</p>
+          {summary.hashscanUrl === null ? null : <a href={summary.hashscanUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-10 items-center rounded-control border border-border px-3 py-2 font-semibold hover:bg-muted">Open Agent payment in HashScan</a>}
+        </div>
       </section>
 
       <section aria-labelledby="retake-options" className="rounded-card border border-border bg-card p-5 sm:p-6">
@@ -102,7 +157,7 @@ export function RecordingControlRoom() {
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Final step</p>
         <h2 id="final-evidence-recap" className="mt-1 text-2xl font-bold">Tool402 demo evidence</h2>
         <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-          <div><dt className="font-semibold">Consumer Agent payment</dt><dd className="text-muted-foreground">Not available in this build.</dd></div>
+          <div><dt className="font-semibold">Consumer Agent payment</dt><dd className="text-muted-foreground">{summary.status}: {summary.detail}</dd></div>
           <div><dt className="font-semibold">ATS deployment and lifecycle</dt><dd className="text-muted-foreground">Action required: verified asset and transfer evidence.</dd></div>
           <div><dt className="font-semibold">Provider campaign</dt><dd className="text-muted-foreground">Show current admitted status on the Provider route.</dd></div>
           <div><dt className="font-semibold">Backing</dt><dd className="text-muted-foreground">Submitted is allocation pending until independent confirmation.</dd></div>

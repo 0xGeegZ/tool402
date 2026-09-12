@@ -63,7 +63,17 @@ export type RiskScanQuickPaymentOutcome =
         | "settlement_rejected"
         | "payment_response_invalid";
     }
-  | { readonly kind: "paid"; readonly settlementRef: string; readonly assessment: RiskScanQuickResult }
+  | {
+      readonly kind: "paid";
+      readonly settlementRef: string;
+      readonly assessment: RiskScanQuickResult;
+      readonly quotedPayment: Readonly<{
+        network: "hedera:testnet";
+        asset: string;
+        amount: string;
+        recipient: string;
+      }>;
+    }
   | { readonly kind: "unexpected_response" };
 
 export type RiskScanQuickPaymentAgent = {
@@ -469,7 +479,17 @@ export function createRiskScanQuickPaymentAgent(
       if (!matchesAssessment(assessment, expectedAssessment)) {
         return { kind: "payment_failed", reason: "payment_response_invalid" };
       }
-      return { kind: "paid", settlementRef, assessment: expectedAssessment };
+      return {
+        kind: "paid",
+        settlementRef,
+        assessment: expectedAssessment,
+        quotedPayment: {
+          network: eligibility.network,
+          asset: eligibility.asset,
+          amount: eligibility.amount.toString(),
+          recipient: challenge.accepts[0].payTo,
+        },
+      };
     },
   };
 }

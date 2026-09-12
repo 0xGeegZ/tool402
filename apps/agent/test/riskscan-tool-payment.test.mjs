@@ -245,6 +245,12 @@ paymentTest("discovers once, freezes the accepted policy, then sends one unsigne
     kind: "paid",
     settlementRef: "settlement-payment-42",
     assessment: expectedAssessment,
+    quotedPayment: {
+      network: "hedera:testnet",
+      asset: "0.0.429274",
+      amount: "10000",
+      recipient: "0.0.1002",
+    },
   });
   assertOneDirectoryGet(harness.calls.directory);
   assert.deepEqual(harness.calls.request, [

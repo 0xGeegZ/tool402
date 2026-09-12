@@ -48,10 +48,13 @@ test("renders the shared fifteen-step itinerary with stable recording links", as
   assert.doesNotMatch(steps, /<a\b/i);
 });
 
-test("keeps guide presentation free of environment, storage, automatic action, and fabricated proof", async () => {
+test("keeps guide presentation free of environment and automatic action while allowing local-only evidence retakes", async () => {
   const [page, steps, room] = await Promise.all([readAppFile(pagePath), readAppFile(stepsPath), readAppFile(roomPath)]);
   const source = page + "\n" + steps + "\n" + room;
-  assert.doesNotMatch(source, /\b(?:localStorage|sessionStorage|indexedDB|process\.env|import\.meta\.env)\b/i);
+  assert.doesNotMatch(source, /\b(?:sessionStorage|indexedDB|process\.env|import\.meta\.env)\b/i);
+  assert.match(room, /readStoredDemoEvidence\(window\.localStorage\)/);
+  assert.match(room, /Import Agent evidence/);
+  assert.match(room, /Export evidence summary/);
   assert.doesNotMatch(source, /\b(?:eth_sendTransaction|eth_signTypedData|wallet_switchEthereumChain|fetch\s*\()\b/);
   assert.match(source, /NOT AVAILABLE/);
   assert.match(source, /allocation pending/i);
