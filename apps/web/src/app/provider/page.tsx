@@ -6,7 +6,7 @@ import { PageHeader } from "../../components/ui/page-header";
 import { readProviderProjections } from "../../lib/offering-projection";
 
 async function ProviderStatusRegions() {
-  const projections = await readProviderProjections(process.env, globalThis.fetch, "riskscan_offering_demo");
+  const projections = await readProviderProjections(process.env, globalThis.fetch, "riskscan_revenue_note_demo");
   return <ProviderStatus projections={projections} />;
 }
 

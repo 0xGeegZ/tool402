@@ -13,10 +13,10 @@ export function nextProviderAction(state: OfferingState) {
     DRAFT: "Prepare the revenue note asset",
     ASSET_PENDING: "Create the note in MetaMask",
     READY: "Publish the directory version",
-    OPEN: "Whitelist the first backer and issue their units",
-    CLOSED: "None. The offering is closed.",
+    OPEN: "Campaign deployed",
+    CLOSED: "Campaign closed",
   } as const;
-  return { message: actions[state], href: state === "CLOSED" ? null : "/provider/deploy" };
+  return { message: actions[state], href: ["OPEN", "CLOSED"].includes(state) ? null : "/provider/deploy" };
 }
 
 export function providerEvidenceRows(

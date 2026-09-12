@@ -5,8 +5,8 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const sourceUrl = new URL("../src/lib/dashboard-campaign.ts", import.meta.url);
-const sourcePath = fileURLToPath(sourceUrl);
 const componentUrl = new URL("../src/components/dashboard/dashboard-campaign.tsx", import.meta.url);
+const sourcePath = fileURLToPath(sourceUrl);
 const dashboardPageUrl = new URL("../src/app/dashboard/page.tsx", import.meta.url);
 const implementedTest = existsSync(sourcePath) ? test : test.skip;
 
@@ -39,6 +39,12 @@ implementedTest("returns the current RiskScan campaign only for its exact canoni
     title: "RiskScan",
     state: "ASSET_PENDING",
     href: "/provider/deploy",
+  });
+
+  assert.deepEqual(readDashboardCampaign({ ...record, state: "OPEN" }, signer), {
+    title: "RiskScan",
+    state: "OPEN",
+    href: "/provider",
   });
 
   for (const candidate of [
@@ -80,4 +86,23 @@ implementedTest("renders one local empty card when the signed session has no cam
   assert.match(source, /There is no RiskScan campaign associated with this signed dashboard session\./u);
   assert.match(source, /href="\/provider\/deploy"[^>]*>Prepare a tool</u);
   assert.match(source, /href="\/explore\/riskscan"[^>]*>Explore RiskScan</u);
+});
+
+implementedTest("uses the configured session cookie name when it reads the dashboard campaign", async () => {
+  const source = await readFile(componentUrl, "utf8");
+  assert.match(source, /\breadDashboardSessionCookieName\b/u);
+  assert.doesNotMatch(source, /const\s+sessionCookieName\s*=\s*["']__Host-tool402-dashboard-session/u);
+});
+
+implementedTest("labels deployed campaigns as a view instead of a resume action", async () => {
+  const source = await readFile(componentUrl, "utf8");
+  assert.match(source, /campaign\.state\s*===\s*["']OPEN["']\s*\|\|\s*campaign\.state\s*===\s*["']CLOSED["']/u);
+  assert.match(source, /View deployment/u);
+  assert.match(source, /Resume deployment/u);
+  assert.doesNotMatch(source, /Resume campaign/u);
+});
+
+implementedTest("sends deployed campaigns to the Provider status page", async () => {
+  const source = await readFile(sourceUrl, "utf8");
+  assert.match(source, /href:\s*["']\/provider["']/u);
 });

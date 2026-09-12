@@ -43,7 +43,7 @@ the browser, response body, log, or error message.
 
 | Name | Exact accepted form | Purpose |
 | --- | --- | --- |
-| `TOOL402_DASHBOARD_AUTH_ORIGIN` | one canonical absolute HTTPS URL, with no credentials, query, hash, or path other than `/` | fixes the EIP-4361 domain and URI, validates POST `Origin`, and sets host-only cookies outside Vercel Preview; it overrides the Preview derivation when present |
+| `TOOL402_DASHBOARD_AUTH_ORIGIN` | one canonical absolute HTTPS URL, or only when `NODE_ENV=development`, `http://localhost:<port>`; neither form permits credentials, query, hash, or a path other than `/` | fixes the EIP-4361 domain and URI, validates POST `Origin`, and selects cookies whose transport attributes match the accepted local-development exception; it overrides the Preview derivation when present |
 | `TOOL402_DASHBOARD_AUTH_SECRET` | exactly 64 lower-case hexadecimal characters | HMAC-SHA-256 key for the challenge and session envelopes |
 
 On Vercel Preview only, when the explicit origin is absent,
@@ -53,7 +53,7 @@ validation. This preserves an exact origin binding for every ephemeral preview.
 It never applies in development or production, never accepts a request-derived
 host, and never replaces the required secret.
 
-Missing or malformed configuration produces only `503 {"outcome":"not_configured"}` and no cookie. Local real-wallet testing therefore requires a separately configured HTTPS origin; Preview requires the Vercel system variables plus the separately configured secret. Configuration remains a human-owned deployment action.
+Missing or malformed configuration produces only `503 {"outcome":"not_configured"}` and no cookie. Local real-wallet testing may use an explicitly configured `http://localhost:<port>` only when `NODE_ENV=development`; it is exact-origin bound, is never inferred from a request host, and is rejected for every other host, scheme, or environment. Preview requires the Vercel system variables plus the separately configured secret. Configuration remains a human-owned deployment action.
 
 ## Protocol
 
@@ -74,7 +74,9 @@ Missing or malformed configuration produces only `503 {"outcome":"not_configured
 5. The server sets the sealed payload in
    `__Host-tool402-dashboard-challenge` with `Path=/`, `Secure`, `HttpOnly`,
    and `SameSite=Strict`, then returns only `{message,expiresAt}` with
-   `Cache-Control: no-store`.
+   `Cache-Control: no-store`. The exact local-development HTTP exception uses
+   `tool402-dashboard-challenge` (without the `__Host` prefix and `Secure`)
+   with the same `Path=/`, `HttpOnly`, and `SameSite=Strict` attributes.
 
 The returned message is byte-for-byte:
 
@@ -111,7 +113,8 @@ relay, or a wallet switch from the sign-in control.
    `__Host-tool402-dashboard-session`. Its fixed signed payload is
    `{v,address,issuedAt,expiresAt}`; its lifetime is exactly eight hours. The
    session cookie has `Path=/`, `Secure`, `HttpOnly`, `SameSite=Strict`, and
-   `Cache-Control: no-store`.
+   `Cache-Control: no-store`. The exact local-development HTTP exception uses
+   `tool402-dashboard-session` with the corresponding non-`Secure` attributes.
 5. On every verification failure, the response clears the challenge cookie
    and returns only `401 {"outcome":"rejected"}`. It never disclose whether
    the address, cookie, message, or signature failed.

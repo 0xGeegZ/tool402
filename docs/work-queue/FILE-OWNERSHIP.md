@@ -1529,3 +1529,16 @@ M50's accepted event behavior if it later rebases its shared-session redesign.
 M50 does not own or amend
 `wallet-state.ts`, deploy-stage signing, command/relay code, configuration,
 packages, lockfiles, or any live path.
+
+M55-T010 is a root-owned `00-inbox` CORE_P0 new-provider-tool refinement.
+Its documentation scope is its card, `docs/specs/m55-provider-demo-attempt-restart.md`,
+`docs/superpowers/plans/2026-09-12-m55-deploy-another-tool.md`,
+`docs/work-queue/evidence/M55-T010-delegation.md`, the product overview's M55
+amendment, root queue/control records, and independent refinement review.
+The retained filenames do not preserve the superseded demo-attempt UX.
+The allocator design is selected in the spec; source readiness is not granted.
+The plan's candidate paths confer no ownership. M51/M53/M54/S26/S36/S42/B04
+reservations remain unchanged until root records release or exact scoped
+transfer/co-review, followed by independent readiness, activation, and RED
+acceptance. No source/test, authority provisioning, environment mutation,
+wallet, signature, transaction, deployment, or live-evidence action is active.

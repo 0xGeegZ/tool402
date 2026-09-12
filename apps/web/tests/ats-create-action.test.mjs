@@ -168,7 +168,6 @@ test("offers an explicit public-hash recovery control before any new transaction
   assert.ok(recoveryButton, "recovery must be an explicit click, not a mount effect");
   assert.deepEqual(calls, []);
 });
-
 test("requires the supplied recovery hash to be canonical before enabling its explicit action", async () => {
   const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
   const transactionHash = `0x${"1".repeat(64)}`;

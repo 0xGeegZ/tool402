@@ -627,7 +627,6 @@ implementedTest("rejects non-canonical public hashes before any provider or Mirr
   assert.deepEqual(provider.calls, []);
   assert.deepEqual(mirror.calls, []);
 });
-
 implementedTest("recovers a confirmed Hedera long-zero issuer result", async () => {
   const log = createBondDeployedLog(factoryApi, projectionApi);
   const mirrorIssuer = "0x00000000000000000000000000000000009f29a7";
@@ -672,7 +671,6 @@ implementedTest("returns no candidate for an absent public transaction without u
   assert.equal(mirror.calls.length, 3, "an absent public transaction uses every bounded Mirror observation");
   assert.deepEqual(waits, [2000, 2000], "only the first two absent observations wait before the final result");
 });
-
 implementedTest("bounds all Mirror cycles to one five-second deadline through the injected timing seam", async () => {
   const provider = fakeProvider({
     receipt: { transactionHash, status: "0x1", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },

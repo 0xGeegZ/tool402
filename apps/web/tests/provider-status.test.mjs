@@ -261,6 +261,7 @@ implementedTest("gives each projection its own deadline and rejects bodies above
 implementedTest("renders only the fixed status regions, actions, evidence rows, and gated external link", async () => {
   const sources = await readSources();
   const page = sources["src/app/provider/page.tsx"];
+  assert.match(page, /readProviderProjections\(process\.env, globalThis\.fetch, ["']riskscan_revenue_note_demo["']\)/u);
   const status = sources["src/components/provider/status/provider-status.tsx"];
   const state = sources["src/components/provider/status/provider-status-state.ts"];
   const presentation = `${page}\n${status}\n${state}`;
@@ -275,8 +276,8 @@ implementedTest("renders only the fixed status regions, actions, evidence rows, 
     "Prepare the revenue note asset",
     "Create the note in MetaMask",
     "Publish the directory version",
-    "Whitelist the first backer and issue their units",
-    "None. The offering is closed.",
+    "Campaign deployed",
+    "Campaign closed",
     "offering.create",
     "external.prepare",
     "revenue note",
@@ -305,7 +306,8 @@ implementedTest("presents unavailable provider data as an actionable workspace w
   assert.match(status, /bg-secondary/);
   assert.match(status, /Offering record/);
   assert.match(status, /Directory record/);
-  assert.match(status, /Prepare an offering/);
+  assert.match(status, /Backer issuance is not available in this demo/);
+  assert.doesNotMatch(status, /Whitelist the first backer/);
   assert.doesNotMatch(status, /funding raised|units issued|paid task|balance|Live testnet|Connected/i);
 });
 
@@ -328,8 +330,8 @@ implementedTest("derives the fixed region order, next actions, evidence cells, a
       { message: "Prepare the revenue note asset", href: "/provider/deploy" },
       { message: "Create the note in MetaMask", href: "/provider/deploy" },
       { message: "Publish the directory version", href: "/provider/deploy" },
-      { message: "Whitelist the first backer and issue their units", href: "/provider/deploy" },
-      { message: "None. The offering is closed.", href: null },
+      { message: "Campaign deployed", href: null },
+      { message: "Campaign closed", href: null },
     ],
   );
 

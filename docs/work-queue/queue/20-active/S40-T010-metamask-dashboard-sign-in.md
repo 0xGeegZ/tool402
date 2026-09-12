@@ -10,7 +10,7 @@
   readiness/activation/RED/acceptance evidence, commits, and pushes. The only
   proposed source/test paths are those declared below and in the
   [MetaMask dashboard sign-in specification](../../../specs/metamask-dashboard-sign-in.md).
-- Human actions: configuring the HTTPS origin and secret, connecting a real
+- Human actions: configuring the canonical origin and secret, connecting a real
   wallet, requesting an account, and signing a real message remain human-owned.
   This card creates no deployment, account, provider permission, transaction,
   payment, relay, or live authority.
@@ -83,8 +83,9 @@ the lockfile.
 - A separate independent activation review may authorize only a durable
   test-only RED contract. Production source remains prohibited until the RED
   review is accepted.
-- The protocol is fixed before source work: HTTPS canonical origin and
-  64-lowercase-hex secret; lower-case EVM address; 16-byte/22-character
+- The protocol is fixed before source work: canonical HTTPS origin and
+  64-lowercase-hex secret, with the separately documented development-only
+  `http://localhost:<port>` exception; lower-case EVM address; 16-byte/22-character
   base64url nonce; 300-second challenge; 28,800-second session; signed
   challenge and session envelopes; exact cookie names; exact `personal_sign`
   message; exact POST bodies; closed generic failures; and server layout gate.
@@ -168,6 +169,17 @@ template and its Web counterpart. The two reserved `.env.example` files above
 are template documentation only. The actual `.env.local`, any origin/secret
 value used at runtime, TLS trust, wallet account request, and real signature
 remain human-owned and outside this card.
+
+## User-directed local HTTP amendment
+
+The repository owner explicitly requires dashboard sign-in to work on the
+ordinary local HTTP dev server. The declared dashboard-auth source and test
+paths may therefore accept only `http://localhost:<port>` when `NODE_ENV` is
+exactly `development`, bind every request and signed message to that exact
+origin, and use dedicated non-`__Host`, non-`Secure` challenge/session cookies
+for that exception. Every non-loopback HTTP origin, any non-development
+environment, Vercel Preview, and production remains HTTPS-only and fail-closed.
+This authorizes no real wallet account request or signature by an agent.
 
 ## User-directed navigation amendment
 

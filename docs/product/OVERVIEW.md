@@ -13,6 +13,17 @@ unconfigured route: it creates no identity, session, wallet, account, or
 personal data claim. A genuine Sign flow needs its own local session,
 recovery, privacy, and provider contract before implementation.
 
+## M55 provider-tool creation amendment
+
+The owner's September 12 scope clarification adds the ability for one already
+authorized provider to deploy multiple independent tools using the supported
+service profile. Names and prefilled information may be identical; identities,
+deployments, and listings remain distinct. Existing tools remain inspectable
+and unchanged. This does not add arbitrary service hosting, issuer onboarding,
+or a general marketplace. The [M55 specification](../specs/m55-provider-demo-attempt-restart.md)
+and its local intake govern this intended extension; documentation is not a
+claim that multiple-tool deployment is already implemented or live.
+
 ## Problem
 
 Software agents need to decide whether a paid tool is useful before they can safely spend on it. Traditional APIs assume a human developer already has credentials, a subscription, and private context. That model is awkward for an autonomous or semi-autonomous consumer: it hides price and capability, makes a real payment difficult to distinguish from a simulated success state, and leaves little evidence that a result was actually produced after settlement.

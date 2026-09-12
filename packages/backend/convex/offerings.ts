@@ -142,10 +142,16 @@ const externalPrepareAttemptFields = [
   "state",
   "acceptedAt",
 ] as const;
+const externalPrepareAttemptOptionalCandidateFields = [
+  "candidateTransactionId",
+  "candidateEvmAddress",
+] as const;
 const publicIdPattern = /^[A-Za-z0-9_-]{1,96}$/u;
 const payloadHashPattern = /^0x[0-9a-f]{64}$/u;
 const parameterHashPattern = /^[0-9a-f]{64}$/u;
 const idempotencyKeyPattern = /^[A-Za-z0-9_-]{21}[AQgw]$/u;
+const candidateTransactionIdPattern =
+  /^0\.0\.(?:0|[1-9][0-9]*)-(?:0|[1-9][0-9]*)-[0-9]{9}$/u;
 const timestampPattern =
   /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z$/u;
 const canonicalStoredValidationExpiry = "2026-01-01T00:00:00.000Z";
@@ -308,6 +314,7 @@ function readSafeOffering(input: unknown): SafeOffering {
 }
 
 export function readAtsCreateReplayOffering(input: unknown): {
+  readonly offeringId: GenericId<"offerings">;
   readonly atsAttemptId: GenericId<"externalPrepareCommandAttempts">;
   readonly state: "ASSET_PENDING";
   readonly subjectPublicId: string;
@@ -326,6 +333,7 @@ export function readAtsCreateReplayOffering(input: unknown): {
       return null;
     }
     return Object.freeze({
+      offeringId: offering.offeringId,
       atsAttemptId: offering.atsAttemptId,
       state: "ASSET_PENDING" as const,
       subjectPublicId: offering.subjectPublicId,
@@ -365,6 +373,59 @@ function readSafePreparedAtsCreateAttempt(input: unknown) {
     || !canonicalTimestamp(record.expiresAt)
     || record.state !== "PREPARED"
     || !isInt64(record.acceptedAt)
+  ) {
+    return reject();
+  }
+  return Object.freeze({
+    attemptId: opaqueId<"externalPrepareCommandAttempts">(record._id),
+    subjectPublicId: record.subjectPublicId,
+    canonicalSignerAddress: record.canonicalSignerAddress,
+    principalPublicId: record.principalPublicId,
+    authorityVersion: record.authorityVersion,
+    idempotencyKey: record.idempotencyKey,
+  });
+}
+
+function readSafePublicAtsCreateAttempt(input: unknown) {
+  const record = readStoredRecord(
+    input,
+    externalPrepareAttemptFields,
+    externalPrepareAttemptOptionalCandidateFields,
+  );
+  const submitted = record.state === "SUBMITTED";
+  const hasCandidateTransactionId = Object.hasOwn(record, "candidateTransactionId");
+  const hasCandidateEvmAddress = Object.hasOwn(record, "candidateEvmAddress");
+  if (
+    record.version !== 1
+    || record.type !== "external.prepare"
+    || record.chainId !== 296
+    || !isCanonicalEvmAddress(record.canonicalSignerAddress)
+    || typeof record.principalPublicId !== "string"
+    || record.principalPublicId.length === 0
+    || record.role !== "ISSUER"
+    || typeof record.authorityVersion !== "string"
+    || record.authorityVersion.length === 0
+    || typeof record.payloadHash !== "string"
+    || !payloadHashPattern.test(record.payloadHash)
+    || record.operationKind !== "ATS_CREATE"
+    || typeof record.subjectPublicId !== "string"
+    || !publicIdPattern.test(record.subjectPublicId)
+    || record.network !== "hedera:testnet"
+    || typeof record.expectedTarget !== "string"
+    || record.expectedTarget.length === 0
+    || typeof record.canonicalParametersHash !== "string"
+    || !parameterHashPattern.test(record.canonicalParametersHash)
+    || typeof record.idempotencyKey !== "string"
+    || !idempotencyKeyPattern.test(record.idempotencyKey)
+    || !canonicalTimestamp(record.expiresAt)
+    || !isInt64(record.acceptedAt)
+    || (!submitted && (record.state !== "PREPARED" || hasCandidateTransactionId || hasCandidateEvmAddress))
+    || (submitted && (
+      !hasCandidateTransactionId
+      || !candidateTransactionIdPattern.test(record.candidateTransactionId as string)
+      || !hasCandidateEvmAddress
+      || !isCanonicalEvmAddress(record.candidateEvmAddress)
+    ))
   ) {
     return reject();
   }
@@ -698,7 +759,7 @@ export const getPublicProjection = publicQuery({
       if (highest.atsAttemptId === undefined) {
         return reject();
       }
-      const attempt = readSafePreparedAtsCreateAttempt(await ctx.db.get(highest.atsAttemptId));
+      const attempt = readSafePublicAtsCreateAttempt(await ctx.db.get(highest.atsAttemptId));
       if (
         attempt.attemptId !== highest.atsAttemptId
         || attempt.subjectPublicId !== highest.subjectPublicId

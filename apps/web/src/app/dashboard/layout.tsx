@@ -2,15 +2,14 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 
-import { readDashboardSession } from "../../lib/dashboard-auth/dashboard-auth.ts";
-
-const sessionCookieName = "__Host-tool402-dashboard-session";
+import { readDashboardSession, readDashboardSessionCookieName } from "../../lib/dashboard-auth/dashboard-auth.ts";
 
 async function DashboardGate({
   children,
 }: Readonly<{ children: ReactNode }>) {
+  const sessionCookieName = readDashboardSessionCookieName(process.env);
   const session = await readDashboardSession(
-    (await cookies()).get(sessionCookieName)?.value ?? null,
+    sessionCookieName === null ? null : (await cookies()).get(sessionCookieName)?.value ?? null,
     process.env,
     Date.now(),
   );

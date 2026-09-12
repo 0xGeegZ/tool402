@@ -23,6 +23,7 @@ implementedTest("accepts only one exact ASSET_PENDING RiskScan projection for th
   };
 
   assert.deepEqual(readProviderCampaignResume(record, record.canonicalSignerAddress), {
+    kind: "ASSET_PENDING",
     attemptPublicId: "CCCCCCCCCCCCCCCCCCCCCg",
   });
 
@@ -32,6 +33,26 @@ implementedTest("accepts only one exact ASSET_PENDING RiskScan projection for th
     { ...record, canonicalSignerAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
     { ...record, atsAttemptPublicId: "bad" },
     { ...record, atsAttemptPublicId: undefined },
+  ]) {
+    assert.equal(readProviderCampaignResume(candidate, record.canonicalSignerAddress), null);
+  }
+});
+
+implementedTest("accepts only a durable READY projection with a canonical recorded asset", async () => {
+  const { readProviderCampaignResume } = await import(sourceUrl.href);
+  const record = {
+    offeringPublicId: "riskscan_revenue_note_demo",
+    subjectPublicId: "riskscan_revenue_note_demo",
+    state: "READY",
+    canonicalSignerAddress: "0xc89f87052c3e080b4a9b021d4930055031ef378e",
+    atsAssetEvmAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  };
+
+  assert.deepEqual(readProviderCampaignResume(record, record.canonicalSignerAddress), { kind: "READY" });
+  for (const candidate of [
+    { ...record, atsAssetEvmAddress: undefined },
+    { ...record, atsAssetEvmAddress: "not-an-address" },
+    { ...record, state: "OPEN" },
   ]) {
     assert.equal(readProviderCampaignResume(candidate, record.canonicalSignerAddress), null);
   }

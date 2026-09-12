@@ -1,18 +1,17 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 
-import { readDashboardSession } from "../../lib/dashboard-auth/dashboard-auth";
+import { readDashboardSession, readDashboardSessionCookieName } from "../../lib/dashboard-auth/dashboard-auth";
 import { readDashboardCampaign, riskScanOfferingPublicId } from "../../lib/dashboard-campaign";
 import { readProviderProjections } from "../../lib/offering-projection";
 import { Badge } from "../ui/badge";
 import { buttonVariants } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 
-const sessionCookieName = "__Host-tool402-dashboard-session";
-
 export async function DashboardCampaign() {
+  const sessionCookieName = readDashboardSessionCookieName(process.env);
   const session = await readDashboardSession(
-    (await cookies()).get(sessionCookieName)?.value ?? null,
+    sessionCookieName === null ? null : (await cookies()).get(sessionCookieName)?.value ?? null,
     process.env,
   );
   if (session === null) return null;
@@ -47,6 +46,12 @@ export async function DashboardCampaign() {
     );
   }
 
+  const deployed = campaign.state === "OPEN" || campaign.state === "CLOSED";
+  const description = deployed
+    ? "This Provider campaign is deployed. Review its current deployment state."
+    : "Continue the existing Provider campaign without creating a new draft.";
+  const action = deployed ? "View deployment" : "Resume deployment";
+
   return (
     <section aria-label="Your campaign">
       <Card className="rounded-card border-border bg-card shadow-none">
@@ -54,11 +59,11 @@ export async function DashboardCampaign() {
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">Your campaign</p>
             <h2 className="text-xl font-bold tracking-[-0.035em] text-foreground">{campaign.title}</h2>
-            <p className="text-sm leading-6 text-muted-foreground">Continue the existing Provider campaign without creating a new draft.</p>
+            <p className="text-sm leading-6 text-muted-foreground">{description}</p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-3">
             <Badge variant="secondary">{campaign.state}</Badge>
-            <Link href={campaign.href} className={buttonVariants({ size: "sm" })}>Resume campaign</Link>
+            <Link href={campaign.href} className={buttonVariants({ size: "sm" })}>{action}</Link>
           </div>
         </CardContent>
       </Card>

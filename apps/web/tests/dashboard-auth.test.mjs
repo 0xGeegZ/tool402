@@ -103,8 +103,10 @@ coreTest("exports the fixed Hedera challenge and session lifetimes", async () =>
     "DASHBOARD_AUTH_CHAIN_ID",
     "SESSION_MAX_AGE_SECONDS",
     "createChallenge",
+    "readDashboardAuthCookieNames",
     "readDashboardAuthOrigin",
     "readDashboardSession",
+    "readDashboardSessionCookieName",
     "verifyChallenge",
   ]);
   assert.equal(api.DASHBOARD_AUTH_CHAIN_ID, 296);
@@ -112,6 +114,24 @@ coreTest("exports the fixed Hedera challenge and session lifetimes", async () =>
   assert.equal(api.SESSION_MAX_AGE_SECONDS, 28_800);
   for (const name of ["createChallenge", "verifyChallenge", "readDashboardSession"]) {
     assert.equal(typeof api[name], "function");
+  }
+});
+
+coreTest("permits HTTP only for a localhost development origin", async () => {
+  const api = await loadApi();
+  const localEnvironment = {
+    TOOL402_DASHBOARD_AUTH_ORIGIN: "http://localhost:4317",
+    TOOL402_DASHBOARD_AUTH_SECRET: secret,
+    NODE_ENV: "development",
+  };
+
+  assert.equal(api.readDashboardAuthOrigin(localEnvironment), "http://localhost:4317");
+  for (const environment of [
+    { ...localEnvironment, NODE_ENV: "production" },
+    { ...localEnvironment, TOOL402_DASHBOARD_AUTH_ORIGIN: "http://127.0.0.1:4317" },
+    { ...localEnvironment, TOOL402_DASHBOARD_AUTH_ORIGIN: "http://localhost.example:4317" },
+  ]) {
+    assert.equal(api.readDashboardAuthOrigin(environment), null);
   }
 });
 
@@ -392,6 +412,7 @@ clientTest("keeps sign-in limited to the accepted local authentication boundary"
   assert.match(client, /\/api\/auth\/metamask\/challenge/u);
   assert.match(client, /\/api\/auth\/metamask\/verify/u);
   assert.match(client, /credentials\s*:\s*["']same-origin["']/u);
+  assert.match(client, /challenge\s*:\s*challenge\.challenge/u);
   assert.match(client, /params\s*:\s*\[\s*message\s*,\s*address\s*\]/u);
   assert.match(client, /disabled\s*=\s*\{\s*pending\s*\}/u);
   assert.match(client, /aria-live\s*=\s*["']polite["']/u);
@@ -407,7 +428,7 @@ signInTest("redirects valid sessions and otherwise renders the public sign-in bo
   assert.match(signIn, /\breadDashboardSession\b/u);
   assert.match(signIn, /\bcookies\(\)/u);
   assert.match(signIn, /\bSuspense\b/u);
-  assert.match(signIn, /__Host-tool402-dashboard-session/u);
+  assert.match(signIn, /\breadDashboardSessionCookieName\b/u);
   assert.match(signIn, /redirect\(\s*["']\/dashboard["']\s*\)/u);
   assert.match(signIn, /\bMetaMaskDashboardSignIn\b/u);
   assert.match(signIn, /Unlock your dashboard/u);
@@ -418,7 +439,7 @@ dashboardLayoutTest("guards dashboard descendants on the server before rendering
   assert.match(layout, /\breadDashboardSession\b/u);
   assert.match(layout, /\bcookies\(\)/u);
   assert.match(layout, /\bSuspense\b/u);
-  assert.match(layout, /__Host-tool402-dashboard-session/u);
+  assert.match(layout, /\breadDashboardSessionCookieName\b/u);
   assert.match(layout, /redirect\(\s*["']\/sign-in["']\s*\)/u);
   assert.match(layout, /return\s+children/u);
   assert.doesNotMatch(layout, /["']use client["']/u);
