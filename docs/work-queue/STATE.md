@@ -42,26 +42,26 @@
   it supersedes historical S11 copy only in its declared scope. No source is
   changed before readiness and RED; wallet and deployment authority is unchanged.
 
-- S43_PROVIDER_COMMAND_CENTER_INTAKE: The repository owner requested a new
+- S44_PROVIDER_COMMAND_CENTER_INTAKE: The repository owner requested a new
   isolated presentational redesign of the existing loaded `/provider` route.
-  S43-T010 is in `20-active`: its committed specification and UI manifest lock
+  S44-T010 is in `20-active`: its committed specification and UI manifest lock
   the command-center composition, and its only future source paths are the
   provider page, provider status component/state, generated provider hero
   asset, focused provider-status test, and the two superseded Provider-only
   visual/header assertion surfaces. It creates no new read, state,
   wallet/provider, command, transaction,
   deployment, or live authority.
-- S43_LOCAL_RECORDS: `docs/specs/s43-provider-command-center.md` and
-  `docs/ui/UI-S43.md` are S43's canonical implementation-local specification
+- S44_LOCAL_RECORDS: `docs/specs/s44-provider-command-center.md` and
+  `docs/ui/UI-S44.md` are S44's canonical implementation-local specification
   and UI manifest; its bounded ledger row is in `docs/ui/IMPORT-LEDGER.md`.
-- S43_PROVIDER_COMMAND_CENTER_RED_ACTIVATION: At planning head
-  `f55dec52426d96f4c1b01f852ed422d14e09c5d5`, S43's local records are
+- S44_PROVIDER_COMMAND_CENTER_RED_ACTIVATION: At planning head
+  `f55dec52426d96f4c1b01f852ed422d14e09c5d5`, S44's local records are
   committed, its focused Web baseline is clear, and independent readiness
   review found no finding. The user-directed implementation activation reserves
   only `apps/web/tests/provider-status.test.mjs` for durable RED; production
   source remains prohibited until an independent review accepts its expected
   missing-command-center failure.
-- S43_PROVIDER_COMMAND_CENTER_RED_ACCEPTANCE: At
+- S44_PROVIDER_COMMAND_CENTER_RED_ACCEPTANCE: At
   `a8e9edd8dca707c25ccf46dd0d0ba11f5cbfe92f`, independent review accepted the
   5×2 offering/Directory matrix with one expected missing-command-center
   presentation failure. The owner-requested visual amendment at `37864045`
@@ -70,9 +70,9 @@
   generated asset, and focused test; every projection/API, session,
   wallet/provider, command, transaction, deployment, and live boundary stays
   excluded.
-- S43_PROVIDER_CONTRACT_RECONCILIATION: The GREEN full-suite run exposed the
+- S44_PROVIDER_CONTRACT_RECONCILIATION: The GREEN full-suite run exposed the
   prior S25 generic Provider header assertion and S28 distilled Provider report
-  assertion as incompatible with S43's already-specified single hero. Only the
+  assertion as incompatible with S44's already-specified single hero. Only the
   Provider target assertions in `apps/web/tests/page-header.test.mjs` and the
   Provider-only `apps/web/tests/provider-visual-reconciliation.test.mjs` may be
   reconciled; other routes and shared components remain outside S43.
