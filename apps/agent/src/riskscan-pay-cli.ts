@@ -60,10 +60,25 @@ type EvidenceExport = Readonly<{
 
 const safeReferencePattern = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,95}$/u;
 const sourceVersionPattern = /^[0-9a-f]{7,64}$/u;
+const b03RecordingRunRef = "b03-release-001";
 
 function requiredEnvironmentValue(name: string): string | null {
   const value = process.env[name]?.trim();
   return value === undefined || value.length === 0 ? null : value;
+}
+
+function configuredRequestReference(): string | null {
+  const raw = requiredEnvironmentValue("RISKSCAN_PAY_INPUT_JSON");
+  if (raw === null) return null;
+  try {
+    const value = JSON.parse(raw) as unknown;
+    return typeof value === "object" && value !== null && !Array.isArray(value)
+      && typeof (value as { requestRef?: unknown }).requestRef === "string"
+      ? (value as { requestRef: string }).requestRef
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 function readServiceConfiguration(): ServiceConfiguration | null {
@@ -158,9 +173,11 @@ function evidenceExport(argumentsList: readonly string[]): EvidenceExport | "inv
       || (suppliedArguments[0] === "--evidence-output" && suppliedArguments[1] === outputPath && suppliedArguments[2] === "--preflight"));
   const recordingRunRef = requiredEnvironmentValue("RISKSCAN_PAY_RECORDING_RUN_REF");
   const sourceVersion = requiredEnvironmentValue("RISKSCAN_PAY_SOURCE_VERSION");
+  const requestReference = configuredRequestReference();
   if ((!isExactExport && !isExactPreflightExport)
     || typeof outputPath !== "string" || outputPath.startsWith("-") || outputPath.length === 0 || outputPath.length > 1_024
     || recordingRunRef === null || !safeReferencePattern.test(recordingRunRef)
+    || (requestReference === b03RecordingRunRef && recordingRunRef !== b03RecordingRunRef)
     || sourceVersion === null || !sourceVersionPattern.test(sourceVersion)) return "invalid";
   try {
     const destination = lstatSync(outputPath, { throwIfNoEntry: false });

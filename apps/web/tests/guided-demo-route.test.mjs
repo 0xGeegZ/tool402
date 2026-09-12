@@ -72,6 +72,7 @@ test("keeps guide presentation free of environment and automatic action while al
   assert.match(room, /Open Agent payment in HashScan/);
   assert.match(source, /show the submitted HashScan link and label it verification pending/i);
   assert.match(room, /rounded-control border border-border p-3 min-w-0/);
+  assert.match(room, /rounded-control bg-muted p-4 min-w-0/);
   assert.match(room, /max-w-full overflow-x-auto text-xs leading-5/);
   assert.match(room, /node --experimental-strip-types apps\/agent\/src\/riskscan-pay-cli\.ts --preflight/);
   assert.doesNotMatch(room, /npm run riskscan:pay/);

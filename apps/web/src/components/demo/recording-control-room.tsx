@@ -121,13 +121,13 @@ export function RecordingControlRoom() {
         <h2 id="consumer-agent-card" className="mt-1 text-xl font-bold">Consumer Agent paid request</h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">Run preflight first. If one client-reported paid result already exists, show its evidence and do not pay again for a retake.</p>
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-control bg-muted p-4">
+          <div className="rounded-control bg-muted p-4 min-w-0">
             <p className="font-semibold">DO</p>
             <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm leading-6"><li>Run preflight.</li><li>Run one authorized paid request only when it has not already completed.</li></ol>
           </div>
-          <div className="rounded-control bg-muted p-4">
+          <div className="rounded-control bg-muted p-4 min-w-0">
             <p className="font-semibold">SHOW</p>
-            <p className="mt-2 text-sm leading-6">Expected preflight:</p><pre className="mt-1 overflow-x-auto text-xs leading-5">{expectedPreflight}</pre><p className="mt-3 text-sm leading-6">Expected paid result:</p><pre className="mt-1 overflow-x-auto text-xs leading-5">{expectedPaidResult}</pre>
+            <p className="mt-2 text-sm leading-6">Expected preflight:</p><pre className="mt-1 max-w-full overflow-x-auto text-xs leading-5">{expectedPreflight}</pre><p className="mt-3 text-sm leading-6">Expected paid result:</p><pre className="mt-1 max-w-full overflow-x-auto text-xs leading-5">{expectedPaidResult}</pre>
           </div>
         </div>
         <div className="mt-4 grid gap-3 lg:grid-cols-2">
