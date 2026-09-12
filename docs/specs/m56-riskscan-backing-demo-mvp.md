@@ -79,7 +79,7 @@ dependencies and are not modified by M56.
 
 ## Verification
 
-The RED contract at `74521d0c` records eleven intended failures and eight
+The RED contract at `2a6e38fa` records eleven intended failures and eight
 unchanged passes against an implementation-free archive. GREEN runs focused
 and full Web tests, typecheck, lint, queue/reference/whitespace checks, a
 supported production build, desktop and 390px browser checks, and independent
