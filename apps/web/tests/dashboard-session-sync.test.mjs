@@ -11,18 +11,22 @@ const sourceUrl = new URL(
   "../src/components/auth/dashboard-session-sync.tsx",
   import.meta.url,
 );
-const layoutUrl = new URL("../src/app/layout.tsx", import.meta.url);
+const navigationUrl = new URL(
+  "../src/components/auth/dashboard-navigation.tsx",
+  import.meta.url,
+);
 const implementedTest = existsSync(fileURLToPath(sourceUrl)) ? test : test.skip;
 
-test("declares the root-mounted dashboard session synchronizer before GREEN", async () => {
+test("mounts the dashboard session synchronizer only from the authenticated navigation boundary", async () => {
   assert.equal(
     existsSync(fileURLToPath(sourceUrl)),
     true,
     `missing S40 sign-out synchronizer: ${fileURLToPath(sourceUrl)}`,
   );
-  const layout = await readFile(layoutUrl, "utf8");
-  assert.match(layout, /import\s*\{\s*DashboardSessionSync\s*\}\s*from\s*["'][^"']*dashboard-session-sync["']/u);
-  assert.equal((layout.match(/<DashboardSessionSync\s*\/>/gu) ?? []).length, 1);
+  const navigation = await readFile(navigationUrl, "utf8");
+  assert.match(navigation, /import\s*\{\s*DashboardSessionSync\s*\}\s*from\s*["'][^"']*dashboard-session-sync["']/u);
+  assert.equal((navigation.match(/<DashboardSessionSync\s*\/>/gu) ?? []).length, 1);
+  assert.match(navigation, /session\s*===\s*null\s*\?\s*null\s*:\s*<DashboardSessionSync\s*\/>/u);
 });
 
 async function loadSynchronizer({ responseStatus = 204, reject = false } = {}) {
@@ -118,7 +122,7 @@ implementedTest("logs out once when a settled MetaMask identity becomes disconne
   harness.render({ kind: "disconnected" });
   await flushMicrotasks();
 
-  assert.deepEqual(harness.requests, [["/api/auth/logout", {
+  assert.deepEqual(harness.requests.map(([url, init]) => [url, { ...init }]), [["/api/auth/logout", {
     method: "POST",
     credentials: "same-origin",
   }]]);
@@ -150,7 +154,7 @@ implementedTest("keeps sign-out synchronization inside the accepted local bounda
 
   assert.match(source, /^"use client";/u);
   assert.match(source, /useWalletSession\(\)/u);
-  assert.match(source, /state\.kind\s*===\s*["']disconnected["']/u);
+  assert.match(source, /state\.kind\s*!==\s*["']disconnected["']/u);
   assert.match(source, /fetch\(["']\/api\/auth\/logout["']/u);
   assert.match(source, /method:\s*["']POST["']/u);
   assert.match(source, /credentials:\s*["']same-origin["']/u);
