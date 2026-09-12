@@ -71,3 +71,13 @@ implementedTest("uses the campaign ownership allowlist as the dashboard projecti
   assert.match(source, /import\s*\{\s*readDashboardCampaign\s*,\s*riskScanOfferingPublicId\s*\}/u);
   assert.doesNotMatch(source, /const\s+riskScanOfferingPublicId\s*=/u);
 });
+
+implementedTest("renders one local empty card when the signed session has no campaign", async () => {
+  const source = await readFile(componentUrl, "utf8");
+
+  assert.match(source, /if\s*\(campaign\s*===\s*null\)\s*\{\s*return\s*\(\s*<section[^>]*aria-label="No campaign yet"/su);
+  assert.match(source, />No campaign yet</u);
+  assert.match(source, /There is no RiskScan campaign associated with this signed dashboard session\./u);
+  assert.match(source, /href="\/provider\/deploy"[^>]*>Prepare a tool</u);
+  assert.match(source, /href="\/explore\/riskscan"[^>]*>Explore RiskScan</u);
+});
