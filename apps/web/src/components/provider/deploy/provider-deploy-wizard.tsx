@@ -372,7 +372,7 @@ function ReviewStep({
   );
 }
 
-export function ProviderDeployWizard() {
+export function ProviderDeployWizard({ selectedToolPublicId }: { selectedToolPublicId?: string }) {
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [values, setValues] = useState<WizardValues>(initialValues);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
@@ -468,7 +468,8 @@ export function ProviderDeployWizard() {
     <main className="mx-auto max-w-6xl px-4 pb-10 sm:px-6 sm:pb-14" data-ui="provider-deploy-surface">
       <header data-ui="provider-deploy-identity" className="pt-6 lg:pt-8">
         <div className="flex flex-wrap gap-2"><Badge variant="outline" className="rounded-full border-warning/40 bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning-foreground">Prepared / demo data fixture</Badge><Badge variant="outline" className="rounded-full border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-foreground">Hedera testnet · chain 296</Badge><Badge variant="outline" className="rounded-full border-border bg-secondary px-2 py-0.5 text-[11px] font-medium text-foreground">Terms v1 · fixed</Badge></div>
-        <h1 className="mt-4 text-3xl font-bold tracking-[-0.05em] text-foreground sm:text-4xl">Deploy the RiskScan campaign</h1>
+        <h1 className="mt-4 text-3xl font-bold tracking-[-0.05em] text-foreground sm:text-4xl">{selectedToolPublicId === undefined ? "Deploy the RiskScan campaign" : "Deploy a new tool"}</h1>
+        {selectedToolPublicId === undefined ? null : <p className="mt-2 font-mono text-xs text-muted-foreground">Selected tool: {selectedToolPublicId}</p>}
         <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">Review every field of the prepared offering, then authorize each step with your issuer wallet. Nothing is created, funded, or published until the named signature and receipt exist.</p>
       </header>
       <div className="mt-7"><StepProgress currentStep={currentStep} onStepSelect={returnToStep} /></div>
@@ -476,6 +477,7 @@ export function ProviderDeployWizard() {
         <div ref={stepRef} tabIndex={-1} aria-label={stepCaption(currentStep)} data-ui="provider-deploy-workspace" className="mt-7 outline-none">
           <DeployStageSigning
             values={values}
+            selectedToolPublicId={selectedToolPublicId}
             footer={footer}
             reviewing={currentStep === lastStep}
             onResume={resumeDurableCampaign}

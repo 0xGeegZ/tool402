@@ -33,6 +33,7 @@ const notConfiguredDetail = "The local relay declined before forwarding. Nothing
 
 export function DeployStageSigning({
   values,
+  selectedToolPublicId,
   children,
   footer,
   reviewing = true,
@@ -40,6 +41,7 @@ export function DeployStageSigning({
   onResume,
 }: {
   values: CampaignReviewValues;
+  selectedToolPublicId?: string;
   children?: ReactNode;
   footer?: ReactNode;
   reviewing?: boolean;
@@ -71,7 +73,7 @@ export function DeployStageSigning({
   const visibleStates = request
     ? states.map((stage, index) => (index === request.stage ? { kind: "in_progress" as const } : stage))
     : states;
-  const enabledStage = session !== null && request === null && !resumePending
+  const enabledStage = selectedToolPublicId === undefined && session !== null && request === null && !resumePending
     ? states.findIndex((stage) => stage.kind === "actionable")
     : -1;
 
@@ -166,7 +168,9 @@ export function DeployStageSigning({
     </section>
   ) : null;
   const resumeNotice = session !== null && resumePending ? <p role="status" aria-live="polite" className="text-[13px] leading-5 text-muted-foreground">Checking the existing durable campaign before enabling any signature.</p> : null;
-  const constructionNotice = reviewing && constructionError ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null;
+  const constructionNotice = selectedToolPublicId !== undefined
+    ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">The selected tool is isolated from the legacy signing path while its durable selected-tool stages load.</p>
+    : reviewing && constructionError ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null;
   const stages = reviewing ? <ProviderDeployStages states={visibleStates} projection={atsCreateConfiguration} enabledStage={enabledStage} onActivate={activate} session={session} candidate={candidate} onCandidate={receiveCandidate} /> : null;
   const dialog = reviewing && request && session ? <SignatureDialog provider={session.provider} request={request} onResult={finish} onCancel={() => finish({ phase: "rejected", outcome: null })} /> : null;
 
