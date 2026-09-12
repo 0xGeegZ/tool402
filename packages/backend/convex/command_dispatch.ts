@@ -802,7 +802,7 @@ export async function handleActiveDirectory(
   } catch {
     return notFound();
   }
-  if (serviceSlug === undefined || serviceSlug !== "riskscan") return notFound();
+  if (serviceSlug === undefined || (serviceSlug !== "riskscan" && !/^tool-[0-9a-f]{32}$/u.test(serviceSlug))) return notFound();
   try {
     const result = await ctx.runQuery(getActiveDirectoryReference, { serviceSlug });
     if (result === null) return notFound();

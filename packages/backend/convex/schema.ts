@@ -140,11 +140,11 @@ export default defineSchema({
     idempotencyKey: v.string(),
     offeringVersion: v.number(),
     directoryVersion: v.number(),
-    serviceSlug: v.literal("riskscan"),
+    serviceSlug: v.string(),
     record: v.object({
       schemaVersion: v.literal(1),
       serviceId: v.string(),
-      serviceSlug: v.literal("riskscan"),
+      serviceSlug: v.string(),
       offeringPublicId: v.string(),
       offeringVersion: v.number(),
       capabilities: v.array(v.literal("evm-contract-risk-signals")),
