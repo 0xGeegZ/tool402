@@ -6,12 +6,12 @@ Turn the already-loaded Provider campaign status page into a readable command ce
 
 ## Loaded composition
 
-1. The page header identifies the route as `Campaign status` and keeps the existing description and two local actions: deploy first, RiskScan second.
-2. A status-derived hero identifies the current provider campaign without calling it live. It presents only the existing offering and directory states, plus an explicit `Not live` label.
-3. A three-stage progress rail is derived solely from the existing offering state and independent directory projection. The third stage stays unavailable in this demonstration; it is never represented as completed.
-4. The existing evidence rows render as a chronological activity list. Their references, verification text, and Hashscan gate remain unchanged.
-5. Existing terms become a compact snapshot: unit price, funding target, maximum units, and maturity. The remaining terms remain visible in the Economics, Capacity, and Governance cards.
-6. Existing directory and signer fields become one Trust details card. No address or endpoint is hidden or transformed into a new value.
+1. One editorial hero replaces the generic page header and the duplicate lavender status block. It contains the provider breadcrumb, Hedera/`Not live` labels, the state-derived campaign title, a concise status sentence, and the existing RiskScan action.
+2. The hero includes a repository-owned generated 3D Tool402 illustration loaded through `next/image`. The bitmap contains no copy or status data; the adjacent slogan remains HTML so it is crisp, responsive, and accessible.
+3. A full-width three-stage progress rail is derived solely from the existing offering state and independent directory projection. The third stage stays unavailable in this demonstration; it is never represented as completed.
+4. The existing evidence rows render as a lifecycle timeline instead of a horizontally scrolling table. Their references, verification text, raw record identifiers, timestamps, and Hashscan gate remain available without inventing activity.
+5. Existing terms become a compact snapshot of four icon-led tiles: unit price, funding target, maximum units, and human-readable maturity. Economics, Capacity, Governance, and Trust details form a single supporting-card row.
+6. The complete admitted terms, directory fields, signer, and raw evidence remain available in a secondary technical-record disclosure. The compact default view does not repeat the former long terms and directory sections.
 
 ## Non-loaded composition
 
@@ -39,7 +39,7 @@ no I/O and owns no runtime capability.
 
 ## Responsive and accessibility rules
 
-The rail wraps into stacked stages at narrow widths. The activity list and snapshot use a single column below `sm`; cards retain labelled headings and the existing headings stay in document order. Decorative artwork is `aria-hidden`; state is always conveyed by text, not colour alone.
+The rail wraps into stacked stages at narrow widths. The activity list and snapshot use a single column below `lg`; their contents avoid fixed minimum widths and horizontal clipping. The supporting cards collapse from four columns to two and then one. Decorative artwork is `aria-hidden`; state is always conveyed by text, not colour alone.
 
 ## Exclusions
 
