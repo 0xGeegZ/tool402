@@ -17,7 +17,13 @@ addresses are identical.
 The rendering is intentionally fail-closed. If the session is invalid, the
 existing dashboard layout redirects to `/sign-in`. If the projection is not
 configured, absent, unavailable, malformed, or belongs to another signer, the
-dashboard renders its existing workspace without a campaign card.
+dashboard renders no campaign card and does not substitute the historical guest
+workspace.
+
+The dashboard home is the authenticated campaign surface. Its existing guest
+workspace shell, overview, and local-journey cards are not mounted there. The
+legacy local child routes remain unchanged; this amendment neither removes nor
+changes those routes.
 
 ## Data contract
 

@@ -28,6 +28,11 @@ The first slice intentionally covers the only current Provider campaign,
 state and offers the existing local Provider workspace as the continuation
 route. It does not claim that every possible future offering can be listed.
 
+The dashboard home replaces its historical guest workspace shell with this
+authenticated campaign surface. It does not mount the guest overview or local
+journey cards as a fallback. The existing child routes and their historical
+components remain unchanged.
+
 The minimum implementation contract is
 `docs/specs/s42-dashboard-campaign-continuation.md`.
 
@@ -67,3 +72,13 @@ and that an absent, malformed, or different signer cannot produce one. S42 is
 read-only and server-rendered: no generic offering enumeration, address
 display, browser storage, wallet request, signature, command, relay,
 transaction, deployment, or external write is authorized.
+
+## Dynamic dashboard amendment
+
+The repository owner directs this follow-up after the durable campaign reader
+landed. The focused `dashboard-campaign.test.mjs` may define the page-level
+contract that `/dashboard` does not import or render `WorkspaceShell` and
+describes the signed campaign surface. After that RED contract is observed,
+only `apps/web/src/app/dashboard/page.tsx` may remove that import and mount.
+No workspace component, child route, session/auth protocol, projection reader,
+wallet action, or external authority may change.
