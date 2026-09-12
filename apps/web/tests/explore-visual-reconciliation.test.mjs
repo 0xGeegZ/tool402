@@ -10,7 +10,7 @@ function readAppFile(path) {
   return readFile(join(appRoot, path), "utf8");
 }
 
-test("uses the compact Explore presentation without changing its static catalogue boundary", async () => {
+test("uses the compact Explore presentation with one bounded provider CTA", async () => {
   const [page, catalog, riskScan, entityCheck] = await Promise.all([
     readAppFile("src/app/explore/page.tsx"),
     readAppFile("src/components/discovery/explore-catalog.tsx"),
@@ -30,6 +30,9 @@ test("uses the compact Explore presentation without changing its static catalogu
   assert.match(catalog, /grid gap-5 md:grid-cols-2 xl:grid-cols-3/);
   assert.doesNotMatch(catalog, /\bFILTER_GROUPS\b/);
   assert.doesNotMatch(catalog, /\bcountsFor\b/);
+  assert.match(catalog, /data-ui="explore-provider-cta"/);
+  assert.match(catalog, /href="\/provider\/deploy"/);
+  assert.doesNotMatch(catalog, /^\s*["']use client["']/m);
   for (const [card, href] of [
     [riskScan, "/explore/riskscan"],
     [entityCheck, "/explore/entitycheck"],
@@ -43,7 +46,8 @@ test("uses the compact Explore presentation without changing its static catalogu
     assert.doesNotMatch(card, /\bshadow-lg\b/);
   }
 
-  const presentationSources = [page, catalog, riskScan, entityCheck];
+  const catalogBeforeProviderCta = catalog.slice(0, catalog.indexOf('data-ui="explore-provider-cta"'));
+  const presentationSources = [page, catalogBeforeProviderCta, riskScan, entityCheck];
   const presentationSource = presentationSources.join("\n");
 
   for (const source of presentationSources) {

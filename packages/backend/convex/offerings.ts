@@ -24,6 +24,10 @@ import {
   revalidateWalletCommandReplayClaim,
 } from "../src/offering-command-admission.ts";
 import type { OfferingCommandBinding } from "../src/offering-command-admission.ts";
+import {
+  isSelectedProviderToolSubject,
+  resolveSelectedProviderToolSubject,
+} from "./provider_tool_authority.ts";
 import type schema from "./schema.ts";
 
 const definitionValidator = v.object({
@@ -315,6 +319,7 @@ function readSafeOffering(input: unknown): SafeOffering {
 
 export function readAtsCreateReplayOffering(input: unknown): {
   readonly offeringId: GenericId<"offerings">;
+  readonly offeringPublicId?: string;
   readonly atsAttemptId: GenericId<"externalPrepareCommandAttempts">;
   readonly state: "ASSET_PENDING";
   readonly subjectPublicId: string;
@@ -334,12 +339,84 @@ export function readAtsCreateReplayOffering(input: unknown): {
     }
     return Object.freeze({
       offeringId: offering.offeringId,
+      ...(isSelectedProviderToolSubject(offering.subjectPublicId)
+        ? { offeringPublicId: offering.offeringPublicId }
+        : {}),
       atsAttemptId: offering.atsAttemptId,
       state: "ASSET_PENDING" as const,
       subjectPublicId: offering.subjectPublicId,
       canonicalSignerAddress: offering.canonicalSignerAddress,
       principalPublicId: offering.principalPublicId,
       authorityVersion: offering.authorityVersion,
+    });
+  } catch {
+    return null;
+  }
+}
+
+export function readSelectedAtsCreateConfigurationOffering(input: unknown): {
+  readonly offeringPublicId: string;
+  readonly subjectPublicId: string;
+  readonly canonicalSignerAddress: string;
+  readonly principalPublicId: string;
+  readonly authorityVersion: string;
+  readonly title: string;
+} | null {
+  try {
+    const offering = readSafeOffering(input);
+    if (
+      (offering.state !== "DRAFT" && offering.state !== "ASSET_PENDING")
+      || offering.atsAssetEvmAddress !== undefined
+      || offering.activeDirectoryVersionId !== undefined
+      || (offering.state === "DRAFT" && offering.atsAttemptId !== undefined)
+    ) return null;
+    return Object.freeze({
+      offeringPublicId: offering.offeringPublicId,
+      subjectPublicId: offering.subjectPublicId,
+      canonicalSignerAddress: offering.canonicalSignerAddress,
+      principalPublicId: offering.principalPublicId,
+      authorityVersion: offering.authorityVersion,
+      title: offering.narrative.title,
+    });
+  } catch {
+    return null;
+  }
+}
+
+/** Read the exact selected-tool offering that an ATS receipt may corroborate. */
+export function readSelectedAtsCreateCorroborationOffering(input: unknown): {
+  readonly offeringId: GenericId<"offerings">;
+  readonly offeringPublicId: string;
+  readonly subjectPublicId: string;
+  readonly canonicalSignerAddress: string;
+  readonly principalPublicId: string;
+  readonly authorityVersion: string;
+  readonly title: string;
+  readonly state: "ASSET_PENDING" | "READY";
+  readonly atsAttemptId: GenericId<"externalPrepareCommandAttempts">;
+  readonly atsAssetEvmAddress?: string;
+} | null {
+  try {
+    const offering = readSafeOffering(input);
+    if (
+      !isSelectedProviderToolSubject(offering.subjectPublicId)
+      || (offering.state !== "ASSET_PENDING" && offering.state !== "READY")
+      || offering.atsAttemptId === undefined
+      || offering.activeDirectoryVersionId !== undefined
+      || (offering.state === "ASSET_PENDING" && offering.atsAssetEvmAddress !== undefined)
+      || (offering.state === "READY" && offering.atsAssetEvmAddress === undefined)
+    ) return null;
+    return Object.freeze({
+      offeringId: offering.offeringId,
+      offeringPublicId: offering.offeringPublicId,
+      subjectPublicId: offering.subjectPublicId,
+      canonicalSignerAddress: offering.canonicalSignerAddress,
+      principalPublicId: offering.principalPublicId,
+      authorityVersion: offering.authorityVersion,
+      title: offering.narrative.title,
+      state: offering.state,
+      atsAttemptId: offering.atsAttemptId,
+      ...(offering.atsAssetEvmAddress === undefined ? {} : { atsAssetEvmAddress: offering.atsAssetEvmAddress }),
     });
   } catch {
     return null;
@@ -497,6 +574,27 @@ function matchesStoredOffering(
   );
 }
 
+async function revalidateSelectedOfferingAuthority(
+  ctx: GenericMutationCtx<DataModelFromSchemaDefinition<typeof schema>>,
+  currentAuthority: unknown,
+  command: OfferingCommandBinding,
+) {
+  if (!isSelectedProviderToolSubject(command.payload.subjectPublicId)) {
+    revalidateOfferingAuthority(currentAuthority, command, true);
+    return null;
+  }
+  const selected = await resolveSelectedProviderToolSubject(ctx, currentAuthority, {
+    subjectPublicId: command.payload.subjectPublicId,
+    offeringPublicId: command.payload.offeringPublicId,
+  });
+  revalidateOfferingAuthority(
+    { ...(currentAuthority as Record<string, unknown>), ownedSubjectPublicIds: [selected.subjectPublicId] },
+    command,
+    true,
+  );
+  return selected;
+}
+
 const internalMutation: MutationBuilder<
   DataModelFromSchemaDefinition<typeof schema>,
   "internal"
@@ -519,7 +617,7 @@ export const admitOfferingCreate = internalMutation({
     if (authorities.length !== 1) {
       return reject();
     }
-    revalidateOfferingAuthority(authorities[0], command, true);
+    const selected = await revalidateSelectedOfferingAuthority(ctx, authorities[0], command);
 
     const claims = await ctx.db.query("walletCommandReplayClaims")
       .withIndex("by_replay_identity", (query) => query.eq("replayIdentity", command.replayIdentity))
@@ -529,6 +627,16 @@ export const admitOfferingCreate = internalMutation({
     }
     if (claims.length === 1) {
       revalidateWalletCommandReplayClaim(claims[0], command.replayIdentity, command.type);
+      if (selected !== null) {
+        const targetId = claims[0]?.targetId;
+        if (typeof targetId !== "string") return reject();
+        const stored = readSafeOffering(await ctx.db.get(opaqueId<"offerings">(targetId)));
+        if (
+          stored.offeringPublicId !== selected.offeringPublicId
+          || stored.subjectPublicId !== selected.subjectPublicId
+          || !matchesStoredOffering(stored, command)
+        ) return reject();
+      }
       return { status: "COMMAND_REPLAYED" as const };
     }
 
@@ -655,6 +763,24 @@ export async function linkAtsCreateAttemptToDraftOffering(
     readonly authorityVersion: string;
   },
 ): Promise<void> {
+  let selectedOfferingPublicId: string | null = null;
+  if (isSelectedProviderToolSubject(binding.subjectPublicId)) {
+    const authorities = await ctx.db.query("commandAuthorities")
+      .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+        query.eq("chainId", 296).eq("canonicalSignerAddress", binding.canonicalSignerAddress)
+      ))
+      .take(2);
+    if (authorities.length !== 1) return reject();
+    const selected = await resolveSelectedProviderToolSubject(ctx, authorities[0], {
+      subjectPublicId: binding.subjectPublicId,
+    });
+    if (
+      selected.subjectPublicId !== binding.subjectPublicId
+      || (authorities[0]?.principalPublicId !== binding.principalPublicId)
+      || (authorities[0]?.authorityVersion !== binding.authorityVersion)
+    ) return reject();
+    selectedOfferingPublicId = selected.offeringPublicId;
+  }
   const candidates = await ctx.db.query("offerings")
     .withIndex("by_ats_create_draft_binding", (query) => (
       query
@@ -675,6 +801,8 @@ export async function linkAtsCreateAttemptToDraftOffering(
     || offering.atsAttemptId !== undefined
     || offering.atsAssetEvmAddress !== undefined
     || offering.activeDirectoryVersionId !== undefined
+    || (selectedOfferingPublicId !== null
+      && offering.offeringPublicId !== selectedOfferingPublicId)
     || offering.subjectPublicId !== binding.subjectPublicId
     || offering.canonicalSignerAddress !== binding.canonicalSignerAddress
     || offering.principalPublicId !== binding.principalPublicId
@@ -699,32 +827,10 @@ export const markAssetReady = internalMutation({
     offeringId: v.id("offerings"),
     state: v.literal("READY"),
   }),
-  handler: async (ctx, args) => {
-    const attemptId = opaqueId<"externalPrepareCommandAttempts">(args.attemptId);
-    if (!isCanonicalEvmAddress(args.atsAssetEvmAddress)) {
-      return reject();
-    }
-    const candidates = await ctx.db.query("offerings")
-      .withIndex("by_ats_attempt_id", (query) => query.eq("atsAttemptId", attemptId))
-      .take(2);
-    if (candidates.length !== 1) {
-      return reject();
-    }
-    const offering = readSafeOffering(candidates[0]);
-    if (
-      offering.state !== "ASSET_PENDING"
-      || offering.atsAttemptId !== attemptId
-      || offering.atsAssetEvmAddress !== undefined
-    ) {
-      return reject();
-    }
-    await ctx.db.patch(offering.offeringId, {
-      state: "READY" as const,
-      atsAssetEvmAddress: args.atsAssetEvmAddress,
-      updatedAt: durableNow(),
-    });
-    return { offeringId: offering.offeringId, state: "READY" as const };
-  },
+  // This historical seam receives neither corroborated receipt evidence nor a
+  // durable receipt reservation. Its direct READY transition is intentionally
+  // retired; ATS writers must use their corroboration-specific atomic path.
+  handler: async () => reject(),
 });
 
 export const getPublicProjection = publicQuery({
@@ -753,6 +859,12 @@ export const getPublicProjection = publicQuery({
           || safeCandidates[1].version >= highest.version))
     ) {
       return reject();
+    }
+    // Provider-tool lifecycle is owner-visible until directory publication. A
+    // syntactically selected subject never grants public draft/receipt access.
+    if (isSelectedProviderToolSubject(highest.subjectPublicId)
+      && highest.state !== "OPEN" && highest.state !== "CLOSED") {
+      return null;
     }
     let atsAttemptPublicId: string | undefined;
     if (highest.state === "ASSET_PENDING") {

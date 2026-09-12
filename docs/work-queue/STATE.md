@@ -1,5 +1,88 @@
 # Runtime queue state
 
+- S40_ACTIVE_ACCOUNT_BINDING_REFINEMENT: A review-confirmed dashboard session
+  may survive a page reload or account switch because the prior synchronizer
+  watched only an already-connected shared session. The owner directs a
+  bounded repair inside the existing S40 synchronizer, test, and authenticated
+  navigation mount: passively settle the existing MetaMask provider and retain
+  the session only for the exact sealed-address/active-Hedera-account match;
+  otherwise call the existing logout route once. No account request,
+  signature, storage, retry, transaction, relay, deployment, or S26/M50
+  source change is authorized.
+
+- S45_DASHBOARD_LOADING_REFINEMENT: The owner authorizes only the
+  `/dashboard` loading fallback to remove its compact mascot cue and give its
+  four existing skeleton regions the full available width. Existing region
+  order and every session, ownership, campaign, wallet, and runtime boundary
+  remain unchanged. The S45 specification, manifest, ledger, active card, and
+  focused loading contracts are amended before RED.
+
+- S45_HUMAN_VISUAL_REFINEMENT: At PR source `6532a880`, the owner approves the
+  exact Tool402 lockup on the existing Explore and deploy document props plus
+  one transparent seated purple mascot in the signed-dashboard empty card.
+  The focused extension is RED only for the missing fifth asset and Dashboard
+  mount. Existing session, ownership, wallet, campaign, link, and runtime
+  behavior remain excluded.
+
+- S45_RED_ACCEPTANCE: Focused source `26cbf725` fails 6/6 only because the four
+  declared production surfaces are absent. A fresh independent re-review is
+  clear after verifying real PNG transparency, decorative accessibility, the
+  cancellable 300 ms reveal, and reduced motion. The test is frozen; S45 now
+  reserves only its declared assets, presentation sources, loader mounts, and
+  the exact Explore/loading contract reconciliations for minimal GREEN.
+
+- S45_RED_ACTIVATION: At ready control source `5780cee2`, the root activates
+  only `apps/web/tests/brand-mascot-surfaces.test.mjs` for durable RED.
+  Production source and generated assets remain prohibited until the focused
+  contract fails only for the declared missing surfaces and receives an
+  independent RED review.
+
+- S45_READY: Corrected intake source `e5ed2304` passed a fresh independent
+  readiness review with no finding. Accepted dependencies, exact candidate
+  paths, ownership isolation, loader timing, accessibility, and runtime
+  exclusions are clear. S45-T010 moves to `10-ready`; no RED, source, or asset
+  path is active until a separate root activation.
+
+- S45_INTAKE_CORRECTION: The initial S45 control commit incorrectly recorded
+  activation without the required inbox and ready transitions. That record is
+  superseded: S45 begins in `00-inbox`, with no active test, source, or asset
+  ownership. An independent readiness review must clear the committed scope
+  before a separate root activation can reserve durable RED.
+- S45_BRAND_MASCOT_SURFACES_INTAKE: The owner requests four generated,
+  text-free Tool402 mascot assets integrated into the existing Demo, Explore,
+  Provider deploy review, and route-loading surfaces in a new draft PR. At
+  exact `origin/main` `98cdbe29`, the complete Node 22.21.1 workspace baseline
+  is green. S45-T010 is `00-inbox`; its proposed focused test and production
+  paths confer no ownership before readiness and a separate activation.
+  The slice adds no data, wallet, command, payment, transaction, deployment,
+  or live authority.
+
+- M56_RISKSCAN_BACKING_DEMO_MVP_INTAKE: The repository owner requests a narrow
+  D-Day RiskScan backing proposal: one OPEN canonical offering, exact S18
+  intent, one explicit HBAR transfer, a canonical hash, and allocation pending.
+  M56-T010 begins in 00-inbox with its local specification only. No product
+  source, executable contract, treasury configuration, BACKER authority,
+  wallet action, signature, transfer, deployment, or live proof is authorized
+  until separate readiness and RED activation records are committed.
+
+- M56_RISKSCAN_BACKING_DEMO_MVP_READY: Dependencies S15, S18, M16, and M40 are
+  accepted; the canonical main baseline is clean and S18 is available for
+  narrow reuse. M56-T010 moves to 10-ready. A separate activation must reserve
+  the exact RED contract before any source or test change; human runtime and
+  live-action authority remain unchanged.
+
+- M56_RISKSCAN_BACKING_DEMO_MVP_ACTIVATION: M56-T010 moves from 10-ready to
+  20-active solely for a focused RED executable contract. Production source,
+  treasury configuration, BACKER authority, wallet action, signature,
+  transfer, deployment, and live proof remain prohibited until the RED result
+  is accepted.
+
+- M56_RISKSCAN_BACKING_DEMO_MVP_RED_ACCEPTANCE: The focused executable contract
+  at `27b0d762` records eleven intended absence failures and eight unchanged
+  passes against the exact implementation-free commit archive. M56 may now
+  amend only the source and test paths in its specification for minimal GREEN;
+  every shared and human runtime boundary remains unchanged.
+
 - S43_FOOTER_POSITIONING_ACCEPTANCE: Source `f248368f` is accepted at 60-done.
   The mascot is grouped with the Tool402 logo in the first footer column;
   asset, decorative accessibility, breakpoint, links, copy and routes remain
@@ -41,6 +124,49 @@
   journey. S43-T010 is inbox-only under docs/specs/s43-recording-demo-journey.md;
   it supersedes historical S11 copy only in its declared scope. No source is
   changed before readiness and RED; wallet and deployment authority is unchanged.
+
+- S44_PROVIDER_COMMAND_CENTER_INTAKE: The repository owner requested a new
+  isolated presentational redesign of the existing loaded `/provider` route.
+  S44-T010 is in `20-active`: its committed specification and UI manifest lock
+  the command-center composition, and its only future source paths are the
+  provider page, provider status component/state, generated provider hero
+  asset, focused provider-status test, and the two superseded Provider-only
+  visual/header assertion surfaces. It creates no new read, state,
+  wallet/provider, command, transaction,
+  deployment, or live authority.
+- S44_LOCAL_RECORDS: `docs/specs/s44-provider-command-center.md` and
+  `docs/ui/UI-S44.md` are S44's canonical implementation-local specification
+  and UI manifest; its bounded ledger row is in `docs/ui/IMPORT-LEDGER.md`.
+- S44_PROVIDER_COMMAND_CENTER_RED_ACTIVATION: At planning head
+  `f55dec52426d96f4c1b01f852ed422d14e09c5d5`, S44's local records are
+  committed, its focused Web baseline is clear, and independent readiness
+  review found no finding. The user-directed implementation activation reserves
+  only `apps/web/tests/provider-status.test.mjs` for durable RED; production
+  source remains prohibited until an independent review accepts its expected
+  missing-command-center failure.
+- S44_PROVIDER_COMMAND_CENTER_RED_ACCEPTANCE: At
+  `a8e9edd8dca707c25ccf46dd0d0ba11f5cbfe92f`, independent review accepted the
+  5×2 offering/Directory matrix with one expected missing-command-center
+  presentation failure. The owner-requested visual amendment at `37864045`
+  additionally reserves only `apps/web/public/brand/provider-campaign-duo.png`.
+  The final hero-art amendment additionally reserves
+  `apps/web/public/brand/provider-campaign-duo-rays.png` for the two
+  decorative violet coin accents only.
+  GREEN may amend only the provider page, provider status component/state,
+  generated asset, and focused test; every projection/API, session,
+  wallet/provider, command, transaction, deployment, and live boundary stays
+  excluded.
+- S44_PROVIDER_CONTRACT_RECONCILIATION: The GREEN full-suite run exposed the
+  prior S25 generic Provider header assertion and S28 distilled Provider report
+  assertion as incompatible with S44's already-specified single hero. Only the
+  Provider target assertions in `apps/web/tests/page-header.test.mjs` and the
+  Provider-only `apps/web/tests/provider-visual-reconciliation.test.mjs` may be
+  reconciled; other routes and shared components remain outside S44.
+- S44_TECHNICAL_RECORD_CONTROL: The owner requests that a technical-record
+  control visibly open its closed destination. S44 additionally reserves only
+  `provider-technical-record-control.tsx` and its existing visual assertion for
+  a state-free, request-free click island that opens and scrolls to the native
+  disclosure.
 
 - S29_POST_ACCEPTANCE_REVIEW_FIX: The repository owner explicitly directs the
   two confirmed Provider deploy review corrections on PR #82. The root may
@@ -402,9 +528,44 @@
   before compilation when its CSS helper is denied a local port bind.
 
 - PRODUCT_OVERVIEW: accepted as P00-T010
-- M55_REFINEMENT_REVIEWED: Fresh independent review accepts the documentation packet at `cdf7d84761d2d2b3d71eba53477127d771b3f685` after closing the legacy/new receipt-exclusivity ambiguity; no Critical or Important findings remain. Queue/reference checks and 36/36 queue-validator tests pass. M55 is ready for delegation only, remains `00-inbox`, and grants no source activation, predecessor release, deployment, or live authority. See the committed M55 refinement review and delegation packet.
+- M55_REFINEMENT_REVIEWED: Fresh independent review accepts the documentation packet at `cdf7d84761d2d2b3d71eba53477127d771b3f685` after closing the legacy/new receipt-exclusivity ambiguity; no Critical or Important findings remain. Queue/reference checks and 36/36 queue-validator tests pass. At that documentation head M55 remained `00-inbox`; D-M55-010-004 later moves only Task 1 to `10-ready`. It grants no source activation, predecessor release, deployment, or live authority. See the committed M55 refinement review and delegation packet.
 - CURRENT_MODULE: S13 outcome-feedback treatment is accepted at source commit `ece66c2fd7b2278ed0f801ad1febd478d9ddc39f`; S15 wallet-island/relay is accepted at `506f038fffb87739cc5fd302a30033b5c56d36ee`; S16 provider deploy wizard is accepted at `ed46ae18a08c859d5f2c94722ab84453ef674835`; M38 offering command payloads and M40 durable offering/Directory admission are accepted at `60-done`. HA-COMMAND-AUTHORITY-002, HA-ATS-RETARGET-001, HA-ATS-RUNTIME-BINDING-001, HA-ISSUER-ACCOUNT-001, and HA-CAMPAIGN-CONVEX-001 are accepted only as bounded local authority or human evidence. B03 Agent payment remains locally green and awaits its separate human-owned testnet exercise.
-- M55_NEW_TOOL_REFINEMENT: M55-T010 remains `00-inbox`, documentation-only. The owner's issue #93 clarification replaces demo-attempt UX with explicit deployment of another independent tool, allowing identical prefilled values. The local spec, implementation plan, and delegation packet select authenticated allocation, per-tool ownership/configuration/receipt binding, independent Directory identities, and dashboard listing. Root must resolve current M51/M53/M54/S26/S36/S42/B04 overlaps by acceptance/release or explicit scoped transfer/co-review, then record readiness, RED activation, and GREEN authority. No source reservation, environment mutation, signature, transaction, deployment, or live action is granted by refinement.
+- M55_NEW_TOOL_REFINEMENT: The owner's issue #93 clarification replaces demo-attempt UX with explicit deployment of another independent tool, allowing identical prefilled values. The local spec, implementation plan, and delegation packet select authenticated allocation, per-tool ownership/configuration/receipt binding, independent Directory identities, and dashboard listing. M55 is `20-active`: Task 1 Green is accepted only for its recorded allocation and protected owner-read paths. Tasks 2–6 remain blocked until their M51/M53/M54/S26/S36/S42/B04 overlaps have an accepted release or exact scoped transfer/co-review; no other source path is active.
+- M55_TASK1_READINESS: At `5f21fc90e1a927317665a1c1bf245eb0f9457cd5`, Task 1's twelve exact Core/Backend/Web allocation and protected-owner-read paths are absent or unreserved; Node 22.21.1 `npm ci`, root `npm test`, and `npm run queue:check` passed. An independent review is clear after correcting the four-test durable-RED scope and Task 5's retained M51 `command_dispatch.ts` collision. The user-directed root activation at `49e5b9d5` permits only durable RED in the four new focused Task 1 tests. No Task 1 source, environment, signature, transaction, deployment, or live action is authorized until independent RED acceptance.
+- M55_TASK1_RED_ACCEPTANCE: Fresh independent review accepts Task 1's durable RED: three Core missing exports, two Backend absent modules with thirteen dependent contracts skipped, and one Web absent module pair with six dependent contracts skipped. The accepted contracts cover identity allocation/replay/revocation/concurrency/collision, protected owner reads, domain-bound provider-session assertions, and dashboard-session POST/GET. Only the twelve exact Task 1 Core/Backend/Web paths may receive minimal Green; Tasks 2–6, every predecessor reservation, environment, signature, transaction, deployment, and live action remain excluded.
+
+- M55_TASK1_HTTP_ROUTE_TEST_INTAKE: Task 1's new fixed protected ingress route
+  makes M41's exact HTTP-route inventory fail. The only requested supplement is
+  its existing route-inventory test, to list `/internal/provider-tools` POST;
+  the test remains excluded until independent readiness and a root-owned
+  test-only activation are recorded. This is not a transfer of M41 command
+  behavior and grants no other M41/M55 source, environment, wallet, signature,
+  transaction, deployment, or live authority.
+
+- M55_TASK1_HTTP_ROUTE_TEST_ACTIVATION: Independent readiness reproduces only
+  the expected closed-inventory delta and clears the completed, unreserved M41
+  test for a root-owned one-entry expectation amendment. The existing route's
+  no-wildcard/no-OPTIONS/command/public assertions remain mandatory; no other
+  M41/M55 path or environment, wallet, signature, transaction, deployment, or
+  live authority is transferred.
+- M55_TASK1_GREEN_ACCEPTANCE: Task 1's identity allocator and protected
+  owner-read/list boundary are accepted after a fresh independent exact-head
+  review. The review confirmed strict POST Origin, ordinary authenticated GET
+  without Origin, explicit foreign-Origin rejection, the Stage-B issuer gate,
+  derived safe title/lifecycle projection, HMAC/replay/bounds, and no P0/P1/P2
+  finding. Node 22.21.1 focused 34/34, root test, typecheck, lint, queue and
+  whitespace checks pass. M55 remains `20-active`; no Task 2–6 path, UI,
+  environment, wallet, signature, transaction, deployment or live authority
+  is released. See `docs/work-queue/evidence/M55-T010-task1-green-review.md`.
+- M55_TASKS2_6_ACTIVATION: The repository owner explicitly authorized the
+  complete local delivery of Tasks 2–6. The root records only the selected
+  provider-tool branches transferred from M51/M53/M54/S26/S36/S42/B04 in
+  `docs/work-queue/evidence/M55-T010-tasks2-6-activation.md`; legacy RiskScan
+  and every predecessor's retained behavior stay owned and must receive joint
+  compatibility review. The activation permits serial TDD, source, tests,
+  queue/control commits and integration only. Wallet signatures, transactions,
+  Directory publication, authority/configuration mutation and every live action
+  remain human-only and excluded.
 - M41_DELIVERY: accepted at `20983649632f4812d9ee045637eb183b3158cc38` as a local HTTP ingress, transport replay, atomic ATS_CREATE admission, and public-projection boundary only; it adds no configuration, key, publication, wallet, provider, SDK, transaction, deployment, or live authority.
 - CURRENT_TASK: B04-T010 (20-active) is the user-directed local security remediation. It authorizes only its eight named durable-RED tests; no source, payment, wallet, provider, transaction, deployment, or live capability is authorized.
 - B04_SECURITY_SCAN_REMEDIATION_ACTIVATION: Independent activation at `d5d4a384` confirms the exact eight RED tests are collision-free. B04-T010 is `20-active` only for those tests; source remains prohibited pending fresh RED acceptance.
@@ -791,6 +952,25 @@ No secrets, account keys, or private evidence belong in this file.
   it adds no second session, automatic discovery, account request, chain
   switch, signature, authority, transaction, deployment, or live behavior.
 
+- S46_DEMO_CONTROL_ROOM_ACTIVATION: The repository owner directly authorizes
+  PR #109 to turn the existing demo route and tour presentation into a
+  recording control room. The root owns only its declared demo presentation,
+  safe command-copy, pure explorer-link, focused-test, runbook, and queue
+  paths. The validated tour `demoStep` may pass through the existing sign-in
+  dashboard redirect only; that wiring may not alter authentication, wallet,
+  session, or authorization behavior. It may not alter M55, M56, ATS, World, Agent, API, backend,
+  configuration, transaction, deployment, or proof semantics. Missing evidence
+  must render as required, optional, or unavailable rather than green.
+
+- S46_DEMO_CONTROL_ROOM_ACCEPTANCE: Source delivery `59ff318a` is accepted
+  after the complete repository test suite, typecheck, web build, queue check,
+  non-signing desktop and 390px browser rehearsal, and fresh independent
+  specification and standards/security review. The `/demo` guide retains the
+  validation-only sign-in handoff and a return-to-guide control at every scene.
+  It performs no payment, signature, transaction, deployment, recording, or
+  submission; all unverified external evidence remains explicitly gated. See
+  docs/work-queue/evidence/S46-T010-final-review.md.
+
 - S38_WALLET_SESSION_PRESERVATION_AMENDMENT: 2026-09-11. The repository owner
   directs successful sign-in to use the fixed internal App Router dashboard
   transition instead of a full-document reload, preserving the mounted shared
@@ -798,3 +978,27 @@ No secrets, account keys, or private evidence belong in this file.
   sole durable authorization decision. No storage, automatic wallet discovery,
   account request, signature, wallet-state mutation, transaction, deployment,
   or live behavior is authorized.
+- S40_METAMASK_SIGN_OUT_SYNC_AMENDMENT: 2026-09-12. The repository owner
+  directs the root to revoke the existing dashboard session when the accepted
+  shared wallet state loses its selected account after one settled identity.
+  The bounded amendment reserves a new auth synchronizer and focused test plus
+  its authenticated-navigation mount. It may call only same-origin `POST /api/auth/logout`,
+  then replace with `/sign-in` and refresh after success. Initial disconnected,
+  rejected-connect, connecting, and wrong-chain states do nothing. S26 and M50
+  source remain unchanged; no provider request, signature, storage, retry,
+  transaction, relay, deployment, or external request is authorized.
+
+- M56_S26_BACKING_COMPOSITION_TRANSFER: Because canonical main does not yet
+  contain M56's card, specification, and catalog row, this is a conditional
+  reservation, not active M56 ownership. It takes effect only in the rebased
+  M56 integration PR that commits those controls. It then transfers only
+  `BackingForm`'s `useWalletSession`/`connectedWalletSession` and
+  `section[aria-labelledby="backing-status"]` composition in `backing-flow.tsx`,
+  plus matching shared-session assertions in `backing-route.test.mjs`. S26
+  retains all other S26 selectors/assertions/paths. M56 must preserve
+  `useWalletSession`, `connectedWalletSession`, and one shared session, with no
+  WalletIsland, local duplicate state, discovery, signature, authority, or
+  other wallet behavior. M56 must rebase on this record, run focused backing/S26
+  compatibility tests, and receive joint review before integration. This neither
+  accepts S26 nor authorizes runtime configuration, authority provisioning,
+  transfer, deployment, or live action.

@@ -6,6 +6,7 @@ import {
   type QueryBuilder,
 } from "convex/server";
 import { v } from "convex/values";
+import { resolveSelectedProviderToolSubject } from "./provider_tool_authority.ts";
 import type schema from "./schema.ts";
 
 const internalMutation: MutationBuilder<
@@ -103,6 +104,10 @@ export const readCommandAuthorities = internalQuery({
   args: {
     chainId: v.literal(296),
     canonicalSignerAddress: v.string(),
+    selection: v.optional(v.object({
+      subjectPublicId: v.string(),
+      offeringPublicId: v.optional(v.string()),
+    })),
   },
   returns: v.array(v.object({
     principalPublicId: v.string(),
@@ -120,8 +125,18 @@ export const readCommandAuthorities = internalQuery({
       ))
       .take(2);
     const projected = authorities.map(projectAuthority);
-    return projected.every((authority) => authority !== null)
-      ? projected
-      : [];
+    if (!projected.every((authority) => authority !== null)) return [];
+    if (args.selection === undefined) return projected;
+    if (projected.length !== 1 || projected[0] === undefined) return [];
+    try {
+      const selected = await resolveSelectedProviderToolSubject(
+        ctx,
+        projected[0],
+        args.selection,
+      );
+      return [{ ...projected[0], ownedSubjectPublicIds: [selected.subjectPublicId] }];
+    } catch {
+      return [];
+    }
   },
 });

@@ -1,5 +1,7 @@
 import factoryArtifact from "@hashgraph/asset-tokenization-contracts/artifacts/contracts/factory/Factory.sol/Factory.json" with { type: "json" };
+import { canonicalizeRequirements } from "@tool402/core";
 import { decodeEventLog, encodeFunctionData, isAddress, type Address, type Hex } from "viem";
+import { keccak256, stringToHex } from "viem";
 
 const factoryAddress = "0xd1f118a40f3b02883d35909ef2517e7edd78379d" as Address;
 const resolverAddress = "0xba2d5fc2083a0b8f164c50e65d782087fba18e0a" as Address;
@@ -30,6 +32,8 @@ const parameterKeys = [
 ] as const;
 
 type RecordValue = Record<string, unknown>;
+
+const titleControlCharacter = /[\u0000-\u001F\u007F-\u009F]/u;
 
 function readExactRecord(value: unknown, keys: readonly string[]): RecordValue {
   if (value === null || typeof value !== "object" || Object.getPrototypeOf(value) !== Object.prototype) {
@@ -76,20 +80,35 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
+function validSelectedTitle(value: unknown): value is string {
+  return typeof value === "string"
+    && value.length > 0
+    && value.trim() === value
+    && !titleControlCharacter.test(value)
+    && new TextEncoder().encode(value).byteLength <= 100;
+}
+
 function assertExpectedConfiguration(configuration: RecordValue, issuerEvmAddress: unknown): {
   readonly parameters: RecordValue;
 } {
   const descriptor = readExactRecord(configuration.operationDescriptor, descriptorKeys);
   const parameters = readExactRecord(configuration.parameters, parameterKeys);
+  const selectedToolPublicId = typeof configuration.subjectPublicId === "string"
+    && /^tool_[0-9a-f]{32}$/u.test(configuration.subjectPublicId)
+    ? configuration.subjectPublicId
+    : null;
+  const selected = selectedToolPublicId !== null;
 
   const expectedRoot: Record<string, unknown> = {
     protocol: "tool402:ats-parameters:v1", network: "hedera:testnet", chainId: 296,
-    subjectPublicId: "riskscan_revenue_note_demo", offeringVersion: "ats_demo_v1",
+    subjectPublicId: selected ? selectedToolPublicId : "riskscan_revenue_note_demo", offeringVersion: "ats_demo_v1",
     registryRevision: "ats_sdk_8_0_0_testnet_v2", operationKind: "ATS_CREATE", targetKind: "EVM_ADDRESS",
     expectedTarget: factoryAddress, sdkPackage: "@hashgraph/asset-tokenization-sdk", sdkVersion: "8.0.0",
     sdkIntegrity: "sha512-V5Tg6IrWhMwxEWzzvv7fZWu4a8zXDj8vAk5OCO9W0dtact32hljstahPIY5dLvlpyNWwNXaepzpvDj77DoccsA==",
     resolverHederaId: "0.0.9212226", resolverEvmAddress: resolverAddress, m20EconomicsBinding: "NONE",
-    canonicalParametersHash: "1880065c5ae64b3fc6279cfdd8c85a6880d43e98ce129ed697c72372204296f9",
+    canonicalParametersHash: selected
+      ? configuration.canonicalParametersHash
+      : "1880065c5ae64b3fc6279cfdd8c85a6880d43e98ce129ed697c72372204296f9",
   };
   const expectedDescriptor: Record<string, unknown> = {
     sdkPackage: "@hashgraph/asset-tokenization-sdk", sdkVersion: "8.0.0", creationFamily: "BOND_STANDARD",
@@ -100,13 +119,15 @@ function assertExpectedConfiguration(configuration: RecordValue, issuerEvmAddres
     configId: "0x0000000000000000000000000000000000000000000000000000000000000002", configVersion: 1,
   };
   const expectedParameters: Record<string, unknown> = {
-    name: "Tool402 RiskScan Revenue Note Demo", symbol: "T402RN", isin: "XS402RISKN02", decimals: 0,
+    name: selected ? parameters.name : "Tool402 RiskScan Revenue Note Demo", symbol: "T402RN", isin: "XS402RISKN02", decimals: 0,
     isWhiteList: true, erc20VotesActivated: false, isControllable: false, arePartitionsProtected: false,
     isMultiPartition: false, clearingActive: false, internalKycActivated: false, diamondOwnerAccount: canonicalIssuer,
     currency: "0x555344", numberOfUnits: "1000", nominalValue: "1", nominalValueDecimals: 0,
     startingDate: "1789430400", maturityDate: "1798675200", regulationType: 1, regulationSubType: 0,
     isCountryControlListWhiteList: false, countries: "",
-    info: "Tool402 testnet demo revenue note; no real-world investment or return claim.",
+    info: selected
+      ? `Tool402 testnet demo revenue note; no real-world investment or return claim. Tool ID: ${selectedToolPublicId}`
+      : "Tool402 testnet demo revenue note; no real-world investment or return claim.",
     configId: "0x0000000000000000000000000000000000000000000000000000000000000002", configVersion: 1,
   };
 
@@ -126,8 +147,31 @@ function assertExpectedConfiguration(configuration: RecordValue, issuerEvmAddres
   for (const [key, expected] of Object.entries(expectedParameters)) {
     if (parameters[key] !== expected) throw new TypeError("unexpected ATS parameter");
   }
+  if (selected && !validSelectedTitle(parameters.name)) {
+    throw new TypeError("unexpected selected-tool ATS title");
+  }
   for (const key of ["externalPausesIds", "externalControlListsIds", "externalKycListsIds", "proceedRecipientsIds", "proceedRecipientsData"]) {
     readExactArray(parameters[key], []);
+  }
+  const canonicalParametersHash = configuration.canonicalParametersHash;
+  if (
+    typeof canonicalParametersHash !== "string"
+    || !/^[0-9a-f]{64}$/u.test(canonicalParametersHash)
+    || keccak256(stringToHex(canonicalizeRequirements({
+      protocol: configuration.protocol,
+      network: configuration.network,
+      chainId: configuration.chainId,
+      subjectPublicId: configuration.subjectPublicId,
+      offeringVersion: configuration.offeringVersion,
+      registryRevision: configuration.registryRevision,
+      operationKind: configuration.operationKind,
+      targetKind: configuration.targetKind,
+      expectedTarget: configuration.expectedTarget,
+      operationDescriptor: descriptor,
+      parameters,
+    }))).slice(2) !== canonicalParametersHash
+  ) {
+    throw new TypeError("unexpected ATS configuration hash");
   }
   return { parameters };
 }

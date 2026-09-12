@@ -1,4 +1,7 @@
+import Image from "next/image";
+import Link from "next/link";
 import { Badge } from "../ui/badge";
+import { buttonVariants } from "../ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
 import { EntityCheckDiscoveryCard } from "./entitycheck-discovery-card";
 import { RiskScanDiscoveryCard } from "./riskscan-discovery-card";
@@ -65,6 +68,18 @@ export function ExploreCatalog() {
           </Card>
         </div>
       </div>
+
+      <section data-ui="explore-provider-cta" className="grid overflow-hidden rounded-panel border border-primary/15 bg-primary/[0.06] px-6 pt-6 sm:px-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-center lg:pt-0">
+        <div className="pb-6 lg:py-8">
+          <Badge variant="outline" className="border-primary/20 bg-background/80 text-primary">For providers</Badge>
+          <h2 className="mt-4 text-2xl font-bold tracking-tight">Bring your tool to Tool402</h2>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Prepare a reviewable offering and make your tool discoverable to agents.</p>
+          <Link href="/provider/deploy" className={buttonVariants({ className: "mt-5" })}>Prepare a tool</Link>
+        </div>
+        <div data-ui="explore-provider-cta-art" aria-hidden="true" className="self-end">
+          <Image src="/brand/explore-publish-trio.png" alt="" width={1536} height={1024} className="mx-auto h-auto w-full max-w-md" />
+        </div>
+      </section>
     </section>
   );
 }

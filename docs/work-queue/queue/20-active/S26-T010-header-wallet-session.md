@@ -144,6 +144,30 @@ exclusions govern; this card does not restate them.
   review. No wallet request, signature, transaction, deployment, or live
   action is authorized by this activation.
 
+## M56 backing composition transfer
+
+Because canonical main does not yet contain M56's card, specification, and
+catalog row, this is a conditional reservation, not active M56 ownership. It
+takes effect only in the rebased M56 integration PR that commits those local
+controls. It then transfers only the backing-specific composition around
+`BackingForm`'s `useWalletSession`/`connectedWalletSession` consumption and
+the `section[aria-labelledby="backing-status"]` composition in
+`apps/web/src/components/backing/backing-flow.tsx`, plus the matching
+shared-session assertions in `apps/web/tests/backing-route.test.mjs`. S26
+retains all other S26 selectors, assertions, and declared paths.
+
+M56 must preserve `useWalletSession` and `connectedWalletSession`, the one
+shared session, and the existing no-local-wallet-state architecture. It may not
+reintroduce `WalletIsland`, duplicate wallet state, discovery, signatures,
+authority behavior, or any other wallet behavior. The transfer excludes
+`wallet-session.tsx`, `wallet-connect.tsx`, root layout/header, provider-deploy
+integration, the S26 session state machine, and every unrelated S26 test.
+
+Before M56 integration, its lane must rebase on the canonical main containing
+this record, run focused backing and S26 compatibility tests, and receive a
+joint M56/S26 review. This transfer does not accept S26 or authorize any live
+action.
+
 ## User-directed deploy-form connection amendment
 
 - The repository owner directs that the last deploy/signing form surface an
@@ -165,3 +189,19 @@ exclusions govern; this card does not restate them.
   remains the sole disconnected-wallet instruction and control; the signing
   explanation card, wallet behavior, authority boundaries, and layout stay
   unchanged.
+
+## User-directed deploy-form retry amendment
+
+- On 2026-09-12, the repository owner directs the existing
+  `provider-deploy-connect` section to remain visible when the accepted shared
+  wallet session reports `no_provider` or `multiple_providers`, rather than
+  only `disconnected`. In those two discovery-failure states its explicit
+  action is labelled `Retry`; the initial `disconnected` action remains
+  `Connect MetaMask`.
+- This narrowly supersedes the "only when ... `disconnected`" wording above
+  for those two closed failure states only. It reserves only
+  `apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, its
+  existing focused `apps/web/tests/deploy-stage-signing.test.mjs` seam, and
+  the existing shared-session assertion in `apps/web/tests/wallet-session.test.mjs`.
+  It does not change the session state union, discovery, account request,
+  chain switch, signing, authority, transaction, deployment, or live boundary.

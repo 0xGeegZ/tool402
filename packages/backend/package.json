@@ -12,6 +12,7 @@
     "lint": "node --check src/index.ts && node --check convex/convex.config.ts"
   },
   "dependencies": {
+    "@hashgraph/asset-tokenization-contracts": "8.0.0",
     "@tool402/core": "file:../core",
     "viem": "2.56.1"
   },

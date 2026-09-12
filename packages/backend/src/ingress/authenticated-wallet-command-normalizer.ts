@@ -2,6 +2,7 @@ import {
   canonicalAttachCandidatePayloadBytes,
   canonicalDirectoryPublishPayloadBytes,
   canonicalOfferingCreatePayloadBytes,
+  parseProviderToolId,
   parseAttachCandidatePayload,
   parseDirectoryPublishPayload,
   parseExternalPreparePayload,
@@ -81,6 +82,15 @@ interface CandidateEnvelope {
 }
 
 type CommandEnvelope = ExternalPrepareEnvelope | OfferingEnvelope | DirectoryEnvelope | CandidateEnvelope;
+
+export type ResolveWalletCommandAuthorities = (
+  chainId: 296,
+  canonicalSignerAddress: string,
+  selection?: Readonly<{
+    subjectPublicId: string;
+    offeringPublicId?: string;
+  }>,
+) => ReturnType<ResolveCommandAuthorities>;
 
 export type NormalizedWalletCommand =
   | {
@@ -1044,14 +1054,25 @@ function captureOneAuthority(records: unknown): unknown | null {
 }
 
 async function resolveAuthority(
-  resolver: ResolveCommandAuthorities,
+  resolver: ResolveWalletCommandAuthorities,
   signer: string,
   envelope: CommandEnvelope,
 ): Promise<ResolvedAuthority | null> {
   if (typeof resolver !== "function") {
     return null;
   }
-  const record = captureOneAuthority(await resolver(296, signer));
+  const subjectPublicId = envelope.type === "offering.create" || envelope.type === "external.prepare"
+    ? parseProviderToolId(envelope.payload.subjectPublicId)
+    : null;
+  const selection = subjectPublicId === null
+    ? undefined
+    : envelope.type === "offering.create"
+      ? { subjectPublicId, offeringPublicId: envelope.payload.offeringPublicId }
+      : { subjectPublicId };
+  const records = selection === undefined
+    ? await resolver(296, signer)
+    : await resolver(296, signer, selection);
+  const record = captureOneAuthority(records);
   return record === null ? null : parseAuthorityRecord(record, signer, envelope);
 }
 
@@ -1170,7 +1191,7 @@ function normalizeEnvelope(
 export async function normalizeClaimedWalletCommand(
   claimedBody: unknown,
   serverNow: string,
-  resolveCommandAuthorities: ResolveCommandAuthorities,
+  resolveCommandAuthorities: ResolveWalletCommandAuthorities,
 ): Promise<NormalizedWalletCommand | null> {
   if (!isClaimedProtectedBody(claimedBody)) return null;
   const rawBody = readClaimedProtectedBody(claimedBody);

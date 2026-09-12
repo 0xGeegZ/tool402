@@ -36,6 +36,7 @@ function context(overrides = {}) {
     chainId: 296,
     expectedTarget,
     candidateTransactionId: "0.0.123@1735689600.123456789",
+    selectedProviderTool: false,
     ...overrides,
   };
 }
@@ -44,10 +45,13 @@ function runtime({
   verificationContext = context(),
   readerResult = { status: "DOCUMENT", document: { result: "SUCCESS" } },
   verificationResult = { outcome: "VERIFIED" },
+  providerReaderResult = { status: "UNKNOWN" },
+  corroborationResult = { status: "CONFIRMED", state: "READY" },
 } = {}) {
   const queries = [];
   const mutations = [];
   const mirrorReads = [];
+  const providerToolReads = [];
   const verifierInputs = [];
   const ctx = {
     async runQuery(reference, args) {
@@ -56,7 +60,9 @@ function runtime({
     },
     async runMutation(reference, args) {
       mutations.push({ name: getFunctionName(reference), args: structuredClone(args) });
-      return undefined;
+      return getFunctionName(reference) === "ats_candidate_receipts:corroborateSelectedProviderToolAtsReceipt"
+        ? corroborationResult
+        : undefined;
     },
     runAction() { throw new Error("receipt verification must not resubmit an action"); },
     db: {
@@ -79,8 +85,12 @@ function runtime({
       verifierInputs.push({ expectation: structuredClone(expectation), document: structuredClone(document) });
       return verificationResult;
     },
+    async readProviderToolReceipt(candidateTransactionId) {
+      providerToolReads.push(candidateTransactionId);
+      return providerReaderResult;
+    },
   };
-  return { ctx, seams, queries, mutations, mirrorReads, verifierInputs };
+  return { ctx, seams, queries, mutations, mirrorReads, providerToolReads, verifierInputs };
 }
 
 function expectedContextRead() {
@@ -185,6 +195,47 @@ implementedTest("stops every ATS operation not configured for receipt verificati
     assert.deepEqual(direct.mirrorReads, [], `${operationKind}: direct no Mirror read`);
     assert.deepEqual(direct.mutations, [], `${operationKind}: direct no outcome mutation`);
   }
+});
+
+implementedTest("routes an attached selected ATS_CREATE candidate through the injected trusted reader and corroboration mutation", async () => {
+  const transaction = { hash: `0x${"1".repeat(64)}` };
+  const receipt = { transactionHash: transaction.hash };
+  const state = runtime({
+    verificationContext: context({
+      operationKind: "ATS_CREATE",
+      candidateEvmAddress: candidateAddress,
+      selectedProviderTool: true,
+    }),
+    providerReaderResult: { status: "DOCUMENTS", transaction, receipt },
+  });
+  assert.deepEqual(
+    await api.verifyAtsCandidateReceiptForTest(state.ctx, { attemptId }, state.seams),
+    { outcome: "CONFIRMED" },
+  );
+  assert.deepEqual(state.queries, expectedContextRead());
+  assert.deepEqual(state.mirrorReads, []);
+  assert.deepEqual(state.verifierInputs, []);
+  assert.deepEqual(state.providerToolReads, ["0.0.123@1735689600.123456789"]);
+  assert.deepEqual(state.mutations, [{
+    name: "ats_candidate_receipts:corroborateSelectedProviderToolAtsReceipt",
+    args: { attemptId, transaction, receipt },
+  }]);
+});
+
+implementedTest("keeps a selected ATS_CREATE offering pending when the trusted reader has no corroborating documents", async () => {
+  const state = runtime({
+    verificationContext: context({
+      operationKind: "ATS_CREATE",
+      candidateEvmAddress: candidateAddress,
+      selectedProviderTool: true,
+    }),
+  });
+  assert.deepEqual(
+    await api.verifyAtsCandidateReceiptForTest(state.ctx, { attemptId }, state.seams),
+    { outcome: "OUTCOME_UNKNOWN" },
+  );
+  assert.deepEqual(state.providerToolReads, ["0.0.123@1735689600.123456789"]);
+  assert.deepEqual(state.mutations, []);
 });
 
 implementedTest("records one verified HEDERA_FUNDING candidate as CONFIRMED after exactly one bounded read", async () => {

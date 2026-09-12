@@ -16,10 +16,14 @@ const bigint = { type: "bigint" };
 const literal = (value) => ({ type: "literal", value });
 const array = (value) => ({ type: "array", value });
 const union = (...values) => ({ type: "union", value: values.map(literal) });
+const optional = (fieldType) => ({ fieldType, optional: true });
 const object = (fields) => ({
   type: "object",
   value: Object.fromEntries(
-    Object.entries(fields).map(([key, fieldType]) => [key, { fieldType, optional: false }]),
+    Object.entries(fields).map(([key, fieldType]) => [
+      key,
+      Object.hasOwn(fieldType, "fieldType") ? fieldType : { fieldType, optional: false },
+    ]),
   ),
 });
 
@@ -141,6 +145,7 @@ implementedTest("registers exactly the protected command route and the two publi
   const routes = http.default.getRoutes().map(([path, method]) => [path, method]);
   assert.deepEqual(routes, [
     ["/internal/commands", "POST"],
+    ["/internal/provider-tools", "POST"],
     ["/public/directory/*", "GET"],
     ["/public/offerings/*", "GET"],
   ]);
@@ -197,6 +202,10 @@ implementedTest("registers the exact internal transport-replay and authority-rea
   assert.deepEqual(JSON.parse(authorities.exportArgs()), object({
     chainId: literal(296),
     canonicalSignerAddress: string,
+    selection: optional(object({
+      subjectPublicId: string,
+      offeringPublicId: optional(string),
+    })),
   }));
   assert.deepEqual(JSON.parse(authorities.exportReturns()), array(object({
     principalPublicId: string,
