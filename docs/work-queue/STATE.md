@@ -1,5 +1,47 @@
 # Runtime queue state
 
+- S43_FOOTER_POSITIONING_ACCEPTANCE: Source `f248368f` is accepted at 60-done.
+  The mascot is grouped with the Tool402 logo in the first footer column;
+  asset, decorative accessibility, breakpoint, links, copy and routes remain
+  unchanged. Landing checks pass 11/11; desktop browser and Next.js error
+  checks are clear. A review finding removed the now-unjustified shadow, and a
+  fresh independent final review is clean. The footer reservation is released;
+  no merge or live-action authority is added. See the S43 final-review record.
+
+- S43_FINAL_MAIN_INTEGRATION: Source `de30e189` on main `5f21fc90` is
+  accepted at 60-done after the menu amendment and conflict resolution.
+  Complete Web tests pass 450 with one historical skip; configuration-free
+  Turbopack build, TypeScript, lint, queue/reference/whitespace checks and two
+  fresh independent module generations are clear. The three session readers
+  retain main's auth policy while repairing their request-time cookie access.
+  All amended S43 reservations are released. Evidence distinguishes historical
+  browser observations from final-source checks. Draft PR only; no merge or
+  live-action authority. See docs/work-queue/evidence/S43-T010-final-review.md.
+
+- S43_MENU_AMENDMENT: The owner authorizes a draft PR and removing only Docs
+  and Campaign from the shared main menu. S43 reopens at 20-active for the
+  exact navigation/test amendment in its specification. Footer routes, signed
+  Dashboard visibility and Prepare a tool remain unchanged; no merge authority.
+
+- S43_RECORDING_DEMO_ACCEPTANCE: Source `0a2554aa` is accepted at 60-done
+  after Web 436 passed/one historical skip, typecheck/lint/queue/guard,
+  Turbopack build, local browser checks and two fresh clean module reviews.
+  Evidence: docs/work-queue/evidence/S43-T010-final-review.md. S43 ownership
+  is released; real-wallet and public-deployment evidence remain separate.
+
+- S43_RECORDING_DEMO_GREEN: Independent RED review at `92f75d6c` accepts
+  32 passes, seven intended failures and one historical skip. Only the exact
+  sources/tests in the S43 specification are authorized for minimal GREEN.
+
+- S43_RECORDING_DEMO_ACTIVATION: Independent readiness at `ea1ee2f8` is clear;
+  the root passes S43 through 10-ready into 20-active for its specified RED
+  tests only. Baseline: 36 passed, one historical skip, no failures.
+
+- S43_RECORDING_DEMO_INTAKE: The owner requests a current six-screen recording
+  journey. S43-T010 is inbox-only under docs/specs/s43-recording-demo-journey.md;
+  it supersedes historical S11 copy only in its declared scope. No source is
+  changed before readiness and RED; wallet and deployment authority is unchanged.
+
 - S29_POST_ACCEPTANCE_REVIEW_FIX: The repository owner explicitly directs the
   two confirmed Provider deploy review corrections on PR #82. The root may
   amend only `provider-deploy-wizard.tsx`, `deploy-stage-signing.tsx`, the new

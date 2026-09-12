@@ -11,31 +11,21 @@ const sourcePaths = [
 ];
 
 const expectedRows = [
-  ["/", "Product overview", "Read the product overview and continue to Explore."],
-  ["/explore", "Explore assessments", "Find the RiskScan entry and its local discovery surface."],
-  ["/explore/riskscan", "Read RiskScan", "Review the Quick input, result, and configuration boundaries."],
-  ["/explore/riskscan/try", "Try the local request", "Inspect the bounded Quick request surface."],
-  ["/explore/riskscan/tool-loop?demo=tool-loop", "Follow ToolLoop", "Inspect the local ToolLoop request boundary."],
-  ["/dashboard", "Open the dashboard", "See the guest dashboard shell."],
-  ["/dashboard/riskscan", "Review the workbench", "Follow the guest RiskScan workbench sequence."],
-  [
-    "/dashboard/riskscan/compatibility",
-    "Check compatibility",
-    "Inspect the guest native quote compatibility surface.",
-  ],
-  ["/dashboard/riskscan/preflight", "Review disclosures", "Inspect the guest Quick disclosure preflight."],
+  ["/", "Introduce Tool402"],
+  ["/explore", "Find RiskScan"],
+  ["/explore/riskscan", "Explain the tool"],
+  ["/explore/riskscan/tool-loop?demo=tool-loop", "Inspect one request"],
+  ["/provider/deploy", "Prepare a campaign"],
+  ["/sign-in", "Open your dashboard"],
 ];
 
 const expectedRouteFiles = {
   "/": "src/app/page.tsx",
   "/explore": "src/app/explore/page.tsx",
   "/explore/riskscan": "src/app/explore/riskscan/page.tsx",
-  "/explore/riskscan/try": "src/app/explore/riskscan/try/page.tsx",
   "/explore/riskscan/tool-loop?demo=tool-loop": "src/app/explore/riskscan/tool-loop/page.tsx",
-  "/dashboard": "src/app/dashboard/page.tsx",
-  "/dashboard/riskscan": "src/app/dashboard/riskscan/page.tsx",
-  "/dashboard/riskscan/compatibility": "src/app/dashboard/riskscan/compatibility/page.tsx",
-  "/dashboard/riskscan/preflight": "src/app/dashboard/riskscan/preflight/page.tsx",
+  "/provider/deploy": "src/app/provider/deploy/page.tsx",
+  "/sign-in": "src/app/sign-in/page.tsx",
 };
 
 async function fileExists(path) {
@@ -81,7 +71,7 @@ test("composes one server page with the named guided step component", async (t) 
   assert.match(page, /<GuidedDemoSteps\s*\/>/);
 });
 
-test("keeps the nine guided steps in the exact local order and copy", async (t) => {
+test("keeps one request and the campaign journey in six reachable main steps", async (t) => {
   const sources = await readGuidedSources(t);
   if (!sources) return;
   const { steps } = sources;
@@ -89,7 +79,7 @@ test("keeps the nine guided steps in the exact local order and copy", async (t) 
     ...steps.matchAll(
       /\{\s*href:\s*["']([^"']+)["']\s*,\s*title:\s*["']([^"']+)["']\s*,\s*observation:\s*["']([^"']+)["']\s*\}/g,
     ),
-  ].map(([, href, title, observation]) => [href, title, observation]);
+  ].map(([, href, title]) => [href, title]);
 
   assert.deepEqual(rows, expectedRows);
   assert.equal((steps.match(/<Link\b/g) ?? []).length, 1);
@@ -99,7 +89,7 @@ test("keeps the nine guided steps in the exact local order and copy", async (t) 
   assert.match(steps, /steps\.slice\(chapter\.start, chapter\.end\)\.map\(/);
   assert.match(steps, /className="flex flex-col gap-8"/);
   assert.match(steps, /className="grid gap-4 md:grid-cols-2"/);
-  assert.match(steps, /<Link\b[^>]*href=\{step\.href\}/);
+  assert.match(steps, /<Link\b[^>]*href=\{withTour\(step\.href\)\}/);
   assert.deepEqual(
     [...steps.matchAll(/href:\s*["']([^"']+)["']/g)].map(([, href]) => href),
     expectedRows.map(([href]) => href),
@@ -125,14 +115,17 @@ test("keeps the demo route local, static, and outside excluded authority claims"
   assert.doesNotMatch(sources, /\b(?:localStorage|sessionStorage|indexedDB|process\.env|import\.meta\.env)\b/i);
   assert.doesNotMatch(sources, /\b(?:analytics|gtag|posthog|segment)\b/i);
   assert.doesNotMatch(sources, /(?:https?:\/\/|mailto:|target\s*=|href\s*=\s*["']\/\/)/i);
-  assert.doesNotMatch(
-    sources,
-    /\b(?:backing|position|onboarding|verification|reviewer|activity|issue|uptime|price|balance|simulated|illustrative|provider|payment|transaction|live|human|narrat(?:e|ion|ed)|fund(?:ing)?|offering|portfolio|allocation|clearing|snapshot|payout|ats|sign[- ]?in|sign[- ]?up|evidence|receipt|deployment|submission)\b|\bnetwork\s+status\b/i,
-  );
+  assert.doesNotMatch(sources, /guest (?:dashboard|workspace)|current guest surfaces/i);
+  assert.match(page, /<details\b/);
+  for (const href of ["/explore/riskscan/try", "/dashboard/riskscan", "/dashboard/riskscan/compatibility", "/dashboard/riskscan/preflight", "/provider"]) {
+    assert.ok(page.includes(`href="${href}"`));
+    await access(join(appRoot, `src/app${href}/page.tsx`));
+  }
+  await access(join(appRoot, "src/app/dashboard/page.tsx"));
   assert.ok([...sources.matchAll(/href\s*=\s*\{?(["'])(\/[^"']*)\1\}?/g)].every(([, , href]) => !href.startsWith("//")));
 });
 
-test("preserves four public navigation entries plus the conditional Dashboard entry", async (t) => {
+test("preserves two public navigation entries plus the conditional Dashboard entry", async (t) => {
   const sources = await readGuidedSources(t);
   if (!sources) return;
   const { navigation, landingTest } = sources;
@@ -142,9 +135,7 @@ test("preserves four public navigation entries plus the conditional Dashboard en
   ].map(([, href, label]) => [href, label]);
   assert.deepEqual(entries, [
     ["/explore", "Explore tools"],
-    ["/docs", "Docs"],
     ["/demo", "Guided demo"],
-    ["/provider", "Campaign"],
     ["/dashboard", "Dashboard"],
   ]);
   const hrefGuardLines = landingTest
@@ -153,7 +144,7 @@ test("preserves four public navigation entries plus the conditional Dashboard en
   assert.equal(hrefGuardLines.length, 1);
   assert.match(
     hrefGuardLines[0],
-    /href: "\(\?!\\?\/explore"\|\\?\/docs"\|\\?\/demo"\|\\?\/provider"\|\\?\/dashboard"\)/,
+    /href: "\(\?!\\?\/explore"\|\\?\/demo"\|\\?\/dashboard"\)/,
   );
-  assert.equal((hrefGuardLines[0].match(/\|/g) ?? []).length, 4);
+  assert.equal((hrefGuardLines[0].match(/\|/g) ?? []).length, 2);
 });

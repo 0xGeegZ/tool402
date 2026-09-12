@@ -189,6 +189,6 @@ test("keeps the guides static, flat, focusable, and free of public-capability cl
   assert.match(docs, /\blg:sticky\b/);
   assert.match(docs, /\bfocus-visible:outline\b/);
   assert.ok((docs.match(/<h2\b/g) ?? []).length >= 4);
-  assert.match(sources.navigation, /\{ href: "\/docs", label: "Docs" \}/);
+  assert.match(sources.footer, /<Link href="\/docs"[^>]*>Documentation<\/Link>/);
   assert.match(sources.footer, /<Link href="\/docs\/providers"[^>]*>Provider documentation<\/Link>/);
 });

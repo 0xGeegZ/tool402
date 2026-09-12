@@ -8,8 +8,9 @@ async function DashboardGate({
   children,
 }: Readonly<{ children: ReactNode }>) {
   const sessionCookieName = readDashboardSessionCookieName(process.env);
+  const cookieStore = await cookies();
   const session = await readDashboardSession(
-    sessionCookieName === null ? null : (await cookies()).get(sessionCookieName)?.value ?? null,
+    sessionCookieName === null ? null : cookieStore.get(sessionCookieName)?.value ?? null,
     process.env,
     Date.now(),
   );

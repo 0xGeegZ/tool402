@@ -309,3 +309,75 @@ Record only decisions made or adopted for this clean implementation repository. 
 | D-M51-010-006 | PUBLIC ADAPTER RED ACCEPTED AND GREEN AUTHORIZED | Scoped RED `2fde5b78a87c57a134a91a64455188a67c7dc0f6` changes only `packages/backend/tests/command-dispatch.test.mjs`; its one intended failure proves the existing public adapter rejects a valid canonical attempt reference after the query has succeeded, while malformed references remain rejected. Ruling: authorize only `packages/backend/convex/command_dispatch.ts` and its exact test for the minimal closed parser extension. It may validate and forward one canonical reference only; no other source, data mutation, wallet/provider request, signature, relay, authority, transaction, candidate, deployment, or live behavior is authorized. | M51-T010, S17-T010 | 2026-09-11T20:18:00Z |
 
 No decision is inferred from silence, model output, or a mock result.
+
+## D-S43-010-001 — Recording guide intake
+
+The owner requests demo consistency and existing form prefill reuse. Catalogue
+S43-T010 before activation, following docs/specs/s43-recording-demo-journey.md.
+This supersedes UI-S11 historical route/copy exclusions for the existing signed
+dashboard and campaign views only; it grants no external or wallet action.
+
+## D-S43-010-002 — Readiness and RED activation
+
+Independent readiness at `ea1ee2f8` is clear: accepted dependencies and bounded
+root auth handoff reservation. Activate only the five named tests after a
+36-pass, one-skip focused baseline. Source remains frozen pending RED review.
+
+## D-S43-010-003 — GREEN scope
+
+The independent RED review at `92f75d6c` is clear. Authorize only the seven
+source paths and five tests in the S43 specification. Preserve all existing
+auth protocol, session gates, backend validation and human-owned actions.
+
+## D-S43-010-004 — Local acceptance
+
+Accept source `0a2554aa` after focused/full Web tests, typecheck, lint,
+queue/guard, production build, local browser checks and two independent fresh
+clean module review generations. Move S43 to 60-done and release ownership.
+The final-review record separates source, browser, wallet and deployment proof.
+
+## D-S43-010-005 — Owner-directed menu amendment and draft PR
+
+The owner explicitly authorizes a draft PR and removal of Docs/Campaign from
+the desktop/mobile main menu. Reopen S43 for the exact shared navigation list
+and its two existing test assertions. Preserve footer links, conditional
+Dashboard and the deployment CTA; retain test-first and independent review.
+This authorizes draft publication, not merge or production deployment.
+
+## D-S43-010-006 — Final acceptance after main integration
+
+The owner explicitly requests resolving main conflicts. Accept final source
+`de30e1898df6dc4f942d1caa5c93a8f0a44ccef1` rebased on
+`5f21fc90e1a927317665a1c1bf245eb0f9457cd5`, preserving M55 ownership and
+main's environment-selected cookies and challenge envelope. The committed
+amendments cover the menu cleanup, Provider assertion, Deploy fixture slot,
+and three reproduced session-reader prerender repairs. Web tests pass 450
+with one historical skip; production build without auth configuration,
+TypeScript, lint, queue/reference and whitespace validation pass. Two fresh
+independent module generations are clean at the exact final source. Move S43
+to 60-done and release all amended reservations, including the third cookie
+reader dashboard-campaign.tsx. The final-review record separates historical
+browser validation from final-source checks; only draft publication is authorized.
+
+## D-S43-010-007 — Owner-directed footer positioning
+
+The owner requests that the existing decorative footer mascot move beside the
+Tool402 logo and first-column introduction. Reopen S43 for
+`landing-footer.tsx` only. Preserve the local asset, decorative empty alt text,
+breakpoint, footer links, copy and routes. This layout-only amendment requires
+existing landing regression tests, desktop browser verification and independent
+review before acceptance. It grants no wallet, campaign, deployment, recording
+or merge authority.
+
+## D-S43-010-008 — Footer positioning acceptance
+
+Accept source `f248368f73035e1ffc2b96b76bbd253591caaf32`. It groups the
+existing decorative mascot with the Tool402 footer logo, retaining the asset,
+empty alternative text, `aria-hidden`, `sm` breakpoint, copy, links and routes.
+The first independent review identified a resting shadow inconsistent with the
+Flat Ledger Rule; the final source removes it. Landing checks pass 11/11,
+desktop browser verification shows the mascot beside the logo without overlap,
+and Next.js reports no compilation or runtime errors. A fresh independent
+final review is clean. Move S43 to 60-done and release the footer reservation;
+no merge, wallet, campaign, deployment, recording or live-action authority is
+granted.

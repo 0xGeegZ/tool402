@@ -10,8 +10,9 @@ import { Card, CardContent } from "../ui/card";
 
 export async function DashboardCampaign() {
   const sessionCookieName = readDashboardSessionCookieName(process.env);
+  const cookieStore = await cookies();
   const session = await readDashboardSession(
-    sessionCookieName === null ? null : (await cookies()).get(sessionCookieName)?.value ?? null,
+    sessionCookieName === null ? null : cookieStore.get(sessionCookieName)?.value ?? null,
     process.env,
   );
   if (session === null) return null;

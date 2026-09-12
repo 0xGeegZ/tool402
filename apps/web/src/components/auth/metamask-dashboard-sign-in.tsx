@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
 import { Button } from "../ui/button";
+import { dashboardTourHref } from "../demo/demo-tour-navigation";
 import { connectedWalletSession, useWalletSession, type WalletSession } from "../wallet/wallet-session";
 
 const failureMessage = "Sign-in could not be completed. Please try again.";
@@ -48,7 +49,7 @@ async function postJson(path: string, body: object): Promise<unknown> {
   }
 }
 
-function MetaMaskSignInButton({ session }: { session: WalletSession }) {
+function MetaMaskSignInButton({ session, tour }: { session: WalletSession; tour: "1" | null }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
@@ -92,7 +93,7 @@ function MetaMaskSignInButton({ session }: { session: WalletSession }) {
         throw new Error("verification rejected");
       }
 
-      router.replace("/dashboard");
+      router.replace(dashboardTourHref(tour));
     } catch {
       setFailure(failureMessage);
     } finally {
@@ -118,7 +119,7 @@ function MetaMaskSignInButton({ session }: { session: WalletSession }) {
   );
 }
 
-export function MetaMaskDashboardSignIn() {
+export function MetaMaskDashboardSignIn({ tour = null }: { tour?: "1" | null }) {
   const wallet = useWalletSession();
   const session: WalletSession | null = connectedWalletSession(wallet);
 
@@ -127,7 +128,7 @@ export function MetaMaskDashboardSignIn() {
       <h2 id="metamask-dashboard-sign-in-title" className="text-lg font-semibold">Sign in with MetaMask</h2>
       {session === null ? (
         <p aria-live="polite" className="text-sm text-muted-foreground">Connect MetaMask from the header on Hedera Testnet, then sign to unlock the dashboard.</p>
-      ) : <MetaMaskSignInButton session={session} />}
+      ) : <MetaMaskSignInButton session={session} tour={tour} />}
     </section>
   );
 }

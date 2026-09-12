@@ -7,14 +7,16 @@ export function LandingFooter() {
   return (
     <footer className="border-t border-border pt-12 pb-10">
       <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between lg:gap-16">
-        <div className="relative max-w-xs space-y-3">
-          <Logo className="h-7" />
+        <div className="max-w-xs space-y-3">
+          <div className="flex items-center gap-3">
+            <Logo className="h-7" />
+            <div aria-hidden="true" className="hidden size-16 overflow-hidden rounded-full border border-border bg-secondary/50 sm:block">
+              <Image src="/brand/mascot-flag.png" alt="" width={96} height={96} className="size-full scale-125 object-cover" />
+            </div>
+          </div>
           <p className="text-sm leading-6 text-muted-foreground">
             A clear starting point for the tools agents use.
           </p>
-          <div aria-hidden="true" className="pointer-events-none absolute -right-3 -top-3 hidden size-16 overflow-hidden rounded-full border border-border bg-secondary/50 shadow-sm sm:block lg:-right-16">
-            <Image src="/brand/mascot-flag.png" alt="" width={96} height={96} className="size-full scale-125 object-cover" />
-          </div>
         </div>
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5 lg:gap-12">
           <nav aria-label="Product links">

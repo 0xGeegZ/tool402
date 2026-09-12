@@ -1542,3 +1542,53 @@ reservations remain unchanged until root records release or exact scoped
 transfer/co-review, followed by independent readiness, activation, and RED
 acceptance. No source/test, authority provisioning, environment mutation,
 wallet, signature, transaction, deployment, or live-evidence action is active.
+
+S43-T010 reserves only its specification/card and root control during intake.
+Its proposed exact source/test boundary is in docs/specs/s43-recording-demo-journey.md.
+The sign-in page/component reservation is limited to the closed tour navigation
+handoff; S40 retains all auth protocol and session authority. No dashboard page,
+deploy logic, API, backend, dependency, or other active source is reserved.
+
+S43 readiness at `ea1ee2f8` is independently clear. Root activates only its
+five named test files; source remains frozen until observed RED acceptance.
+
+D-S43-010-003 authorizes the exact seven sources and five tests in the S43
+specification after independent RED acceptance at `92f75d6c`. The two sign-in
+files permit only the closed tour handoff; all other S40/S42 paths stay frozen.
+
+S43-T010 is accepted at source `0a2554aa`; its exact reservations above are
+released after the local checks and two fresh clean module review generations
+recorded in docs/work-queue/evidence/S43-T010-final-review.md.
+
+S43's owner-directed menu follow-up reserves only local-navigation.tsx and
+the existing navigation assertions in landing-explore.test.mjs and
+guided-demo-route.test.mjs. Footer, layout, auth and every other source remain
+unchanged. This bounded amendment is defined in the S43 specification.
+
+The S43 main-integration amendment reserves the three existing auth request
+boundaries, dashboard-navigation.tsx, dashboard/layout.tsx, and
+dashboard-campaign.tsx, solely to
+await their existing cookie store before the null-name branch. This fixes
+the reproduced unconfigured prerender failure; auth policy is unchanged.
+It also reserves the existing signing test's attempt-slot fixture and the
+Provider ID assertion reconciliation described in the S43 specification.
+
+D-S43-010-006 accepts final source `de30e189` on main `5f21fc90` after
+two fresh clean module generations and final validation. Release all S43
+reservations, including the shared navigation/tests, the three session readers
+dashboard-navigation.tsx, dashboard/layout.tsx and dashboard-campaign.tsx,
+and the integration test fixtures. Other lanes retain their existing authority;
+S43 acceptance grants no merge, deployment or live-action authority.
+
+D-S43-010-007 reopens S43 for the owner-directed footer positioning follow-up.
+It reserves only apps/web/src/components/landing/landing-footer.tsx to group
+the existing decorative mascot with the Tool402 logo. Existing asset, empty
+alternative text, breakpoint, footer links, copy, routes and all non-footer
+sources remain unchanged. Independent review and local browser verification
+precede release; no live-action authority is granted.
+
+D-S43-010-008 accepts footer source `f248368f` after landing checks, desktop
+browser/Next.js verification and a fresh independent final review. Release
+landing-footer.tsx; its existing asset, decorative accessibility, breakpoint,
+links, copy and routes remain unchanged. No merge, deployment or live-action
+authority is granted.

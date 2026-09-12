@@ -120,7 +120,7 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
         evmAddress: "0x52908400098527886e0f7030069857d2e4169ee7",
       };
       slots[1] = [{ kind: "done" }, { kind: "done" }];
-      slots[2] = "AAAAAAAAAAAAAAAAAAAAAA";
+      slots[3] = "AAAAAAAAAAAAAAAAAAAAAA";
     },
     connectionRequests() { return connectionRequests; },
   };

@@ -5,15 +5,12 @@ import { usePathname } from "next/navigation";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { steps } from "./guided-demo-steps";
+import { withTour } from "./demo-tour-navigation";
 
 const tourValues = ["1"] as const;
 
 function pathOf(href: string): string {
   return href.split("?")[0];
-}
-
-function withTour(href: string): string {
-  return href.includes("?") ? `${href}&tour=1` : `${href}?tour=1`;
 }
 
 const linkClass =
@@ -44,7 +41,8 @@ export function DemoTourBar() {
 
   if (tour !== "1") return null;
 
-  const index = steps.findIndex((step) => pathOf(step.href) === pathname);
+  const stepPath = pathname === "/dashboard" ? "/sign-in" : pathname;
+  const index = steps.findIndex((step) => pathOf(step.href) === stepPath);
   if (index === -1) return null;
 
   const step = steps[index];
@@ -67,9 +65,9 @@ export function DemoTourBar() {
           {next ? (
             <Link href={withTour(next.href)} className={primaryLinkClass}>Next: {next.title} →</Link>
           ) : (
-            <Link href="/demo" className={primaryLinkClass}>Tour complete · back to the guide</Link>
+            <Link href="/demo" className={primaryLinkClass}>Back to the guide</Link>
           )}
-          <Link href={pathname} className={quietLinkClass}>Exit tour</Link>
+          <Link href={pathname === "/dashboard" ? pathname : step.href} className={quietLinkClass}>Exit tour</Link>
         </p>
       </div>
     </aside>

@@ -261,7 +261,7 @@ implementedTest("gives each projection its own deadline and rejects bodies above
 implementedTest("renders only the fixed status regions, actions, evidence rows, and gated external link", async () => {
   const sources = await readSources();
   const page = sources["src/app/provider/page.tsx"];
-  assert.match(page, /readProviderProjections\(process\.env, globalThis\.fetch, ["']riskscan_revenue_note_demo["']\)/u);
+  assert.match(page, /readProviderProjections\(process\.env, globalThis\.fetch, riskScanOfferingPublicId\)/u);
   const status = sources["src/components/provider/status/provider-status.tsx"];
   const state = sources["src/components/provider/status/provider-status-state.ts"];
   const presentation = `${page}\n${status}\n${state}`;
@@ -370,4 +370,12 @@ implementedTest("derives the fixed region order, next actions, evidence cells, a
     );
   }
   assert.equal(state.hashscanContractUrl("READY", undefined), null);
+});
+
+
+implementedTest("reads the current campaign shared with the signed dashboard", async () => {
+  const page = (await readSources())["src/app/provider/page.tsx"];
+  assert.match(page, /import\s*\{\s*riskScanOfferingPublicId\s*\}\s*from\s*["'][^"']*dashboard-campaign["']/);
+  assert.match(page, /readProviderProjections\(process\.env, globalThis\.fetch, riskScanOfferingPublicId\)/);
+  assert.doesNotMatch(page, /riskscan_offering_demo/);
 });

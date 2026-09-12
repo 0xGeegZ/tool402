@@ -4,9 +4,10 @@ import { LandingFooter } from "../../components/landing/landing-footer";
 import { ProviderStatus } from "../../components/provider/status/provider-status";
 import { PageHeader } from "../../components/ui/page-header";
 import { readProviderProjections } from "../../lib/offering-projection";
+import { riskScanOfferingPublicId } from "../../lib/dashboard-campaign";
 
 async function ProviderStatusRegions() {
-  const projections = await readProviderProjections(process.env, globalThis.fetch, "riskscan_revenue_note_demo");
+  const projections = await readProviderProjections(process.env, globalThis.fetch, riskScanOfferingPublicId);
   return <ProviderStatus projections={projections} />;
 }
 
