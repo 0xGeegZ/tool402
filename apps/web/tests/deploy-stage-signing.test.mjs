@@ -114,6 +114,13 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
       };
       this.render();
     },
+    setWalletState(state) {
+      session = {
+        state,
+        provider: null,
+        async connect() { connectionRequests += 1; },
+      };
+    },
     seedStageThreeCandidate() {
       slots[0] = {
         transactionId: "0.0.9213391-1789430400-000000001",
@@ -368,4 +375,27 @@ implementedTest("offers one explicit deploy-form MetaMask connection while the s
     false,
     "the deploy-form action must disappear once the shared session is connected",
   );
+});
+
+implementedTest("keeps the deploy-form connection card available to retry discovery failures", async () => {
+  const { campaignFixture } = await import("../src/components/provider/deploy/campaign-fixture.ts");
+  const values = {
+    ...campaignFixture,
+    targetAgentCustomers: campaignFixture.targetAgentCustomers.join("\n"),
+    useOfFunds: campaignFixture.useOfFunds.join("\n"),
+    risks: campaignFixture.risks.join("\n"),
+  };
+
+  for (const state of [{ kind: "no_provider" }, { kind: "multiple_providers" }]) {
+    const harness = await signingIslandHarness(values);
+    harness.setWalletState(state);
+    const tree = harness.render();
+    const connectSection = elements(tree).find((element) => element.props["data-ui"] === "provider-deploy-connect");
+
+    assert.ok(connectSection, `${state.kind} must keep the deploy-form connection card visible`);
+    const retryButton = elements(connectSection).find((element) => element.type === "Button" && visibleText(element) === "Retry");
+    assert.ok(retryButton, `${state.kind} must provide a labelled retry button`);
+    retryButton.props.onClick();
+    assert.equal(harness.connectionRequests(), 1, `${state.kind} retries only after an explicit click`);
+  }
 });
