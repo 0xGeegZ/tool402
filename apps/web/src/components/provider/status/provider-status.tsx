@@ -110,8 +110,8 @@ function LoadedRegions({ offering, directoryOutcome }: { offering: OfferingRecor
             </div>
           </div>
           <div aria-hidden="true" className="relative min-h-60 overflow-hidden rounded-panel border border-brand-purple/20 bg-[linear-gradient(135deg,color-mix(in_oklab,var(--secondary)_76%,white),color-mix(in_oklab,var(--brand-purple)_13%,white))] shadow-[0_24px_70px_-45px_color-mix(in_oklab,var(--brand-purple)_75%,transparent)] sm:min-h-72">
-            <Image src="/brand/provider-campaign-duo.png" alt="" width={1536} height={1024} priority sizes="(min-width: 1024px) 34rem, calc(100vw - 3rem)" className="absolute bottom-0 left-0 h-[108%] w-[74%] object-contain object-bottom" />
-            <p className="absolute right-6 top-1/2 max-w-32 -translate-y-1/2 text-2xl font-extrabold leading-[1.02] tracking-[-0.045em] text-brand-purple/65 sm:right-8 sm:text-3xl">Tools power what&apos;s next.</p>
+            <Image src="/brand/provider-campaign-duo-rays.png" alt="" width={1536} height={1024} priority sizes="(min-width: 1024px) 34rem, calc(100vw - 3rem)" className="absolute bottom-0 left-0 h-[122%] w-[84%] object-contain object-bottom" />
+            <p className="absolute right-4 top-1/2 max-w-24 -translate-y-1/2 text-xl font-extrabold leading-[1.02] tracking-[-0.045em] text-brand-purple/65 sm:right-5 sm:text-2xl">Tools power what&apos;s next.</p>
           </div>
         </section>
 

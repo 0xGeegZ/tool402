@@ -47,7 +47,8 @@ test("defines the Provider command center: one dynamic hero, scannable data regi
   assert.equal((status.match(/href=["']\/provider\/deploy["']/g) ?? []).length, 1);
   assert.match(status, /href=\{nextAction\.href\}/);
   assert.match(status, /href=["']\/explore\/riskscan["']/);
-  assert.match(status, /src=["']\/brand\/provider-campaign-duo\.png["']/);
+  assert.match(status, /src=["']\/brand\/provider-campaign-duo-rays\.png["']/);
+  assert.match(status, /h-\[122%\] w-\[84%\] object-contain object-bottom/);
   assert.match(status, /<Icon kind="offline" \/>Not live/);
   assert.match(status, /<Badge variant="outline" className="[^"]*border-destructive-foreground\/50[^"]*"><Icon kind="offline" \/>Not live<\/Badge>/);
   assert.doesNotMatch(status, /<Icon kind="document" \/>Not live/);

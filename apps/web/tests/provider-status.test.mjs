@@ -6,7 +6,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const appRoot = fileURLToPath(new URL("..", import.meta.url));
-const campaignHeroAsset = join(appRoot, "public/brand/provider-campaign-duo.png");
+const campaignHeroAsset = join(appRoot, "public/brand/provider-campaign-duo-rays.png");
 const sourcePaths = [
   "src/app/provider/page.tsx",
   "src/lib/offering-projection.ts",
@@ -326,7 +326,7 @@ implementedTest("renders the S44 command center from the admitted campaign proje
   assert.match(status, /data-ui=["']provider-supporting-cards["']/);
   assert.match(status, /data-ui=["']provider-technical-record["']/);
   assert.match(status, /import Image from ["']next\/image["']/);
-  assert.match(status, /src=["']\/brand\/provider-campaign-duo\.png["']/);
+  assert.match(status, /src=["']\/brand\/provider-campaign-duo-rays\.png["']/);
   assert.equal(existsSync(campaignHeroAsset), true, "missing generated provider campaign hero asset");
   assert.doesNotMatch(status, /<table\b|min-w-\[/u);
   for (const text of [
