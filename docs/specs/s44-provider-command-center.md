@@ -12,6 +12,7 @@ Turn the already-loaded Provider campaign status page into a readable command ce
 4. The existing evidence rows render as a lifecycle timeline instead of a horizontally scrolling table. Their references, verification text, raw record identifiers, timestamps, and Hashscan gate remain available without inventing activity.
 5. Existing terms become a compact snapshot of four icon-led tiles: unit price, funding target, maximum units, and human-readable maturity. Economics, Capacity, Governance, and Trust details form a single supporting-card row.
 6. The complete admitted terms, directory fields, signer, and raw evidence remain available in a secondary technical-record disclosure. The compact default view does not repeat the former long terms and directory sections.
+7. Each `View technical record`/activity control opens that disclosure before scrolling it into view. The control is a minimal click-only client island; it holds no state, performs no request, and does not alter campaign data.
 
 ## Non-loaded composition
 

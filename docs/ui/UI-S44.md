@@ -13,6 +13,9 @@ In this order for a loaded campaign:
 3. `Activity & proof` as a lifecycle timeline and `Campaign snapshot` as four icon-led metric tiles, paired on desktop.
 4. `Economics`, `Capacity`, `Governance`, and `Trust details` as one supporting-card row, followed by a closed-by-default technical-record disclosure for the complete values.
 
+Controls that target the technical record must set the native `details.open`
+state before scrolling to it, so the destination is visible on arrival.
+
 The hero's decorative illustration is required, static, repository-owned, loaded through `next/image`, and aria-hidden. It must not contain text or campaign data and cannot substitute for status copy.
 
 ## Content ownership

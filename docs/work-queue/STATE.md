@@ -75,7 +75,12 @@
   assertion as incompatible with S44's already-specified single hero. Only the
   Provider target assertions in `apps/web/tests/page-header.test.mjs` and the
   Provider-only `apps/web/tests/provider-visual-reconciliation.test.mjs` may be
-  reconciled; other routes and shared components remain outside S43.
+  reconciled; other routes and shared components remain outside S44.
+- S44_TECHNICAL_RECORD_CONTROL: The owner requests that a technical-record
+  control visibly open its closed destination. S44 additionally reserves only
+  `provider-technical-record-control.tsx` and its existing visual assertion for
+  a state-free, request-free click island that opens and scrolls to the native
+  disclosure.
 
 - S29_POST_ACCEPTANCE_REVIEW_FIX: The repository owner explicitly directs the
   two confirmed Provider deploy review corrections on PR #82. The root may
