@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { formatHbar, formatShare, groupThousands } from "../../../lib/hbar-format";
@@ -358,6 +359,9 @@ function ReviewStep({
   return (
     <div className="space-y-5">
       {connect ? <section aria-label="Wallet connection" data-ui="provider-deploy-wallet-pair" className="grid gap-4 lg:grid-cols-2 lg:items-stretch"><div className="min-w-0">{connect}</div><section className="flex h-full flex-col rounded-card border border-primary/15 bg-primary/[0.06] p-5 shadow-none sm:p-6"><div className="flex items-start gap-3"><ProviderIcon kind="shield" /><div><h2 className="text-lg font-bold tracking-tight">Your keys, your control</h2><p className="mt-1.5 text-sm leading-6 text-muted-foreground">You authorize each step. Nothing is submitted to the network until you sign and confirm.</p></div></div><p className="mt-5 border-t border-primary/15 pt-3 text-xs leading-5 text-muted-foreground">Connecting a wallet only enables the next local signature request.</p></section></section> : null}
+      <div data-ui="provider-deploy-review-art" aria-hidden="true" className="overflow-hidden rounded-panel border border-primary/15 bg-primary/[0.06] px-4 pt-4 sm:px-8">
+        <Image src="/brand/deploy-review-trio.png" alt="" width={1536} height={1024} className="mx-auto h-auto max-h-64 w-full object-contain object-bottom" />
+      </div>
       <section className="rounded-card border border-primary/10 bg-card p-5 shadow-[0_10px_30px_color-mix(in_srgb,var(--primary)_6%,transparent)] sm:p-6" aria-labelledby="prepared-title"><div className="flex items-start justify-between gap-4"><div className="flex gap-4"><ProviderIcon kind="document" /><div><h2 id="prepared-title" className="text-lg font-bold">Prepared details</h2><p className="mt-1 text-sm leading-5 text-muted-foreground">Review the key details of your offering. These values remain editable until you sign.</p></div></div><Button type="button" variant="outline" className="hidden shrink-0 sm:inline-flex">Edit details</Button></div><dl className="mt-4 grid gap-x-8 gap-y-3 rounded-field border border-primary/10 bg-primary/[0.03] p-3 text-sm sm:grid-cols-2">{reviewRows.map(([label, value]) => <div key={label} className="grid grid-cols-[minmax(7rem,0.8fr)_1.2fr] gap-2"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium text-foreground">{value}</dd></div>)}</dl></section>
       {resumeNotice}
       {constructionNotice}

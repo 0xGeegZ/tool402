@@ -1,8 +1,10 @@
+import { BrandRouteLoader } from "../../../components/ui/brand-route-loader";
 import { Skeleton } from "../../../components/ui/skeleton";
 
 export default function Loading() {
   return (
     <main className="mx-auto max-w-3xl space-y-8 pb-6 sm:pb-12">
+      <BrandRouteLoader />
       <div data-skeleton-region="navigation" className="h-24 w-48">
         <Skeleton />
       </div>

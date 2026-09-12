@@ -87,6 +87,7 @@ const sourcePaths = [skeletonPath, ...loaders.map(({ path }) => path)];
 const loaderAttributes = new Map([
   ["main", new Set(["className"])],
   ["div", new Set(["className", "data-skeleton-region"])],
+  ["BrandRouteLoader", new Set()],
   ["Skeleton", new Set()],
 ]);
 
@@ -647,6 +648,12 @@ test(
         sourceFile,
         [
           {
+            specifier: importSpecifier.replace(/skeleton$/u, "brand-route-loader"),
+            bindings: [
+              { imported: "BrandRouteLoader", local: "BrandRouteLoader", typeOnly: false },
+            ],
+          },
+          {
             specifier: importSpecifier,
             bindings: [
               { imported: "Skeleton", local: "Skeleton", typeOnly: false },
@@ -658,6 +665,7 @@ test(
         [],
         loaderAttributes,
       );
+      assert.equal(countJsxTag(sourceFile, "BrandRouteLoader"), 1);
       if (centered) {
         const rootClassNames = jsxAttributeValue(root, "className")
           ?.split(/\s+/u)

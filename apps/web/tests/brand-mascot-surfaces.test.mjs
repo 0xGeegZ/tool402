@@ -100,7 +100,7 @@ test("adds one provider CTA after the unchanged Explore catalogue grid", async (
 
   assert.ok(gridEnd >= 0 && cta > gridEnd, "provider CTA must follow the catalogue grid");
   assert.match(catalog, /src="\/brand\/explore-publish-trio\.png"/);
-  assert.match(catalog, /data-ui="explore-provider-cta"[^>]*aria-hidden="true"/s);
+  assert.match(catalog, /data-ui="explore-provider-cta-art"[^>]*aria-hidden="true"/s);
   assert.match(catalog, /src="\/brand\/explore-publish-trio\.png"[^>]*alt=""/s);
   assert.match(catalog, /href="\/provider\/deploy"/);
   assert.equal((catalog.match(/data-ui="explore-provider-cta"/g) ?? []).length, 1);
