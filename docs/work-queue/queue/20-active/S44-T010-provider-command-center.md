@@ -13,7 +13,7 @@
 
 Recompose the existing server-rendered loaded campaign view into a command center that makes campaign readiness, evidence, current terms, and trust details scannable. It may use the existing admitted projections and routes only. It does not change their reader, schemas, outcome unions, source calls, or content boundary.
 
-The local specification is [`s44-provider-command-center`](../../../specs/s44-provider-command-center.md) and the UI contract is [`UI-S44`](../../../ui/UI-S44.md). The future source paths are limited to `apps/web/src/app/provider/page.tsx`, `apps/web/src/components/provider/status/provider-status.tsx`, `apps/web/src/components/provider/status/provider-status-state.ts`, `apps/web/src/components/provider/status/provider-technical-record-control.tsx`, `apps/web/public/brand/provider-campaign-duo.png`, `apps/web/tests/provider-status.test.mjs`, `apps/web/tests/provider-visual-reconciliation.test.mjs`, and the Provider-only target assertions in `apps/web/tests/page-header.test.mjs`.
+The local specification is [`s44-provider-command-center`](../../../specs/s44-provider-command-center.md) and the UI contract is [`UI-S44`](../../../ui/UI-S44.md). The future source paths are limited to `apps/web/src/app/provider/page.tsx`, `apps/web/src/components/provider/status/provider-status.tsx`, `apps/web/src/components/provider/status/provider-status-state.ts`, `apps/web/src/components/provider/status/provider-technical-record-control.tsx`, `apps/web/public/brand/provider-campaign-duo.png`, `apps/web/public/brand/provider-campaign-duo-rays.png`, `apps/web/tests/provider-status.test.mjs`, `apps/web/tests/provider-visual-reconciliation.test.mjs`, and the Provider-only target assertions in `apps/web/tests/page-header.test.mjs`.
 
 ## Ready and RED activation
 
@@ -36,6 +36,11 @@ generated `apps/web/public/brand/provider-campaign-duo.png` illustration, and
 the focused test may now change for minimal GREEN. Every reader, API, shell,
 wallet/provider, command, transaction, deployment, and live path remains
 outside the scope.
+
+The owner's final hero-art amendment additionally reserves the generated
+`apps/web/public/brand/provider-campaign-duo-rays.png` variant. It may only
+add the two decorative violet accent rays requested for the gold coin; it
+creates no new data, state, interaction, or runtime authority.
 
 The GREEN full-suite run exposed two superseded S25/S28 assertions that still
 require the removed generic Provider header and the former report hierarchy.

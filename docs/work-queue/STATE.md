@@ -66,6 +66,9 @@
   5×2 offering/Directory matrix with one expected missing-command-center
   presentation failure. The owner-requested visual amendment at `37864045`
   additionally reserves only `apps/web/public/brand/provider-campaign-duo.png`.
+  The final hero-art amendment additionally reserves
+  `apps/web/public/brand/provider-campaign-duo-rays.png` for the two
+  decorative violet coin accents only.
   GREEN may amend only the provider page, provider status component/state,
   generated asset, and focused test; every projection/API, session,
   wallet/provider, command, transaction, deployment, and live boundary stays
