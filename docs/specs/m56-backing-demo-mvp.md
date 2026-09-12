@@ -12,7 +12,7 @@ The existing S18 funding flow receives one server-derived `OPEN` RiskScan offeri
 
 ## Authority enforcement
 
-The durable BACKER authority record carries one canonical `fundingTreasuryAddress` in addition to its existing chain, signer, role, subject, and version fields. The authenticated normalizer and durable admission both require, for `HEDERA_FUNDING`, exact BACKER role, the named subject in `ownedSubjectPublicIds`, and exact equality of payload `expectedTarget` to that stored address. Missing, duplicate, malformed, foreign, or mismatched rows fail before any attempt/replay write. Other operations and ISSUER `external.attachCandidate` stay semantically unchanged.
+The durable BACKER authority record carries one canonical `fundingTreasuryAddress` in addition to its existing chain, signer, role, subject, and version fields. The bounded internal authority projection must carry that field to the authenticated normalizer. The normalizer and durable admission both require, for `HEDERA_FUNDING`, exact BACKER role, the named subject in `ownedSubjectPublicIds`, and exact equality of payload `expectedTarget` to that stored address. Missing, duplicate, malformed, foreign, or mismatched rows fail before any external-prepare attempt or external-prepare replay write; the independently deduplicated ingress claim remains unchanged. Other operations and ISSUER `external.attachCandidate` stay semantically unchanged.
 
 ## Human authority and exclusions
 

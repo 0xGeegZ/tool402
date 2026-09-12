@@ -17,9 +17,14 @@ S18 already implements local units → HEDERA_FUNDING → explicit transfer → 
 - `apps/web/src/components/riskscan/detail/riskscan-detail.tsx`;
 - `apps/web/src/components/backing/backing-flow.tsx`;
 - `apps/web/tests/backing-demo-projection.test.mjs` (new); and
-- `apps/web/tests/backing-demo-route.test.mjs` (new).
+- `apps/web/tests/backing-demo-route.test.mjs` (new);
+- `packages/backend/tests/authenticated-wallet-command-normalizer.test.mjs`;
+- `packages/backend/tests/external-prepare-command-durable-admission.test.mjs`;
+- `packages/backend/tests/external-prepare-command-durable-schema.test.mjs`;
+- `packages/backend/tests/http-command-ingress.test.mjs`; and
+- `packages/backend/tests/offering-durable-schema.test.mjs`.
 
-The root also reserves `packages/backend/convex/schema.ts`, `packages/backend/src/ingress/authenticated-wallet-command-normalizer.ts`, `packages/backend/convex/external_prepare_command_admission.ts`, and new `packages/backend/tests/backing-funding-authority.test.mjs`. M56 changes no S26-owned test or backing-state path. No allocation, directory, ATS candidate, package, lockfile, or generic wallet path is in scope.
+The root also reserves `packages/backend/convex/schema.ts`, `packages/backend/convex/wallet_command_replay.ts`, `packages/backend/src/ingress/authenticated-wallet-command-normalizer.ts`, and `packages/backend/convex/external_prepare_command_admission.ts`. M56 changes no S26-owned test or backing-state path. No allocation, directory, ATS candidate, package, lockfile, or generic wallet path is in scope.
 
 ## Contract
 
