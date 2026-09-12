@@ -44,6 +44,7 @@ test("consumes the shared wallet session, signature dialog, and relay without a 
   assert.match(flow, /useRef/);
   assert.match(flow, /isCurrentBackingIntent/);
   assert.match(flow, /sendingRef\.current/);
+  assert.doesNotMatch(flow, /backing-presentation|backing-step-rail|presetUnits|BackingStepRail/);
   assert.doesNotMatch(flow, /approvedIssuerAddress|canonicalSignerAddress/);
   assert.doesNotMatch(flow, /discoverMetaMaskProvider|eth_requestAccounts|wallet_switchEthereumChain|eth_signTypedData|signCommand|createUnsignedCommand|relayCommandBody|\/api\/commands|createCommandNonce|keccak/);
   assert.equal((flow.match(/eth_sendTransaction/g) ?? []).length, 0);
@@ -62,6 +63,7 @@ test("renders the fixed copy and none of the canvas's sample or simulation conte
   assert.match(sources, /of qualifying usage revenue funds capped distributions under the offering terms\. This is not a projected return\. No payout amount or timeline is promised\./);
   assert.match(sources, /I understand this is a testnet experiment with no real funds, that units are allocated only after the issuer signs, and that the payout cap is/);
   assert.match(flow, /name="units"/);
+  assert.doesNotMatch(flow, /role="radiogroup"|Amount presets|Custom/);
   assert.match(flow, /name="acknowledgement"/);
   assert.match(flow, /aria-live="polite"/);
   assert.match(flow, /disabled=\{/);

@@ -28,8 +28,6 @@ import {
   type BackingView,
   type TransferResult,
 } from "./backing-state";
-import { presetUnits } from "./backing-presentation";
-import { BackingStepRail } from "./backing-step-rail";
 
 const finalPhases: ReadonlySet<SignatureResult["phase"]> = new Set(["complete", "rejected", "failed", "unknown"]);
 
@@ -62,10 +60,8 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
   const [request, setRequest] = useState<BackingIntent | null>(null);
   const [transferring, setTransferring] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const [customAmount, setCustomAmount] = useState(false);
   const sendingRef = useRef(false);
   const validation = validateUnits(offering, unitsInput);
-  const presets = presetUnits(offering.terms);
   const label = backingLifecycleLabels[view.kind];
   const committed = request ?? ("intent" in view ? view.intent : null);
   const locked = view.kind !== "choosing" || request !== null;
@@ -122,7 +118,6 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
 
   return (
     <div className="space-y-6">
-      <BackingStepRail kind={view.kind} signing={request !== null} />
       <Card>
         <CardHeader>
           <CardTitle>Terms v{offering.terms.version.replace(/^v/u, "")}</CardTitle>
@@ -151,18 +146,9 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
           <CardDescription>Whole note units at {formatHbar(offering.terms.noteUnitPriceTinybars)} each. Minimum {offering.terms.minimumPurchaseUnits.toString()} units.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div role="radiogroup" aria-label="Amount presets" className="flex flex-wrap gap-2">
-            {presets.map((units) => {
-              const selected = !customAmount && unitsInput === units.toString();
-              return <Button key={units.toString()} type="button" variant={selected ? "primary" : "outline"} disabled={locked} role="radio" aria-checked={selected} onClick={() => { setUnitsInput(units.toString()); setCustomAmount(false); }}>
-                {formatHbar(paymentTinybars(offering, units))} · {units.toString()} units{units === offering.terms.minimumPurchaseUnits ? " minimum" : ""}
-              </Button>;
-            })}
-            <Button type="button" variant={customAmount ? "primary" : "outline"} disabled={locked} role="radio" aria-checked={customAmount} onClick={() => setCustomAmount(true)}>Custom</Button>
-          </div>
           <label className="block space-y-2 text-sm">
             <span className="font-medium">Units</span>
-            <input name="units" inputMode="numeric" value={unitsInput} disabled={locked} hidden={!customAmount} aria-invalid={!validation.ok} aria-describedby="backing-units-message" onChange={(event: ChangeEvent<HTMLInputElement>) => setUnitsInput(event.target.value)} className="block w-full rounded-control border border-border bg-background px-3 py-2" />
+            <input name="units" inputMode="numeric" value={unitsInput} disabled={locked} aria-invalid={!validation.ok} aria-describedby="backing-units-message" onChange={(event: ChangeEvent<HTMLInputElement>) => setUnitsInput(event.target.value)} className="block w-full rounded-control border border-border bg-background px-3 py-2" />
           </label>
           <p id="backing-units-message" className="text-sm text-muted-foreground">{validation.ok ? "Whole units within the offering bounds." : validation.message}</p>
           <p className="text-sm">{committed !== null ? formatHbar(committed.tinybars) : validation.ok ? formatHbar(paymentTinybars(offering, validation.units)) : "—"} for {committed !== null ? committed.units.toString() : validation.ok ? validation.units.toString() : "—"} note units</p>

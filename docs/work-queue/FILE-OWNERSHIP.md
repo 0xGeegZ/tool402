@@ -749,8 +749,8 @@ authority nor an M40 treasury field.
 M56-T010 owns its active card and specification; new
 `apps/web/src/lib/riskscan-backing-projection.ts` and
 `apps/web/tests/riskscan-backing-projection.test.mjs`; and the exact backing
-route, backing flow/state/presentation/step rail, RiskScan detail page/component,
-and focused backing/presentation/detail tests named in its specification. It may consume, but must not
+route, backing flow/state, RiskScan detail page/component, and focused
+backing/detail tests named in its specification. It may consume, but must not
 modify, the existing offering reader, dashboard campaign identity, wallet
 session, SignatureDialog, relay, or command admission. The only runtime input
 is the server-owned `TOOL402_FUNDING_EVM_ADDRESS`; its value, BACKER authority

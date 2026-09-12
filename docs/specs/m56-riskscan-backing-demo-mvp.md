@@ -22,7 +22,7 @@ external candidate attachment in this card.
 
 ## Proposed controls
 
-The active RED contract may establish the missing projection and presentation
+The active RED contract may establish the missing projection and entry
 boundaries before implementation. It must retain S18's bigint money
 calculation, one user-clicked transfer, fresh account/chain read, shared
 signature/relay path, canonical transaction hash display, no automatic retry,
@@ -48,10 +48,9 @@ units/tinybar/weibar arithmetic, HEDERA_FUNDING preimage, shared wallet
 session, SignatureDialog, relay, account/chain re-read, and one-send lock are
 preserved.
 
-The detail renders one server-projected `Back this tool` entry only for an OPEN
-projection. The backing route shows fixed 10, 50, and 100-unit candidates only
-when each lies within the offering's exact bounds, plus the existing custom
-input and a four-step rail. A canonical lower-case hash remains
+The detail renders one server-projected `Back this tool` header action only for
+an OPEN projection. The backing route retains the existing unit input. A
+canonical lower-case hash remains
 `payment_submitted` and is shown as `Payment submitted — allocation pending`;
 it does not claim confirmation, settlement, allocation, or ownership. A
 missing hash or ambiguous outcome remains `payment_outcome_unknown` with no
@@ -64,13 +63,10 @@ automatic resend.
 - `apps/web/src/app/explore/riskscan/back/page.tsx`
 - `apps/web/src/components/backing/backing-flow.tsx`
 - `apps/web/src/components/backing/backing-state.ts`
-- `apps/web/src/components/backing/backing-presentation.ts`
-- `apps/web/src/components/backing/backing-step-rail.tsx`
 - `apps/web/src/app/explore/riskscan/page.tsx`
 - `apps/web/src/components/riskscan/detail/riskscan-detail.tsx`
 - `apps/web/tests/backing-route.test.mjs`
 - `apps/web/tests/backing-state.test.mjs`
-- `apps/web/tests/backing-presentation.test.mjs`
 - `apps/web/tests/riskscan-detail.test.mjs`
 
 `apps/web/src/lib/offering-projection.ts`, the wallet session, SignatureDialog,

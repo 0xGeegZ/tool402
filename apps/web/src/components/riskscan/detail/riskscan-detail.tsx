@@ -81,10 +81,16 @@ export function RiskScanDetail({ projection }: { projection: BackingProjection |
               eyebrow="Read-only detail"
               title="RiskScan"
               description="A bounded Quick assessment that makes caller-reported disclosure gaps visible."
-              actions={[
-                { href: "/explore/riskscan/try", label: "Try RiskScan" },
-                { href: "/explore/riskscan/tool-loop", label: "Explore RiskScan ToolLoop" },
-              ]}
+              actions={projection === null
+                ? [
+                  { href: "/explore/riskscan/try", label: "Try RiskScan" },
+                  { href: "/explore/riskscan/tool-loop", label: "Explore RiskScan ToolLoop" },
+                ]
+                : [
+                  { href: "/explore/riskscan/try", label: "Try RiskScan" },
+                  { href: "/explore/riskscan/tool-loop", label: "Explore RiskScan ToolLoop" },
+                  { href: "/explore/riskscan/back", label: "Back this tool" },
+                ]}
             />
             <p className="text-sm text-muted-foreground">Current local route · Risk assessment</p>
           </div>
@@ -139,15 +145,6 @@ export function RiskScanDetail({ projection }: { projection: BackingProjection |
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-28">
-          {projection !== null ? <Card className="rounded-panel border-brand-purple/30">
-            <CardHeader className="space-y-2">
-              <CardTitle>Back this tool</CardTitle>
-              <CardDescription>Choose note units and send HBAR on Hedera Testnet. Allocation is separate.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/explore/riskscan/back" className="text-sm font-medium text-primary underline-offset-4 hover:underline">Back this tool</Link>
-            </CardContent>
-          </Card> : null}
           <Card className="rounded-panel">
             <CardHeader className="space-y-2">
               <CardTitle>Current boundary</CardTitle>
