@@ -8,6 +8,12 @@
   wallet action, signature, transfer, deployment, or live proof is authorized
   until separate readiness and RED activation records are committed.
 
+- M56_RISKSCAN_BACKING_DEMO_MVP_READY: Dependencies S15, S18, M16, and M40 are
+  accepted; the canonical main baseline is clean and S18 is available for
+  narrow reuse. M56-T010 moves to 10-ready. A separate activation must reserve
+  the exact RED contract before any source or test change; human runtime and
+  live-action authority remain unchanged.
+
 - S43_FOOTER_POSITIONING_ACCEPTANCE: Source `f248368f` is accepted at 60-done.
   The mascot is grouped with the Tool402 logo in the first footer column;
   asset, decorative accessibility, breakpoint, links, copy and routes remain

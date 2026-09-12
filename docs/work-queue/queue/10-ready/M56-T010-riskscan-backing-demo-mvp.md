@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: S15-T010 accepted, S18-T010 accepted, M16-T010 accepted,
   M40-T010 accepted
 - Owner: This lane owns this card and the M56 specification. The root retains
@@ -24,11 +24,12 @@ an authority record, `external.attachCandidate`, token action, refund, payout,
 or another project route. A returned transaction hash is shown only as
 `payment_submitted` with allocation pending.
 
-## Next gate
+## Readiness
 
-Independent readiness must establish a clean baseline and exact ownership
-before this card can move to 10-ready. No production source or test is
-authorized by this intake.
+The canonical baseline is clean and the accepted S18 surface is available for
+reuse. M56 is ready only for a later, separate RED activation that names its
+exact executable contract. No production source or test is authorized by this
+readiness record.
 
 ## Shared boundaries
 
