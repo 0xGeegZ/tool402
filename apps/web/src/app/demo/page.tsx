@@ -1,3 +1,5 @@
+import Image from "next/image";
+import Link from "next/link";
 import { GuidedDemoSteps } from "../../components/demo/guided-demo-steps";
 import { PageHeader } from "../../components/ui/page-header";
 
@@ -5,11 +7,16 @@ export default function DemoPage() {
   return (
     <main className="pb-6 sm:pb-12">
       <article className="mx-auto max-w-5xl space-y-8">
-        <PageHeader
-          eyebrow="Hackathon demo guide"
-          title="Follow the Tool402 demo"
-          description="Six screens to tell one story: discover a tool, inspect a request, prepare a campaign, and open your signed dashboard. Keep this guide open while recording."
-        />
+        <div className="grid items-center gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <PageHeader
+            eyebrow="Hackathon demo guide"
+            title="Follow the Tool402 demo"
+            description="Six screens to tell one story: discover a tool, inspect a request, prepare a campaign, and open your signed dashboard. Keep this guide open while recording."
+          />
+          <div data-ui="demo-guide-art" aria-hidden="true" className="overflow-hidden rounded-panel border border-primary/15 bg-primary/[0.06] px-4 pt-4">
+            <Image src="/brand/demo-guide-trio.png" alt="" width={1536} height={1024} priority className="mx-auto h-auto w-full max-w-sm" />
+          </div>
+        </div>
         <section aria-label="Demo context" className="grid gap-3 sm:grid-cols-4">
           <div className="rounded-card border border-border bg-card p-4"><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Target duration</p><p className="mt-2 font-semibold">3–4 minutes</p></div>
           <div className="rounded-card border border-border bg-card p-4"><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Network</p><p className="mt-2 font-semibold">Hedera testnet</p></div>
@@ -39,4 +46,3 @@ export default function DemoPage() {
     </main>
   );
 }
-import Link from "next/link";

@@ -55,6 +55,8 @@ const loaders = [
   {
     path: "src/app/dashboard/loading.tsx",
     importSpecifier: "../../components/ui/skeleton",
+    brandLoader: false,
+    fullWidth: true,
     regions: ["heading", "guest-context", "overview", "navigation"],
   },
   {
@@ -87,6 +89,7 @@ const sourcePaths = [skeletonPath, ...loaders.map(({ path }) => path)];
 const loaderAttributes = new Map([
   ["main", new Set(["className"])],
   ["div", new Set(["className", "data-skeleton-region"])],
+  ["BrandRouteLoader", new Set()],
   ["Skeleton", new Set()],
 ]);
 
@@ -618,7 +621,14 @@ test(
   async () => {
     const sources = new Map(await readSources());
 
-    for (const { path, importSpecifier, centered = false, regions } of loaders) {
+    for (const {
+      path,
+      importSpecifier,
+      brandLoader = true,
+      centered = false,
+      fullWidth = false,
+      regions,
+    } of loaders) {
       const source = sources.get(path);
 
       assert.ok(source);
@@ -646,6 +656,12 @@ test(
         source,
         sourceFile,
         [
+          ...(brandLoader ? [{
+            specifier: importSpecifier.replace(/skeleton$/u, "brand-route-loader"),
+            bindings: [
+              { imported: "BrandRouteLoader", local: "BrandRouteLoader", typeOnly: false },
+            ],
+          }] : []),
           {
             specifier: importSpecifier,
             bindings: [
@@ -658,6 +674,16 @@ test(
         [],
         loaderAttributes,
       );
+      assert.equal(countJsxTag(sourceFile, "BrandRouteLoader"), brandLoader ? 1 : 0);
+      if (fullWidth) {
+        for (const { element } of regionElements) {
+          const className = jsxAttributeValue(element.openingElement, "className");
+
+          assert.ok(className);
+          assert.match(className, /\bw-full\b/u);
+          assert.doesNotMatch(className, /\bmax-w-/u);
+        }
+      }
       if (centered) {
         const rootClassNames = jsxAttributeValue(root, "className")
           ?.split(/\s+/u)

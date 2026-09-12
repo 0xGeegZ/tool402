@@ -1212,6 +1212,19 @@ rehydrate wallet data, read a wallet, discover a provider, alter the server
 cookie guard, or add any wallet, account, signature, transaction, deployment,
 or live authority.
 
+User-directed S40 MetaMask sign-out synchronization amendment: the root
+additionally reserves new
+`apps/web/src/components/auth/dashboard-session-sync.tsx`, new
+`apps/web/tests/dashboard-session-sync.test.mjs`, and only the synchronizer
+import/mount in the existing server-authenticated
+`apps/web/src/components/auth/dashboard-navigation.tsx` boundary. The component
+may consume the accepted shared wallet state, remember that one settled identity was observed,
+and on a later `disconnected` state call only same-origin
+`POST /api/auth/logout`. A successful response may replace the current route
+with `/sign-in` and refresh the App Router. It may not read cookies, inspect or
+trust native event payloads, discover/request an account, retry, store data,
+sign, relay, transact, deploy, or change S26/M50 source or tests.
+
 S41-T010 is an `00-inbox` CORE_P0 follow-up with no active source or test
 reservation. S40 acceptance is an explicit activation gate while the card is
 still speculative. After that gate and its own independent readiness/activation
@@ -1621,3 +1634,23 @@ browser/Next.js verification and a fresh independent final review. Release
 landing-footer.tsx; its existing asset, decorative accessibility, breakpoint,
 links, copy and routes remain unchanged. No merge, deployment or live-action
 authority is granted.
+
+S45-T010 is a root-owned `20-active` POLISH record for the owner-approved mascot
+expansion. Its current specification reserves five exact files under
+`apps/web/public/brand/`, a shared loading component, root/nested loading
+mounts, the Demo header, the Explore final CTA, only `ReviewStep` in the deploy
+wizard, the Dashboard campaign component only for its empty illustration, a
+focused test, and constrained Explore/loading test reconciliation.
+Fresh independent readiness is clear at corrected intake `e5ed2304`. At ready
+source `5780cee2`, only `apps/web/tests/brand-mascot-surfaces.test.mjs` is
+reserved for durable RED. Fresh independent RED acceptance at `26cbf725`
+freezes that test and reserves the four declared PNGs, Demo header, Explore
+final CTA, only deploy `ReviewStep`, the shared/root loader, nine loader mounts,
+and exact Explore/loading contract reconciliations for minimal GREEN. All
+catalogue data, dynamic form values,
+wallet/session/signing code, skeleton region order, runtime APIs,
+configuration, dependencies, and external/live behavior remain excluded.
+The owner refinement at `6532a880` additionally reserves
+`apps/web/public/brand/dashboard-empty-mascot.png` and only the empty-state
+illustration region in `apps/web/src/components/dashboard/dashboard-campaign.tsx`;
+it does not reserve or change the component's session or ownership logic.

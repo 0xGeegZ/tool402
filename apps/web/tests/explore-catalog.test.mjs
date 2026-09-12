@@ -69,9 +69,11 @@ function jsxViolations(sourceFile) {
     "CardFooter",
     "RiskScanDiscoveryCard",
     "EntityCheckDiscoveryCard",
+    "Image",
+    "Link",
   ]);
-  const forbiddenElements = new Set(["a", "button", "form", "input", "select", "textarea", "Link"]);
-  const forbiddenAttributes = new Set(["href", "role", "tabIndex"]);
+  const forbiddenElements = new Set(["a", "button", "form", "input", "select", "textarea"]);
+  const forbiddenAttributes = new Set(["role", "tabIndex"]);
 
   function tagName(node) {
     if (typescript.isIdentifier(node.tagName)) return node.tagName.text;
@@ -87,6 +89,9 @@ function jsxViolations(sourceFile) {
     for (const attribute of node.attributes.properties) {
       if (!typescript.isJsxAttribute(attribute)) continue;
       const name = attribute.name.text;
+      if (name === "href" && !(tag === "Link" && stringValue(attribute.initializer) === "/provider/deploy")) {
+        violations.push(`forbidden JSX attribute ${name}`);
+      }
       if (forbiddenAttributes.has(name) || /^on[A-Z]/.test(name)) {
         violations.push(`forbidden JSX attribute ${name}`);
       }
@@ -105,7 +110,7 @@ function jsxViolations(sourceFile) {
   return violations;
 }
 
-test("defines the two-entry static Explore catalog without interactive controls", async () => {
+test("defines the two-entry static Explore catalog with only its provider CTA", async () => {
   const source = await readAppFile("src/components/discovery/explore-catalog.tsx");
   const sourceFile = sourceFileFor(source);
   const entries = catalogEntries(sourceFile);
@@ -168,5 +173,6 @@ test("defines the two-entry static Explore catalog without interactive controls"
   assert.deepEqual(jsxViolations(sourceFile), []);
   assert.doesNotMatch(source, /["']use client["']/);
   assert.doesNotMatch(source, /\b(?:useState|useEffect|useMemo|fetch|localStorage|sessionStorage)\b/);
-  assert.doesNotMatch(source, /from\s+["']next\/link["']/);
+  assert.match(source, /from\s+["']next\/link["']/);
+  assert.match(source, /href="\/provider\/deploy"/);
 });

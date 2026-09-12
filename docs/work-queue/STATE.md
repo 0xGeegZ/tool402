@@ -1,5 +1,52 @@
 # Runtime queue state
 
+- S45_DASHBOARD_LOADING_REFINEMENT: The owner authorizes only the
+  `/dashboard` loading fallback to remove its compact mascot cue and give its
+  four existing skeleton regions the full available width. Existing region
+  order and every session, ownership, campaign, wallet, and runtime boundary
+  remain unchanged. The S45 specification, manifest, ledger, active card, and
+  focused loading contracts are amended before RED.
+
+- S45_HUMAN_VISUAL_REFINEMENT: At PR source `6532a880`, the owner approves the
+  exact Tool402 lockup on the existing Explore and deploy document props plus
+  one transparent seated purple mascot in the signed-dashboard empty card.
+  The focused extension is RED only for the missing fifth asset and Dashboard
+  mount. Existing session, ownership, wallet, campaign, link, and runtime
+  behavior remain excluded.
+
+- S45_RED_ACCEPTANCE: Focused source `26cbf725` fails 6/6 only because the four
+  declared production surfaces are absent. A fresh independent re-review is
+  clear after verifying real PNG transparency, decorative accessibility, the
+  cancellable 300 ms reveal, and reduced motion. The test is frozen; S45 now
+  reserves only its declared assets, presentation sources, loader mounts, and
+  the exact Explore/loading contract reconciliations for minimal GREEN.
+
+- S45_RED_ACTIVATION: At ready control source `5780cee2`, the root activates
+  only `apps/web/tests/brand-mascot-surfaces.test.mjs` for durable RED.
+  Production source and generated assets remain prohibited until the focused
+  contract fails only for the declared missing surfaces and receives an
+  independent RED review.
+
+- S45_READY: Corrected intake source `e5ed2304` passed a fresh independent
+  readiness review with no finding. Accepted dependencies, exact candidate
+  paths, ownership isolation, loader timing, accessibility, and runtime
+  exclusions are clear. S45-T010 moves to `10-ready`; no RED, source, or asset
+  path is active until a separate root activation.
+
+- S45_INTAKE_CORRECTION: The initial S45 control commit incorrectly recorded
+  activation without the required inbox and ready transitions. That record is
+  superseded: S45 begins in `00-inbox`, with no active test, source, or asset
+  ownership. An independent readiness review must clear the committed scope
+  before a separate root activation can reserve durable RED.
+- S45_BRAND_MASCOT_SURFACES_INTAKE: The owner requests four generated,
+  text-free Tool402 mascot assets integrated into the existing Demo, Explore,
+  Provider deploy review, and route-loading surfaces in a new draft PR. At
+  exact `origin/main` `98cdbe29`, the complete Node 22.21.1 workspace baseline
+  is green. S45-T010 is `00-inbox`; its proposed focused test and production
+  paths confer no ownership before readiness and a separate activation.
+  The slice adds no data, wallet, command, payment, transaction, deployment,
+  or live authority.
+
 - M56_RISKSCAN_BACKING_DEMO_MVP_INTAKE: The repository owner requests a narrow
   D-Day RiskScan backing proposal: one OPEN canonical offering, exact S18
   intent, one explicit HBAR transfer, a canonical hash, and allocation pending.
@@ -867,6 +914,15 @@ No secrets, account keys, or private evidence belong in this file.
   sole durable authorization decision. No storage, automatic wallet discovery,
   account request, signature, wallet-state mutation, transaction, deployment,
   or live behavior is authorized.
+- S40_METAMASK_SIGN_OUT_SYNC_AMENDMENT: 2026-09-12. The repository owner
+  directs the root to revoke the existing dashboard session when the accepted
+  shared wallet state loses its selected account after one settled identity.
+  The bounded amendment reserves a new auth synchronizer and focused test plus
+  its authenticated-navigation mount. It may call only same-origin `POST /api/auth/logout`,
+  then replace with `/sign-in` and refresh after success. Initial disconnected,
+  rejected-connect, connecting, and wrong-chain states do nothing. S26 and M50
+  source remain unchanged; no provider request, signature, storage, retry,
+  transaction, relay, deployment, or external request is authorized.
 
 - M56_S26_BACKING_COMPOSITION_TRANSFER: Because canonical main does not yet
   contain M56's card, specification, and catalog row, this is a conditional
