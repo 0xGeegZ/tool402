@@ -2,10 +2,15 @@
 
 ## Decision
 
-Active S26 transfers to M56 only the backing-specific shared-session/wallet-mount
-composition seam in `apps/web/src/components/backing/backing-flow.tsx` and the
-matching shared-session assertions in `apps/web/tests/backing-route.test.mjs`.
-S26 retains every other portion of those files and all of its other paths.
+Because canonical main does not yet contain M56's card, specification, and
+catalog row, this is a conditional reservation, not active M56 ownership. It
+takes effect only in the rebased M56 integration PR that commits those controls.
+It then transfers only `BackingForm`'s
+`useWalletSession`/`connectedWalletSession` consumption and
+`section[aria-labelledby="backing-status"]` composition in
+`apps/web/src/components/backing/backing-flow.tsx`, plus matching shared-session
+assertions in `apps/web/tests/backing-route.test.mjs`. S26 retains all other S26
+selectors, assertions, and paths.
 
 ## Invariants
 

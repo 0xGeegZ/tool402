@@ -2,11 +2,14 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
-M56-S26 scoped ownership transfer: active S26 releases only the
-backing-specific shared-session/wallet-mount composition seam in
-`apps/web/src/components/backing/backing-flow.tsx` and the matching
-shared-session assertions in `apps/web/tests/backing-route.test.mjs` to M56.
-S26 retains all other hunks in both files and every other S26 path. M56 must
+M56-S26 scoped ownership transfer: because canonical main does not yet contain
+M56's card, specification, and catalog row, this is a conditional reservation,
+not active M56 ownership. It takes effect only when the rebased M56 integration
+PR commits those controls. It then transfers only `BackingForm`'s
+`useWalletSession`/`connectedWalletSession` composition and the
+`section[aria-labelledby="backing-status"]` composition in `backing-flow.tsx`,
+plus the matching shared-session assertions in `backing-route.test.mjs`. S26
+retains all other S26 selectors, assertions, and paths. M56 must
 preserve `useWalletSession`, `connectedWalletSession`, and the one shared
 session; it may not add `WalletIsland`, local duplicate wallet state, discovery,
 signature, authority, or other wallet behavior. The transfer excludes

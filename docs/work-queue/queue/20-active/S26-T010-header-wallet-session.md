@@ -146,11 +146,15 @@ exclusions govern; this card does not restate them.
 
 ## M56 backing composition transfer
 
-The root transfers to M56 only the backing-specific composition amendment at
-the existing shared-session/wallet-mount seam in
-`apps/web/src/components/backing/backing-flow.tsx` and only the matching
+Because canonical main does not yet contain M56's card, specification, and
+catalog row, this is a conditional reservation, not active M56 ownership. It
+takes effect only in the rebased M56 integration PR that commits those local
+controls. It then transfers only the backing-specific composition around
+`BackingForm`'s `useWalletSession`/`connectedWalletSession` consumption and
+the `section[aria-labelledby="backing-status"]` composition in
+`apps/web/src/components/backing/backing-flow.tsx`, plus the matching
 shared-session assertions in `apps/web/tests/backing-route.test.mjs`. S26
-retains every other portion of those files and all of its other declared paths.
+retains all other S26 selectors, assertions, and declared paths.
 
 M56 must preserve `useWalletSession` and `connectedWalletSession`, the one
 shared session, and the existing no-local-wallet-state architecture. It may not
