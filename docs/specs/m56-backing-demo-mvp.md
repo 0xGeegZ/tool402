@@ -2,7 +2,7 @@
 
 ## Outcome
 
-The existing S18 funding flow receives one server-derived `OPEN` RiskScan offering and one server-controlled testnet treasury EVM address. A dedicated BACKER may prepare `HEDERA_FUNDING`, explicitly submit exactly one HBAR transfer, and see only `Payment submitted — allocation pending.` after a canonical wallet hash.
+The existing S18 funding flow receives one server-derived `OPEN` RiskScan offering and one server-controlled testnet treasury EVM address. A dedicated BACKER may prepare `HEDERA_FUNDING`, explicitly submit exactly one HBAR transfer, and see the canonical transaction hash beside only `Payment submitted — allocation pending.` A hash is not confirmation, funding, allocation, or settlement.
 
 ## Server boundary
 
@@ -12,7 +12,7 @@ The existing S18 funding flow receives one server-derived `OPEN` RiskScan offeri
 
 ## Authority enforcement
 
-The durable BACKER authority record carries one canonical `fundingTreasuryAddress` in addition to its existing chain, signer, role, subject, and version fields. The bounded internal authority projection must carry that field to the authenticated normalizer. The normalizer and durable admission both require, for `HEDERA_FUNDING`, exact BACKER role, the named subject in `ownedSubjectPublicIds`, and exact equality of payload `expectedTarget` to that stored address. Missing, duplicate, malformed, foreign, or mismatched rows fail before any external-prepare attempt or external-prepare replay write; the independently deduplicated ingress claim remains unchanged. Other operations and ISSUER `external.attachCandidate` stay semantically unchanged.
+`fundingTreasuryAddress` is an optional authority field so pre-existing ISSUER rows remain valid without it. For `HEDERA_FUNDING` only, the bounded internal authority projection, shared authority record, authenticated normalizer, and durable admission require it to be a lower-case canonical EVM address, require exact BACKER role and the named subject in `ownedSubjectPublicIds`, and require exact equality of payload `expectedTarget` to that stored address. Missing, duplicate, malformed, foreign, or mismatched BACKER rows fail before any external-prepare attempt or external-prepare replay write; the independently deduplicated ingress claim remains unchanged. ISSUER offering, directory, ATS, and `external.attachCandidate` behavior remains unchanged when the optional field is absent.
 
 ## Human authority and exclusions
 

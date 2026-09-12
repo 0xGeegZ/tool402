@@ -2,7 +2,7 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
-M56-T010 is a root-owned `00-inbox` CORE_P0 backing-demo successor. It owns control records, new server projection helper, back page, RiskScan detail entry point, existing `backing-flow.tsx`, two new named Web tests, and the smallest authority schema/projection/shared-record/normalizer/admission paths plus their named focused tests after readiness/RED activation. It changes no S26-owned route test or backing-state path. No allocation, candidate, package, lockfile, or live action is reserved.
+M56-T010 is a root-controlled `00-inbox` CORE_P0 backing-demo successor. Its delegated backing lane owns the new server projection helper, back page, RiskScan detail entry point, and two new named Web tests; root owns the authority schema/projection/shared-record/normalizer/admission paths and their named focused tests after readiness/RED activation. S26 retains its active backing-flow island mount, header, and Funding composition; M56's sole root integration seam is its `payment_submitted` display branch. It changes no S26-owned route test or backing-state path. No allocation, candidate, package, lockfile, or live action is reserved.
 
 M54-T010 is a root-owned `20-active` CORE_P0 candidate recovery correction. It
 owns its card, specification, queue/review records, integration, commits, and
