@@ -38,6 +38,8 @@ test("defines a stable, non-mutating recording itinerary with truthful evidence 
   assert.equal(recordingSteps.find((step) => step.id === "backing")?.wallet, "BACKER");
   assert.equal(recordingSteps.find((step) => step.id === "provider-sign-in")?.href, "/sign-in");
   assert.equal(recordingSteps.find((step) => step.id === "dashboard")?.href, "/sign-in");
+  assert.equal(recordingSteps.find((step) => step.id === "ats-deployment")?.nextAction, "Continue after verified receipt");
+  assert.equal(recordingSteps.find((step) => step.id === "world")?.nextAction, "Continue without World proof");
   assert.match(recordingSteps.find((step) => step.id === "backing")?.show ?? "", /allocation pending/i);
   assert.deepEqual(recordingReadiness.map((item) => item.status), [
     "ACTION REQUIRED",

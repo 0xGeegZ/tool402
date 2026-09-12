@@ -40,6 +40,8 @@ test("derives guided-demo progress from the route and a tour flag, never from st
   assert.match(bar, /SHOW/);
   assert.match(bar, /Hide presenter notes/);
   assert.match(bar, /Restart guide/);
+  assert.match(bar, /Back to demo guide/);
+  assert.match(bar, /step\.nextAction/);
 });
 
 test("mounts the tour bar once in the shell under a Suspense boundary", async () => {

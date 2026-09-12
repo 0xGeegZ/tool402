@@ -58,7 +58,8 @@ export function DemoTourBar() {
         ) : null}
         <div className="flex flex-wrap items-center gap-2">
           {previous === undefined ? null : <Link href={recordingTourHref(previous.href, previous.id)} className={quietLinkClass}>Previous</Link>}
-          {next === undefined ? <Link href="/demo" className={primaryLinkClass}>Back to demo guide</Link> : <Link href={recordingTourHref(next.href, next.id)} className={primaryLinkClass}>Next: {next.title} →</Link>}
+          {next === undefined ? null : <Link href={recordingTourHref(next.href, next.id)} className={primaryLinkClass}>{step.nextAction ?? `Next: ${next.title} →`}</Link>}
+          <Link href="/demo" className={next === undefined ? primaryLinkClass : quietLinkClass}>Back to demo guide</Link>
           <button type="button" onClick={() => setNotesVisible((visible) => !visible)} className={quietLinkClass}>{notesVisible ? "Hide presenter notes" : "Show presenter notes"}</button>
           <Link href={recordingTourHref(steps[0].href, steps[0].id)} className={quietLinkClass}>Restart guide</Link>
           <Link href={pathname === "/dashboard" ? pathname : step.href} className={quietLinkClass}>Exit tour</Link>
