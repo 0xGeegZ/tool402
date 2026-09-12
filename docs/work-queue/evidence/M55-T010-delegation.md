@@ -9,7 +9,7 @@ their deployed records. This is not a reset or user-facing “demo attempt”.
 Read, in order:
 
 1. Root AGENTS.md and committed [STATE](../STATE.md).
-2. [M55 card](../queue/10-ready/M55-T010-provider-demo-attempt-restart.md).
+2. [M55 card](../queue/20-active/M55-T010-provider-demo-attempt-restart.md).
 3. [M55 behavioral specification](../../specs/m55-provider-demo-attempt-restart.md).
 4. [Implementation plan](../../superpowers/plans/2026-09-12-m55-deploy-another-tool.md).
 

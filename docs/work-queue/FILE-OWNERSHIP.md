@@ -1581,8 +1581,8 @@ M50 does not own or amend
 `wallet-state.ts`, deploy-stage signing, command/relay code, configuration,
 packages, lockfiles, or any live path.
 
-M55-T010 is a root-owned `10-ready` CORE_P0 new-provider-tool refinement for
-Task 1 only.
+M55-T010 is a root-owned `20-active` CORE_P0 new-provider-tool refinement for
+Task 1 durable RED only.
 Its documentation scope is its card, `docs/specs/m55-provider-demo-attempt-restart.md`,
 `docs/superpowers/plans/2026-09-12-m55-deploy-another-tool.md`,
 `docs/work-queue/evidence/M55-T010-delegation.md`, its Task 1 readiness
@@ -1680,7 +1680,7 @@ demoStep to the existing internal dashboard destination and must not alter the
 challenge, verifier, cookie, wallet, account, chain, signature, session, or
 authorization decision.
 
-M55-T010 Task 1 is the sole `10-ready` slice at this control head. Its exact
+M55-T010 Task 1 is the sole `20-active` slice at this control head. Its exact
 candidate paths are
 `packages/core/src/provider-tool-identity.ts`,
 `packages/core/test/provider-tool-identity.test.mjs`,
@@ -1692,8 +1692,10 @@ candidate paths are
 `apps/web/src/app/api/provider/tools/route.ts`, and
 `apps/web/tests/provider-tools-api.test.mjs`.
 They create no offering, campaign, ATS candidate, receipt, Directory record,
-or authority. They are now the sole M55 `10-ready` reservation and no source
-or test change is active until root RED activation. Tasks 2–6 remain blocked
-by M51/M53/M54/S26/S36/S42/B04 as mapped in
+or authority. They are the sole M55 reservation. The four new Task 1 test
+paths and the other eight declared Task 1 source paths are `20-active` for the
+minimal Green implementation accepted in
+`docs/work-queue/evidence/M55-T010-task1-red-review.md`. Tasks 2–6 remain
+blocked by M51/M53/M54/S26/S36/S42/B04 as mapped in
 `docs/work-queue/evidence/M55-T010-task1-readiness-review.md`; no active
 predecessor path is transferred by this candidate record.

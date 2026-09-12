@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 10-ready (Task 1 only)
+- Queue state: 20-active (Task 1 durable RED only)
 - Dependencies: none.
 - Owner: root integrator for documentation, readiness, path reservations,
   activation, review, integration, commits, and pushes.
@@ -39,8 +39,13 @@ decisions do not depend on rediscovering the conversation.
   not active reservations.
 - Task 1 independent readiness is clear in
   [its review](../../evidence/M55-T010-task1-independent-readiness-review.md).
-  Root must still make a separate test-only RED activation and review its
-  intended failures before authorizing any Task 1 GREEN path.
+  The [test-only activation](../../evidence/M55-T010-task1-activation.md)
+  authorizes its four new focused tests only. Root must review their intended
+  failures before authorizing any Task 1 GREEN path.
+
+The [independent RED review](../../evidence/M55-T010-task1-red-review.md) is
+clear. Only the twelve Task 1 paths recorded in the readiness review may now
+receive minimal Green implementation; all Task 2–6 paths remain excluded.
 
 The first independently reviewable slice is Task 1 only. Its exact candidate
 paths, retained predecessor owners, and the Tasks 2–6 block map are recorded
@@ -62,9 +67,8 @@ gate above remains mandatory for the implementation agent.
 
 Refinement is complete when packet/control records agree, reference/queue/
 whitespace checks pass, independent documentation review is clear, and docs
-are committed/pushed. This card is `10-ready` only for the Task 1 candidate
-reservation after its independent readiness review; it does not authorize Task
-1 source or test changes until root RED activation.
+are committed/pushed. This card is `20-active` only for Task 1 durable RED;
+the accepted RED review authorizes only the exact Task 1 Green paths.
 
 Implementation completion requires the plan's exact-head tests/reviews and
 separate browser, CI, deployment, and human-testnet evidence. A committed
