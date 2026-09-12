@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 20-active
 - Dependencies: S17-T010 and S25-T010 accepted.
 - Raised by: human operator, 2026-09-12. The request is to restyle the existing loaded `/provider` campaign status route after the supplied command-center reference.
 - Owner: root integrator. The root owns this card, its specification, review records, implementation, validation, and integration decision.
@@ -15,9 +15,11 @@ Recompose the existing server-rendered loaded campaign view into a command cente
 
 The local specification is [`s43-provider-command-center`](../../../specs/s43-provider-command-center.md) and the UI contract is [`UI-S43`](../../../ui/UI-S43.md). The future source paths are limited to `apps/web/src/app/provider/page.tsx`, `apps/web/src/components/provider/status/provider-status.tsx`, `apps/web/src/components/provider/status/provider-status-state.ts`, and `apps/web/tests/provider-status.test.mjs`.
 
-## Candidate delivery gate
+## Ready and RED activation
 
-Before production source changes, commit the specification, UI contract, task catalogue, state, and ownership records; add a focused test that fails because the existing loaded view lacks the declared command-center regions; obtain an independent RED review; then make the minimum presentational GREEN change.
+The local specification, UI manifest, task catalogue, state, ownership, and ledger records are committed at `f55dec52426d96f4c1b01f852ed422d14e09c5d5`. The focused Web baseline passes 431 tests with one separately blocked skip under Node 22.21.1. Independent readiness review found no remaining finding.
+
+The repository owner explicitly requested implementation through the current isolated worktree. S43 is activated only for a durable RED amendment to `apps/web/tests/provider-status.test.mjs`: it must fail because the existing loaded view lacks the declared command-center regions. Production source stays prohibited until an independent RED review accepts that expected failure.
 
 ## Boundary
 

@@ -44,7 +44,7 @@
 
 - S43_PROVIDER_COMMAND_CENTER_INTAKE: The repository owner requested a new
   isolated presentational redesign of the existing loaded `/provider` route.
-  S43-T010 is in `00-inbox`: its committed specification and UI manifest lock
+  S43-T010 is in `20-active`: its committed specification and UI manifest lock
   the command-center composition, and its only future source paths are the
   provider page, provider status component/state, and focused provider-status
   test. It creates no new read, state, wallet/provider, command, transaction,
@@ -52,6 +52,13 @@
 - S43_LOCAL_RECORDS: `docs/specs/s43-provider-command-center.md` and
   `docs/ui/UI-S43.md` are S43's canonical implementation-local specification
   and UI manifest; its bounded ledger row is in `docs/ui/IMPORT-LEDGER.md`.
+- S43_PROVIDER_COMMAND_CENTER_RED_ACTIVATION: At planning head
+  `f55dec52426d96f4c1b01f852ed422d14e09c5d5`, S43's local records are
+  committed, its focused Web baseline is clear, and independent readiness
+  review found no finding. The user-directed implementation activation reserves
+  only `apps/web/tests/provider-status.test.mjs` for durable RED; production
+  source remains prohibited until an independent review accepts its expected
+  missing-command-center failure.
 
 - S29_POST_ACCEPTANCE_REVIEW_FIX: The repository owner explicitly directs the
   two confirmed Provider deploy review corrections on PR #82. The root may
