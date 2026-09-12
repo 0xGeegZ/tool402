@@ -1555,3 +1555,7 @@ five named test files; source remains frozen until observed RED acceptance.
 D-S43-010-003 authorizes the exact seven sources and five tests in the S43
 specification after independent RED acceptance at `92f75d6c`. The two sign-in
 files permit only the closed tour handoff; all other S40/S42 paths stay frozen.
+
+S43-T010 is accepted at source `0a2554aa`; its exact reservations above are
+released after the local checks and two fresh clean module review generations
+recorded in docs/work-queue/evidence/S43-T010-final-review.md.

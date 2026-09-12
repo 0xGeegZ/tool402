@@ -328,3 +328,10 @@ root auth handoff reservation. Activate only the five named tests after a
 The independent RED review at `92f75d6c` is clear. Authorize only the seven
 source paths and five tests in the S43 specification. Preserve all existing
 auth protocol, session gates, backend validation and human-owned actions.
+
+## D-S43-010-004 — Local acceptance
+
+Accept source `0a2554aa` after focused/full Web tests, typecheck, lint,
+queue/guard, production build, local browser checks and two independent fresh
+clean module review generations. Move S43 to 60-done and release ownership.
+The final-review record separates source, browser, wallet and deployment proof.

@@ -1,5 +1,11 @@
 # Runtime queue state
 
+- S43_RECORDING_DEMO_ACCEPTANCE: Source `0a2554aa` is accepted at 60-done
+  after Web 436 passed/one historical skip, typecheck/lint/queue/guard,
+  Turbopack build, local browser checks and two fresh clean module reviews.
+  Evidence: docs/work-queue/evidence/S43-T010-final-review.md. S43 ownership
+  is released; real-wallet and public-deployment evidence remain separate.
+
 - S43_RECORDING_DEMO_GREEN: Independent RED review at `92f75d6c` accepts
   32 passes, seven intended failures and one historical skip. Only the exact
   sources/tests in the S43 specification are authorized for minimal GREEN.

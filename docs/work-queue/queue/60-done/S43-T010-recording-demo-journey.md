@@ -1,7 +1,7 @@
 # S43-T010 — Recording demo journey
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M01-T040 accepted, S11-T010 accepted, S19-T010 accepted, S30-T010 accepted
 - Owner: root; current provided checkout, based on canonical main `5e863970935b074060b88d62a519102f2edfb9af`.
 - Human actions: real wallet signatures, funded actions, deployment and video recording remain human-owned.
@@ -31,3 +31,12 @@ Independent RED review at `92f75d6c` is clear: 32 passed, seven intended
 failures, one historical skip. Only the exact specified sources and tests
 are now authorized for minimal GREEN; the auth protocol and all external
 authority remain unchanged.
+
+## Local acceptance
+
+Source `0a2554aa233c5a403375c65ba111ad3b39d23a66` is accepted after focused
+and complete Web checks, build, local browser verification, independent task
+review and two fresh clean module generations. Evidence is recorded in
+[S43 final review](../../evidence/S43-T010-final-review.md). Source reservations
+are released. No real-wallet sign-in, transaction or public deployment is
+claimed; S40/S42 acceptance remains independent.
