@@ -1,5 +1,13 @@
 # Runtime queue state
 
+- M56_RISKSCAN_BACKING_DEMO_MVP_INTAKE: The repository owner requests a narrow
+  D-Day RiskScan backing proposal: one OPEN canonical offering, exact S18
+  intent, one explicit HBAR transfer, a canonical hash, and allocation pending.
+  M56-T010 begins in 00-inbox with its local specification only. No product
+  source, executable contract, treasury configuration, BACKER authority,
+  wallet action, signature, transfer, deployment, or live proof is authorized
+  until separate readiness and RED activation records are committed.
+
 - S43_FOOTER_POSITIONING_ACCEPTANCE: Source `f248368f` is accepted at 60-done.
   The mascot is grouped with the Tool402 logo in the first footer column;
   asset, decorative accessibility, breakpoint, links, copy and routes remain

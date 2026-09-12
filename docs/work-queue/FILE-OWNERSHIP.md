@@ -746,6 +746,13 @@ separately accepted runtime boundary supplies an OPEN offering and explicit
 funding treasury. Its acceptance provisions neither an enabled `BACKER`
 authority nor an M40 treasury field.
 
+M56-T010 is an inbox-only successor proposal to S18. It owns its card and
+specification only; a later readiness review must reserve any source or test.
+The existing offering reader, dashboard campaign identity, wallet session,
+SignatureDialog, relay, command admission, treasury configuration, BACKER
+authority, wallet action, transaction, deployment, and live proof remain
+outside this intake scope.
+
 M44-T010's independently reviewed RED contract is accepted at `c5d2bf3`.
 Before any remaining M44 source, the root-owned next step may amend only
 `apps/web/package.json`, the root `package-lock.json`,
