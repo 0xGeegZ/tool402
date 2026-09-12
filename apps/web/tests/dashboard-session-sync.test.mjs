@@ -25,11 +25,15 @@ test("mounts the dashboard session synchronizer only from the authenticated navi
   );
   const navigation = await readFile(navigationUrl, "utf8");
   assert.match(navigation, /import\s*\{\s*DashboardSessionSync\s*\}\s*from\s*["'][^"']*dashboard-session-sync["']/u);
-  assert.equal((navigation.match(/<DashboardSessionSync\s*\/>/gu) ?? []).length, 1);
-  assert.match(navigation, /session\s*===\s*null\s*\?\s*null\s*:\s*<DashboardSessionSync\s*\/>/u);
+  assert.equal((navigation.match(/<DashboardSessionSync\s+address=\{session\.address\}\s*\/>/gu) ?? []).length, 1);
+  assert.match(navigation, /session\s*===\s*null\s*\?\s*null\s*:\s*<DashboardSessionSync\s+address=\{session\.address\}\s*\/>/u);
 });
 
-async function loadSynchronizer({ responseStatus = 204, reject = false } = {}) {
+async function loadSynchronizer({
+  responseStatus = 204,
+  reject = false,
+  connections = [{ kind: "disconnected" }],
+} = {}) {
   const { outputText } = typescript.transpileModule(await readFile(sourceUrl, "utf8"), {
     fileName: fileURLToPath(sourceUrl),
     compilerOptions: {
@@ -42,6 +46,8 @@ async function loadSynchronizer({ responseStatus = 204, reject = false } = {}) {
   const effects = [];
   const requests = [];
   const navigations = [];
+  const listeners = [];
+  const provider = {};
   const wallet = { state: { kind: "disconnected" } };
   let cursor = 0;
   const react = {
@@ -62,6 +68,7 @@ async function loadSynchronizer({ responseStatus = 204, reject = false } = {}) {
   const module = { exports: {} };
   runInNewContext(outputText, {
     exports: module.exports,
+    window: {},
     fetch: async (...arguments_) => {
       requests.push(arguments_);
       if (reject) throw new Error("network unavailable");
@@ -82,6 +89,21 @@ async function loadSynchronizer({ responseStatus = 204, reject = false } = {}) {
           };
         case "../wallet/wallet-session":
           return { useWalletSession: () => wallet };
+        case "../../lib/wallet/metamask-provider":
+          return {
+            discoverMetaMaskProvider: async () => ({ kind: "provider", provider }),
+            watchWalletSessionChanges: (_provider, listener) => {
+              listeners.push(listener);
+              return () => {};
+            },
+          };
+        case "../../lib/wallet/wallet-state":
+          return {
+            readCurrentSession: async () => ({
+              state: connections.shift() ?? { kind: "disconnected" },
+              provider,
+            }),
+          };
         default:
           throw new Error(`unexpected synchronizer import: ${specifier}`);
       }
@@ -91,10 +113,11 @@ async function loadSynchronizer({ responseStatus = 204, reject = false } = {}) {
   return {
     requests,
     navigations,
-    render(state) {
+    listeners,
+    render(address, state = wallet.state) {
       wallet.state = state;
       cursor = 0;
-      assert.equal(module.exports.DashboardSessionSync(), null);
+      assert.equal(module.exports.DashboardSessionSync({ address }), null);
       for (const effect of effects) {
         if (effect?.pending) {
           effect.pending = false;
@@ -109,17 +132,10 @@ async function flushMicrotasks() {
   for (let index = 0; index < 8; index += 1) await Promise.resolve();
 }
 
-implementedTest("logs out once when a settled MetaMask identity becomes disconnected", async () => {
+implementedTest("logs out a restored dashboard session without a selected account", async () => {
   const harness = await loadSynchronizer();
 
-  harness.render({ kind: "disconnected" });
-  harness.render({ kind: "connecting" });
-  harness.render({ kind: "wrong_chain", chainId: "0x1" });
-  assert.equal(harness.requests.length, 0);
-
-  harness.render({ kind: "connected", address: "0xc89f87052c3e080b4a9b021d4930055031ef378e" });
-  harness.render({ kind: "connecting" });
-  harness.render({ kind: "disconnected" });
+  harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
 
   assert.deepEqual(harness.requests.map(([url, init]) => [url, { ...init }]), [["/api/auth/logout", {
@@ -128,20 +144,39 @@ implementedTest("logs out once when a settled MetaMask identity becomes disconne
   }]]);
   assert.deepEqual(harness.navigations, [["replace", "/sign-in"], ["refresh"]]);
 
-  harness.render({ kind: "disconnected" });
+  harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
   assert.equal(harness.requests.length, 1);
 });
 
-implementedTest("does not navigate when dashboard logout is rejected or unavailable", async () => {
+implementedTest("logs out after the selected MetaMask account changes", async () => {
+  const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const harness = await loadSynchronizer({
+    connections: [
+      { kind: "connected", address },
+      { kind: "connected", address: "0x0000000000000000000000000000000000000402" },
+    ],
+  });
+
+  harness.render(address);
+  await flushMicrotasks();
+  assert.equal(harness.requests.length, 0);
+  assert.equal(harness.listeners.length, 1);
+
+  harness.listeners[0]();
+  await flushMicrotasks();
+
+  assert.deepEqual(harness.requests.map(([url, init]) => [url, { ...init }]), [["/api/auth/logout", {
+    method: "POST",
+    credentials: "same-origin",
+  }]]);
+  assert.deepEqual(harness.navigations, [["replace", "/sign-in"], ["refresh"]]);
+});
+
+implementedTest("does not navigate when active-account logout is rejected or unavailable", async () => {
   for (const failure of [{ responseStatus: 401 }, { reject: true }]) {
-    const harness = await loadSynchronizer(failure);
-    harness.render({
-      kind: "not_issuer",
-      address: "0xc89f87052c3e080b4a9b021d4930055031ef378e",
-      approvedIssuerAddress: "0x0000000000000000000000000000000000000402",
-    });
-    harness.render({ kind: "disconnected" });
+    const harness = await loadSynchronizer({ ...failure, connections: [{ kind: "disconnected" }] });
+    harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
     await flushMicrotasks();
 
     assert.equal(harness.requests.length, 1);
@@ -153,8 +188,10 @@ implementedTest("keeps sign-out synchronization inside the accepted local bounda
   const source = await readFile(sourceUrl, "utf8");
 
   assert.match(source, /^"use client";/u);
-  assert.match(source, /useWalletSession\(\)/u);
-  assert.match(source, /state\.kind\s*!==\s*["']disconnected["']/u);
+  assert.match(source, /discoverMetaMaskProvider\(window\)/u);
+  assert.match(source, /readCurrentSession\(/u);
+  assert.match(source, /watchWalletSessionChanges\(/u);
+  assert.match(source, /state\.address\s*===\s*address/u);
   assert.match(source, /fetch\(["']\/api\/auth\/logout["']/u);
   assert.match(source, /method:\s*["']POST["']/u);
   assert.match(source, /credentials:\s*["']same-origin["']/u);
