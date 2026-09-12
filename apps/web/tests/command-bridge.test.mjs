@@ -191,6 +191,22 @@ implementedTest("builds the stage 1 offering.create request through the accepted
   assert.deepEqual(request.canonicalPayloadBytes, core.canonicalOfferingCreatePayloadBytes(parsed));
 });
 
+implementedTest("binds a selected provider tool to its own offering and never reuses the legacy campaign identity", () => {
+  const toolPublicId = `tool_${"cd".repeat(16)}`;
+  const target = bridge.providerDeploymentTarget(toolPublicId);
+  const request = build(0, { deploymentTarget: target });
+  const payload = core.parseOfferingCreatePayload(payloadOf(request));
+
+  assert.equal(target.kind, "provider-tool");
+  assert.equal(payload.subjectPublicId, toolPublicId);
+  assert.equal(payload.offeringPublicId, `offering_${"cd".repeat(16)}`);
+  assert.notEqual(payload.offeringPublicId, neutralCampaignSubject);
+  assert.throws(
+    () => build(1, { deploymentTarget: target, states: [done, actionable, blocked, blocked] }),
+    /server-derived ATS configuration/u,
+  );
+});
+
 implementedTest("preserves the Core rejection of blank and noncanonical offering resources before signing", () => {
   for (const qualifyingResource of ["", " ", " riskscan", "riskscan ", "a".repeat(257)]) {
     assert.throws(
@@ -292,7 +308,7 @@ implementedTest("refuses a request whose predecessor is not done or whose stage 
   assert.equal(build(0, { states: [actionable, blocked, blocked, blocked] }).stage, 0);
 });
 
-implementedTest("keeps caller and S16 display projections out of stage 2 while confining the neutral subject to stages 1 and 4", () => {
+implementedTest("keeps caller and S16 display projections out of stage 2 while binding every stage to one deployment target", () => {
   const source = readFileSync(bridgeUrl, "utf8");
 
   assert.equal(
@@ -309,15 +325,19 @@ implementedTest("keeps caller and S16 display projections out of stage 2 while c
   );
   assert.match(
     source,
-    /case\s+0\s*:[\s\S]{0,480}offeringCreateBytes\(\s*input\.values\s*,\s*neutralCampaignSubject\s*,/u,
+    /const\s+deploymentTarget\s*=\s*input\.deploymentTarget\s*\?\?\s*legacyDeploymentTarget/u,
   );
   assert.match(
     source,
-    /case\s+1\s*:[\s\S]{0,480}externalPrepareBytes\(\s*stageBAtsCreateCommandProjection\s*,/u,
+    /case\s+1\s*:[\s\S]{0,640}externalPrepareBytes\(\s*input\.atsCreateCommand\s*\?\?\s*stageBAtsCreateCommandProjection\s*,/u,
   );
   assert.match(
     source,
-    /case\s+3\s*:[\s\S]{0,480}directoryPublishBytes\(\s*input\.record\s*,\s*neutralCampaignSubject\s*,/u,
+    /case\s+0\s*:[\s\S]{0,480}offeringCreateBytes\(\s*input\.values\s*,\s*deploymentTarget\s*,/u,
+  );
+  assert.match(
+    source,
+    /case\s+3\s*:[\s\S]{0,480}directoryPublishBytes\(\s*input\.record\s*,\s*deploymentTarget\s*,/u,
   );
 });
 
@@ -339,6 +359,21 @@ implementedTest("freezes the directory record literal without inventing a cleari
   assert.equal(literal.isDirectoryRecordComplete(record), false);
   assert.equal(literal.isDirectoryRecordComplete(completeRecord()), true);
   assert.deepEqual(literal.missingDirectoryRecordFields({ ...record, x402Endpoint: "https://api.tool402.test/riskscan" }), ["clearingAccount"]);
+});
+
+implementedTest("derives a selected tool directory identity without mutating the legacy literal", () => {
+  const toolPublicId = `tool_${"ef".repeat(16)}`;
+  const selected = literal.directoryRecordForProviderTool(toolPublicId);
+  assert.equal(selected.serviceId, toolPublicId);
+  assert.equal(selected.serviceSlug, `tool-${"ef".repeat(16)}`);
+  const complete = literal.completeDirectoryRecordLiteral(selected, {
+    x402Endpoint: "https://api.tool402.test/riskscan",
+    clearingAccount: "0.0.4200",
+  });
+  assert.equal(complete.serviceId, toolPublicId);
+  assert.equal(complete.serviceSlug, `tool-${"ef".repeat(16)}`);
+  assert.equal(literal.directoryRecordLiteral.serviceId, "riskscan");
+  assert.throws(() => literal.directoryRecordForProviderTool("tool_invalid"), /invalid selected provider tool/u);
 });
 
 implementedTest("maps a final dialog result onto the closed stage union with one path to done", () => {

@@ -27,7 +27,7 @@ const candidate: AgentDirectoryRecordCandidate = parseAgentDirectoryRecordCandid
 });
 
 const schemaVersion: 1 = candidate.schemaVersion;
-const serviceSlug: "riskscan" = candidate.serviceSlug;
+const serviceSlug: "riskscan" | `tool-${string}` = candidate.serviceSlug;
 const protocol: "x402" = candidate.paymentProtocol;
 const network: "hedera-testnet" = candidate.paymentNetwork;
 const asset: "HBAR" = candidate.asset;

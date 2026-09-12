@@ -291,24 +291,64 @@ export function isValidOfferingPublicId(offeringPublicId: string): boolean {
   return publicIdPattern.test(offeringPublicId);
 }
 
+export function isValidDirectoryServiceSlug(serviceSlug: string): boolean {
+  return serviceSlug === "riskscan" || /^tool-[0-9a-f]{32}$/u.test(serviceSlug);
+}
+
+function selectedToolContext(offeringPublicId: string, serviceSlug: string): { offeringPublicId: string; subjectPublicId: string; serviceId: string; serviceSlug: string } | null {
+  if (!serviceSlug.startsWith("tool-")) return null;
+  const suffix = serviceSlug.slice("tool-".length);
+  const subjectPublicId = `tool_${suffix}`;
+  return offeringPublicId === `offering_${suffix}`
+    ? { offeringPublicId, subjectPublicId, serviceId: subjectPublicId, serviceSlug }
+    : null;
+}
+
+function matchesSelectedOffering(outcome: OfferingOutcome, context: NonNullable<ReturnType<typeof selectedToolContext>>): boolean {
+  return outcome.outcome !== "loaded"
+    || (outcome.record.offeringPublicId === context.offeringPublicId
+      && outcome.record.version === 1
+      && outcome.record.subjectPublicId === context.subjectPublicId);
+}
+
+function matchesSelectedDirectory(outcome: DirectoryOutcome, context: NonNullable<ReturnType<typeof selectedToolContext>>): boolean {
+  return outcome.outcome !== "loaded"
+    || (outcome.directoryVersion === 1
+      && outcome.record.offeringPublicId === context.offeringPublicId
+      && outcome.record.offeringVersion === 1
+      && outcome.record.serviceId === context.serviceId
+      && outcome.record.serviceSlug === context.serviceSlug);
+}
+
 export async function readProviderProjections(
   environment: NodeJS.ProcessEnv,
   fetcher: ProviderProjectionFetcher,
   offeringPublicId: string,
+  serviceSlug = "riskscan",
 ): Promise<ProviderProjections> {
   const source = providerSiteSource(environment);
   if (source === null || typeof fetcher !== "function") {
     return { offering: { outcome: "not_configured" }, directory: { outcome: "not_configured" } };
   }
-  if (!isValidOfferingPublicId(offeringPublicId)) {
+  if (!isValidOfferingPublicId(offeringPublicId) || !isValidDirectoryServiceSlug(serviceSlug)) {
     return { offering: { outcome: "unexpected_response" }, directory: { outcome: "unexpected_response" } };
   }
 
   const [offering, directory] = await Promise.all([
     readProjection(new URL(`/public/offerings/${offeringPublicId}`, source), fetcher, parseOfferingProjection, { outcome: "absent" }),
-    readProjection(new URL("/public/directory/riskscan/active", source), fetcher, parseDirectoryProjection, { outcome: "absent" }),
+    readProjection(new URL(`/public/directory/${serviceSlug}/active`, source), fetcher, parseDirectoryProjection, { outcome: "absent" }),
   ]);
-  return { offering: offering as OfferingOutcome, directory: directory as DirectoryOutcome };
+  const selected = selectedToolContext(offeringPublicId, serviceSlug);
+  const offeringOutcome = offering as OfferingOutcome;
+  const directoryOutcome = directory as DirectoryOutcome;
+  return {
+    offering: selected !== null && !matchesSelectedOffering(offeringOutcome, selected)
+      ? { outcome: "unexpected_response" }
+      : offeringOutcome,
+    directory: selected !== null && !matchesSelectedDirectory(directoryOutcome, selected)
+      ? { outcome: "unexpected_response" }
+      : directoryOutcome,
+  };
 }
 import {
   parseAgentDirectoryRecordCandidate,

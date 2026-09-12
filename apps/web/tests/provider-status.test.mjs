@@ -6,11 +6,13 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const appRoot = fileURLToPath(new URL("..", import.meta.url));
+const campaignHeroAsset = join(appRoot, "public/brand/provider-campaign-duo-rays.png");
 const sourcePaths = [
   "src/app/provider/page.tsx",
   "src/lib/offering-projection.ts",
   "src/components/provider/status/provider-status.tsx",
   "src/components/provider/status/provider-status-state.ts",
+  "src/components/dashboard/provider-tool-list.tsx",
 ];
 const sourceExists = sourcePaths.every((path) => existsSync(join(appRoot, path)));
 const implementedTest = sourceExists ? test : test.skip;
@@ -128,6 +130,63 @@ implementedTest("keeps the two projection outcome unions closed and independent"
     assert.equal(init.redirect, "error");
     assert.ok(init.signal instanceof AbortSignal);
   }
+});
+
+implementedTest("uses the selected generated service slug instead of the global RiskScan directory", async () => {
+  const suffix = "a".repeat(32);
+  const toolId = `tool_${suffix}`;
+  const serviceSlug = `tool-${suffix}`;
+  const paths = [];
+  await projection.readProviderProjections(
+    { TOOL402_CONVEX_SITE_URL: "https://convex.example.test/" },
+    async (input) => { paths.push(input.pathname); return json(null, 404); },
+    `offering_${suffix}`,
+    serviceSlug,
+  );
+  assert.deepEqual(paths, [`/public/offerings/offering_${suffix}`, `/public/directory/${serviceSlug}/active`]);
+  assert.equal(toolId.startsWith("tool_"), true);
+});
+
+implementedTest("fails closed when a selected tool receives a mismatched offering or Directory projection", async () => {
+  const suffix = "a".repeat(32);
+  const toolId = `tool_${suffix}`;
+  const offeringId = `offering_${suffix}`;
+  const serviceSlug = `tool-${suffix}`;
+  const selectedOffering = offeringRecord({ offeringPublicId: offeringId, subjectPublicId: toolId });
+  const selectedDirectory = directoryRecord({ serviceId: toolId, serviceSlug, offeringPublicId: offeringId });
+  const environment = { TOOL402_CONVEX_SITE_URL: "https://convex.example.test/" };
+
+  const mismatchedDirectory = await projection.readProviderProjections(environment, async (input) => (
+    input.pathname.startsWith("/public/offerings/")
+      ? json({ outcome: "FOUND", record: selectedOffering })
+      : json({ outcome: "FOUND", record: { ...selectedDirectory, offeringPublicId: "offering_other" }, directoryVersion: 1 })
+  ), offeringId, serviceSlug);
+  assert.equal(mismatchedDirectory.offering.outcome, "loaded");
+  assert.equal(mismatchedDirectory.directory.outcome, "unexpected_response");
+
+  const mismatchedOffering = await projection.readProviderProjections(environment, async (input) => (
+    input.pathname.startsWith("/public/offerings/")
+      ? json({ outcome: "FOUND", record: { ...selectedOffering, subjectPublicId: `tool_${"b".repeat(32)}` } })
+      : json({ outcome: "FOUND", record: selectedDirectory, directoryVersion: 1 })
+  ), offeringId, serviceSlug);
+  assert.equal(mismatchedOffering.offering.outcome, "unexpected_response");
+  assert.equal(mismatchedOffering.directory.outcome, "loaded");
+});
+
+implementedTest("routes an OPEN selected tool to its own Provider status projection", async () => {
+  const sources = await readSources();
+  const page = sources["src/app/provider/page.tsx"];
+  const list = sources["src/components/dashboard/provider-tool-list.tsx"];
+
+  assert.match(page, /searchParams:\s*Promise<\{\s*tool\?:\s*string\s*\|\s*string\[\]\s*\}>/u);
+  assert.match(page, /parseProviderToolId/u);
+  assert.match(page, /notFound\(\)/u);
+  assert.match(page, /`offering_\$\{selectedToolPublicId\.slice\(5\)\}`/u);
+  assert.match(page, /`tool-\$\{selectedToolPublicId\.slice\(5\)\}`/u);
+  assert.match(page, /<ProviderStatusRegions\s+selectedToolPublicId=\{selectedToolPublicId\}\s*\/>/u);
+  assert.match(list, /tool\.state\s*===\s*["']OPEN["']\s*\|\|\s*tool\.state\s*===\s*["']CLOSED["']/u);
+  assert.match(list, /\/provider\?tool=\$\{encodeURIComponent\(tool\.toolPublicId\)\}/u);
+  assert.match(list, /\/provider\/deploy\?tool=\$\{encodeURIComponent\(tool\.toolPublicId\)\}/u);
 });
 
 implementedTest("loads only a complete valid directory projection", async () => {
@@ -261,14 +320,13 @@ implementedTest("gives each projection its own deadline and rejects bodies above
 implementedTest("renders only the fixed status regions, actions, evidence rows, and gated external link", async () => {
   const sources = await readSources();
   const page = sources["src/app/provider/page.tsx"];
-  assert.match(page, /readProviderProjections\(process\.env, globalThis\.fetch, riskScanOfferingPublicId\)/u);
+  assert.match(page, /selectedToolPublicId\s*===\s*undefined\s*\?\s*riskScanOfferingPublicId/u);
   const status = sources["src/components/provider/status/provider-status.tsx"];
   const state = sources["src/components/provider/status/provider-status-state.ts"];
   const presentation = `${page}\n${status}\n${state}`;
 
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
-  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 1);
-  assert.match(page, /<PageHeader\b[^>]*title="Provider status"/);
+  assert.equal((page.match(/<PageHeader\b/g) ?? []).length, 0);
   assert.equal((page.match(/<Suspense\b/g) ?? []).length, 1);
   assert.match(page, /aria-live=["']polite["']/);
   assert.doesNotMatch(page, /["']use client["']|\bfetch\s*\(|set(?:Timeout|Interval)\s*\(/);
@@ -301,7 +359,7 @@ implementedTest("presents unavailable provider data as an actionable workspace w
   const page = sources["src/app/provider/page.tsx"];
   const status = sources["src/components/provider/status/provider-status.tsx"];
 
-  assert.match(page, /Provider status/);
+  assert.match(page, /Campaign status/);
   assert.match(page, /Tool operator/);
   assert.match(status, /bg-secondary/);
   assert.match(status, /Offering record/);
@@ -311,14 +369,82 @@ implementedTest("presents unavailable provider data as an actionable workspace w
   assert.doesNotMatch(status, /funding raised|units issued|paid task|balance|Live testnet|Connected/i);
 });
 
+implementedTest("renders the S44 command center from the admitted campaign projection without new runtime authority", async () => {
+  const sources = await readSources();
+  const page = sources["src/app/provider/page.tsx"];
+  const status = sources["src/components/provider/status/provider-status.tsx"];
+  const state = sources["src/components/provider/status/provider-status-state.ts"];
+  const presentation = `${page}\n${status}\n${state}`;
+
+  assert.match(status, /data-ui=["']provider-command-center["']/);
+  assert.match(status, /data-ui=["']provider-campaign-hero["']/);
+  assert.match(status, /data-ui=["']provider-campaign-progress["']/);
+  assert.match(status, /data-ui=["']provider-activity-timeline["']/);
+  assert.match(status, /data-ui=["']provider-campaign-snapshot["']/);
+  assert.match(status, /data-ui=["']provider-supporting-cards["']/);
+  assert.match(status, /data-ui=["']provider-technical-record["']/);
+  assert.match(status, /import Image from ["']next\/image["']/);
+  assert.match(status, /src=["']\/brand\/provider-campaign-duo-rays\.png["']/);
+  assert.equal(existsSync(campaignHeroAsset), true, "missing generated provider campaign hero asset");
+  assert.doesNotMatch(status, /<table\b|min-w-\[/u);
+  for (const text of [
+    "Campaign in progress",
+    "Campaign prepared",
+    "Campaign ready",
+    "Campaign closed",
+    "Directory unavailable",
+    "Backer issuance",
+    "Unavailable in this demo",
+    "Activity &amp; proof",
+    "Campaign snapshot",
+    "Economics",
+    "Capacity",
+    "Governance",
+    "Trust details",
+    "Not live",
+  ]) assert.match(presentation, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.doesNotMatch(presentation, /["']use client["']|\bfetch\s*\(|set(?:Timeout|Interval)\s*\(/);
+  assert.doesNotMatch(presentation, /funding raised|units issued|paid task|balance|Live testnet|Connected|New offering version/i);
+
+  const stateModule = await import(new URL("../src/components/provider/status/provider-status-state.ts", import.meta.url).href);
+  assert.equal(typeof stateModule.providerCampaignPresentation, "function");
+  const offeringCases = [
+    ["DRAFT", "Campaign in progress", "Offering admitted", "Offering admitted · DRAFT", "current"],
+    ["ASSET_PENDING", "Campaign in progress", "Offering admitted", "Offering admitted · ASSET_PENDING", "current"],
+    ["READY", "Campaign prepared", "Offering admitted", "Offering admitted · READY", "complete"],
+    ["OPEN", "Campaign ready", "Offering published", "Offering admitted · OPEN", "complete"],
+    ["CLOSED", "Campaign closed", "Offering closed", "Offering admitted · CLOSED", "complete"],
+  ];
+  const cases = offeringCases.flatMap(([offeringState, heroTitle, offeringTitle, offeringStage, offeringTone]) => [true, false].map((directoryLoaded) => ({
+    offeringState,
+    directoryLoaded,
+    expected: {
+      heroTitle,
+      offeringTitle,
+      offeringStage,
+      offeringTone,
+      directoryTitle: directoryLoaded ? "Directory active" : "Directory unavailable",
+      directoryStage: directoryLoaded ? "Directory active" : "Directory unavailable",
+      directoryTone: directoryLoaded ? "complete" : "current",
+      issuanceStage: "Unavailable in this demo",
+    },
+  })));
+  assert.deepEqual(
+    cases.map(({ offeringState, directoryLoaded }) => stateModule.providerCampaignPresentation(offeringState, directoryLoaded)),
+    cases.map(({ expected }) => expected),
+  );
+  assert.deepEqual(stateModule.nextProviderAction("CLOSED"), { message: "Campaign closed", href: null });
+});
+
 implementedTest("derives the fixed region order, next actions, evidence cells, and Hashscan gate from admitted projection data", async () => {
   const state = await import(new URL("../src/components/provider/status/provider-status-state.ts", import.meta.url).href);
   assert.deepEqual(state.providerStatusRegionOrder, [
-    "status block",
-    "deployment evidence table",
-    "active terms",
-    "active directory",
-    "signer",
+    "campaign hero",
+    "progress rail",
+    "activity timeline",
+    "campaign snapshot",
+    "supporting cards",
+    "technical record",
   ]);
   const format = await import(new URL("../src/lib/hbar-format.ts", import.meta.url).href);
   assert.equal(format.formatHbar(1000n), "0.00001 HBAR");
@@ -343,13 +469,13 @@ implementedTest("derives the fixed region order, next actions, evidence cells, a
     atsAssetEvmAddress: "0x1111111111111111111111111111111111111111",
   }, {
     directoryVersion: 2,
-    record: { publishedAt: "2026-09-10T01:00:00.000Z" },
+    record: { publishedAt: "2026-09-10T01:00:00.000Z", serviceSlug: "dynamic-service" },
   });
   assert.deepEqual(rows, [
     ["offering.create", "riskscan_offering_demo v1", "signed command admitted", "2026-09-10T00:00:00.000Z"],
     ["external.prepare", "not recorded", "prepared attempt recorded", "not recorded"],
     ["revenue note", "0x1111111111111111111111111111111111111111", "address recorded", "not recorded"],
-    ["directory.publish", "riskscan v2", "a published directory version exists", "2026-09-10T01:00:00.000Z"],
+    ["directory.publish", "dynamic-service v2", "a published directory version exists", "2026-09-10T01:00:00.000Z"],
   ]);
   assert.deepEqual(
     state.providerEvidenceRows({
@@ -376,6 +502,6 @@ implementedTest("derives the fixed region order, next actions, evidence cells, a
 implementedTest("reads the current campaign shared with the signed dashboard", async () => {
   const page = (await readSources())["src/app/provider/page.tsx"];
   assert.match(page, /import\s*\{\s*riskScanOfferingPublicId\s*\}\s*from\s*["'][^"']*dashboard-campaign["']/);
-  assert.match(page, /readProviderProjections\(process\.env, globalThis\.fetch, riskScanOfferingPublicId\)/);
+  assert.match(page, /selectedToolPublicId\s*===\s*undefined\s*\?\s*riskScanOfferingPublicId/);
   assert.doesNotMatch(page, /riskscan_offering_demo/);
 });

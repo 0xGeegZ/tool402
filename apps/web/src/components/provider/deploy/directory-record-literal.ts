@@ -1,6 +1,6 @@
 export type DirectoryRecordLiteral = Readonly<{
   serviceId: string;
-  serviceSlug: "riskscan";
+  serviceSlug: string;
   capabilities: readonly ["evm-contract-risk-signals"];
   paymentProtocol: "x402";
   paymentNetwork: "hedera-testnet";
@@ -29,10 +29,23 @@ export const directoryRecordLiteral: DirectoryRecordLiteral = Object.freeze({
   status: "active",
 });
 
+export function directoryRecordForProviderTool(toolPublicId?: string): DirectoryRecordLiteral {
+  if (toolPublicId === undefined) return directoryRecordLiteral;
+  if (!/^tool_[0-9a-f]{32}$/u.test(toolPublicId)) {
+    throw new TypeError("invalid selected provider tool");
+  }
+  return Object.freeze({
+    ...directoryRecordLiteral,
+    serviceId: toolPublicId,
+    serviceSlug: `tool-${toolPublicId.slice("tool_".length)}`,
+  });
+}
+
 export function completeDirectoryRecordLiteral(
+  record: DirectoryRecordLiteral,
   configuration: Readonly<{ x402Endpoint: string; clearingAccount: string }>,
 ): CompleteDirectoryRecordLiteral {
-  return Object.freeze({ ...directoryRecordLiteral, ...configuration });
+  return Object.freeze({ ...record, ...configuration });
 }
 
 export function missingDirectoryRecordFields(

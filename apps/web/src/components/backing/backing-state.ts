@@ -115,6 +115,7 @@ const refusalMessages: Readonly<Record<Exclude<RelayOutcome, "ACCEPTED" | "trans
 
 export function readBackingOffering(projection: BackingProjection | null | undefined): BackingOffering | null {
   if (projection === null || projection === undefined) return null;
+  if (projection.state !== "OPEN") return null;
   const treasury = projection.fundingTreasuryAddress;
   if (typeof treasury !== "string" || !treasuryPattern.test(treasury)) return null;
   let terms: OfferingTerms;
@@ -233,6 +234,17 @@ export function transferRequest(view: BackingView, from: string): TransferReques
     method: "eth_sendTransaction",
     params: [Object.freeze({ from, to: view.intent.treasury, value: view.intent.weibarHex })] as const,
   });
+}
+
+export function isCurrentBackingIntent(offering: BackingOffering, intent: BackingIntent): boolean {
+  const validation = validateUnits(offering, intent.units.toString());
+  return validation.ok
+    && intent.treasury === offering.treasury
+    && intent.tinybars === paymentTinybars(offering, intent.units)
+    && intent.weibarHex === weibarQuantity(intent.tinybars)
+    && intent.parameters.offeringPublicId === offering.offeringPublicId
+    && intent.parameters.units === intent.units.toString()
+    && intent.parameters.tinybars === intent.tinybars.toString();
 }
 
 export function viewAfterTransfer(view: BackingView, result: TransferResult): BackingView {

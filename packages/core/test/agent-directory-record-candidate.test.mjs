@@ -69,6 +69,20 @@ test("parses the exact candidate into a frozen detached snapshot", () => {
   assert.notEqual(parsed.advertisedTiers, input.advertisedTiers);
 });
 
+test("accepts a canonical allocated-tool service slug without loosening legacy records", () => {
+  const toolId = `tool_${"a".repeat(32)}`;
+  const parsed = parseAgentDirectoryRecordCandidate(candidate({
+    serviceId: toolId,
+    serviceSlug: `tool-${"a".repeat(32)}`,
+    offeringPublicId: `offering_${"a".repeat(32)}`,
+  }));
+  assert.equal(parsed.serviceId, toolId);
+  assert.equal(parsed.serviceSlug, `tool-${"a".repeat(32)}`);
+  for (const serviceSlug of ["tool-", "tool-not-hex", `tool-${"A".repeat(32)}`, `tool-${"a".repeat(31)}`, "other-tool"]) {
+    assertInputError(candidate({ serviceSlug }));
+  }
+});
+
 test("parses descriptor-backed proxies without ordinary property reads", () => {
   const root = candidate();
   const counts = { root: 0, capabilities: 0, tiers: 0 };

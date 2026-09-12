@@ -37,6 +37,15 @@ import {
 } from "./tool402-command.ts";
 import { stageBAtsCreateCommandProjection } from "../ats/stage-b-ats-create-command-projection.ts";
 
+export type AtsCreateCommandProjection = Readonly<{
+  network: "hedera:testnet";
+  chainId: 296;
+  subjectPublicId: string;
+  operationKind: "ATS_CREATE";
+  expectedTarget: string;
+  canonicalParametersHash: string;
+}>;
+
 export const CAMPAIGN_COMMAND_TYPES = TOOL402_COMMAND_TYPES;
 export type CampaignCommandType = Tool402CommandType;
 export const isCampaignCommandType = isTool402CommandType;
@@ -46,6 +55,36 @@ export const DIRECTORY_VERSION = 1;
 export const TERMS_VERSION = "v1";
 
 const neutralCampaignSubject = "riskscan_revenue_note_demo";
+
+export type ProviderDeploymentTarget = Readonly<{
+  readonly kind: "legacy";
+  readonly subjectPublicId: "riskscan_revenue_note_demo";
+  readonly offeringPublicId: "riskscan_revenue_note_demo";
+}> | Readonly<{
+  readonly kind: "provider-tool";
+  readonly toolPublicId: string;
+  readonly subjectPublicId: string;
+  readonly offeringPublicId: string;
+}>;
+
+const legacyDeploymentTarget: ProviderDeploymentTarget = Object.freeze({
+  kind: "legacy",
+  subjectPublicId: neutralCampaignSubject,
+  offeringPublicId: neutralCampaignSubject,
+});
+
+export function providerDeploymentTarget(toolPublicId?: string): ProviderDeploymentTarget {
+  if (toolPublicId === undefined) return legacyDeploymentTarget;
+  if (!/^tool_[0-9a-f]{32}$/u.test(toolPublicId)) {
+    throw new TypeError("invalid selected provider tool");
+  }
+  return Object.freeze({
+    kind: "provider-tool",
+    toolPublicId,
+    subjectPublicId: toolPublicId,
+    offeringPublicId: `offering_${toolPublicId.slice("tool_".length)}`,
+  });
+}
 
 export type DeployStageIndex = 0 | 1 | 2 | 3;
 
@@ -69,6 +108,8 @@ export interface StageRequestInput {
   readonly record: DirectoryRecordLiteral;
   readonly nowMilliseconds: number;
   readonly randomBytes?: RandomBytes;
+  readonly deploymentTarget?: ProviderDeploymentTarget;
+  readonly atsCreateCommand?: AtsCreateCommandProjection;
 }
 
 export interface StageSignatureRequest extends SignatureDialogRequest {
@@ -97,15 +138,15 @@ function lines(value: string): readonly string[] {
 
 function offeringCreateBytes(
   values: CampaignReviewValues,
-  subjectPublicId: string,
+  deploymentTarget: ProviderDeploymentTarget,
   idempotencyKey: string,
   expiresAt: string,
 ): Uint8Array {
   const payload = parseOfferingCreatePayload({
     schemaVersion: 1,
-    offeringPublicId: subjectPublicId,
+    offeringPublicId: deploymentTarget.offeringPublicId,
     offeringVersion: OFFERING_VERSION,
-    subjectPublicId,
+    subjectPublicId: deploymentTarget.subjectPublicId,
     definition: {
       schemaVersion: 1,
       terms: {
@@ -138,7 +179,7 @@ function offeringCreateBytes(
 }
 
 function externalPrepareBytes(
-  stageBCommand: typeof stageBAtsCreateCommandProjection,
+  stageBCommand: AtsCreateCommandProjection,
   idempotencyKey: string,
   expiresAt: string,
 ): Uint8Array {
@@ -175,21 +216,21 @@ function attachCandidateBytes(
 
 function directoryPublishBytes(
   record: CompleteDirectoryRecordLiteral,
-  subjectPublicId: string,
+  deploymentTarget: ProviderDeploymentTarget,
   publishedAt: string,
   idempotencyKey: string,
   expiresAt: string,
 ): Uint8Array {
   const payload = parseDirectoryPublishPayload({
     schemaVersion: 1,
-    offeringPublicId: subjectPublicId,
+    offeringPublicId: deploymentTarget.offeringPublicId,
     offeringVersion: OFFERING_VERSION,
     directoryVersion: DIRECTORY_VERSION,
     record: {
       schemaVersion: 1,
       serviceId: record.serviceId,
       serviceSlug: record.serviceSlug,
-      offeringPublicId: subjectPublicId,
+      offeringPublicId: deploymentTarget.offeringPublicId,
       offeringVersion: OFFERING_VERSION,
       capabilities: [...record.capabilities],
       x402Endpoint: record.x402Endpoint,
@@ -222,6 +263,7 @@ export function buildStageSignatureRequest(
   }
 
   const { issuedAt, expiresAt } = createCommandTimestamps(input.nowMilliseconds);
+  const deploymentTarget = input.deploymentTarget ?? legacyDeploymentTarget;
   const idempotencyKey = createCommandNonce(input.randomBytes);
   let type: CampaignCommandType;
   let canonicalPayloadBytes: Uint8Array;
@@ -229,11 +271,14 @@ export function buildStageSignatureRequest(
   switch (stage) {
     case 0:
       type = "offering.create";
-      canonicalPayloadBytes = offeringCreateBytes(input.values, neutralCampaignSubject, idempotencyKey, expiresAt);
+      canonicalPayloadBytes = offeringCreateBytes(input.values, deploymentTarget, idempotencyKey, expiresAt);
       break;
     case 1:
+      if (deploymentTarget.kind === "provider-tool" && input.atsCreateCommand === undefined) {
+        throw new TypeError("the selected tool needs its server-derived ATS configuration");
+      }
       type = "external.prepare";
-      canonicalPayloadBytes = externalPrepareBytes(stageBAtsCreateCommandProjection, idempotencyKey, expiresAt);
+      canonicalPayloadBytes = externalPrepareBytes(input.atsCreateCommand ?? stageBAtsCreateCommandProjection, idempotencyKey, expiresAt);
       break;
     case 2:
       if (input.candidate === null) {
@@ -250,7 +295,7 @@ export function buildStageSignatureRequest(
         throw new TypeError("stage 4 needs a complete directory record literal");
       }
       type = "directory.publish";
-      canonicalPayloadBytes = directoryPublishBytes(input.record, neutralCampaignSubject, issuedAt, idempotencyKey, expiresAt);
+      canonicalPayloadBytes = directoryPublishBytes(input.record, deploymentTarget, issuedAt, idempotencyKey, expiresAt);
       break;
   }
 

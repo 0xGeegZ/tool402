@@ -43,10 +43,10 @@ export default function RootLayout({
                 <Suspense fallback={<LocalNavigation />}>
                   <DashboardNavigation />
                 </Suspense>
-                <WalletIsland />
                 <Link href="/provider/deploy" className="hidden min-h-9 touch-target items-center rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:inline-flex">
                   Prepare a tool
                 </Link>
+                <WalletIsland />
               </div>
             </div>
           </header>

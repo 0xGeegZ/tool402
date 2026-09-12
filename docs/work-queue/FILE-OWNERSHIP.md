@@ -2,6 +2,22 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
+M56-S26 scoped ownership transfer: because canonical main does not yet contain
+M56's card, specification, and catalog row, this is a conditional reservation,
+not active M56 ownership. It takes effect only when the rebased M56 integration
+PR commits those controls. It then transfers only `BackingForm`'s
+`useWalletSession`/`connectedWalletSession` composition and the
+`section[aria-labelledby="backing-status"]` composition in `backing-flow.tsx`,
+plus the matching shared-session assertions in `backing-route.test.mjs`. S26
+retains all other S26 selectors, assertions, and paths. M56 must
+preserve `useWalletSession`, `connectedWalletSession`, and the one shared
+session; it may not add `WalletIsland`, local duplicate wallet state, discovery,
+signature, authority, or other wallet behavior. The transfer excludes
+`wallet-session.tsx`, `wallet-connect.tsx`, layout/header, provider-deploy
+integration, the session state machine, and unrelated tests. M56 must rebase on
+this canonical record, run focused backing/S26 compatibility tests, and receive
+joint review before integration.
+
 M54-T010 is a root-owned `20-active` CORE_P0 candidate recovery correction. It
 owns its card, specification, queue/review records, integration, commits, and
 pushes, plus only `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`,
@@ -730,6 +746,17 @@ separately accepted runtime boundary supplies an OPEN offering and explicit
 funding treasury. Its acceptance provisions neither an enabled `BACKER`
 authority nor an M40 treasury field.
 
+M56-T010 owns its active card and specification; new
+`apps/web/src/lib/riskscan-backing-projection.ts` and
+`apps/web/tests/riskscan-backing-projection.test.mjs`; and the exact backing
+route, backing flow/state, RiskScan detail page/component, and focused
+backing/detail tests named in its specification. It may consume, but must not
+modify, the existing offering reader, dashboard campaign identity, wallet
+session, SignatureDialog, relay, or command admission. The only runtime input
+is the server-owned `TOOL402_FUNDING_EVM_ADDRESS`; its value, BACKER authority
+provisioning, wallet action, transaction, deployment, and live proof remain
+outside this source scope.
+
 M44-T010's independently reviewed RED contract is accepted at `c5d2bf3`.
 Before any remaining M44 source, the root-owned next step may amend only
 `apps/web/package.json`, the root `package-lock.json`,
@@ -969,6 +996,8 @@ branch is unreviewed and has no ownership or implementation authority. No client
 state, timer, command, write, Mirror/chain read, wallet, provider, payment,
 transaction, deployment, or live path is authorized.
 
+S44-T010 is a root-controlled `20-active` POLISH record for the isolated Provider command-center redesign. Its implementation is limited to `apps/web/src/app/provider/page.tsx`, `apps/web/src/components/provider/status/provider-status.tsx`, `apps/web/src/components/provider/status/provider-status-state.ts`, `apps/web/src/components/provider/status/provider-technical-record-control.tsx`, the generated `apps/web/public/brand/provider-campaign-duo.png` and `apps/web/public/brand/provider-campaign-duo-rays.png` illustrations, `apps/web/tests/provider-status.test.mjs`, `apps/web/tests/provider-visual-reconciliation.test.mjs`, and only the Provider target assertions in `apps/web/tests/page-header.test.mjs`; the card, local specification, and UI manifest are its queue records. Independent RED acceptance at `37864045` permits the original five paths for minimal GREEN. The full-suite reconciliation additionally reserves only the two named superseded Provider assertion surfaces, the owner interaction amendment reserves the technical-record control path, and the final hero-art amendment reserves only the two violet coin accents in the versioned generated asset; none may change other route or shared-header expectations. It owns no projection reader, API, shell, wallet/session, dependency, configuration, or external behavior. The existing S17 reader, closed outcomes, evidence values, Hashscan gate, local links, and live-boundary exclusions remain unchanged.
+
 S21-T010 is a root-controlled `60-done` CORE_P0 record. Its historical
 source was integrated at `48421352607a00c1a73f593dcc48160fac771e6a`; that is
 not acceptance evidence. The corrective record
@@ -1182,6 +1211,28 @@ already-mounted S26 session for that navigation only; it does not persist or
 rehydrate wallet data, read a wallet, discover a provider, alter the server
 cookie guard, or add any wallet, account, signature, transaction, deployment,
 or live authority.
+
+User-directed S40 MetaMask sign-out synchronization amendment: the root
+additionally reserves new
+`apps/web/src/components/auth/dashboard-session-sync.tsx`, new
+`apps/web/tests/dashboard-session-sync.test.mjs`, and only the synchronizer
+import/mount in the existing server-authenticated
+`apps/web/src/components/auth/dashboard-navigation.tsx` boundary. The component
+may consume the accepted shared wallet state, remember that one settled identity was observed,
+and on a later `disconnected` state call only same-origin
+`POST /api/auth/logout`. A successful response may replace the current route
+with `/sign-in` and refresh the App Router. It may not read cookies, inspect or
+trust native event payloads, discover/request an account, retry, store data,
+sign, relay, transact, deploy, or change S26/M50 source or tests.
+
+Review-driven S40 active-account binding amendment: within that same reserved
+synchronizer, focused test, and authenticated-navigation mount, the root may
+passively select the existing provider, read only `eth_chainId` and
+`eth_accounts`, and use M50's accepted account/chain watcher to compare the
+settled address with the server-validated session address. It may call the
+existing same-origin logout route once when the provider/account/chain is not
+an exact match. It may not request an account, sign, trust an event payload,
+store data, retry, relay, transact, deploy, or change S26/M50 source or tests.
 
 S41-T010 is an `00-inbox` CORE_P0 follow-up with no active source or test
 reservation. S40 acceptance is an explicit activation gate while the card is
@@ -1530,18 +1581,23 @@ M50 does not own or amend
 `wallet-state.ts`, deploy-stage signing, command/relay code, configuration,
 packages, lockfiles, or any live path.
 
-M55-T010 is a root-owned `00-inbox` CORE_P0 new-provider-tool refinement.
+M55-T010 is a root-owned `20-active` CORE_P0 new-provider-tool refinement with
+Task 1 Green accepted only for the exact allocation and protected owner-read
+paths recorded below.
 Its documentation scope is its card, `docs/specs/m55-provider-demo-attempt-restart.md`,
 `docs/superpowers/plans/2026-09-12-m55-deploy-another-tool.md`,
-`docs/work-queue/evidence/M55-T010-delegation.md`, the product overview's M55
-amendment, root queue/control records, and independent refinement review.
+`docs/work-queue/evidence/M55-T010-delegation.md`, its Task 1 readiness
+reviews, the product overview's M55 amendment, root queue/control records, and
+independent refinement review.
 The retained filenames do not preserve the superseded demo-attempt UX.
-The allocator design is selected in the spec; source readiness is not granted.
-The plan's candidate paths confer no ownership. M51/M53/M54/S26/S36/S42/B04
-reservations remain unchanged until root records release or exact scoped
-transfer/co-review, followed by independent readiness, activation, and RED
-acceptance. No source/test, authority provisioning, environment mutation,
-wallet, signature, transaction, deployment, or live-evidence action is active.
+The allocator design is selected in the spec; no source outside the accepted
+Task 1 paths is granted.
+The Tasks 2–6 plan candidate paths confer no ownership. M51/M53/M54/S26/S36/
+S42/B04 reservations remain unchanged until root records release or exact
+scoped transfer/co-review, followed by independent readiness, activation, and
+RED acceptance. No other source/test, authority provisioning, environment
+mutation, wallet, signature, transaction, deployment, or live-evidence action
+is active.
 
 S43-T010 reserves only its specification/card and root control during intake.
 Its proposed exact source/test boundary is in docs/specs/s43-recording-demo-journey.md.
@@ -1592,3 +1648,72 @@ browser/Next.js verification and a fresh independent final review. Release
 landing-footer.tsx; its existing asset, decorative accessibility, breakpoint,
 links, copy and routes remain unchanged. No merge, deployment or live-action
 authority is granted.
+
+S45-T010 is a root-owned `20-active` POLISH record for the owner-approved mascot
+expansion. Its current specification reserves five exact files under
+`apps/web/public/brand/`, a shared loading component, root/nested loading
+mounts, the Demo header, the Explore final CTA, only `ReviewStep` in the deploy
+wizard, the Dashboard campaign component only for its empty illustration, a
+focused test, and constrained Explore/loading test reconciliation.
+Fresh independent readiness is clear at corrected intake `e5ed2304`. At ready
+source `5780cee2`, only `apps/web/tests/brand-mascot-surfaces.test.mjs` is
+reserved for durable RED. Fresh independent RED acceptance at `26cbf725`
+freezes that test and reserves the four declared PNGs, Demo header, Explore
+final CTA, only deploy `ReviewStep`, the shared/root loader, nine loader mounts,
+and exact Explore/loading contract reconciliations for minimal GREEN. All
+catalogue data, dynamic form values,
+wallet/session/signing code, skeleton region order, runtime APIs,
+configuration, dependencies, and external/live behavior remain excluded.
+The owner refinement at `6532a880` additionally reserves
+`apps/web/public/brand/dashboard-empty-mascot.png` and only the empty-state
+illustration region in `apps/web/src/components/dashboard/dashboard-campaign.tsx`;
+it does not reserve or change the component's session or ownership logic.
+S46-T010 owns only the demo control-room surface: the `/demo` page, the
+components under apps/web/src/components/demo, the demo-only HashScan-link
+utility, its focused tests and the matching submission rehearsal runbook. It
+may compose public route interfaces but does not own Provider, wallet, M55,
+M56/backing, ATS, World, Agent, API, backend or deployment source. No live
+action authority is granted.
+
+S46-T010 additionally reserves only the redirect query handling in
+apps/web/src/app/sign-in/page.tsx and
+apps/web/src/components/auth/metamask-dashboard-sign-in.tsx, with matching
+apps/web/tests/dashboard-auth.test.mjs assertions. It may carry only a known
+demoStep to the existing internal dashboard destination and must not alter the
+challenge, verifier, cookie, wallet, account, chain, signature, session, or
+authorization decision.
+
+M55-T010 Task 1 is the sole `20-active` slice at this control head. Its exact
+candidate paths are
+`packages/core/src/provider-tool-identity.ts`,
+`packages/core/test/provider-tool-identity.test.mjs`,
+`packages/core/src/index.ts`, `packages/backend/convex/provider_tools.ts`,
+`packages/backend/convex/provider_session_ingress.ts`, Backend `schema.ts` and
+`http.ts`, `packages/backend/tests/provider-tools.test.mjs`,
+`packages/backend/tests/provider-session-ingress.test.mjs`,
+`apps/web/src/lib/provider-tools-server.ts`,
+`apps/web/src/app/api/provider/tools/route.ts`, and
+`apps/web/tests/provider-tools-api.test.mjs`. The M41-completed
+`packages/backend/tests/http-command-ingress.test.mjs` is additionally
+reserved only for its one `/internal/provider-tools` POST route-inventory
+expectation, as independently reviewed and activated in
+`docs/work-queue/evidence/M55-T010-task1-http-route-supplement.md`.
+They create no offering, campaign, ATS candidate, receipt, Directory record,
+or authority. They are the sole M55 reservation. The four new Task 1 test
+paths and the other eight declared Task 1 source paths are `20-active` for the
+minimal Green implementation accepted in
+`docs/work-queue/evidence/M55-T010-task1-green-review.md`. Tasks 2–6 remain
+blocked by M51/M53/M54/S26/S36/S42/B04 as mapped in
+`docs/work-queue/evidence/M55-T010-task1-readiness-review.md`; no active
+predecessor path is transferred by this candidate record.
+
+M55-T010 Tasks 2–6 activation supersedes only the preceding statement that
+Task 1 is the sole active M55 source slice. The exact root-owned transfer is
+recorded in `docs/work-queue/evidence/M55-T010-tasks2-6-activation.md`: M55
+may amend only selected-provider-tool branches of the named M51/M53/M54/S26/
+S36/S42/B04 seams and the new M55 helpers/tests declared there. The legacy
+RiskScan branches, B04 bounded-input controls, M53 Factory-event selection,
+M54 explicit recovery, S26 shared-session control, S36 callback, and S42
+signer-exact read remain retained by their original owners. Every transferred
+seam requires joint compatibility review before integration; all other active
+reservations remain unchanged.

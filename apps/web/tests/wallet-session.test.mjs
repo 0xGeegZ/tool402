@@ -142,14 +142,14 @@ implementedTest("invalidates late connect and switch results after an explicit d
   assert.match(source.slice(disconnectStart), /sessionReadGenerationRef\.current \+= 1;/u);
 });
 
-implementedTest("wraps the shell in the session provider and renders the control after the navigation", async () => {
+implementedTest("wraps the shell in the session provider and renders the control at the far right of the header", async () => {
   const layout = await readAppFile(layoutPath);
 
   assert.match(layout, /import\s*\{\s*WalletSessionProvider\s*\}\s+from\s+["']\.\.\/components\/wallet\/wallet-session["']/u);
   assert.match(layout, /import\s*\{\s*WalletIsland\s*\}\s+from\s+["']\.\.\/components\/wallet\/wallet-connect["']/u);
   assert.match(layout, /<WalletSessionProvider>\s*<div data-ui-shell=["']s00["']/u);
   assert.match(layout, /<\/div>\s*<\/WalletSessionProvider>\s*<\/body>/u);
-  assert.match(layout, /<\/Suspense>\s*<WalletIsland \/>/u);
+  assert.match(layout, /Prepare a tool\s*<\/Link>\s*<WalletIsland \/>/u);
   assert.equal((layout.match(/<WalletIsland \/>/gu) ?? []).length, 1);
 });
 
@@ -186,6 +186,7 @@ implementedTest("renders the compact header control per session kind from the sh
     const api = await loadClientModule(islandPath, {
       "react/jsx-runtime": jsxRuntime,
       "next/link": { default: "Link" },
+      "next/image": { default: "Image" },
       "../ui/badge": { Badge: "Badge" },
       "../ui/button": { Button: "Button" },
       "./wallet-session": { useWalletSession: () => session },
@@ -215,8 +216,16 @@ implementedTest("renders the compact header control per session kind from the sh
     assert.equal(badges.length, 0, `${state.kind} renders no badge`);
     assert.equal(buttons.length, 1, `${state.kind} renders one control`);
     const [button] = buttons;
-    assert.equal(visibleText(button), expected.label);
+    assert.equal(visibleText(button).trim(), expected.label);
     assert.equal(button.props.size, "sm");
+    if (state.kind === "disconnected") {
+      const icons = elements(button).filter((element) => element.type === "Image");
+      assert.equal(icons.length, 1, "the disconnected control carries the MetaMask icon");
+      assert.equal(icons[0].props.src, "/brand/metamask-fox.svg");
+      assert.equal(icons[0].props.alt, "");
+      assert.equal(icons[0].props["aria-hidden"], "true");
+      assert.match(button.props.className, /\bgap-2\b/u);
+    }
     if (expected.disabled) {
       assert.equal(button.props.disabled, true);
       assert.equal(button.props["aria-disabled"], "true");
@@ -238,6 +247,8 @@ implementedTest("reads the shared session in the signing stage instead of mounti
   assert.equal((signing.match(/useWalletSession\(\)/gu) ?? []).length, 1);
   assert.match(signing, /data-ui=["']provider-deploy-connect["']/u);
   assert.match(signing, /wallet\.state\.kind === "disconnected"/u);
+  assert.match(signing, /wallet\.state\.kind === "no_provider"/u);
+  assert.match(signing, /wallet\.state\.kind === "multiple_providers"/u);
   assert.match(signing, /void wallet\.connect\(\)/u);
   assert.doesNotMatch(signing, /approved issuer|issuer-specific/u);
   assert.doesNotMatch(signing, /approvedIssuerAddress/u, "the wizard passes no approved issuer address");

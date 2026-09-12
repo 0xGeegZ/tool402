@@ -49,8 +49,10 @@ The card may add exactly these new paths:
 - `apps/web/src/app/sign-in/page.tsx`;
 - `apps/web/src/app/dashboard/layout.tsx`;
 - `apps/web/src/components/auth/dashboard-navigation.tsx`;
+- `apps/web/src/components/auth/dashboard-session-sync.tsx`;
 - `apps/web/tests/dashboard-auth.test.mjs`; and
-- `apps/web/tests/dashboard-auth-routes.test.mjs`.
+- `apps/web/tests/dashboard-auth-routes.test.mjs`; and
+- `apps/web/tests/dashboard-session-sync.test.mjs`.
 
 The repository owner additionally reserves `.env.example` and
 `apps/web/.env.example` as documentation-only templates for the two fixed
@@ -225,3 +227,32 @@ and its shared wallet session stay mounted for this transition, while the
 server still authorizes dashboard access solely from the sealed `HttpOnly`
 cookie. This adds no storage, wallet discovery, account request, signature,
 wallet-state mutation, route target, or live authority.
+
+## User-directed MetaMask sign-out synchronization amendment
+
+After observing that disconnecting MetaMask left an eight-hour dashboard
+session active, the repository owner directs the root to synchronize accepted
+wallet loss with the existing logout route. The root additionally reserves one
+new `dashboard-session-sync.tsx` client component, its focused
+`dashboard-session-sync.test.mjs` contract, and its mount inside the existing
+server-authenticated navigation boundary.
+After the shared wallet state has exposed one settled identity, a later
+`disconnected` state may send exactly one same-origin `POST /api/auth/logout`;
+after a successful response it replaces the route with `/sign-in` and refreshes
+the App Router. Initial disconnected, rejected-connect, connecting, and
+wrong-chain states do nothing. The amendment adds no provider discovery,
+account request, event-payload trust, signature, storage, retry, transaction,
+relay, deployment, or external request, and it does not amend S26 or M50 source.
+
+## Review-driven active-account binding amendment
+
+The owner directs the root to repair the review-confirmed gap where a restored
+dashboard cookie outlives a missing, changed, or wrong-chain MetaMask account.
+Within the existing synchronizer, its focused test, and the authenticated
+navigation mount, the browser may passively select the existing provider, read
+only `eth_chainId` and `eth_accounts`, and use the accepted account/chain
+watcher. It must retain the session only when the settled Hedera Testnet
+address exactly matches the server-validated session address; otherwise it
+may call the existing same-origin logout route once. It adds no account
+request, signature, event-payload trust, storage, retry, transaction, relay,
+deployment, or M50/S26 source amendment.
