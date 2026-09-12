@@ -96,6 +96,13 @@ export function ProviderStatus({ projections }: { projections: ProviderProjectio
   const offering = projections.offering.outcome === "loaded" ? projections.offering.record : undefined;
   const directory = projections.directory.outcome === "loaded" ? projections.directory : undefined;
   const action = offering === undefined ? { message: "Prepare a provider offering", href: "/provider/deploy" } : nextProviderAction(offering.state);
+  const summary = offering === undefined
+    ? "Prepare the existing RiskScan offering in the local wizard. A preview is not a public offer. Evidence, terms, directory, and signer appear here once a signed offering command is admitted."
+    : offering.state === "OPEN"
+      ? "The revenue note and active directory are recorded. Backer issuance is not available in this demo."
+      : offering.state === "CLOSED"
+        ? "This campaign is closed. Its deployment evidence remains available for inspection."
+        : "Review the current local preparation before advancing the provider path.";
 
   return (
     <div className="space-y-10">
@@ -108,7 +115,7 @@ export function ProviderStatus({ projections }: { projections: ProviderProjectio
           <div className="space-y-2">
             <h2 id="provider-next-action" className="text-2xl font-semibold tracking-[-0.03em]">{action.message}</h2>
             <p className="max-w-prose text-sm leading-6 text-foreground/80">
-              {offering === undefined ? "Prepare the existing RiskScan offering in the local wizard. A preview is not a public offer. Evidence, terms, directory, and signer appear here once a signed offering command is admitted." : "Review the current local preparation before advancing the provider path."}
+              {summary}
               {" "}<Link className={`underline underline-offset-4 ${focusRing}`} href="/docs/providers">How provider records are admitted</Link>
             </p>
           </div>
