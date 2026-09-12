@@ -153,3 +153,35 @@ Under Node 22.21.1:
   sandbox-only Turbopack process/port failure at `globals.css`;
 - fresh independent task and final code/spec/security reviews found no
   actionable finding; Vercel Preview is Ready for this exact head.
+
+## PR #100 selected-tool recovery correction
+
+The executable correction is
+`5cbdade88e401b7a473f7b6cf6eb782cae981ae9`, based on exact `origin/main`
+`94c4bec1ddeff29bc86cf7b88b3cdaccb0837097`. It keeps M55 `20-active` and
+does not authorize a wallet signature, ATS transaction, authority action, or
+live deployment.
+
+The browser bridge now derives Factory calldata from the validated selected
+tool configuration with the existing official Factory encoder. It accepts a
+Mirror candidate only when the documented ContractResult
+`function_parameters` exactly equals that calldata, on both initial and final
+Mirror reads. The post-send path uses the same generated calldata. A mismatch
+or unavailable public input remains `submission_unknown` with its known hash;
+it neither emits a candidate nor issues an attachment or replacement send.
+The independent fixed-endpoint server verifier and its atomic one-candidate
+exclusivity remain unchanged.
+
+Under Node 22.21.1 at that executable head:
+
+- focused browser recovery, A/B/C journey, ATS action, receipt reader, and
+  corroboration contracts passed 73/73; the journey proves B rejects A before
+  attachment, remains unchanged, and can then recover B's own transaction;
+- the complete Backend workspace passed 350/350; root typecheck, lint, and
+  queue check passed, as did `git diff --check`;
+- the direct complete Web workspace has one inherited failure at
+  `dashboard-auth.test.mjs:378` (511 pass, one skip, one fail), caused by its
+  obsolete no-`address` assertion against unchanged dashboard navigation;
+- `npm run build` stops at the same sandbox-only Turbopack process/port error
+  on exact main and the executable head, while processing `globals.css`;
+- a fresh independent standards/security review found no actionable P1/P2.
