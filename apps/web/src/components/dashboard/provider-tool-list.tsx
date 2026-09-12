@@ -63,7 +63,7 @@ export function ProviderToolList() {
         {tools.map((tool) => (
           <li key={tool.toolPublicId} className="flex flex-wrap items-center justify-between gap-3 rounded-control border border-border bg-background p-3">
             <div className="min-w-0"><p className="truncate font-semibold">{tool.title}</p><p className="mt-1 break-all font-mono text-xs text-muted-foreground">{tool.toolPublicId}</p></div>
-            <div className="flex items-center gap-2"><Badge variant="secondary">{tool.state}</Badge><Link href={`/provider/deploy?tool=${encodeURIComponent(tool.toolPublicId)}`} className={buttonVariants({ variant: "outline", size: "sm" })}>{tool.state === "OPEN" || tool.state === "CLOSED" ? "View" : "Resume"}</Link></div>
+            <div className="flex items-center gap-2"><Badge variant="secondary">{tool.state}</Badge><Link href={tool.state === "OPEN" || tool.state === "CLOSED" ? `/provider?tool=${encodeURIComponent(tool.toolPublicId)}` : `/provider/deploy?tool=${encodeURIComponent(tool.toolPublicId)}`} className={buttonVariants({ variant: "outline", size: "sm" })}>{tool.state === "OPEN" || tool.state === "CLOSED" ? "View" : "Resume"}</Link></div>
           </li>
         ))}
       </ul>

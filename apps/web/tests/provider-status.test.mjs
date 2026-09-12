@@ -12,6 +12,7 @@ const sourcePaths = [
   "src/lib/offering-projection.ts",
   "src/components/provider/status/provider-status.tsx",
   "src/components/provider/status/provider-status-state.ts",
+  "src/components/dashboard/provider-tool-list.tsx",
 ];
 const sourceExists = sourcePaths.every((path) => existsSync(join(appRoot, path)));
 const implementedTest = sourceExists ? test : test.skip;
@@ -146,6 +147,48 @@ implementedTest("uses the selected generated service slug instead of the global 
   assert.equal(toolId.startsWith("tool_"), true);
 });
 
+implementedTest("fails closed when a selected tool receives a mismatched offering or Directory projection", async () => {
+  const suffix = "a".repeat(32);
+  const toolId = `tool_${suffix}`;
+  const offeringId = `offering_${suffix}`;
+  const serviceSlug = `tool-${suffix}`;
+  const selectedOffering = offeringRecord({ offeringPublicId: offeringId, subjectPublicId: toolId });
+  const selectedDirectory = directoryRecord({ serviceId: toolId, serviceSlug, offeringPublicId: offeringId });
+  const environment = { TOOL402_CONVEX_SITE_URL: "https://convex.example.test/" };
+
+  const mismatchedDirectory = await projection.readProviderProjections(environment, async (input) => (
+    input.pathname.startsWith("/public/offerings/")
+      ? json({ outcome: "FOUND", record: selectedOffering })
+      : json({ outcome: "FOUND", record: { ...selectedDirectory, offeringPublicId: "offering_other" }, directoryVersion: 1 })
+  ), offeringId, serviceSlug);
+  assert.equal(mismatchedDirectory.offering.outcome, "loaded");
+  assert.equal(mismatchedDirectory.directory.outcome, "unexpected_response");
+
+  const mismatchedOffering = await projection.readProviderProjections(environment, async (input) => (
+    input.pathname.startsWith("/public/offerings/")
+      ? json({ outcome: "FOUND", record: { ...selectedOffering, subjectPublicId: `tool_${"b".repeat(32)}` } })
+      : json({ outcome: "FOUND", record: selectedDirectory, directoryVersion: 1 })
+  ), offeringId, serviceSlug);
+  assert.equal(mismatchedOffering.offering.outcome, "unexpected_response");
+  assert.equal(mismatchedOffering.directory.outcome, "loaded");
+});
+
+implementedTest("routes an OPEN selected tool to its own Provider status projection", async () => {
+  const sources = await readSources();
+  const page = sources["src/app/provider/page.tsx"];
+  const list = sources["src/components/dashboard/provider-tool-list.tsx"];
+
+  assert.match(page, /searchParams:\s*Promise<\{\s*tool\?:\s*string\s*\|\s*string\[\]\s*\}>/u);
+  assert.match(page, /parseProviderToolId/u);
+  assert.match(page, /notFound\(\)/u);
+  assert.match(page, /`offering_\$\{selectedToolPublicId\.slice\(5\)\}`/u);
+  assert.match(page, /`tool-\$\{selectedToolPublicId\.slice\(5\)\}`/u);
+  assert.match(page, /<ProviderStatusRegions\s+selectedToolPublicId=\{selectedToolPublicId\}\s*\/>/u);
+  assert.match(list, /tool\.state\s*===\s*["']OPEN["']\s*\|\|\s*tool\.state\s*===\s*["']CLOSED["']/u);
+  assert.match(list, /\/provider\?tool=\$\{encodeURIComponent\(tool\.toolPublicId\)\}/u);
+  assert.match(list, /\/provider\/deploy\?tool=\$\{encodeURIComponent\(tool\.toolPublicId\)\}/u);
+});
+
 implementedTest("loads only a complete valid directory projection", async () => {
   const record = directoryRecord();
   const environment = { TOOL402_CONVEX_SITE_URL: "https://convex.example.test/" };
@@ -277,7 +320,7 @@ implementedTest("gives each projection its own deadline and rejects bodies above
 implementedTest("renders only the fixed status regions, actions, evidence rows, and gated external link", async () => {
   const sources = await readSources();
   const page = sources["src/app/provider/page.tsx"];
-  assert.match(page, /readProviderProjections\(process\.env, globalThis\.fetch, riskScanOfferingPublicId\)/u);
+  assert.match(page, /selectedToolPublicId\s*===\s*undefined\s*\?\s*riskScanOfferingPublicId/u);
   const status = sources["src/components/provider/status/provider-status.tsx"];
   const state = sources["src/components/provider/status/provider-status-state.ts"];
   const presentation = `${page}\n${status}\n${state}`;
@@ -459,6 +502,6 @@ implementedTest("derives the fixed region order, next actions, evidence cells, a
 implementedTest("reads the current campaign shared with the signed dashboard", async () => {
   const page = (await readSources())["src/app/provider/page.tsx"];
   assert.match(page, /import\s*\{\s*riskScanOfferingPublicId\s*\}\s*from\s*["'][^"']*dashboard-campaign["']/);
-  assert.match(page, /readProviderProjections\(process\.env, globalThis\.fetch, riskScanOfferingPublicId\)/);
+  assert.match(page, /selectedToolPublicId\s*===\s*undefined\s*\?\s*riskScanOfferingPublicId/);
   assert.doesNotMatch(page, /riskscan_offering_demo/);
 });
