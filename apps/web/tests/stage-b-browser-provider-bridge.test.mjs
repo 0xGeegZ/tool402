@@ -768,6 +768,10 @@ implementedTest("rejects or ignores caller-supplied routing and transaction over
   const outcome = await bridge.execute();
   const send = provider.calls.find(({ method }) => method === "eth_sendTransaction");
 
+  if (outcome.kind === "rejected") {
+    assert.equal(send, undefined, "a malformed selected-tool configuration must fail before any send");
+    return;
+  }
   assert.equal(outcome.kind, "submission_unknown");
   assert.deepEqual(send?.params, [{
     from: issuer,

@@ -130,11 +130,11 @@ const expectedM40 = {
       idempotencyKey: string,
       offeringVersion: number,
       directoryVersion: number,
-      serviceSlug: literal("riskscan"),
+      serviceSlug: string,
       record: object({
         schemaVersion: literal(1),
         serviceId: string,
-        serviceSlug: literal("riskscan"),
+        serviceSlug: string,
         offeringPublicId: string,
         offeringVersion: number,
         capabilities: array(literal("evm-contract-risk-signals")),

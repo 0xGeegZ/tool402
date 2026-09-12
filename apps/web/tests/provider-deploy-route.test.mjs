@@ -316,7 +316,7 @@ implementedTest("renders the direct provider deploy route as a server page over 
   const fixture = sources["src/components/provider/deploy/campaign-fixture.ts"];
 
   assert.match(page, /import\s*\{\s*ProviderDeployWizard\s*\}\s+from\s+["'][^"']*provider-deploy-wizard["']/);
-  assert.match(page, /<ProviderDeployWizard\s*\/>/);
+  assert.match(page, /<ProviderDeployWizard\s+selectedToolPublicId=\{selectedToolPublicId\}\s*\/>/);
   assert.doesNotMatch(page, /["']use client["']/);
   assert.match(fixture, /PREPARED\s*\/\s*DEMO DATA/);
   assert.match(fixture, /Object\.freeze/);
@@ -364,7 +364,7 @@ implementedTest("keeps unavailable configuration rows blank and stage outcomes a
   const wizard = sources["src/components/provider/deploy/provider-deploy-wizard.tsx"];
   const stages = sources["src/components/provider/deploy/provider-deploy-stages.tsx"];
 
-  assert.match(wizard, /not configured/i);
+  assert.match(wizard, /ATS configuration is derived only after its offering is recorded/i);
   assert.match(stages, /aria-live=["']polite["']/);
   assert.match(stages, /server gave no reason/i);
   assert.match(stages, /nothing was recorded/i);
