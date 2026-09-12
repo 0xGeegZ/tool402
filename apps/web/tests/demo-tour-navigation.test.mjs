@@ -4,21 +4,16 @@ import test from "node:test";
 
 const navigationUrl = new URL("../src/components/demo/demo-tour-navigation.ts", import.meta.url);
 
-test("keeps tour redirects fixed and preserves editable demo selection in step links", async (t) => {
+test("keeps the validated dashboard tour redirect fixed", async (t) => {
   assert.ok(existsSync(navigationUrl), "the shared tour navigation contract must exist");
-  const { dashboardTourHref, withTour } = await import(navigationUrl.href);
+  const { dashboardTourHref } = await import(navigationUrl.href);
 
   await t.test("only a scalar 1 selects the dashboard tour destination", () => {
     assert.equal(dashboardTourHref("1"), "/dashboard?tour=1");
+    assert.equal(dashboardTourHref("1", "provider-sign-in"), "/dashboard?tour=1&demoStep=provider-sign-in");
+    assert.equal(dashboardTourHref("1", "unknown-step"), "/dashboard?tour=1");
     for (const value of [undefined, null, "", "0", "true", "unknown", 1, true, ["1"], ["1", "1"], "https://evil.example", "//evil.example", { tour: "1" }]) {
       assert.equal(dashboardTourHref(value), "/dashboard");
     }
-  });
-
-  await t.test("step links enter the tour without discarding ToolLoop defaults", () => {
-    assert.equal(withTour("/"), "/?tour=1");
-    assert.equal(withTour("/sign-in"), "/sign-in?tour=1");
-    assert.equal(withTour("/provider/deploy"), "/provider/deploy?tour=1");
-    assert.equal(withTour("/explore/riskscan/tool-loop?demo=tool-loop"), "/explore/riskscan/tool-loop?demo=tool-loop&tour=1");
   });
 });

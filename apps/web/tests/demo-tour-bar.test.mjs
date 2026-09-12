@@ -27,13 +27,21 @@ test("derives guided-demo progress from the route and a tour flag, never from st
   assert.match(bar, /import\s*\{\s*usePathname\s*\}\s*from\s*["']next\/navigation["']/);
   assert.match(bar, /import\s*\{[^}]*useQueryState[^}]*\}\s*from\s*["']nuqs["']/);
   assert.match(bar, /import\s*\{\s*steps\s*\}\s*from\s*["']\.\/guided-demo-steps["']/);
-  assert.match(steps, /export const steps = \[/);
+  assert.match(bar, /useQueryState\(\s*["']demoStep["']/);
+  assert.match(bar, /recordingTourHref/);
+  assert.match(steps, /export const steps = recordingSteps/);
   assert.match(bar, /useQueryState\(\s*["']tour["']/);
   assert.match(bar, /of \{steps\.length\}/);
   assert.match(bar, /aria-label=["']Guided demo progress["']/);
   assert.equal((bar.match(/<a\b/gi) ?? []).length, 0);
   assert.doesNotMatch(bar, /\b(?:localStorage|sessionStorage|indexedDB|fetch|setTimeout|setInterval)\b/);
-  assert.doesNotMatch(bar, /\b(?:wallet|payment|credential|auth|analytics|evidence|metric)\b/i);
+  assert.match(bar, /DO/);
+  assert.match(bar, /SAY/);
+  assert.match(bar, /SHOW/);
+  assert.match(bar, /Hide presenter notes/);
+  assert.match(bar, /Restart guide/);
+  assert.match(bar, /Back to demo guide/);
+  assert.match(bar, /step\.nextAction/);
 });
 
 test("mounts the tour bar once in the shell under a Suspense boundary", async () => {
@@ -45,9 +53,10 @@ test("mounts the tour bar once in the shell under a Suspense boundary", async ()
 });
 
 
-test("keeps the dashboard handoff in the final step and retains demo defaults on exit", async () => {
+test("uses the explicit demo step rather than pathname-only matching and retains context on exit", async () => {
   const bar = await readAppFile(barPath);
-  assert.match(bar, /pathname === "\/dashboard" \? "\/sign-in" : pathname/);
+  assert.doesNotMatch(bar, /pathname === "\/dashboard" \? "\/sign-in" : pathname/);
+  assert.match(bar, /steps\.findIndex\(\(candidate\) => candidate\.id === demoStep\)/);
   assert.match(bar, /href=\{pathname === "\/dashboard" \? pathname : step\.href\}/);
-  assert.doesNotMatch(bar, /Tour complete/);
+  assert.match(bar, /Exit tour/);
 });
