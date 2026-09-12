@@ -156,11 +156,19 @@ export function DeployStageSigning({
           setResults([{ kind: "done", detail: "Recovered from this tool's durable offering record." }]);
           onResume?.();
         } else if (deployment.state === "ASSET_PENDING" && deployment.atsAttemptPublicId !== null) {
-          setResults([
+          const recovered: ProviderDeployStageState[] = [
             { kind: "done", detail: "Recovered from this tool's durable offering record." },
             { kind: "done", detail: "Recovered from this tool's durable prepared attempt." },
-          ]);
+          ];
+          if (deployment.atsCandidate !== null) {
+            recovered.push({
+              kind: "actionable",
+              detail: "Recheck the attached receipt. This sends no wallet transaction; directory publication stays blocked until durable corroboration.",
+            });
+          }
+          setResults(recovered);
           setAttemptPublicId(deployment.atsAttemptPublicId);
+          setCandidate(deployment.atsCandidate);
           onResume?.();
         } else if (deployment.state === "READY") {
           setResults([
@@ -206,13 +214,24 @@ export function DeployStageSigning({
     const stageState = result.outcome === "not_configured"
       ? { kind: "unavailable" as const, detail: notConfiguredDetail }
       : stageStateForSignatureResult(result);
+    const selectedAttachmentAwaitingCorroboration = request.stage === 2
+      && selectedToolPublicId !== undefined
+      && (stageState.kind === "done" || stageState.kind === "replayed");
     setResults((previous) => {
       const next = [...previous];
-      next[request.stage] = stageState;
+      next[request.stage] = selectedAttachmentAwaitingCorroboration
+        ? {
+          kind: "actionable",
+          detail: "Recheck the attached receipt. This sends no wallet transaction; directory publication stays blocked until durable corroboration.",
+        }
+        : stageState;
       return next;
     });
     if (request.stage === 1 && stageState.kind === "done") setAttemptPublicId(request.idempotencyKey);
     if (request.stage === 0 && stageState.kind === "done" && selectedToolPublicId !== undefined) {
+      setSelectedRefresh((current) => current + 1);
+    }
+    if (selectedAttachmentAwaitingCorroboration) {
       setSelectedRefresh((current) => current + 1);
     }
     activeRequestContext.current = null;

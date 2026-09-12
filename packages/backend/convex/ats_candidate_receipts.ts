@@ -699,6 +699,7 @@ export const readAtsCandidateVerificationContext = internalQuery({
     expectedTarget: v.string(),
     candidateTransactionId: v.optional(v.string()),
     candidateEvmAddress: v.optional(v.string()),
+    selectedProviderTool: v.boolean(),
   })),
   handler: async (ctx, args) => {
     const row = await ctx.db.get(args.attemptId);
@@ -718,6 +719,7 @@ export const readAtsCandidateVerificationContext = internalQuery({
       ...(attempt.candidateEvmAddress === undefined
         ? {}
         : { candidateEvmAddress: attempt.candidateEvmAddress }),
+      selectedProviderTool: isSelectedProviderToolSubject(attempt.subjectPublicId),
     };
   },
 });
@@ -725,8 +727,8 @@ export const readAtsCandidateVerificationContext = internalQuery({
 /**
  * Attach a selected tool's ATS asset only after a trusted caller supplies
  * receipt documents matching the durable, server-rederived Factory calldata.
- * This mutation intentionally performs no RPC work; a future reader may inject
- * documents, while unavailable or malformed evidence leaves the offering pending.
+ * This mutation intentionally performs no RPC work; the pinned internal reader
+ * supplies documents, while unavailable or malformed evidence leaves the offering pending.
  */
 export const corroborateSelectedProviderToolAtsReceipt = internalMutation({
   args: {

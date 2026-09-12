@@ -287,9 +287,10 @@ function authorityFor(type, payload) {
   };
 }
 
-function commandContext({ mutationResult, mutationResults, mutationError, queryResult, queryError } = {}) {
+function commandContext({ mutationResult, mutationResults, mutationError, queryResult, queryError, scheduleError } = {}) {
   const mutations = [];
   const queries = [];
+  const schedules = [];
   const queuedMutationResults = mutationResults === undefined ? null : [...mutationResults];
   const forbidden = () => {
     throw new Error("unexpected external operation");
@@ -309,9 +310,16 @@ function commandContext({ mutationResult, mutationResults, mutationError, queryR
         return queryResult;
       },
       runAction: forbidden,
-      scheduler: { runAfter: forbidden, runAt: forbidden },
+      scheduler: {
+        async runAfter(delay, reference, args) {
+          if (scheduleError !== undefined) throw scheduleError;
+          schedules.push({ delay, name: getFunctionName(reference), args: structuredClone(args) });
+        },
+        runAt: forbidden,
+      },
       db: forbidden,
     },
+    schedules,
   };
 }
 
@@ -1010,7 +1018,40 @@ implementedTest("maps M43 attachment results through the existing public respons
       authorityVersion: "authority-v1",
       replayIdentity: walletReplayIdentity,
     }, name);
+    assert.deepEqual(state.schedules, name === "ATTACHED" || name === "ALREADY_ATTACHED"
+      ? [{
+        delay: 0,
+        name: "ats_receipt_verification:verifyAtsCandidateReceipt",
+        args: { attemptId: "externalPrepareCommandAttempts:private" },
+      }]
+      : [], name);
     assert.equal(Object.hasOwn(body, "publicId"), expected.outcome !== "REJECTED", name);
+  }
+});
+
+implementedTest("keeps a scheduler failure retryable through a fresh ALREADY_ATTACHED receipt signature", async () => {
+  const { handleCommandIngressForTest } = await import(dispatchUrl);
+  const payload = attachCandidatePayload();
+
+  for (const [result, scheduleError, expected] of [
+    [{ status: "ATTACHED", attemptId: "externalPrepareCommandAttempts:private", state: "SUBMITTED" }, new Error("scheduler unavailable"), { outcome: "ACCEPTED", publicId: payload.attemptPublicId }],
+    [{ status: "ALREADY_ATTACHED", attemptId: "externalPrepareCommandAttempts:private", state: "SUBMITTED" }, undefined, { outcome: "REPLAYED", publicId: payload.attemptPublicId }],
+  ]) {
+    const transport = await signedTransport("external.attachCandidate", payload);
+    const ingress = await signedIngressRequest(transport);
+    const state = commandContext({ mutationResult: result, scheduleError });
+    const seamState = testSeams({ key: ingress.key, type: "external.attachCandidate", payload });
+    const response = await handleCommandIngressForTest(state.ctx, ingress.request, seamState.seams);
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(await responseJson(response), expected);
+    assert.deepEqual(state.schedules, scheduleError === undefined
+      ? [{
+        delay: 0,
+        name: "ats_receipt_verification:verifyAtsCandidateReceipt",
+        args: { attemptId: "externalPrepareCommandAttempts:private" },
+      }]
+      : []);
   }
 });
 

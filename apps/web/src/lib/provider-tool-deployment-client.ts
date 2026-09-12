@@ -7,6 +7,7 @@ export type ProviderToolDeployment = Readonly<{
   state: "ALLOCATED" | "DRAFT" | "ASSET_PENDING" | "READY" | "OPEN" | "CLOSED";
   title: string;
   atsAttemptPublicId: string | null;
+  atsCandidate: Readonly<{ transactionId: string; evmAddress: string }> | null;
   durableValues: ProviderToolDurableValues | null;
 }>;
 
@@ -24,7 +25,7 @@ export type ProviderToolDurableValues = Readonly<{
 export function parseProviderToolDeployment(input: unknown, expectedToolPublicId: string): ProviderToolDeployment | null {
   if (!toolIdPattern.test(expectedToolPublicId) || input === null || typeof input !== "object" || Object.getPrototypeOf(input) !== Object.prototype) return null;
   const record = input as Record<string, unknown>;
-  if (Reflect.ownKeys(record).length !== 4 || !Object.hasOwn(record, "tool") || !Object.hasOwn(record, "atsCreateConfigurationJson") || !Object.hasOwn(record, "atsAttemptPublicId") || !Object.hasOwn(record, "durableValues")) return null;
+  if (Reflect.ownKeys(record).length !== 5 || !Object.hasOwn(record, "tool") || !Object.hasOwn(record, "atsCreateConfigurationJson") || !Object.hasOwn(record, "atsAttemptPublicId") || !Object.hasOwn(record, "atsCandidate") || !Object.hasOwn(record, "durableValues")) return null;
   if (record.tool === null || typeof record.tool !== "object" || Object.getPrototypeOf(record.tool) !== Object.prototype) return null;
   const tool = record.tool as Record<string, unknown>;
   const suffix = expectedToolPublicId.slice("tool_".length);
@@ -37,9 +38,11 @@ export function parseProviderToolDeployment(input: unknown, expectedToolPublicId
   if ((state === "ASSET_PENDING" && (typeof attempt !== "string" || !/^[A-Za-z0-9_-]{21}[AQgw]$/u.test(attempt)))
     || (state !== "ASSET_PENDING" && attempt !== null)) return null;
   const atsAttemptPublicId = typeof attempt === "string" ? attempt : null;
+  const atsCandidate = parseAtsCandidate(record.atsCandidate);
+  if (atsCandidate === undefined || (state !== "ASSET_PENDING" && atsCandidate !== null)) return null;
   const durableValues = parseDurableValues(record.durableValues);
   if (record.atsCreateConfigurationJson === null) return state === "ALLOCATED" && durableValues === null
-    ? Object.freeze({ ats: null, state, title, atsAttemptPublicId: null, durableValues: null })
+    ? Object.freeze({ ats: null, state, title, atsAttemptPublicId: null, atsCandidate: null, durableValues: null })
     : null;
   if (durableValues === null) return null;
   if (typeof record.atsCreateConfigurationJson !== "string" || record.atsCreateConfigurationJson.length > 16_384) return null;
@@ -49,11 +52,21 @@ export function parseProviderToolDeployment(input: unknown, expectedToolPublicId
         toolPublicId: expectedToolPublicId,
         offeringPublicId: `offering_${suffix}`,
         configuration: JSON.parse(record.atsCreateConfigurationJson),
-      }), state, title, atsAttemptPublicId, durableValues,
+      }), state, title, atsAttemptPublicId, atsCandidate, durableValues,
     });
   } catch {
     return null;
   }
+}
+
+function parseAtsCandidate(value: unknown): Readonly<{ transactionId: string; evmAddress: string }> | null | undefined {
+  if (value === null) return null;
+  if (value === null || typeof value !== "object" || Object.getPrototypeOf(value) !== Object.prototype) return undefined;
+  const record = value as Record<string, unknown>;
+  if (Reflect.ownKeys(record).length !== 2 || !Object.hasOwn(record, "transactionId") || !Object.hasOwn(record, "evmAddress")
+    || typeof record.transactionId !== "string" || !/^0\.0\.[0-9]+(?:@[0-9]+\.[0-9]+|-[0-9]+-[0-9]+)$/u.test(record.transactionId)
+    || typeof record.evmAddress !== "string" || !/^0x[0-9a-f]{40}$/u.test(record.evmAddress)) return undefined;
+  return Object.freeze({ transactionId: record.transactionId, evmAddress: record.evmAddress });
 }
 
 function parseDurableValues(value: unknown): ProviderToolDurableValues | null {

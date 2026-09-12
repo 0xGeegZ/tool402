@@ -581,6 +581,7 @@ implementedTest("does not project a prototype-supplied candidate address from a 
       chainId: 296,
       expectedTarget,
       candidateTransactionId: "0.0.123@1735689600.123456789",
+      selectedProviderTool: false,
     });
     assert.equal(Object.hasOwn(context, "candidateEvmAddress"), false);
   } finally {
@@ -704,6 +705,7 @@ implementedTest("returns only the minimal verification context and terminalizes 
       expectedTarget,
       candidateTransactionId: "0.0.123@1735689600.123456789",
       candidateEvmAddress: candidateAddress,
+      selectedProviderTool: false,
     },
   );
 

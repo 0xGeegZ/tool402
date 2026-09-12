@@ -432,6 +432,7 @@ implementedTest("returns ATS configuration only from the exact durable selected-
     },
     atsCreateConfigurationJson: null,
     atsAttemptPublicId: null,
+    atsCandidate: null,
     durableValues: null,
   });
 
@@ -473,7 +474,7 @@ implementedTest("returns ATS configuration only from the exact durable selected-
   );
 });
 
-implementedTest("recovers only the exact selected tool's durable prepared attempt", async () => {
+implementedTest("recovers only the exact selected tool's durable pending ATS attempt", async () => {
   const { readOwnedToolDeployment } = await import(sourceUrl.href);
   const mine = tool();
   const attemptId = "externalPrepareCommandAttempts:mine";
@@ -492,9 +493,33 @@ implementedTest("recovers only the exact selected tool's durable prepared attemp
   assert.equal(recovered.tool.state, "ASSET_PENDING");
   assert.equal(recovered.atsAttemptPublicId, attemptPublicId);
 
+  const attached = {
+    ...attempt,
+    state: "SUBMITTED",
+    candidateTransactionId: "0.0.123-1735689600-123456789",
+    candidateEvmAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  };
+  const recoveredAttachment = await readOwnedToolDeployment._handler(
+    database({ tools: [mine], offerings: [pending], attempts: [attached] }).ctx,
+    { canonicalSignerAddress, toolPublicId: mine.toolPublicId },
+  );
+  assert.equal(recoveredAttachment.tool.state, "ASSET_PENDING");
+  assert.equal(recoveredAttachment.atsAttemptPublicId, attemptPublicId);
+  assert.deepEqual(recoveredAttachment.atsCandidate, {
+    transactionId: "0.0.123-1735689600-123456789",
+    evmAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  });
+
   assert.equal(
     await readOwnedToolDeployment._handler(
       database({ tools: [mine], offerings: [pending], attempts: [{ ...attempt, subjectPublicId: `tool_${"cd".repeat(16)}` }] }).ctx,
+      { canonicalSignerAddress, toolPublicId: mine.toolPublicId },
+    ),
+    null,
+  );
+  assert.equal(
+    await readOwnedToolDeployment._handler(
+      database({ tools: [mine], offerings: [pending], attempts: [{ ...attached, candidateEvmAddress: "not-an-address" }] }).ctx,
       { canonicalSignerAddress, toolPublicId: mine.toolPublicId },
     ),
     null,

@@ -82,6 +82,9 @@ const admitDirectoryPublishReference = makeFunctionReference<"mutation">(
 const attachAtsCandidateReceiptReference = makeFunctionReference<"mutation">(
   "ats_candidate_receipts:attachAtsCandidateReceipt",
 );
+const verifyAtsCandidateReceiptReference = makeFunctionReference<"action">(
+  "ats_receipt_verification:verifyAtsCandidateReceipt",
+);
 const getOfferingProjectionReference = makeFunctionReference<"query">(
   "offerings:getPublicProjection",
 );
@@ -131,6 +134,20 @@ const commandDispatch: Readonly<Record<NormalizedCommand["type"], DispatchEntry>
         authorityVersion: command.authorityVersion,
         replayIdentity: command.replayIdentity,
       });
+      const attachmentStatus = result !== null && typeof result === "object"
+        ? Object.getOwnPropertyDescriptor(result, "status")?.value
+        : undefined;
+      if (attachmentStatus === "ATTACHED" || attachmentStatus === "ALREADY_ATTACHED") {
+        const attemptId = Object.getOwnPropertyDescriptor(result, "attemptId")?.value;
+        if (typeof attemptId === "string") {
+          try {
+            await ctx.scheduler.runAfter(0, verifyAtsCandidateReceiptReference, { attemptId });
+          } catch {
+            // A scheduling failure leaves the durable offering ASSET_PENDING. The
+            // signed attachment response must not claim corroboration succeeded.
+          }
+        }
+      }
       return mapAttachmentResult(result, command.payload.attemptPublicId);
     },
   }),

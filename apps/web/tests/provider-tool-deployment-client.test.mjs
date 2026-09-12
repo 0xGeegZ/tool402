@@ -26,6 +26,7 @@ test("accepts only an exact selected-tool ATS configuration from the protected d
     tool: { toolPublicId, subjectPublicId: toolPublicId, offeringPublicId, title: "Second RiskScan", state: "DRAFT" },
     atsCreateConfigurationJson: JSON.stringify(configuration),
     atsAttemptPublicId: null,
+    atsCandidate: null,
     durableValues,
   }, toolPublicId);
   assert.equal(parsed?.ats?.command.subjectPublicId, toolPublicId);
@@ -41,12 +42,31 @@ test("fails closed for a mismatched tool or a tampered configuration", () => {
     tool: { toolPublicId, subjectPublicId: toolPublicId, offeringPublicId: "offering_other", title: "Second RiskScan", state: "DRAFT" },
     atsCreateConfigurationJson: JSON.stringify(configuration),
     atsAttemptPublicId: null,
+    atsCandidate: null,
     durableValues,
   }, toolPublicId), null);
   assert.equal(parseProviderToolDeployment({
     tool: { toolPublicId, subjectPublicId: toolPublicId, offeringPublicId, title: "Second RiskScan", state: "DRAFT" },
     atsCreateConfigurationJson: JSON.stringify({ ...configuration, canonicalParametersHash: "0".repeat(64) }),
     atsAttemptPublicId: null,
+    atsCandidate: null,
     durableValues,
   }, toolPublicId), null);
+});
+
+test("accepts one exact submitted ATS candidate only for the selected pending tool", () => {
+  const configuration = createProviderToolAtsConfiguration({
+    toolPublicId, subjectPublicId: toolPublicId, title: "Second RiskScan", canonicalSignerAddress: signer,
+  }).atsCreateConfiguration;
+  const input = {
+    tool: { toolPublicId, subjectPublicId: toolPublicId, offeringPublicId, title: "Second RiskScan", state: "ASSET_PENDING" },
+    atsCreateConfigurationJson: JSON.stringify(configuration),
+    atsAttemptPublicId: "CCCCCCCCCCCCCCCCCCCCCg",
+    atsCandidate: { transactionId: "0.0.123-1735689600-123456789", evmAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+    durableValues,
+  };
+  assert.deepEqual(parseProviderToolDeployment(input, toolPublicId)?.atsCandidate, input.atsCandidate);
+  assert.equal(parseProviderToolDeployment({ ...input, atsCandidate: { ...input.atsCandidate, extra: true } }, toolPublicId), null);
+  assert.equal(parseProviderToolDeployment({ ...input, atsCandidate: { ...input.atsCandidate, evmAddress: "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" } }, toolPublicId), null);
+  assert.equal(parseProviderToolDeployment({ ...input, tool: { ...input.tool, state: "READY" }, atsAttemptPublicId: null }, toolPublicId), null);
 });

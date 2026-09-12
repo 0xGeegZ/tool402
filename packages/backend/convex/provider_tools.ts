@@ -18,6 +18,7 @@ const internalQuery: QueryBuilder<DataModelFromSchemaDefinition<typeof schema>, 
 
 const addressPattern = /^0x[0-9a-f]{40}$/u;
 const requestIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
+const candidateTransactionIdPattern = /^0\.0\.[0-9]+(?:@[0-9]+\.[0-9]+|-[0-9]+-[0-9]+)$/u;
 const stateValidator = v.union(
   v.literal("ALLOCATED"), v.literal("DRAFT"), v.literal("ASSET_PENDING"),
   v.literal("READY"), v.literal("OPEN"), v.literal("CLOSED"),
@@ -35,6 +36,7 @@ const deploymentValidator = v.object({
   tool: toolValidator,
   atsCreateConfigurationJson: v.union(v.string(), v.null()),
   atsAttemptPublicId: v.union(v.string(), v.null()),
+  atsCandidate: v.union(v.object({ transactionId: v.string(), evmAddress: v.string() }), v.null()),
   durableValues: v.union(v.object({
     toolName: v.string(),
     customerProblem: v.string(),
@@ -68,8 +70,10 @@ type ToolDeploymentProjection = Readonly<{
   tool: ToolProjection;
   atsCreateConfigurationJson: string | null;
   atsAttemptPublicId: string | null;
+  atsCandidate: AtsCandidate | null;
   durableValues: ToolDurableValues | null;
 }>;
+type AtsCandidate = Readonly<{ transactionId: string; evmAddress: string }>;
 type ToolDurableValues = Readonly<{
   toolName: string;
   customerProblem: string;
@@ -173,7 +177,7 @@ async function projectDeployment(ctx: DatabaseContext, value: unknown): Promise<
   const tool = await project(ctx, value);
   if (allocation === null || tool === null) return null;
   if (tool.state === "ALLOCATED") {
-    return Object.freeze({ tool, atsCreateConfigurationJson: null, atsAttemptPublicId: null, durableValues: null });
+    return Object.freeze({ tool, atsCreateConfigurationJson: null, atsAttemptPublicId: null, atsCandidate: null, durableValues: null });
   }
   const offerings = await ctx.db.query("offerings")
     .withIndex("by_offering_public_id_and_version", (query) => query.eq("offeringPublicId", allocation.offeringPublicId))
@@ -188,9 +192,15 @@ async function projectDeployment(ctx: DatabaseContext, value: unknown): Promise<
       title: tool.title,
       canonicalSignerAddress: allocation.canonicalSignerAddress,
     });
-    const atsAttemptPublicId = await pendingAttemptPublicId(ctx, allocation, tool.state);
-    if (tool.state === "ASSET_PENDING" && atsAttemptPublicId === null) return null;
-    return Object.freeze({ tool, atsCreateConfigurationJson: JSON.stringify(configuration.atsCreateConfiguration), atsAttemptPublicId, durableValues });
+    const pending = await pendingAttempt(ctx, allocation, tool.state);
+    if (tool.state === "ASSET_PENDING" && pending === null) return null;
+    return Object.freeze({
+      tool,
+      atsCreateConfigurationJson: JSON.stringify(configuration.atsCreateConfiguration),
+      atsAttemptPublicId: pending?.publicId ?? null,
+      atsCandidate: pending?.candidate ?? null,
+      durableValues,
+    });
   } catch {
     return null;
   }
@@ -225,11 +235,11 @@ function projectDurableValues(value: unknown): ToolDurableValues | null {
   });
 }
 
-async function pendingAttemptPublicId(
+async function pendingAttempt(
   ctx: DatabaseContext,
   allocation: ToolAllocation,
   state: ToolState,
-): Promise<string | null> {
+): Promise<Readonly<{ publicId: string; candidate: AtsCandidate | null }> | null> {
   if (state !== "ASSET_PENDING") return null;
   const offerings = await ctx.db.query("offerings")
     .withIndex("by_offering_public_id_and_version", (query) => query.eq("offeringPublicId", allocation.offeringPublicId))
@@ -240,19 +250,30 @@ async function pendingAttemptPublicId(
   const attempt = await ctx.db.get(offering.atsAttemptId as GenericId<"externalPrepareCommandAttempts">);
   if (attempt === null || typeof attempt !== "object") return null;
   const record = attempt as Record<string, unknown>;
-  return record.version === 1
+  const validIdentity = record.version === 1
     && record.type === "external.prepare"
     && record.chainId === 296
     && record.operationKind === "ATS_CREATE"
-    && record.state === "PREPARED"
+    && (record.state === "PREPARED" || record.state === "SUBMITTED")
     && record.subjectPublicId === allocation.subjectPublicId
     && record.canonicalSignerAddress === allocation.canonicalSignerAddress
     && record.principalPublicId === allocation.principalPublicId
     && record.authorityVersion === allocation.authorityVersion
     && typeof record.idempotencyKey === "string"
-    && /^[A-Za-z0-9_-]{21}[AQgw]$/u.test(record.idempotencyKey)
-    ? record.idempotencyKey
+    && /^[A-Za-z0-9_-]{21}[AQgw]$/u.test(record.idempotencyKey);
+  if (!validIdentity) return null;
+  const candidate = record.state === "SUBMITTED"
+    ? projectCandidate(record)
     : null;
+  if (record.state === "SUBMITTED" && candidate === null) return null;
+  if (typeof record.idempotencyKey !== "string") return null;
+  return Object.freeze({ publicId: record.idempotencyKey, candidate });
+}
+
+function projectCandidate(record: Record<string, unknown>): AtsCandidate | null {
+  if (typeof record.candidateTransactionId !== "string" || !candidateTransactionIdPattern.test(record.candidateTransactionId)
+    || typeof record.candidateEvmAddress !== "string" || !addressPattern.test(record.candidateEvmAddress)) return null;
+  return Object.freeze({ transactionId: record.candidateTransactionId, evmAddress: record.candidateEvmAddress });
 }
 
 function randomIdentity() {

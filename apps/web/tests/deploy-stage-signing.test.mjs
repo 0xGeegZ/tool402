@@ -17,7 +17,7 @@ async function readIsland() {
   return readFile(join(appRoot, islandPath), "utf8");
 }
 
-async function signingIslandHarness(values, renderReview, resume = null, onResume = undefined) {
+async function signingIslandHarness(values, renderReview, resume = null, onResume = undefined, options = {}) {
   const slots = [];
   let cursor = 0;
   let connectionRequests = 0;
@@ -75,12 +75,13 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
     },
     "../../../lib/provider-directory-configuration-client.ts": {
       loadProviderDirectoryConfiguration() {
-        return { then(resolve) { resolve(null); } };
+        return { then(resolve) { resolve(options.directoryConfiguration ?? null); } };
       },
     },
     "../../../lib/provider-tool-deployment-client.ts": {
       loadProviderToolDeployment() {
-        return { then(resolve) { resolve(null); } };
+        const deployment = typeof options.deployment === "function" ? options.deployment() : options.deployment ?? null;
+        return { then(resolve) { resolve(deployment); } };
       },
     },
     "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
@@ -119,7 +120,7 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
   return {
     render() {
       cursor = 0;
-      return module.exports.DeployStageSigning({ values, renderReview, onResume });
+      return module.exports.DeployStageSigning({ values, renderReview, onResume, selectedToolPublicId: options.selectedToolPublicId });
     },
     connect() {
       session = {
@@ -143,6 +144,10 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
       };
       slots[1] = [{ kind: "done" }, { kind: "done" }];
       slots[3] = "AAAAAAAAAAAAAAAAAAAAAA";
+    },
+    seedSelectedStageThreeCandidate() {
+      this.seedStageThreeCandidate();
+      slots[7] = { display: imports["./ats-create-configuration"].atsCreateConfiguration };
     },
     connectionRequests() { return connectionRequests; },
   };
@@ -346,6 +351,86 @@ implementedTest("retains each closed relay outcome after its signature dialog is
     if (detail !== undefined) assert.equal(afterStages.props.states[2].detail, detail, `${outcome} must retain its no-forward/no-record fact`);
     assert.equal(elements(after).some((element) => element.type === "SignatureDialog"), false);
   }
+});
+
+implementedTest("keeps directory publication blocked after a selected tool attaches until its durable projection is READY", async () => {
+  const { campaignFixture } = await import("../src/components/provider/deploy/campaign-fixture.ts");
+  const values = {
+    ...campaignFixture,
+    targetAgentCustomers: campaignFixture.targetAgentCustomers.join("\n"),
+    useOfFunds: campaignFixture.useOfFunds.join("\n"),
+    risks: campaignFixture.risks.join("\n"),
+  };
+  const harness = await signingIslandHarness(values, undefined, null, undefined, {
+    selectedToolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    directoryConfiguration: {
+      x402Endpoint: "https://api.tool402.test/riskscan",
+      clearingAccount: "0.0.10430877",
+    },
+  });
+  harness.connect();
+  harness.seedSelectedStageThreeCandidate();
+  const before = harness.render();
+  const stages = elements(before).find((element) => element.type === "ProviderDeployStages");
+  assert.equal(stages.props.enabledStage, 2);
+  stages.props.onActivate(2);
+  const dialog = elements(harness.render()).find((element) => element.type === "SignatureDialog");
+  assert.ok(dialog);
+  dialog.props.onResult({ phase: "complete", outcome: "ACCEPTED" });
+  const after = elements(harness.render()).find((element) => element.type === "ProviderDeployStages");
+  assert.equal(after.props.states[2].kind, "actionable");
+  assert.match(after.props.states[2].detail, /Recheck the attached receipt/u);
+  assert.equal(after.props.states[3].kind, "blocked");
+  assert.notEqual(after.props.enabledStage, 3);
+  after.props.onActivate(2);
+  const recheck = elements(harness.render()).find((element) => element.type === "SignatureDialog");
+  assert.ok(recheck);
+  assert.equal(recheck.props.request.type, "external.attachCandidate");
+});
+
+implementedTest("rehydrates the exact submitted candidate and refreshes a selected tool to READY after recheck", async () => {
+  const { campaignFixture } = await import("../src/components/provider/deploy/campaign-fixture.ts");
+  const { atsCreateConfiguration } = await import("../src/components/provider/deploy/ats-create-configuration.ts");
+  const values = {
+    ...campaignFixture,
+    targetAgentCustomers: campaignFixture.targetAgentCustomers.join("\n"),
+    useOfFunds: campaignFixture.useOfFunds.join("\n"),
+    risks: campaignFixture.risks.join("\n"),
+  };
+  const candidate = {
+    transactionId: "0.0.123-1735689600-123456789",
+    evmAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  };
+  const deployment = (state) => ({
+    ats: { display: atsCreateConfiguration, command: atsCreateConfiguration },
+    state,
+    title: "Second RiskScan",
+    atsAttemptPublicId: state === "ASSET_PENDING" ? "CCCCCCCCCCCCCCCCCCCCCg" : null,
+    atsCandidate: state === "ASSET_PENDING" ? candidate : null,
+    durableValues: null,
+  });
+  let reads = 0;
+  const harness = await signingIslandHarness(values, undefined, null, undefined, {
+    selectedToolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    directoryConfiguration: {
+      x402Endpoint: "https://api.tool402.test/riskscan",
+      clearingAccount: "0.0.10430877",
+    },
+    deployment: () => deployment(reads++ === 0 ? "ASSET_PENDING" : "READY"),
+  });
+  harness.connect();
+  const before = elements(harness.render()).find((element) => element.type === "ProviderDeployStages");
+  assert.equal(before.props.enabledStage, 2);
+  before.props.onActivate(2);
+  const dialog = elements(harness.render()).find((element) => element.type === "SignatureDialog");
+  assert.ok(dialog);
+  assert.equal(dialog.props.request.type, "external.attachCandidate");
+  dialog.props.onResult({ phase: "complete", outcome: "REPLAYED" });
+  harness.render();
+  const after = elements(harness.render()).find((element) => element.type === "ProviderDeployStages");
+  assert.equal(reads, 2);
+  assert.deepEqual(after.props.states.map((state) => state.kind), ["done", "done", "done", "actionable"]);
+  assert.equal(after.props.enabledStage, 3);
 });
 implementedTest("uses the shared connected session without an issuer-specific local gate", async () => {
   const { campaignFixture } = await import("../src/components/provider/deploy/campaign-fixture.ts");
