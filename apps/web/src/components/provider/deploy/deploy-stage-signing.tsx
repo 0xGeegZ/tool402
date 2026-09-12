@@ -150,7 +150,8 @@ export function DeployStageSigning({
     setCandidate((current) => current ?? nextCandidate);
   }
 
-  const connect = wallet.state.kind === "disconnected" ? (
+  const canRetryConnection = wallet.state.kind === "no_provider" || wallet.state.kind === "multiple_providers";
+  const connect = wallet.state.kind === "disconnected" || canRetryConnection ? (
     <section data-ui="provider-deploy-connect" aria-labelledby="provider-deploy-connect-title" className="h-full rounded-card border border-primary/15 bg-primary/[0.03] p-5 shadow-none sm:p-6">
       <div className="flex items-start gap-3">
         <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -161,7 +162,7 @@ export function DeployStageSigning({
           <p className="mt-1.5 text-sm leading-6 text-muted-foreground">Connect MetaMask on Hedera Testnet to enable the first signing step.</p>
         </div>
       </div>
-      <Button size="lg" shape="pill" className="mt-5 w-full sm:w-auto" onClick={() => { void wallet.connect(); }}>Connect MetaMask</Button>
+      <Button size="lg" shape="pill" className="mt-5 w-full sm:w-auto" onClick={() => { void wallet.connect(); }}>{canRetryConnection ? "Retry" : "Connect MetaMask"}</Button>
     </section>
   ) : null;
   const resumeNotice = session !== null && resumePending ? <p role="status" aria-live="polite" className="text-[13px] leading-5 text-muted-foreground">Checking the existing durable campaign before enabling any signature.</p> : null;
