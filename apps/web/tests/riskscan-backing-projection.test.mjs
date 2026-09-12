@@ -55,6 +55,8 @@ test("fails closed for unavailable, non-OPEN, mismatched, or malformed campaign 
   const unavailable = Object.freeze({ offering: Object.freeze({ outcome: "absent" }), directory: Object.freeze({ outcome: "absent" }) });
 
   assert.equal(selectRiskScanBackingProjection(unavailable, environment), null);
+  assert.equal(selectRiskScanBackingProjection({ offering: null }, environment), null);
+  assert.equal(selectRiskScanBackingProjection({ offering: { outcome: "loaded", record: null } }, environment), null);
   for (const candidate of [
     record({ state: "DRAFT" }), record({ state: "ASSET_PENDING" }), record({ state: "READY" }), record({ state: "CLOSED" }),
     record({ offeringPublicId: "other_offering" }), record({ subjectPublicId: "other_subject" }),

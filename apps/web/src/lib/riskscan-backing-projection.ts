@@ -41,15 +41,19 @@ export function selectRiskScanBackingProjection(
   projections: ProviderProjections | unknown,
   environment: unknown,
 ): BackingProjection | null {
-  if (
-    projections === null || typeof projections !== "object"
-    || !("offering" in projections)
-  ) return null;
-  const offering = (projections as ProviderProjections).offering;
-  const treasury = fundingTreasury(environment);
-  if (offering.outcome !== "loaded" || treasury === null || !isCanonicalRiskScanOffering(offering.record)) return null;
-  const candidate = Object.freeze({ ...offering.record, fundingTreasuryAddress: treasury });
-  return readBackingOffering(candidate) === null ? null : candidate;
+  try {
+    if (
+      projections === null || typeof projections !== "object"
+      || !("offering" in projections)
+    ) return null;
+    const offering = (projections as ProviderProjections).offering;
+    const treasury = fundingTreasury(environment);
+    if (offering.outcome !== "loaded" || treasury === null || !isCanonicalRiskScanOffering(offering.record)) return null;
+    const candidate = Object.freeze({ ...offering.record, fundingTreasuryAddress: treasury });
+    return readBackingOffering(candidate) === null ? null : candidate;
+  } catch {
+    return null;
+  }
 }
 
 export async function loadRiskScanBackingProjection(
