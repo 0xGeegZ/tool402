@@ -3,11 +3,13 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 00-inbox
-- Dependencies: none. M51-T010, M53-T010, S26-T010, S36-T010, and B04-T010
-  acceptance/release are readiness gates while this intake remains inbox-only.
+- Queue state: 20-active
+- Dependencies: M53-T010's fixed-Factory receipt selection is co-reviewed in
+  this branch. M51-T010, S26-T010, S36-T010, and B04-T010 do not grant any
+  additional behavior outside the exact paths below.
 - Owner: root owns the card, specification, queue records, reviews,
-  integration, commits, and pushes. No source or test path is active.
+  integration, commits, and pushes. The exact source and test paths below are
+  active; no other path is reserved.
 - Human actions: no wallet request, signature, relay, transaction, attachment,
   deployment, configuration, or public-network proof is required for local
   delivery. Any later real-browser action remains human-owned.
@@ -27,8 +29,7 @@ The minimum contract is
 
 ## Candidate source and test boundary
 
-Only a separate readiness, test-only RED activation, and RED acceptance may
-reserve these paths:
+The active correction reserves only these paths:
 
 - `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`;
 - `apps/web/src/components/provider/deploy/ats-create-action.tsx`;
