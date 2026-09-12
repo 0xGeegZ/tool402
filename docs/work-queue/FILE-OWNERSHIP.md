@@ -1621,3 +1621,17 @@ browser/Next.js verification and a fresh independent final review. Release
 landing-footer.tsx; its existing asset, decorative accessibility, breakpoint,
 links, copy and routes remain unchanged. No merge, deployment or live-action
 authority is granted.
+
+S45-T010 is a root-owned `20-active` POLISH record for the owner-approved
+mascot expansion. During activation it reserves only
+`apps/web/tests/brand-mascot-surfaces.test.mjs` for durable RED. After observed
+and independently accepted RED, its GREEN boundary may include the four exact
+new files under `apps/web/public/brand/`,
+`apps/web/src/components/ui/brand-route-loader.tsx`,
+`apps/web/src/app/loading.tsx`, the nine existing route loading files, the
+header composition of `apps/web/src/app/demo/page.tsx`, the final CTA of
+`apps/web/src/components/discovery/explore-catalog.tsx`, only `ReviewStep` in
+`apps/web/src/components/provider/deploy/provider-deploy-wizard.tsx`, and the
+minimum Explore/loading test reconciliation. All catalogue data, dynamic form
+values, wallet/session/signing code, skeleton region order, runtime APIs,
+configuration, dependencies, and external/live behavior remain excluded.

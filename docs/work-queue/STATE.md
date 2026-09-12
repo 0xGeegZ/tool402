@@ -1,5 +1,14 @@
 # Runtime queue state
 
+- S45_BRAND_MASCOT_SURFACES_ACTIVATION: The owner requests four generated,
+  text-free Tool402 mascot assets integrated into the existing Demo, Explore,
+  Provider deploy review, and route-loading surfaces in a new draft PR. At
+  exact `origin/main` `98cdbe29`, the complete Node 22.21.1 workspace baseline
+  is green. S45-T010 is `20-active` only for its focused durable RED contract;
+  production source and assets require observed RED and independent review.
+  The slice adds no data, wallet, command, payment, transaction, deployment,
+  or live authority.
+
 - M56_RISKSCAN_BACKING_DEMO_MVP_INTAKE: The repository owner requests a narrow
   D-Day RiskScan backing proposal: one OPEN canonical offering, exact S18
   intent, one explicit HBAR transfer, a canonical hash, and allocation pending.
