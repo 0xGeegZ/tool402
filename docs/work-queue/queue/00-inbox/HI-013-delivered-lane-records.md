@@ -78,10 +78,10 @@ and changes no card's scope.
 3. Record the three ownership paragraphs and the ledger rows before merging
    any lane, because each lane amends at least one shared accepted file whose
    integration reservation does not exist yet.
-4. Reconcile the `20-active` queue from the card-move list below: nothing
-   moves to `60-done` on this card's evidence, one card is recommended for
-   `90-cancelled` as superseded, and the remainder are listed with the exact
-   record that is missing.
+4. Reconcile the `20-active` queue from the card-move list below: on this
+   card's evidence nothing moves to `60-done` and nothing moves to
+   `90-cancelled`; every card in the batch is listed with the exact record
+   that is missing.
 5. Record pull request #53 as superseded by #114 and close it.
 
 ## Requested root records
@@ -94,7 +94,7 @@ Authority/evidence, Local-card effect, UTC.
 ```
 | D-HI-008-001 | SEQUENCE RECORDED | Human intake card HI-008 records the operator's GO on one working order before the Stage B rehearsal: M47-T010 acceptance, the HI-007 mirror-form ruling, B03-T020 GREEN, then ready review and activation of the delivered S25-T010, S23-T010, and S18-T010 lanes, then S22-T010 and S24-T010 after rehearsal evidence. The card supersedes no card scope and requests no human-action change. | Recorded as the root's working order for that batch; every step named in it is now either complete or superseded by a later delivered lane, so the row closes HI-008 as an input record rather than an open sequence. No card tier, dependency, path, boundary, or human-action row changes, and no wallet, SDK, provider, transaction, deployment, or live authority is granted. | 2026-09-12 |
 | D-HI-009-001 | PHASE A ACCEPTANCE RECORDED | Human intake card HI-009 records the operator's acceptance, at 2026-09-10T19:15:51Z and in the packet's own words, of HA-ATS-M33-ENABLEMENT-001 as recorded in `docs/work-queue/evidence/HA-ATS-STAGE-B-001-recommended-decision-v2.md`. The acceptance covers only Phase A local source-only M33 ATS_CREATE enablement and supersedes only the earlier allocation of that static source mapping to HA-ATS-STAGE-B-001. | M48-T010 is created exactly as the packet describes, with one schema-versioned enabled fixed ATS_CREATE record byte-identical to the frozen M42 projection, and the deferred browser/provider transaction-execution successor is catalogued with M48-T010 acceptance as its gate. Every live, provider, wallet, authority-row, deployment, host, transaction, candidate, receipt-verifier, funding, and lifecycle action stays rejected; HA-ATS-STAGE-B-001 remains PENDING and is the only execution gate. | 2026-09-12 |
-| D-HI-009-002 | TRIMMED LIVE STAGE B RULING | HI-009 item 3 asks the root to rule whether a live Stage B packet may be requested once M48-T010 and the transaction-execution successor are accepted, scoped to exactly one Factory `deployBond`, a terminal `SUBMITTED` attempt with the candidate attached and the offering at `ASSET_PENDING`, redacted transaction and Mirror Node finality evidence, no verification action invoked, and no lifecycle operation. The human's stated fallback is that the demo keeps its truthful pending gate and makes no Stage B claim. | The root's ruling either permits that one trimmed request under the stated scope or declines it and keeps the pending gate; either way the card is closed by this row. HA-ATS-STAGE-B-001 stays PENDING until its own evidence is recorded, and nothing in this row authorizes a wallet, provider, transaction, deployment, or live action. | 2026-09-12 |
+| D-HI-009-002 | TRIMMED LIVE STAGE B RULING | HI-009 item 3 asks the root to rule whether a live Stage B packet may be requested once M48-T010 and the transaction-execution successor are accepted, scoped to exactly one Factory `deployBond`, a terminal `SUBMITTED` attempt with the candidate attached and the offering at `ASSET_PENDING`, redacted transaction and Mirror Node finality evidence, no verification action invoked, and no lifecycle operation. The human's stated fallback is that the demo keeps its truthful pending gate and makes no Stage B claim. | Recommended ruling: a live Stage B packet may be requested, conditional on both M48-T010 and the transaction-execution successor being accepted first and on the rehearsal commit being named with a local host or runtime proof. If either acceptance does not land before the submission deadline, the human's own fallback applies without a further ruling: the demo keeps its truthful pending gate and makes no Stage B claim. The conditional form adds no gate and removes none; HA-ATS-STAGE-B-001 stays PENDING and remains the sole execution gate, and this row authorizes no wallet, provider, transaction, deployment, or live action. The ruling is the root's call. | 2026-09-12 |
 | D-HI-012-001 | S18 LANE ORDER AND BACKER RULINGS | Human intake card HI-012 records the operator's GO on taking `work/backing` (pull request #41, head `18de36f`) as input for the S18-T010 ready review, and asks for the two rulings HI-002 deferred to S18 ready time: whether an enabled BACKER `commandAuthorities` row is provisioned so the HEDERA_FUNDING signature can pass the authority predicate, and whether M40 adds a `fundingTreasuryAccount` field as the route's `expectedTarget` or S18 stays parked. | S18-T010 is accepted at rebased source `164f170` with no continuing reservation, so this row records the lane order as satisfied and answers the two deferred rulings. If either ruling parks the backer path, it is recorded as parked with that reason; S18 is PRIZE_OPTIONAL and creates no transfer path without an `expectedTarget`. The row provisions no authority row, schema field, wallet action, transaction, deployment, or live behavior. | 2026-09-12 |
 ```
 
@@ -270,13 +270,16 @@ recommended text is:
 
 ### 5. Card moves
 
-Nothing on this card's evidence moves to `60-done`. The ledger records
-intake, readiness, activation, RED acceptance, and refinements for this batch,
-but no `STATE.md` or `DECISIONS.md` entry records integration or acceptance of
-the merged result for any of the cards below, so the acceptance is the root's
-to make rather than this card's to assert.
+Nothing on this card's evidence moves to `60-done`, and nothing moves to
+`90-cancelled`. The ledger records intake, readiness, activation, RED
+acceptance, and refinements for this batch, but no `STATE.md` or
+`DECISIONS.md` entry records integration or acceptance of the merged result
+for any of the cards below, so the acceptance is the root's to make rather
+than this card's to assert. Two cards were tested against a supersession
+reading and neither holds: both S26-T010 and S36-T010 turn out to be delivered
+and unrecorded, which is an acceptance question, not a supersession one.
 
-Recommended for `90-cancelled` as superseded:
+Root to confirm, with what is missing named for each:
 
 - **S26-T010.** Its only `STATE.md` entry,
   `S26_ROOT_INTEGRATION_ACTIVATION`, records the activation and states that
@@ -292,11 +295,17 @@ Recommended for `90-cancelled` as superseded:
   and the `backing-flow.tsx` island mount was transferred to M56-T010 by the
   scoped ownership transfer recorded at the top of
   `docs/work-queue/FILE-OWNERSHIP.md`. Nothing declared remains for S26 to
-  implement. If the root would rather record acceptance than supersession, the
-  missing piece is the declared browser evidence plus an independent review at
-  a named head; that choice is the root's.
-
-Root to confirm, with what is missing named for each:
+  implement. Provenance matters for the reading, though:
+  `wallet-session.tsx` was created by `3c90da74`, "feat(web): share one
+  MetaMask session from the shell header", which is S26's own lane merged
+  under `S26_ROOT_INTEGRATION_ACTIVATION`, and pull request #112 amended that
+  shipped delivery rather than replacing it. So S26 is delivered and
+  unrecorded on the same footing as S36 below. Missing: the card's declared
+  browser evidence plus an independent review at a named head, recorded as an
+  acceptance. If the root instead judges that #112 and the M56 transfer
+  replaced the delivery, a supersession ruling and a move to `90-cancelled` is
+  the alternative; that choice is the root's, and this card recommends the
+  acceptance path because the delivery is S26's own.
 
 - **M51-T010.** Newest record is `D-M51-010-003`, RED accepted and GREEN
   authorized for its six declared Backend/Web paths. Missing: an independent

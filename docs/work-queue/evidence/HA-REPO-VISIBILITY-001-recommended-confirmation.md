@@ -78,11 +78,12 @@ Two limits of this scan that a human confirming "no key material" needs:
   form does not match it. The expectation was confirmed against the repository
   rather than copied, and the actual result above is what is recorded.
 - The word-bounded form also does not reach `0x`-prefixed literals, because
-  `0x` leaves no word boundary before the hex run. The same backend test files
-  hold 18 such `0x`-prefixed 64-hex literals, which are fixture signer
-  addresses and payload hashes of the same synthetic commands. They are listed
-  here as a known scan blind spot, not as findings; the human should say
-  plainly that the confirmation rests on the four commands as written.
+  `0x` leaves no word boundary before the hex run. Re-derived without that
+  boundary, `packages/backend/tests` holds 25 lines across nine files carrying
+  such `0x`-prefixed 64-hex literals, which are fixture signer addresses and
+  payload hashes of the same synthetic commands. They are listed here as a
+  known scan blind spot, not as findings; the human should say plainly that
+  the confirmation rests on the four commands as written.
 
 ### Scan 4 — seed phrase and mnemonic wording
 
