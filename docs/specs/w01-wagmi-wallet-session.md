@@ -7,7 +7,7 @@ wallet-session plumbing with Wagmi v3 and Viem. It is a migration of client
 transport and connection state, not a change to dashboard authentication,
 business authorization, command admission, or payment finality.
 
-The starting point is `origin/main` at `c8585c83dd7206a4610b42de1b3be88cb01179bb`.
+The starting point is `origin/main` at `02c22d6906c7ef117d05ccd28ff2c37236356e64`.
 W01 is not active until the root records readiness and accepts a focused RED
 contract. Until then, this document grants no source, package, or runtime
 change.

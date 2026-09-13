@@ -43,7 +43,7 @@
   remain separately controlled.
 
 - W01_WAGMI_WALLET_SESSION_INTAKE: At `origin/main`
-  `c8585c83dd7206a4610b42de1b3be88cb01179bb`, the owner requests replacing
+  `02c22d6906c7ef117d05ccd28ff2c37236356e64`, the owner requests replacing
   the in-house MetaMask connection/session transport with Wagmi v3 and Viem.
   W01-T010 begins in `00-inbox` with its committed local specification and
   design only. No application source, dependency, lockfile, wallet request,
