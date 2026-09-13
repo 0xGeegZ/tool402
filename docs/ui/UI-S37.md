@@ -43,11 +43,13 @@ accepted first, only its badge-label assertion may change.
   and returns the hex weibar string the Hedera JSON-RPC relay answers with. It
   throws only when the response is not a `0x`-prefixed hex string; a rejected
   request propagates as-is. It performs no other call.
-- `formatHbar(weibarHex)` converts the 18-decimal weibar quantity to a
-  decimal HBAR string with exactly two fractional digits, truncated not
-  rounded, followed by a space and `HBAR`: `0x0` renders `0.00 HBAR`,
-  `0xde0b6b3a7640000` renders `1.00 HBAR`. Values are handled with `BigInt`,
-  never floating point.
+- `formatHbar(weibarHex)` truncates the 18-decimal weibar quantity to
+  tinybars and delegates to the shared `formatHbar` of
+  `apps/web/src/lib/hbar-format.ts`, so the badge reads in the single HBAR
+  style the rest of the interface uses: `0x0` renders `0 HBAR`,
+  `0xde0b6b3a7640000` renders `1 HBAR`, a sub-tinybar remainder is dropped,
+  and a value above one thousand groups its thousands. Values are handled
+  with `BigInt`, never floating point.
 
 The owning component reads the balance exactly when a session read settles in
 the `connected` or `not_issuer` kind: after `connect`, after `switchChain`,
