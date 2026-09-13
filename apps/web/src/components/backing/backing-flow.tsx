@@ -33,6 +33,7 @@ import {
   type TransferResult,
 } from "./backing-state";
 import { BackingStepRail } from "./backing-step-rail";
+import { assessFundingBalance } from "./backing-balance";
 
 const finalPhases: ReadonlySet<SignatureResult["phase"]> = new Set(["complete", "rejected", "failed", "unknown"]);
 const pendingAttachmentPrefix = "tool402-backing-pending-attachment-v2:";
@@ -206,14 +207,41 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       setTransferring(false);
       return;
     }
+    const request = transferRequest(view, session.address);
+    const initialBalance = await assessFundingBalance(session.provider, request);
+    if (initialBalance === "INSUFFICIENT") {
+      setNotice("Insufficient testnet HBAR for this transfer and its estimated network fee. Nothing was sent.");
+      sendingRef.current = false;
+      setTransferring(false);
+      return;
+    }
+    if (initialBalance === "UNAVAILABLE") {
+      setNotice("Your testnet HBAR balance or fee estimate is unavailable. Nothing was sent.");
+      sendingRef.current = false;
+      setTransferring(false);
+      return;
+    }
     if (!await reservePayment(view.intent)) {
+      sendingRef.current = false;
+      setTransferring(false);
+      return;
+    }
+    const reservedBalance = await assessFundingBalance(session.provider, request);
+    if (reservedBalance === "INSUFFICIENT") {
+      setNotice("Insufficient testnet HBAR for this transfer and its estimated network fee. The funding reservation remains; nothing was sent.");
+      sendingRef.current = false;
+      setTransferring(false);
+      return;
+    }
+    if (reservedBalance === "UNAVAILABLE") {
+      setNotice("Your testnet HBAR balance or fee estimate is unavailable. The funding reservation remains; nothing was sent.");
       sendingRef.current = false;
       setTransferring(false);
       return;
     }
     let result: TransferResult;
     try {
-      const response = await session.provider.request(transferRequest(view, session.address));
+      const response = await session.provider.request(request);
       result = typeof response === "string" ? { kind: "hash", hash: response } : { kind: "no_hash" };
     } catch (error) {
       result = isUserRejection(error) ? { kind: "declined" } : { kind: "no_hash" };
