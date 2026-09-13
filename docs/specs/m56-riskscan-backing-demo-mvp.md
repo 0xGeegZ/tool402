@@ -60,8 +60,9 @@ automatic resend.
 
 When the server projection is OPEN, `Back this tool` is the first RiskScan
 detail header action so the existing shared header renders it as the primary
-button. The existing Try and ToolLoop links remain available as outline
-actions. No shared header API, backing state, relay, or wallet behavior changes.
+button. `Try RiskScan` remains the secondary outline action. `Explore RiskScan
+ToolLoop` is a tertiary text link rather than a button, in both projection
+states. No shared header API, backing state, relay, or wallet behavior changes.
 
 ## Owned paths
 

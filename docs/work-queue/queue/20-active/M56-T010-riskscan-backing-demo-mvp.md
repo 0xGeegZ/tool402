@@ -28,7 +28,9 @@ or another project route. A returned transaction hash is shown only as
 
 For an OPEN server projection, the existing `Back this tool` RiskScan detail
 header link is ordered first so the existing shared header styles it as primary.
-The change is limited to that action order and its focused existing detail test;
+`Try RiskScan` remains the secondary outline action. `Explore RiskScan ToolLoop`
+is a tertiary text link rather than a button in either projection state. The
+change is limited to the RiskScan detail and its focused existing detail test;
 it creates no shared-header API, authority, wallet, relay, transaction, or
 deployment behavior.
 
