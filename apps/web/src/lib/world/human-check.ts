@@ -8,6 +8,9 @@ export const WORLD_HUMAN_COOKIE = "tool402-world-human";
 export const WORLD_HUMAN_MAX_AGE_SECONDS = 2_592_000;
 export const WORLD_CONTEXT_SECONDS = 300;
 
+const COOKIE_HEADER_MAX_BYTES = 16_384;
+const SESSION_COOKIE_MAX_BYTES = 4_096;
+
 export type WorldEnvironment = Readonly<Record<string, string | undefined>>;
 
 type WorldConfiguration = Readonly<{
@@ -135,10 +138,14 @@ export async function readHumanVerification(
 function sessionCookieFrom(request: Request, env: WorldEnvironment): string | null {
   const name = readDashboardSessionCookieName(env);
   const header = request.headers.get("cookie");
-  if (name === null || header === null || header.length > 4096) return null;
+  if (name === null || header === null || header.length > COOKIE_HEADER_MAX_BYTES) return null;
   const prefix = `${name}=`;
-  const matches = header.split(";").map((part) => part.trim()).filter((part) => part.startsWith(prefix));
-  return matches.length === 1 ? matches[0]!.slice(prefix.length) : null;
+  const values = header
+    .split(";")
+    .map((part) => part.trim())
+    .filter((part) => part.startsWith(prefix))
+    .map((part) => part.slice(prefix.length));
+  return values.length === 1 && values[0]!.length <= SESSION_COOKIE_MAX_BYTES ? values[0]! : null;
 }
 
 export type WorldRequestContext =

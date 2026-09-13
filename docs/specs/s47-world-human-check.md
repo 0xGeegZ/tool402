@@ -42,6 +42,11 @@ must belong to the account that is signed in. Each body is then read through
 the shared bounded JSON reader, so an oversized or malformed body returns
 `400 invalid_request` before anything is parsed or forwarded.
 
+The session reader accepts one dashboard session cookie from a `Cookie` header
+of at most 16 KiB. It rejects duplicate session cookies and a session-cookie
+value over 4 KiB, but unrelated browser cookies do not invalidate a valid
+signed session.
+
 `POST /api/world/request` accepts a JSON object carrying one canonical
 lowercase EVM `address`. It returns the public IDKit request values only: the
 app id, the action, the environment, and a five-minute RP context whose
