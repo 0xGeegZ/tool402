@@ -1,7 +1,9 @@
 import { internalMutationGeneric, internalQueryGeneric, type DataModelFromSchemaDefinition, type MutationBuilder, type QueryBuilder } from "convex/server";
 import { v } from "convex/values";
+import { isInt64, readStoredRecord } from "../src/offering-command-admission.ts";
 import type schema from "./schema.ts";
 import { backingPaymentClaimStore } from "./backing_payment_claims.ts";
+import { isPublicTestnetSelfServiceEnabled } from "./self_service_accounts.ts";
 
 const internalMutation: MutationBuilder<DataModelFromSchemaDefinition<typeof schema>, "internal"> = internalMutationGeneric;
 const internalQuery: QueryBuilder<DataModelFromSchemaDefinition<typeof schema>, "internal"> = internalQueryGeneric;
@@ -41,6 +43,49 @@ function validAttempt(value: unknown, input: { attemptPublicId: string; canonica
 
 function now(): bigint { return BigInt(Date.now()); }
 
+function isActiveSelfServiceBacker(value: unknown, canonicalSignerAddress: string): boolean {
+  try {
+    const account = readStoredRecord(value, [
+      "canonicalSignerAddress", "chainId", "principalPublicId", "policyVersion", "status", "createdAt", "updatedAt",
+    ]);
+    return account.canonicalSignerAddress === canonicalSignerAddress
+      && account.chainId === 296
+      && account.principalPublicId === `self_service_${canonicalSignerAddress.slice(2)}`
+      && account.policyVersion === "public_testnet_v1"
+      && account.status === "ACTIVE"
+      && isInt64(account.createdAt)
+      && isInt64(account.updatedAt);
+  } catch {
+    return false;
+  }
+}
+
+/** A reservation can still lead to a new wallet send, so it must re-check current admission. */
+async function mayReserveNewBackingPayment(
+  ctx: Parameters<typeof reserveBackingPayment.handler>[0],
+  canonicalSignerAddress: string,
+  offeringPublicId: string,
+): Promise<boolean> {
+  const authorities = await ctx.db.query("commandAuthorities")
+    .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+      query.eq("chainId", 296).eq("canonicalSignerAddress", canonicalSignerAddress)
+    ))
+    .take(2);
+  const authority = authorities[0];
+  const legacyBacker = authorities.length === 1
+    && authority?.role === "BACKER"
+    && authority.enabled === true
+    && authority.canonicalSignerAddress === canonicalSignerAddress;
+  if (offeringPublicId === legacyRiskScanOfferingPublicId) return legacyBacker;
+  if (!isPublicTestnetSelfServiceEnabled()) return false;
+  const accounts = await ctx.db.query("selfServiceAccounts")
+    .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+      query.eq("chainId", 296).eq("canonicalSignerAddress", canonicalSignerAddress)
+    ))
+    .take(2);
+  return accounts.length === 1 && isActiveSelfServiceBacker(accounts[0], canonicalSignerAddress);
+}
+
 /** Pure admission policy; the mutation applies it while reading both indexed claims transactionally. */
 export function resolveBackingPaymentClaim(
   claimedHash: ExistingClaim | undefined,
@@ -65,6 +110,7 @@ export const reserveBackingPayment = internalMutation({
     const intents = await ctx.db.query("backingIntents").withIndex("by_idempotency_key", (q) => q.eq("idempotencyKey", args.attemptPublicId)).take(2);
     if (intents.length !== 1 || !validFrozenIntent(intents[0], { idempotencyKey: args.attemptPublicId, canonicalSignerAddress: args.canonicalSignerAddress, tinybars: args.tinybars })) return null;
     const offeringPublicId = intents[0]!.offeringPublicId;
+    if (!await mayReserveNewBackingPayment(ctx, args.canonicalSignerAddress, offeringPublicId)) return null;
     const claims = await ctx.db.query(backingPaymentClaimStore).withIndex("by_attempt_id", (q) => q.eq("attemptId", rows[0]!._id)).take(2);
     if (claims.length > 1 || (claims.length === 1 && claims[0]!.tinybars !== args.tinybars)) return null;
     const claim = claims[0];

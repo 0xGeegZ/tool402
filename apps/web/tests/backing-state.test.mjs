@@ -271,6 +271,24 @@ test("rechecks the accepted intent before the one explicit transfer", async () =
   assert.equal(state.isCurrentBackingIntent(offering, { ...intent, weibarHex: "0x1" }), false);
 });
 
+test("reload with a hash awaiting attachment remains payment_submitted and cannot construct another transfer", async () => {
+  const state = await loadState();
+  const offering = state.readBackingOffering(record());
+  const intent = state.createBackingIntent(offering, 25n, nowMilliseconds, fixedBytes(5));
+  const recovered = state.viewForRecoveredPendingPayment(intent, {
+    intent: { idempotencyKey: intent.idempotencyKey, parameters: intent.parameters },
+    transactionHash: `0x${"ab".repeat(32)}`,
+  });
+  assert.equal(recovered.kind, "payment_submitted");
+  assert.throws(() => state.transferRequest(recovered, "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"), TypeError);
+
+  const mismatched = state.viewForRecoveredPendingPayment(intent, {
+    intent: { idempotencyKey: intent.idempotencyKey, parameters: { ...intent.parameters, tinybars: "1" } },
+    transactionHash: `0x${"ab".repeat(32)}`,
+  });
+  assert.equal(mismatched.kind, "prepared");
+});
+
 test("retries nothing: an unknown wallet return, a transport failure, and an unexpected response reach the unknown kind", async () => {
   const state = await loadState();
   const offering = state.readBackingOffering(record());

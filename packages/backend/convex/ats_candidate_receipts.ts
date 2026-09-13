@@ -30,7 +30,6 @@ import {
   isSelectedProviderToolSubject,
   resolveSelectedProviderToolSubject,
 } from "./provider_tool_authority.ts";
-import { isPublicTestnetSelfServiceEnabled } from "./self_service_accounts.ts";
 import { claimAtsReceiptBinding } from "./provider_tool_receipts.ts";
 import { createProviderToolAtsConfiguration } from "../src/ats/provider-tool-ats-configuration.ts";
 import { createProviderToolReceiptExpectation } from "../src/ats/provider-tool-receipt-expectation.ts";
@@ -404,7 +403,10 @@ async function readSelectedProviderToolReceiptContext(
     ))
     .take(2);
   let authority: unknown = authorities.length === 1 ? authorities[0] : null;
-  if (authority === null && authorities.length === 0 && isPublicTestnetSelfServiceEnabled()) {
+  // This is recovery for an already-submitted attempt, not admission for a new
+  // self-service command. A later kill switch or membership suspension must not
+  // erase the immutable attempt/offer binding needed to corroborate its receipt.
+  if (authority === null && authorities.length === 0) {
     const accounts = await ctx.db.query("selfServiceAccounts")
       .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
         query.eq("chainId", 296).eq("canonicalSignerAddress", attempt.canonicalSignerAddress)
@@ -421,7 +423,7 @@ async function readSelectedProviderToolReceiptContext(
       || account.principalPublicId !== attempt.principalPublicId
       || account.policyVersion !== "public_testnet_v1"
       || account.policyVersion !== attempt.authorityVersion
-      || account.status !== "ACTIVE"
+      || (account.status !== "ACTIVE" && account.status !== "SUSPENDED" && account.status !== "REVOKED")
       || !isInt64(account.createdAt)
       || !isInt64(account.updatedAt)
     ) return reject();

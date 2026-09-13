@@ -39,6 +39,11 @@ type FrozenIntent = Readonly<{
   canonicalParametersHash: string;
   expiresAt: string;
 }>;
+type StoredFrozenIntent = FrozenIntent & Readonly<{
+  canonicalSignerAddress: string;
+  offeringVersion: 1;
+  offeringTermsDigest: string;
+}>;
 
 function reject(): { outcome: "REJECTED" } { return { outcome: "REJECTED" }; }
 
@@ -123,7 +128,7 @@ function readOpenOffering(value: unknown): Readonly<{ offeringPublicId: string; 
   }
 }
 
-function readIntent(value: unknown): FrozenIntent | null {
+function readIntent(value: unknown): StoredFrozenIntent | null {
   try {
     const record = readStoredRecord(value, [
       "idempotencyKey", "purchaseIntentId", "canonicalSignerAddress", "offeringPublicId", "offeringVersion", "offeringTermsDigest", "subjectPublicId",
@@ -141,7 +146,10 @@ function readIntent(value: unknown): FrozenIntent | null {
     return {
       idempotencyKey: record.idempotencyKey as string,
       purchaseIntentId: record.purchaseIntentId as string,
+      canonicalSignerAddress: record.canonicalSignerAddress as string,
       offeringPublicId: record.offeringPublicId as string,
+      offeringVersion: 1,
+      offeringTermsDigest: record.offeringTermsDigest as string,
       subjectPublicId: record.subjectPublicId as string,
       recipient: record.recipient as string,
       units: record.units as string,
@@ -152,6 +160,35 @@ function readIntent(value: unknown): FrozenIntent | null {
   } catch {
     return null;
   }
+}
+
+function matchesFrozenIntentRequest(
+  stored: StoredFrozenIntent,
+  args: Readonly<{
+    canonicalSignerAddress: string; offeringPublicId: string; units: string;
+    idempotencyKey: string; purchaseIntentId: string; expiresAt: string;
+  }>,
+): boolean {
+  return stored.canonicalSignerAddress === args.canonicalSignerAddress
+    && stored.idempotencyKey === args.idempotencyKey
+    && stored.purchaseIntentId === args.purchaseIntentId
+    && stored.offeringPublicId === args.offeringPublicId
+    && stored.units === args.units
+    && stored.expiresAt === args.expiresAt;
+}
+
+function frozenIntent(stored: StoredFrozenIntent): FrozenIntent {
+  return {
+    idempotencyKey: stored.idempotencyKey,
+    purchaseIntentId: stored.purchaseIntentId,
+    offeringPublicId: stored.offeringPublicId,
+    subjectPublicId: stored.subjectPublicId,
+    recipient: stored.recipient,
+    units: stored.units,
+    tinybars: stored.tinybars,
+    canonicalParametersHash: stored.canonicalParametersHash,
+    expiresAt: stored.expiresAt,
+  };
 }
 
 export const freezeBackingIntent = internalMutation({
@@ -170,13 +207,29 @@ export const freezeBackingIntent = internalMutation({
       || expires === null || !Number.isSafeInteger(now) || expires <= now || expires - now > maxLifetimeMilliseconds
     ) return reject();
 
-    const selfService = isPublicTestnetSelfServiceEnabled();
-    const legacyAuthorities = selfService ? [] : await ctx.db.query("commandAuthorities")
+    // An exact retry only recovers the immutable preparation after a lost
+    // response. It never admits a new reservation or wallet send.
+    const existing = await ctx.db.query("backingIntents")
+      .withIndex("by_idempotency_key", (query) => query.eq("idempotencyKey", args.idempotencyKey))
+      .take(2);
+    if (existing.length > 1) return reject();
+    if (existing.length === 1) {
+      const stored = readIntent(existing[0]);
+      if (stored === null || !matchesFrozenIntentRequest(stored, args)) return reject();
+      return { outcome: "PREPARED" as const, intent: frozenIntent(stored) };
+    }
+
+    const legacyAuthorities = await ctx.db.query("commandAuthorities")
       .withIndex("by_chain_id_and_canonical_signer_address", (query) => query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress))
       .take(2);
-    if (!selfService && (args.offeringPublicId !== legacyRiskScanOfferingPublicId || legacyAuthorities.length !== 1
-      || legacyAuthorities[0]?.role !== "BACKER" || legacyAuthorities[0]?.enabled !== true
-      || legacyAuthorities[0]?.canonicalSignerAddress !== args.canonicalSignerAddress)) return reject();
+    const legacyBacker = legacyAuthorities.length === 1
+      && legacyAuthorities[0]?.role === "BACKER"
+      && legacyAuthorities[0]?.enabled === true
+      && legacyAuthorities[0]?.canonicalSignerAddress === args.canonicalSignerAddress;
+    const legacyRiskScan = args.offeringPublicId === legacyRiskScanOfferingPublicId;
+    if (legacyRiskScan && !legacyBacker) return reject();
+    const selfService = !legacyRiskScan && isPublicTestnetSelfServiceEnabled();
+    if (!legacyRiskScan && !selfService) return reject();
     const accounts = selfService ? await ctx.db.query("selfServiceAccounts")
       .withIndex("by_chain_id_and_canonical_signer_address", (query) => query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress))
       .take(2) : [];
@@ -214,11 +267,6 @@ export const freezeBackingIntent = internalMutation({
       canonicalParametersHash: keccak256(new TextEncoder().encode(canonicalizeRequirements(parameters))).slice(2),
       expiresAt: args.expiresAt,
     };
-    const existing = await ctx.db.query("backingIntents")
-      .withIndex("by_idempotency_key", (query) => query.eq("idempotencyKey", args.idempotencyKey))
-      .take(2);
-    if (existing.length > 1) return reject();
-    if (existing.length === 1) return reject();
     if (!selfService) {
       await ctx.db.insert("backingIntents", { ...intent, canonicalSignerAddress: args.canonicalSignerAddress, offeringVersion: offering.offeringVersion, offeringTermsDigest: offering.offeringTermsDigest, createdAt: BigInt(now) });
       return { outcome: "PREPARED" as const, intent };
@@ -226,20 +274,17 @@ export const freezeBackingIntent = internalMutation({
     const maximumPending = readSelfServiceMaxPendingAttempts();
     if (maximumPending === null) return reject();
     const pending = await ctx.db.query("backingIntents")
-      .withIndex("by_canonical_signer_address_and_created_at", (query) => (
-        query.eq("canonicalSignerAddress", args.canonicalSignerAddress)
+      .withIndex("by_canonical_signer_address_and_expires_at", (query) => (
+        query.eq("canonicalSignerAddress", args.canonicalSignerAddress).gt("expiresAt", new Date(now).toISOString())
       ))
-      .order("desc")
       .take(maximumPending + 1);
-    let active = 0;
     for (const candidate of pending) {
       const stored = readIntent(candidate);
       if (stored === null) return reject();
       const expiry = timestamp(stored.expiresAt);
-      if (expiry === null) return reject();
-      if (expiry > now) active += 1;
+      if (expiry === null || expiry <= now) return reject();
     }
-    if (active >= maximumPending) return reject();
+    if (pending.length >= maximumPending) return reject();
     const maxHourlyIntents = readSelfServiceMaxBackingIntentsPerHour();
     const windowStartedAt = BigInt(Math.floor(now / 3_600_000) * 3_600_000);
     if (maxHourlyIntents === null) return reject();

@@ -73,6 +73,11 @@ export interface BackingIntent extends SignatureDialogRequest {
   readonly parameters: BackingParameters;
 }
 
+export interface RecoveredPendingBackingPayment {
+  readonly intent: Pick<BackingIntent, "idempotencyKey" | "parameters">;
+  readonly transactionHash: `0x${string}`;
+}
+
 export interface FrozenBackingIntentInput {
   readonly idempotencyKey: string;
   readonly purchaseIntentId: string;
@@ -299,6 +304,23 @@ export function isCurrentBackingIntent(offering: BackingOffering, intent: Backin
     && intent.parameters.offeringPublicId === offering.offeringPublicId
     && intent.parameters.units === intent.units.toString()
     && intent.parameters.tinybars === intent.tinybars.toString();
+}
+
+/** A locally persisted hash means the wallet already sent; recovery must never reopen Send. */
+export function viewForRecoveredPendingPayment(
+  intent: BackingIntent | null,
+  pending: RecoveredPendingBackingPayment | null,
+): BackingView {
+  if (intent === null) return Object.freeze({ kind: "choosing" });
+  if (
+    pending !== null
+    && pending.intent.idempotencyKey === intent.idempotencyKey
+    && pending.intent.parameters.offeringPublicId === intent.parameters.offeringPublicId
+    && pending.intent.parameters.units === intent.parameters.units
+    && pending.intent.parameters.tinybars === intent.parameters.tinybars
+    && pending.intent.parameters.purchaseIntentId === intent.parameters.purchaseIntentId
+  ) return Object.freeze({ kind: "payment_submitted", intent, transactionHash: pending.transactionHash });
+  return Object.freeze({ kind: "prepared", intent });
 }
 
 export function viewAfterTransfer(view: BackingView, result: TransferResult): BackingView {

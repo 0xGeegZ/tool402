@@ -182,12 +182,13 @@ test("corroborates only independently encoded exact calldata and writes READY af
   assert.equal(db.rows.externalPrepareCommandAttempts[0].verifiedEvmTransactionHash, transactionHash);
 });
 
-test("corroborates a selected self-service owner's exact receipt without a legacy authority", async () => {
+test("corroborates a selected self-service owner's exact receipt after the public flag is disabled and membership is suspended", async () => {
   const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
-  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "false";
   try {
     const api = await import(sourceUrl.href);
     const data = await fixture({ selfService: true });
+    data.rows.selfServiceAccounts[0].status = "SUSPENDED";
     const db = database(data.rows);
     assert.deepEqual(
       await api.corroborateSelectedProviderToolAtsReceipt._handler(db.ctx, {

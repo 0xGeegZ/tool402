@@ -27,6 +27,7 @@ import {
   validateUnits,
   viewAfterSignature,
   viewAfterTransfer,
+  viewForRecoveredPendingPayment,
   type BackingIntent,
   type BackingOffering,
   type BackingProjection,
@@ -123,13 +124,14 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   const [unitsInput, setUnitsInput] = useState(offering.terms.minimumPurchaseUnits.toString());
   const [acknowledged, setAcknowledged] = useState(false);
   const recoveredIntent = preparedIntent(dashboardAddress, offering);
-  const [view, setView] = useState<BackingView>(() => recoveredIntent === null ? { kind: "choosing" } : { kind: "prepared", intent: recoveredIntent });
+  const recoveredPending = pendingAttachment(dashboardAddress, offering.offeringPublicId);
+  const [view, setView] = useState<BackingView>(() => viewForRecoveredPendingPayment(recoveredIntent, recoveredPending));
   const [request, setRequest] = useState<BackingIntent | null>(null);
   const [preparing, setPreparing] = useState(false);
   const [transferring, setTransferring] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [payment, setPayment] = useState<BackingPaymentRecord | null>(initialPayment);
-  const [pending, setPending] = useState<PendingAttachment | null>(() => pendingAttachment(dashboardAddress, offering.offeringPublicId));
+  const [pending, setPending] = useState<PendingAttachment | null>(recoveredPending);
   const sendingRef = useRef(false);
   const validation = validateUnits(offering, unitsInput);
   const label = payment?.status === "CONFIRMED" ? "payment_confirmed" : payment?.status === "REJECTED" ? "payment_rejected" : backingLifecycleLabels[view.kind];
