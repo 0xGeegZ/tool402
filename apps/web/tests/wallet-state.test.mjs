@@ -476,6 +476,10 @@ test("renders the closed seven-phase signature dialog with refusal copy inside e
   assert.match(source, /useSignTypedData\(\{\s*mutation:\s*\{\s*retry:\s*false\s*\}\s*\}\)/u);
   assert.match(source, /readCurrentContext:\s*\(\)\s*=>\s*currentActionContext\(walletRef\.current\)/u);
   assert.doesNotMatch(source, /Eip1193Provider|metamask-provider|provider\.request/u);
+  assert.match(source, /const\s+signingRef\s*=\s*useRef\(false\)/u);
+  assert.match(source, /if\s*\(\s*signingRef\.current\s*\)\s*return;/u);
+  assert.match(source, /signingRef\.current\s*=\s*true;/u);
+  assert.match(source, /finally\s*\{\s*signingRef\.current\s*=\s*false;/u);
   assert.doesNotMatch(
     source,
     /\b(?:signCommand|relayCommandBody|createCommandNonce|createUnsignedCommand|readCurrentSession|readChainId|readSignerAddress)\(/u,

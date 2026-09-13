@@ -202,6 +202,7 @@ export function SignatureDialog({
   const { mutateAsync: signTypedData } = useSignTypedData({ mutation: { retry: false } });
   const [state, setState] = useState<DialogState>(idleState);
   const cardRef = useRef<HTMLElement>(null);
+  const signingRef = useRef(false);
   const busy = state.phase === "waiting" || state.phase === "checking";
 
   function keepFocus(event: KeyboardEvent<HTMLElement>) {
@@ -234,32 +235,38 @@ export function SignatureDialog({
   }
 
   async function sign() {
+    if (signingRef.current) return;
     const context = currentActionContext(wallet);
     if (context === null) {
       finish(describeResult({ kind: "no_account" }));
       return;
     }
-    setState({
-      phase: "waiting",
-      message: "Confirm the signature in MetaMask.",
-      outcome: null,
-    });
-    cardRef.current?.focus();
-    const result = await signAndRelayCommand(context, request, {
-      relay,
-      readCurrentContext: () => currentActionContext(walletRef.current),
-      signTypedData: (typedData) => signTypedData({
-        ...typedData,
-        message: { ...typedData.message },
-      }),
-      onSigned: () =>
-        setState({
-          phase: "checking",
-          message: "Signature received. Relaying the command.",
-          outcome: null,
+    signingRef.current = true;
+    try {
+      setState({
+        phase: "waiting",
+        message: "Confirm the signature in MetaMask.",
+        outcome: null,
+      });
+      cardRef.current?.focus();
+      const result = await signAndRelayCommand(context, request, {
+        relay,
+        readCurrentContext: () => currentActionContext(walletRef.current),
+        signTypedData: (typedData) => signTypedData({
+          ...typedData,
+          message: { ...typedData.message },
         }),
-    });
-    finish(describeResult(result));
+        onSigned: () =>
+          setState({
+            phase: "checking",
+            message: "Signature received. Relaying the command.",
+            outcome: null,
+          }),
+      });
+      finish(describeResult(result));
+    } finally {
+      signingRef.current = false;
+    }
   }
 
   const rows: readonly (readonly [string, string])[] = [
