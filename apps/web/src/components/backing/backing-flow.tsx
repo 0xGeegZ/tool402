@@ -215,7 +215,11 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
 
   function onSignature(result: SignatureResult) {
     if (request === null || !finalPhases.has(result.phase)) return;
-    setView(viewAfterSignature(result, request));
+    const next = viewAfterSignature(result, request);
+    if (next.kind !== "prepared") {
+      try { window.localStorage.removeItem(preparedIntentKey(dashboardAddress ?? "", offering.offeringPublicId, request.idempotencyKey)); } catch { /* recovery storage is best effort only */ }
+    }
+    setView(next);
     setRequest(null);
   }
 
