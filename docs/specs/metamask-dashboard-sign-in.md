@@ -61,9 +61,9 @@ Missing or malformed configuration produces only `503 {"outcome":"not_configured
 
 1. The existing `WalletIsland` obtains one MetaMask account only after an
    explicit click and reports `connected` only after observing chain `0x128`.
-   When that shared session is absent, the sign-in control may passively select
-   an already-authorized MetaMask provider and read only `eth_chainId` and
-   `eth_accounts` to offer the same control; it never requests an account.
+   Its shared session may passively restore an already-authorized MetaMask
+   provider after a full reload by reading only `eth_chainId` and
+   `eth_accounts`; it never requests an account.
 2. The sign-in control calls `readCurrentSession(provider)` immediately before
    it starts. It proceeds only when the observed state is `connected` and its
    lower-case address still equals the rendered address.
@@ -185,8 +185,8 @@ without inventing account-specific data or a claim of account authority.
 | MetaMask removes the selected account after a settled wallet identity | one same-origin logout request, then replace with `/sign-in` and refresh after success |
 | restored dashboard session has no selected MetaMask account, a wrong chain, or a different selected account | one same-origin logout request, then replace with `/sign-in` and refresh after success |
 
-No automatic retry, provider discovery outside the sign-in control and
-authenticated synchronizer, storage API, timer,
+No automatic retry, provider discovery outside the shared wallet-session
+provider and authenticated synchronizer, storage API, timer,
 analytics, console logging, external fetch, payment, transaction, command
 relay, role decision, or configuration fallback other than the fixed Vercel
 Preview origin derivation is allowed.

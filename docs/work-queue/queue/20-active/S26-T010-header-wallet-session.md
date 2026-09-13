@@ -34,7 +34,8 @@ island with its own state. This card moves the accepted island to the shell
 header as a compact control, shares one session through a React context in
 the root layout, and removes the wizard's wallet block; the wizard reads the
 shared session and shows one sentence pointing to the header until connected.
-Discovery still runs only on a click. Nothing auto-connects or persists.
+Nothing persists. An already-authorized account may be passively restored on
+the first shared-session mount without requesting an account.
 
 The local contract is the
 [UI-S26 header wallet control manifest](../../../ui/UI-S26.md). The accepted
@@ -66,9 +67,9 @@ slices it builds on are the [UI-S00 manifest](../../../ui/UI-S00.md), the
   because `wallet-session.tsx` does not exist, the island still holds local
   state, the layout renders no wallet control, and the signing component
   still mounts its own wallet block.
-- Focused tests prove the fixed session API, discovery only inside
-  `connect`, the layout wrapper and control placement, the per-kind labels,
-  and the visually hidden live region.
+- Focused tests prove the fixed session API, one passive initial account read
+  without `eth_requestAccounts`, the layout wrapper and control placement, the
+  per-kind labels, and the visually hidden live region.
 - The amended accepted tests pass with only their island, header, and
   landmark assertions changed; every other assertion is untouched.
 - Web typecheck, test, lint, and build; root typecheck, test, lint,
@@ -83,10 +84,20 @@ slices it builds on are the [UI-S00 manifest](../../../ui/UI-S00.md), the
 ## Boundary
 
 This card changes presentation and client-state composition only. It adds no
-state kind, wallet, auto-connect, storage, discovery outside a click,
-signature outside the accepted dialog, authority display, balance,
-transaction, route, navigation change, or API change. The manifest's
-exclusions govern; this card does not restate them.
+state kind, wallet, storage, account request, signature outside the accepted
+dialog, authority display, balance, transaction, route, navigation change, or
+API change. The manifest's exclusions govern; this card does not restate them.
+
+## User-directed passive restoration amendment
+
+The repository owner directs the existing shared wallet session to restore one
+already-authorized MetaMask account after a full reload, so the header no
+longer requires a second Connect click. Only `wallet-session.tsx` and
+`wallet-session.test.mjs` may change: after mount, the provider may use the
+accepted discovery seam and read only `eth_chainId` and `eth_accounts` once.
+It must never call `eth_requestAccounts`, sign, switch, store, retry, transact,
+or infer authority; an explicit header click remains required to request an
+account.
 
 ## Human worktree lane request
 

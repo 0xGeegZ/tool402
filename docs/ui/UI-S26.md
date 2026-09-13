@@ -6,8 +6,8 @@ UI-S26 moves the accepted UI-S15 MetaMask island into the shared shell header
 as a compact control and gives every client component the same wallet session
 through one React context, so the provider deploy wizard no longer mounts its
 own wallet block. It is presentation and client-state composition only. No
-state-machine kind, discovery rule, chain gate, signature, relay, command,
-data read, or route changes.
+state-machine kind, chain gate, signature, relay, command, data read, or route
+changes.
 
 ## Local targets
 
@@ -42,13 +42,16 @@ and `useWalletSession()`. The provider holds exactly the state the UI-S15
 island holds today: one `WalletState` from the accepted seven-kind union and
 one selected EIP-1193 provider reference. It exposes
 `connect(approvedIssuerAddress?)`, `switchChain()`, and `disconnect()`, whose
-bodies move unchanged from the island: discovery through the accepted
-`discoverMetaMaskProvider` runs only inside `connect`, never at module load,
-on render, or in an effect; `switchChain` reuses `recheckAfterSwitch`;
-`disconnect` clears both values. `useWalletSession()` throws outside the
-provider. The session lives in the root layout, so it survives client-side
-navigation and resets to `disconnected` on a full reload. Nothing is persisted
-to storage. A connected session is not an authority; the server re-reads the
+bodies move unchanged from the island. On initial mount only, the provider may
+passively select an already-authorized MetaMask provider, read exactly
+`eth_chainId` and `eth_accounts`, and retain the resulting existing session.
+It never calls `eth_requestAccounts`, signs, switches a chain, stores data, or
+retries. The explicit `connect` handler remains the only way to request an
+account. `switchChain` reuses `recheckAfterSwitch`; `disconnect` clears both
+values. `useWalletSession()` throws outside the provider. The session lives in
+the root layout, so it survives client-side navigation and restores an
+already-authorized account after a full reload. Nothing is persisted to
+storage. A connected session is not an authority; the server re-reads the
 durable authority record on every command.
 
 ## Header control contract
@@ -96,11 +99,11 @@ passes no approved issuer address, as today.
 
 ## Explicit exclusions
 
-Do not add an eighth state kind, a second wallet, an auto-connect, a storage
-read or write, a discovery call outside `connect`, a chain switch outside a
-user click, a disconnect control in the header, a signature outside the
-accepted dialog, a balance, transaction, or authority display, an icon
-library, or a change to the navigation entries. Do not touch
+Do not add an eighth state kind, a second wallet, a storage read or write, a
+provider request, a chain switch outside a user click, a disconnect control in
+the header, a signature outside the accepted dialog, a balance, transaction,
+or authority display, an icon library, or a change to the navigation entries.
+Do not touch
 `wallet-state.ts`, `metamask-provider.ts`, the command bridge, the relay, or
 any API route.
 

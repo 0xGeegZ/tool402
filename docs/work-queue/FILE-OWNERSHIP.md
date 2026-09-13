@@ -1128,6 +1128,13 @@ The root additionally reserves only the connected-address badge wrapper in
 internal `/dashboard` navigation. It neither reads nor grants the separate S38
 signed dashboard session.
 
+User-directed S26 passive restoration amendment: the root additionally reserves
+only `apps/web/src/components/wallet/wallet-session.tsx` and
+`apps/web/tests/wallet-session.test.mjs` to restore an already-authorized
+MetaMask account once after mount via `eth_chainId` and `eth_accounts`. It may
+not call `eth_requestAccounts`, sign, switch, store, retry, transact, or alter
+the server dashboard-session guard.
+
 The owner-directed deploy-form amendment further reserves only the existing
 `deploy-stage-signing.tsx` signing block and its existing
 `deploy-stage-signing.test.mjs` assertion to render one explicit shared-session
