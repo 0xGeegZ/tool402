@@ -144,13 +144,14 @@ implementedTest("invalidates late connect and switch results after an explicit d
   assert.match(source.slice(disconnectStart), /sessionReadGenerationRef\.current \+= 1;/u);
 });
 
-implementedTest("wraps the shell in the session provider and renders the control at the far right of the header", async () => {
+implementedTest("keeps the session provider inside the root Wagmi provider until its consumers migrate", async () => {
   const layout = await readAppFile(layoutPath);
 
+  assert.match(layout, /import\s*\{\s*WalletProviders\s*\}\s+from\s+["']\.\.\/components\/wallet\/wallet-providers["']/u);
   assert.match(layout, /import\s*\{\s*WalletSessionProvider\s*\}\s+from\s+["']\.\.\/components\/wallet\/wallet-session["']/u);
   assert.match(layout, /import\s*\{\s*WalletIsland\s*\}\s+from\s+["']\.\.\/components\/wallet\/wallet-connect["']/u);
-  assert.match(layout, /<WalletSessionProvider>\s*<div data-ui-shell=["']s00["']/u);
-  assert.match(layout, /<\/div>\s*<\/WalletSessionProvider>\s*<\/body>/u);
+  assert.match(layout, /<WalletProviders>\s*<WalletSessionProvider>\s*<div data-ui-shell=["']s00["']/u);
+  assert.match(layout, /<\/div>\s*<\/WalletSessionProvider>\s*<\/WalletProviders>\s*<\/body>/u);
   assert.match(layout, /Prepare a tool\s*<\/Link>\s*<WalletIsland \/>/u);
   assert.equal((layout.match(/<WalletIsland \/>/gu) ?? []).length, 1);
 });

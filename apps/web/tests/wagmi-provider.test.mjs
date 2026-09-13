@@ -50,7 +50,7 @@ implementedConfigTest("starts server-neutral with one injected MetaMask connecto
   const connectors = getConnectors(api.tool402WagmiConfig);
   assert.equal(connectors.length, 1);
   assert.equal(connectors[0]?.type, "injected");
-  assert.equal(connectors[0]?.id, "injected");
+  assert.equal(connectors[0]?.id, "metaMask");
 });
 
 implementedConfigTest("uses the configured Hashio transport for its public client", () => {
@@ -68,10 +68,9 @@ async function captureConfigOptions() {
   runInNewContext(outputText, {
     exports: module.exports,
     require(specifier) {
-      if (specifier === "wagmi") return { createConfig: (value) => { options = value; return value; } };
-      if (specifier === "wagmi/connectors") return { injected: (value) => ({ type: "injected", ...value }) };
-      if (specifier === "viem") return {
-        defineChain: (value) => value,
+      if (specifier === "wagmi") return {
+        createConfig: (value) => { options = value; return value; },
+        injected: (value) => ({ type: "injected", ...value }),
         http: (url) => ({ url }),
       };
       throw new Error(`unexpected config import: ${specifier}`);
@@ -83,7 +82,9 @@ async function captureConfigOptions() {
 implementedConfigTest("enables SSR and explicitly targets MetaMask", async () => {
   const options = await captureConfigOptions();
   assert.equal(options?.ssr, true);
-  assert.deepEqual(options?.connectors, [{ type: "injected", target: "metaMask" }]);
+  assert.equal(options?.connectors?.length, 1);
+  assert.equal(options?.connectors?.[0]?.type, "injected");
+  assert.equal(options?.connectors?.[0]?.target, "metaMask");
   assert.equal(options?.transports?.[296]?.url, "https://testnet.hashio.io/api");
 });
 
@@ -133,8 +134,12 @@ async function loadProviders() {
 
 implementedProviderTest("mounts one Wagmi config around one browser QueryClient", async () => {
   const harness = await loadProviders();
-  assert.equal(harness.WalletProviders({ children: "shell" }), "shell");
-  assert.equal(harness.WalletProviders({ children: "shell" }), "shell");
+  const render = (node) =>
+    node !== null && typeof node === "object" && typeof node.type === "function"
+      ? render(node.type(node.props))
+      : node;
+  assert.equal(render(harness.WalletProviders({ children: "shell" })), "shell");
+  assert.equal(render(harness.WalletProviders({ children: "shell" })), "shell");
   assert.equal(harness.wagmiCalls.length, 2);
   assert.equal(harness.wagmiCalls[0]?.config, api.tool402WagmiConfig);
   assert.equal(harness.wagmiCalls[1]?.config, api.tool402WagmiConfig);
