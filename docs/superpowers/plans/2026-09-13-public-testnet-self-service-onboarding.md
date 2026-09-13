@@ -59,7 +59,7 @@ Expected: one documentation-only commit before executable work.
 - Create: `packages/backend/convex/self_service_accounts.ts`
 - Create: `packages/backend/tests/self-service-accounts.test.mjs`
 - Modify: `packages/backend/convex/schema.ts`, `packages/backend/convex/provider_session_ingress.ts`, `packages/backend/convex/http.ts`
-- Modify: `apps/web/src/lib/dashboard-auth/dashboard-auth-routes.ts`, `apps/web/tests/dashboard-auth-routes.test.mjs`, `packages/backend/tests/provider-session-ingress.test.mjs`
+- Modify: `apps/web/src/lib/self-service-server.ts`, `apps/web/tests/self-service-server.test.mjs`, `packages/backend/tests/provider-session-ingress.test.mjs`
 
 **Interfaces:**
 
@@ -100,13 +100,14 @@ const derivedPrincipal = `self_service_${canonicalSignerAddress.slice(2)}`;
 
 Use an exact HMAC body variant such as `{ type: "self_service_ensure",
 canonicalSignerAddress, sessionExpiresAt }`; expose it only through the
-existing server assertion path. Invoke it after successful dashboard challenge
-verification and before writing the session cookie, returning a clear
-unavailable state rather than an authenticated-looking button.
+existing server assertion path. Invoke it from the first protected
+self-service read after the existing dashboard session is established. Keep
+legacy sign-in successful when public self-service is disabled or unavailable;
+return a clear unavailable state rather than an authenticated-looking button.
 
 - [ ] **Step 4: Run GREEN and regression contracts**
 
-Run: `npm run test --workspace=@tool402/backend -- tests/self-service-accounts.test.mjs tests/provider-session-ingress.test.mjs && npm run test --workspace=@tool402/web -- tests/dashboard-auth-routes.test.mjs`
+Run: `npm run test --workspace=@tool402/backend -- tests/self-service-accounts.test.mjs tests/provider-session-ingress.test.mjs && npm run test --workspace=@tool402/web -- tests/self-service-server.test.mjs`
 
 Expected: all targeted tests pass.
 

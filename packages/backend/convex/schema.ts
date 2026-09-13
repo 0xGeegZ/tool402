@@ -13,6 +13,15 @@ export default defineSchema({
     authorityVersion: v.string(),
     enabled: v.boolean(),
   }).index("by_chain_id_and_canonical_signer_address", ["chainId", "canonicalSignerAddress"]),
+  selfServiceAccounts: defineTable({
+    canonicalSignerAddress: v.string(),
+    chainId: v.literal(296),
+    principalPublicId: v.string(),
+    policyVersion: v.literal("public_testnet_v1"),
+    status: v.union(v.literal("ACTIVE"), v.literal("SUSPENDED"), v.literal("REVOKED")),
+    createdAt: v.int64(),
+    updatedAt: v.int64(),
+  }).index("by_chain_id_and_canonical_signer_address", ["chainId", "canonicalSignerAddress"]),
   externalPrepareCommandReplayClaims: defineTable({
     replayIdentity: v.string(),
     outcome: v.union(v.literal("NEW"), v.literal("IDEMPOTENCY_REPLAYED"), v.literal("IDEMPOTENCY_CONFLICT")),

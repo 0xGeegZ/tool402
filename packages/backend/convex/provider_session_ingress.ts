@@ -21,6 +21,7 @@ type ProviderToolRequest =
   | Readonly<{ type: "list"; canonicalSignerAddress: string; cursor: string | null; sessionExpiresAt: string }>
   | Readonly<{ type: "read"; canonicalSignerAddress: string; toolPublicId: string; sessionExpiresAt: string }>
   | Readonly<{ type: "deployment"; canonicalSignerAddress: string; toolPublicId: string; sessionExpiresAt: string }>
+  | Readonly<{ type: "self_service_ensure"; canonicalSignerAddress: string; sessionExpiresAt: string }>
   | Readonly<{ type: "backing"; canonicalSignerAddress: string; attemptPublicId: string; transactionHash: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string }; sessionExpiresAt: string }>
   | Readonly<{ type: "backing_reserve"; canonicalSignerAddress: string; attemptPublicId: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string }; sessionExpiresAt: string }>
   | Readonly<{ type: "backing_read"; canonicalSignerAddress: string; sessionExpiresAt: string }>;
@@ -32,6 +33,7 @@ type Seams = {
   readonly list: (input: { canonicalSignerAddress: string; cursor: string | null }) => Promise<ToolPage>;
   readonly read: (input: { canonicalSignerAddress: string; toolPublicId: string }) => Promise<ToolRead>;
   readonly deployment: (input: { canonicalSignerAddress: string; toolPublicId: string }) => Promise<ToolRead>;
+  readonly ensureSelfService: (input: { canonicalSignerAddress: string }) => Promise<unknown>;
   readonly backing: (input: { canonicalSignerAddress: string; attemptPublicId: string; transactionHash: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string } }) => Promise<unknown>;
   readonly backingReserve: (input: { canonicalSignerAddress: string; attemptPublicId: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string } }) => Promise<unknown>;
   readonly backingRead: (input: { canonicalSignerAddress: string }) => Promise<unknown>;
@@ -41,6 +43,7 @@ const allocateReference = makeFunctionReference<"mutation">("provider_tools:allo
 const listReference = makeFunctionReference<"query">("provider_tools:listOwnedTools");
 const readReference = makeFunctionReference<"query">("provider_tools:readOwnedTool");
 const deploymentReference = makeFunctionReference<"query">("provider_tools:readOwnedToolDeployment");
+const ensureSelfServiceReference = makeFunctionReference<"mutation">("self_service_accounts:ensureSelfServiceAccount");
 const claimReplayReference = makeFunctionReference<"mutation">("wallet_command_replay:claimIngressReplayIdentity");
 const backingReference = makeFunctionReference<"action">("backing_payment_records:confirmBackingPayment");
 const backingReserveReference = makeFunctionReference<"action">("backing_payment_records:reserveBackingPayment");
@@ -161,6 +164,9 @@ function exactBody(bytes: Uint8Array): ProviderToolRequest | null {
       && typeof record.toolPublicId === "string" && /^tool_[0-9a-f]{32}$/u.test(record.toolPublicId)) {
       return { type: "deployment", canonicalSignerAddress: record.canonicalSignerAddress, toolPublicId: record.toolPublicId, sessionExpiresAt: record.sessionExpiresAt };
     }
+    if (record.type === "self_service_ensure" && JSON.stringify(Object.keys(record)) === JSON.stringify(["type", "canonicalSignerAddress", "sessionExpiresAt"])) {
+      return { type: "self_service_ensure", canonicalSignerAddress: record.canonicalSignerAddress, sessionExpiresAt: record.sessionExpiresAt };
+    }
     if (record.type === "backing" && JSON.stringify(Object.keys(record)) === JSON.stringify(["type", "canonicalSignerAddress", "attemptPublicId", "transactionHash", "parameters", "sessionExpiresAt"])
       && typeof record.attemptPublicId === "string" && noncePattern.test(record.attemptPublicId)
       && typeof record.transactionHash === "string" && /^0x[0-9a-f]{64}$/u.test(record.transactionHash)
@@ -223,6 +229,9 @@ async function handle(ctx: ActionContext, request: Request, seams: Seams): Promi
     if (body.type === "deployment") {
       return response(await seams.deployment({ canonicalSignerAddress: body.canonicalSignerAddress, toolPublicId: body.toolPublicId }), 200);
     }
+    if (body.type === "self_service_ensure") {
+      return response(await seams.ensureSelfService({ canonicalSignerAddress: body.canonicalSignerAddress }), 200);
+    }
     if (body.type === "backing") {
       return response(await seams.backing({ canonicalSignerAddress: body.canonicalSignerAddress, attemptPublicId: body.attemptPublicId, transactionHash: body.transactionHash, parameters: body.parameters }), 200);
     }
@@ -259,6 +268,7 @@ export async function handleProviderSessionIngress(ctx: ActionContext, request: 
     list: (input) => ctx.runQuery(listReference, input) as Promise<ToolPage>,
     read: (input) => ctx.runQuery(readReference, input) as Promise<ToolRead>,
     deployment: (input) => ctx.runQuery(deploymentReference, input) as Promise<ToolRead>,
+    ensureSelfService: (input) => ctx.runMutation(ensureSelfServiceReference, input),
     backing: (input) => ctx.runAction(backingReference, input),
     backingReserve: (input) => ctx.runAction(backingReserveReference, input),
     backingRead: (input) => ctx.runAction(backingReadReference, input),

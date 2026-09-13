@@ -23,12 +23,14 @@ version never change on normal sign-in. Its status is `ACTIVE`, `SUSPENDED`,
 or `REVOKED`; only an operator-controlled mutation may change it.
 
 The authenticated Next-to-Convex ingress provisions that membership
-atomically and idempotently after a verified session. It accepts no owner,
-role, version, or capability supplied by the browser. It returns an explicit
-unavailable result when the feature flag or backend configuration is absent.
-Existing sessions invoke the same server assertion before a new self-service
-write, so they are not required to sign in again. A suspended or revoked row
-is never recreated or silently reactivated.
+atomically and idempotently from a verified dashboard session. It accepts no
+owner, role, version, or capability supplied by the browser. Dashboard sign-in
+itself remains available for legacy users: the first protected self-service
+dashboard/provider/backer read performs the ensure after the session is set.
+It returns an explicit unavailable result when the feature flag or backend
+configuration is absent. Existing sessions invoke the same server assertion
+before a new self-service write, so they are not required to sign in again. A
+suspended or revoked row is never recreated or silently reactivated.
 
 Command admission resolves exactly one principal in this order: a compatible
 legacy authority, or one valid self-service membership for the requested

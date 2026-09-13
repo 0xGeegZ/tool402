@@ -1,0 +1,54 @@
+import { internalMutationGeneric, type DataModelFromSchemaDefinition, type MutationBuilder } from "convex/server";
+import { v } from "convex/values";
+import type schema from "./schema.ts";
+
+const internalMutation: MutationBuilder<DataModelFromSchemaDefinition<typeof schema>, "internal"> = internalMutationGeneric;
+const addressPattern = /^0x[0-9a-f]{40}$/u;
+const outcomeValidator = v.union(
+  v.literal("ACTIVE"),
+  v.literal("DISABLED"),
+  v.literal("SUSPENDED"),
+  v.literal("REVOKED"),
+  v.literal("UNAVAILABLE"),
+);
+
+function enabled(): boolean {
+  return process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED === "true";
+}
+
+function timestamp(): bigint | null {
+  const value = Date.now();
+  return Number.isSafeInteger(value) && value >= 0 ? BigInt(value) : null;
+}
+
+export const ensureSelfServiceAccount = internalMutation({
+  args: { canonicalSignerAddress: v.string() },
+  returns: v.object({ outcome: outcomeValidator }),
+  handler: async (ctx, args) => {
+    if (!enabled()) return { outcome: "DISABLED" as const };
+    if (!addressPattern.test(args.canonicalSignerAddress)) return { outcome: "UNAVAILABLE" as const };
+    const matches = await ctx.db.query("selfServiceAccounts")
+      .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+        query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress)
+      )).take(2);
+    if (matches.length > 1) return { outcome: "UNAVAILABLE" as const };
+    const existing = matches[0];
+    if (existing !== undefined) {
+      if (existing.principalPublicId !== `self_service_${args.canonicalSignerAddress.slice(2)}`
+        || existing.policyVersion !== "public_testnet_v1") return { outcome: "UNAVAILABLE" as const };
+      return { outcome: existing.status };
+    }
+    const now = timestamp();
+    if (now === null) return { outcome: "UNAVAILABLE" as const };
+    await ctx.db.insert("selfServiceAccounts", {
+      canonicalSignerAddress: args.canonicalSignerAddress,
+      chainId: 296,
+      principalPublicId: `self_service_${args.canonicalSignerAddress.slice(2)}`,
+      policyVersion: "public_testnet_v1",
+      status: "ACTIVE",
+      createdAt: now,
+      updatedAt: now,
+    });
+    return { outcome: "ACTIVE" as const };
+  },
+});
