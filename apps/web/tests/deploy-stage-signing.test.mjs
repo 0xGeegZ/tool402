@@ -457,12 +457,14 @@ implementedTest("keeps directory publication blocked after a selected tool attac
   assert.equal(after.props.states[3].kind, "blocked");
   assert.notEqual(after.props.enabledStage, 3);
   after.props.onActivate(2);
-  const recheck = elements(harness.render()).find((element) => element.type === "SignatureDialog");
-  assert.ok(recheck);
-  assert.equal(recheck.props.request.type, "external.attachCandidate");
+  assert.equal(
+    elements(harness.render()).some((element) => element.type === "SignatureDialog"),
+    false,
+    "a receipt recheck reads the durable state without a second attachment signature",
+  );
 });
 
-implementedTest("rehydrates the exact submitted candidate and refreshes a selected tool to READY after recheck", async () => {
+implementedTest("rehydrates the exact submitted candidate and refreshes a selected tool to READY after a signature-free receipt recheck", async () => {
   const { campaignFixture } = await import("../src/components/provider/deploy/campaign-fixture.ts");
   const { atsCreateConfiguration } = await import("../src/components/provider/deploy/ats-create-configuration.ts");
   const values = {
@@ -496,10 +498,11 @@ implementedTest("rehydrates the exact submitted candidate and refreshes a select
   const before = elements(harness.render()).find((element) => element.type === "ProviderDeployStages");
   assert.equal(before.props.enabledStage, 2);
   before.props.onActivate(2);
-  const dialog = elements(harness.render()).find((element) => element.type === "SignatureDialog");
-  assert.ok(dialog);
-  assert.equal(dialog.props.request.type, "external.attachCandidate");
-  dialog.props.onResult({ phase: "complete", outcome: "REPLAYED" });
+  assert.equal(
+    elements(harness.render()).some((element) => element.type === "SignatureDialog"),
+    false,
+    "a pending selected receipt is rechecked without a second MetaMask signature",
+  );
   harness.render();
   const after = elements(harness.render()).find((element) => element.type === "ProviderDeployStages");
   assert.equal(reads, 2);

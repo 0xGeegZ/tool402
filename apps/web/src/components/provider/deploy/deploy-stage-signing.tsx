@@ -200,6 +200,15 @@ export function DeployStageSigning({
 
   function activate(stage: number) {
     if (request !== null || stage !== enabledStage) return;
+    if (
+      stage === 2
+      && selectedToolPublicId !== undefined
+      && states[stage]?.detail?.startsWith("Recheck the attached receipt")
+    ) {
+      setResumePending(true);
+      setSelectedRefresh((current) => current + 1);
+      return;
+    }
     try {
       const nextRequest = buildStageSignatureRequest({
         stage,
@@ -241,9 +250,6 @@ export function DeployStageSigning({
     });
     if (request.stage === 1 && stageState.kind === "done") setAttemptPublicId(request.idempotencyKey);
     if (request.stage === 0 && stageState.kind === "done" && selectedToolPublicId !== undefined) {
-      setSelectedRefresh((current) => current + 1);
-    }
-    if (selectedAttachmentAwaitingCorroboration) {
       setSelectedRefresh((current) => current + 1);
     }
     activeRequestContext.current = null;
