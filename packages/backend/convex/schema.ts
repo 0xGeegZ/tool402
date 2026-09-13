@@ -115,7 +115,7 @@ export default defineSchema({
     createdAt: v.int64(),
   }).index("by_idempotency_key", ["idempotencyKey"])
     .index("by_canonical_signer_address_and_created_at", ["canonicalSignerAddress", "createdAt"])
-    .index("by_canonical_signer_address_and_offering_public_id_and_created_at", ["canonicalSignerAddress", "offeringPublicId", "createdAt"]),
+    .index("by_backer_offering_created", ["canonicalSignerAddress", "offeringPublicId", "createdAt"]),
   offerings: defineTable({
     offeringPublicId: v.string(),
     subjectPublicId: v.string(),

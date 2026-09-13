@@ -122,7 +122,7 @@ export const readBackerPaymentForOffering = internalQuery({
   handler: async (ctx, args) => {
     if (!addressPattern.test(args.canonicalSignerAddress) || !/^[A-Za-z0-9_-]{1,96}$/u.test(args.offeringPublicId)) return null;
     const intents = await ctx.db.query("backingIntents")
-      .withIndex("by_canonical_signer_address_and_offering_public_id_and_created_at", (query) => (
+      .withIndex("by_backer_offering_created", (query) => (
         query.eq("canonicalSignerAddress", args.canonicalSignerAddress).eq("offeringPublicId", args.offeringPublicId)
       ))
       .order("desc")
