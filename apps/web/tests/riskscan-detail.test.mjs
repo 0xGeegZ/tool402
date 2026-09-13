@@ -43,9 +43,8 @@ test("locks the read-only RiskScan detail boundary", async () => {
   assert.match(discoveryCard, /href=["']\/explore\/riskscan["']/);
 
   const hrefs = [...sources.matchAll(/href=["']([^"']+)["']/g)].map(([, href]) => href);
-  assert.deepEqual(hrefs, ["/explore", "/explore/riskscan"]);
+  assert.deepEqual(hrefs, ["/explore", "/explore/riskscan/tool-loop", "/explore/riskscan"]);
   assert.match(detail, /href: "\/explore\/riskscan\/try", label: "Try RiskScan"/);
-  assert.match(detail, /href: "\/explore\/riskscan\/tool-loop", label: "Explore RiskScan ToolLoop"/);
   assert.match(detail, /actions=\{projection === null[\s\S]*?\{ href: "\/explore\/riskscan\/back", label: "Back this tool" \}/);
   assert.doesNotMatch(sources, /<(?:form|button|input|select|textarea)\b/i);
   assert.doesNotMatch(sources, /\bon[A-Z][A-Za-z]+\s*=|\baction\s*=/);
@@ -66,5 +65,18 @@ test("makes the OPEN RiskScan backing action primary", async () => {
   assert.match(
     detail,
     /actions=\{projection === null[\s\S]*?: \[\s*\{ href: "\/explore\/riskscan\/back", label: "Back this tool" \},\s*\{ href: "\/explore\/riskscan\/try", label: "Try RiskScan" \}/,
+  );
+});
+
+test("keeps the RiskScan ToolLoop route out of the button action group", async () => {
+  const detail = await readAppFile("src/components/riskscan/detail/riskscan-detail.tsx");
+
+  assert.doesNotMatch(
+    detail,
+    /actions=\{projection === null[\s\S]*?href: "\/explore\/riskscan\/tool-loop", label: "Explore RiskScan ToolLoop"/,
+  );
+  assert.match(
+    detail,
+    /<Link\s+href="\/explore\/riskscan\/tool-loop"\s+className="inline-flex items-center gap-1 text-sm font-medium text-brand-purple transition-colors hover:text-brand-purple\/80"\s*>\s*Explore RiskScan ToolLoop\s*<\/Link>/,
   );
 });

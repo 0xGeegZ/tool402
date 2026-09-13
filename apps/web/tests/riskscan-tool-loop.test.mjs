@@ -233,7 +233,7 @@ test("locks the static ToolLoop page, bounded client form, and non-payment prese
   assert.match(flow, /<StatusRegion\b/);
   assert.equal((flow.match(/\brunRiskScanQuickFlow\b/g) ?? []).length, 2);
 
-  assert.match(detail, /href: "\/explore\/riskscan\/tool-loop", label: "Explore RiskScan ToolLoop"/);
+  assert.match(detail, /<Link\s+href="\/explore\/riskscan\/tool-loop"/);
 
   assert.doesNotMatch(flow, /\bfetch\b|\/api\//);
   assert.doesNotMatch(flow, /\bheaders\b|payment-required|PAYMENT-REQUIRED/i);

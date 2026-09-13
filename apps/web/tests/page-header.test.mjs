@@ -71,5 +71,5 @@ test("migrates only the declared headers and fixes the two page-level action set
   assert.doesNotMatch(provider, /<h1\b/);
   assert.doesNotMatch(provider, /actions=/);
   assert.match(detail, /href: "\/explore\/riskscan\/try", label: "Try RiskScan"/);
-  assert.match(detail, /href: "\/explore\/riskscan\/tool-loop", label: "Explore RiskScan ToolLoop"/);
+  assert.match(detail, /<Link\s+href="\/explore\/riskscan\/tool-loop"/);
 });
