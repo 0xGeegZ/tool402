@@ -325,6 +325,46 @@ test("restores an already-authorized MetaMask account after a full reload withou
   assert.deepEqual(calls, ["eth_chainId", "eth_accounts"]);
 });
 
+test("subscribes before publishing a restored account so an intervening account change wins", async () => {
+  const listeners = [];
+  let resolveInitialAccounts;
+  let accountReads = 0;
+  const provider = {
+    isMetaMask: true,
+    on(event, listener) {
+      listeners.push({ event, listener });
+    },
+    removeListener() {},
+    async request({ method }) {
+      if (method === "eth_chainId") return "0x128";
+      if (method === "eth_accounts") {
+        accountReads += 1;
+        if (accountReads === 1) {
+          return new Promise((resolve) => {
+            resolveInitialAccounts = resolve;
+          });
+        }
+        return ["0x0000000000000000000000000000000000000402"];
+      }
+      throw new Error(`unexpected provider method: ${method}`);
+    },
+  };
+  const harness = await walletIslandHarness(provider);
+
+  harness.render();
+  await flushMicrotasks();
+  assert.deepEqual(listeners.map(({ event }) => event), ["accountsChanged", "chainChanged"]);
+
+  listeners[0].listener(["0x0000000000000000000000000000000000000402"]);
+  resolveInitialAccounts(["0xc89f87052c3e080b4a9b021d4930055031ef378e"]);
+  await flushMicrotasks();
+
+  assert.match(
+    visibleText(harness.render()),
+    /Connected as 0x0000000000000000000000000000000000000402/u,
+  );
+});
+
 test("keeps the newest session event state when an older account read resolves late", async () => {
   const fake = deferredProvider();
   const harness = await walletIslandHarness(fake.provider);

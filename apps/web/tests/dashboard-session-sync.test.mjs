@@ -39,8 +39,7 @@ test("mounts the dashboard session synchronizer from the server-validated dashbo
 async function loadSynchronizer({
   responseStatus = 204,
   reject = false,
-  connections = [{ kind: "disconnected" }],
-  providerSelection = undefined,
+  walletSession = { state: { kind: "disconnected" }, settled: true },
 } = {}) {
   const { outputText } = typescript.transpileModule(await readFile(sourceUrl, "utf8"), {
     fileName: fileURLToPath(sourceUrl),
@@ -54,9 +53,6 @@ async function loadSynchronizer({
   const effects = [];
   const requests = [];
   const navigations = [];
-  const listeners = [];
-  const provider = {};
-  const selection = providerSelection ?? { kind: "provider", provider };
   let cursor = 0;
   const react = {
     useRef(initial) {
@@ -95,21 +91,8 @@ async function loadSynchronizer({
               refresh: () => navigations.push(["refresh"]),
             }),
           };
-        case "../../lib/wallet/metamask-provider":
-          return {
-            discoverMetaMaskProvider: async () => selection,
-            watchWalletSessionChanges: (_provider, listener) => {
-              listeners.push(listener);
-              return () => {};
-            },
-          };
-        case "../../lib/wallet/wallet-state":
-          return {
-            readCurrentSession: async () => ({
-              state: connections.shift() ?? { kind: "disconnected" },
-              provider,
-            }),
-          };
+        case "../wallet/wallet-session":
+          return { useWalletSession: () => walletSession };
         default:
           throw new Error(`unexpected synchronizer import: ${specifier}`);
       }
@@ -119,7 +102,9 @@ async function loadSynchronizer({
   return {
     requests,
     navigations,
-    listeners,
+    setWalletSession(next) {
+      Object.assign(walletSession, next);
+    },
     render(address) {
       cursor = 0;
       assert.equal(module.exports.DashboardSessionSync({ address }), null);
@@ -145,6 +130,21 @@ function assertLogout(harness) {
   assert.deepEqual(harness.navigations, [["replace", "/sign-in"], ["refresh"]]);
 }
 
+implementedTest("waits for passive wallet restoration before comparing the dashboard session", async () => {
+  const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const harness = await loadSynchronizer();
+
+  harness.setWalletSession({ state: { kind: "disconnected" }, settled: false });
+  harness.render(address);
+  await flushMicrotasks();
+  assert.equal(harness.requests.length, 0);
+
+  harness.setWalletSession({ state: { kind: "connected", address }, settled: true });
+  harness.render(address);
+  await flushMicrotasks();
+  assert.equal(harness.requests.length, 0);
+});
+
 implementedTest("logs out a restored dashboard session without a selected account", async () => {
   const harness = await loadSynchronizer();
 
@@ -160,26 +160,21 @@ implementedTest("logs out a restored dashboard session without a selected accoun
 
 implementedTest("logs out after the selected MetaMask account changes", async () => {
   const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
-  const harness = await loadSynchronizer({
-    connections: [
-      { kind: "connected", address },
-      { kind: "connected", address: "0x0000000000000000000000000000000000000402" },
-    ],
-  });
+  const harness = await loadSynchronizer({ walletSession: { state: { kind: "connected", address }, settled: true } });
 
   harness.render(address);
   await flushMicrotasks();
   assert.equal(harness.requests.length, 0);
-  assert.equal(harness.listeners.length, 1);
 
-  harness.listeners[0]();
+  harness.setWalletSession({ state: { kind: "connected", address: "0x0000000000000000000000000000000000000402" } });
+  harness.render(address);
   await flushMicrotasks();
 
   assertLogout(harness);
 });
 
 implementedTest("logs out a restored dashboard session without a MetaMask provider", async () => {
-  const harness = await loadSynchronizer({ providerSelection: { kind: "no_provider" } });
+  const harness = await loadSynchronizer({ walletSession: { state: { kind: "no_provider" }, settled: true } });
 
   harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
@@ -188,7 +183,7 @@ implementedTest("logs out a restored dashboard session without a MetaMask provid
 });
 
 implementedTest("logs out a restored dashboard session on the wrong chain", async () => {
-  const harness = await loadSynchronizer({ connections: [{ kind: "wrong_chain", chainId: "0x1" }] });
+  const harness = await loadSynchronizer({ walletSession: { state: { kind: "wrong_chain", chainId: "0x1" }, settled: true } });
 
   harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
@@ -198,7 +193,7 @@ implementedTest("logs out a restored dashboard session on the wrong chain", asyn
 
 implementedTest("does not navigate when active-account logout is rejected or unavailable", async () => {
   for (const failure of [{ responseStatus: 401 }, { reject: true }]) {
-    const harness = await loadSynchronizer({ ...failure, connections: [{ kind: "disconnected" }] });
+    const harness = await loadSynchronizer({ ...failure });
     harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
     await flushMicrotasks();
 
@@ -211,14 +206,14 @@ implementedTest("keeps sign-out synchronization inside the accepted local bounda
   const source = await readFile(sourceUrl, "utf8");
 
   assert.match(source, /^"use client";/u);
-  assert.match(source, /discoverMetaMaskProvider\(window\)/u);
-  assert.match(source, /readCurrentSession\(/u);
-  assert.match(source, /watchWalletSessionChanges\(/u);
+  assert.match(source, /import\s*\{\s*useWalletSession\s*\}\s*from\s*["']\.\.\/wallet\/wallet-session["']/u);
+  assert.match(source, /const\s*\{\s*state,\s*settled\s*\}\s*=\s*useWalletSession\(\)/u);
+  assert.match(source, /if\s*\(\s*!settled\s*\)\s*return;/u);
   assert.match(source, /state\.address\s*===\s*address/u);
   assert.match(source, /fetch\(["']\/api\/auth\/logout["']/u);
   assert.match(source, /method:\s*["']POST["']/u);
   assert.match(source, /credentials:\s*["']same-origin["']/u);
   assert.match(source, /router\.replace\(["']\/sign-in["']\)/u);
   assert.match(source, /router\.refresh\(\)/u);
-  assert.doesNotMatch(source, /document\.cookie|localStorage|sessionStorage|indexedDB|provider\.request|personal_sign|eth_requestAccounts|eth_sendTransaction|setTimeout|setInterval|console/u);
+  assert.doesNotMatch(source, /document\.cookie|localStorage|sessionStorage|indexedDB|provider\.request|personal_sign|eth_requestAccounts|eth_sendTransaction|setTimeout|setInterval|console|discoverMetaMaskProvider|readCurrentSession|watchWalletSessionChanges/u);
 });

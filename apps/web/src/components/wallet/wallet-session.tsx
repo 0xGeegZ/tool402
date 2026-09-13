@@ -28,6 +28,7 @@ export interface WalletSession {
 
 export interface WalletSessionValue {
   readonly state: WalletState;
+  readonly settled: boolean;
   readonly provider: Eip1193Provider | null;
   connect(approvedIssuerAddress?: string): Promise<void>;
   switchChain(): Promise<void>;
@@ -44,6 +45,7 @@ const WalletSessionContext = createContext<WalletSessionValue | null>(null);
 
 export function WalletSessionProvider({ children }: { readonly children: ReactNode }) {
   const [state, setState] = useState<WalletState>({ kind: "disconnected" });
+  const [settled, setSettled] = useState(false);
   const providerRef = useRef<Eip1193Provider | null>(null);
   const approvedIssuerRef = useRef<string | undefined>(undefined);
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -59,9 +61,27 @@ export function WalletSessionProvider({ children }: { readonly children: ReactNo
       if (!active || sessionReadGenerationRef.current !== generation) return;
       if (selection.kind !== "provider") {
         setState({ kind: selection.kind });
+        setSettled(true);
         return;
       }
 
+      providerRef.current = selection.provider;
+      cleanupRef.current = watchWalletSessionChanges(selection.provider, async () => {
+        const readGeneration = sessionReadGenerationRef.current + 1;
+        sessionReadGenerationRef.current = readGeneration;
+        setState({ kind: "connecting" });
+        const connection = await readCurrentSession(
+          selection.provider,
+          approvedIssuerRef.current,
+        );
+        if (
+          providerRef.current === selection.provider
+          && sessionReadGenerationRef.current === readGeneration
+        ) {
+          setState(connection.state);
+          setSettled(true);
+        }
+      });
       const connection = await readCurrentSession(
         selection.provider,
         approvedIssuerRef.current,
@@ -69,20 +89,24 @@ export function WalletSessionProvider({ children }: { readonly children: ReactNo
       if (!active || sessionReadGenerationRef.current !== generation) return;
       providerRef.current = connection.provider;
       setState(connection.state);
+      setSettled(true);
     }).catch(() => {
       if (active && sessionReadGenerationRef.current === generation) {
         setState({ kind: "disconnected" });
+        setSettled(true);
       }
     });
 
     return () => {
       active = false;
       sessionReadGenerationRef.current += 1;
+      cleanupRef.current?.();
+      cleanupRef.current = null;
     };
   }, []);
 
   useEffect(() => {
-    if (provider === null) {
+    if (provider === null || cleanupRef.current !== null) {
       return;
     }
 
@@ -102,6 +126,7 @@ export function WalletSessionProvider({ children }: { readonly children: ReactNo
     cleanupRef.current = cleanup;
     return () => {
       sessionReadGenerationRef.current += 1;
+      if (cleanupRef.current === cleanup) cleanupRef.current = null;
       cleanup();
     };
   }, [provider]);
@@ -118,6 +143,7 @@ export function WalletSessionProvider({ children }: { readonly children: ReactNo
     if (sessionReadGenerationRef.current !== generation) return;
     providerRef.current = connection.provider;
     setState(connection.state);
+    setSettled(true);
   }
 
   async function switchChain() {
@@ -132,6 +158,7 @@ export function WalletSessionProvider({ children }: { readonly children: ReactNo
     if (providerRef.current !== current || sessionReadGenerationRef.current !== generation) return;
     providerRef.current = connection.provider;
     setState(connection.state);
+    setSettled(true);
   }
 
   function disconnect() {
@@ -140,10 +167,11 @@ export function WalletSessionProvider({ children }: { readonly children: ReactNo
     cleanupRef.current = null;
     providerRef.current = null;
     setState({ kind: "disconnected" });
+    setSettled(true);
   }
 
   return (
-    <WalletSessionContext.Provider value={{ state, provider, connect, switchChain, disconnect }}>
+    <WalletSessionContext.Provider value={{ state, settled, provider, connect, switchChain, disconnect }}>
       {children}
     </WalletSessionContext.Provider>
   );
