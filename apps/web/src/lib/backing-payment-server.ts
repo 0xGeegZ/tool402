@@ -191,3 +191,12 @@ export async function loadBackerPayment(env: DashboardAuthEnvironment, sessionCo
   if (session === null || !addressPattern.test(session.address)) return null;
   return record(await forward(env, { type: "backing_read", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt }));
 }
+
+export async function loadBackerPaymentForOffering(env: DashboardAuthEnvironment, sessionCookie: string | null, offeringPublicId: string): Promise<BackingPaymentRecord | null> {
+  const session = await readDashboardSession(sessionCookie, env);
+  if (session === null || !addressPattern.test(session.address) || !/^[A-Za-z0-9_-]{1,96}$/u.test(offeringPublicId)) return null;
+  return record(await forward(env, {
+    type: "backing_read_offering", canonicalSignerAddress: session.address, offeringPublicId,
+    sessionExpiresAt: session.expiresAt,
+  }));
+}

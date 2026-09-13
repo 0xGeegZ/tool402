@@ -603,6 +603,7 @@ const offeringProjectionValidator = object({
   advertisedQuickPriceTinybars: string,
   advertisedStandardPriceTinybars: string,
   canonicalSignerAddress: string,
+  fundingRecipient: optional(string),
   atsAssetEvmAddress: optional(string),
   atsAttemptPublicId: optional(string),
   acceptedAt: bigint,
@@ -992,6 +993,7 @@ implementedTest("registers the exact closed M40 admission, asset-seam, and publi
     "admitOfferingCreate",
     "getPublicProjection",
     ...(atomicHelperSourceDeclared ? ["linkAtsCreateAttemptToDraftOffering"] : []),
+    "listPublicProviderBacking",
     "markAssetPending",
     "markAssetReady",
     "readAtsCreateReplayOffering",
@@ -1009,6 +1011,8 @@ implementedTest("registers the exact closed M40 admission, asset-seam, and publi
   }
   assert.equal(offerings.getPublicProjection.isQuery, true);
   assert.equal(offerings.getPublicProjection.isPublic, true);
+  assert.equal(offerings.listPublicProviderBacking.isQuery, true);
+  assert.equal(offerings.listPublicProviderBacking.isPublic, true);
   for (const flag of ["isInternal", "isMutation", "isAction"]) {
     assert.equal(offerings.getPublicProjection[flag], undefined);
   }

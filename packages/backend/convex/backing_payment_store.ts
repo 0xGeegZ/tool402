@@ -115,6 +115,36 @@ export const readBackerPayment = internalQuery({
   },
 });
 
+/** Reads a backer's latest durable payment record for one public offering only. */
+export const readBackerPaymentForOffering = internalQuery({
+  args: { canonicalSignerAddress: v.string(), offeringPublicId: v.string() },
+  returns: resultValidator,
+  handler: async (ctx, args) => {
+    if (!addressPattern.test(args.canonicalSignerAddress) || !/^[A-Za-z0-9_-]{1,96}$/u.test(args.offeringPublicId)) return null;
+    const intents = await ctx.db.query("backingIntents")
+      .withIndex("by_canonical_signer_address_and_offering_public_id_and_created_at", (query) => (
+        query.eq("canonicalSignerAddress", args.canonicalSignerAddress).eq("offeringPublicId", args.offeringPublicId)
+      ))
+      .order("desc")
+      .take(8);
+    for (const intent of intents) {
+      const attempts = await ctx.db.query("externalPrepareCommandAttempts")
+        .withIndex("by_idempotency_key", (query) => query.eq("idempotencyKey", intent.idempotencyKey))
+        .take(2);
+      if (attempts.length !== 1 || !validAttempt(attempts[0], { attemptPublicId: intent.idempotencyKey, canonicalSignerAddress: args.canonicalSignerAddress })) continue;
+      const claims = await ctx.db.query(backingPaymentClaimStore)
+        .withIndex("by_attempt_id", (query) => query.eq("attemptId", attempts[0]!._id))
+        .take(2);
+      const claim = claims[0];
+      if (
+        claims.length === 1 && integerPattern.test(claim!.tinybars)
+        && (claim!.transactionHash === undefined || hashPattern.test(claim!.transactionHash))
+      ) return { status: claim!.state, transactionHash: claim!.transactionHash ?? null, tinybars: claim!.tinybars };
+    }
+    return null;
+  },
+});
+
 export const readBackingPaymentVerificationContext = internalQuery({
   args: { canonicalSignerAddress: v.string() },
   returns: v.union(v.null(), v.object({

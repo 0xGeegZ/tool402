@@ -20,6 +20,7 @@ const recordReference = makeFunctionReference<"mutation", { attemptPublicId: str
 const reserveReference = makeFunctionReference<"mutation", { attemptPublicId: string; canonicalSignerAddress: string; tinybars: string }, Reservation>("backing_payment_store:reserveBackingPayment");
 const verificationContextReference = makeFunctionReference<"query", { canonicalSignerAddress: string }, { attemptPublicId: string; expectedTarget: string; transactionHash: string; tinybars: string; state: Status } | null>("backing_payment_store:readBackingPaymentVerificationContext");
 const paymentReference = makeFunctionReference<"query", { canonicalSignerAddress: string }, Reservation>("backing_payment_store:readBackerPayment");
+const scopedPaymentReference = makeFunctionReference<"query", { canonicalSignerAddress: string; offeringPublicId: string }, Reservation>("backing_payment_store:readBackerPaymentForOffering");
 
 function validParameters(input: Parameters): boolean {
   return /^[A-Za-z0-9_-]{1,96}$/u.test(input.offeringPublicId)
@@ -81,6 +82,15 @@ export const reverifyBackerPayment = internalActionGeneric({
   args: { canonicalSignerAddress: v.string() },
   returns: v.union(v.null(), v.object({ status: v.union(v.literal("PREPARED"), v.literal("CONFIRMED"), v.literal("REJECTED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN")), transactionHash: v.union(v.null(), v.string()), tinybars: v.string() })),
   handler: reverify,
+});
+
+export const readBackerPaymentForOffering = internalActionGeneric({
+  args: { canonicalSignerAddress: v.string(), offeringPublicId: v.string() },
+  returns: v.union(v.null(), v.object({ status: v.union(v.literal("PREPARED"), v.literal("CONFIRMED"), v.literal("REJECTED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN")), transactionHash: v.union(v.null(), v.string()), tinybars: v.string() })),
+  handler: async (ctx, args) => {
+    if (!addressPattern.test(args.canonicalSignerAddress) || !/^[A-Za-z0-9_-]{1,96}$/u.test(args.offeringPublicId)) return null;
+    return ctx.runQuery(scopedPaymentReference, args);
+  },
 });
 
 export function confirmBackingPaymentForTest(ctx: Context, args: { attemptPublicId: string; canonicalSignerAddress: string; transactionHash: string; parameters: Parameters }, readReceipt: ReceiptReader): Promise<Outcome> {

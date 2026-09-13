@@ -114,7 +114,8 @@ export default defineSchema({
     expiresAt: v.string(),
     createdAt: v.int64(),
   }).index("by_idempotency_key", ["idempotencyKey"])
-    .index("by_canonical_signer_address_and_created_at", ["canonicalSignerAddress", "createdAt"]),
+    .index("by_canonical_signer_address_and_created_at", ["canonicalSignerAddress", "createdAt"])
+    .index("by_canonical_signer_address_and_offering_public_id_and_created_at", ["canonicalSignerAddress", "offeringPublicId", "createdAt"]),
   offerings: defineTable({
     offeringPublicId: v.string(),
     subjectPublicId: v.string(),
@@ -160,6 +161,7 @@ export default defineSchema({
     atsAssetEvmAddress: v.optional(v.string()),
     activeDirectoryVersionId: v.optional(v.id("directoryVersions")),
   }).index("by_offering_public_id_and_version", ["offeringPublicId", "version"])
+    .index("by_state_and_updated_at", ["state", "updatedAt"])
     .index("by_ats_attempt_id", ["atsAttemptId"])
     .index("by_ats_create_draft_binding", [
       "subjectPublicId",

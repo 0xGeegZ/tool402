@@ -101,11 +101,16 @@ const projectionValidator = v.object({
   advertisedQuickPriceTinybars: v.string(),
   advertisedStandardPriceTinybars: v.string(),
   canonicalSignerAddress: v.string(),
+  fundingRecipient: v.optional(v.string()),
   atsAssetEvmAddress: v.optional(v.string()),
   atsAttemptPublicId: v.optional(v.string()),
   acceptedAt: v.int64(),
   updatedAt: v.int64(),
 });
+const publicBackingCatalogValidator = v.array(v.object({
+  offeringPublicId: v.string(),
+  title: v.string(),
+}));
 const offeringFields = [
   "offeringPublicId",
   "subjectPublicId",
@@ -954,6 +959,9 @@ export const getPublicProjection = publicQuery({
       advertisedQuickPriceTinybars: highest.advertisedQuickPriceTinybars,
       advertisedStandardPriceTinybars: highest.advertisedStandardPriceTinybars,
       canonicalSignerAddress: highest.canonicalSignerAddress,
+      ...(highest.fundingRecipient === undefined
+        ? {}
+        : { fundingRecipient: highest.fundingRecipient }),
       ...(highest.atsAssetEvmAddress === undefined
         ? {}
         : { atsAssetEvmAddress: highest.atsAssetEvmAddress }),
@@ -961,5 +969,27 @@ export const getPublicProjection = publicQuery({
       acceptedAt: highest.acceptedAt,
       updatedAt: highest.updatedAt,
     };
+  },
+});
+
+/** Public, bounded discovery surface for OPEN self-service provider offerings. */
+export const listPublicProviderBacking = publicQuery({
+  args: {},
+  returns: publicBackingCatalogValidator,
+  handler: async (ctx) => {
+    const rows = await ctx.db.query("offerings")
+      .withIndex("by_state_and_updated_at", (query) => query.eq("state", "OPEN"))
+      .order("desc")
+      .take(24);
+    const entries: Array<{ offeringPublicId: string; title: string }> = [];
+    for (const row of rows) {
+      const offering = readSafeOffering(row);
+      if (
+        !isSelectedProviderToolSubject(offering.subjectPublicId)
+        || offering.state !== "OPEN" || offering.fundingRecipient === undefined
+      ) continue;
+      entries.push({ offeringPublicId: offering.offeringPublicId, title: offering.narrative.title });
+    }
+    return entries;
   },
 });

@@ -30,6 +30,7 @@ export type OfferingRecord = {
   readonly advertisedQuickPriceTinybars: string;
   readonly advertisedStandardPriceTinybars: string;
   readonly canonicalSignerAddress: string;
+  readonly fundingRecipient?: string;
   readonly atsAssetEvmAddress?: string;
   readonly atsAttemptPublicId?: string;
   readonly acceptedAt: number | string;
@@ -56,6 +57,8 @@ export type ProviderProjections = {
   readonly offering: OfferingOutcome;
   readonly directory: DirectoryOutcome;
 };
+
+export type ProviderBackingCatalogEntry = Readonly<{ offeringPublicId: string; title: string }>;
 
 export type ProviderProjectionFetcher = (input: URL, init: RequestInit) => Promise<Response>;
 
@@ -133,6 +136,9 @@ function readOfferingRecord(input: unknown): OfferingRecord | null {
     baseFields,
     [...baseFields, "atsAssetEvmAddress"],
     [...baseFields, "atsAttemptPublicId"],
+    [...baseFields, "fundingRecipient"],
+    [...baseFields, "atsAssetEvmAddress", "fundingRecipient"],
+    [...baseFields, "atsAttemptPublicId", "fundingRecipient"],
   ];
   if (!fields.some((candidate) => hasOnlyOwnFields(record, candidate))) return null;
 
@@ -145,6 +151,7 @@ function readOfferingRecord(input: unknown): OfferingRecord | null {
   const advertisedQuickPriceTinybars = readAdvertisedPrice(record.advertisedQuickPriceTinybars);
   const advertisedStandardPriceTinybars = readAdvertisedPrice(record.advertisedStandardPriceTinybars);
   const canonicalSignerAddress = readString(record.canonicalSignerAddress);
+  const fundingRecipient = Object.hasOwn(record, "fundingRecipient") ? readString(record.fundingRecipient) : undefined;
   const acceptedAt = readTimestamp(record.acceptedAt);
   const updatedAt = readTimestamp(record.updatedAt);
   if (
@@ -152,6 +159,7 @@ function readOfferingRecord(input: unknown): OfferingRecord | null {
     || typeof version !== "number" || !Number.isSafeInteger(version) || version < 1
     || subjectPublicId === null || !publicIdPattern.test(subjectPublicId) || !["DRAFT", "ASSET_PENDING", "READY", "OPEN", "CLOSED"].includes(state as OfferingState)
     || definition === null || advertisedQuickPriceTinybars === null || advertisedStandardPriceTinybars === null || canonicalSignerAddress === null || !canonicalEvmAddressPattern.test(canonicalSignerAddress)
+    || fundingRecipient === null || (fundingRecipient !== undefined && (!canonicalEvmAddressPattern.test(fundingRecipient) || fundingRecipient !== canonicalSignerAddress))
     || acceptedAt === null || updatedAt === null
   ) return null;
 
@@ -177,6 +185,7 @@ function readOfferingRecord(input: unknown): OfferingRecord | null {
     advertisedQuickPriceTinybars,
     advertisedStandardPriceTinybars,
     canonicalSignerAddress,
+    ...(fundingRecipient === undefined ? {} : { fundingRecipient }),
     ...(atsAssetEvmAddress === undefined ? {} : { atsAssetEvmAddress }),
     ...(atsAttemptPublicId === undefined ? {} : { atsAttemptPublicId }),
     acceptedAt,
@@ -285,6 +294,38 @@ function parseDirectoryProjection(input: unknown): DirectoryOutcome {
   const record = readDirectoryRecord(input.record);
   if (typeof directoryVersion !== "number" || !Number.isSafeInteger(directoryVersion) || directoryVersion < 1 || record === null) return { outcome: "unexpected_response" };
   return { outcome: "loaded", directoryVersion, record };
+}
+
+function parseProviderBackingCatalog(input: unknown): readonly ProviderBackingCatalogEntry[] | null {
+  if (!hasOnlyOwnFields(input, ["outcome", "records"]) || input.outcome !== "FOUND" || !Array.isArray(input.records) || input.records.length > 24) return null;
+  const entries: ProviderBackingCatalogEntry[] = [];
+  for (const value of input.records) {
+    if (!hasOnlyOwnFields(value, ["offeringPublicId", "title"])) return null;
+    const offeringPublicId = readString(value.offeringPublicId);
+    const title = readString(value.title);
+    if (offeringPublicId === null || !/^offering_[0-9a-f]{32}$/u.test(offeringPublicId) || title === null || title.length === 0 || title.length > 160) return null;
+    entries.push({ offeringPublicId, title });
+  }
+  return entries;
+}
+
+export async function readProviderBackingCatalog(
+  environment: NodeJS.ProcessEnv,
+  fetcher: ProviderProjectionFetcher,
+): Promise<readonly ProviderBackingCatalogEntry[]> {
+  const source = providerSiteSource(environment);
+  if (source === null || typeof fetcher !== "function") return [];
+  try {
+    const deadline = AbortSignal.timeout(timeoutMilliseconds);
+    const response = await fetcher(new URL("/public/backing-catalog", source), {
+      method: "GET", headers: { accept: "application/json" }, credentials: "omit",
+      redirect: "error", cache: "no-store", signal: deadline,
+    });
+    if (response.status !== 200) return [];
+    return parseProviderBackingCatalog(await readBoundedJson(response, deadline)) ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export function isValidOfferingPublicId(offeringPublicId: string): boolean {

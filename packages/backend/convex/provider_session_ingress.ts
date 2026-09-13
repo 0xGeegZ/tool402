@@ -25,7 +25,8 @@ type ProviderToolRequest =
   | Readonly<{ type: "backing_intent"; canonicalSignerAddress: string; offeringPublicId: string; units: string; idempotencyKey: string; purchaseIntentId: string; expiresAt: string; sessionExpiresAt: string }>
   | Readonly<{ type: "backing"; canonicalSignerAddress: string; attemptPublicId: string; transactionHash: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string }; sessionExpiresAt: string }>
   | Readonly<{ type: "backing_reserve"; canonicalSignerAddress: string; attemptPublicId: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string }; sessionExpiresAt: string }>
-  | Readonly<{ type: "backing_read"; canonicalSignerAddress: string; sessionExpiresAt: string }>;
+  | Readonly<{ type: "backing_read"; canonicalSignerAddress: string; sessionExpiresAt: string }>
+  | Readonly<{ type: "backing_read_offering"; canonicalSignerAddress: string; offeringPublicId: string; sessionExpiresAt: string }>;
 type Seams = {
   readonly nowMilliseconds: () => number;
   readonly resolveIngressKey: (keyId: string) => CryptoKey | undefined;
@@ -39,6 +40,7 @@ type Seams = {
   readonly backing: (input: { canonicalSignerAddress: string; attemptPublicId: string; transactionHash: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string } }) => Promise<unknown>;
   readonly backingReserve: (input: { canonicalSignerAddress: string; attemptPublicId: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string } }) => Promise<unknown>;
   readonly backingRead: (input: { canonicalSignerAddress: string }) => Promise<unknown>;
+  readonly backingReadOffering: (input: { canonicalSignerAddress: string; offeringPublicId: string }) => Promise<unknown>;
 };
 
 const allocateReference = makeFunctionReference<"mutation">("provider_tools:allocateForIssuer");
@@ -51,6 +53,7 @@ const claimReplayReference = makeFunctionReference<"mutation">("wallet_command_r
 const backingReference = makeFunctionReference<"action">("backing_payment_records:confirmBackingPayment");
 const backingReserveReference = makeFunctionReference<"action">("backing_payment_records:reserveBackingPayment");
 const backingReadReference = makeFunctionReference<"action">("backing_payment_records:reverifyBackerPayment");
+const backingReadOfferingReference = makeFunctionReference<"action">("backing_payment_records:readBackerPaymentForOffering");
 
 function response(body: unknown, status: number): Response {
   try {
@@ -202,6 +205,10 @@ function exactBody(bytes: Uint8Array): ProviderToolRequest | null {
     if (record.type === "backing_read" && JSON.stringify(Object.keys(record)) === JSON.stringify(["type", "canonicalSignerAddress", "sessionExpiresAt"])) {
       return { type: "backing_read", canonicalSignerAddress: record.canonicalSignerAddress, sessionExpiresAt: record.sessionExpiresAt };
     }
+    if (record.type === "backing_read_offering" && JSON.stringify(Object.keys(record)) === JSON.stringify(["type", "canonicalSignerAddress", "offeringPublicId", "sessionExpiresAt"])
+      && typeof record.offeringPublicId === "string" && /^[A-Za-z0-9_-]{1,96}$/u.test(record.offeringPublicId)) {
+      return { type: "backing_read_offering", canonicalSignerAddress: record.canonicalSignerAddress, offeringPublicId: record.offeringPublicId, sessionExpiresAt: record.sessionExpiresAt };
+    }
     return null;
   } catch { return null; }
 }
@@ -263,6 +270,9 @@ async function handle(ctx: ActionContext, request: Request, seams: Seams): Promi
     if (body.type === "backing_read") {
       return response(await seams.backingRead({ canonicalSignerAddress: body.canonicalSignerAddress }), 200);
     }
+    if (body.type === "backing_read_offering") {
+      return response(await seams.backingReadOffering({ canonicalSignerAddress: body.canonicalSignerAddress, offeringPublicId: body.offeringPublicId }), 200);
+    }
     return response(await seams.read({ canonicalSignerAddress: body.canonicalSignerAddress, toolPublicId: body.toolPublicId }), 200);
   } catch {
     return rejected();
@@ -295,6 +305,7 @@ export async function handleProviderSessionIngress(ctx: ActionContext, request: 
     backing: (input) => ctx.runAction(backingReference, input),
     backingReserve: (input) => ctx.runAction(backingReserveReference, input),
     backingRead: (input) => ctx.runAction(backingReadReference, input),
+    backingReadOffering: (input) => ctx.runAction(backingReadOfferingReference, input),
   });
 }
 

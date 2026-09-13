@@ -498,6 +498,7 @@ implementedTest("exports the closed command-dispatch surface and keeps the direc
     "handleCommandIngress",
     "handleCommandIngressForTest",
     "handleOfferingProjection",
+    "handlePublicProviderBacking",
   ]);
   assert.deepEqual(Object.keys(http), ["default"]);
   const httpSource = readFileSync(httpUrl, "utf8");
