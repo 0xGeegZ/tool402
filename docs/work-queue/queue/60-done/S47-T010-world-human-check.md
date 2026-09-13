@@ -152,7 +152,9 @@ path exists on `main`: `apps/web/src/lib/world/human-check.ts`, the two
 skip, Web typecheck is clean, and the Web build renders 37 of 37 routes. S40-T010, the recorded
 activation gate for this card, is accepted in the same reconciliation.
 
-Four lane questions are ruled, on HI-013's recommendations:
+Four lane questions are ruled, on HI-013's recommendations except ruling 10,
+which is the operator's own decision departing from HI-013's recommended
+follow-up root card:
 
 8. Ownership and the integration reservations are accepted exactly as this
    card's Owner paragraph states them, reproduced as the S47 paragraph in

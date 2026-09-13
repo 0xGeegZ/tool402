@@ -1779,8 +1779,9 @@ S26-T010 is accepted. `apps/web/src/components/wallet/wallet-session.tsx`,
 `apps/web/src/components/wallet/wallet-connect.tsx`, the header block and shell
 wrapper of `apps/web/src/app/layout.tsx`, the wallet block of
 `apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, the
-backing-flow island mount, and the shared-session assertions in the accepted
-tests are released. `D-S26-010-001` records the acceptance and states that the
+backing-flow island mount, the shared-session assertions in the accepted
+tests, and the `apps/web/public/brand/metamask-fox.svg` asset delivered by
+pull request #112 at merge commit `01b67c06` are released. `D-S26-010-001` records the acceptance and states that the
 operator accepted the merged verification in place of the card's declared
 browser evidence and independent review, neither of which was produced.
 
@@ -1799,10 +1800,13 @@ was removed from `main` by commit `7bcedcb9` at merge commit `526d6a88`, so
 that reservation lapses unused. `D-S40-010-001` records the acceptance.
 
 S42-T010 is accepted. Its dashboard campaign source and focused-test
-reservations are released. `D-S42-010-001` records the acceptance.
+reservations, along with `apps/web/src/components/provider/deploy/new-tool-action.tsx`
+and `apps/web/tests/provider-tool-journey.test.mjs` delivered by pull request
+#113, are released. `D-S42-010-001` records the acceptance.
 
 S44-T010 is accepted. Its provider page, status component and state module,
-technical-record control, generated provider hero asset, focused
+technical-record control, generated `apps/web/public/brand/provider-campaign-duo.png`
+and `apps/web/public/brand/provider-campaign-duo-rays.png` hero assets, focused
 provider-status contract, Provider visual reconciliation contract, and
 Provider-only page-header assertions are released. `D-S44-010-001` records the
 acceptance.
@@ -1839,7 +1843,9 @@ reservation is limited to the units, acknowledgement, funding, and
 `payment_submitted` blocks of
 `apps/web/src/components/backing/backing-flow.tsx` together with the
 module-scope `chipClass` helper and the five presentation imports that block
-implies, the single back link in
+implies — an extension beyond the UI-S39 manifest's four amendable blocks,
+disclosed there as the one named exception and ruled by the operator in
+`D-S39-010-001` ruling 6 — the single back link in
 `apps/web/src/app/explore/riskscan/back/page.tsx`, and, in
 `apps/web/tests/backing-route.test.mjs`, the source-path list, the required
 literals, and the named replacement of the blanket no-link scan by exactly one

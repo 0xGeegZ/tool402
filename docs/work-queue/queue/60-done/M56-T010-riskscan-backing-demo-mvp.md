@@ -43,7 +43,7 @@ contract.
 M56-T010 is accepted by the repository operator's ruling of 2026-09-12 on the
 delivered work already merged on `main` at `07beeffe`. The GREEN authorized by
 `M56_RISKSCAN_BACKING_DEMO_MVP_RED_ACCEPTANCE` at `27b0d762` was delivered
-through pull request #107 at merge commit `00b80850`. All eleven source and
+through pull request #107 at merge commit `00b80850`. All ten source and
 test paths the M56 specification names exist on `main`, including
 `apps/web/src/lib/riskscan-backing-projection.ts`,
 `apps/web/src/components/backing/backing-flow.tsx`,
