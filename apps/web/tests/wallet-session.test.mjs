@@ -84,6 +84,7 @@ async function loadWagmiHook(hooks) {
 }
 
 function wagmiHarness(options = {}) {
+  class ProviderNotFoundError extends Error {}
   const calls = { connection: 0, connectors: 0, connect: [], disconnect: [], switchChain: [] };
   const metaMask = { id: "metaMask", type: "injected" };
   const rabby = { id: "rabby", type: "injected" };
@@ -98,6 +99,7 @@ function wagmiHarness(options = {}) {
     calls,
     metaMask,
     hooks: {
+      ProviderNotFoundError,
       useConnection() {
         calls.connection += 1;
         return connection;
@@ -108,7 +110,7 @@ function wagmiHarness(options = {}) {
       },
       useConnect() {
         return {
-          error: options.connectError,
+          error: options.providerMissing ? new ProviderNotFoundError() : options.connectError,
           mutateAsync: async (values) => {
             calls.connect.push(values);
             if (options.connectMutationError) throw options.connectMutationError;
@@ -140,6 +142,7 @@ function wagmiHarness(options = {}) {
     },
     currentConnector,
     rabby,
+    ProviderNotFoundError,
   };
 }
 
@@ -169,6 +172,7 @@ test("derives connection display state solely from Wagmi values", async () => {
       chainId: 296,
       connector: undefined,
       hasMetaMaskConnector: false,
+      providerUnavailable: false,
     }),
     { kind: "no_provider" },
   );
@@ -179,6 +183,7 @@ test("derives connection display state solely from Wagmi values", async () => {
       chainId: 296,
       connector: undefined,
       hasMetaMaskConnector: true,
+      providerUnavailable: false,
     }),
     { kind: "disconnected" },
   );
@@ -189,6 +194,7 @@ test("derives connection display state solely from Wagmi values", async () => {
       chainId: 1,
       connector: { id: "metaMask" },
       hasMetaMaskConnector: true,
+      providerUnavailable: false,
     }),
     { kind: "wrong_chain", chainId: 1 },
   );
@@ -199,6 +205,7 @@ test("derives connection display state solely from Wagmi values", async () => {
       chainId: 296,
       connector: { id: "metaMask" },
       hasMetaMaskConnector: true,
+      providerUnavailable: false,
     }),
     { kind: "connected", address },
   );
@@ -209,6 +216,7 @@ test("derives connection display state solely from Wagmi values", async () => {
       chainId: undefined,
       connector: undefined,
       hasMetaMaskConnector: true,
+      providerUnavailable: false,
       connectError: new Error("rejected"),
       switchError: undefined,
     }),
@@ -221,10 +229,24 @@ test("derives connection display state solely from Wagmi values", async () => {
       chainId: 1,
       connector: { id: "metaMask" },
       hasMetaMaskConnector: true,
+      providerUnavailable: false,
       connectError: undefined,
       switchError: new Error("switch rejected"),
     }),
     { kind: "request_failed", operation: "switch" },
+  );
+  assertWalletState(
+    deriveTool402WalletState({
+      status: "disconnected",
+      address: undefined,
+      chainId: undefined,
+      connector: undefined,
+      hasMetaMaskConnector: true,
+      providerUnavailable: true,
+      connectError: new Error("provider absent"),
+      switchError: undefined,
+    }),
+    { kind: "no_provider" },
   );
 });
 
@@ -287,7 +309,7 @@ test("keeps explicit disconnect across a passive remount and exposes connector f
   assert.equal(disconnected.calls.disconnect.length, 1);
   assert.equal(disconnected.calls.disconnect[0]?.connector, disconnected.currentConnector);
 
-  const unavailable = wagmiHarness({ connectors: [] });
+  const unavailable = wagmiHarness({ providerMissing: true });
   const unavailableApi = await loadWagmiHook(unavailable.hooks);
   assertWalletState(unavailableApi.useTool402Wallet().state, { kind: "no_provider" });
 
@@ -416,7 +438,7 @@ implementedTest("renders the compact header control from the Wagmi-derived walle
     [{ kind: "no_provider" }, { label: "Retry", variant: "outline", disabled: false }],
     [{ kind: "request_failed", operation: "connect" }, { label: "Retry", variant: "outline", disabled: false }],
     [{ kind: "request_failed", operation: "switch" }, { label: "Retry", variant: "outline", disabled: false }],
-    [{ kind: "connected", address }, { badge: true }],
+    [{ kind: "connected", address }, { badge: true, disconnect: true }],
   ];
 
   for (const [state, expected] of expectations) {
@@ -445,7 +467,7 @@ implementedTest("renders the compact header control from the Wagmi-derived walle
     assert.ok(visibleText(live).length > 0);
 
     if (expected.badge) {
-      assert.equal(buttons.length, 0, `${state.kind} renders no button`);
+      assert.equal(buttons.length, expected.disconnect ? 1 : 0, `${state.kind} renders only its expected controls`);
       assert.equal(badges.length, 1);
       assert.equal(badges[0].props.variant, "secondary");
       assert.equal(badges[0].props.title, address);
@@ -455,6 +477,12 @@ implementedTest("renders the compact header control from the Wagmi-derived walle
       assert.equal(dashboardLinks[0].props.href, "/dashboard");
       assert.equal(dashboardLinks[0].props.prefetch, false, `${state.kind} evaluates dashboard access on click`);
       assert.match(dashboardLinks[0].props.className, /\btouch-target\b/u);
+      if (expected.disconnect) {
+        const [disconnect] = buttons;
+        assert.equal(disconnect.props["aria-label"], "Disconnect MetaMask");
+        assert.equal(disconnect.props.onClick(), undefined);
+        assert.deepEqual(calls, [["disconnect"]]);
+      }
       continue;
     }
 
@@ -476,7 +504,7 @@ implementedTest("renders the compact header control from the Wagmi-derived walle
       assert.equal(button.props["aria-disabled"], "true");
     } else {
       assert.equal(button.props.variant, expected.variant);
-      button.props.onClick();
+      assert.equal(button.props.onClick(), undefined);
       assert.equal(calls.length, 1);
       const retriesSwitch = state.kind === "wrong_chain" || (
         state.kind === "request_failed" && state.operation === "switch"
