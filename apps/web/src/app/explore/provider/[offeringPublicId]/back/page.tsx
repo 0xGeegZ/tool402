@@ -7,6 +7,10 @@ import { loadBackerPaymentForOffering } from "../../../../../lib/backing-payment
 import { readDashboardSession, readDashboardSessionCookieName } from "../../../../../lib/dashboard-auth/dashboard-auth";
 import { loadProviderBackingProjection } from "../../../../../lib/provider-backing-projection";
 
+// This route reads a wallet-bound cookie and a dynamic offering id. It must
+// render on request rather than attempting static prerendering of navigation.
+export const instant = false;
+
 async function BackingFlowRegion({ offeringPublicId }: { offeringPublicId: string }) {
   const cookieStore = await cookies();
   const name = readDashboardSessionCookieName(process.env);
