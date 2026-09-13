@@ -153,7 +153,7 @@ function MetaMaskSignInButton({
 }
 
 export function MetaMaskDashboardSignIn({ tour = null, demoStep = null, returnTo = null }: { tour?: "1" | null; demoStep?: string | null; returnTo?: string | null }) {
-  const { connection, resolved } = useTool402Wallet();
+  const { connection, resolved, state, connect } = useTool402Wallet();
   const connectionRef = useRef(connection);
   connectionRef.current = connection;
   const canSignIn = resolved
@@ -166,7 +166,16 @@ export function MetaMaskDashboardSignIn({ tour = null, demoStep = null, returnTo
     <section aria-labelledby="metamask-dashboard-sign-in-title" className="space-y-3">
       <h2 id="metamask-dashboard-sign-in-title" className="text-lg font-semibold">Sign in with MetaMask</h2>
       {!canSignIn ? (
-        <p aria-live="polite" className="text-sm text-muted-foreground">Connect MetaMask from the header on Hedera Testnet, then sign to unlock the dashboard.</p>
+        <div className="space-y-2">
+          <p aria-live="polite" className="text-sm text-muted-foreground">Connect MetaMask on Hedera Testnet, then sign to unlock the dashboard.</p>
+          <Button
+            disabled={state.kind === "resolving" || state.kind === "connecting"}
+            aria-disabled={state.kind === "resolving" || state.kind === "connecting"}
+            onClick={() => void connect()}
+          >
+            {state.kind === "request_failed" || state.kind === "no_provider" ? "Retry MetaMask connection" : "Connect MetaMask"}
+          </Button>
+        </div>
       ) : <MetaMaskSignInButton connection={connection} readCurrentConnection={() => connectionRef.current} tour={tour} demoStep={demoStep} returnTo={returnTo} />}
     </section>
   );

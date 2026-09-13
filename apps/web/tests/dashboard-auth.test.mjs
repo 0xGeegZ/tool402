@@ -50,12 +50,13 @@ function elements(node) {
   return [node, ...elements(node.props.children)];
 }
 
-async function signInHarness({ deferVerification = false } = {}) {
+async function signInHarness({ deferVerification = false, initialConnection } = {}) {
   const slots = [];
   const routes = [];
   const fetches = [];
   const messages = [];
-  let connection = { generation: 0, status: "connected", account: address, chainId: 296, connector: { id: "metaMask" } };
+  let connection = initialConnection ?? { generation: 0, status: "connected", account: address, chainId: 296, connector: { id: "metaMask" } };
+  let connectCalls = 0;
   let resolveVerification;
   let markVerificationRequested;
   const verificationRequest = new Promise((resolve) => {
@@ -118,6 +119,10 @@ async function signInHarness({ deferVerification = false } = {}) {
         "../wallet/use-tool402-wallet": { useTool402Wallet: () => ({
           resolved: true,
           connection,
+          state: { kind: connection.status === "connected" ? "connected" : "request_failed" },
+          connect: () => {
+            connectCalls += 1;
+          },
         }) },
       };
       assert.ok(Object.hasOwn(imports, specifier), `unexpected sign-in import: ${specifier}`);
@@ -128,6 +133,9 @@ async function signInHarness({ deferVerification = false } = {}) {
     fetches,
     messages,
     routes,
+    get connectCalls() {
+      return connectCalls;
+    },
     setConnection(next) {
       connection = next;
     },
@@ -148,6 +156,13 @@ async function signInHarness({ deferVerification = false } = {}) {
       assert.ok(signer, "the connected wallet renders the signing control");
       const button = elements(signer.type(signer.props)).find((element) => element.type === "Button");
       assert.ok(button, "the signing control renders its explicit action");
+      return button.props.onClick();
+    },
+    connect() {
+      cursor = 0;
+      const tree = module.exports.MetaMaskDashboardSignIn({ tour: "1", demoStep: "identity" });
+      const button = elements(tree).find((element) => element.type === "Button" && element.props.children === "Retry MetaMask connection");
+      assert.ok(button, "the disconnected wallet renders an explicit retry action");
       return button.props.onClick();
     },
   };
@@ -525,6 +540,8 @@ clientTest("keeps sign-in limited to the accepted local authentication boundary"
   assert.match(client, /\buseTool402Wallet\b/u);
   assert.match(client, /Sign in with MetaMask/u);
   assert.match(client, /Sign and open dashboard/u);
+  assert.match(client, /Connect MetaMask/u);
+  assert.match(client, /Retry MetaMask connection/u);
   assert.match(client, /does not send funds or cost HBAR/u);
   assert.match(client, /\buseSignMessage\b/u);
   assert.match(client, /useSignMessage\(\{\s*mutation:\s*\{\s*retry:\s*false\s*\}\s*\}\)/u);
@@ -540,6 +557,18 @@ clientTest("keeps sign-in limited to the accepted local authentication boundary"
   assert.match(client, /router\.replace\(returnTo \?\? dashboardTourHref\(tour, demoStep\)\)/u);
   assert.doesNotMatch(client, /window\.location/u);
   assert.doesNotMatch(client, /\b(?:WalletSession|readCurrentSession|personal_sign|eth_send(?:Raw)?Transaction|send(?:Raw)?Transaction|transaction|relay|localStorage|sessionStorage|indexedDB|setTimeout|setInterval|discover(?:y)?|requestProvider)\b/u);
+});
+
+clientTest("keeps a visible page-level wallet connection action before dashboard sign-in", async () => {
+  const harness = await signInHarness({
+    initialConnection: { generation: 0, status: "disconnected", account: undefined, chainId: undefined, connector: undefined },
+  });
+
+  await harness.connect();
+
+  assert.equal(harness.connectCalls, 1);
+  assert.deepEqual(harness.fetches, [], "connecting must not request an authentication challenge");
+  assert.deepEqual(harness.messages, [], "connecting must not request a signature");
 });
 
 clientTest("refreshes the root server navigation after a successful dashboard sign-in", async () => {
