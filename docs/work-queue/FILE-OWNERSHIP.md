@@ -42,7 +42,8 @@ test paths are `wagmi-provider.test.mjs`, `wallet-session.test.mjs`,
 `tool402-command-wagmi-compatibility.test.mjs`, `commands-api.test.mjs`,
 `backing-route.test.mjs`, `backing-state.test.mjs`,
 `stage-b-browser-provider-bridge.test.mjs`, `ats-create-action.test.mjs`, and
-`deploy-stage-signing.test.mjs`, all under `apps/web/tests/`. All candidate
+`deploy-stage-signing.test.mjs`, and `provider-tool-journey.test.mjs`, all
+under `apps/web/tests/`. All candidate
 source, test, package and lockfile changes are prohibited until a separate
 W01 test-only RED activation.
 

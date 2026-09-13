@@ -38,7 +38,8 @@ That activation may reserve only `apps/web/tests/wagmi-provider.test.mjs`,
 `tool402-command.test.mjs`, `tool402-command-wagmi-compatibility.test.mjs`,
 `commands-api.test.mjs`, `backing-route.test.mjs`, `backing-state.test.mjs`,
 `stage-b-browser-provider-bridge.test.mjs`, `ats-create-action.test.mjs`, and
-`deploy-stage-signing.test.mjs`, all under `apps/web/tests/`. No application
+`deploy-stage-signing.test.mjs`, and `provider-tool-journey.test.mjs`, all
+under `apps/web/tests/`. No application
 source, package or lockfile path is active before the ensuing RED review.
 
 The W01-M56 successor transfer replaces only the old custom wallet-hook names

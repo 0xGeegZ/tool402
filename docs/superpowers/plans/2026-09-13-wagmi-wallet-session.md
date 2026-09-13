@@ -121,6 +121,7 @@ test('does not redirect after a failed server logout', async () => {
 
 **Files:**
 - Modify: `apps/web/src/lib/wallet/tool402-command.ts`, `apps/web/src/lib/wallet/command-relay.ts`, `apps/web/src/components/wallet/signature-dialog.tsx`, `apps/web/src/lib/wallet/command-bridge.ts`, `apps/web/tests/tool402-command.test.mjs`, `apps/web/tests/commands-api.test.mjs`
+- Modify: `apps/web/tests/provider-tool-journey.test.mjs`
 - Create: `apps/web/tests/tool402-command-wagmi-compatibility.test.mjs`
 
 **Interfaces:** `signCommand(command, signTypedData)` consumes a narrow async signer and returns the existing signed envelope after grammar and recovered-signer validation. `signAndRelayCommand(context, request, dependencies)` accepts a `readCurrentContext(): WalletActionContext | null` assertion and checks it before signature and immediately before relay.
@@ -144,9 +145,9 @@ test('does not relay after the injected context changes during signing', async (
 })
 ```
 
-- [ ] **Step 2: Verify RED** — run command and new compatibility tests.
+- [ ] **Step 2: Verify RED** — run command, provider-tool journey, and new compatibility tests.
 - [ ] **Step 3: Implement** — define `WalletActionContext = { address; chainId: 296; connectorId; generation }`, retain the existing typed-data object/expiry/body, call `useSignTypedData().mutateAsync` with `retry: false`, recover/compare signer, and require the injected context assertion before signing and before relay. Keep no `personal_sign` fallback.
-- [ ] **Step 4: Verify GREEN** — command/compatibility tests pass.
+- [ ] **Step 4: Verify GREEN** — command, provider-tool journey, and compatibility tests pass.
 - [ ] **Step 5: Commit** — `refactor: Sign Tool402 commands through Wagmi`.
 
 ### Task 5: Migrate backing and Stage-B transaction transport

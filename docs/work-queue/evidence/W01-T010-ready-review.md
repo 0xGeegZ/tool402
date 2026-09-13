@@ -39,6 +39,9 @@ transactions, configuration, deployment, merge or live activity.
 6. The plan now requires deterministic mock-connector behavior/race RED tests
    and an injected `WalletActionContext` assertion in command relay before
    deleting `wallet-state`.
+7. Fresh activation review adds `provider-tool-journey.test.mjs` to the W01
+   RED set because it mocks the replaced wallet/signature/transaction seams;
+   its existing Stage-2 baseline failure remains separately reported.
 
 ## Baseline
 
