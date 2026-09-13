@@ -551,6 +551,53 @@ implementedTest("serves only the signed-in browser and never an unauthenticated 
   });
 });
 
+implementedTest("accepts a signed dashboard session among unrelated cookies larger than four KiB", async () => {
+  const requestRoute = await loadRoute(requestRouteUrl);
+  const unrelatedCookies = `theme=${"a".repeat(4_200)}`;
+
+  await withEnvironment(configuredEnvironment, async () => {
+    const response = await requestRoute.POST(requestOf(
+      { address },
+      { path: "/api/world/request", cookie: `${unrelatedCookies}; ${sessionHeader}` },
+    ));
+
+    assert.equal(response.status, 200);
+    assert.deepEqual((await response.json()).app_id, configuredEnvironment.WORLD_APP_ID);
+  });
+});
+
+implementedTest("rejects duplicate or oversized dashboard cookies before either World route", async () => {
+  const source = await readFile(moduleUrl, "utf8");
+  const requestRoute = await loadRoute(requestRouteUrl);
+  const verifyRoute = await loadRoute(verifyRouteUrl);
+  const idkitResponse = boundResult(address);
+  const rejectedCookies = [
+    `${sessionHeader}; ${sessionHeader}`,
+    `__Host-tool402-dashboard-session=${"a".repeat(4_097)}`,
+    `theme=${"a".repeat(16_384)}; ${sessionHeader}`,
+  ];
+
+  assert.match(source, /const COOKIE_HEADER_MAX_BYTES = 16_384/u);
+  assert.match(source, /const SESSION_COOKIE_MAX_BYTES = 4_096/u);
+
+  await withCountedFetch(async (calls) => {
+    await withEnvironment(configuredEnvironment, async () => {
+      for (const cookie of rejectedCookies) {
+        const responses = [
+          await requestRoute.POST(requestOf({ address }, { path: "/api/world/request", cookie })),
+          await verifyRoute.POST(requestOf({ address, idkitResponse }, { cookie })),
+        ];
+        for (const response of responses) {
+          assert.equal(response.status, 401);
+          assert.deepEqual(await response.json(), { error: "unauthorized" });
+          assert.equal(response.headers.get("set-cookie"), null);
+        }
+      }
+    });
+    assert.equal(calls.length, 0);
+  });
+});
+
 implementedTest("refuses a verification body larger than the shared bound before forwarding", async () => {
   const verifyRoute = await loadRoute(verifyRouteUrl);
   const oversized = JSON.stringify({ address, idkitResponse: boundResult(address), padding: "a".repeat(PROTECTED_JSON_MAX_BYTES) });
