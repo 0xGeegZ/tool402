@@ -10,11 +10,14 @@ import typescript from "typescript";
 
 const appRoot = fileURLToPath(new URL("..", import.meta.url));
 const sessionPath = "src/components/wallet/wallet-session.tsx";
+const wagmiHookPath = "src/components/wallet/use-tool402-wallet.ts";
 const islandPath = "src/components/wallet/wallet-connect.tsx";
 const layoutPath = "src/app/layout.tsx";
 const signingPath = "src/components/provider/deploy/deploy-stage-signing.tsx";
 const sessionExists = existsSync(join(appRoot, sessionPath));
+const wagmiHookExists = existsSync(join(appRoot, wagmiHookPath));
 const implementedTest = sessionExists ? test : test.skip;
+const implementedWagmiTest = wagmiHookExists ? test : test.skip;
 
 function readAppFile(path) {
   return readFile(join(appRoot, path), "utf8");
@@ -76,6 +79,76 @@ const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
 
 test("requires the declared UI-S26 session module", () => {
   assert.equal(sessionExists, true, `missing declared source path: ${sessionPath}`);
+});
+
+test("requires the W01 Wagmi-derived wallet hook", () => {
+  assert.equal(wagmiHookExists, true, `missing declared source path: ${wagmiHookPath}`);
+});
+
+implementedWagmiTest("derives connection display state solely from Wagmi values", async () => {
+  const api = await import(`../${wagmiHookPath}`);
+
+  assert.deepEqual(
+    api.deriveTool402WalletState({
+      status: "reconnecting",
+      address: undefined,
+      chainId: undefined,
+      connector: undefined,
+      hasMetaMaskConnector: true,
+    }),
+    { kind: "resolving" },
+  );
+  assert.deepEqual(
+    api.deriveTool402WalletState({
+      status: "disconnected",
+      address: undefined,
+      chainId: 296,
+      connector: undefined,
+      hasMetaMaskConnector: false,
+    }),
+    { kind: "no_provider" },
+  );
+  assert.deepEqual(
+    api.deriveTool402WalletState({
+      status: "disconnected",
+      address: undefined,
+      chainId: 296,
+      connector: undefined,
+      hasMetaMaskConnector: true,
+    }),
+    { kind: "disconnected" },
+  );
+  assert.deepEqual(
+    api.deriveTool402WalletState({
+      status: "connected",
+      address: "0xC89F87052C3E080B4A9B021D4930055031EF378E",
+      chainId: 1,
+      connector: { id: "metaMask" },
+      hasMetaMaskConnector: true,
+    }),
+    { kind: "wrong_chain", chainId: 1 },
+  );
+  assert.deepEqual(
+    api.deriveTool402WalletState({
+      status: "connected",
+      address: "0xC89F87052C3E080B4A9B021D4930055031EF378E",
+      chainId: 296,
+      connector: { id: "metaMask" },
+      hasMetaMaskConnector: true,
+    }),
+    { kind: "connected", address },
+  );
+});
+
+implementedWagmiTest("owns no connection store or native provider listeners", async () => {
+  const source = await readAppFile(wagmiHookPath);
+
+  assert.match(source, /\buseConnection\b/u);
+  assert.match(source, /\buseConnectors\b/u);
+  assert.match(source, /\buseConnect\b/u);
+  assert.match(source, /\buseDisconnect\b/u);
+  assert.match(source, /\buseSwitchChain\b/u);
+  assert.doesNotMatch(source, /\b(?:useState|useEffect|useRef|accountsChanged|chainChanged|eip6963)\b/u);
 });
 
 implementedTest("exports the fixed session API and throws outside the provider", async () => {
