@@ -8,6 +8,7 @@ import { formatHbar } from "../../lib/hbar-format";
 import { hashscanTransactionUrl } from "../../lib/hashscan-links";
 import { loadBackerPayment } from "../../lib/backing-payment-server";
 import { readProviderProjections } from "../../lib/offering-projection";
+import { ensureSelfServiceMembership } from "../../lib/provider-tools-server";
 import { Badge } from "../ui/badge";
 import { buttonVariants } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
@@ -93,6 +94,10 @@ export async function DashboardCampaign() {
   );
   if (session === null) return null;
 
+  const membership = await ensureSelfServiceMembership(
+    process.env,
+    sessionCookieName === null ? null : cookieStore.get(sessionCookieName)?.value ?? null,
+  );
   const projections = await readProviderProjections(process.env, globalThis.fetch, riskScanOfferingPublicId);
   const backing = await loadBackerPayment(process.env, sessionCookieName === null ? null : cookieStore.get(sessionCookieName)?.value ?? null);
   const campaign = projections.offering.outcome === "loaded"
@@ -122,6 +127,7 @@ export async function DashboardCampaign() {
               <h2 className="text-xl font-bold tracking-[-0.035em] text-foreground">No campaign yet</h2>
               <p className="text-sm leading-6 text-muted-foreground">There is no RiskScan campaign associated with this signed dashboard session.</p>
             </div>
+            {membership.outcome === "ACTIVE" ? null : <p role="status" className="text-sm text-muted-foreground">Self-service onboarding is currently unavailable. Your existing tools and payment records remain available.</p>}
             <div className="flex flex-wrap items-center justify-center gap-4">
               <NewToolAction />
               <Link href="/provider/deploy" className={buttonVariants({ variant: "outline", size: "lg", shape: "pill" })}>Prepare a tool</Link>
