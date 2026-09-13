@@ -17,6 +17,12 @@
 - Preserve legacy RiskScan, manually provisioned authorities, B03/x402, and mainnet behavior byte-for-byte where the selected branch does not apply.
 - Use chain 296 only. No user private key, platform-funded gas, automatic payment, arbitrary user code hosting, shared deployment, data migration, or live wallet action.
 - Run tests using Node 22.21.1; a passing local/injected test is not a claim of deployed or live testnet proof.
+- A payment reservation is not a Send permit: dispatch-started, submitted, and
+  terminal states are durable, a missing hash is ambiguous, and the server
+  rechecks live new-dispatch eligibility without blocking historic recovery.
+- Owned-tool ATS Recheck invokes the bounded receipt verifier for the exact
+  existing attempt and returns its refreshed projection; it never creates a
+  deployment or wallet request.
 
 ## File map
 

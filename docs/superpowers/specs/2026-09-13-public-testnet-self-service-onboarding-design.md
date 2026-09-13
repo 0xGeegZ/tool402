@@ -32,10 +32,11 @@ configuration is absent. Existing sessions invoke the same server assertion
 before a new self-service write, so they are not required to sign in again. A
 suspended or revoked row is never recreated or silently reactivated.
 
-Command admission resolves exactly one principal in this order: a compatible
-legacy authority, or one valid self-service membership for the requested
-command. The selected command and durable mutation both enforce the same
-scoped capability:
+Command admission resolves the requested capability and durable target. A
+compatible legacy authority keeps its original principal/version; an
+incompatible or disabled legacy row neither masks an eligible self-service
+membership nor becomes enabled. The selected command and durable mutation
+both enforce the same scoped capability:
 
 - create, edit, prepare ATS, attach a candidate, and publish require the
   selected tool's durable owner;
@@ -65,8 +66,10 @@ permission never substitutes for an on-chain permission.
 
 Candidate attachment and receipt confirmation reconstruct the expected
 tool/owner configuration, preserve the existing exclusive transaction and
-asset bindings, and retain reload recovery. Recheck/status controls only read
-durable evidence and never resubmit a wallet transaction.
+asset bindings, and retain reload recovery. The owned-tool Recheck request
+invokes the bounded receipt verifier for that exact submitted attempt before
+returning its updated projection; it never resubmits a wallet transaction or
+authorizes a new deployment.
 
 ## Backing flow
 
@@ -79,8 +82,18 @@ recipient, signer, and exact BigInt tinybar amount. Draft and closed offerings,
 forged terms, self-transfers, and a changed recipient are rejected.
 
 M58's reservation, unique hash claim, idempotent attachment, verifier, and
-recovery semantics apply per attempt. A confirmed HBAR transfer is payment
-evidence only; it does not allocate an ATS asset.
+recovery semantics apply per attempt. Payment dispatch has durable distinct
+states: reserved-not-started, dispatch-started-with-unknown-outcome,
+submitted-hash, and terminal verified outcome. Starting dispatch is an atomic,
+single-use claim: a reservation replay never becomes a second Send permit.
+Missing browser storage or a missing hash is not proof that dispatch did not
+start. Explicit wallet rejection and pre-dispatch insufficient balance may
+return to a controlled unsent state; an ambiguous invocation cannot. The
+server rechecks current OPEN eligibility and the exact frozen
+version/terms/recipient immediately before a new dispatch, while submitted
+historical receipts remain reconcilable after closure, suspension, or flag
+disablement. A confirmed HBAR transfer is payment evidence only; it does not
+allocate an ATS asset.
 
 ## Operations and user experience
 
