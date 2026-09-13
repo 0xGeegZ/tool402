@@ -1,4 +1,4 @@
-import { internalMutationGeneric, internalQueryGeneric, type DataModelFromSchemaDefinition, type MutationBuilder, type QueryBuilder } from "convex/server";
+import { internalMutationGeneric, internalQueryGeneric, type DataModelFromSchemaDefinition, type GenericMutationCtx, type MutationBuilder, type QueryBuilder } from "convex/server";
 import { v } from "convex/values";
 import { isInt64, readStoredRecord } from "../src/offering-command-admission.ts";
 import type schema from "./schema.ts";
@@ -17,8 +17,9 @@ const resultValidator = v.union(v.null(), v.object({ status: outcomeValidator, t
 const paymentListValidator = v.array(v.object({ offeringPublicId: v.string(), status: outcomeValidator, transactionHash: v.union(v.null(), v.string()), tinybars: v.string() }));
 type Status = "PREPARED" | "CONFIRMED" | "REJECTED" | "SUBMITTED" | "OUTCOME_UNKNOWN";
 type ExistingClaim = Readonly<{ attemptId: string; transactionHash?: string; tinybars: string; state: Status }>;
+type Context = GenericMutationCtx<DataModelFromSchemaDefinition<typeof schema>>;
 
-function validFrozenIntent(value: unknown, input: { idempotencyKey: string; canonicalSignerAddress: string; tinybars: string }): value is Readonly<{ offeringPublicId: string }> {
+function validFrozenIntent(value: unknown, input: { idempotencyKey: string; canonicalSignerAddress: string; tinybars: string }): value is Readonly<{ offeringPublicId: string; expiresAt?: string }> {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
   const record = value as Record<string, unknown>;
   return record.idempotencyKey === input.idempotencyKey
@@ -26,6 +27,14 @@ function validFrozenIntent(value: unknown, input: { idempotencyKey: string; cano
     && record.tinybars === input.tinybars
     && typeof record.offeringPublicId === "string"
     && /^[A-Za-z0-9_-]{1,96}$/u.test(record.offeringPublicId);
+}
+
+function hasLiveSelfServiceBackingIntent(intent: Readonly<{ expiresAt?: string }>, now = Date.now()): boolean {
+  if (typeof intent.expiresAt !== "string") return false;
+  const expiresAt = Date.parse(intent.expiresAt);
+  return Number.isSafeInteger(expiresAt)
+    && new Date(expiresAt).toISOString() === intent.expiresAt
+    && expiresAt > now;
 }
 
 function validAttempt(value: unknown, input: { attemptPublicId: string; canonicalSignerAddress: string }): value is Record<string, unknown> {
@@ -62,7 +71,7 @@ function isActiveSelfServiceBacker(value: unknown, canonicalSignerAddress: strin
 
 /** A reservation can still lead to a new wallet send, so it must re-check current admission. */
 async function mayReserveNewBackingPayment(
-  ctx: Parameters<typeof reserveBackingPayment.handler>[0],
+  ctx: Context,
   canonicalSignerAddress: string,
   offeringPublicId: string,
 ): Promise<boolean> {
@@ -109,7 +118,9 @@ export const reserveBackingPayment = internalMutation({
     if (rows.length !== 1 || !validAttempt(rows[0], args)) return null;
     const intents = await ctx.db.query("backingIntents").withIndex("by_idempotency_key", (q) => q.eq("idempotencyKey", args.attemptPublicId)).take(2);
     if (intents.length !== 1 || !validFrozenIntent(intents[0], { idempotencyKey: args.attemptPublicId, canonicalSignerAddress: args.canonicalSignerAddress, tinybars: args.tinybars })) return null;
-    const offeringPublicId = intents[0]!.offeringPublicId;
+    const intent = intents[0]!;
+    const offeringPublicId = intent.offeringPublicId;
+    if (offeringPublicId !== legacyRiskScanOfferingPublicId && !hasLiveSelfServiceBackingIntent(intent)) return null;
     if (!await mayReserveNewBackingPayment(ctx, args.canonicalSignerAddress, offeringPublicId)) return null;
     const claims = await ctx.db.query(backingPaymentClaimStore).withIndex("by_attempt_id", (q) => q.eq("attemptId", rows[0]!._id)).take(2);
     if (claims.length > 1 || (claims.length === 1 && claims[0]!.tinybars !== args.tinybars)) return null;

@@ -10,7 +10,7 @@ function readAppFile(path) {
   return readFile(join(appRoot, path), "utf8");
 }
 
-test("uses the compact Explore presentation with one bounded provider CTA", async () => {
+test("keeps the static catalogue compact while separately mounting published provider discovery", async () => {
   const [page, catalog, riskScan, entityCheck] = await Promise.all([
     readAppFile("src/app/explore/page.tsx"),
     readAppFile("src/components/discovery/explore-catalog.tsx"),
@@ -22,6 +22,7 @@ test("uses the compact Explore presentation with one bounded provider CTA", asyn
   assert.match(page, /\bMarketplace\b/);
   assert.match(page, /\bTwo local tools with clear routes to inspect what each one covers\./);
   assert.match(page, /\bPageHeader\b/);
+  assert.match(page, /<ProviderBackingDiscovery\s*\/>/);
 
   assert.match(catalog, /\bCurrent catalogue\b/);
   assert.match(catalog, /\bStatic marketplace view\b/);
@@ -47,7 +48,7 @@ test("uses the compact Explore presentation with one bounded provider CTA", asyn
   }
 
   const catalogBeforeProviderCta = catalog.slice(0, catalog.indexOf('data-ui="explore-provider-cta"'));
-  const presentationSources = [page, catalogBeforeProviderCta, riskScan, entityCheck];
+  const presentationSources = [catalogBeforeProviderCta, riskScan, entityCheck];
   const presentationSource = presentationSources.join("\n");
 
   for (const source of presentationSources) {

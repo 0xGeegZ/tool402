@@ -160,6 +160,39 @@ test("refuses a new self-service payment reservation after the public flag is di
   assert.deepEqual(store.writes, []);
 });
 
+test("refuses a new self-service payment reservation after its frozen intent expires", async (t) => {
+  const { reserveBackingPayment } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const attemptPublicId = "AAAAAAAAAAAAAAAAAAAAAA";
+  const store = reservationStoreDatabase({
+    attempts: [{
+      _id: "externalPrepareCommandAttempts:funding", idempotencyKey: attemptPublicId,
+      operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296,
+      canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111",
+      canonicalParametersHash: "a".repeat(64), state: "PREPARED",
+    }],
+    intents: [{
+      _id: "backingIntents:funding", idempotencyKey: attemptPublicId,
+      canonicalSignerAddress: signer, offeringPublicId: "offering_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", tinybars: "7",
+      expiresAt: new Date(Date.now() - 1).toISOString(),
+    }],
+    accounts: [{
+      _id: "selfServiceAccounts:backer", canonicalSignerAddress: signer, chainId: 296,
+      principalPublicId: `self_service_${signer.slice(2)}`, policyVersion: "public_testnet_v1", status: "ACTIVE",
+      createdAt: 1n, updatedAt: 1n,
+    }],
+  });
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  t.after(() => { process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous; });
+
+  assert.equal(
+    await reserveBackingPayment._handler({ db: store.db }, { attemptPublicId, canonicalSignerAddress: signer, tinybars: "7" }),
+    null,
+  );
+  assert.deepEqual(store.writes, []);
+});
+
 test("preserves the exact enabled legacy RiskScan reservation while public self-service is disabled", async (t) => {
   const { reserveBackingPayment } = await import(storeUrl.href);
   const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";

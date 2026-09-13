@@ -15,7 +15,9 @@ import { Card, CardContent } from "../ui/card";
 import { NewToolAction } from "../provider/deploy/new-tool-action";
 import { ProviderToolList } from "./provider-tool-list";
 
-function DashboardBacking({ backing }: { backing: BackingPaymentHistoryRecord }) {
+type DashboardBackingRecord = BackingPaymentHistoryRecord & Readonly<{ legacyEvidence?: boolean }>;
+
+function DashboardBacking({ backing }: { backing: DashboardBackingRecord }) {
   const projectName = backing.offeringPublicId === riskScanOfferingPublicId ? "RiskScan" : "Provider project";
   const transactionUrl = hashscanTransactionUrl(backing.transactionHash);
   const confirmed = backing.status === "CONFIRMED";
@@ -40,13 +42,14 @@ function DashboardBacking({ backing }: { backing: BackingPaymentHistoryRecord })
     <section aria-label="Your backing">
       <Card className="rounded-card border-border bg-card shadow-none">
         <CardContent className="p-5 sm:p-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-xl font-bold tracking-[-0.035em] text-foreground">{confirmed ? `${projectName} backed` : `${projectName} backing`}</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-xl font-bold tracking-[-0.035em] text-foreground">{confirmed ? `${projectName} backed` : `${projectName} backing`}</h2>
             <Badge className={confirmed ? "gap-1 bg-emerald-100 text-emerald-800" : rejected ? "bg-destructive/10 text-destructive" : "bg-secondary text-secondary-foreground"}>
               {confirmed ? <span aria-hidden="true">✓</span> : null}
               {statusLabel}
-            </Badge>
-          </div>
+              </Badge>
+            </div>
+            {backing.legacyEvidence ? <p className="mt-2 text-sm text-muted-foreground">Older RiskScan evidence predates self-service frozen intents.</p> : null}
 
           <div className="mt-5 grid gap-5 md:grid-cols-[minmax(11rem,0.72fr)_minmax(0,1.28fr)] md:items-center">
             <div className="rounded-card border border-brand-purple/10 bg-brand-purple/[0.06] px-5 py-4">
@@ -107,7 +110,7 @@ export async function DashboardCampaign() {
   ]);
   const backing = legacyBacking === null || backingHistory.some((record) => record.offeringPublicId === riskScanOfferingPublicId)
     ? backingHistory
-    : [{ ...legacyBacking, offeringPublicId: riskScanOfferingPublicId }, ...backingHistory];
+    : [{ ...legacyBacking, offeringPublicId: riskScanOfferingPublicId, legacyEvidence: true }, ...backingHistory];
   const campaign = projections.offering.outcome === "loaded"
     ? readDashboardCampaign(projections.offering.record, session.address)
     : null;

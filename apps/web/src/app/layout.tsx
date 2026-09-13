@@ -7,6 +7,7 @@ import "./globals.css";
 import { DashboardNavigation } from "../components/auth/dashboard-navigation";
 import { DemoTourBar } from "../components/demo/demo-tour-bar";
 import { Logo } from "../components/tool402/logo";
+import { buttonVariants } from "../components/ui/button";
 import { WalletIsland } from "../components/wallet/wallet-connect";
 import { WalletSessionProvider } from "../components/wallet/wallet-session";
 
@@ -42,6 +43,9 @@ export default function RootLayout({
                 <Suspense fallback={null}>
                   <DashboardNavigation />
                 </Suspense>
+                <Link href="/provider/deploy" className={buttonVariants({ variant: "outline", size: "sm", shape: "pill", className: "hidden whitespace-nowrap lg:inline-flex" })}>
+                  Prepare a tool
+                </Link>
                 <WalletIsland />
               </div>
             </div>
