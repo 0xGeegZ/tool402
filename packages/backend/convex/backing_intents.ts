@@ -60,7 +60,7 @@ function ownObject(value: unknown, fields: readonly string[]): Readonly<Record<s
   return result;
 }
 
-function readOpenOffering(value: unknown): Readonly<{ offeringPublicId: string; subjectPublicId: string; recipient: string; minimumPurchaseUnits: bigint; maximumNoteUnits: bigint; noteUnitPriceTinybars: bigint }> | null {
+function readOpenOffering(value: unknown): Readonly<{ offeringPublicId: string; offeringVersion: 1; offeringTermsDigest: string; subjectPublicId: string; recipient: string; minimumPurchaseUnits: bigint; maximumNoteUnits: bigint; noteUnitPriceTinybars: bigint }> | null {
   try {
     const offering = readStoredRecord(value, [
       "offeringPublicId", "subjectPublicId", "canonicalSignerAddress", "principalPublicId", "authorityVersion",
@@ -105,6 +105,10 @@ function readOpenOffering(value: unknown): Readonly<{ offeringPublicId: string; 
     ) return null;
     return {
       offeringPublicId: offering.offeringPublicId as string,
+      offeringVersion: 1,
+      // Persist the canonical terms digest with the prepared intent so later
+      // offering edits cannot rewrite the evidence a backer reviewed.
+      offeringTermsDigest: keccak256(new TextEncoder().encode(canonicalizeRequirements(termsInput))).slice(2),
       subjectPublicId: offering.subjectPublicId as string,
       recipient,
       minimumPurchaseUnits: terms.minimumPurchaseUnits,
@@ -119,12 +123,13 @@ function readOpenOffering(value: unknown): Readonly<{ offeringPublicId: string; 
 function readIntent(value: unknown): FrozenIntent | null {
   try {
     const record = readStoredRecord(value, [
-      "idempotencyKey", "purchaseIntentId", "canonicalSignerAddress", "offeringPublicId", "subjectPublicId",
+      "idempotencyKey", "purchaseIntentId", "canonicalSignerAddress", "offeringPublicId", "offeringVersion", "offeringTermsDigest", "subjectPublicId",
       "recipient", "units", "tinybars", "canonicalParametersHash", "expiresAt", "createdAt",
     ]);
     if (
       !noncePattern.test(record.idempotencyKey as string) || !noncePattern.test(record.purchaseIntentId as string)
       || !isCanonicalEvmAddress(record.canonicalSignerAddress) || !publicIdPattern.test(record.offeringPublicId as string)
+      || record.offeringVersion !== 1 || !parameterHashPattern.test(record.offeringTermsDigest as string)
       || !publicIdPattern.test(record.subjectPublicId as string) || !isCanonicalEvmAddress(record.recipient)
       || !integerPattern.test(record.units as string) || !integerPattern.test(record.tinybars as string)
       || !parameterHashPattern.test(record.canonicalParametersHash as string) || timestamp(record.expiresAt) === null
@@ -221,7 +226,13 @@ export const freezeBackingIntent = internalMutation({
       if (expiry > now) active += 1;
     }
     if (active >= maximumPending) return reject();
-    await ctx.db.insert("backingIntents", { ...intent, canonicalSignerAddress: args.canonicalSignerAddress, createdAt: BigInt(now) });
+    await ctx.db.insert("backingIntents", {
+      ...intent,
+      canonicalSignerAddress: args.canonicalSignerAddress,
+      offeringVersion: offering.offeringVersion,
+      offeringTermsDigest: offering.offeringTermsDigest,
+      createdAt: BigInt(now),
+    });
     return { outcome: "PREPARED" as const, intent };
   },
 });
@@ -243,7 +254,7 @@ export function matchesFrozenBackingIntent(
 ): boolean {
   try {
     const record = readStoredRecord(value, [
-      "idempotencyKey", "purchaseIntentId", "canonicalSignerAddress", "offeringPublicId", "subjectPublicId",
+      "idempotencyKey", "purchaseIntentId", "canonicalSignerAddress", "offeringPublicId", "offeringVersion", "offeringTermsDigest", "subjectPublicId",
       "recipient", "units", "tinybars", "canonicalParametersHash", "expiresAt", "createdAt",
     ]);
     const intent = readIntent(value);

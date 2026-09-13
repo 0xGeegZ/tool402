@@ -359,7 +359,10 @@ export const admitExternalPrepareCommand = internalMutation({
   handler: async (ctx, args) => {
     const { bound, replayIdentity, durableNow } = bindCommand(args);
     const authority = await resolveCurrentAuthority(ctx, bound);
-    const selected = isSelectedProviderToolSubject(bound.payload.subjectPublicId)
+    // A funding backer must bind to the server-frozen offering, not become the
+    // provider-tool issuer. Resolving tool ownership here would reject the
+    // deliberately BACKER-scoped self-service authority before that binding.
+    const selected = bound.payload.operationKind !== "HEDERA_FUNDING" && isSelectedProviderToolSubject(bound.payload.subjectPublicId)
       ? await revalidateSelectedPrepareAuthority(ctx, authority, bound)
       : null;
     if (selected === null) revalidateAuthority(authority, bound);

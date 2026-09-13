@@ -129,8 +129,8 @@ export async function DashboardCampaign() {
             </div>
             {membership.outcome === "ACTIVE" ? null : <p role="status" className="text-sm text-muted-foreground">Self-service onboarding is currently unavailable. Your existing tools and payment records remain available.</p>}
             <div className="flex flex-wrap items-center justify-center gap-4">
-              <NewToolAction />
-              <Link href="/provider/deploy" className={buttonVariants({ variant: "outline", size: "lg", shape: "pill" })}>Prepare a tool</Link>
+              {membership.outcome !== "ACTIVE" ? null : <NewToolAction />}
+              {membership.outcome !== "ACTIVE" ? null : <Link href="/provider/deploy" className={buttonVariants({ variant: "outline", size: "lg", shape: "pill" })}>Prepare a tool</Link>}
               <Link href="/explore/riskscan" className="text-sm font-semibold text-primary transition-colors hover:text-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Explore RiskScan</Link>
             </div>
           </CardContent>
@@ -159,7 +159,7 @@ export async function DashboardCampaign() {
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-3">
             <Link href={campaign.href} className={buttonVariants({ size: "lg", shape: "pill" })}>{action}</Link>
-            <NewToolAction variant="outline" />
+            {membership.outcome !== "ACTIVE" ? null : <NewToolAction variant="outline" />}
           </div>
         </CardContent>
         <CardContent className="space-y-3 border-t pt-4"><p className="text-sm font-semibold">Your tools</p><ProviderToolList /></CardContent>

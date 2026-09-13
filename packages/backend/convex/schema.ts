@@ -106,6 +106,8 @@ export default defineSchema({
     purchaseIntentId: v.string(),
     canonicalSignerAddress: v.string(),
     offeringPublicId: v.string(),
+    offeringVersion: v.literal(1),
+    offeringTermsDigest: v.string(),
     subjectPublicId: v.string(),
     recipient: v.string(),
     units: v.string(),

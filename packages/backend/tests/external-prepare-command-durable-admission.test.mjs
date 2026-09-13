@@ -576,6 +576,7 @@ test("admits self-service HEDERA_FUNDING only when the exact frozen attempt bind
     canonicalSignerAddress: selfServiceSigner, principalPublicId, role: "BACKER", authorityVersion: "public_testnet_v1",
     replayIdentity: `tool402:wallet-command:v1:296:${selfServiceSigner}:AAAAAAAAAAAAAAAAAAAAAA`,
   });
+  args.payload = { ...args.payload, subjectPublicId: `tool_${"c".repeat(32)}` };
   args.payload = {
     ...args.payload, expectedTarget: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     canonicalParametersHash: keccak256(new TextEncoder().encode(canonicalizeRequirements(parameters))).slice(2),
@@ -585,6 +586,7 @@ test("admits self-service HEDERA_FUNDING only when the exact frozen attempt bind
     _id: "backingIntents:frozen", _creationTime: now - 1,
     idempotencyKey: args.payload.idempotencyKey, purchaseIntentId: parameters.purchaseIntentId,
     canonicalSignerAddress: selfServiceSigner, offeringPublicId: parameters.offeringPublicId,
+    offeringVersion: 1, offeringTermsDigest: "c".repeat(64),
     subjectPublicId: args.payload.subjectPublicId, recipient: args.payload.expectedTarget,
     units: parameters.units, tinybars: parameters.tinybars,
     canonicalParametersHash: args.payload.canonicalParametersHash, expiresAt: args.payload.expiresAt, createdAt: 1n,
