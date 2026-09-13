@@ -1,5 +1,168 @@
 # Runtime queue state
 
+- B04_SECURITY_SCAN_REMEDIATION_ACCEPTANCE: 2026-09-12. B04-T010 is accepted
+  on merged `main` at `07beeffe`. Commit `a64edd97` delivered the minimal GREEN
+  at merge commit `44054b96` through pull request #76. All sixteen declared
+  files exist, and the eight declared contracts run together under Node 22
+  report 115 tests, 115 passes, and no failure, cancellation, or skip, so the
+  shared immutable Stage-B digest and the 65,536-byte bounded protected JSON
+  reader with its `413` rejection are both proved. The complete Web suite
+  passes 547 of 548 with one skip, Web typecheck is clean, and the Web build
+  renders 37 of 37 routes. B04-T010 moves to `60-done`; every B04 source and
+  test reservation is released, including the bridge pair already transferred
+  to M53-T010. No payment, wallet, provider authority, transaction,
+  deployment, or live action is granted.
+
+- S45_BRAND_MASCOT_SURFACES_ACCEPTANCE: 2026-09-12. S45-T010 is accepted on
+  merged `main` at `07beeffe`. Pull request #108 at merge commit `c33b89c1`
+  delivered the mascot surfaces; the five declared transparent PNGs, the
+  `logo-full.png` lockup, and `apps/web/tests/brand-mascot-surfaces.test.mjs`
+  exist. The complete Web suite passes 547 of 548 with one skip, typecheck is
+  clean, and the build renders 37 of 37 routes. The operator accepts the merged
+  result directly, so the pre-RED specification, manifest, ledger, card, and
+  loading-contract amendment sequence that S45_DASHBOARD_LOADING_REFINEMENT
+  required is closed unused. S45-T010 moves to `60-done` and every asset,
+  source, and test reservation is released. The slice stays presentation-only
+  apart from the loader's cancellable reveal.
+
+- S44_PROVIDER_COMMAND_CENTER_ACCEPTANCE: 2026-09-12. S44-T010 is accepted on
+  merged `main` at `07beeffe`. Pull request #98 at merge commit `49e9b872`
+  delivered the command-center redesign, and pull request #115 at merge commit
+  `ce080a16` delivered the technical-record reconciliation that
+  S44_TECHNICAL_RECORD_CONTROL reserved, with the directory-version and
+  HashScan readability correction in `cc8cd503`. Every declared path exists.
+  The complete Web suite passes 547 of 548 with one skip, typecheck is clean,
+  and the build renders 37 of 37 routes. S44-T010 moves to `60-done` and every
+  source, asset, and test reservation is released. The page still renders only
+  the current admitted projection; no runtime boundary changes.
+
+- S42_DASHBOARD_CAMPAIGN_ACCEPTANCE: 2026-09-12. S42-T010 is accepted on merged
+  `main` at `07beeffe`. Commit `c8446477` delivered the dynamic and
+  empty-campaign amendments through pull request #113 at merge commit
+  `fbf456ad`, refined by `078a09b3`;
+  `apps/web/src/components/dashboard/dashboard-campaign.tsx` and
+  `apps/web/tests/dashboard-campaign.test.mjs` exist. The complete Web suite
+  passes 547 of 548 with one skip, typecheck is clean, and the build renders 37
+  of 37 routes. The acceptance stands in place of the separate RED and GREEN
+  records the two amendments would otherwise have produced. S42-T010 moves to
+  `60-done` and its reservations are released; no session, wallet, command,
+  payment, transaction, deployment, or external authority is granted.
+
+- S40_METAMASK_DASHBOARD_SIGN_IN_ACCEPTANCE: 2026-09-12. S40-T010 is accepted
+  on merged `main` at `07beeffe`. Commit `1e1d7a04` delivered the sign-in
+  surface at merge commit `951ba1e2`, and pull request #110 at merge commit
+  `f080d5b2` delivered the active-account binding that
+  S40_ACTIVE_ACCOUNT_BINDING_REFINEMENT directed. Seventeen of the eighteen
+  declared paths exist; the eighteenth,
+  `apps/web/tests/dashboard-workspace-reconciliation.test.mjs`, was a reserved
+  amendment target that commit `7bcedcb9` removed at merge commit `526d6a88`
+  under pull request #95, so that reservation lapses unused. The complete Web
+  suite passes 547 of 548 with one skip, typecheck is clean, and the build
+  renders 37 of 37 routes. S40-T010 moves to `60-done`, which satisfies the
+  recorded activation gate for S41-T010 and S47-T010. No account request,
+  signature, storage, retry, transaction, relay, deployment, or external
+  request is granted.
+
+- S36_PROVIDER_SIGNATURE_HANDOFF_ACCEPTANCE: 2026-09-12. S36-T010 is accepted
+  on merged `main` at `07beeffe`. Commit `b26e7f87` delivered the GREEN that
+  D-S36-010-002 authorized, at merge commit `9727f4fb` through pull request
+  #57. The conditional handoff region carries
+  `data-ui="provider-signature-handoff"` in
+  `apps/web/src/components/provider/deploy/provider-deploy-stages.tsx` and its
+  focused contract
+  `apps/web/tests/provider-deploy-signature-handoff.test.mjs` exists; the later
+  provider work amended the component around that region rather than replacing
+  it. The complete Web suite passes 547 of 548 with one skip, typecheck is
+  clean, and the build renders 37 of 37 routes. S36-T010 moves to `60-done` and
+  its source and test reservation is released. No wallet, signature, authority,
+  relay, durable record, payment, transaction, ATS, deployment, or live action
+  is granted.
+
+- S26_HEADER_WALLET_SESSION_ACCEPTANCE: 2026-09-12. S26-T010 is accepted on
+  merged `main` at `07beeffe`. Commit `3c90da74` delivered the shared MetaMask
+  session at merge commit `951ba1e2` under the direct integration recorded as
+  S26_ROOT_INTEGRATION_ACTIVATION; the card's own lane pull request #63 was
+  closed without being merged, so the delivery is recorded against that commit.
+  Pull request #112 at merge commit `01b67c06` amended the shipped header
+  control, and commits `84b31e83` and `a6f807f8` simplified the session guards.
+  `apps/web/src/components/wallet/wallet-session.tsx`,
+  `apps/web/tests/wallet-session.test.mjs`, and the shell-header island mount
+  in `apps/web/src/app/layout.tsx` all exist. The complete Web suite passes 547
+  of 548 with one skip, typecheck is clean, and the build renders 37 of 37
+  routes. The operator accepts that merged verification in place of the card's
+  declared browser evidence and independent review, neither of which was
+  produced; this record claims neither. S26-T010 moves to `60-done` and every
+  S26 reservation is released apart from the `BackingForm` composition already
+  transferred to M56-T010.
+
+- M56_RISKSCAN_BACKING_DEMO_MVP_ACCEPTANCE: 2026-09-12. M56-T010 is accepted on
+  merged `main` at `07beeffe`. Pull request #107 at merge commit `00b80850`
+  delivered the GREEN that M56_RISKSCAN_BACKING_DEMO_MVP_RED_ACCEPTANCE
+  permitted at `27b0d762`. All eleven source and test paths the M56
+  specification names exist. The complete Web suite passes 547 of 548 with one
+  skip, typecheck is clean, and the build renders 37 of 37 routes. The
+  M56-S26 scoped ownership transfer's condition is satisfied: canonical `main`
+  carries M56's card, specification, and catalog row, confirmed at `ce080a16`,
+  so the transfer is in effect rather than conditional and
+  `docs/work-queue/FILE-OWNERSHIP.md` records it as such. M56-T010 moves to
+  `60-done`; runtime configuration, BACKER provisioning, wallet use, signature,
+  HBAR transfer, deployment, and recording remain human-owned and excluded.
+
+- M55_TASKS2_6_ACCEPTANCE: 2026-09-12. M55-T010 is accepted on merged `main` at
+  `07beeffe`. Task 1 was already accepted by D-M55-010-008; Tasks 2 to 6,
+  activated serially by D-M55-010-009, were delivered through pull request #100
+  at merge commit `62da3c1d` after the packet formalization at merge commit
+  `5f21fc90`. `provider_tools.ts`, `provider_tool_authority.ts`,
+  `provider_tool_receipts.ts`, and `provider_session_ingress.ts` exist under
+  `packages/backend/convex/`, with the dashboard listing at
+  `apps/web/src/components/dashboard/provider-tool-list.tsx`. The complete Web
+  suite passes 547 of 548 with one skip, typecheck is clean, and the build
+  renders 37 of 37 routes. The acceptance stands in place of the per-task GREEN
+  and joint compatibility review records that were never written separately:
+  every seam M55 borrowed from M51, M53, M54, S26, S36, S42, and B04 is
+  accepted in the same ruling against the same merged state, so no transfer
+  stays open. M55-T010 moves to `60-done`. Wallet signatures, transactions,
+  Directory publication, authority or configuration mutation, and every live
+  action remain human-only and excluded.
+
+- M54_STAGE_3_CANDIDATE_RECOVERY_ACCEPTANCE: 2026-09-12. M54-T010 is accepted
+  on merged `main` at `07beeffe`. Commits `b0a24e42` and `aa0f60f5` delivered
+  the read-only Stage 3 candidate recovery and the closed relay feedback at
+  merge commit `eba56e41` through pull request #91, and commit `059f7ae8`
+  hardened the same paths for the selected-tool seam at merge commit
+  `62da3c1d`. Every declared source and test path exists. The complete Web
+  suite passes 547 of 548 with one skip, typecheck is clean, and the build
+  renders 37 of 37 routes. M54-T010 moves to `60-done` and its reservations are
+  released. No send, signature, relay, attachment, browser persistence, runtime
+  configuration, or live action is granted, and Stage 4 durable continuation
+  stays outside the card.
+
+- M53_STAGE_B_FACTORY_RECEIPT_LOG_SELECTION_ACCEPTANCE: 2026-09-12. M53-T010 is
+  accepted on merged `main` at `07beeffe`. Commit `592e14dc` delivered the
+  minimal decoder correction at merge commit `951ba1e2` through pull request
+  #67. Both declared paths exist, and the bridge now retains only logs emitted
+  by the fixed canonical Factory and decodes only when exactly one such log is
+  present and valid, leaving zero, malformed, missing, and ambiguous cases
+  rejected. The complete Web suite passes 547 of 548 with one skip, typecheck
+  is clean, and the build renders 37 of 37 routes. M53-T010 moves to `60-done`
+  and the bridge and test reservation transferred from B04-T010 is released. No
+  UI, command, authority, transaction, receipt attachment, backend, package,
+  configuration, deployment, or live path is granted.
+
+- M51_PROVIDER_DURABLE_RESUME_ACCEPTANCE: 2026-09-12. M51-T010 is accepted on
+  merged `main` at `07beeffe`. Commit `b61725de` delivered the read-only
+  durable resume projection and commit `7d186b04` the closed public adapter
+  extension that D-M51-010-006 authorized, both at merge commit `43ba0e36`
+  through pull request #84. All seven declared paths exist, together with the
+  wiring-only `deploy-stage-signing.test.mjs` amendment D-M51-010-004 allowed.
+  The complete Web suite passes 547 of 548 with one skip, typecheck is clean,
+  and the build renders 37 of 37 routes. The acceptance stands in place of the
+  separate GREEN reviews for the Backend, Web, and adapter paths, which were
+  never recorded. M51-T010 moves to `60-done` and every M51 reservation is
+  released. No provider or wallet request, signature, relay, authority
+  mutation, transaction, chain observation, candidate attachment, deployment,
+  or live action is granted.
+
 - S40_ACTIVE_ACCOUNT_BINDING_REFINEMENT: A review-confirmed dashboard session
   may survive a page reload or account switch because the prior synchronizer
   watched only an already-connected shared session. The owner directs a
@@ -567,7 +730,7 @@
   Directory publication, authority/configuration mutation and every live action
   remain human-only and excluded.
 - M41_DELIVERY: accepted at `20983649632f4812d9ee045637eb183b3158cc38` as a local HTTP ingress, transport replay, atomic ATS_CREATE admission, and public-projection boundary only; it adds no configuration, key, publication, wallet, provider, SDK, transaction, deployment, or live authority.
-- CURRENT_TASK: B04-T010 (20-active) is the user-directed local security remediation. It authorizes only its eight named durable-RED tests; no source, payment, wallet, provider, transaction, deployment, or live capability is authorized.
+- CURRENT_TASK: S27-T010 (00-inbox) is the deploy wizard step progress card, held in the inbox while its delegated lane runs. B04-T010's security remediation is accepted and recorded at `60-done`; it authorized only its eight named contracts and its eight named sources, and no payment, wallet, provider, transaction, deployment, or live capability was granted.
 - B04_SECURITY_SCAN_REMEDIATION_ACTIVATION: Independent activation at `d5d4a384` confirms the exact eight RED tests are collision-free. B04-T010 is `20-active` only for those tests; source remains prohibited pending fresh RED acceptance.
 - B04_SECURITY_SCAN_REMEDIATION_RED_ACCEPTANCE: Independent review of `8f7fc8a1` confirms 94 passes, seven intended source-absence or pre-fix failures, and one dependent skip across the eight activated tests. Only the eight exact B04 source paths recorded in the card and ownership ledger may now receive the minimal Green implementation.
 - S18_BACKER_FUNDING_READY: Independent readiness at canonical

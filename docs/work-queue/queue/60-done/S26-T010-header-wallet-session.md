@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M02-T020 accepted, S15-T010 accepted, S16-T010 accepted,
   S21-T010 accepted; the root sequences this card after S25-T010 (shell
   header) is integrated. S18-T010 does not block the card: if it is accepted
@@ -205,3 +205,26 @@ action.
   the existing shared-session assertion in `apps/web/tests/wallet-session.test.mjs`.
   It does not change the session state union, discovery, account request,
   chain switch, signing, authority, transaction, deployment, or live boundary.
+
+## Acceptance
+
+S26-T010 is accepted by the repository operator's ruling of 2026-09-12 on the
+delivered work already merged on `main` at `07beeffe`. The shared session was
+delivered by commit `3c90da74`, "feat(web): share one MetaMask session from the
+shell header", which reached `main` at merge commit `951ba1e2` through pull
+request #67 under the direct integration recorded as
+`S26_ROOT_INTEGRATION_ACTIVATION`. The card's own lane pull request #63 was
+closed without being merged, so the delivery is recorded against that commit
+rather than against #63. The header control was then amended in place by pull
+request #112 at merge commit `01b67c06`, and the session guards were simplified
+by commits `84b31e83` and `a6f807f8`. On `main`,
+`apps/web/src/components/wallet/wallet-session.tsx` and
+`apps/web/tests/wallet-session.test.mjs` exist, and the shell header mounts the
+island inside the session provider at `apps/web/src/app/layout.tsx` line 49.
+Verification is the merged-`main` state at `07beeffe`: the complete Web suite passes 547 of 548 with no failure and one skip, Web typecheck is clean, and the Web build renders 37 of 37 routes. The operator's ruling accepts that merged verification in place of the
+separate browser evidence and independent review the card originally declared;
+neither was produced, and this record does not claim either. The acceptance
+releases every S26 source and test reservation except the `BackingForm`
+composition already transferred to M56-T010, and it grants no authority, wallet
+permission, payment, provider, configuration, account, transaction, deployment,
+or live behaviour.

@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: S29-T010 accepted, M50-T010 accepted.
 - Owner: The root owns queue state, catalog, ownership, decisions, review,
   commits, and pushes. The active paths are exactly the UI-S36 targets.
@@ -37,3 +37,20 @@ handoff region. It authorizes minimal GREEN only in the two declared paths.
 This card is presentation-only. It creates no new action, authority, wallet
 request, signature, relay, state transition, record, API call, payment,
 transaction, ATS activity, deployment, or live claim.
+
+## Acceptance
+
+S36-T010 is accepted by the repository operator's ruling of 2026-09-12 on the
+delivered work already merged on `main` at `07beeffe`. The GREEN authorized by
+D-S36-010-002 was delivered by commit `b26e7f87`, "fix: Surface provider
+signature handoff", integrated at merge commit `9727f4fb` through pull request
+#57. The declared contract is live on `main`: the conditional handoff region
+carries `data-ui="provider-signature-handoff"` at
+`apps/web/src/components/provider/deploy/provider-deploy-stages.tsx` line 246,
+and its focused contract is
+`apps/web/tests/provider-deploy-signature-handoff.test.mjs`. The later provider
+work amended the same component around that region rather than replacing it, so
+the slice is delivered, not superseded. Verification is the merged-`main` state at `07beeffe`: the complete Web suite passes 547 of 548 with no failure and one skip, Web typecheck is clean, and the Web build renders 37 of 37 routes. The acceptance releases the S36
+source and test reservation and grants no wallet, signature, authority change,
+relay, durable record, payment, transaction, ATS execution, deployment, or live
+action.

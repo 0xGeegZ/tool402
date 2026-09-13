@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: S17-T010 and S25-T010 accepted.
 - Raised by: human operator, 2026-09-12. The request is to restyle the existing loaded `/provider` campaign status route after the supplied command-center reference.
 - Owner: root integrator. The root owns this card, its specification, review records, implementation, validation, and integration decision.
@@ -59,3 +59,20 @@ state and perform no request, storage, wallet, command, or live action.
 ## Boundary
 
 The page continues to render the current admitted projection as-is. Its existing `/provider/deploy`, `/explore/riskscan`, documentation, and Hashscan links retain their destinations. It may not create synthetic campaign values, claim an unavailable action occurred, use a wallet/provider, fetch a new resource, add state or timers, or change an API, package, configuration, backend, deployment, or financial path.
+
+## Acceptance
+
+S44-T010 is accepted by the repository operator's ruling of 2026-09-12 on the
+delivered work already merged on `main` at `07beeffe`. The command-center
+redesign was delivered through pull request #98 at merge commit `49e9b872`, and
+the reconciled provider status contract that `S44_TECHNICAL_RECORD_CONTROL`
+reserved was delivered by commit `df3a42f8` through pull request #115 at merge
+commit `ce080a16`, with the directory-version and HashScan readability
+correction in commit `cc8cd503`. Every declared path exists on `main`,
+including `apps/web/src/components/provider/status/provider-status.tsx`, its
+state module, the technical-record control, the generated provider hero asset,
+and the focused provider-status and Provider visual reconciliation contracts.
+Verification is the merged-`main` state at `07beeffe`: the complete Web suite passes 547 of 548 with no failure and one skip, Web typecheck is clean, and the Web build renders 37 of 37 routes. The acceptance releases every S44 source, asset, and test reservation. The
+page continues to render only the current admitted projection; no projection,
+API, session, wallet, provider, transaction, deployment, or live boundary
+changes.

@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: none. S42 consumes the already-merged dashboard-session and
   offering-projection read boundaries without modifying their active source or
   test paths; S24-T010's historical dashboard restriction is superseded only
@@ -104,3 +104,18 @@ after its expected RED result, only the already-reserved
 card. It may use only the existing `/provider/deploy` and `/explore/riskscan`
 links. No new query, retry, wallet action, session behavior, provider command,
 or external authority is authorized.
+
+## Acceptance
+
+S42-T010 is accepted by the repository operator's ruling of 2026-09-12 on the
+delivered work already merged on `main` at `07beeffe`. The dynamic and
+empty-campaign amendments that `S42_DYNAMIC_DASHBOARD_AMENDMENT` and
+`S42_EMPTY_CAMPAIGN_AMENDMENT` directed were delivered by commit `c8446477`,
+integrated through pull request #113 at merge commit `fbf456ad`, with the badge
+placement refinement in commit `078a09b3`. The declared surface exists on
+`main` as `apps/web/src/components/dashboard/dashboard-campaign.tsx` with its
+focused contract `apps/web/tests/dashboard-campaign.test.mjs`. Verification is the merged-`main` state at `07beeffe`: the complete Web suite passes 547 of 548 with no failure and one skip, Web typecheck is clean, and the Web build renders 37 of 37 routes. The
+acceptance stands in place of the separate RED and GREEN records the
+amendments would otherwise have produced, releases every S42 source and test
+reservation, and authorizes no session, wallet, command, payment, transaction,
+deployment, or external authority.

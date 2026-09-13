@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: M43-T010 accepted, M44-T030 accepted, M47-T010 accepted, and M52-T010 accepted.
 - Owner: root integrator owns queue/control records, reviews, integration, commits, and pushes.
 - Human actions: none for local delivery. This card neither sends nor retries a wallet transaction, attaches a candidate, changes authority, or performs a live action.
@@ -65,3 +65,19 @@ Only these paths are authorized for the minimal correction:
 The source may select exactly one fixed-Factory event from a valid multi-log
 array before the existing M44 decode boundary. All command, authority,
 transaction, retry, attachment, and deployment exclusions remain fixed.
+
+## Acceptance
+
+M53-T010 is accepted by the repository operator's ruling of 2026-09-12 on the
+delivered work already merged on `main` at `07beeffe`. The minimal decoder
+correction was delivered by commit `592e14dc`, integrated at merge commit
+`951ba1e2` through pull request #67. Both declared paths exist on `main`:
+`apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts` and
+`apps/web/tests/stage-b-browser-provider-bridge.test.mjs`. The bridge now scans
+an untrusted receipt log array, retains only logs emitted by the fixed
+canonical Factory, and decodes only when exactly one such log is present and
+valid; zero, malformed, missing, and ambiguous Factory-event cases remain
+rejected. Verification is the merged-`main` state at `07beeffe`: the complete Web suite passes 547 of 548 with no failure and one skip, Web typecheck is clean, and the Web build renders 37 of 37 routes. The acceptance releases the M53 bridge and test reservation, which
+B04-T010 had transferred for this defect. It authorizes no UI, command,
+authority, transaction, receipt attachment, backend, package, configuration,
+deployment, or live path.

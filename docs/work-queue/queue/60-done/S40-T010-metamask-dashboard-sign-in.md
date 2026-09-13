@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: S15-T010 accepted, M50-T010 accepted, S24-T010 accepted.
   S26-T010 is not a dependency and remains an independent header-wallet slice.
 - Owner: the root owns this card, source contract, catalog, ownership, state,
@@ -256,3 +256,28 @@ address exactly matches the server-validated session address; otherwise it
 may call the existing same-origin logout route once. It adds no account
 request, signature, event-payload trust, storage, retry, transaction, relay,
 deployment, or M50/S26 source amendment.
+
+## Acceptance
+
+S40-T010 is accepted by the repository operator's ruling of 2026-09-12 on the
+delivered work already merged on `main` at `07beeffe`. The sign-in surface was
+delivered by commit `1e1d7a04`, "feat: Protect dashboard with MetaMask
+sign-in", at merge commit `951ba1e2` through pull request #67; the active
+account binding that `S40_ACTIVE_ACCOUNT_BINDING_REFINEMENT` directed was
+delivered through pull request #110 at merge commit `f080d5b2`. Seventeen of
+the eighteen declared paths exist on `main`, including
+`apps/web/src/lib/dashboard-auth/dashboard-auth.ts`,
+`apps/web/src/lib/dashboard-auth/dashboard-auth-routes.ts`, the three
+`api/auth` routes, `apps/web/src/components/auth/dashboard-session-sync.tsx`,
+`apps/web/src/components/auth/dashboard-navigation.tsx`,
+`apps/web/src/components/auth/metamask-dashboard-sign-in.tsx`, and the four
+focused dashboard-auth contracts. The eighteenth,
+`apps/web/tests/dashboard-workspace-reconciliation.test.mjs`, was a reserved
+amendment target only; it was removed from `main` by commit `7bcedcb9` at merge
+commit `526d6a88` under pull request #95 when the guest workspace surface was
+replaced by the dynamic campaign surface, so that reservation lapses unused and
+is released rather than exercised. Verification is the merged-`main` state at `07beeffe`: the complete Web suite passes 547 of 548 with no failure and one skip, Web typecheck is clean, and the Web build renders 37 of 37 routes. The acceptance releases every S40 source
+and test reservation. It is the recorded activation gate for S41-T010 and
+S47-T010, and it grants no provider request beyond the accepted passive settle,
+no signature, storage, retry, transaction, relay, deployment, or external
+request.

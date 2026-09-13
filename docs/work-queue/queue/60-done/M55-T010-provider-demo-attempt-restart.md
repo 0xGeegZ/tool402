@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active (Task 1 Green accepted; Tasks 2–6 activated for serial local delivery)
+- Queue state: 60-done
 - Dependencies: none.
 - Owner: root integrator for documentation, readiness, path reservations,
   activation, review, integration, commits, and pushes.
@@ -89,3 +89,24 @@ end-to-end deployment is available.
 Implementation completion requires the plan's exact-head tests/reviews and
 separate browser, CI, deployment, and human-testnet evidence. A committed
 specification is not proof that the new-tool button works.
+
+## Acceptance
+
+M55-T010 is accepted by the repository operator's ruling of 2026-09-12 on the
+delivered work already merged on `main` at `07beeffe`. Task 1 was already
+accepted by D-M55-010-008. Tasks 2 to 6, activated serially by D-M55-010-009,
+were delivered through pull request #100 at merge commit `62da3c1d`, with the
+packet formalization integrated earlier through pull request #97 at merge
+commit `5f21fc90`. The selected-tool boundary exists on `main` as
+`packages/backend/convex/provider_tools.ts`,
+`packages/backend/convex/provider_tool_authority.ts`,
+`packages/backend/convex/provider_tool_receipts.ts`, and
+`packages/backend/convex/provider_session_ingress.ts`, with the dashboard
+listing at `apps/web/src/components/dashboard/provider-tool-list.tsx`. Verification is the merged-`main` state at `07beeffe`: the complete Web suite passes 547 of 548 with no failure and one skip, Web typecheck is clean, and the Web build renders 37 of 37 routes. The
+acceptance stands in place of the per-task GREEN and joint compatibility review
+records that were never written separately: every seam M55 borrowed from
+M51-T010, M53-T010, M54-T010, S26-T010, S36-T010, S42-T010, and B04-T010 is
+accepted in the same ruling and against the same merged state, so no transfer
+remains open. It releases every M55 path reservation and grants no wallet
+signature, transaction, Directory publication, authority provisioning,
+environment mutation, or live action.

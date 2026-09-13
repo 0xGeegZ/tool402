@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: S11-T010 accepted, S14-T010 accepted, S20-T010 accepted, S29-T010 accepted, S33-T010 accepted, S43-T010 accepted.
 - Raised by: human operator, 2026-09-12. The request is to generate and integrate the four approved mascot compositions for Demo, Explore, Provider deploy review, and route loading.
 - Owner: root integrator. The root owns this card, specification, UI manifest, assets, tests, source integration, review records, validation, and draft PR.
@@ -51,3 +51,23 @@ runtime behavior remain unchanged.
 ## Boundary
 
 The slice is presentation-only except for the loader's cancellable 300 ms visual reveal timer and the one internal Explore link. It cannot change catalogue entries, dynamic deploy values, form progression, wallet/session/signing behavior, route skeleton order, network calls, storage, configuration, APIs, dependencies, backend code, deployment, or live evidence.
+
+## Acceptance
+
+S45-T010 is accepted by the repository operator's ruling of 2026-09-12 on the
+delivered work already merged on `main` at `07beeffe`. The mascot surfaces were
+delivered through pull request #108 at merge commit `c33b89c1`. The five
+declared repository-owned transparent PNGs exist on `main` under
+`apps/web/public/brand/` as `demo-guide-trio.png`, `explore-publish-trio.png`,
+`deploy-review-trio.png`, `dashboard-empty-mascot.png`, and
+`route-loader-trio.png`, alongside the `logo-full.png` lockup, and the focused
+contract is `apps/web/tests/brand-mascot-surfaces.test.mjs`. Verification is the merged-`main` state at `07beeffe`: the complete Web suite passes 547 of 548 with no failure and one skip, Web typecheck is clean, and the Web build renders 37 of 37 routes. The acceptance
+stands in place of the separate specification, manifest, ledger, and focused
+loading-contract amendment plus RED and GREEN records that
+`S45_DASHBOARD_LOADING_REFINEMENT` had required before RED; the operator
+accepts the merged result directly and that pre-RED sequence is closed unused.
+The acceptance releases every S45 asset, source, and test reservation. The
+slice remains presentation-only except for the loader's cancellable reveal, and
+it adds no data, tool, form-flow, wallet, session, signing, payment,
+transaction, network, storage, configuration, dependency, deployment, or live
+claim.

@@ -3,7 +3,7 @@
 ## State
 
 - Tier: CORE_P0
-- Queue state: 20-active
+- Queue state: 60-done
 - Dependencies: S17-T010 accepted, S21-T010 accepted, M47-T010 accepted,
   M48-T010 accepted, M49-T010 accepted, M50-T010 accepted.
 - Owner: root integrator for queue/control records; a later implementer may
@@ -115,3 +115,24 @@ M51 replaces only the historical statement that the original browser session
 must remain open to retain already accepted Stage 1/2 state. It leaves all
 authority, idempotency, signing, Stage-B, on-chain, candidate, and live gates
 unchanged.
+
+## Acceptance
+
+M51-T010 is accepted by the repository operator's ruling of 2026-09-12 on the
+delivered work already merged on `main` at `07beeffe`. The read-only durable
+resume projection was delivered by commit `b61725de` and the closed public
+adapter extension authorized by D-M51-010-006 by commit `7d186b04`, both
+integrated through pull request #84 at merge commit `43ba0e36`. All seven
+declared paths exist on `main`: `packages/backend/convex/offerings.ts`,
+`packages/backend/convex/command_dispatch.ts`,
+`packages/backend/tests/offering-command-admission.test.mjs`,
+`packages/backend/tests/command-dispatch.test.mjs`,
+`apps/web/src/lib/offering-projection.ts`,
+`apps/web/src/lib/provider-campaign-resume.ts`, and
+`apps/web/tests/provider-campaign-resume.test.mjs`, together with the
+wiring-only amendment of `apps/web/tests/deploy-stage-signing.test.mjs`
+authorized by D-M51-010-004. Verification is the merged-`main` state at `07beeffe`: the complete Web suite passes 547 of 548 with no failure and one skip, Web typecheck is clean, and the Web build renders 37 of 37 routes. The acceptance is recorded against that merged
+state rather than against a fresh exact-head review, and it releases every M51
+source and test reservation. It grants no provider or wallet request,
+signature, relay, authority mutation, transaction, chain observation, candidate
+attachment, deployment, or live authority.
