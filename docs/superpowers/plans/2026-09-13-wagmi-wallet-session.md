@@ -63,7 +63,7 @@ Pin `wagmi@3.7.7` and `@tanstack/react-query@5.102.8`; create exactly one
 **Files:**
 - Create: `apps/web/src/components/wallet/use-tool402-wallet.ts`
 - Modify: `apps/web/src/components/wallet/wallet-connect.tsx`, `apps/web/tests/wallet-session.test.mjs`, `apps/web/tests/wallet-state.test.mjs`, `apps/web/tests/wallet-session-sync.test.mjs`, `apps/web/tests/metamask-provider.test.mjs`
-- Delete: `apps/web/src/components/wallet/wallet-session.tsx`, `apps/web/src/lib/wallet/wallet-state.ts`, `apps/web/src/lib/wallet/metamask-provider.ts`
+- Retain temporarily: `apps/web/src/components/wallet/wallet-session.tsx`, `apps/web/src/lib/wallet/wallet-state.ts`, `apps/web/src/lib/wallet/metamask-provider.ts` while the later auth, command, backing, and Stage-B consumers migrate. Their deletion belongs to Task 6, after the last import is removed.
 
 **Interfaces:** `useTool402Wallet()` returns derived `connection`, `resolved`, account/chain/connector and explicit `connect`, `disconnect`, `switchToHedera` operations; it stores neither a provider nor a listener.
 
@@ -85,8 +85,8 @@ test('keeps an explicit disconnect after remount', async () => {
 ```
 
 - [ ] **Step 2: Verify RED** — run the three wallet session/state focused tests.
-- [ ] **Step 3: Implement the derived hook and migrate UI** — filter `useConnectors()` to configured MetaMask, normalize Tool402 addresses to lower case, derive resolving/no-provider/wrong-chain/connected view states, and invoke mutations only from explicit controls.
-- [ ] **Step 4: Verify GREEN** — focused tests pass and `rg` finds no `WalletSessionProvider`, `useWalletSession`, discovery or custom listener in `apps/web/src`.
+- [ ] **Step 3: Implement the derived hook and migrate UI** — filter `useConnectors()` to configured MetaMask, normalize Tool402 addresses to lower case, derive resolving/no-provider/wrong-chain/connected view states, and invoke mutations only from explicit controls. Retain legacy modules solely for later consumers; do not add new imports of them.
+- [ ] **Step 4: Verify GREEN** — focused hook/header tests pass. The final `rg` assertion that finds no `WalletSessionProvider`, `useWalletSession`, discovery or custom listener belongs to Task 6 after every consumer has migrated.
 - [ ] **Step 5: Commit** — `refactor: Derive wallet state from Wagmi`.
 
 ### Task 3: Migrate dashboard sign-in and safe session synchronization
@@ -185,7 +185,7 @@ test('recovers an existing ATS hash without another send', async () => {
 
 **Files:**
 - Modify: `README.md`, W01 specification/queue records and only reviewed final rebase-conflict files.
-- Delete: obsolete custom wallet tests/modules only after all consumers move.
+- Delete: `apps/web/src/components/wallet/wallet-session.tsx`, `apps/web/src/lib/wallet/wallet-state.ts`, `apps/web/src/lib/wallet/metamask-provider.ts` and their obsolete tests only after all consumers move.
 
 - [ ] **Step 1: Write failing cleanup assertion**
 
