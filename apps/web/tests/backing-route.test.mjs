@@ -9,15 +9,17 @@ const appRoot = fileURLToPath(new URL("..", import.meta.url));
 const sourcePaths = [
   "src/app/explore/riskscan/back/page.tsx",
   "src/components/backing/backing-flow.tsx",
+  "src/components/backing/backing-presentation.ts",
   "src/components/backing/backing-state.ts",
+  "src/components/backing/backing-step-rail.tsx",
 ];
 
 function readAppFile(path) {
   return readFile(join(appRoot, path), "utf8");
 }
 
-test("declares exactly the three backing source paths", () => {
-  assert.deepEqual(sourcePaths.map((path) => existsSync(join(appRoot, path))), [true, true, true]);
+test("declares exactly the five backing source paths", () => {
+  assert.deepEqual(sourcePaths.map((path) => existsSync(join(appRoot, path))), [true, true, true, true, true]);
 });
 
 test("loads one server-owned RiskScan backing projection before rendering the flow", async () => {
@@ -30,7 +32,9 @@ test("loads one server-owned RiskScan backing projection before rendering the fl
   assert.match(page, /loadRiskScanBackingProjection\(process\.env, globalThis\.fetch\)/);
   assert.match(page, /<Suspense fallback=\{<BackingFlow projection=\{null\} \/>\}>/);
   assert.match(page, /<BackingFlow projection=\{projection\} \/>/);
-  assert.doesNotMatch(page, /href="\/explore\/riskscan"/);
+  assert.equal((page.match(/<Link\b/g) ?? []).length, 1);
+  assert.equal((page.match(/href=/g) ?? []).length, 1);
+  assert.match(page, /<Link\s+href="\/explore\/riskscan"[\s\S]*?>\s*Back to RiskScan\s*<\/Link>/);
 });
 
 test("consumes the shared wallet session, signature dialog, and relay without a second copy of any", async () => {
@@ -44,7 +48,10 @@ test("consumes the shared wallet session, signature dialog, and relay without a 
   assert.match(flow, /useRef/);
   assert.match(flow, /isCurrentBackingIntent/);
   assert.match(flow, /sendingRef\.current/);
-  assert.doesNotMatch(flow, /backing-presentation|backing-step-rail|presetUnits|BackingStepRail/);
+  assert.equal((flow.match(/<BackingStepRail\b/g) ?? []).length, 1);
+  assert.equal((flow.match(/<WalletIsland\b/g) ?? []).length, 1);
+  assert.match(flow, /import \{ presetUnits, railPosition \} from "\.\/backing-presentation"/);
+  assert.match(flow, /import \{ BackingStepRail \} from "\.\/backing-step-rail"/);
   assert.doesNotMatch(flow, /approvedIssuerAddress|canonicalSignerAddress/);
   assert.doesNotMatch(flow, /discoverMetaMaskProvider|eth_requestAccounts|wallet_switchEthereumChain|eth_signTypedData|signCommand|createUnsignedCommand|relayCommandBody|\/api\/commands|createCommandNonce|keccak/);
   assert.equal((flow.match(/eth_sendTransaction/g) ?? []).length, 0);
@@ -63,7 +70,7 @@ test("renders the fixed copy and none of the canvas's sample or simulation conte
   assert.match(sources, /of qualifying usage revenue funds capped distributions under the offering terms\. This is not a projected return\. No payout amount or timeline is promised\./);
   assert.match(sources, /I understand this is a testnet experiment with no real funds, that units are allocated only after the issuer signs, and that the payout cap is/);
   assert.match(flow, /name="units"/);
-  assert.doesNotMatch(flow, /role="radiogroup"|Amount presets|Custom/);
+  assert.doesNotMatch(flow, /role="radiogroup"|Amount presets/);
   assert.match(flow, /name="acknowledgement"/);
   assert.match(flow, /aria-live="polite"/);
   assert.match(flow, /disabled=\{/);
