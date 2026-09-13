@@ -157,12 +157,18 @@ export const recordBackingPayment = internalMutation({
     const row = rows[0];
     const intents = await ctx.db.query("backingIntents").withIndex("by_idempotency_key", (q) => q.eq("idempotencyKey", args.attemptPublicId)).take(2);
     if (intents.length !== 1 || !validFrozenIntent(intents[0], { idempotencyKey: args.attemptPublicId, canonicalSignerAddress: args.canonicalSignerAddress, tinybars: args.tinybars })) return null;
-    const offeringPublicId = intents[0]!.offeringPublicId;
+    const intent = intents[0]!;
+    const offeringPublicId = intent.offeringPublicId;
     const claims = await ctx.db.query(backingPaymentClaimStore).withIndex("by_transaction_hash", (q) => q.eq("transactionHash", args.transactionHash)).take(2);
     if (claims.length > 1) return null;
     const attempts = await ctx.db.query(backingPaymentClaimStore).withIndex("by_attempt_id", (q) => q.eq("attemptId", row._id)).take(2);
     if (attempts.length > 1) return null;
     const claim = attempts[0];
+    if (
+      claim === undefined
+      && (offeringPublicId !== legacyRiskScanOfferingPublicId && !hasLiveSelfServiceBackingIntent(intent)
+        || !await mayReserveNewBackingPayment(ctx, args.canonicalSignerAddress, offeringPublicId))
+    ) return null;
     const next = resolveBackingPaymentClaim(claims[0], claim, { attemptId: row._id, transactionHash: args.transactionHash, tinybars: args.tinybars, outcome: args.outcome });
     if (next === null || (claim === undefined && (row.state === "CONFIRMED" || row.state === "REJECTED"))) return null;
     if (claim === undefined) {
