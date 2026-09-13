@@ -42,6 +42,15 @@
   deployment, migration, feature enablement, wallet actions, and live evidence
   remain separately controlled.
 
+- W01_WAGMI_WALLET_SESSION_INTAKE: At `origin/main`
+  `c8585c83dd7206a4610b42de1b3be88cb01179bb`, the owner requests replacing
+  the in-house MetaMask connection/session transport with Wagmi v3 and Viem.
+  W01-T010 begins in `00-inbox` with its committed local specification and
+  design only. No application source, dependency, lockfile, wallet request,
+  signature, transaction, authority, deployment, merge or live action is
+  authorized until a separate root readiness and RED activation reconciles
+  active S26/S36/S40/M49/M50/M58 ownership and open PR #118.
+
 - S38_S39_S47_MERGED_LANE_RECONCILIATION: At `origin/main`
   `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, S38-T010, S39-T010, and
   S47-T010 are documented as completed local source deliveries. Their merged
