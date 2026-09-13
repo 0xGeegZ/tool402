@@ -208,6 +208,12 @@ export async function loadBackerPayment(env: DashboardAuthEnvironment, sessionCo
   return record(await forward(env, { type: "backing_read", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt }));
 }
 
+export async function loadLegacyRiskScanPayment(env: DashboardAuthEnvironment, sessionCookie: string | null): Promise<BackingPaymentRecord | null> {
+  const session = await readDashboardSession(sessionCookie, env);
+  if (session === null || !addressPattern.test(session.address)) return null;
+  return record(await forward(env, { type: "backing_read_legacy", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt }));
+}
+
 export async function loadBackerPayments(env: DashboardAuthEnvironment, sessionCookie: string | null): Promise<BackingPaymentHistoryRecord[]> {
   const session = await readDashboardSession(sessionCookie, env);
   if (session === null || !addressPattern.test(session.address)) return [];

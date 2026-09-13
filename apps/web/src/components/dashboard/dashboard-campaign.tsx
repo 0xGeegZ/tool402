@@ -6,7 +6,7 @@ import { readDashboardSession, readDashboardSessionCookieName } from "../../lib/
 import { readDashboardCampaign, riskScanOfferingPublicId } from "../../lib/dashboard-campaign";
 import { formatHbar } from "../../lib/hbar-format";
 import { hashscanTransactionUrl } from "../../lib/hashscan-links";
-import { loadBackerPayment, loadBackerPayments, type BackingPaymentHistoryRecord } from "../../lib/backing-payment-server";
+import { loadBackerPayments, loadLegacyRiskScanPayment, type BackingPaymentHistoryRecord } from "../../lib/backing-payment-server";
 import { readProviderProjections } from "../../lib/offering-projection";
 import { ensureSelfServiceMembership } from "../../lib/provider-tools-server";
 import { Badge } from "../ui/badge";
@@ -102,11 +102,9 @@ export async function DashboardCampaign() {
   const projections = await readProviderProjections(process.env, globalThis.fetch, riskScanOfferingPublicId);
   const sessionCookie = sessionCookieName === null ? null : cookieStore.get(sessionCookieName)?.value ?? null;
   const [legacyBacking, backingHistory] = await Promise.all([
-    loadBackerPayment(process.env, sessionCookie),
+    loadLegacyRiskScanPayment(process.env, sessionCookie),
     loadBackerPayments(process.env, sessionCookie),
   ]);
-  // Older RiskScan evidence predates self-service frozen intents; retain it
-  // until it has a scoped replacement in the new history projection.
   const backing = legacyBacking === null || backingHistory.some((record) => record.offeringPublicId === riskScanOfferingPublicId)
     ? backingHistory
     : [{ ...legacyBacking, offeringPublicId: riskScanOfferingPublicId }, ...backingHistory];

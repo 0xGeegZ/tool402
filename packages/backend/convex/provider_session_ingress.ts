@@ -26,6 +26,7 @@ type ProviderToolRequest =
   | Readonly<{ type: "backing"; canonicalSignerAddress: string; attemptPublicId: string; transactionHash: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string }; sessionExpiresAt: string }>
   | Readonly<{ type: "backing_reserve"; canonicalSignerAddress: string; attemptPublicId: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string }; sessionExpiresAt: string }>
   | Readonly<{ type: "backing_read"; canonicalSignerAddress: string; sessionExpiresAt: string }>
+  | Readonly<{ type: "backing_read_legacy"; canonicalSignerAddress: string; sessionExpiresAt: string }>
   | Readonly<{ type: "backing_list"; canonicalSignerAddress: string; sessionExpiresAt: string }>
   | Readonly<{ type: "backing_read_offering"; canonicalSignerAddress: string; offeringPublicId: string; sessionExpiresAt: string }>;
 type Seams = {
@@ -41,6 +42,7 @@ type Seams = {
   readonly backing: (input: { canonicalSignerAddress: string; attemptPublicId: string; transactionHash: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string } }) => Promise<unknown>;
   readonly backingReserve: (input: { canonicalSignerAddress: string; attemptPublicId: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string } }) => Promise<unknown>;
   readonly backingRead: (input: { canonicalSignerAddress: string }) => Promise<unknown>;
+  readonly backingReadLegacy: (input: { canonicalSignerAddress: string }) => Promise<unknown>;
   readonly backingList: (input: { canonicalSignerAddress: string }) => Promise<unknown>;
   readonly backingReadOffering: (input: { canonicalSignerAddress: string; offeringPublicId: string }) => Promise<unknown>;
 };
@@ -55,6 +57,7 @@ const claimReplayReference = makeFunctionReference<"mutation">("wallet_command_r
 const backingReference = makeFunctionReference<"action">("backing_payment_records:confirmBackingPayment");
 const backingReserveReference = makeFunctionReference<"action">("backing_payment_records:reserveBackingPayment");
 const backingReadReference = makeFunctionReference<"action">("backing_payment_records:reverifyBackerPayment");
+const backingReadLegacyReference = makeFunctionReference<"action">("backing_payment_records:readLegacyRiskScanPayment");
 const backingListReference = makeFunctionReference<"action">("backing_payment_records:listBackerPayments");
 const backingReadOfferingReference = makeFunctionReference<"action">("backing_payment_records:readBackerPaymentForOffering");
 
@@ -208,6 +211,9 @@ function exactBody(bytes: Uint8Array): ProviderToolRequest | null {
     if (record.type === "backing_read" && JSON.stringify(Object.keys(record)) === JSON.stringify(["type", "canonicalSignerAddress", "sessionExpiresAt"])) {
       return { type: "backing_read", canonicalSignerAddress: record.canonicalSignerAddress, sessionExpiresAt: record.sessionExpiresAt };
     }
+    if (record.type === "backing_read_legacy" && JSON.stringify(Object.keys(record)) === JSON.stringify(["type", "canonicalSignerAddress", "sessionExpiresAt"])) {
+      return { type: "backing_read_legacy", canonicalSignerAddress: record.canonicalSignerAddress, sessionExpiresAt: record.sessionExpiresAt };
+    }
     if (record.type === "backing_list" && JSON.stringify(Object.keys(record)) === JSON.stringify(["type", "canonicalSignerAddress", "sessionExpiresAt"])) {
       return { type: "backing_list", canonicalSignerAddress: record.canonicalSignerAddress, sessionExpiresAt: record.sessionExpiresAt };
     }
@@ -261,6 +267,10 @@ async function handle(ctx: ActionContext, request: Request, seams: Seams): Promi
       return response(await seams.ensureSelfService({ canonicalSignerAddress: body.canonicalSignerAddress }), 200);
     }
     if (body.type === "backing_intent") {
+      // A direct backing route has the same authenticated provisioning path as
+      // the dashboard. `ensure` is idempotent and never revives a revoked row;
+      // freezeBackingIntent remains the sole legacy/public admission gate.
+      await seams.ensureSelfService({ canonicalSignerAddress: body.canonicalSignerAddress });
       return response(await seams.freezeBackingIntent({
         canonicalSignerAddress: body.canonicalSignerAddress, offeringPublicId: body.offeringPublicId,
         units: body.units, idempotencyKey: body.idempotencyKey, purchaseIntentId: body.purchaseIntentId,
@@ -275,6 +285,9 @@ async function handle(ctx: ActionContext, request: Request, seams: Seams): Promi
     }
     if (body.type === "backing_read") {
       return response(await seams.backingRead({ canonicalSignerAddress: body.canonicalSignerAddress }), 200);
+    }
+    if (body.type === "backing_read_legacy") {
+      return response(await seams.backingReadLegacy({ canonicalSignerAddress: body.canonicalSignerAddress }), 200);
     }
     if (body.type === "backing_list") {
       return response(await seams.backingList({ canonicalSignerAddress: body.canonicalSignerAddress }), 200);
@@ -314,6 +327,7 @@ export async function handleProviderSessionIngress(ctx: ActionContext, request: 
     backing: (input) => ctx.runAction(backingReference, input),
     backingReserve: (input) => ctx.runAction(backingReserveReference, input),
     backingRead: (input) => ctx.runAction(backingReadReference, input),
+    backingReadLegacy: (input) => ctx.runAction(backingReadLegacyReference, input),
     backingList: (input) => ctx.runAction(backingListReference, input),
     backingReadOffering: (input) => ctx.runAction(backingReadOfferingReference, input),
   });

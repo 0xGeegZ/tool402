@@ -35,18 +35,32 @@ import {
 import { BackingStepRail } from "./backing-step-rail";
 
 const finalPhases: ReadonlySet<SignatureResult["phase"]> = new Set(["complete", "rejected", "failed", "unknown"]);
-const pendingAttachmentKey = "tool402-backing-pending-attachment-v1";
-type PendingAttachment = Readonly<{ intent: Pick<BackingIntent, "idempotencyKey" | "parameters">; transactionHash: `0x${string}` }>;
+const pendingAttachmentPrefix = "tool402-backing-pending-attachment-v2:";
+type PendingAttachment = Readonly<{ canonicalSignerAddress: string; offeringPublicId: string; intent: Pick<BackingIntent, "idempotencyKey" | "parameters">; transactionHash: `0x${string}` }>;
 
-function pendingAttachment(): PendingAttachment | null {
+function pendingAttachmentKey(canonicalSignerAddress: string, offeringPublicId: string, attemptPublicId: string): string {
+  return `${pendingAttachmentPrefix}${canonicalSignerAddress}:${offeringPublicId}:${attemptPublicId}`;
+}
+
+function pendingAttachment(canonicalSignerAddress: string | null, offeringPublicId: string): PendingAttachment | null {
+  if (canonicalSignerAddress === null) return null;
   if (typeof window === "undefined") return null;
   try {
-    const value: unknown = JSON.parse(window.localStorage.getItem(pendingAttachmentKey) ?? "null");
-    if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
-    const record = value as Record<string, unknown>;
-    return typeof record.transactionHash === "string" && /^0x[0-9a-f]{64}$/u.test(record.transactionHash) && record.intent !== null && typeof record.intent === "object"
-      ? { intent: record.intent as PendingAttachment["intent"], transactionHash: record.transactionHash as `0x${string}` }
-      : null;
+    const prefix = `${pendingAttachmentPrefix}${canonicalSignerAddress}:${offeringPublicId}:`;
+    for (const key of Object.keys(window.localStorage)) {
+      if (!key.startsWith(prefix)) continue;
+      const value: unknown = JSON.parse(window.localStorage.getItem(key) ?? "null");
+      if (value === null || typeof value !== "object" || Array.isArray(value)) continue;
+      const record = value as Record<string, unknown>;
+      const intent = record.intent;
+      if (record.canonicalSignerAddress === canonicalSignerAddress && record.offeringPublicId === offeringPublicId
+        && typeof record.transactionHash === "string" && /^0x[0-9a-f]{64}$/u.test(record.transactionHash)
+        && intent !== null && typeof intent === "object" && !Array.isArray(intent)
+        && typeof (intent as Record<string, unknown>).idempotencyKey === "string") {
+        return { canonicalSignerAddress, offeringPublicId, intent: intent as PendingAttachment["intent"], transactionHash: record.transactionHash as `0x${string}` };
+      }
+    }
+    return null;
   } catch { return null; }
 }
 
@@ -91,7 +105,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   const [transferring, setTransferring] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [payment, setPayment] = useState<BackingPaymentRecord | null>(initialPayment);
-  const [pending, setPending] = useState<PendingAttachment | null>(pendingAttachment);
+  const [pending, setPending] = useState<PendingAttachment | null>(() => pendingAttachment(dashboardAddress, offering.offeringPublicId));
   const sendingRef = useRef(false);
   const validation = validateUnits(offering, unitsInput);
   const label = payment?.status === "CONFIRMED" ? "payment_confirmed" : payment?.status === "REJECTED" ? "payment_rejected" : backingLifecycleLabels[view.kind];
@@ -137,7 +151,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
           && typeof record.transactionHash === "string" && /^0x[0-9a-f]{64}$/u.test(record.transactionHash)
           && typeof record.tinybars === "string" && /^(?:0|[1-9][0-9]*)$/u.test(record.tinybars)) {
           setPayment({ status: record.status, transactionHash: record.transactionHash as `0x${string}`, tinybars: record.tinybars });
-          try { window.localStorage.removeItem(pendingAttachmentKey); } catch { /* recovery storage is best effort only */ }
+          try { window.localStorage.removeItem(pendingAttachmentKey(dashboardAddress ?? "", offering.offeringPublicId, intent.idempotencyKey)); } catch { /* recovery storage is best effort only */ }
           setPending(null);
           return;
         }
@@ -210,8 +224,8 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       setView(viewAfterTransfer(view, { kind: "no_hash" }));
     }
     if (result.kind === "hash" && /^0x[0-9a-f]{64}$/u.test(result.hash)) {
-      const attachment = { intent: { idempotencyKey: view.intent.idempotencyKey, parameters: view.intent.parameters }, transactionHash: result.hash as `0x${string}` };
-      try { window.localStorage.setItem(pendingAttachmentKey, JSON.stringify(attachment)); } catch { /* the authoritative attachment still proceeds */ }
+      const attachment = { canonicalSignerAddress: dashboardAddress, offeringPublicId: offering.offeringPublicId, intent: { idempotencyKey: view.intent.idempotencyKey, parameters: view.intent.parameters }, transactionHash: result.hash as `0x${string}` };
+      try { window.localStorage.setItem(pendingAttachmentKey(dashboardAddress, offering.offeringPublicId, view.intent.idempotencyKey), JSON.stringify(attachment)); } catch { /* the authoritative attachment still proceeds */ }
       setPending(attachment);
       await persistPayment(attachment.intent, attachment.transactionHash);
     }

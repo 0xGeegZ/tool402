@@ -97,9 +97,11 @@ function readOpenOffering(value: unknown): Readonly<{ offeringPublicId: string; 
       payoutCapTinybars: termsInput.payoutCapTinybars as string,
     });
     const fundingRecipient = offering.fundingRecipient;
-    const recipient = fundingRecipient === undefined
-      ? process.env.TOOL402_FUNDING_EVM_ADDRESS
-      : fundingRecipient;
+    // The shared treasury predates offer-scoped self-service funding. It is
+    // retained solely for the immutable legacy RiskScan offering; every public
+    // offering must persist the recipient the backer reviewed.
+    if (fundingRecipient === undefined && offering.offeringPublicId !== legacyRiskScanOfferingPublicId) return null;
+    const recipient = fundingRecipient === undefined ? process.env.TOOL402_FUNDING_EVM_ADDRESS : fundingRecipient;
     if (
       !isCanonicalEvmAddress(recipient)
       || (fundingRecipient !== undefined && fundingRecipient !== offering.canonicalSignerAddress)

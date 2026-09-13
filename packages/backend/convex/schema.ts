@@ -97,17 +97,22 @@ export default defineSchema({
     nextReconciliationAt: v.optional(v.int64()),
     acceptedAt: v.int64(),
   }).index("by_idempotency_key", ["idempotencyKey"])
-    .index("by_operation_kind_and_canonical_signer_address", ["operationKind", "canonicalSignerAddress"]),
+    .index("by_operation_kind_and_canonical_signer_address", ["operationKind", "canonicalSignerAddress"])
+    .index("by_funding_backer_and_subject", ["operationKind", "canonicalSignerAddress", "subjectPublicId"]),
   backingPaymentClaims: defineTable({
     transactionHash: v.optional(v.string()),
     attemptId: v.id("externalPrepareCommandAttempts"),
     canonicalSignerAddress: v.string(),
+    // Added after the first legacy claims. New claims are deliberately
+    // offer-scoped; historic rows remain readable through their attempt.
+    offeringPublicId: v.optional(v.string()),
     tinybars: v.string(),
     state: v.union(v.literal("PREPARED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN"), v.literal("CONFIRMED"), v.literal("REJECTED")),
     claimedAt: v.int64(),
   }).index("by_transaction_hash", ["transactionHash"])
     .index("by_attempt_id", ["attemptId"])
-    .index("by_canonical_signer_address", ["canonicalSignerAddress"]),
+    .index("by_canonical_signer_address", ["canonicalSignerAddress"])
+    .index("by_backer_offering_and_claimed_at", ["canonicalSignerAddress", "offeringPublicId", "claimedAt"]),
   backingIntents: defineTable({
     idempotencyKey: v.string(),
     purchaseIntentId: v.string(),

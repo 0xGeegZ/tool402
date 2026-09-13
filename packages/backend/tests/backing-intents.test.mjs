@@ -21,8 +21,8 @@ function offering(overrides = {}) {
   };
 }
 
-function database({ authorities = [], offerings = [offering()] } = {}) {
-  const rows = { commandAuthorities: authorities, offerings, selfServiceAccounts: [], backingIntents: [], selfServiceWriteRateLimits: [] };
+function database({ authorities = [], offerings = [offering()], accounts = [] } = {}) {
+  const rows = { commandAuthorities: authorities, offerings, selfServiceAccounts: accounts, backingIntents: [], selfServiceWriteRateLimits: [] };
   return { rows, ctx: { db: {
     query(table) { return { withIndex(_name, select) { const filters = []; const query = { eq(field, value) { filters.push([field, value]); return query; } }; select(query); const builder = { order() { return builder; }, async take(limit) { return rows[table].filter((row) => filters.every(([field, value]) => row[field] === value)).slice(0, limit); } }; return builder; } }; },
     async insert(table, value) { rows[table].push({ _id: `${table}:${rows[table].length}`, _creationTime: 1, ...value }); },
@@ -49,5 +49,29 @@ test("refuses a fresh public backer while the public self-service flag is disabl
   process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "false";
   t.after(() => { process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previousFlag; });
   const result = await freezeBackingIntent._handler(database({ offerings: [offering({ offeringPublicId: "offering_public", subjectPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", fundingRecipient: recipient })] }).ctx, { canonicalSignerAddress: signer, offeringPublicId: "offering_public", units: "2", idempotencyKey: "AAAAAAAAAAAAAAAAAAAAAA", purchaseIntentId: "CCCCCCCCCCCCCCCCCCCCCg", expiresAt: expiry() });
+  assert.deepEqual(result, { outcome: "REJECTED" });
+});
+
+test("does not use the legacy treasury for a public offering without a frozen recipient", async (t) => {
+  const { freezeBackingIntent } = await import(sourceUrl.href);
+  const previousFlag = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  const previousTreasury = process.env.TOOL402_FUNDING_EVM_ADDRESS;
+  const previousPendingLimit = process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS;
+  const previousHourlyLimit = process.env.TOOL402_SELF_SERVICE_MAX_BACKING_INTENTS_PER_HOUR;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  process.env.TOOL402_FUNDING_EVM_ADDRESS = recipient;
+  process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS = "3";
+  process.env.TOOL402_SELF_SERVICE_MAX_BACKING_INTENTS_PER_HOUR = "3";
+  t.after(() => {
+    process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previousFlag;
+    process.env.TOOL402_FUNDING_EVM_ADDRESS = previousTreasury;
+    process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS = previousPendingLimit;
+    process.env.TOOL402_SELF_SERVICE_MAX_BACKING_INTENTS_PER_HOUR = previousHourlyLimit;
+  });
+  const account = { _id: "selfServiceAccounts:backer", _creationTime: 1, canonicalSignerAddress: signer, chainId: 296, principalPublicId: `self_service_${signer.slice(2)}`, policyVersion: "public_testnet_v1", status: "ACTIVE", createdAt: 1n, updatedAt: 1n };
+  const result = await freezeBackingIntent._handler(database({
+    accounts: [account],
+    offerings: [offering({ offeringPublicId: "offering_public", subjectPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" })],
+  }).ctx, { canonicalSignerAddress: signer, offeringPublicId: "offering_public", units: "2", idempotencyKey: "AAAAAAAAAAAAAAAAAAAAAA", purchaseIntentId: "CCCCCCCCCCCCCCCCCCCCCg", expiresAt: expiry() });
   assert.deepEqual(result, { outcome: "REJECTED" });
 });

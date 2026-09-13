@@ -107,7 +107,7 @@ implementedTest("forwards a signed self-service ensure assertion only to the pri
   assert.deepEqual(calls, [{ canonicalSignerAddress }]);
 });
 
-implementedTest("forwards a signed backing intent request only to the server-side term freezer", async () => {
+implementedTest("provisions direct backing idempotently before forwarding only to the server-side term freezer", async () => {
   const { handleProviderSessionIngressForTest } = await import(ingressUrl.href);
   const body = JSON.stringify({
     type: "backing_intent", canonicalSignerAddress, offeringPublicId: "riskscan_revenue_note_demo", units: "10",
@@ -123,7 +123,7 @@ implementedTest("forwards a signed backing intent request only to the server-sid
     list: async () => { throw new Error("must not list"); },
     read: async () => { throw new Error("must not read"); },
     deployment: async () => { throw new Error("must not deploy"); },
-    ensureSelfService: async () => { throw new Error("must not ensure"); },
+    ensureSelfService: async (input) => { calls.push({ ensure: input }); return { outcome: "ACTIVE" }; },
     backing: async () => { throw new Error("must not record"); },
     backingReserve: async () => { throw new Error("must not reserve"); },
     backingRead: async () => { throw new Error("must not read payment"); },
@@ -131,7 +131,7 @@ implementedTest("forwards a signed backing intent request only to the server-sid
   });
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { outcome: "PREPARED" });
-  assert.deepEqual(calls, [{
+  assert.deepEqual(calls, [{ ensure: { canonicalSignerAddress } }, {
     canonicalSignerAddress, offeringPublicId: "riskscan_revenue_note_demo", units: "10",
     idempotencyKey: nonce, purchaseIntentId: "ZyXwVuTsRqPoNmLkJiHgFw", expiresAt: "2025-01-01T00:05:00.000Z",
   }]);

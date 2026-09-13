@@ -35,6 +35,50 @@ test("admits one durable hash claim exactly once per attempt and preserves termi
   assert.equal(resolveBackingPaymentClaim({ ...claim, state: "CONFIRMED" }, { ...claim, state: "CONFIRMED" }, input), "CONFIRMED", "terminal confirmation is immutable");
 });
 
+function paymentStoreDatabase(claims) {
+  return {
+    db: {
+      query(table) {
+        return {
+          withIndex(_index, configure) {
+            const filters = [];
+            const query = { eq(field, value) { filters.push([field, value]); return query; } };
+            configure(query);
+            const matching = claims.filter((claim) => table === "backingPaymentClaims" && filters.every(([field, value]) => claim[field] === value));
+            const builder = {
+              order(direction) {
+                const ordered = [...matching].sort((left, right) => direction === "desc" ? Number(right.claimedAt - left.claimedAt) : Number(left.claimedAt - right.claimedAt));
+                return { async take(limit) { return ordered.slice(0, limit); } };
+              },
+              async take(limit) { return matching.slice(0, limit); },
+            };
+            return builder;
+          },
+        };
+      },
+    },
+  };
+}
+
+test("reads an actual scoped payment even after more than twenty abandoned intents", async () => {
+  const { readBackerPaymentForOffering } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const claims = [{ _id: "claim:older", attemptId: "attempt:older", canonicalSignerAddress: signer, offeringPublicId: "offering_a", tinybars: "10", state: "CONFIRMED", transactionHash: `0x${"ab".repeat(32)}`, claimedAt: 1n }];
+  const result = await readBackerPaymentForOffering._handler(paymentStoreDatabase(claims), { canonicalSignerAddress: signer, offeringPublicId: "offering_a" });
+  assert.deepEqual(result, { status: "CONFIRMED", transactionHash: `0x${"ab".repeat(32)}`, tinybars: "10" });
+});
+
+test("lists only offer-scoped durable claims and never relabels an arbitrary legacy claim", async () => {
+  const { listBackerPayments } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const claims = [
+    { _id: "claim:generic", attemptId: "attempt:generic", canonicalSignerAddress: signer, offeringPublicId: "offering_generic", tinybars: "11", state: "CONFIRMED", transactionHash: `0x${"cd".repeat(32)}`, claimedAt: 2n },
+    { _id: "claim:unscoped", attemptId: "attempt:unscoped", canonicalSignerAddress: signer, tinybars: "12", state: "CONFIRMED", transactionHash: `0x${"ef".repeat(32)}`, claimedAt: 3n },
+  ];
+  const result = await listBackerPayments._handler(paymentStoreDatabase(claims), { canonicalSignerAddress: signer });
+  assert.deepEqual(result, [{ offeringPublicId: "offering_generic", status: "CONFIRMED", transactionHash: `0x${"cd".repeat(32)}`, tinybars: "11" }]);
+});
+
 test("keeps the shared ATS prepare attempt PREPARED while the dedicated backing claim changes state", async () => {
   const source = await readFile(storeUrl, "utf8");
   assert.match(source, /ctx\.db\.patch\(claim\._id, \{ transactionHash: args\.transactionHash, state: next \}\)/u);
@@ -82,6 +126,22 @@ test("persists a submitted hash before observation and later re-verifies it with
   const rejected = await reverifyBackerPaymentForTest({ ...ctx, runQuery: async () => ({ ...context, state: "OUTCOME_UNKNOWN" }) }, { canonicalSignerAddress: signer }, async () => ({ from: signer, to: signer, value: 10_000_000_000_000_000_000n, status: "0x0" }));
   assert.equal(rejected.status, "REJECTED");
   assert.deepEqual(writes.map((write) => write.outcome), ["SUBMITTED", "OUTCOME_UNKNOWN", "CONFIRMED", "REJECTED"]);
+});
+
+test("re-verifies the selected offer's pending claim instead of the wallet's latest claim", async () => {
+  const { reverifyBackerPaymentForOfferingForTest } = await import(recordsUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const selectedHash = `0x${"12".repeat(32)}`;
+  const writes = [];
+  const result = await reverifyBackerPaymentForOfferingForTest({
+    runQuery: async () => ({ attemptPublicId: "SelectedAttemptKey12345A", expectedTarget: signer, transactionHash: selectedHash, tinybars: "7", state: "OUTCOME_UNKNOWN" }),
+    runMutation: async (_reference, input) => { writes.push(input); return { status: input.outcome, transactionHash: input.transactionHash, tinybars: input.tinybars }; },
+  }, { canonicalSignerAddress: signer, offeringPublicId: "offering_selected" }, async (hash) => {
+    assert.equal(hash, selectedHash);
+    return { from: signer, to: signer, value: 70_000_000_000n, status: "0x1" };
+  });
+  assert.deepEqual(result, { status: "CONFIRMED", transactionHash: selectedHash, tinybars: "7" });
+  assert.deepEqual(writes.map((write) => write.attemptPublicId), ["SelectedAttemptKey12345A"]);
 });
 
 test("returns a durable pre-send reservation on reload without reading a receipt or enabling another send", async () => {
