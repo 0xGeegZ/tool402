@@ -5,7 +5,7 @@ import { keccak256 } from "viem";
 
 import { isCanonicalEvmAddress, isInt64, readStoredRecord } from "../src/offering-command-admission.ts";
 import type schema from "./schema.ts";
-import { isPublicTestnetSelfServiceEnabled } from "./self_service_accounts.ts";
+import { isPublicTestnetSelfServiceEnabled, readSelfServiceMaxPendingAttempts } from "./self_service_accounts.ts";
 
 const internalMutation: MutationBuilder<DataModelFromSchemaDefinition<typeof schema>, "internal"> = internalMutationGeneric;
 const noncePattern = /^[A-Za-z0-9_-]{21}[AQgw]$/u;
@@ -204,6 +204,23 @@ export const freezeBackingIntent = internalMutation({
       .take(2);
     if (existing.length > 1) return reject();
     if (existing.length === 1) return reject();
+    const maximumPending = readSelfServiceMaxPendingAttempts();
+    if (maximumPending === null) return reject();
+    const pending = await ctx.db.query("backingIntents")
+      .withIndex("by_canonical_signer_address_and_created_at", (query) => (
+        query.eq("canonicalSignerAddress", args.canonicalSignerAddress)
+      ))
+      .order("desc")
+      .take(maximumPending + 1);
+    let active = 0;
+    for (const candidate of pending) {
+      const stored = readIntent(candidate);
+      if (stored === null) return reject();
+      const expiry = timestamp(stored.expiresAt);
+      if (expiry === null) return reject();
+      if (expiry > now) active += 1;
+    }
+    if (active >= maximumPending) return reject();
     await ctx.db.insert("backingIntents", { ...intent, canonicalSignerAddress: args.canonicalSignerAddress, createdAt: BigInt(now) });
     return { outcome: "PREPARED" as const, intent };
   },

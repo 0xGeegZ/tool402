@@ -89,3 +89,28 @@ test("does not create or reactivate a disabled, suspended, or revoked membership
     assert.equal(store.writes.length, 0);
   }
 });
+
+test("parses self-service quotas server-side and fails closed when either is absent or malformed", async () => {
+  const { readSelfServiceMaxPendingAttempts, readSelfServiceMaxTools } = await import(sourceUrl.href);
+  const previousTools = process.env.TOOL402_SELF_SERVICE_MAX_TOOLS;
+  const previousPending = process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS;
+  try {
+    delete process.env.TOOL402_SELF_SERVICE_MAX_TOOLS;
+    delete process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS;
+    assert.equal(readSelfServiceMaxTools(), null);
+    assert.equal(readSelfServiceMaxPendingAttempts(), null);
+    process.env.TOOL402_SELF_SERVICE_MAX_TOOLS = "2";
+    process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS = "3";
+    assert.equal(readSelfServiceMaxTools(), 2);
+    assert.equal(readSelfServiceMaxPendingAttempts(), 3);
+    process.env.TOOL402_SELF_SERVICE_MAX_TOOLS = "0";
+    process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS = "101";
+    assert.equal(readSelfServiceMaxTools(), null);
+    assert.equal(readSelfServiceMaxPendingAttempts(), null);
+  } finally {
+    if (previousTools === undefined) delete process.env.TOOL402_SELF_SERVICE_MAX_TOOLS;
+    else process.env.TOOL402_SELF_SERVICE_MAX_TOOLS = previousTools;
+    if (previousPending === undefined) delete process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS;
+    else process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS = previousPending;
+  }
+});

@@ -27,6 +27,10 @@ export function readSelfServiceMaxTools(): number | null {
   return boundedPositiveInteger(process.env.TOOL402_SELF_SERVICE_MAX_TOOLS, 100);
 }
 
+export function readSelfServiceMaxPendingAttempts(): number | null {
+  return boundedPositiveInteger(process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS, 100);
+}
+
 function timestamp(): bigint | null {
   const value = Date.now();
   return Number.isSafeInteger(value) && value >= 0 ? BigInt(value) : null;
