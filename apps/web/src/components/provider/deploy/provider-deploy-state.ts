@@ -23,7 +23,7 @@ export const providerDeploySteps = Object.freeze([
     fixed: Object.freeze(["capability"]),
   }),
   Object.freeze({
-    label: "Pricing and target agent customers",
+    label: "Pricing and customers",
     editable: Object.freeze(["quickPrice", "standardPrice", "targetAgentCustomers"]),
     fixed: Object.freeze([]),
   }),
