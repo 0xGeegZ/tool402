@@ -324,6 +324,15 @@ implementedTest("renders the direct provider deploy route as a server page over 
   assert.match(fixture, /Object\.freeze/);
 });
 
+implementedTest("streams the provider deploy query under Suspense", async () => {
+  const page = (await readS16Sources())["src/app/provider/deploy/page.tsx"];
+
+  assert.match(page, /import\s*\{\s*Suspense\s*\}\s+from\s+["']react["']/);
+  assert.match(page, /<Suspense\s+fallback=\{null\}>\s*<ProviderDeployBoundary\s+searchParams=\{searchParams\}\s*\/>\s*<\/Suspense>/);
+  assert.match(page, /async function ProviderDeployBoundary\(\{ searchParams \}: ProviderDeployPageProps\)[\s\S]*?await searchParams/);
+  assert.doesNotMatch(page, /export default async function ProviderDeployPage/);
+});
+
 implementedTest("keeps the route and every step transition local with no external or persistent read", async () => {
   const sources = Object.values(await readS16Sources()).join("\n");
 

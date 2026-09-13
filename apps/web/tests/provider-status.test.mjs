@@ -189,6 +189,14 @@ implementedTest("routes an OPEN selected tool to its own Provider status project
   assert.match(list, /\/provider\/deploy\?tool=\$\{encodeURIComponent\(tool\.toolPublicId\)\}/u);
 });
 
+implementedTest("streams the Provider query under Suspense", async () => {
+  const page = (await readSources())["src/app/provider/page.tsx"];
+
+  assert.match(page, /<Suspense\s+fallback=\{<p[^>]*>Loading admitted records\.<\/p>\}>\s*<ProviderPageBoundary\s+searchParams=\{searchParams\}\s*\/>\s*<\/Suspense>/u);
+  assert.match(page, /async function ProviderPageBoundary\(\{ searchParams \}: ProviderPageProps\)[\s\S]*?await searchParams/u);
+  assert.doesNotMatch(page, /export default async function ProviderPage/u);
+});
+
 implementedTest("loads only a complete valid directory projection", async () => {
   const record = directoryRecord();
   const environment = { TOOL402_CONVEX_SITE_URL: "https://convex.example.test/" };
