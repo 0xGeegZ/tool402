@@ -16,7 +16,7 @@ import { connectedWalletSession, useWalletSession, type WalletSession } from "..
 import { presetUnits, railPosition } from "./backing-presentation";
 import {
   backingLifecycleLabels,
-  createBackingIntent,
+  createFrozenBackingIntent,
   formatHbar,
   formatShare,
   isCurrentBackingIntent,
@@ -87,6 +87,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   const [acknowledged, setAcknowledged] = useState(false);
   const [view, setView] = useState<BackingView>({ kind: "choosing" });
   const [request, setRequest] = useState<BackingIntent | null>(null);
+  const [preparing, setPreparing] = useState(false);
   const [transferring, setTransferring] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [payment, setPayment] = useState<BackingPaymentRecord | null>(initialPayment);
@@ -95,18 +96,29 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   const validation = validateUnits(offering, unitsInput);
   const label = payment?.status === "CONFIRMED" ? "payment_confirmed" : payment?.status === "REJECTED" ? "payment_rejected" : backingLifecycleLabels[view.kind];
   const committed = request ?? ("intent" in view ? view.intent : null);
-  const locked = payment !== null || view.kind !== "choosing" || request !== null;
+  const locked = payment !== null || view.kind !== "choosing" || request !== null || preparing;
   const dashboardMatchesWallet = session !== null && dashboardAddress !== null && session.address === dashboardAddress;
   const canPrepare = validation.ok && acknowledged && dashboardMatchesWallet && !locked;
   const readoutUnits = committed !== null ? committed.units : validation.ok ? validation.units : null;
   const readoutTinybars = committed !== null ? committed.tinybars : validation.ok ? paymentTinybars(offering, validation.units) : null;
 
-  function prepare() {
+  async function prepare() {
     if (!validation.ok || !canPrepare) return;
+    setPreparing(true);
     try {
-      setRequest(createBackingIntent(offering, validation.units, Date.now()));
+      const response = await fetch("/api/backing/intent", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ offeringPublicId: offering.offeringPublicId, units: validation.units.toString() }),
+      });
+      const value: unknown = await response.json();
+      if (!response.ok || value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("frozen intent unavailable");
+      const frozen = (value as Record<string, unknown>).intent;
+      if (frozen === null || typeof frozen !== "object" || Array.isArray(frozen)) throw new Error("invalid frozen intent");
+      setRequest(createFrozenBackingIntent(offering, frozen as Parameters<typeof createFrozenBackingIntent>[1], Date.now()));
     } catch {
       setView({ kind: "choosing", message: "The funding intent could not be prepared. Nothing was signed or sent." });
+    } finally {
+      setPreparing(false);
     }
   }
 

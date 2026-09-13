@@ -101,6 +101,20 @@ export default defineSchema({
   }).index("by_transaction_hash", ["transactionHash"])
     .index("by_attempt_id", ["attemptId"])
     .index("by_canonical_signer_address", ["canonicalSignerAddress"]),
+  backingIntents: defineTable({
+    idempotencyKey: v.string(),
+    purchaseIntentId: v.string(),
+    canonicalSignerAddress: v.string(),
+    offeringPublicId: v.string(),
+    subjectPublicId: v.string(),
+    recipient: v.string(),
+    units: v.string(),
+    tinybars: v.string(),
+    canonicalParametersHash: v.string(),
+    expiresAt: v.string(),
+    createdAt: v.int64(),
+  }).index("by_idempotency_key", ["idempotencyKey"])
+    .index("by_canonical_signer_address_and_created_at", ["canonicalSignerAddress", "createdAt"]),
   offerings: defineTable({
     offeringPublicId: v.string(),
     subjectPublicId: v.string(),
@@ -141,6 +155,7 @@ export default defineSchema({
       v.literal("DRAFT"), v.literal("ASSET_PENDING"), v.literal("READY"),
       v.literal("OPEN"), v.literal("CLOSED"),
     ),
+    fundingRecipient: v.optional(v.string()),
     atsAttemptId: v.optional(v.id("externalPrepareCommandAttempts")),
     atsAssetEvmAddress: v.optional(v.string()),
     activeDirectoryVersionId: v.optional(v.id("directoryVersions")),

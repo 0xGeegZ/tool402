@@ -15,6 +15,7 @@ import {
   resolveSelectedProviderToolSubject,
 } from "./provider_tool_authority.ts";
 import { isPublicTestnetSelfServiceEnabled } from "./self_service_accounts.ts";
+import { matchesFrozenBackingIntent } from "./backing_intents.ts";
 import type schema from "./schema.ts";
 
 const contextValidators = {
@@ -220,7 +221,6 @@ async function resolveCurrentAuthority(
   if (
     authorities.length !== 0
     || !isPublicTestnetSelfServiceEnabled()
-    || command.payload.operationKind === "HEDERA_FUNDING"
   ) return reject();
 
   const accounts = await ctx.db.query("selfServiceAccounts")
@@ -269,6 +269,31 @@ async function revalidateSelectedPrepareAuthority(
     command,
   );
   return selected;
+}
+
+async function assertFrozenSelfServiceFundingIntent(
+  ctx: Parameters<typeof resolveSelectedProviderToolSubject>[0],
+  command: ReturnType<typeof bindContext>,
+): Promise<void> {
+  if (
+    command.payload.operationKind !== "HEDERA_FUNDING"
+    || command.authorityVersion !== "public_testnet_v1"
+    || command.principalPublicId !== `self_service_${command.canonicalSignerAddress.slice(2)}`
+  ) return;
+  const intents = await ctx.db.query("backingIntents")
+    .withIndex("by_idempotency_key", (query) => query.eq("idempotencyKey", command.payload.idempotencyKey))
+    .take(2);
+  if (
+    intents.length !== 1
+    || !matchesFrozenBackingIntent(intents[0], {
+      canonicalSignerAddress: command.canonicalSignerAddress,
+      idempotencyKey: command.payload.idempotencyKey,
+      subjectPublicId: command.payload.subjectPublicId,
+      expectedTarget: command.payload.expectedTarget,
+      canonicalParametersHash: command.payload.canonicalParametersHash,
+      expiresAt: command.payload.expiresAt,
+    })
+  ) return reject();
 }
 
 async function assertSelectedAtsCreateConfiguration(
@@ -340,6 +365,7 @@ export const admitExternalPrepareCommand = internalMutation({
     if (selected === null) revalidateAuthority(authority, bound);
     if (bound.payload.operationKind === "ATS_CREATE") return reject();
     assertCurrentAtsPrepareAuthority(bound.payload);
+    await assertFrozenSelfServiceFundingIntent(ctx, bound);
 
     const claims = await ctx.db.query("externalPrepareCommandReplayClaims")
       .withIndex("by_replay_identity", (query) => query.eq("replayIdentity", replayIdentity))

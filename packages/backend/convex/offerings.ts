@@ -127,6 +127,7 @@ const offeringOptionalFields = [
   "atsAttemptId",
   "atsAssetEvmAddress",
   "activeDirectoryVersionId",
+  "fundingRecipient",
 ] as const;
 const externalPrepareAttemptFields = [
   "version",
@@ -183,6 +184,7 @@ interface SafeOffering {
   readonly atsAttemptId?: GenericId<"externalPrepareCommandAttempts">;
   readonly atsAssetEvmAddress?: string;
   readonly activeDirectoryVersionId?: GenericId<"directoryVersions">;
+  readonly fundingRecipient?: string;
 }
 
 function reject(): never {
@@ -270,6 +272,9 @@ function readSafeOffering(input: unknown): SafeOffering {
   const activeDirectoryVersionId = Object.hasOwn(record, "activeDirectoryVersionId")
     ? opaqueId<"directoryVersions">(record.activeDirectoryVersionId)
     : undefined;
+  const fundingRecipient = Object.hasOwn(record, "fundingRecipient")
+    ? record.fundingRecipient
+    : undefined;
   if (
     !isCanonicalEvmAddress(record.canonicalSignerAddress)
     || typeof record.principalPublicId !== "string"
@@ -282,6 +287,7 @@ function readSafeOffering(input: unknown): SafeOffering {
     || !isInt64(record.updatedAt)
     || !["DRAFT", "ASSET_PENDING", "READY", "OPEN", "CLOSED"].includes(state as OfferingState)
     || (atsAssetEvmAddress !== undefined && !isCanonicalEvmAddress(atsAssetEvmAddress))
+    || (fundingRecipient !== undefined && (!isCanonicalEvmAddress(fundingRecipient) || fundingRecipient !== record.canonicalSignerAddress))
   ) {
     return reject();
   }
@@ -315,6 +321,7 @@ function readSafeOffering(input: unknown): SafeOffering {
     ...(atsAttemptId === undefined ? {} : { atsAttemptId }),
     ...(atsAssetEvmAddress === undefined ? {} : { atsAssetEvmAddress }),
     ...(activeDirectoryVersionId === undefined ? {} : { activeDirectoryVersionId }),
+    ...(fundingRecipient === undefined ? {} : { fundingRecipient }),
   });
 }
 
@@ -691,6 +698,9 @@ export const admitOfferingCreate = internalMutation({
         definition: storedDefinition(payload),
         narrative: storedNarrative(payload),
         state: "DRAFT" as const,
+        ...(selected !== null && command.authorityVersion === "public_testnet_v1"
+          ? { fundingRecipient: command.canonicalSignerAddress }
+          : {}),
       });
       await ctx.db.insert("walletCommandReplayClaims", {
         replayIdentity: command.replayIdentity,

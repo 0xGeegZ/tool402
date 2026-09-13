@@ -188,6 +188,32 @@ test("builds the HEDERA_FUNDING command over the canonical parameters preimage",
   assert.throws(() => state.createBackingIntent(offering, 5n, nowMilliseconds, fixedBytes(1)), RangeError);
 });
 
+test("builds a backing signature only from an exact server-frozen offer, amount, and recipient", async () => {
+  const state = await loadState();
+  const { canonicalizeRequirements } = await import("@tool402/core");
+  const { keccak256 } = await import("viem");
+  const offering = state.readBackingOffering(record());
+  const parameters = {
+    offeringPublicId: offering.offeringPublicId, units: "25", tinybars: "2500000000",
+    purchaseIntentId: "ZyXwVuTsRqPoNmLkJiHgFw",
+  };
+  const frozen = {
+    idempotencyKey: "AbCdEfGhIjKlMnOpQrStUw", purchaseIntentId: parameters.purchaseIntentId,
+    offeringPublicId: offering.offeringPublicId, subjectPublicId: offering.subjectPublicId,
+    recipient: treasury, units: parameters.units, tinybars: parameters.tinybars,
+    canonicalParametersHash: keccak256(new TextEncoder().encode(canonicalizeRequirements(parameters))).slice(2),
+    expiresAt: "2026-09-10T18:05:00.000Z",
+  };
+  const intent = state.createFrozenBackingIntent(offering, frozen, nowMilliseconds);
+  assert.equal(intent.idempotencyKey, frozen.idempotencyKey);
+  assert.equal(intent.purchaseIntentId, frozen.purchaseIntentId);
+  assert.deepEqual(intent.parameters, parameters);
+  assert.equal(intent.treasury, treasury);
+  assert.throws(() => state.createFrozenBackingIntent(offering, { ...frozen, tinybars: "1" }, nowMilliseconds));
+  assert.throws(() => state.createFrozenBackingIntent(offering, { ...frozen, recipient: "0x1111111111111111111111111111111111111111" }, nowMilliseconds));
+  assert.throws(() => state.createFrozenBackingIntent(offering, { ...frozen, canonicalParametersHash: "a".repeat(64) }, nowMilliseconds));
+});
+
 test("refuses to fund without an explicit lowercase treasury address and never derives one", async () => {
   const state = await loadState();
 

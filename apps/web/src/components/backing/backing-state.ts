@@ -73,6 +73,18 @@ export interface BackingIntent extends SignatureDialogRequest {
   readonly parameters: BackingParameters;
 }
 
+export interface FrozenBackingIntentInput {
+  readonly idempotencyKey: string;
+  readonly purchaseIntentId: string;
+  readonly offeringPublicId: string;
+  readonly subjectPublicId: string;
+  readonly recipient: string;
+  readonly units: string;
+  readonly tinybars: string;
+  readonly canonicalParametersHash: string;
+  readonly expiresAt: string;
+}
+
 type ViewOf<Kind extends BackingViewKind, Extra = object> = Readonly<{ kind: Kind } & Extra>;
 
 export type BackingView =
@@ -193,6 +205,48 @@ export function createBackingIntent(
     weibarHex: weibarQuantity(tinybars),
     treasury: offering.treasury,
     parameters,
+  });
+}
+
+/** Builds the signing request only from terms the server has already frozen. */
+export function createFrozenBackingIntent(
+  offering: BackingOffering,
+  frozen: FrozenBackingIntentInput,
+  nowMilliseconds: number,
+): BackingIntent {
+  if (!Number.isSafeInteger(nowMilliseconds) || nowMilliseconds < 0) throw new TypeError("a frozen backing intent needs a canonical current time");
+  if (
+    frozen.offeringPublicId !== offering.offeringPublicId || frozen.subjectPublicId !== offering.subjectPublicId
+    || frozen.recipient !== offering.treasury || !/^[A-Za-z0-9_-]{21}[AQgw]$/u.test(frozen.idempotencyKey)
+    || !/^[A-Za-z0-9_-]{21}[AQgw]$/u.test(frozen.purchaseIntentId) || !wholeUnitsPattern.test(frozen.units)
+    || !wholeUnitsPattern.test(frozen.tinybars) || BigInt(frozen.units) < 1n || BigInt(frozen.tinybars) < 1n
+    || !/^[0-9a-f]{64}$/u.test(frozen.canonicalParametersHash) || !Number.isFinite(Date.parse(frozen.expiresAt))
+    || new Date(Date.parse(frozen.expiresAt)).toISOString() !== frozen.expiresAt || nowMilliseconds >= Date.parse(frozen.expiresAt)
+  ) throw new TypeError("invalid frozen backing intent");
+  const units = BigInt(frozen.units);
+  const validation = validateUnits(offering, frozen.units);
+  const tinybars = BigInt(frozen.tinybars);
+  if (!validation.ok || tinybars !== paymentTinybars(offering, units)) throw new RangeError("the frozen amount no longer matches the offering");
+  const parameters: BackingParameters = Object.freeze({
+    offeringPublicId: frozen.offeringPublicId, units: frozen.units, tinybars: frozen.tinybars,
+    purchaseIntentId: frozen.purchaseIntentId,
+  });
+  if (keccak256(new TextEncoder().encode(canonicalizeRequirements(parameters))).slice(2) !== frozen.canonicalParametersHash) {
+    throw new TypeError("the frozen parameter hash does not match the frozen payment");
+  }
+  const payload = parseExternalPreparePayload({
+    operationKind: "HEDERA_FUNDING", subjectPublicId: frozen.subjectPublicId, network: "hedera:testnet", chainId: 296,
+    expectedTarget: frozen.recipient, canonicalParametersHash: frozen.canonicalParametersHash,
+    idempotencyKey: frozen.idempotencyKey, expiresAt: frozen.expiresAt,
+  });
+  return Object.freeze({
+    type: "external.prepare",
+    canonicalPayloadBytes: new TextEncoder().encode(canonicalizeRequirements(payload)),
+    issuedAt: new Date(nowMilliseconds).toISOString(), expiresAt: frozen.expiresAt,
+    title: "Prepare the funding intent",
+    description: "Signs one server-frozen external.prepare command for HEDERA_FUNDING. It sends no HBAR.",
+    idempotencyKey: frozen.idempotencyKey, purchaseIntentId: frozen.purchaseIntentId, units, tinybars,
+    weibarHex: weibarQuantity(tinybars), treasury: frozen.recipient, parameters,
   });
 }
 

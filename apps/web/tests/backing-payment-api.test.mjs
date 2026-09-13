@@ -20,6 +20,10 @@ function request(body = JSON.stringify(payload), origin = "https://tool402.test"
   return new Request("https://tool402.test/api/backing/payment", { method: "POST", headers: { "content-type": "application/json", origin, cookie: "__Host-tool402-dashboard-session=session" }, body });
 }
 
+function intentRequest(body = JSON.stringify({ offeringPublicId: "riskscan_revenue_note_demo", units: "10" }), origin = "https://tool402.test") {
+  return new Request("https://tool402.test/api/backing/intent", { method: "POST", headers: { "content-type": "application/json", origin, cookie: "__Host-tool402-dashboard-session=session" }, body });
+}
+
 test("requires a valid same-origin dashboard session and forwards only its signer", async () => {
   const { handleBackingPaymentRequest } = await import(serverUrl.href);
   const forwarded = [];
@@ -31,6 +35,39 @@ test("requires a valid same-origin dashboard session and forwards only its signe
   assert.deepEqual(await response.json(), { status: "CONFIRMED", transactionHash: payload.transactionHash, tinybars: "1000000000" });
   assert.equal(forwarded[0].canonicalSignerAddress, signer);
   assert.equal(forwarded[0].type, "backing");
+});
+
+test("freezes a backing intent server-side and never accepts a browser-supplied recipient or price", async () => {
+  const { prepareBackingIntentRequest } = await import(serverUrl.href);
+  const forwarded = [];
+  const session = { address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" };
+  const response = await prepareBackingIntentRequest(intentRequest(), env, {
+    readSession: async () => session,
+    forward: async (input) => {
+      forwarded.push(input);
+      return {
+        outcome: "PREPARED",
+        intent: {
+          idempotencyKey: input.idempotencyKey, purchaseIntentId: input.purchaseIntentId,
+          offeringPublicId: input.offeringPublicId, subjectPublicId: "riskscan_revenue_note_demo",
+          recipient: "0xc89f87052c3e080b4a9b021d4930055031ef378e", units: input.units,
+          tinybars: "1000000000", canonicalParametersHash: "a".repeat(64), expiresAt: input.expiresAt,
+        },
+      };
+    },
+  });
+  assert.equal(response.status, 200);
+  const value = await response.json();
+  assert.equal(value.intent.tinybars, "1000000000");
+  assert.deepEqual(Object.keys(forwarded[0]), ["type", "canonicalSignerAddress", "offeringPublicId", "units", "idempotencyKey", "purchaseIntentId", "expiresAt", "sessionExpiresAt"]);
+  assert.equal(forwarded[0].canonicalSignerAddress, signer);
+  assert.equal(forwarded[0].offeringPublicId, "riskscan_revenue_note_demo");
+  assert.equal(forwarded[0].units, "10");
+  assert.match(forwarded[0].idempotencyKey, /^[A-Za-z0-9_-]{21}[AQgw]$/);
+  assert.match(forwarded[0].purchaseIntentId, /^[A-Za-z0-9_-]{21}[AQgw]$/);
+  assert.notEqual(forwarded[0].idempotencyKey, forwarded[0].purchaseIntentId);
+  const malformed = await prepareBackingIntentRequest(intentRequest(JSON.stringify({ offeringPublicId: "riskscan_revenue_note_demo", units: "10", recipient: signer })), env, { readSession: async () => session });
+  assert.equal(malformed.status, 401);
 });
 
 test("rejects missing session, wrong origin, malformed body, and unavailable upstream without exposing secrets", async () => {

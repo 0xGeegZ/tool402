@@ -1,4 +1,5 @@
 import { readDashboardAuthOrigin, readDashboardSession, readDashboardSessionCookieName, type DashboardAuthEnvironment } from "./dashboard-auth/dashboard-auth.ts";
+import { createCommandNonce, createCommandTimestamps } from "./wallet/tool402-command.ts";
 
 const addressPattern = /^0x[0-9a-f]{40}$/u;
 const attemptPattern = /^[A-Za-z0-9_-]{21}[AQgw]$/u;
@@ -6,6 +7,17 @@ const hashPattern = /^0x[0-9a-f]{64}$/u;
 const integerPattern = /^(?:0|[1-9][0-9]*)$/u;
 const maximumBytes = 4096;
 type Parameters = Readonly<{ offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string }>;
+export type FrozenBackingIntent = Readonly<{
+  idempotencyKey: string;
+  purchaseIntentId: string;
+  offeringPublicId: string;
+  subjectPublicId: string;
+  recipient: `0x${string}`;
+  units: string;
+  tinybars: string;
+  canonicalParametersHash: string;
+  expiresAt: string;
+}>;
 export type BackingPaymentRecord = Readonly<{ status: "PREPARED" | "CONFIRMED" | "REJECTED" | "SUBMITTED" | "OUTCOME_UNKNOWN"; transactionHash: `0x${string}` | null; tinybars: string }>;
 type Session = Readonly<{ address: string; issuedAt: string; expiresAt: string }>;
 type Dependencies = Readonly<{
@@ -40,6 +52,22 @@ async function body(request: Request, requiresHash: boolean): Promise<{ attemptP
       || typeof input.tinybars !== "string" || !integerPattern.test(input.tinybars) || BigInt(input.tinybars) < 1n
       || typeof input.purchaseIntentId !== "string" || !attemptPattern.test(input.purchaseIntentId)) return null;
     return { attemptPublicId: value.attemptPublicId, ...(requiresHash ? { transactionHash: value.transactionHash as `0x${string}` } : {}), parameters: { offeringPublicId: input.offeringPublicId, units: input.units, tinybars: input.tinybars, purchaseIntentId: input.purchaseIntentId } };
+  } catch { return null; }
+}
+
+async function intentBody(request: Request): Promise<{ offeringPublicId: string; units: string } | null> {
+  try {
+    const length = request.headers.get("content-length");
+    if (length !== null && (!/^(?:0|[1-9][0-9]*)$/u.test(length) || Number(length) > maximumBytes)) return null;
+    const text = await request.text();
+    if (new TextEncoder().encode(text).byteLength > maximumBytes) return null;
+    const value: unknown = JSON.parse(text);
+    if (value === null || typeof value !== "object" || Array.isArray(value) || JSON.stringify(Object.keys(value)) !== JSON.stringify(["offeringPublicId", "units"])) return null;
+    const input = value as Record<string, unknown>;
+    return typeof input.offeringPublicId === "string" && /^[A-Za-z0-9_-]{1,96}$/u.test(input.offeringPublicId)
+      && typeof input.units === "string" && integerPattern.test(input.units) && BigInt(input.units) >= 1n
+      ? { offeringPublicId: input.offeringPublicId, units: input.units }
+      : null;
   } catch { return null; }
 }
 
@@ -88,6 +116,30 @@ function record(value: unknown): BackingPaymentRecord | null {
     : null;
 }
 
+function frozenIntent(value: unknown): FrozenBackingIntent | null {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+  const outer = value as Record<string, unknown>;
+  if (outer.outcome !== "PREPARED" || outer.intent === null || typeof outer.intent !== "object" || Array.isArray(outer.intent)) return null;
+  const intent = outer.intent as Record<string, unknown>;
+  if (JSON.stringify(Object.keys(intent)) !== JSON.stringify(["idempotencyKey", "purchaseIntentId", "offeringPublicId", "subjectPublicId", "recipient", "units", "tinybars", "canonicalParametersHash", "expiresAt"])
+    || typeof intent.idempotencyKey !== "string" || !attemptPattern.test(intent.idempotencyKey)
+    || typeof intent.purchaseIntentId !== "string" || !attemptPattern.test(intent.purchaseIntentId)
+    || typeof intent.offeringPublicId !== "string" || !/^[A-Za-z0-9_-]{1,96}$/u.test(intent.offeringPublicId)
+    || typeof intent.subjectPublicId !== "string" || !/^[A-Za-z0-9_-]{1,96}$/u.test(intent.subjectPublicId)
+    || typeof intent.recipient !== "string" || !addressPattern.test(intent.recipient)
+    || typeof intent.units !== "string" || !integerPattern.test(intent.units) || BigInt(intent.units) < 1n
+    || typeof intent.tinybars !== "string" || !integerPattern.test(intent.tinybars) || BigInt(intent.tinybars) < 1n
+    || typeof intent.canonicalParametersHash !== "string" || !/^[0-9a-f]{64}$/u.test(intent.canonicalParametersHash)
+    || typeof intent.expiresAt !== "string" || new Date(Date.parse(intent.expiresAt)).toISOString() !== intent.expiresAt
+  ) return null;
+  return {
+    idempotencyKey: intent.idempotencyKey, purchaseIntentId: intent.purchaseIntentId,
+    offeringPublicId: intent.offeringPublicId, subjectPublicId: intent.subjectPublicId,
+    recipient: intent.recipient as `0x${string}`, units: intent.units, tinybars: intent.tinybars,
+    canonicalParametersHash: intent.canonicalParametersHash, expiresAt: intent.expiresAt,
+  };
+}
+
 async function sessionFor(request: Request, env: DashboardAuthEnvironment, readSession: Dependencies["readSession"] = readDashboardSession): Promise<Session | null> {
   const origin = readDashboardAuthOrigin(env);
   const name = readDashboardSessionCookieName(env);
@@ -113,6 +165,25 @@ export function handleBackingPaymentRequest(request: Request, env: DashboardAuth
 
 export function reserveBackingPaymentRequest(request: Request, env: DashboardAuthEnvironment, dependencies: Dependencies = {}): Promise<Response> {
   return handle(request, env, dependencies, true);
+}
+
+export async function prepareBackingIntentRequest(request: Request, env: DashboardAuthEnvironment, dependencies: Dependencies = {}): Promise<Response> {
+  if (request.method !== "POST") return json({ outcome: "rejected" }, 401);
+  const [session, input] = await Promise.all([sessionFor(request, env, dependencies.readSession), intentBody(request)]);
+  if (session === null || input === null) return json({ outcome: "rejected" }, 401);
+  try {
+    const { expiresAt } = createCommandTimestamps(Date.now());
+    const result = frozenIntent(await (dependencies.forward === undefined ? forward(env, {
+      type: "backing_intent", canonicalSignerAddress: session.address, offeringPublicId: input.offeringPublicId,
+      units: input.units, idempotencyKey: createCommandNonce(), purchaseIntentId: createCommandNonce(),
+      expiresAt, sessionExpiresAt: session.expiresAt,
+    }) : dependencies.forward({
+      type: "backing_intent", canonicalSignerAddress: session.address, offeringPublicId: input.offeringPublicId,
+      units: input.units, idempotencyKey: createCommandNonce(), purchaseIntentId: createCommandNonce(),
+      expiresAt, sessionExpiresAt: session.expiresAt,
+    })));
+    return result === null ? json({ outcome: "unavailable" }, 503) : json({ intent: result }, 200);
+  } catch { return json({ outcome: "unavailable" }, 503); }
 }
 
 export async function loadBackerPayment(env: DashboardAuthEnvironment, sessionCookie: string | null): Promise<BackingPaymentRecord | null> {

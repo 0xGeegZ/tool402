@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { keccak256, stringToHex } from "viem";
+import { canonicalizeRequirements } from "@tool402/core";
 
 import { createProviderToolAtsConfiguration } from "../src/ats/provider-tool-ats-configuration.ts";
 
@@ -308,8 +309,8 @@ function selectedAtomicDatabase({
 }
 
 // The double preserves inserts so a second real handler invocation observes durable replay.
-function database({ authorities = [authority()], selfServiceAccounts = [], claims = [], attempts = [] } = {}) {
-  const rows = { commandAuthorities: [...authorities], selfServiceAccounts: [...selfServiceAccounts], externalPrepareCommandReplayClaims: [...claims], externalPrepareCommandAttempts: [...attempts] };
+function database({ authorities = [authority()], selfServiceAccounts = [], backingIntents = [], claims = [], attempts = [] } = {}) {
+  const rows = { commandAuthorities: [...authorities], selfServiceAccounts: [...selfServiceAccounts], backingIntents: [...backingIntents], externalPrepareCommandReplayClaims: [...claims], externalPrepareCommandAttempts: [...attempts] };
   const reads = [];
   const writes = [];
   const accesses = [];
@@ -565,6 +566,53 @@ test("does not admit self-service HEDERA_FUNDING until offering-scoped terms are
     process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous;
   }
   assert.deepEqual(db.writes, []);
+});
+
+test("admits self-service HEDERA_FUNDING only when the exact frozen attempt binds signer, recipient, and terms", async (t) => {
+  const mutation = await loadMutation(t);
+  const principalPublicId = `self_service_${selfServiceSigner.slice(2)}`;
+  const parameters = { offeringPublicId: "offering_public", units: "25", tinybars: "250", purchaseIntentId: "ZyXwVuTsRqPoNmLkJiHgFw" };
+  const args = input({
+    canonicalSignerAddress: selfServiceSigner, principalPublicId, role: "BACKER", authorityVersion: "public_testnet_v1",
+    replayIdentity: `tool402:wallet-command:v1:296:${selfServiceSigner}:AAAAAAAAAAAAAAAAAAAAAA`,
+  });
+  args.payload = {
+    ...args.payload, expectedTarget: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    canonicalParametersHash: keccak256(new TextEncoder().encode(canonicalizeRequirements(parameters))).slice(2),
+  };
+  args.payloadHash = hashPayload(args.payload);
+  const backingIntent = {
+    _id: "backingIntents:frozen", _creationTime: now - 1,
+    idempotencyKey: args.payload.idempotencyKey, purchaseIntentId: parameters.purchaseIntentId,
+    canonicalSignerAddress: selfServiceSigner, offeringPublicId: parameters.offeringPublicId,
+    subjectPublicId: args.payload.subjectPublicId, recipient: args.payload.expectedTarget,
+    units: parameters.units, tinybars: parameters.tinybars,
+    canonicalParametersHash: args.payload.canonicalParametersHash, expiresAt: args.payload.expiresAt, createdAt: 1n,
+  };
+  const activeAccount = {
+    _id: "selfServiceAccounts:active", _creationTime: now - 1,
+    canonicalSignerAddress: selfServiceSigner, chainId: 296, principalPublicId,
+    policyVersion: "public_testnet_v1", status: "ACTIVE", createdAt: 1n, updatedAt: 1n,
+  };
+  const db = database({
+    authorities: [], backingIntents: [backingIntent],
+    selfServiceAccounts: [activeAccount],
+  });
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
+    assert.deepEqual(await mutation._handler(db.ctx, args), { status: "NEW", attemptId, state: "PREPARED" });
+  } finally {
+    process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous;
+  }
+  assert.deepEqual(db.accesses, ["commandAuthorities", "selfServiceAccounts", "backingIntents", "externalPrepareCommandReplayClaims", "externalPrepareCommandAttempts", "externalPrepareCommandAttempts", "externalPrepareCommandReplayClaims"]);
+  const altered = database({ authorities: [], backingIntents: [{ ...backingIntent, recipient: selfServiceSigner }], selfServiceAccounts: [activeAccount] });
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
+    await assert.rejects(() => mutation._handler(altered.ctx, args), TypeError);
+  } finally {
+    process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous;
+  }
 });
 
 test("returns replay before idempotency for all valid stored claim outcomes", async (t) => {
