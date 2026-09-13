@@ -42,7 +42,7 @@
   deployment, migration, feature enablement, wallet actions, and live evidence
   remain separately controlled.
 
-- W01_WAGMI_WALLET_SESSION_INTAKE: At `origin/main`
+- W01_WAGMI_WALLET_SESSION_INTAKE: At `origin/dev`
   `02c22d6906c7ef117d05ccd28ff2c37236356e64`, the owner requests replacing
   the in-house MetaMask connection/session transport with Wagmi v3 and Viem.
   W01-T010 begins in `00-inbox` with its committed local specification and

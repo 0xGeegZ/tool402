@@ -52,4 +52,4 @@ old system, overwrite unmerged work, or make a claim from copied evidence.
   review are present.
 - Node 22.21.1 validation covers the required root test/typecheck/lint/queue/
   build/whitespace gates. A draft PR is opened only after a final rebase on
-  refreshed `origin/main`; it is not merged or deployed.
+  refreshed `origin/dev`; it is not merged or deployed.

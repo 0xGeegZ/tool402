@@ -37,6 +37,6 @@ ATS, backing and evidence protocols remain intact.
    RED/GREEN commits.
 4. Delete the old discovery/store/listener modules and their form-only tests;
    retain business guards and deterministic compatibility fixtures.
-5. Rebase on refreshed `origin/main` (including any merged #118 work), run
+5. Rebase on refreshed `origin/dev` (including any merged #118 work), run
    all required validation/browser checks, conduct independent review, and
    open a draft PR without merging or deploying.
