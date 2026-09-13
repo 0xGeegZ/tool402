@@ -111,6 +111,8 @@ implementedTest("keeps campaign and backing projections independent in all four 
 implementedTest("renders a verified backing as an honest allocation-pending progress card", async () => {
   const source = await readFile(componentUrl, "utf8");
   assert.match(source, /loadBackerPayments/);
+  assert.match(source, /loadBackerPayment/);
+  assert.match(source, /Older RiskScan evidence predates self-service frozen intents/u);
   assert.match(source, /Provider project/);
   assert.match(source, /formatHbar\(BigInt\(backing\.tinybars\)\)/u);
   assert.match(source, /Payment confirmed/);
