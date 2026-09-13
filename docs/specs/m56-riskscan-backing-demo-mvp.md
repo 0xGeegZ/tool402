@@ -56,6 +56,13 @@ it does not claim confirmation, settlement, allocation, or ownership. A
 missing hash or ambiguous outcome remains `payment_outcome_unknown` with no
 automatic resend.
 
+## Demo entry affordance amendment
+
+When the server projection is OPEN, `Back this tool` is the first RiskScan
+detail header action so the existing shared header renders it as the primary
+button. The existing Try and ToolLoop links remain available as outline
+actions. No shared header API, backing state, relay, or wallet behavior changes.
+
 ## Owned paths
 
 - `apps/web/src/lib/riskscan-backing-projection.ts`

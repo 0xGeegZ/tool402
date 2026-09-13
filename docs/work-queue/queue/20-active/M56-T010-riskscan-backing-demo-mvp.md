@@ -24,6 +24,14 @@ an authority record, `external.attachCandidate`, token action, refund, payout,
 or another project route. A returned transaction hash is shown only as
 `payment_submitted` with allocation pending.
 
+## Demo entry affordance amendment
+
+For an OPEN server projection, the existing `Back this tool` RiskScan detail
+header link is ordered first so the existing shared header styles it as primary.
+The change is limited to that action order and its focused existing detail test;
+it creates no shared-header API, authority, wallet, relay, transaction, or
+deployment behavior.
+
 ## GREEN scope
 
 The RED contract is accepted. M56 owns only the exact source and test paths

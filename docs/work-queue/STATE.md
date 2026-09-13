@@ -83,6 +83,13 @@
   amend only the source and test paths in its specification for minimal GREEN;
   every shared and human runtime boundary remains unchanged.
 
+- M56_DEMO_ENTRY_AFFORDANCE_AMENDMENT: The owner directs the existing
+  server-projected RiskScan detail `Back this tool` action to appear first when
+  the canonical offering is OPEN, using the existing primary shared-header
+  style. M56 may amend only its existing detail source and focused test; no
+  shared header, authority, wallet, relay, transaction, or deployment behavior
+  changes.
+
 - S43_FOOTER_POSITIONING_ACCEPTANCE: Source `f248368f` is accepted at 60-done.
   The mascot is grouped with the Tool402 logo in the first footer column;
   asset, decorative accessibility, breakpoint, links, copy and routes remain
