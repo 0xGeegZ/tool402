@@ -97,13 +97,20 @@ implementedTest("keeps campaign and backing projections independent in all four 
   assert.match(source, /aria-label="Your campaign"[\s\S]*?\{backing\s*===\s*null\s*\?\s*null\s*:\s*<DashboardBacking/su);
 });
 
-implementedTest("projects durable backer proof without treating it as an issuer campaign", async () => {
+implementedTest("renders a verified backing as an honest allocation-pending progress card", async () => {
   const source = await readFile(componentUrl, "utf8");
   assert.match(source, /loadBackerPayment/);
-  assert.match(source, /Your backing/);
-  assert.match(source, /View on HashScan/);
-  assert.match(source, /allocation pending until the issuer signs/);
-  assert.doesNotMatch(source, /Units issued|Payout/u);
+  assert.match(source, /RiskScan backed/);
+  assert.match(source, /formatHbar\(BigInt\(backing\.tinybars\)\)/u);
+  assert.match(source, /Payment confirmed/);
+  assert.match(source, /Allocation pending — issuer signature required/);
+  assert.match(source, /Issuer allocation/);
+  assert.match(source, /Units issued/);
+  assert.match(source, /View transaction/);
+  assert.match(source, /backing\.status === "CONFIRMED"/u);
+  assert.match(source, /const issuerAllocationActive = confirmed;/u);
+  assert.match(source, /issuerAllocationActive \? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground"/u);
+  assert.doesNotMatch(source, /RiskScan · \{backing\.tinybars\} tinybars/u);
 });
 
 implementedTest("uses the configured session cookie name when it reads the dashboard campaign", async () => {
