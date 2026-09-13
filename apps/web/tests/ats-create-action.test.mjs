@@ -28,7 +28,9 @@ async function actionHarness() {
   const fetchCalls = [];
   let activeSession = null;
   let generation = 0;
+  const stored = new Map();
   const bridge = await import("../src/lib/ats/stage-b-browser-provider-bridge.ts");
+  const recovery = await import("../src/components/provider/deploy/stage-b-recovery.ts");
   const imports = {
     react: {
       useRef(initial) {
@@ -43,14 +45,20 @@ async function actionHarness() {
           slots[index] = typeof value === "function" ? value(slots[index]) : value;
         }];
       },
+      useEffect(effect) {
+        effect();
+      },
     },
     "react/jsx-runtime": jsxRuntime,
     "../../../lib/ats/stage-b-browser-provider-bridge.ts": bridge,
+    "./stage-b-recovery": recovery,
     "../../ui/button": { Button: "Button" },
     "../../ui/status": { StatusRegion: "StatusRegion" },
     wagmi: {
       usePublicClient: () => activeSession === null ? undefined : ({
-        getTransactionReceipt: ({ hash }) => activeSession.provider.request({ method: "eth_getTransactionReceipt", params: [hash] }),
+        getTransactionReceipt: ({ hash }) => activeSession.getTransactionReceipt
+          ? activeSession.getTransactionReceipt({ hash })
+          : activeSession.provider.request({ method: "eth_getTransactionReceipt", params: [hash] }),
       }),
       useSendTransaction: () => ({
         mutateAsync: ({ account, to, data, value }) => activeSession.provider.request({
@@ -93,6 +101,14 @@ async function actionHarness() {
     Promise,
     Object,
     Error,
+    JSON,
+    window: {
+      localStorage: {
+        getItem(key) { return stored.get(key) ?? null; },
+        setItem(key, value) { stored.set(key, value); },
+        removeItem(key) { stored.delete(key); },
+      },
+    },
   }, { filename: actionPath });
   return {
     render(props) {
@@ -104,6 +120,7 @@ async function actionHarness() {
       return module.exports.AtsCreateAction(props);
     },
     fetchCalls() { return fetchCalls; },
+    stored() { return new Map(stored); },
   };
 }
 
@@ -119,11 +136,11 @@ test("wires the Stage-B action through its isolated local bridge instead of a di
   assert.match(signing, /\bsetCandidate\b/u, "candidate ownership is browser-session React state");
 });
 
-test("keeps Stage-B UI interaction local, manual, and free of persistence or automatic attach/signing", async () => {
+test("keeps Stage-B UI interaction manual and free of automatic attach or signing", async () => {
   const [action, stages, signing] = await sources();
   const combined = `${action}\n${stages}\n${signing}`;
 
-  assert.doesNotMatch(combined, /(?:localStorage|sessionStorage|indexedDB|document\.cookie|fetch\s*\(|XMLHttpRequest|WebSocket|EventSource|sendBeacon|setInterval|setTimeout|requestAnimationFrame|process\.env|import\.meta\.env)/u);
+  assert.doesNotMatch(combined, /(?:sessionStorage|indexedDB|document\.cookie|fetch\s*\(|XMLHttpRequest|WebSocket|EventSource|sendBeacon|setInterval|setTimeout|requestAnimationFrame|process\.env|import\.meta\.env)/u);
   assert.doesNotMatch(action, /(?:external\.attachCandidate|eth_signTypedData_v4|eth_sendTransaction)/u);
   assert.match(action, /<StatusRegion\b[^>]*>\{feedback \?\?/u, "safe feedback must land in a live region that exists before the first click");
   assert.doesNotMatch(action, /\{feedback \? <p/u);

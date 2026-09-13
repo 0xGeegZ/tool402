@@ -284,7 +284,7 @@ export function DeployStageSigning({
   const constructionNotice = selectedToolPublicId !== undefined
     ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">This tool has its own offering and directory identity. {selectedAts === null ? "ATS creation stays unavailable until its server-derived configuration is admitted." : "Its ATS configuration was derived from the admitted offering."}</p>
     : reviewing && constructionError ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null;
-  const stages = reviewing ? <ProviderDeployStages states={visibleStates} projection={projection} enabledStage={enabledStage} onActivate={activate} walletConnected={walletAddress !== undefined} candidate={candidate} onCandidate={receiveCandidate} atsConfiguration={selectedAts?.configuration} selectedTool={selectedToolPublicId !== undefined} selectedToolPublicId={selectedToolPublicId} /> : null;
+  const stages = reviewing ? <ProviderDeployStages states={visibleStates} projection={projection} enabledStage={enabledStage} onActivate={activate} walletConnected={walletAddress !== undefined} candidate={candidate} onCandidate={receiveCandidate} atsConfiguration={selectedAts?.configuration} preparedAttemptPublicId={attemptPublicId ?? undefined} selectedTool={selectedToolPublicId !== undefined} selectedToolPublicId={selectedToolPublicId} /> : null;
   const dialog = reviewing && request && walletAddress !== undefined ? <SignatureDialog request={request} onResult={finish} onCancel={() => finish({ phase: "rejected", outcome: null })} /> : null;
 
   if (renderReview) {

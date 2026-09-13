@@ -10,6 +10,8 @@ import {
   useSwitchChain,
 } from "wagmi";
 
+import { useWalletHydrated } from "./wallet-providers";
+
 export const tool402HederaTestnetChainId = 296;
 const metaMaskConnectorId = "metaMask";
 const metaMaskRdns = "io.metamask";
@@ -91,8 +93,17 @@ export function deriveTool402WalletState(input: WalletStateInput): Tool402Wallet
   if (input.status === "reconnecting") {
     return { kind: "resolving" };
   }
+  if (input.status === "connected" && input.address !== undefined) {
+    if (input.chainId !== tool402HederaTestnetChainId) {
+      return { kind: "wrong_chain", chainId: input.chainId ?? 0 };
+    }
+    return { kind: "connected", address: input.address.toLowerCase() };
+  }
   if (!input.hasMetaMaskConnector || input.providerUnavailable) {
     return { kind: "no_provider" };
+  }
+  if (input.status === "connecting") {
+    return { kind: "connecting" };
   }
   if (input.connectError !== undefined && input.connectError !== null) {
     return { kind: "request_failed", operation: "connect" };
@@ -100,19 +111,11 @@ export function deriveTool402WalletState(input: WalletStateInput): Tool402Wallet
   if (input.switchError !== undefined && input.switchError !== null) {
     return { kind: "request_failed", operation: "switch" };
   }
-  if (input.status === "connecting") {
-    return { kind: "connecting" };
-  }
-  if (input.status !== "connected" || input.address === undefined) {
-    return { kind: "disconnected" };
-  }
-  if (input.chainId !== tool402HederaTestnetChainId) {
-    return { kind: "wrong_chain", chainId: input.chainId ?? 0 };
-  }
-  return { kind: "connected", address: input.address.toLowerCase() };
+  return { kind: "disconnected" };
 }
 
 export function useTool402Wallet() {
+  const hydrated = useWalletHydrated();
   const connection = useConnection();
   const connectors = useConnectors();
   const { mutateAsync: connectAsync, error: connectError } = useConnect();
@@ -148,7 +151,7 @@ export function useTool402Wallet() {
 
   return {
     connection: currentConnection,
-    resolved: connection.status !== "reconnecting",
+    resolved: hydrated && connection.status !== "reconnecting",
     state,
     connectErrorCode: walletErrorCode(connectError),
     async connect() {

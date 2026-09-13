@@ -53,7 +53,7 @@ function fakeProvider({
       if (method === "eth_chainId") return chainId;
       if (method === "eth_accounts") return accounts;
       if (method === "eth_sendTransaction") return send();
-      if (method === "eth_getTransactionReceipt") return receipt;
+      if (method === "eth_getTransactionReceipt") return typeof receipt === "function" ? receipt(params[0]) : receipt;
       assert.fail(`unexpected provider request: ${method}`);
     },
   };
@@ -579,7 +579,7 @@ implementedTest("takes its invocation lock before the first await so same-tick c
 implementedTest("correlates a bounded, fake-only Mirror candidate and never follows its pagination link", async () => {
   const log = createBondDeployedLog(factoryApi, projectionApi);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const waitCalls = [];
   const mirror = responseQueue([
@@ -625,12 +625,46 @@ implementedTest("correlates a bounded, fake-only Mirror candidate and never foll
   assert.equal(Object.hasOwn(outcome, "attach"), false);
 });
 
+implementedTest("only accepts Viem-formatted successful receipts after temporary absence", async () => {
+  const log = createBondDeployedLog(factoryApi, projectionApi);
+  const receipts = [
+    null,
+    { transactionHash, status: "success", to: factory, logs: [log] },
+  ];
+  const provider = fakeProvider({ receipt: () => receipts.shift() ?? null });
+  const mirror = responseQueue(mirrorCandidateResponses({ input: factoryCalldata(projectionApi.createStageBAtsCreateExecutionProjection().configuration), log }));
+  const bridge = createBridge(api, provider, mirror.fetch);
+
+  const outcome = await bridge.execute();
+
+  assert.equal(outcome.kind, "candidate");
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_getTransactionReceipt").length, 2);
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
+});
+
+implementedTest("keeps reverted or malformed Viem receipt results recoverable without a second send", async () => {
+  for (const receipt of [
+    { transactionHash, status: "reverted", to: factory, logs: [] },
+    { transactionHash, status: "0x1", to: factory, logs: [] },
+  ]) {
+    const provider = fakeProvider({ receipt });
+    const mirror = responseQueue([]);
+    const bridge = createBridge(api, provider, mirror.fetch);
+
+    const outcome = await bridge.execute();
+
+    assert.deepEqual(outcome, { kind: "submission_unknown", transactionHash });
+    assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
+    assert.equal(mirror.calls.length, 0);
+  }
+});
+
 implementedTest("selects one Factory BondDeployed event among unrelated receipt and Mirror logs", async () => {
   const log = createBondDeployedLog(factoryApi, projectionApi);
   const unrelatedLog = { address: otherEmitter, data: "0x", topics: [] };
   const logs = [unrelatedLog, log, unrelatedLog];
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs },
+    receipt: { transactionHash, status: "success", to: factory, logs },
   });
   const mirror = responseQueue([
     new Response("", { status: 404 }),
@@ -717,7 +751,7 @@ implementedTest("keeps the sent hash pending when Mirror function parameters do 
   const configurationB = selectedConfiguration("b".repeat(32));
   const log = createBondDeployedLog(factoryApi, projectionApi);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue(mirrorCandidateResponses({ input: factoryCalldata(configurationA), log }));
 
@@ -806,7 +840,7 @@ implementedTest("returns no candidate for an absent public transaction without u
 });
 implementedTest("bounds all Mirror cycles to one five-second deadline through the injected timing seam", async () => {
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },
   });
   let now = 0;
   const mirror = responseQueue([() => {
@@ -829,7 +863,7 @@ implementedTest("bounds all Mirror cycles to one five-second deadline through th
 
 implementedTest("keeps the one remaining Mirror deadline armed through a headers-first stalled body", async () => {
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },
   });
   const deadlines = controlledTimers();
   let bodyReadStarted = false;
@@ -908,7 +942,7 @@ implementedTest("rejects or ignores caller-supplied routing and transaction over
 implementedTest("rejects a non-Factory BondDeployed emitter before any Mirror read and latches the post-hash session", async () => {
   const log = createBondDeployedLog(factoryApi, projectionApi, otherEmitter);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue([]);
   const bridge = createBridge(api, provider, mirror.fetch);
@@ -930,7 +964,7 @@ implementedTest("validates a Factory event emitter before it can hand a valid-lo
   });
   const log = createBondDeployedLog(factoryApi, projectionApi, otherEmitter);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue([]);
 
@@ -946,7 +980,7 @@ implementedTest("rejects an accessor-backed Mirror ContractResult field before F
   const log = createBondDeployedLog(factoryApi, projectionApi);
   const hostile = accessorBackedRecord(mirrorContractResult(log), "hash", reads);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue([jsonResponse({ ignored: true })]);
 
@@ -968,7 +1002,7 @@ implementedTest("rejects an inherited Mirror ContractResult field before Factory
     value: "0x128",
   });
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue([jsonResponse({ ignored: true })]);
 
@@ -989,7 +1023,7 @@ implementedTest("rejects an accessor-backed Mirror log field before it can reach
   const reads = [];
   const hostileLog = accessorBackedRecord(createBondDeployedLog(factoryApi, projectionApi), "address", reads);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },
   });
   const mirror = responseQueue([jsonResponse({ ignored: true })]);
 
@@ -1014,7 +1048,7 @@ implementedTest("rejects a non-enumerable Mirror transactions envelope before a 
   }] }, "transactions");
   const documents = [mirrorContractResult(log), hostileEnvelope];
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue([jsonResponse({ ignored: true }), jsonResponse({ ignored: true })]);
 
@@ -1036,7 +1070,7 @@ implementedTest("rejects an accessor-backed Mirror transaction entry before it c
   }, "transaction_id", reads);
   const documents = [mirrorContractResult(log), { transactions: [hostileTransaction] }];
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue([jsonResponse({ ignored: true }), jsonResponse({ ignored: true })]);
 
@@ -1050,7 +1084,7 @@ implementedTest("rejects an accessor-backed Mirror transaction entry before it c
 implementedTest("treats ambiguous Mirror transaction records as terminal with no candidate or resend", async () => {
   const log = createBondDeployedLog(factoryApi, projectionApi);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue([
     jsonResponse(mirrorContractResult(log)),
@@ -1097,7 +1131,7 @@ implementedTest("fails closed on every malformed first Mirror result without can
 
   for (const [name, makeResponse] of vectors) {
     const provider = fakeProvider({
-      receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+      receipt: { transactionHash, status: "success", to: factory, logs: [log] },
     });
     const mirror = responseQueue([makeResponse]);
     const bridge = createBridge(api, provider, mirror.fetch);
@@ -1149,7 +1183,7 @@ implementedTest("rejects an invalid returned Mirror transaction id and a final e
 
   for (const [name, makeResponses] of vectors) {
     const provider = fakeProvider({
-      receipt: { transactionHash, status: "0x1", to: factory, logs: [receiptLog] },
+      receipt: { transactionHash, status: "success", to: factory, logs: [receiptLog] },
     });
     const mirror = responseQueue(makeResponses());
     const bridge = createBridge(api, provider, mirror.fetch);
@@ -1173,7 +1207,7 @@ implementedTest("rejects an invalid returned Mirror transaction id and a final e
 implementedTest("validates a returned Mirror transaction id before it can contribute to a final URL path", async () => {
   const receiptLog = createBondDeployedLog(factoryApi, projectionApi);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [receiptLog] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [receiptLog] },
   });
   const mirror = responseQueue([
     jsonResponse(mirrorContractResult(receiptLog)),

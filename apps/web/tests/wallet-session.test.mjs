@@ -31,6 +31,7 @@ async function loadHook(hooks) {
     require(specifier) {
       if (specifier === "react") return { useRef: (initial) => ({ current: initial }) };
       if (specifier === "wagmi") return hooks;
+      if (specifier === "./wallet-providers") return { useWalletHydrated: () => true };
       assert.fail(`unexpected hook import: ${specifier}`);
     },
   }, { filename: hookPath });
@@ -121,6 +122,19 @@ test("reports a missing provider or rejected Wagmi operation without a fallback 
   assert.deepEqual({ ...unavailableApi.useTool402Wallet().state }, { kind: "no_provider" });
   assert.deepEqual({ ...rejectedApi.useTool402Wallet().state }, { kind: "request_failed", operation: "connect" });
   assert.equal(rejectedApi.useTool402Wallet().connectErrorCode, "4001");
+});
+
+test("keeps a valid connected wallet authoritative over stale Wagmi mutation errors", async () => {
+  const staleConnectError = Object.assign(new Error("old rejection"), { code: 4001 });
+  const staleSwitchError = Object.assign(new Error("old switch rejection"), { code: 4001 });
+  const instance = harness({
+    connection: { status: "connected", address, chainId: 296, connector: { id: "metaMask" } },
+    connectError: staleConnectError,
+    switchError: staleSwitchError,
+  });
+  const { useTool402Wallet } = await loadHook(instance.hooks);
+
+  assert.deepEqual({ ...useTool402Wallet().state }, { kind: "connected", address });
 });
 
 test("removes the legacy wallet store and mounts only the shared Wagmi provider", async () => {

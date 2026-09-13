@@ -40,7 +40,19 @@ export type StageBTransactionSender = (request: Readonly<{
   value: bigint;
 }>) => Promise<unknown>;
 
-export type StageBReceiptReader = (request: Readonly<{ hash: `0x${string}` }>) => Promise<unknown>;
+/**
+ * Viem formats receipt statuses as semantic values. Mirror-node responses are
+ * deliberately parsed separately below because their REST status remains a
+ * JSON-RPC hex quantity.
+ */
+export type StageBViemReceipt = Readonly<{
+  transactionHash: `0x${string}`;
+  status: "success" | "reverted";
+  to: `0x${string}` | null;
+  logs: readonly unknown[];
+}>;
+
+export type StageBReceiptReader = (request: Readonly<{ hash: `0x${string}` }>) => Promise<StageBViemReceipt | null>;
 
 export interface StageBDeadlineTimers {
   readonly set: (callback: () => void, milliseconds: number) => unknown;
@@ -649,7 +661,7 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
           const fields = captureOwnEnumerableDataFields(record, ["transactionHash", "status", "to", "logs"]);
           if (fields === null) break;
           const [receiptHash, status, to, logs] = fields;
-          if (receiptHash !== hash || status !== "0x1" || canonicalAddress(to) !== factory) break;
+          if (receiptHash !== hash || status !== "success" || canonicalAddress(to) !== factory) break;
           receiptAddress = decodeSingleFactoryEvent(logs);
           break;
         }

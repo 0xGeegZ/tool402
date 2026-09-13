@@ -153,7 +153,7 @@ function MetaMaskSignInButton({
 }
 
 export function MetaMaskDashboardSignIn({ tour = null, demoStep = null, returnTo = null }: { tour?: "1" | null; demoStep?: string | null; returnTo?: string | null }) {
-  const { connection, resolved, state, connect, connectErrorCode } = useTool402Wallet();
+  const { connection, resolved, state, connect, connectErrorCode, switchToHedera } = useTool402Wallet();
   const connectionRef = useRef(connection);
   connectionRef.current = connection;
   const canSignIn = connectedTool402Wallet(connection, resolved) !== null;
@@ -167,9 +167,9 @@ export function MetaMaskDashboardSignIn({ tour = null, demoStep = null, returnTo
           <Button
             disabled={state.kind === "resolving" || state.kind === "connecting"}
             aria-disabled={state.kind === "resolving" || state.kind === "connecting"}
-            onClick={() => void connect()}
+            onClick={() => void (state.kind === "wrong_chain" ? switchToHedera() : connect())}
           >
-            {state.kind === "request_failed" || state.kind === "no_provider" ? "Retry MetaMask connection" : "Connect MetaMask"}
+            {state.kind === "wrong_chain" ? "Switch to Hedera Testnet" : state.kind === "request_failed" || state.kind === "no_provider" ? "Retry MetaMask connection" : "Connect MetaMask"}
           </Button>
           {state.kind === "request_failed" ? (
             <p aria-live="polite" className="text-sm text-muted-foreground">

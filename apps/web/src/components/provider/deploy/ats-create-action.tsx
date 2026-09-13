@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePublicClient, useSendTransaction } from "wagmi";
 
 import {
@@ -13,13 +13,24 @@ import {
 import { Button } from "../../ui/button";
 import { StatusRegion } from "../../ui/status";
 import { connectedTool402Wallet, useTool402Wallet } from "../../wallet/use-tool402-wallet";
+import {
+  clearStageBRecovery,
+  createStageBRecoveryScope,
+  persistStageBRecovery,
+  readStageBRecovery,
+  type StageBRecoveryScope,
+} from "./stage-b-recovery";
 
 type StageBActionController = Readonly<{
   wallet: StageBWalletContext;
   execute: () => Promise<StageBBridgeOutcome>;
   recover: (transactionHash: string) => Promise<StageBBridgeOutcome>;
 }>;
-type ControllerContext = Readonly<{ selectedToolPublicId: string | undefined; wallet: StageBWalletContext | null }>;
+type ControllerContext = Readonly<{
+  preparedAttemptPublicId: string | undefined;
+  selectedToolPublicId: string | undefined;
+  wallet: StageBWalletContext | null;
+}>;
 
 function stageBWalletContext(wallet: ReturnType<typeof useTool402Wallet>): StageBWalletContext | null {
   const connection = connectedTool402Wallet(wallet.connection, wallet.resolved);
@@ -33,15 +44,25 @@ function stageBWalletContext(wallet: ReturnType<typeof useTool402Wallet>): Stage
 }
 
 function isSameControllerContext(left: ControllerContext, right: ControllerContext): boolean {
-  return left.selectedToolPublicId === right.selectedToolPublicId
+  return left.preparedAttemptPublicId === right.preparedAttemptPublicId
+    && left.selectedToolPublicId === right.selectedToolPublicId
     && left.wallet?.address === right.wallet?.address
     && left.wallet?.chainId === right.wallet?.chainId
     && left.wallet?.connectorId === right.wallet?.connectorId
     && left.wallet?.generation === right.wallet?.generation;
 }
 
+function recoveryScope(context: ControllerContext): StageBRecoveryScope | null {
+  return context.wallet === null ? null : createStageBRecoveryScope({
+    address: context.wallet.address,
+    preparedAttemptPublicId: context.preparedAttemptPublicId,
+    selectedToolPublicId: context.selectedToolPublicId,
+  });
+}
+
 export function AtsCreateAction({
   configuration,
+  preparedAttemptPublicId,
   selectedTool,
   selectedToolPublicId,
   stageTwoDone,
@@ -49,6 +70,7 @@ export function AtsCreateAction({
   onCandidate,
 }: {
   configuration?: unknown;
+  preparedAttemptPublicId?: string;
   selectedTool: boolean;
   selectedToolPublicId?: string;
   stageTwoDone: boolean;
@@ -62,7 +84,7 @@ export function AtsCreateAction({
   const publicClient = usePublicClient({ chainId: 296 });
   const { mutateAsync: sendTransaction } = useSendTransaction({ mutation: { retry: false } });
   const controller = useRef<StageBActionController | null>(null);
-  const controllerContext = useRef<ControllerContext>({ selectedToolPublicId, wallet: currentWallet });
+  const controllerContext = useRef<ControllerContext>({ preparedAttemptPublicId, selectedToolPublicId, wallet: currentWallet });
   const actionInFlight = useRef<ControllerContext | null>(null);
   const sessionChanged = useRef(false);
   const [terminalOutcome, setTerminalOutcome] = useState<ControllerContext | null>(null);
@@ -70,8 +92,11 @@ export function AtsCreateAction({
   const [recovery, setRecovery] = useState<Readonly<{ context: ControllerContext; hash: string; pending: boolean }> | null>(null);
   const [, setInFlight] = useState<ControllerContext | null>(null);
 
-  const nextControllerContext = { selectedToolPublicId, wallet: currentWallet };
-  if (controllerContext.current.selectedToolPublicId !== selectedToolPublicId) {
+  const nextControllerContext = { preparedAttemptPublicId, selectedToolPublicId, wallet: currentWallet };
+  if (
+    controllerContext.current.selectedToolPublicId !== selectedToolPublicId
+    || controllerContext.current.preparedAttemptPublicId !== preparedAttemptPublicId
+  ) {
     controller.current = null;
     actionInFlight.current = null;
     sessionChanged.current = false;
@@ -81,6 +106,13 @@ export function AtsCreateAction({
   } else if (!isSameControllerContext(controllerContext.current, nextControllerContext)) {
     sessionChanged.current = true;
   }
+
+  const currentRecoveryScope = recoveryScope(controllerContext.current);
+  useEffect(() => {
+    if (currentRecoveryScope === null) return;
+    const hash = readStageBRecovery(currentRecoveryScope);
+    if (hash !== null) setRecovery({ context: controllerContext.current, hash, pending: false });
+  }, [currentRecoveryScope?.address, currentRecoveryScope?.preparedAttemptPublicId, currentRecoveryScope?.toolPublicId]);
 
   if (controller.current === null && currentWallet !== null && publicClient !== undefined && (!selectedTool || configuration !== undefined)) {
     const bridge = createStageBBrowserProviderBridge({
@@ -117,6 +149,10 @@ export function AtsCreateAction({
     setInFlight(actionContext);
     try {
       const outcome = await controller.current.execute();
+      const actionRecoveryScope = recoveryScope(actionContext);
+      if (outcome.kind === "submission_unknown" && outcome.transactionHash !== undefined && actionRecoveryScope !== null) {
+        persistStageBRecovery(actionRecoveryScope, outcome.transactionHash);
+      }
       if (controllerContext.current !== actionContext || sessionChanged.current) return;
       if (outcome.kind === "candidate") {
         setTerminalOutcome(controllerContext.current);
@@ -155,6 +191,8 @@ export function AtsCreateAction({
       const outcome = await controller.current.recover(recoveryHash);
       if (controllerContext.current !== actionContext || sessionChanged.current) return;
       if (outcome.kind === "candidate") {
+        const actionRecoveryScope = recoveryScope(actionContext);
+        if (actionRecoveryScope !== null) clearStageBRecovery(actionRecoveryScope, recoveryHash);
         setTerminalOutcome(controllerContext.current);
         onCandidate(outcome.candidate);
         setFeedback("The public transaction was corroborated. Attach the candidate with the separate signature step.");
