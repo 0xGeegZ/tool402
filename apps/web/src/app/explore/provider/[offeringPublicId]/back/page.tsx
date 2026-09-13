@@ -33,7 +33,7 @@ export default async function ProviderBackPage({ params }: { params: Promise<{ o
             Review the fixed testnet terms, sign the funding intent, then explicitly send HBAR from MetaMask.
           </p>
         </header>
-        <Suspense fallback={<BackingFlow projection={null} />}>
+        <Suspense fallback={<div className="min-h-80 rounded-panel border bg-card" aria-busy="true" />}>
           <BackingFlowRegion offeringPublicId={offeringPublicId} />
         </Suspense>
       </article>
