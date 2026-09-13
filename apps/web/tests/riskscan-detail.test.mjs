@@ -59,3 +59,12 @@ test("locks the read-only RiskScan detail boundary", async () => {
   );
   assert.doesNotMatch(sourcesWithoutRequiredLimitation, /\b(?:wallet|payment|provider|account|metric|receipt)\b/i);
 });
+
+test("makes the OPEN RiskScan backing action primary", async () => {
+  const detail = await readAppFile("src/components/riskscan/detail/riskscan-detail.tsx");
+
+  assert.match(
+    detail,
+    /actions=\{projection === null[\s\S]*?: \[\s*\{ href: "\/explore\/riskscan\/back", label: "Back this tool" \},\s*\{ href: "\/explore\/riskscan\/try", label: "Try RiskScan" \}/,
+  );
+});

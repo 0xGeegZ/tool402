@@ -88,9 +88,9 @@ export function RiskScanDetail({ projection }: { projection: BackingProjection |
                   { href: "/explore/riskscan/tool-loop", label: "Explore RiskScan ToolLoop" },
                 ]
                 : [
+                  { href: "/explore/riskscan/back", label: "Back this tool" },
                   { href: "/explore/riskscan/try", label: "Try RiskScan" },
                   { href: "/explore/riskscan/tool-loop", label: "Explore RiskScan ToolLoop" },
-                  { href: "/explore/riskscan/back", label: "Back this tool" },
                 ]}
             />
             <p className="text-sm text-muted-foreground">Current local route · Risk assessment</p>
