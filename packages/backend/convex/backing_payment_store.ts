@@ -11,6 +11,7 @@ const integerPattern = /^(?:0|[1-9][0-9]*)$/u;
 
 const outcomeValidator = v.union(v.literal("PREPARED"), v.literal("CONFIRMED"), v.literal("REJECTED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN"));
 const resultValidator = v.union(v.null(), v.object({ status: outcomeValidator, transactionHash: v.union(v.null(), v.string()), tinybars: v.string() }));
+const paymentListValidator = v.array(v.object({ offeringPublicId: v.string(), status: outcomeValidator, transactionHash: v.union(v.null(), v.string()), tinybars: v.string() }));
 type Status = "PREPARED" | "CONFIRMED" | "REJECTED" | "SUBMITTED" | "OUTCOME_UNKNOWN";
 type ExistingClaim = Readonly<{ attemptId: string; transactionHash?: string; tinybars: string; state: Status }>;
 
@@ -142,6 +143,34 @@ export const readBackerPaymentForOffering = internalQuery({
       ) return { status: claim!.state, transactionHash: claim!.transactionHash ?? null, tinybars: claim!.tinybars };
     }
     return null;
+  },
+});
+
+/** Bounded, offer-scoped payment history for the authenticated backer only. */
+export const listBackerPayments = internalQuery({
+  args: { canonicalSignerAddress: v.string() },
+  returns: paymentListValidator,
+  handler: async (ctx, args) => {
+    if (!addressPattern.test(args.canonicalSignerAddress)) return [];
+    const intents = await ctx.db.query("backingIntents")
+      .withIndex("by_canonical_signer_address_and_created_at", (query) => query.eq("canonicalSignerAddress", args.canonicalSignerAddress))
+      .order("desc").take(20);
+    const records: Array<{ offeringPublicId: string; status: Status; transactionHash: string | null; tinybars: string }> = [];
+    const seenOfferings = new Set<string>();
+    for (const intent of intents) {
+      if (seenOfferings.has(intent.offeringPublicId)) continue;
+      const attempts = await ctx.db.query("externalPrepareCommandAttempts")
+        .withIndex("by_idempotency_key", (query) => query.eq("idempotencyKey", intent.idempotencyKey)).take(2);
+      if (attempts.length !== 1 || !validAttempt(attempts[0], { attemptPublicId: intent.idempotencyKey, canonicalSignerAddress: args.canonicalSignerAddress })) continue;
+      const claims = await ctx.db.query(backingPaymentClaimStore)
+        .withIndex("by_attempt_id", (query) => query.eq("attemptId", attempts[0]!._id)).take(2);
+      const claim = claims[0];
+      if (claims.length !== 1 || claim === undefined || !integerPattern.test(claim.tinybars)
+        || (claim.transactionHash !== undefined && !hashPattern.test(claim.transactionHash))) continue;
+      seenOfferings.add(intent.offeringPublicId);
+      records.push({ offeringPublicId: intent.offeringPublicId, status: claim.state, transactionHash: claim.transactionHash ?? null, tinybars: claim.tinybars });
+    }
+    return records;
   },
 });
 

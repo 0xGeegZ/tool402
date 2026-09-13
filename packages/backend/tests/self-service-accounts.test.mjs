@@ -46,6 +46,11 @@ function database(accounts = []) {
           writes.push(row);
           return row._id;
         },
+        async patch(id, value) {
+          const row = rows.find((candidate) => candidate._id === id);
+          assert.notEqual(row, undefined);
+          Object.assign(row, structuredClone(value));
+        },
       },
     },
   };
@@ -90,27 +95,48 @@ test("does not create or reactivate a disabled, suspended, or revoked membership
   }
 });
 
+test("permits only an internal operator mutation to durably suspend an existing membership", async () => {
+  const { setSelfServiceAccountStatus } = await import(sourceUrl.href);
+  const store = database([{
+    _id: "selfServiceAccounts:0", _creationTime: 1,
+    canonicalSignerAddress: addressA, chainId: 296, principalPublicId: `self_service_${addressA.slice(2)}`,
+    policyVersion: "public_testnet_v1", status: "ACTIVE", createdAt: 1n, updatedAt: 1n,
+  }]);
+  assert.equal(await setSelfServiceAccountStatus._handler(store.ctx, { canonicalSignerAddress: addressA, status: "SUSPENDED" }), true);
+  assert.equal(store.rows[0].status, "SUSPENDED");
+  assert.equal(await setSelfServiceAccountStatus._handler(store.ctx, { canonicalSignerAddress: "invalid", status: "SUSPENDED" }), false);
+});
+
 test("parses self-service quotas server-side and fails closed when either is absent or malformed", async () => {
-  const { readSelfServiceMaxPendingAttempts, readSelfServiceMaxTools } = await import(sourceUrl.href);
+  const { readSelfServiceMaxBackingIntentsPerHour, readSelfServiceMaxPendingAttempts, readSelfServiceMaxTools } = await import(sourceUrl.href);
   const previousTools = process.env.TOOL402_SELF_SERVICE_MAX_TOOLS;
   const previousPending = process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS;
+  const previousHourly = process.env.TOOL402_SELF_SERVICE_MAX_BACKING_INTENTS_PER_HOUR;
   try {
     delete process.env.TOOL402_SELF_SERVICE_MAX_TOOLS;
     delete process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS;
+    delete process.env.TOOL402_SELF_SERVICE_MAX_BACKING_INTENTS_PER_HOUR;
     assert.equal(readSelfServiceMaxTools(), null);
     assert.equal(readSelfServiceMaxPendingAttempts(), null);
+    assert.equal(readSelfServiceMaxBackingIntentsPerHour(), null);
     process.env.TOOL402_SELF_SERVICE_MAX_TOOLS = "2";
     process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS = "3";
+    process.env.TOOL402_SELF_SERVICE_MAX_BACKING_INTENTS_PER_HOUR = "4";
     assert.equal(readSelfServiceMaxTools(), 2);
     assert.equal(readSelfServiceMaxPendingAttempts(), 3);
+    assert.equal(readSelfServiceMaxBackingIntentsPerHour(), 4);
     process.env.TOOL402_SELF_SERVICE_MAX_TOOLS = "0";
     process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS = "101";
+    process.env.TOOL402_SELF_SERVICE_MAX_BACKING_INTENTS_PER_HOUR = "0";
     assert.equal(readSelfServiceMaxTools(), null);
     assert.equal(readSelfServiceMaxPendingAttempts(), null);
+    assert.equal(readSelfServiceMaxBackingIntentsPerHour(), null);
   } finally {
     if (previousTools === undefined) delete process.env.TOOL402_SELF_SERVICE_MAX_TOOLS;
     else process.env.TOOL402_SELF_SERVICE_MAX_TOOLS = previousTools;
     if (previousPending === undefined) delete process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS;
     else process.env.TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS = previousPending;
+    if (previousHourly === undefined) delete process.env.TOOL402_SELF_SERVICE_MAX_BACKING_INTENTS_PER_HOUR;
+    else process.env.TOOL402_SELF_SERVICE_MAX_BACKING_INTENTS_PER_HOUR = previousHourly;
   }
 });

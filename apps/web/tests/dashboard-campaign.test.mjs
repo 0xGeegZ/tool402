@@ -82,12 +82,14 @@ implementedTest("renders one local empty card when the signed session has no cam
   const source = await readFile(componentUrl, "utf8");
 
   assert.match(source, /if\s*\(campaign\s*===\s*null\)\s*\{/su);
-  assert.match(source, /if\s*\(backing\s*!==\s*null\)\s*\{[\s\S]*?<DashboardBacking backing=\{backing\}/su);
+  assert.match(source, /if\s*\(backing\.length\s*!==\s*0\)\s*\{[\s\S]*?backing\.map\(\(record\)\s*=>\s*<DashboardBacking/su);
   assert.match(source, /if\s*\(campaign\s*===\s*null\)\s*\{[\s\S]*?aria-label="No campaign yet"/su);
   assert.match(source, />No campaign yet</u);
   assert.match(source, /There is no RiskScan campaign associated with this signed dashboard session\./u);
   assert.match(source, /href="\/provider\/deploy"[^>]*>Prepare a tool</u);
   assert.match(source, /href="\/explore\/riskscan"[^>]*>Explore RiskScan</u);
+  assert.match(source, /https:\/\/portal\.hedera\.com\//u);
+  assert.match(source, /Need test HBAR\? Open the Hedera Portal faucet/u);
 });
 
 implementedTest("keeps the empty campaign state focused on starting a campaign", async () => {
@@ -101,15 +103,15 @@ implementedTest("keeps the empty campaign state focused on starting a campaign",
 
 implementedTest("keeps campaign and backing projections independent in all four dashboard combinations", async () => {
   const source = await readFile(componentUrl, "utf8");
-  assert.match(source, /if\s*\(campaign\s*===\s*null\)\s*\{[\s\S]*?if\s*\(backing\s*!==\s*null\)/su);
+  assert.match(source, /if\s*\(campaign\s*===\s*null\)\s*\{[\s\S]*?if\s*\(backing\.length\s*!==\s*0\)/su);
   assert.match(source, /if\s*\(campaign\s*===\s*null\)[\s\S]*?aria-label="No campaign yet"/su);
-  assert.match(source, /aria-label="Your campaign"[\s\S]*?\{backing\s*===\s*null\s*\?\s*null\s*:\s*<DashboardBacking/su);
+  assert.match(source, /aria-label="Your campaign"[\s\S]*?\{backing\.length\s*===\s*0\s*\?\s*null\s*:\s*<div/su);
 });
 
 implementedTest("renders a verified backing as an honest allocation-pending progress card", async () => {
   const source = await readFile(componentUrl, "utf8");
-  assert.match(source, /loadBackerPayment/);
-  assert.match(source, /RiskScan backed/);
+  assert.match(source, /loadBackerPayments/);
+  assert.match(source, /Provider project/);
   assert.match(source, /formatHbar\(BigInt\(backing\.tinybars\)\)/u);
   assert.match(source, /Payment confirmed/);
   assert.match(source, /Allocation pending — issuer signature required/);

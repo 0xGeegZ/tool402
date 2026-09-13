@@ -6,7 +6,7 @@ import { readDashboardSession, readDashboardSessionCookieName } from "../../lib/
 import { readDashboardCampaign, riskScanOfferingPublicId } from "../../lib/dashboard-campaign";
 import { formatHbar } from "../../lib/hbar-format";
 import { hashscanTransactionUrl } from "../../lib/hashscan-links";
-import { loadBackerPayment } from "../../lib/backing-payment-server";
+import { loadBackerPayments, type BackingPaymentHistoryRecord } from "../../lib/backing-payment-server";
 import { readProviderProjections } from "../../lib/offering-projection";
 import { ensureSelfServiceMembership } from "../../lib/provider-tools-server";
 import { Badge } from "../ui/badge";
@@ -15,7 +15,8 @@ import { Card, CardContent } from "../ui/card";
 import { NewToolAction } from "../provider/deploy/new-tool-action";
 import { ProviderToolList } from "./provider-tool-list";
 
-function DashboardBacking({ backing }: { backing: NonNullable<Awaited<ReturnType<typeof loadBackerPayment>>> }) {
+function DashboardBacking({ backing }: { backing: BackingPaymentHistoryRecord }) {
+  const projectName = backing.offeringPublicId === riskScanOfferingPublicId ? "RiskScan" : "Provider project";
   const transactionUrl = hashscanTransactionUrl(backing.transactionHash);
   const confirmed = backing.status === "CONFIRMED";
   const rejected = backing.status === "REJECTED";
@@ -40,7 +41,7 @@ function DashboardBacking({ backing }: { backing: NonNullable<Awaited<ReturnType
       <Card className="rounded-card border-border bg-card shadow-none">
         <CardContent className="p-5 sm:p-6">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-xl font-bold tracking-[-0.035em] text-foreground">{confirmed ? "RiskScan backed" : "RiskScan backing"}</h2>
+            <h2 className="text-xl font-bold tracking-[-0.035em] text-foreground">{confirmed ? `${projectName} backed` : `${projectName} backing`}</h2>
             <Badge className={confirmed ? "gap-1 bg-emerald-100 text-emerald-800" : rejected ? "bg-destructive/10 text-destructive" : "bg-secondary text-secondary-foreground"}>
               {confirmed ? <span aria-hidden="true">✓</span> : null}
               {statusLabel}
@@ -50,7 +51,7 @@ function DashboardBacking({ backing }: { backing: NonNullable<Awaited<ReturnType
           <div className="mt-5 grid gap-5 md:grid-cols-[minmax(11rem,0.72fr)_minmax(0,1.28fr)] md:items-center">
             <div className="rounded-card border border-brand-purple/10 bg-brand-purple/[0.06] px-5 py-4">
               <p className="text-4xl font-extrabold tracking-[-0.055em] text-foreground">{formatHbar(BigInt(backing.tinybars))}</p>
-              <p className="mt-1 text-sm font-medium text-muted-foreground">RiskScan backing</p>
+              <p className="mt-1 text-sm font-medium text-muted-foreground">{projectName} backing</p>
             </div>
 
             <div className="border-border md:border-l md:pl-6">
@@ -76,7 +77,7 @@ function DashboardBacking({ backing }: { backing: NonNullable<Awaited<ReturnType
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 text-sm">
-            <p className="text-muted-foreground">Hedera Testnet · RiskScan</p>
+            <p className="text-muted-foreground">Hedera Testnet · {projectName}</p>
             {transactionUrl === null ? null : <a href={transactionUrl} target="_blank" rel="noreferrer" className="font-semibold text-primary transition-colors hover:text-brand-purple">View transaction ↗</a>}
           </div>
         </CardContent>
@@ -99,15 +100,15 @@ export async function DashboardCampaign() {
     sessionCookieName === null ? null : cookieStore.get(sessionCookieName)?.value ?? null,
   );
   const projections = await readProviderProjections(process.env, globalThis.fetch, riskScanOfferingPublicId);
-  const backing = await loadBackerPayment(process.env, sessionCookieName === null ? null : cookieStore.get(sessionCookieName)?.value ?? null);
+  const backing = await loadBackerPayments(process.env, sessionCookieName === null ? null : cookieStore.get(sessionCookieName)?.value ?? null);
   const campaign = projections.offering.outcome === "loaded"
     ? readDashboardCampaign(projections.offering.record, session.address)
     : null;
 
   if (campaign === null) {
-    if (backing !== null) {
+    if (backing.length !== 0) {
       return (
-        <div className="space-y-6"><DashboardBacking backing={backing} /><section aria-label="Your tools"><Card className="rounded-card border-border bg-card shadow-none"><CardContent className="space-y-3 p-5"><p className="text-sm font-semibold">Your tools</p><ProviderToolList /></CardContent></Card></section></div>
+        <div className="space-y-6"><div className="space-y-4">{backing.map((record) => <DashboardBacking key={record.offeringPublicId} backing={record} />)}</div><section aria-label="Your tools"><Card className="rounded-card border-border bg-card shadow-none"><CardContent className="space-y-3 p-5"><p className="text-sm font-semibold">Your tools</p><ProviderToolList /></CardContent></Card></section></div>
       );
     }
     return (
@@ -133,6 +134,7 @@ export async function DashboardCampaign() {
               {membership.outcome !== "ACTIVE" ? null : <Link href="/provider/deploy" className={buttonVariants({ variant: "outline", size: "lg", shape: "pill" })}>Prepare a tool</Link>}
               <Link href="/explore/riskscan" className="text-sm font-semibold text-primary transition-colors hover:text-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Explore RiskScan</Link>
             </div>
+            <a href="https://portal.hedera.com/" target="_blank" rel="noreferrer" className="text-sm font-semibold text-primary transition-colors hover:text-brand-purple">Need test HBAR? Open the Hedera Portal faucet ↗</a>
           </CardContent>
         </Card>
       </section>
@@ -165,7 +167,7 @@ export async function DashboardCampaign() {
         <CardContent className="space-y-3 border-t pt-4"><p className="text-sm font-semibold">Your tools</p><ProviderToolList /></CardContent>
         </Card>
       </section>
-      {backing === null ? null : <DashboardBacking backing={backing} />}
+      {backing.length === 0 ? null : <div className="space-y-4">{backing.map((record) => <DashboardBacking key={record.offeringPublicId} backing={record} />)}</div>}
     </div>
   );
 }

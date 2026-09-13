@@ -21,6 +21,7 @@ const reserveReference = makeFunctionReference<"mutation", { attemptPublicId: st
 const verificationContextReference = makeFunctionReference<"query", { canonicalSignerAddress: string }, { attemptPublicId: string; expectedTarget: string; transactionHash: string; tinybars: string; state: Status } | null>("backing_payment_store:readBackingPaymentVerificationContext");
 const paymentReference = makeFunctionReference<"query", { canonicalSignerAddress: string }, Reservation>("backing_payment_store:readBackerPayment");
 const scopedPaymentReference = makeFunctionReference<"query", { canonicalSignerAddress: string; offeringPublicId: string }, Reservation>("backing_payment_store:readBackerPaymentForOffering");
+const paymentListReference = makeFunctionReference<"query", { canonicalSignerAddress: string }, Array<{ offeringPublicId: string; status: "PREPARED" | Status; transactionHash: string | null; tinybars: string }>>("backing_payment_store:listBackerPayments");
 
 function validParameters(input: Parameters): boolean {
   return /^[A-Za-z0-9_-]{1,96}$/u.test(input.offeringPublicId)
@@ -91,6 +92,12 @@ export const readBackerPaymentForOffering = internalActionGeneric({
     if (!addressPattern.test(args.canonicalSignerAddress) || !/^[A-Za-z0-9_-]{1,96}$/u.test(args.offeringPublicId)) return null;
     return ctx.runQuery(scopedPaymentReference, args);
   },
+});
+
+export const listBackerPayments = internalActionGeneric({
+  args: { canonicalSignerAddress: v.string() },
+  returns: v.array(v.object({ offeringPublicId: v.string(), status: v.union(v.literal("PREPARED"), v.literal("CONFIRMED"), v.literal("REJECTED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN")), transactionHash: v.union(v.null(), v.string()), tinybars: v.string() })),
+  handler: async (ctx, args) => addressPattern.test(args.canonicalSignerAddress) ? ctx.runQuery(paymentListReference, args) : [],
 });
 
 export function confirmBackingPaymentForTest(ctx: Context, args: { attemptPublicId: string; canonicalSignerAddress: string; transactionHash: string; parameters: Parameters }, readReceipt: ReceiptReader): Promise<Outcome> {

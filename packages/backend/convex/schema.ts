@@ -22,6 +22,13 @@ export default defineSchema({
     createdAt: v.int64(),
     updatedAt: v.int64(),
   }).index("by_chain_id_and_canonical_signer_address", ["chainId", "canonicalSignerAddress"]),
+  selfServiceWriteRateLimits: defineTable({
+    canonicalSignerAddress: v.string(),
+    operation: v.literal("BACKING_INTENT"),
+    windowStartedAt: v.int64(),
+    count: v.number(),
+    updatedAt: v.int64(),
+  }).index("by_signer_operation_and_window", ["canonicalSignerAddress", "operation", "windowStartedAt"]),
   externalPrepareCommandReplayClaims: defineTable({
     replayIdentity: v.string(),
     outcome: v.union(v.literal("NEW"), v.literal("IDEMPOTENCY_REPLAYED"), v.literal("IDEMPOTENCY_CONFLICT")),

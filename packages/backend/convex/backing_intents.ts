@@ -5,7 +5,7 @@ import { keccak256 } from "viem";
 
 import { isCanonicalEvmAddress, isInt64, readStoredRecord } from "../src/offering-command-admission.ts";
 import type schema from "./schema.ts";
-import { isPublicTestnetSelfServiceEnabled, readSelfServiceMaxPendingAttempts } from "./self_service_accounts.ts";
+import { isPublicTestnetSelfServiceEnabled, readSelfServiceMaxBackingIntentsPerHour, readSelfServiceMaxPendingAttempts } from "./self_service_accounts.ts";
 
 const internalMutation: MutationBuilder<DataModelFromSchemaDefinition<typeof schema>, "internal"> = internalMutationGeneric;
 const noncePattern = /^[A-Za-z0-9_-]{21}[AQgw]$/u;
@@ -226,6 +226,29 @@ export const freezeBackingIntent = internalMutation({
       if (expiry > now) active += 1;
     }
     if (active >= maximumPending) return reject();
+    const maxHourlyIntents = readSelfServiceMaxBackingIntentsPerHour();
+    const windowStartedAt = BigInt(Math.floor(now / 3_600_000) * 3_600_000);
+    if (maxHourlyIntents === null) return reject();
+    const rateRows = await ctx.db.query("selfServiceWriteRateLimits")
+      .withIndex("by_signer_operation_and_window", (query) => (
+        query.eq("canonicalSignerAddress", args.canonicalSignerAddress)
+          .eq("operation", "BACKING_INTENT")
+          .eq("windowStartedAt", windowStartedAt)
+      )).take(2);
+    if (rateRows.length > 1) return reject();
+    const rateLimit = rateRows[0];
+    if (rateLimit === undefined) {
+      await ctx.db.insert("selfServiceWriteRateLimits", {
+        canonicalSignerAddress: args.canonicalSignerAddress,
+        operation: "BACKING_INTENT",
+        windowStartedAt,
+        count: 1,
+        updatedAt: BigInt(now),
+      });
+    } else {
+      if (!Number.isSafeInteger(rateLimit.count) || rateLimit.count < 1 || rateLimit.count >= maxHourlyIntents) return reject();
+      await ctx.db.patch(rateLimit._id, { count: rateLimit.count + 1, updatedAt: BigInt(now) });
+    }
     await ctx.db.insert("backingIntents", {
       ...intent,
       canonicalSignerAddress: args.canonicalSignerAddress,

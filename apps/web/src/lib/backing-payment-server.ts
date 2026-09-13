@@ -19,6 +19,7 @@ export type FrozenBackingIntent = Readonly<{
   expiresAt: string;
 }>;
 export type BackingPaymentRecord = Readonly<{ status: "PREPARED" | "CONFIRMED" | "REJECTED" | "SUBMITTED" | "OUTCOME_UNKNOWN"; transactionHash: `0x${string}` | null; tinybars: string }>;
+export type BackingPaymentHistoryRecord = BackingPaymentRecord & Readonly<{ offeringPublicId: string }>;
 type Session = Readonly<{ address: string; issuedAt: string; expiresAt: string }>;
 type Dependencies = Readonly<{
   readSession?: (value: string, env: DashboardAuthEnvironment) => Promise<Session | null>;
@@ -116,6 +117,21 @@ function record(value: unknown): BackingPaymentRecord | null {
     : null;
 }
 
+function paymentHistory(value: unknown): BackingPaymentHistoryRecord[] | null {
+  if (!Array.isArray(value) || value.length > 20) return null;
+  const seen = new Set<string>();
+  const records: BackingPaymentHistoryRecord[] = [];
+  for (const item of value) {
+    if (item === null || typeof item !== "object" || Array.isArray(item)) return null;
+    const input = item as Record<string, unknown>;
+    const payment = record(input);
+    if (payment === null || typeof input.offeringPublicId !== "string" || !/^[A-Za-z0-9_-]{1,96}$/u.test(input.offeringPublicId) || seen.has(input.offeringPublicId)) return null;
+    seen.add(input.offeringPublicId);
+    records.push({ ...payment, offeringPublicId: input.offeringPublicId });
+  }
+  return records;
+}
+
 function frozenIntent(value: unknown): FrozenBackingIntent | null {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
   const outer = value as Record<string, unknown>;
@@ -190,6 +206,12 @@ export async function loadBackerPayment(env: DashboardAuthEnvironment, sessionCo
   const session = await readDashboardSession(sessionCookie, env);
   if (session === null || !addressPattern.test(session.address)) return null;
   return record(await forward(env, { type: "backing_read", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt }));
+}
+
+export async function loadBackerPayments(env: DashboardAuthEnvironment, sessionCookie: string | null): Promise<BackingPaymentHistoryRecord[]> {
+  const session = await readDashboardSession(sessionCookie, env);
+  if (session === null || !addressPattern.test(session.address)) return [];
+  return paymentHistory(await forward(env, { type: "backing_list", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt })) ?? [];
 }
 
 export async function loadBackerPaymentForOffering(env: DashboardAuthEnvironment, sessionCookie: string | null, offeringPublicId: string): Promise<BackingPaymentRecord | null> {

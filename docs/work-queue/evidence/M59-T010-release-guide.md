@@ -18,6 +18,7 @@ put their values in source control.
 | `TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED` | `true` only during the enabled Testnet window; any other value disables new self-service writes. |
 | `TOOL402_SELF_SERVICE_MAX_TOOLS` | Integer from `1` through `100`; absent or malformed blocks self-service tool creation. |
 | `TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS` | Integer from `1` through `100`; absent or malformed blocks new frozen self-service backing intents. |
+| `TOOL402_SELF_SERVICE_MAX_BACKING_INTENTS_PER_HOUR` | Integer from `1` through `100`; absent or malformed blocks new frozen self-service backing intents. This durable per-wallet window cannot be reset by refreshing the page. |
 | `TOOL402_INGRESS_KEY_ID`, `TOOL402_INGRESS_SECRET`, `TOOL402_CONVEX_SITE_URL` | Existing authenticated provider-session ingress configuration. |
 | `TOOL402_FUNDING_EVM_ADDRESS` | Existing legacy RiskScan recipient only. New provider offerings persist their owner-recipient policy instead. |
 
