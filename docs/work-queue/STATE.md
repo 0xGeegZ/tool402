@@ -361,6 +361,13 @@
   documentation only and adds no runtime configuration, TLS trust, wallet
   permission, signature, relay, transaction, deployment, or live authority.
 
+- ROOT_ENVIRONMENT_TEMPLATE_GROUPING_AMENDMENT: The repository owner explicitly
+  directs a presentation-only regrouping of every existing root `.env.example`
+  placeholder under descriptive comments. It may reorder comments and existing
+  assignments only; it may not add, remove, rename, or populate any name. This
+  adds no runtime configuration, secret, wallet permission, signature, relay,
+  transaction, deployment, or live authority.
+
 - S40_VERCEL_PREVIEW_ORIGIN_AMENDMENT: The repository owner explicitly
   requires ephemeral Vercel previews to derive their exact canonical origin
   from `VERCEL_URL` only when `VERCEL_ENV=preview` and the explicit origin is

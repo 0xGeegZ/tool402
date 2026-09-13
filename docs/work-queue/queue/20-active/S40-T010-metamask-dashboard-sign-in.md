@@ -185,6 +185,15 @@ amendment does not change `apps/web/.env.example`, configure a runtime, or
 authorize an origin, secret, wallet action, signature, relay, transaction,
 deployment, or live action.
 
+## User-directed root environment-template grouping amendment
+
+The repository owner additionally directs a presentation-only regrouping of all
+existing root `.env.example` placeholders under descriptive comments. The
+update may reorder comments and the existing assignments, but may not add,
+remove, rename, or populate a variable. It does not configure a runtime or
+authorize a secret, wallet action, signature, relay, transaction, deployment,
+or live action.
+
 ## User-directed local HTTP amendment
 
 The repository owner explicitly requires dashboard sign-in to work on the

@@ -1216,6 +1216,14 @@ trust, wallet action, signature, relay, transaction, deployment, or live
 authority is added. This narrowly supersedes the earlier template restriction
 only for these root-template entries.
 
+User-directed root environment-template grouping amendment: the root
+additionally reserves `.env.example` for a presentation-only regrouping of
+every existing placeholder under descriptive comments. It may reorder comments
+and existing assignments, but may not add, remove, rename, or populate a
+variable. This changes no runtime configuration or authority, including for
+secrets, wallet actions, signatures, relays, transactions, deployments, or
+live actions.
+
 User-directed S38 Vercel Preview-origin amendment: the root additionally
 reserves the declared auth sources and focused auth tests to derive an origin
 only from the Vercel system `VERCEL_URL` when `VERCEL_ENV=preview` and the
