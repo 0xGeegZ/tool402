@@ -81,17 +81,29 @@ export function useTool402Wallet() {
     state,
     async connect() {
       if (metaMask !== undefined) {
-        await connectAsync({ connector: metaMask });
+        try {
+          await connectAsync({ connector: metaMask });
+        } catch {
+          // Wagmi exposes the mutation error on the next render for accessible retry copy.
+        }
       }
     },
     async disconnect() {
       const connector = connection.connector ?? metaMask;
       if (connector !== undefined) {
-        await disconnectAsync({ connector });
+        try {
+          await disconnectAsync({ connector });
+        } catch {
+          // The current connection remains authoritative until Wagmi reports otherwise.
+        }
       }
     },
     async switchToHedera() {
-      await switchChainAsync({ chainId: hederaTestnetChainId });
+      try {
+        await switchChainAsync({ chainId: hederaTestnetChainId });
+      } catch {
+        // Wagmi exposes the mutation error on the next render for accessible retry copy.
+      }
     },
   };
 }
