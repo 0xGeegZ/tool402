@@ -37,13 +37,14 @@ test("loads one server-owned RiskScan backing projection before rendering the fl
   assert.match(page, /<Link\s+href="\/explore\/riskscan"[\s\S]*?>\s*Back to RiskScan\s*<\/Link>/);
 });
 
-test("consumes the shared wallet session, signature dialog, and relay without a second copy of any", async () => {
+test("uses the Wagmi wallet context, signature dialog, and relay without a second copy of any", async () => {
   const flow = await readAppFile("src/components/backing/backing-flow.tsx");
 
   assert.match(flow, /^["']use client["'];/);
-  assert.match(flow, /import \{ connectedWalletSession, useWalletSession, type WalletSession \} from "\.\.\/wallet\/wallet-session"/);
+  assert.match(flow, /import \{ isTool402MetaMaskConnector, useTool402Wallet, type Tool402WalletConnection \} from "\.\.\/wallet\/use-tool402-wallet"/);
+  assert.match(flow, /useSendTransaction\(\{ mutation: \{ retry: false \} \}\)/);
   assert.match(flow, /import \{ SignatureDialog, type SignatureResult \} from "\.\.\/wallet\/signature-dialog"/);
-  assert.equal((flow.match(/useWalletSession\(\)/g) ?? []).length, 1);
+  assert.equal((flow.match(/useTool402Wallet\(\)/g) ?? []).length, 1);
   assert.equal((flow.match(/<SignatureDialog\b/g) ?? []).length, 1);
   assert.match(flow, /useRef/);
   assert.match(flow, /isCurrentBackingIntent/);
@@ -53,15 +54,18 @@ test("consumes the shared wallet session, signature dialog, and relay without a 
   assert.match(flow, /import \{ presetUnits, railPosition \} from "\.\/backing-presentation"/);
   assert.match(flow, /import \{ BackingStepRail \} from "\.\/backing-step-rail"/);
   assert.doesNotMatch(flow, /approvedIssuerAddress/);
-  assert.doesNotMatch(flow, /discoverMetaMaskProvider|eth_requestAccounts|wallet_switchEthereumChain|eth_signTypedData|signCommand|createUnsignedCommand|relayCommandBody|\/api\/commands|createCommandNonce|keccak/);
+  assert.doesNotMatch(flow, /wallet-session|wallet-state|metamask-provider|discoverMetaMaskProvider|eth_requestAccounts|wallet_switchEthereumChain|eth_signTypedData|signCommand|createUnsignedCommand|relayCommandBody|\/api\/commands|createCommandNonce|keccak/);
   assert.equal((flow.match(/eth_sendTransaction/g) ?? []).length, 0);
-  assert.match(flow, /transferRequest\(/);
+  assert.match(flow, /transferRequest\(view\)/);
+  assert.match(flow, /account: connection\.account/);
+  assert.match(flow, /chainId: 296/);
+  assert.equal((flow.match(/isSameBackingConnection\(connectionRef\.current, connection\)/g) ?? []).length, 2, "the current wallet is checked again after reservation and before sending");
   assert.doesNotMatch(flow, /process\.env|setTimeout|setInterval|sessionStorage|https?:\/\//);
   assert.match(flow, /localStorage/);
   assert.match(flow, /Attach recorded transaction/);
   assert.match(flow, /fetch\("\/api\/backing\/payment"/);
   assert.match(flow, /dashboardAddress/);
-  assert.match(flow, /session\.address === dashboardAddress/);
+  assert.match(flow, /connection\.account === dashboardAddress/);
   assert.match(flow, /assessFundingBalance/);
   assert.match(flow, /Insufficient testnet HBAR/);
 });

@@ -1,30 +1,22 @@
-import type { Eip1193Provider } from "../../lib/wallet/metamask-provider.ts";
 import type { TransferRequest } from "./backing-state.ts";
 
-const hexadecimalQuantity = /^0x[0-9a-f]+$/u;
-
-function quantity(value: unknown): bigint | null {
-  if (typeof value !== "string" || !hexadecimalQuantity.test(value)) return null;
-  try { return BigInt(value); } catch { return null; }
-}
+type FundingBalanceClient = Readonly<{
+  getBalance: (parameters: Readonly<{ address: `0x${string}` }>) => Promise<bigint>;
+  estimateGas: (parameters: Readonly<{ account: `0x${string}`; to: `0x${string}`; value: bigint }>) => Promise<bigint>;
+  getGasPrice: () => Promise<bigint>;
+}>;
 
 export type FundingBalance = "SUFFICIENT" | "INSUFFICIENT" | "UNAVAILABLE";
 
-/** Reads wallet balance and an estimated gas allowance; it never requests accounts or sends a transaction. */
-export async function assessFundingBalance(provider: Eip1193Provider, request: TransferRequest): Promise<FundingBalance> {
-  const transaction = request.params[0];
+/** Reads the configured public client; it never requests accounts or sends a transaction. */
+export async function assessFundingBalance(client: FundingBalanceClient, request: TransferRequest & Readonly<{ account: `0x${string}` }>): Promise<FundingBalance> {
   try {
     const [balance, gas, gasPrice] = await Promise.all([
-      provider.request({ method: "eth_getBalance", params: [transaction.from, "latest"] }),
-      provider.request({ method: "eth_estimateGas", params: [transaction] }),
-      provider.request({ method: "eth_gasPrice" }),
+      client.getBalance({ address: request.account }),
+      client.estimateGas(request),
+      client.getGasPrice(),
     ]);
-    const available = quantity(balance);
-    const gasUnits = quantity(gas);
-    const price = quantity(gasPrice);
-    const value = quantity(transaction.value);
-    if (available === null || gasUnits === null || price === null || value === null) return "UNAVAILABLE";
-    return available >= value + gasUnits * price ? "SUFFICIENT" : "INSUFFICIENT";
+    return balance >= request.value + gas * gasPrice ? "SUFFICIENT" : "INSUFFICIENT";
   } catch {
     return "UNAVAILABLE";
   }

@@ -2,11 +2,10 @@
 
 import { useRef, useState, type ChangeEvent } from "react";
 import Link from "next/link";
+import { usePublicClient, useSendTransaction } from "wagmi";
 
-import { isUserRejection } from "../../lib/wallet/metamask-provider.ts";
 import { hashscanTransactionUrl } from "../../lib/hashscan-links.ts";
 import type { BackingPaymentRead, BackingPaymentRecord } from "../../lib/backing-payment-server.ts";
-import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -14,7 +13,7 @@ import { DetailList } from "../ui/detail-list";
 import { StatusRegion } from "../ui/status";
 import { SignatureDialog, type SignatureResult } from "../wallet/signature-dialog";
 import { WalletIsland } from "../wallet/wallet-connect";
-import { connectedWalletSession, useWalletSession, type WalletSession } from "../wallet/wallet-session";
+import { isTool402MetaMaskConnector, useTool402Wallet, type Tool402WalletConnection } from "../wallet/use-tool402-wallet";
 import { presetUnits, railPosition } from "./backing-presentation";
 import {
   backingLifecycleLabels,
@@ -51,6 +50,25 @@ function pendingAttachmentKey(canonicalSignerAddress: string, offeringPublicId: 
 
 function pendingAttachment(canonicalSignerAddress: string | null, offeringPublicId: string): PendingAttachment | null {
   if (canonicalSignerAddress === null) return null;
+
+function currentBackingConnection(connection: Tool402WalletConnection, resolved: boolean): Tool402WalletConnection | null {
+  return resolved
+    && connection.status === "connected"
+    && connection.account !== undefined
+    && connection.chainId === 296
+    && isTool402MetaMaskConnector(connection.connector)
+    ? connection
+    : null;
+}
+
+function isSameBackingConnection(left: Tool402WalletConnection, right: Tool402WalletConnection): boolean {
+  return left.generation === right.generation
+    && left.account === right.account
+    && left.chainId === right.chainId
+    && left.connector?.id === right.connector?.id
+    && right.status === "connected";
+}
+
   if (typeof window === "undefined") return null;
   try {
     const prefix = `${pendingAttachmentPrefix}${canonicalSignerAddress}:${offeringPublicId}:`;
@@ -130,8 +148,12 @@ function describeView(view: BackingView, payment: BackingPaymentRecord | null): 
 }
 
 function BackingForm({ offering, initialPayment, dashboardAddress }: { offering: BackingOffering; initialPayment: BackingPaymentRead; dashboardAddress: string | null }) {
-  const wallet = useWalletSession();
-  const session: WalletSession | null = connectedWalletSession(wallet);
+  const wallet = useTool402Wallet();
+  const connectionRef = useRef(wallet.connection);
+  connectionRef.current = wallet.connection;
+  const publicClient = usePublicClient({ chainId: 296 });
+  const { mutateAsync: sendTransaction } = useSendTransaction({ mutation: { retry: false } });
+  const connection = currentBackingConnection(wallet.connection, wallet.resolved);
   const presets = presetUnits(offering.terms);
   const [preset, setPreset] = useState<bigint | null>(offering.terms.minimumPurchaseUnits);
   const [unitsInput, setUnitsInput] = useState(offering.terms.minimumPurchaseUnits.toString());
@@ -154,7 +176,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   const resumedReservation = payment?.status === "PREPARED" && view.kind === "prepared";
   const paymentReadUnavailable = initialPayment.kind === "UNAVAILABLE";
   const locked = paymentReadUnavailable || (payment !== null && !resumedReservation) || view.kind !== "choosing" || request !== null || preparing;
-  const dashboardMatchesWallet = session !== null && dashboardAddress !== null && session.address === dashboardAddress;
+  const dashboardMatchesWallet = connection !== null && dashboardAddress !== null && connection.account === dashboardAddress;
   const canPrepare = offering.fundingOpen && initialPayment.kind === "NONE" && payment === null && validation.ok && acknowledged && dashboardMatchesWallet && !locked;
   const readoutUnits = committed !== null ? committed.units : validation.ok ? validation.units : null;
   const readoutTinybars = committed !== null ? committed.tinybars : validation.ok ? paymentTinybars(offering, validation.units) : null;
@@ -264,8 +286,8 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   }
 
   async function send() {
-    if (session === null || dashboardAddress === null || session.address !== dashboardAddress || view.kind !== "prepared" || transferring || sendingRef.current) {
-      if (session !== null && dashboardAddress !== null && session.address !== dashboardAddress) setNotice("The connected MetaMask wallet differs from the signed dashboard wallet. Sign in with this backing wallet before funding; nothing was sent.");
+    if (connection === null || dashboardAddress === null || connection.account !== dashboardAddress || view.kind !== "prepared" || transferring || sendingRef.current) {
+      if (connection !== null && dashboardAddress !== null && connection.account !== dashboardAddress) setNotice("The connected MetaMask wallet differs from the signed dashboard wallet. Sign in with this backing wallet before funding; nothing was sent.");
       return;
     }
     if (!offering.fundingOpen) {
@@ -281,15 +303,23 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       setTransferring(false);
       return;
     }
-    const current = await readCurrentSession(session.provider);
-    if (current.state.kind !== "connected" || current.state.address !== session.address || current.state.address !== dashboardAddress) {
+    if (!isSameBackingConnection(connectionRef.current, connection) || connectionRef.current.account !== dashboardAddress) {
       setNotice("MetaMask's account or network changed after connecting. Reconnect on Hedera Testnet before sending; nothing was sent.");
       sendingRef.current = false;
       setTransferring(false);
       return;
     }
-    const request = transferRequest(view, session.address);
-    const initialBalance = await assessFundingBalance(session.provider, request);
+    if (publicClient === undefined) {
+      setNotice("Your testnet HBAR balance or fee estimate is unavailable. Nothing was sent.");
+      sendingRef.current = false;
+      setTransferring(false);
+      return;
+    }
+    const request = transferRequest(view);
+    const initialBalance = await assessFundingBalance(publicClient, {
+      account: connection.account as `0x${string}`,
+      ...request,
+    });
     if (initialBalance === "INSUFFICIENT") {
       setNotice("Insufficient testnet HBAR for this transfer and its estimated network fee. Nothing was sent.");
       sendingRef.current = false;
@@ -307,7 +337,10 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       setTransferring(false);
       return;
     }
-    const reservedBalance = await assessFundingBalance(session.provider, request);
+    const reservedBalance = await assessFundingBalance(publicClient, {
+      account: connection.account as `0x${string}`,
+      ...request,
+    });
     if (reservedBalance === "INSUFFICIENT") {
       setNotice("Insufficient testnet HBAR for this transfer and its estimated network fee. The funding reservation remains; nothing was sent.");
       sendingRef.current = false;
@@ -320,9 +353,8 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       setTransferring(false);
       return;
     }
-    const immediatelyBeforeDispatch = await readCurrentSession(session.provider);
-    if (immediatelyBeforeDispatch.state.kind !== "connected" || immediatelyBeforeDispatch.state.address !== session.address || immediatelyBeforeDispatch.state.address !== dashboardAddress) {
-      setNotice("MetaMask's account or network changed while funding was prepared. Nothing was sent.");
+    if (!isSameBackingConnection(connectionRef.current, connection) || connectionRef.current.account !== dashboardAddress) {
+      setNotice("MetaMask's account or network changed while the funding attempt was reserved. Nothing was sent.");
       sendingRef.current = false;
       setTransferring(false);
       return;
@@ -332,8 +364,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       setTransferring(false);
       return;
     }
-    const afterDispatchClaim = await readCurrentSession(session.provider);
-    if (afterDispatchClaim.state.kind !== "connected" || afterDispatchClaim.state.address !== session.address || afterDispatchClaim.state.address !== dashboardAddress) {
+    if (!isSameBackingConnection(connectionRef.current, connection) || connectionRef.current.account !== dashboardAddress) {
       setView({ kind: "payment_outcome_unknown", intent: view.intent, message: "The dispatch was reserved, but MetaMask changed before invocation. Nothing was sent." });
       setNotice("MetaMask's account or network changed before the wallet request. Nothing was sent.");
       setTransferring(false);
@@ -341,10 +372,16 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
     }
     let result: TransferResult;
     try {
-      const response = await session.provider.request(request);
+      const response = await sendTransaction({
+        ...request,
+        account: connection.account as `0x${string}`,
+        chainId: 296,
+      });
       result = typeof response === "string" ? { kind: "hash", hash: response } : { kind: "no_hash" };
     } catch (error) {
-      result = isUserRejection(error) ? { kind: "declined" } : { kind: "no_hash" };
+      result = typeof error === "object" && error !== null && (error as { code?: unknown }).code === 4001
+        ? { kind: "declined" }
+        : { kind: "no_hash" };
     }
     try {
       setView(viewAfterTransfer(view, result));
@@ -440,9 +477,9 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
             <p className="text-xs text-muted-foreground">{dashboardAddress === null ? <><Link href={signInHref} className="font-semibold text-primary">Sign in</Link> to continue this backing route and restore a submitted payment.</> : dashboardMatchesWallet ? "Two confirmations: one signature, one HBAR transfer." : "The connected MetaMask wallet must match the signed dashboard wallet before funding."}</p>
           </div>
         ) : null}
-        {request !== null && session !== null ? <SignatureDialog request={request} onResult={onSignature} /> : null}
+        {request !== null && connection !== null ? <SignatureDialog request={request} onResult={onSignature} /> : null}
         {view.kind === "prepared" ? (
-          <Button disabled={transferring || session === null} aria-disabled={transferring || session === null} onClick={send}>
+          <Button disabled={transferring || connection === null} aria-disabled={transferring || connection === null} onClick={send}>
             Send {formatHbar(view.intent.tinybars)} to the treasury
           </Button>
         ) : null}
