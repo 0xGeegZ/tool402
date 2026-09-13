@@ -158,7 +158,13 @@ export function RecordingControlRoom() {
         <div className="mt-4 rounded-control border border-border p-3 text-sm">
           <p className="font-semibold">Recorded payment evidence: {summary.status}</p>
           <p className="mt-1 text-muted-foreground">{summary.detail}</p>
-          {evidence.at(-1) === undefined ? null : <dl className="mt-3 grid gap-x-4 gap-y-1 text-muted-foreground sm:grid-cols-2"><div><dt className="font-semibold text-foreground">Service</dt><dd>{evidence.at(-1)?.service.id} at {evidence.at(-1)?.service.host}</dd></div><div><dt className="font-semibold text-foreground">Quoted amount</dt><dd>{evidence.at(-1)?.payment.quotedAmount} atomic units of {evidence.at(-1)?.payment.asset}</dd></div><div><dt className="font-semibold text-foreground">Payer → recipient</dt><dd>{evidence.at(-1)?.payment.payer} → {evidence.at(-1)?.payment.recipient}</dd></div><div><dt className="font-semibold text-foreground">Observed / local source</dt><dd>{evidence.at(-1)?.observedAt} / {evidence.at(-1)?.sourceVersion ?? "not recorded"}</dd></div><div><dt className="font-semibold text-foreground">Transaction</dt><dd>{evidence.at(-1)?.payment.settlementRef}</dd></div></dl>}
+          {evidence.at(-1) === undefined ? null : <dl className="mt-3 grid gap-x-4 gap-y-1 text-muted-foreground sm:grid-cols-2">
+            <div className="min-w-0"><dt className="font-semibold text-foreground">Service</dt><dd className="break-all">{evidence.at(-1)?.service.id} at {evidence.at(-1)?.service.host}</dd></div>
+            <div className="min-w-0"><dt className="font-semibold text-foreground">Quoted amount</dt><dd className="break-all">{evidence.at(-1)?.payment.quotedAmount} atomic units of {evidence.at(-1)?.payment.asset}</dd></div>
+            <div className="min-w-0"><dt className="font-semibold text-foreground">Payer → recipient</dt><dd className="break-all">{evidence.at(-1)?.payment.payer} → {evidence.at(-1)?.payment.recipient}</dd></div>
+            <div className="min-w-0"><dt className="font-semibold text-foreground">Observed / local source</dt><dd className="break-all">{evidence.at(-1)?.observedAt} / {evidence.at(-1)?.sourceVersion ?? "not recorded"}</dd></div>
+            <div className="min-w-0"><dt className="font-semibold text-foreground">Transaction</dt><dd className="break-all">{evidence.at(-1)?.payment.settlementRef}</dd></div>
+          </dl>}
           {summary.hashscanUrl === null ? null : <a href={summary.hashscanUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-10 items-center rounded-control border border-border px-3 py-2 font-semibold hover:bg-muted">Open Agent payment in HashScan</a>}
         </div>
       </section>

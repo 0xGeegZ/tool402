@@ -75,6 +75,8 @@ test("keeps guide presentation free of environment and automatic action while al
   assert.match(room, /rounded-control border border-border p-3 min-w-0/);
   assert.match(room, /rounded-control bg-muted p-4 min-w-0/);
   assert.match(room, /max-w-full overflow-x-auto text-xs leading-5/);
+  assert.match(room, /grid gap-x-4 gap-y-1 text-muted-foreground sm:grid-cols-2/);
+  assert.match(room, /break-all/);
   assert.match(room, /node --experimental-strip-types apps\/agent\/src\/riskscan-pay-cli\.ts --preflight/);
   assert.doesNotMatch(room, /npm run riskscan:pay/);
   assert.doesNotMatch(room, /PRIVATE_KEY\s*=/);
