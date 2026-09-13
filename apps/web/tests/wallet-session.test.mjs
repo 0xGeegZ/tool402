@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { runInNewContext } from "node:vm";
 import * as jsxRuntime from "react/jsx-runtime";
 import typescript from "typescript";
+import { ProviderNotFoundError } from "wagmi";
 
 const appRoot = fileURLToPath(new URL("..", import.meta.url));
 const sessionPath = "src/components/wallet/wallet-session.tsx";
@@ -84,7 +85,6 @@ async function loadWagmiHook(hooks) {
 }
 
 function wagmiHarness(options = {}) {
-  class ProviderNotFoundError extends Error {}
   const calls = { connection: 0, connectors: 0, connect: [], disconnect: [], switchChain: [] };
   const metaMask = { id: "metaMask", type: "injected" };
   const rabby = { id: "rabby", type: "injected" };
@@ -121,6 +121,7 @@ function wagmiHarness(options = {}) {
         return {
           mutateAsync: async (values) => {
             calls.disconnect.push(values);
+            if (options.disconnectMutationError) throw options.disconnectMutationError;
             connection = {
               status: "disconnected",
               address: undefined,
@@ -328,6 +329,30 @@ test("keeps explicit disconnect across a passive remount and exposes connector f
   });
   const switchRejectedApi = await loadWagmiHook(switchRejected.hooks);
   assertWalletState(switchRejectedApi.useTool402Wallet().state, { kind: "request_failed", operation: "switch" });
+});
+
+test("contains rejected Wagmi mutations from every explicit wallet action", async () => {
+  const rejection = new Error("rejected");
+  const harness = wagmiHarness({
+    connection: {
+      status: "connected",
+      address: "0xC89F87052C3E080B4A9B021D4930055031EF378E",
+      chainId: 296,
+      connector: { id: "metaMask" },
+    },
+    connectMutationError: rejection,
+    disconnectMutationError: rejection,
+    switchMutationError: rejection,
+  });
+  const { useTool402Wallet } = await loadWagmiHook(harness.hooks);
+  const wallet = useTool402Wallet();
+
+  await assert.doesNotReject(() => wallet.connect());
+  await assert.doesNotReject(() => wallet.switchToHedera());
+  await assert.doesNotReject(() => wallet.disconnect());
+  assert.equal(harness.calls.connect.length, 1);
+  assert.equal(harness.calls.switchChain.length, 1);
+  assert.equal(harness.calls.disconnect.length, 1);
 });
 
 test("owns no connection store or native provider listeners", async () => {
