@@ -123,7 +123,7 @@ async function signInHarness({ deferVerification = false, initialConnection } = 
           connect: () => {
             connectCalls += 1;
           },
-        }) },
+        }), isTool402MetaMaskConnector: (connector) => connector?.id === "metaMask" || connector?.rdns?.includes("io.metamask") === true },
       };
       assert.ok(Object.hasOwn(imports, specifier), `unexpected sign-in import: ${specifier}`);
       return imports[specifier];

@@ -10,7 +10,7 @@ import {
   type SignatureRequest,
   type WalletActionContext,
 } from "../../lib/wallet/command-relay.ts";
-import { useTool402Wallet } from "./use-tool402-wallet";
+import { isTool402MetaMaskConnector, useTool402Wallet } from "./use-tool402-wallet";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -173,19 +173,21 @@ function currentActionContext(
   wallet: ReturnType<typeof useTool402Wallet>,
 ): WalletActionContext | null {
   const { connection, resolved } = wallet;
+  const connector = connection.connector;
   if (
     !resolved
     || connection.status !== "connected"
     || connection.account === undefined
     || connection.chainId !== 296
-    || connection.connector?.id !== "metaMask"
+    || connector === undefined
+    || !isTool402MetaMaskConnector(connector)
   ) {
     return null;
   }
   return {
     address: connection.account,
     chainId: 296,
-    connectorId: connection.connector.id,
+    connectorId: connector.id,
     generation: connection.generation,
   };
 }

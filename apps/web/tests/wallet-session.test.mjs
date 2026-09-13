@@ -307,6 +307,23 @@ test("uses only explicit MetaMask connect, disconnect, and Hedera switch mutatio
   assert.equal(harness.calls.disconnect[0]?.connector, harness.currentConnector);
 });
 
+test("prefers the Wagmi-discovered EIP-6963 MetaMask connector when another wallet owns window.ethereum", async () => {
+  const discoveredMetaMask = { id: "io.metamask", rdns: ["io.metamask"], type: "injected" };
+  const harness = wagmiHarness();
+  harness.hooks.useConnectors = () => [
+    { id: "rabby", type: "injected" },
+    discoveredMetaMask,
+    harness.metaMask,
+  ];
+  const { useTool402Wallet, isTool402MetaMaskConnector } = await loadWagmiHook(harness.hooks);
+  const wallet = useTool402Wallet();
+
+  assert.equal(isTool402MetaMaskConnector(discoveredMetaMask), true);
+  assert.equal(isTool402MetaMaskConnector({ id: "rabby", rdns: ["io.rabby"] }), false);
+  await wallet.connect();
+  assert.equal(harness.calls.connect[0]?.connector, discoveredMetaMask);
+});
+
 test("keeps explicit disconnect across a passive remount and exposes connector failures", async () => {
   const disconnected = wagmiHarness({
     connection: {

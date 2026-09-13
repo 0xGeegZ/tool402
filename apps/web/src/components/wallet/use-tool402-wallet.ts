@@ -12,6 +12,7 @@ import {
 
 const hederaTestnetChainId = 296;
 const metaMaskConnectorId = "metaMask";
+const metaMaskRdns = "io.metamask";
 
 type ConnectionStatus = "connected" | "connecting" | "disconnected" | "reconnecting";
 
@@ -40,7 +41,15 @@ export interface Tool402WalletConnection {
   readonly status: ConnectionStatus;
   readonly account: string | undefined;
   readonly chainId: number | undefined;
-  readonly connector: { readonly id: string } | undefined;
+  readonly connector: { readonly id: string; readonly rdns?: string | readonly string[] } | undefined;
+}
+
+export function isTool402MetaMaskConnector(
+  connector: { readonly id: string; readonly rdns?: string | readonly string[] } | undefined,
+): boolean {
+  return connector?.id === metaMaskConnectorId
+    || connector?.rdns === metaMaskRdns
+    || (Array.isArray(connector?.rdns) && connector.rdns.includes(metaMaskRdns));
 }
 
 export function deriveTool402WalletState(input: WalletStateInput): Tool402WalletState {
@@ -74,7 +83,8 @@ export function useTool402Wallet() {
   const { mutateAsync: connectAsync, error: connectError } = useConnect();
   const { mutateAsync: disconnectAsync } = useDisconnect();
   const { mutateAsync: switchChainAsync, error: switchError } = useSwitchChain();
-  const metaMask = connectors.find((connector) => connector.id === metaMaskConnectorId);
+  const metaMask = connectors.find((connector) => isTool402MetaMaskConnector(connector))
+    ?? connectors.find((connector) => connector.id === metaMaskConnectorId);
   const account = connection.address?.toLowerCase();
   const identity = `${connection.status}:${account ?? ""}:${connection.chainId ?? ""}:${connection.connector?.id ?? ""}`;
   const generationRef = useRef({ identity, generation: 0 });
