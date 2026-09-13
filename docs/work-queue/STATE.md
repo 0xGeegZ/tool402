@@ -230,28 +230,32 @@
   action remain human-only and excluded.
 
 - M54_STAGE_3_CANDIDATE_RECOVERY_ACCEPTANCE: 2026-09-12. M54-T010 is accepted
-  on merged `main` at `07beeffe`. Commits `b0a24e42` and `aa0f60f5` delivered
-  the read-only Stage 3 candidate recovery and the closed relay feedback at
-  merge commit `eba56e41` through pull request #91, and commit `059f7ae8`
-  hardened the same paths for the selected-tool seam at merge commit
-  `62da3c1d`. Every declared source and test path exists. The complete Web
-  suite passes 547 of 548 with one skip, typecheck is clean, and the build
-  renders 37 of 37 routes. M54-T010 moves to `60-done` and its reservations are
-  released. No send, signature, relay, attachment, browser persistence, runtime
+  on merged `main` at `07beeffe`. Commit `b0a24e42` delivered the read-only
+  Stage 3 candidate recovery and the closed relay feedback at merge commit
+  `eba56e41` through pull request #91; the equivalent commit `aa0f60f5`
+  reached `main` separately through pull request #97 at merge commit
+  `5f21fc90`, and commit `059f7ae8` hardened the same paths for the
+  selected-tool seam at merge commit `62da3c1d` through pull request #100.
+  Every declared source and test path exists. The complete Web suite passes
+  547 of 548 with one skip, typecheck is clean, and the build renders 37 of 37
+  routes. M54-T010 moves to `60-done` and its reservations are released. No
+  send, signature, relay, attachment, browser persistence, runtime
   configuration, or live action is granted, and Stage 4 durable continuation
   stays outside the card.
 
-- M53_STAGE_B_FACTORY_RECEIPT_LOG_SELECTION_ACCEPTANCE: 2026-09-12. M53-T010 is
-  accepted on merged `main` at `07beeffe`. Commit `592e14dc` delivered the
-  minimal decoder correction at merge commit `951ba1e2` through pull request
-  #67. Both declared paths exist, and the bridge now retains only logs emitted
-  by the fixed canonical Factory and decodes only when exactly one such log is
-  present and valid, leaving zero, malformed, missing, and ambiguous cases
-  rejected. The complete Web suite passes 547 of 548 with one skip, typecheck
-  is clean, and the build renders 37 of 37 routes. M53-T010 moves to `60-done`
-  and the bridge and test reservation transferred from B04-T010 is released. No
-  UI, command, authority, transaction, receipt attachment, backend, package,
-  configuration, deployment, or live path is granted.
+- M53_STAGE_B_FACTORY_RECEIPT_LOG_SELECTION_ACCEPTANCE: 2026-09-12. M53-T010
+  is accepted on merged `main` at `07beeffe`. Commit `592e14dc` delivered the
+  minimal decoder correction straight onto `main`'s first-parent chain on
+  2026-09-11, after the RED commit `91564c21`; it carries no pull request and
+  no merge commit of its own. Both declared paths exist, and the bridge now
+  retains only logs emitted by the fixed canonical Factory and decodes only
+  when exactly one such log is present and valid, leaving zero, malformed,
+  missing, and ambiguous cases rejected. The complete Web suite passes 547 of
+  548 with one skip, typecheck is clean, and the build renders 37 of 37
+  routes. M53-T010 moves to `60-done` and the bridge and test reservation
+  transferred from B04-T010 is released. No UI, command, authority,
+  transaction, receipt attachment, backend, package, configuration,
+  deployment, or live path is granted.
 
 - M51_PROVIDER_DURABLE_RESUME_ACCEPTANCE: 2026-09-12. M51-T010 is accepted on
   merged `main` at `07beeffe`. Commit `b61725de` delivered the read-only

@@ -68,17 +68,21 @@ M51 and is excluded.
 
 M54-T010 is accepted by the repository operator's ruling of 2026-09-12 on the
 delivered work already merged on `main` at `07beeffe`. The explicit read-only
-Stage 3 candidate recovery and closed relay feedback were delivered by commits
-`b0a24e42` and `aa0f60f5`, integrated at merge commit `eba56e41` through pull
-request #91, and later hardened for the selected-tool seam by commit `059f7ae8`
-under pull request #100 at merge commit `62da3c1d`. Every declared path exists
-on `main`, including
+Stage 3 candidate recovery and closed relay feedback were delivered by commit
+`b0a24e42`, integrated at merge commit `eba56e41` through pull request #91;
+the equivalent commit `aa0f60f5` reached `main` separately through pull
+request #97 at merge commit `5f21fc90`. The same paths were later hardened for
+the selected-tool seam by commit `059f7ae8` under pull request #100 at merge
+commit `62da3c1d`. Every declared path exists on `main`, including
 `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`,
 `apps/web/src/components/provider/deploy/ats-create-action.tsx`,
 `apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`,
 `apps/web/src/components/provider/deploy/provider-deploy-state.ts`,
 `apps/web/src/components/provider/deploy/provider-deploy-stages.tsx`, and
-`apps/web/tests/ats-create-action.test.mjs`. Verification is the merged-`main` state at `07beeffe`: the complete Web suite passes 547 of 548 with no failure and one skip, Web typecheck is clean, and the Web build renders 37 of 37 routes. The acceptance releases every
-M54 source and test reservation. It authorizes no send, signature, relay,
-attachment, browser persistence, runtime configuration, or live action, and
-Stage 4 durable continuation remains outside this card.
+`apps/web/tests/ats-create-action.test.mjs`. Verification is the merged-`main`
+state at `07beeffe`: the complete Web suite passes 547 of 548 with no failure
+and one skip, Web typecheck is clean, and the Web build renders 37 of 37
+routes. The acceptance releases every M54 source and test reservation. It
+authorizes no send, signature, relay, attachment, browser persistence, runtime
+configuration, or live action, and Stage 4 durable continuation remains
+outside this card.

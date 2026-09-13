@@ -70,14 +70,18 @@ transaction, retry, attachment, and deployment exclusions remain fixed.
 
 M53-T010 is accepted by the repository operator's ruling of 2026-09-12 on the
 delivered work already merged on `main` at `07beeffe`. The minimal decoder
-correction was delivered by commit `592e14dc`, integrated at merge commit
-`951ba1e2` through pull request #67. Both declared paths exist on `main`:
-`apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts` and
-`apps/web/tests/stage-b-browser-provider-bridge.test.mjs`. The bridge now scans
-an untrusted receipt log array, retains only logs emitted by the fixed
+correction was delivered by commit `592e14dc`, "fix: Decode Factory event from
+multi-log receipts", which was committed straight onto `main` on 2026-09-11
+and sits on its first-parent chain after the RED commit `91564c21`. It carries
+no pull request and no merge commit of its own. Both declared paths exist on
+`main`: `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts` and
+`apps/web/tests/stage-b-browser-provider-bridge.test.mjs`. The bridge now
+scans an untrusted receipt log array, retains only logs emitted by the fixed
 canonical Factory, and decodes only when exactly one such log is present and
 valid; zero, malformed, missing, and ambiguous Factory-event cases remain
-rejected. Verification is the merged-`main` state at `07beeffe`: the complete Web suite passes 547 of 548 with no failure and one skip, Web typecheck is clean, and the Web build renders 37 of 37 routes. The acceptance releases the M53 bridge and test reservation, which
-B04-T010 had transferred for this defect. It authorizes no UI, command,
-authority, transaction, receipt attachment, backend, package, configuration,
-deployment, or live path.
+rejected. Verification is the merged-`main` state at `07beeffe`: the complete
+Web suite passes 547 of 548 with no failure and one skip, Web typecheck is
+clean, and the Web build renders 37 of 37 routes. The acceptance releases the
+M53 bridge and test reservation, which B04-T010 had transferred for this
+defect. It authorizes no UI, command, authority, transaction, receipt
+attachment, backend, package, configuration, deployment, or live path.
