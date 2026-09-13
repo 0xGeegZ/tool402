@@ -491,6 +491,21 @@ implementedTest("projects one selected issuer authority from an active self-serv
   } finally { process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous; }
 });
 
+implementedTest("projects an active self-service issuer for deferred attempt and offering ownership", async () => {
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
+    const { readCommandAuthorities } = await import(replayUrl);
+    const principalPublicId = `self_service_${canonicalSignerAddress.slice(2)}`;
+    const rows = {
+      commandAuthorities: [],
+      selfServiceAccounts: [{ canonicalSignerAddress, chainId: 296, principalPublicId, policyVersion: "public_testnet_v1", status: "ACTIVE" }],
+    };
+    const ctx = { db: { query(table) { return { withIndex(_index, select) { const filters = []; const range = { eq(field, value) { filters.push([field, value]); return range; } }; select(range); return { async take(limit) { return rows[table].filter((row) => filters.every(([field, value]) => row[field] === value)).slice(0, limit); } }; } }; } } };
+    assert.deepEqual(await readCommandAuthorities._handler(ctx, { chainId: 296, canonicalSignerAddress, purpose: "OWNER" }), [{ principalPublicId, canonicalSignerAddress, chainId: 296, role: "ISSUER", ownedSubjectPublicIds: [], authorityVersion: "public_testnet_v1", enabled: true }]);
+  } finally { process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous; }
+});
+
 implementedTest("exports the closed command-dispatch surface and keeps the direct-test entrypoint out of the HTTP router", async () => {
   const [dispatch, http] = await Promise.all([import(dispatchUrl), import(httpUrl)]);
   assert.deepEqual(Object.keys(dispatch).sort(), [
@@ -708,7 +723,7 @@ implementedTest("uses only a safe injected production ingress environment to cla
 
   assert.deepEqual(state.queries, [{
     name: "wallet_command_replay:readCommandAuthorities",
-    args: { chainId: 296, canonicalSignerAddress },
+      args: { chainId: 296, canonicalSignerAddress, purpose: "BACKING" },
   }]);
   assert.equal(state.mutations.length, 2);
   assert.deepEqual(state.mutations[0], {

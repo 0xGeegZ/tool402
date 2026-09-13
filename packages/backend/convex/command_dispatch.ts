@@ -468,9 +468,9 @@ export async function handleCommandIngress(
       claimIngressReplayReference,
       { replayIdentity },
     ),
-    resolveCommandAuthorities: (chainId, canonicalSignerAddress, selection) => ctx.runQuery(
+    resolveCommandAuthorities: (chainId, canonicalSignerAddress, selection, purpose) => ctx.runQuery(
       readCommandAuthoritiesReference,
-      { chainId, canonicalSignerAddress, ...(selection === undefined ? {} : { selection }) },
+      { chainId, canonicalSignerAddress, ...(selection === undefined ? {} : { selection }), ...(purpose === undefined ? {} : { purpose }) },
     ) as Promise<readonly CommandAuthorityRecord[]>,
     serverNowMilliseconds: () => Date.now(),
   });
