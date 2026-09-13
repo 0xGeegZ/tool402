@@ -166,7 +166,7 @@ export const recordBackingPayment = internalMutation({
     const claim = attempts[0];
     if (
       claim === undefined
-      && (offeringPublicId !== legacyRiskScanOfferingPublicId && !hasLiveSelfServiceBackingIntent(intent)
+      && (offeringPublicId !== legacyRiskScanOfferingPublicId
         || !await mayReserveNewBackingPayment(ctx, args.canonicalSignerAddress, offeringPublicId))
     ) return null;
     const next = resolveBackingPaymentClaim(claims[0], claim, { attemptId: row._id, transactionHash: args.transactionHash, tinybars: args.tinybars, outcome: args.outcome });

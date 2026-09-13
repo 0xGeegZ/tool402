@@ -193,7 +193,7 @@ test("refuses a new self-service payment reservation after its frozen intent exp
   assert.deepEqual(store.writes, []);
 });
 
-test("refuses a first self-service payment attachment after its frozen intent expires", async (t) => {
+test("refuses a first self-service payment attachment without a durable reservation", async (t) => {
   const { recordBackingPayment } = await import(storeUrl.href);
   const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
   const attemptPublicId = "AAAAAAAAAAAAAAAAAAAAAA";
@@ -207,7 +207,7 @@ test("refuses a first self-service payment attachment after its frozen intent ex
     intents: [{
       _id: "backingIntents:funding", idempotencyKey: attemptPublicId,
       canonicalSignerAddress: signer, offeringPublicId: "offering_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", tinybars: "7",
-      expiresAt: new Date(Date.now() - 1).toISOString(),
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
     }],
     accounts: [{
       _id: "selfServiceAccounts:backer", canonicalSignerAddress: signer, chainId: 296,
