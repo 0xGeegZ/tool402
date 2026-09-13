@@ -51,6 +51,37 @@ export function WalletSessionProvider({ children }: { readonly children: ReactNo
   const provider = providerRef.current;
 
   useEffect(() => {
+    let active = true;
+    const generation = sessionReadGenerationRef.current + 1;
+    sessionReadGenerationRef.current = generation;
+
+    void discoverMetaMaskProvider(window).then(async (selection) => {
+      if (!active || sessionReadGenerationRef.current !== generation) return;
+      if (selection.kind !== "provider") {
+        setState({ kind: selection.kind });
+        return;
+      }
+
+      const connection = await readCurrentSession(
+        selection.provider,
+        approvedIssuerRef.current,
+      );
+      if (!active || sessionReadGenerationRef.current !== generation) return;
+      providerRef.current = connection.provider;
+      setState(connection.state);
+    }).catch(() => {
+      if (active && sessionReadGenerationRef.current === generation) {
+        setState({ kind: "disconnected" });
+      }
+    });
+
+    return () => {
+      active = false;
+      sessionReadGenerationRef.current += 1;
+    };
+  }, []);
+
+  useEffect(() => {
     if (provider === null) {
       return;
     }

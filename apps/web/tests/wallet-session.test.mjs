@@ -113,10 +113,10 @@ implementedTest("exports the fixed session API and throws outside the provider",
   }
 });
 
-implementedTest("discovers MetaMask only inside connect and never at load, render, or in an effect", async () => {
+implementedTest("discovers MetaMask from explicit connect or one passive initial restoration", async () => {
   const source = await readAppFile(sessionPath);
 
-  assert.equal([...source.matchAll(/discoverMetaMaskProvider\(\s*window\s*\)/gu)].length, 1);
+  assert.equal([...source.matchAll(/discoverMetaMaskProvider\(\s*window\s*\)/gu)].length, 2);
   const connectStart = source.indexOf("async function connect(");
   const connectEnd = source.indexOf("async function switchChain(");
   assert.ok(connectStart !== -1 && connectEnd > connectStart);
@@ -124,7 +124,9 @@ implementedTest("discovers MetaMask only inside connect and never at load, rende
   const effectStart = source.indexOf("useEffect(");
   const effectEnd = source.indexOf("async function connect(");
   assert.ok(effectStart !== -1 && effectEnd > effectStart);
-  assert.doesNotMatch(source.slice(effectStart, effectEnd), /discoverMetaMaskProvider/u);
+  assert.match(source.slice(effectStart, effectEnd), /discoverMetaMaskProvider\(\s*window\s*\)/u);
+  assert.match(source.slice(effectStart, effectEnd), /readCurrentSession\(/u);
+  assert.doesNotMatch(source.slice(effectStart, effectEnd), /eth_requestAccounts|connectWallet|switchChain/u);
 });
 
 implementedTest("invalidates late connect and switch results after an explicit disconnect", async () => {
@@ -209,6 +211,7 @@ implementedTest("renders the compact header control per session kind from the sh
       const dashboardLinks = elements(tree).filter((element) => element.type === "Link");
       assert.equal(dashboardLinks.length, 1, `${state.kind} renders one dashboard link`);
       assert.equal(dashboardLinks[0].props.href, "/dashboard");
+      assert.equal(dashboardLinks[0].props.prefetch, false, `${state.kind} evaluates dashboard access on click`);
       assert.match(dashboardLinks[0].props.className, /\btouch-target\b/u);
       continue;
     }

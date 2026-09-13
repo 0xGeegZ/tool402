@@ -60,7 +60,7 @@ export function WalletIsland() {
         </Button>
       ) : null}
       {state.kind === "connected" || state.kind === "not_issuer" ? (
-        <Link href="/dashboard" aria-label="Open dashboard" className="touch-target rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+        <Link href="/dashboard" prefetch={false} aria-label="Open dashboard" className="touch-target rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
           <Badge variant="secondary" title={state.address}>
             {shortenAddress(state.address)}
           </Badge>

@@ -301,6 +301,30 @@ async function flushMicrotasks() {
   }
 }
 
+test("restores an already-authorized MetaMask account after a full reload without requesting it", async () => {
+  const calls = [];
+  const provider = {
+    isMetaMask: true,
+    on() {},
+    removeListener() {},
+    async request({ method }) {
+      calls.push(method);
+      switch (method) {
+        case "eth_chainId": return "0x128";
+        case "eth_accounts": return ["0xc89f87052c3e080b4a9b021d4930055031ef378e"];
+        default: throw new Error(`unexpected provider method: ${method}`);
+      }
+    },
+  };
+  const harness = await walletIslandHarness(provider);
+
+  harness.render();
+  await flushMicrotasks();
+
+  assert.match(visibleText(harness.render()), /Connected as 0xc89f87052c3e080b4a9b021d4930055031ef378e/u);
+  assert.deepEqual(calls, ["eth_chainId", "eth_accounts"]);
+});
+
 test("keeps the newest session event state when an older account read resolves late", async () => {
   const fake = deferredProvider();
   const harness = await walletIslandHarness(fake.provider);
