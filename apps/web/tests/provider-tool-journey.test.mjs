@@ -430,7 +430,7 @@ test("a self-service provider reaches independent OPEN tools through signed orch
     const component = loadSource("../src/components/provider/deploy/deploy-stage-signing.tsx", {
       react: renderer.react, "react/jsx-runtime": jsxRuntime,
       "../../wallet/use-tool402-wallet": {
-        isTool402MetaMaskConnector: () => true,
+        connectedTool402Wallet: (connection, resolved) => resolved && connection.status === "connected" && connection.account !== undefined && connection.chainId === 296 && connection.connector?.id === "metaMask" ? connection : null,
         useTool402Wallet: () => ({
           resolved: true,
           state: { kind: "connected", address: issuer },

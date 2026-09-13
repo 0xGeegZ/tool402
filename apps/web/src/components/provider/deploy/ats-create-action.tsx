@@ -12,7 +12,7 @@ import {
 } from "../../../lib/ats/stage-b-browser-provider-bridge.ts";
 import { Button } from "../../ui/button";
 import { StatusRegion } from "../../ui/status";
-import { isTool402MetaMaskConnector, useTool402Wallet } from "../../wallet/use-tool402-wallet";
+import { connectedTool402Wallet, useTool402Wallet } from "../../wallet/use-tool402-wallet";
 
 type StageBActionController = Readonly<{
   wallet: StageBWalletContext;
@@ -22,18 +22,12 @@ type StageBActionController = Readonly<{
 type ControllerContext = Readonly<{ selectedToolPublicId: string | undefined; wallet: StageBWalletContext | null }>;
 
 function stageBWalletContext(wallet: ReturnType<typeof useTool402Wallet>): StageBWalletContext | null {
-  const { connection, resolved } = wallet;
-  if (
-    !resolved
-    || connection.status !== "connected"
-    || connection.account === undefined
-    || connection.chainId !== 296
-    || !isTool402MetaMaskConnector(connection.connector)
-  ) return null;
+  const connection = connectedTool402Wallet(wallet.connection, wallet.resolved);
+  if (connection === null) return null;
   return {
     address: connection.account,
     chainId: 296,
-    connectorId: connection.connector?.id ?? "",
+    connectorId: connection.connector.id,
     generation: connection.generation,
   };
 }

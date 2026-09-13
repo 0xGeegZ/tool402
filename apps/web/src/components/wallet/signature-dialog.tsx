@@ -10,7 +10,7 @@ import {
   type SignatureRequest,
   type WalletActionContext,
 } from "../../lib/wallet/command-relay.ts";
-import { isTool402MetaMaskConnector, useTool402Wallet } from "./use-tool402-wallet";
+import { connectedTool402Wallet, useTool402Wallet } from "./use-tool402-wallet";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -172,22 +172,12 @@ function clockTime(iso: string): string {
 function currentActionContext(
   wallet: ReturnType<typeof useTool402Wallet>,
 ): WalletActionContext | null {
-  const { connection, resolved } = wallet;
-  const connector = connection.connector;
-  if (
-    !resolved
-    || connection.status !== "connected"
-    || connection.account === undefined
-    || connection.chainId !== 296
-    || connector === undefined
-    || !isTool402MetaMaskConnector(connector)
-  ) {
-    return null;
-  }
+  const connection = connectedTool402Wallet(wallet.connection, wallet.resolved);
+  if (connection === null) return null;
   return {
     address: connection.account,
     chainId: 296,
-    connectorId: connector.id,
+    connectorId: connection.connector.id,
     generation: connection.generation,
   };
 }

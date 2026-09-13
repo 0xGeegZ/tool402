@@ -41,7 +41,7 @@ test("uses the Wagmi wallet context, signature dialog, and relay without a secon
   const flow = await readAppFile("src/components/backing/backing-flow.tsx");
 
   assert.match(flow, /^["']use client["'];/);
-  assert.match(flow, /import \{ isTool402MetaMaskConnector, useTool402Wallet, type Tool402WalletConnection \} from "\.\.\/wallet\/use-tool402-wallet"/);
+  assert.match(flow, /import \{ connectedTool402Wallet, useTool402Wallet, type Tool402WalletConnection \} from "\.\.\/wallet\/use-tool402-wallet"/);
   assert.match(flow, /useSendTransaction\(\{ mutation: \{ retry: false \} \}\)/);
   assert.match(flow, /import \{ SignatureDialog, type SignatureResult \} from "\.\.\/wallet\/signature-dialog"/);
   assert.equal((flow.match(/useTool402Wallet\(\)/g) ?? []).length, 1);

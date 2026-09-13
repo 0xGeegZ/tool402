@@ -6,7 +6,7 @@ import { useSignMessage } from "wagmi";
 
 import { Button } from "../ui/button";
 import { dashboardTourHref } from "../demo/demo-tour-navigation";
-import { isTool402MetaMaskConnector, useTool402Wallet, type Tool402WalletConnection } from "../wallet/use-tool402-wallet";
+import { connectedTool402Wallet, isTool402MetaMaskConnector, useTool402Wallet, type Tool402WalletConnection } from "../wallet/use-tool402-wallet";
 
 const failureMessage = "Sign-in could not be completed. Please try again.";
 
@@ -156,11 +156,7 @@ export function MetaMaskDashboardSignIn({ tour = null, demoStep = null, returnTo
   const { connection, resolved, state, connect, connectErrorCode } = useTool402Wallet();
   const connectionRef = useRef(connection);
   connectionRef.current = connection;
-  const canSignIn = resolved
-    && connection.status === "connected"
-    && connection.account !== undefined
-    && connection.chainId === 296
-    && isTool402MetaMaskConnector(connection.connector);
+  const canSignIn = connectedTool402Wallet(connection, resolved) !== null;
 
   return (
     <section aria-labelledby="metamask-dashboard-sign-in-title" className="space-y-3">

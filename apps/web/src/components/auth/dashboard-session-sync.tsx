@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useConnectionEffect } from "wagmi";
 
 import { useTool402Wallet } from "../wallet/use-tool402-wallet";
 
@@ -18,9 +19,7 @@ export function DashboardSessionSync({
     && connection.chainId === 296
     && connection.account === address;
 
-  useEffect(() => {
-    if (!resolved) return;
-    if (currentSessionMatches) return;
+  const endSession = useCallback(() => {
     if (logoutStarted.current) return;
     logoutStarted.current = true;
     void fetch("/api/auth/logout", {
@@ -35,7 +34,15 @@ export function DashboardSessionSync({
     }).catch(() => {
       setLogoutFailed(true);
     });
-  }, [address, connection, currentSessionMatches, resolved]);
+  }, []);
+
+  useConnectionEffect({ onDisconnect: endSession });
+
+  useEffect(() => {
+    if (!resolved) return;
+    if (currentSessionMatches) return;
+    endSession();
+  }, [currentSessionMatches, endSession, resolved]);
 
   if (!resolved || currentSessionMatches) return children;
   return (

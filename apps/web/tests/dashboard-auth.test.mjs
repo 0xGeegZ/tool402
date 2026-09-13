@@ -124,7 +124,7 @@ async function signInHarness({ deferVerification = false, initialConnection } = 
           connect: () => {
             connectCalls += 1;
           },
-        }), isTool402MetaMaskConnector: (connector) => connector?.id === "metaMask" || connector?.rdns?.includes("io.metamask") === true },
+        }), connectedTool402Wallet: (connection, resolved) => resolved && connection.status === "connected" && connection.account !== undefined && connection.chainId === 296 && connection.connector?.id === "metaMask" ? connection : null, isTool402MetaMaskConnector: (connector) => connector?.id === "metaMask" || connector?.id === "io.metamask" || connector?.rdns?.includes("io.metamask") === true },
       };
       assert.ok(Object.hasOwn(imports, specifier), `unexpected sign-in import: ${specifier}`);
       return imports[specifier];

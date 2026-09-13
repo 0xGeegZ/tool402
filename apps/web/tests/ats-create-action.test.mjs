@@ -60,7 +60,7 @@ async function actionHarness() {
       }),
     },
     "../../wallet/use-tool402-wallet": {
-      isTool402MetaMaskConnector: () => true,
+      connectedTool402Wallet: (connection, resolved) => resolved && connection.status === "connected" && connection.account !== undefined && connection.chainId === 296 && connection.connector?.id === "metaMask" ? connection : null,
       useTool402Wallet: () => activeSession === null ? {
         resolved: true,
         connection: { status: "disconnected", account: undefined, chainId: undefined, connector: undefined, generation },

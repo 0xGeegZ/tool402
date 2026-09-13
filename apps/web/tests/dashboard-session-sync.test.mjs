@@ -55,6 +55,7 @@ async function loadSynchronizer({
   const references = [];
   const states = [];
   const effects = [];
+  const connectionEffects = [];
   const requests = [];
   const navigations = [];
   let cursor = 0;
@@ -79,6 +80,9 @@ async function loadSynchronizer({
         || dependencies.some((dependency, dependencyIndex) => dependency !== previous.dependencies[dependencyIndex]);
       if (changed) effects[index] = { dependencies, effect, pending: true };
     },
+    useCallback(callback) {
+      return callback;
+    },
   };
   const module = { exports: {} };
   runInNewContext(outputText, {
@@ -99,6 +103,8 @@ async function loadSynchronizer({
           return react;
         case "react/jsx-runtime":
           return jsxRuntime;
+        case "wagmi":
+          return { useConnectionEffect: (handlers) => connectionEffects.push(handlers) };
         case "../wallet/use-tool402-wallet":
           return { useTool402Wallet: () => wallet };
         default:
@@ -110,6 +116,9 @@ async function loadSynchronizer({
   return {
     requests,
     navigations,
+    disconnect() {
+      connectionEffects.at(-1)?.onDisconnect?.();
+    },
     setWallet(next) {
       Object.assign(wallet, next);
     },
@@ -197,6 +206,18 @@ implementedTest("logs out a restored dashboard session without a MetaMask accoun
   assertLogout(harness);
 });
 
+implementedTest("starts only one logout when Wagmi reports an explicit disconnect", async () => {
+  const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const harness = await loadSynchronizer({ wallet: { connection: { status: "connected", account: address, chainId: 296, connector: { id: "metaMask" } }, resolved: true } });
+
+  harness.render(address);
+  harness.disconnect();
+  harness.disconnect();
+  await flushMicrotasks();
+
+  assertLogout(harness);
+});
+
 implementedTest("logs out a restored dashboard session on the wrong chain", async () => {
   const harness = await loadSynchronizer({ wallet: { connection: { status: "connected", account: "0xc89f87052c3e080b4a9b021d4930055031ef378e", chainId: 1, connector: { id: "metaMask" } }, resolved: true } });
 
@@ -223,6 +244,8 @@ implementedTest("keeps sign-out synchronization inside the accepted local bounda
 
   assert.match(source, /^"use client";/u);
   assert.match(source, /import\s*\{\s*useTool402Wallet\s*\}\s*from\s*["']\.\.\/wallet\/use-tool402-wallet["']/u);
+  assert.match(source, /import\s*\{\s*useConnectionEffect\s*\}\s*from\s*["']wagmi["']/u);
+  assert.match(source, /useConnectionEffect\(\{\s*onDisconnect:\s*endSession\s*\}\)/u);
   assert.match(source, /const\s*\{\s*connection,\s*resolved\s*\}\s*=\s*useTool402Wallet\(\)/u);
   assert.match(source, /if\s*\(\s*!resolved\s*\)\s*return;/u);
   assert.match(source, /connection\.account\s*===\s*address/u);

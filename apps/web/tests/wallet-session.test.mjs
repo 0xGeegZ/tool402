@@ -82,6 +82,20 @@ test("selects the Wagmi-discovered MetaMask connector rather than another inject
   assert.equal(instance.calls.connect[0]?.connector, discoveredMetaMask);
 });
 
+test("centralizes the eligible Tool402 wallet connection invariant", async () => {
+  const instance = harness({ connection: { status: "connected", address, chainId: 296, connector: { id: "io.metamask" } } });
+  const { connectedTool402Wallet, useTool402Wallet } = await loadHook(instance.hooks);
+  const wallet = useTool402Wallet();
+
+  const connected = connectedTool402Wallet(wallet.connection, wallet.resolved);
+  assert.equal(connected?.generation, 0);
+  assert.equal(connected?.status, "connected");
+  assert.equal(connected?.account, address);
+  assert.equal(connected?.chainId, 296);
+  assert.equal(connected?.connector.id, "io.metamask");
+  assert.equal(connectedTool402Wallet(wallet.connection, false), null);
+});
+
 test("uses only explicit Wagmi mutations and normalizes the connected identity", async () => {
   const instance = harness({
     connection: { status: "connected", address: address.toUpperCase(), chainId: 296, connector: { id: "metaMask" } },

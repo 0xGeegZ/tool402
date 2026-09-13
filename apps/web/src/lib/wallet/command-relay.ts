@@ -10,6 +10,7 @@ import {
   type RandomBytes,
   type Tool402TypedDataSigner,
 } from "./tool402-command.ts";
+import { isUserRejectedWalletRequest } from "./wallet-error.ts";
 
 export const RELAY_OUTCOMES = Object.freeze([
   "ACCEPTED",
@@ -305,10 +306,6 @@ function sameContext(left: WalletActionContext, right: WalletActionContext): boo
     && left.generation === right.generation;
 }
 
-function isUserRejection(error: unknown): boolean {
-  return typeof error === "object" && error !== null && (error as { code?: unknown }).code === 4001;
-}
-
 export async function signAndRelayCommand(
   context: WalletActionContext,
   request: SignatureRequest,
@@ -344,7 +341,7 @@ export async function signAndRelayCommand(
     const signed = await signCommand(command, dependencies.signTypedData);
     body = createCommandBody(signed, request.canonicalPayloadBytes);
   } catch (error) {
-    return { kind: isUserRejection(error) ? "declined" : "signing_failed" };
+    return { kind: isUserRejectedWalletRequest(error) ? "declined" : "signing_failed" };
   }
   const currentAfterSignature = dependencies.readCurrentContext();
   if (currentAfterSignature === null || !sameContext(currentAfterSignature, context)) {

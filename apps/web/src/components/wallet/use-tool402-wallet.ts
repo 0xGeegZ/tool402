@@ -10,7 +10,7 @@ import {
   useSwitchChain,
 } from "wagmi";
 
-const hederaTestnetChainId = 296;
+export const tool402HederaTestnetChainId = 296;
 const metaMaskConnectorId = "metaMask";
 const metaMaskRdns = "io.metamask";
 
@@ -20,7 +20,6 @@ interface WalletStateInput {
   readonly status: ConnectionStatus;
   readonly address: string | undefined;
   readonly chainId: number | undefined;
-  readonly connector: { readonly id: string } | undefined;
   readonly hasMetaMaskConnector: boolean;
   readonly providerUnavailable: boolean;
   readonly connectError?: unknown;
@@ -44,6 +43,13 @@ export interface Tool402WalletConnection {
   readonly connector: { readonly id: string; readonly rdns?: string | readonly string[] } | undefined;
 }
 
+export type ConnectedTool402WalletConnection = Tool402WalletConnection & {
+  readonly status: "connected";
+  readonly account: string;
+  readonly chainId: typeof tool402HederaTestnetChainId;
+  readonly connector: { readonly id: string; readonly rdns?: string | readonly string[] };
+};
+
 export function isTool402MetaMaskConnector(
   connector: { readonly id: string; readonly rdns?: string | readonly string[] } | undefined,
 ): boolean {
@@ -57,6 +63,22 @@ function hasMetaMaskRdns(
 ): boolean {
   return connector?.rdns === metaMaskRdns
     || (Array.isArray(connector?.rdns) && connector.rdns.includes(metaMaskRdns));
+}
+
+export function connectedTool402Wallet(
+  connection: Tool402WalletConnection,
+  resolved: boolean,
+): ConnectedTool402WalletConnection | null {
+  if (
+    !resolved
+    || connection.status !== "connected"
+    || connection.account === undefined
+    || connection.chainId !== tool402HederaTestnetChainId
+    || !isTool402MetaMaskConnector(connection.connector)
+  ) {
+    return null;
+  }
+  return connection as ConnectedTool402WalletConnection;
 }
 
 function walletErrorCode(error: unknown): string | null {
@@ -84,7 +106,7 @@ export function deriveTool402WalletState(input: WalletStateInput): Tool402Wallet
   if (input.status !== "connected" || input.address === undefined) {
     return { kind: "disconnected" };
   }
-  if (input.chainId !== hederaTestnetChainId) {
+  if (input.chainId !== tool402HederaTestnetChainId) {
     return { kind: "wrong_chain", chainId: input.chainId ?? 0 };
   }
   return { kind: "connected", address: input.address.toLowerCase() };
@@ -118,7 +140,6 @@ export function useTool402Wallet() {
     status: connection.status,
     address: connection.address,
     chainId: connection.chainId,
-    connector: connection.connector,
     hasMetaMaskConnector: metaMask !== undefined,
     providerUnavailable: connectError instanceof ProviderNotFoundError,
     connectError,
@@ -151,7 +172,7 @@ export function useTool402Wallet() {
     },
     async switchToHedera() {
       try {
-        await switchChainAsync({ chainId: hederaTestnetChainId });
+        await switchChainAsync({ chainId: tool402HederaTestnetChainId });
       } catch {
         // Wagmi exposes the mutation error on the next render for accessible retry copy.
       }

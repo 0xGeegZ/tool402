@@ -1,5 +1,6 @@
 import { isAddress } from "viem";
 
+import { isUserRejectedWalletRequest } from "../wallet/wallet-error.ts";
 import { STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH } from "./stage-b-ats-create-canonical-identity.ts";
 import { createStageBAtsCreateExecutionProjection } from "./stage-b-ats-create-execution-projection.ts";
 import {
@@ -316,15 +317,6 @@ async function readBoundedJson(body: unknown, deadline: AbortSignal): Promise<un
   }
 }
 
-function isExplicitUserRejection(error: unknown): boolean {
-  if (error === null || typeof error !== "object") return false;
-  try {
-    return (error as { readonly code?: unknown }).code === 4001;
-  } catch {
-    return false;
-  }
-}
-
 function eligibleFactoryLog(value: unknown): { readonly data: `0x${string}`; readonly topics: readonly `0x${string}`[] } | null {
   const fields = captureOwnEnumerableDataFields(value, ["address", "data", "topics"]);
   if (fields === null) return null;
@@ -620,7 +612,7 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
           value: 0n,
         });
       } catch (error) {
-        if (isExplicitUserRejection(error)) return rejectedOutcome();
+        if (isUserRejectedWalletRequest(error)) return rejectedOutcome();
         terminal = unknownOutcome();
         return terminal;
       }

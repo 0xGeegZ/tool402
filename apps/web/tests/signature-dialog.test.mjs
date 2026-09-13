@@ -74,7 +74,7 @@ async function loadHarness() {
         "./use-tool402-wallet": { useTool402Wallet: () => ({
           resolved: true,
           connection: { generation: 0, status: "connected", account, chainId: 296, connector: { id: "metaMask" } },
-        }), isTool402MetaMaskConnector: (connector) => connector?.id === "metaMask" || connector?.rdns?.includes("io.metamask") === true },
+        }), connectedTool402Wallet: (connection, resolved) => resolved && connection.status === "connected" && connection.account !== undefined && connection.chainId === 296 && connection.connector?.id === "metaMask" ? connection : null },
         "../ui/button": { Button: "Button" },
         "../ui/card": {
           Card: "Card",

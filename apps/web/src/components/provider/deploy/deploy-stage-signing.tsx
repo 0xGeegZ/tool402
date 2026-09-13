@@ -14,7 +14,7 @@ import { loadProviderCampaignResume } from "../../../lib/provider-campaign-resum
 import { loadProviderDirectoryConfiguration } from "../../../lib/provider-directory-configuration-client.ts";
 import { loadProviderToolDeployment, recheckProviderToolDeployment, type ProviderToolDeployment, type ProviderToolDurableValues } from "../../../lib/provider-tool-deployment-client.ts";
 import type { ProviderToolAtsStageProjection } from "../../../lib/ats/provider-tool-ats-projection.ts";
-import { isTool402MetaMaskConnector, useTool402Wallet } from "../../wallet/use-tool402-wallet";
+import { connectedTool402Wallet, useTool402Wallet } from "../../wallet/use-tool402-wallet";
 import { Button } from "../../ui/button";
 import { atsCreateConfiguration } from "./ats-create-configuration";
 import {
@@ -71,13 +71,8 @@ export function DeployStageSigning({
   onRecoveredToolTitle?: (title: string) => void;
 }) {
   const wallet = useTool402Wallet();
-  const walletAddress = wallet.resolved
-    && wallet.connection.status === "connected"
-    && wallet.connection.account !== undefined
-    && wallet.connection.chainId === 296
-    && isTool402MetaMaskConnector(wallet.connection.connector)
-    ? wallet.connection.account
-    : undefined;
+  const connectedWallet = connectedTool402Wallet(wallet.connection, wallet.resolved);
+  const walletAddress = connectedWallet?.account;
   const [candidate, setCandidate] = useState<AtsCreateCandidate | null>(null);
   const [results, setResults] = useState<readonly (ProviderDeployStageState | undefined)[]>([]);
   const [directoryRecord, setDirectoryRecord] = useState<DirectoryRecordLiteral>(directoryRecordLiteral);
@@ -88,9 +83,9 @@ export function DeployStageSigning({
   const [selectedAts, setSelectedAts] = useState<ProviderToolAtsStageProjection | null>(null);
   const [selectedDeploymentState, setSelectedDeploymentState] = useState<ProviderToolDeployment["state"] | null>(null);
   const [selectedRefresh, setSelectedRefresh] = useState(0);
-  const currentSigningContext = useRef<SigningContext>({ selectedToolPublicId, address: walletAddress, generation: walletAddress === undefined ? undefined : wallet.connection.generation });
+  const currentSigningContext = useRef<SigningContext>({ selectedToolPublicId, address: walletAddress, generation: connectedWallet?.generation });
   const activeRequestContext = useRef<SigningContext | null>(null);
-  currentSigningContext.current = { selectedToolPublicId, address: walletAddress, generation: walletAddress === undefined ? undefined : wallet.connection.generation };
+  currentSigningContext.current = { selectedToolPublicId, address: walletAddress, generation: connectedWallet?.generation };
   const deploymentTarget = providerDeploymentTarget(selectedToolPublicId);
   const projection = selectedToolPublicId === undefined ? atsCreateConfiguration : selectedAts?.display;
   const initialDirectoryRecord = useMemo(

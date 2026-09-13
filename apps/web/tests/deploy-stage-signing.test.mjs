@@ -93,7 +93,7 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
     },
     "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
     "../../wallet/use-tool402-wallet": {
-      isTool402MetaMaskConnector: () => true,
+      connectedTool402Wallet: (connection, resolved) => resolved && connection.status === "connected" && connection.account !== undefined && connection.chainId === 296 && connection.connector?.id === "metaMask" ? connection : null,
       useTool402Wallet: () => ({
         resolved: true,
         state: session.state,

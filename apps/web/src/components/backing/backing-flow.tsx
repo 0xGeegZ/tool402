@@ -6,6 +6,7 @@ import { usePublicClient, useSendTransaction } from "wagmi";
 
 import { hashscanTransactionUrl } from "../../lib/hashscan-links.ts";
 import type { BackingPaymentRead, BackingPaymentRecord } from "../../lib/backing-payment-server.ts";
+import { isUserRejectedWalletRequest } from "../../lib/wallet/wallet-error.ts";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -13,7 +14,7 @@ import { DetailList } from "../ui/detail-list";
 import { StatusRegion } from "../ui/status";
 import { SignatureDialog, type SignatureResult } from "../wallet/signature-dialog";
 import { WalletIsland } from "../wallet/wallet-connect";
-import { isTool402MetaMaskConnector, useTool402Wallet, type Tool402WalletConnection } from "../wallet/use-tool402-wallet";
+import { connectedTool402Wallet, useTool402Wallet, type Tool402WalletConnection } from "../wallet/use-tool402-wallet";
 import { presetUnits, railPosition } from "./backing-presentation";
 import {
   backingLifecycleLabels,
@@ -52,13 +53,7 @@ function pendingAttachment(canonicalSignerAddress: string | null, offeringPublic
   if (canonicalSignerAddress === null) return null;
 
 function currentBackingConnection(connection: Tool402WalletConnection, resolved: boolean): Tool402WalletConnection | null {
-  return resolved
-    && connection.status === "connected"
-    && connection.account !== undefined
-    && connection.chainId === 296
-    && isTool402MetaMaskConnector(connection.connector)
-    ? connection
-    : null;
+  return connectedTool402Wallet(connection, resolved);
 }
 
 function isSameBackingConnection(left: Tool402WalletConnection, right: Tool402WalletConnection): boolean {
@@ -379,7 +374,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       });
       result = typeof response === "string" ? { kind: "hash", hash: response } : { kind: "no_hash" };
     } catch (error) {
-      result = typeof error === "object" && error !== null && (error as { code?: unknown }).code === 4001
+      result = isUserRejectedWalletRequest(error)
         ? { kind: "declined" }
         : { kind: "no_hash" };
     }
