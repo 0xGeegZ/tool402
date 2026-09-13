@@ -80,20 +80,27 @@ function canonicalAddress(value: unknown): string | null {
 
 const issuerMirrorAddress = "0x00000000000000000000000000000000009f29a7";
 
-function isIssuerAddress(value: unknown): boolean {
+function isExpectedSender(value: unknown, expectedSender: string): boolean {
   const address = canonicalAddress(value);
-  return address === issuer || address === issuerMirrorAddress;
+  return address === expectedSender || (expectedSender === issuer && address === issuerMirrorAddress);
 }
 
-function hasExactlyOneIssuerAccount(value: unknown): boolean {
+function hasExactlyOneExpectedAccount(value: unknown, expectedSender: string): boolean {
   if (!Array.isArray(value) || value.length === 0) return false;
-  let issuerCount = 0;
+  let expectedCount = 0;
   for (const account of value) {
     const address = canonicalAddress(account);
     if (address === null) return false;
-    if (address === issuer) issuerCount += 1;
+    if (address === expectedSender) expectedCount += 1;
   }
-  return issuerCount === 1;
+  return expectedCount === 1;
+}
+
+function configurationOwner(configuration: unknown): string | null {
+  if (configuration === null || typeof configuration !== "object") return null;
+  const parameters = (configuration as Record<string, unknown>).parameters;
+  if (parameters === null || typeof parameters !== "object") return null;
+  return canonicalAddress((parameters as Record<string, unknown>).diamondOwnerAccount);
 }
 
 export function isCanonicalStageBTransactionHash(value: unknown): value is string {
@@ -347,6 +354,7 @@ function eligibleContractResult(
   value: unknown,
   transactionHash: string,
   expectedInput: string,
+  expectedSender: string,
   expectedTimestamp?: string,
 ): { readonly timestamp: string; readonly evmAddress: string } | null {
   const fields = captureOwnEnumerableDataFields(
@@ -360,7 +368,7 @@ function eligibleContractResult(
     resultChainId !== chainId ||
     resultValue !== "SUCCESS" ||
     status !== "0x1" ||
-    !isIssuerAddress(from) ||
+    !isExpectedSender(from, expectedSender) ||
     canonicalAddress(to) !== factory ||
     functionParameters !== expectedInput ||
     typeof timestamp !== "string" ||
@@ -478,6 +486,7 @@ async function resolveMirrorCandidate(
   timers: StageBDeadlineTimers,
   transactionHash: string,
   expectedInput: string,
+  expectedSender: string,
   expectedReceiptAddress?: string,
 ): Promise<StageBCandidate | null> {
   const deadline = deadlineFrom(now, mirrorObservationLimitMilliseconds);
@@ -489,7 +498,7 @@ async function resolveMirrorCandidate(
       return null;
     }
     if (first.kind !== "value") return null;
-    const firstResult = eligibleContractResult(first.value, transactionHash, expectedInput);
+    const firstResult = eligibleContractResult(first.value, transactionHash, expectedInput, expectedSender);
     if (firstResult === null) return null;
     const receiptAddress = expectedReceiptAddress ?? firstResult.evmAddress;
     if (firstResult.evmAddress !== receiptAddress) return null;
@@ -517,7 +526,7 @@ async function resolveMirrorCandidate(
       return null;
     }
     if (final.kind !== "value") return null;
-    const finalResult = eligibleContractResult(final.value, transactionHash, expectedInput, firstResult.timestamp);
+    const finalResult = eligibleContractResult(final.value, transactionHash, expectedInput, expectedSender, firstResult.timestamp);
     if (finalResult === null || finalResult.evmAddress !== receiptAddress) return null;
     return Object.freeze({ transactionId: normalizedTransactionId, evmAddress: receiptAddress });
   }
@@ -533,15 +542,17 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
   function expectedDeploymentInput(): string | null {
     const legacyProjection = configuration === undefined ? createStageBAtsCreateExecutionProjection() : null;
     const configured = legacyProjection?.configuration ?? configuration;
+    const owner = legacyProjection?.issuerEvmAddress ?? configurationOwner(configured);
     if (
       legacyProjection !== null && (
         legacyProjection.issuerEvmAddress !== issuer
         || legacyProjection.mirrorNodeBaseUrl !== mirrorBase
         || legacyProjection.configuration.canonicalParametersHash !== expectedHash
       )
+      || owner === null
     ) return null;
     try {
-      return encodeFactoryDeployBond(buildFactoryDeployBondRequest(configured, { issuerEvmAddress: issuer }));
+      return encodeFactoryDeployBond(buildFactoryDeployBondRequest(configured, { issuerEvmAddress: owner }));
     } catch {
       return null;
     }
@@ -552,8 +563,9 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
     recoveryInFlight = true;
     try {
       const expectedInput = expectedDeploymentInput();
-      if (expectedInput === null) return unknownOutcome(transactionHash);
-      const candidate = await resolveMirrorCandidate(fetcher, wait, now, timers, transactionHash, expectedInput);
+      const owner = configuration === undefined ? issuer : configurationOwner(configuration);
+      if (expectedInput === null || owner === null) return unknownOutcome(transactionHash);
+      const candidate = await resolveMirrorCandidate(fetcher, wait, now, timers, transactionHash, expectedInput, owner);
       return candidate === null ? unknownOutcome(transactionHash) : Object.freeze({ kind: "candidate", candidate });
     } catch {
       return unknownOutcome(transactionHash);
@@ -570,7 +582,8 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
     try {
       if (await provider.request({ method: "eth_chainId" }) !== chainId) return rejectedOutcome();
       const accounts = await provider.request({ method: "eth_accounts" });
-      if (!hasExactlyOneIssuerAccount(accounts)) return rejectedOutcome();
+      const owner = configuration === undefined ? issuer : configurationOwner(configuration);
+      if (owner === null || !hasExactlyOneExpectedAccount(accounts, owner)) return rejectedOutcome();
 
       const data = expectedDeploymentInput();
       if (data === null) return rejectedOutcome();
@@ -578,7 +591,7 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
       try {
         returnedHash = await provider.request({
           method: "eth_sendTransaction",
-          params: [{ from: issuer, to: factory, data, value: "0x0" }],
+          params: [{ from: owner, to: factory, data, value: "0x0" }],
         });
       } catch (error) {
         if (isExplicitUserRejection(error)) return rejectedOutcome();
@@ -627,7 +640,7 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
         terminal = unknownOutcome(transactionHash);
         return terminal;
       }
-      const candidate = await resolveMirrorCandidate(fetcher, wait, now, timers, hash, data, receiptAddress);
+      const candidate = await resolveMirrorCandidate(fetcher, wait, now, timers, hash, data, owner, receiptAddress);
       terminal = candidate === null ? unknownOutcome(transactionHash) : Object.freeze({ kind: "candidate", candidate });
       return terminal;
     } catch {
