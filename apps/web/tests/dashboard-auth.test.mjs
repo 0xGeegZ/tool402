@@ -50,11 +50,17 @@ function elements(node) {
   return [node, ...elements(node.props.children)];
 }
 
-async function signInHarness() {
+async function signInHarness({ deferVerification = false } = {}) {
   const slots = [];
   const routes = [];
   const fetches = [];
   const messages = [];
+  let connection = { generation: 0, status: "connected", account: address, chainId: 296, connector: { id: "metaMask" } };
+  let resolveVerification;
+  let markVerificationRequested;
+  const verificationRequest = new Promise((resolve) => {
+    markVerificationRequested = resolve;
+  });
   let cursor = 0;
   const { outputText } = typescript.transpileModule(await readFile(clientUrl, "utf8"), {
     fileName: fileURLToPath(clientUrl),
@@ -74,9 +80,16 @@ async function signInHarness() {
       return {
         ok: true,
         async json() {
-          return path === "/api/auth/metamask/challenge"
-            ? { message: "Tool402 sign-in", expiresAt: "2026-09-13T12:05:00.000Z", challenge: "challenge" }
-            : { outcome: "authenticated" };
+          if (path === "/api/auth/metamask/challenge") {
+            return { message: "Tool402 sign-in", expiresAt: "2026-09-13T12:05:00.000Z", challenge: "challenge" };
+          }
+          if (deferVerification) {
+            markVerificationRequested();
+            return new Promise((resolve) => {
+              resolveVerification = () => resolve({ outcome: "authenticated" });
+            });
+          }
+          return { outcome: "authenticated" };
         },
       };
     },
@@ -104,7 +117,7 @@ async function signInHarness() {
         "../demo/demo-tour-navigation": { dashboardTourHref: () => "/dashboard?tour=1&demoStep=identity" },
         "../wallet/use-tool402-wallet": { useTool402Wallet: () => ({
           resolved: true,
-          connection: { status: "connected", account: address, chainId: 296, connector: { id: "metaMask" } },
+          connection,
         }) },
       };
       assert.ok(Object.hasOwn(imports, specifier), `unexpected sign-in import: ${specifier}`);
@@ -115,6 +128,19 @@ async function signInHarness() {
     fetches,
     messages,
     routes,
+    setConnection(next) {
+      connection = next;
+    },
+    refreshConnection() {
+      cursor = 0;
+      module.exports.MetaMaskDashboardSignIn({ tour: "1", demoStep: "identity" });
+    },
+    async waitForVerification() {
+      await verificationRequest;
+    },
+    resolveVerification() {
+      resolveVerification();
+    },
     signIn() {
       cursor = 0;
       const tree = module.exports.MetaMaskDashboardSignIn({ tour: "1", demoStep: "identity" });
@@ -530,6 +556,19 @@ clientTest("refreshes the root server navigation after a successful dashboard si
     ["replace", "/dashboard?tour=1&demoStep=identity"],
     ["refresh"],
   ]);
+});
+
+clientTest("does not navigate after the wallet changes during verification", async () => {
+  const harness = await signInHarness({ deferVerification: true });
+
+  const operation = harness.signIn();
+  await harness.waitForVerification();
+  harness.setConnection({ generation: 1, status: "connected", account: address, chainId: 296, connector: { id: "metaMask" } });
+  harness.refreshConnection();
+  harness.resolveVerification();
+  await operation;
+
+  assert.deepEqual(harness.routes, []);
 });
 
 signInTest("redirects valid sessions and otherwise renders the public sign-in boundary", async () => {

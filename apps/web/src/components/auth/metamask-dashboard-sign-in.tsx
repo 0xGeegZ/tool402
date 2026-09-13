@@ -118,6 +118,9 @@ function MetaMaskSignInButton({
         signature,
         challenge: challenge.challenge,
       });
+      if (!isCurrentConnection(readCurrentConnection(), connection)) {
+        throw new Error("wallet session changed");
+      }
       if (!isAuthenticated(verification)) {
         throw new Error("verification rejected");
       }
