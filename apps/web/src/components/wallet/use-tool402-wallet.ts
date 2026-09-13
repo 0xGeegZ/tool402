@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ProviderNotFoundError,
   useConnect,
   useConnection,
   useConnectors,
@@ -19,6 +20,7 @@ interface WalletStateInput {
   readonly chainId: number | undefined;
   readonly connector: { readonly id: string } | undefined;
   readonly hasMetaMaskConnector: boolean;
+  readonly providerUnavailable: boolean;
   readonly connectError?: unknown;
   readonly switchError?: unknown;
 }
@@ -36,14 +38,14 @@ export function deriveTool402WalletState(input: WalletStateInput): Tool402Wallet
   if (input.status === "reconnecting") {
     return { kind: "resolving" };
   }
+  if (!input.hasMetaMaskConnector || input.providerUnavailable) {
+    return { kind: "no_provider" };
+  }
   if (input.connectError !== undefined && input.connectError !== null) {
     return { kind: "request_failed", operation: "connect" };
   }
   if (input.switchError !== undefined && input.switchError !== null) {
     return { kind: "request_failed", operation: "switch" };
-  }
-  if (!input.hasMetaMaskConnector) {
-    return { kind: "no_provider" };
   }
   if (input.status === "connecting") {
     return { kind: "connecting" };
@@ -70,6 +72,7 @@ export function useTool402Wallet() {
     chainId: connection.chainId,
     connector: connection.connector,
     hasMetaMaskConnector: metaMask !== undefined,
+    providerUnavailable: connectError instanceof ProviderNotFoundError,
     connectError,
     switchError,
   });

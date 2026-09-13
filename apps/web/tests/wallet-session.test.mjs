@@ -427,7 +427,7 @@ implementedTest("renders the compact header control from the Wagmi-derived walle
   assert.doesNotMatch(source, /wallet-session|wallet-state|metamask-provider/u);
   assert.doesNotMatch(source, /\buseState\b|\buseRef\b|\buseEffect\b/u, "the island holds no local session state");
   assert.doesNotMatch(source, /discoverMetaMaskProvider|connectWallet|readCurrentSession|recheckAfterSwitch/u);
-  assert.doesNotMatch(source, /Disconnect/u, "the header renders no disconnect control");
+  assert.match(source, /aria-label=["']Disconnect MetaMask["']/u);
   assert.doesNotMatch(source, /<h2\b/u);
 
   const expectations = [

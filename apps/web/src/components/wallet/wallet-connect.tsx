@@ -33,12 +33,12 @@ function shortenAddress(address: string): string {
 }
 
 export function WalletIsland() {
-  const { state, connect, switchToHedera } = useTool402Wallet();
+  const { state, connect, disconnect, switchToHedera } = useTool402Wallet();
 
   return (
     <div data-slot="wallet-island" className="flex items-center gap-2">
       {state.kind === "disconnected" ? (
-        <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap" onClick={() => connect()}>
+        <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap" onClick={() => void connect()}>
           <Image src="/brand/metamask-fox.svg" alt="" aria-hidden="true" width={18} height={18} />
           Connect MetaMask
         </Button>
@@ -64,11 +64,16 @@ export function WalletIsland() {
         </Button>
       ) : null}
       {state.kind === "connected" ? (
-        <Link href="/dashboard" prefetch={false} aria-label="Open dashboard" className="touch-target rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
-          <Badge variant="secondary" title={state.address}>
-            {shortenAddress(state.address)}
-          </Badge>
-        </Link>
+        <>
+          <Link href="/dashboard" prefetch={false} aria-label="Open dashboard" className="touch-target rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            <Badge variant="secondary" title={state.address}>
+              {shortenAddress(state.address)}
+            </Badge>
+          </Link>
+          <Button variant="outline" size="sm" aria-label="Disconnect MetaMask" onClick={() => void disconnect()}>
+            Disconnect
+          </Button>
+        </>
       ) : null}
       <p aria-live="polite" className="sr-only">
         {describe(state)}
