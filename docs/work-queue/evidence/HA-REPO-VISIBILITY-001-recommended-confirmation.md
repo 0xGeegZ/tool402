@@ -38,6 +38,12 @@ Pattern: `PRIVATE KEY`, AWS access-key-id form, Stripe live/test secret-key
 form, GitHub personal-token form, Slack token form, and JWT form, over all
 tracked paths except `package-lock.json`.
 
+Command:
+
+```
+git grep -nIE 'PRIVATE KEY|AKIA[0-9A-Z]{16}|sk_(live|test)_[0-9a-zA-Z]{24,}|gh[pousr]_[A-Za-z0-9]{36,}|xox[baprs]-[0-9A-Za-z-]+|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+' <commit> -- ':(exclude)package-lock.json'
+```
+
 **0 hits.** Nothing to dispose of.
 
 ### Scan 2 — assigned secret-style environment names
@@ -45,6 +51,12 @@ tracked paths except `package-lock.json`.
 Pattern: `SECRET`, `PRIVATE_KEY`, `SIGNING_KEY`, `MNEMONIC`, or `SEED_PHRASE`
 immediately followed by `=` and a non-placeholder, non-whitespace character,
 over all tracked paths.
+
+Command:
+
+```
+git grep -nIE '(SECRET|PRIVATE_KEY|SIGNING_KEY|MNEMONIC|SEED_PHRASE)=[^[:space:]]' <commit> -- ':(exclude)package-lock.json'
+```
 
 **0 hits.** Every occurrence of these names in tracked files is a name only:
 documentation, an example template with an empty or placeholder value, or
@@ -54,6 +66,12 @@ prose. No tracked file assigns a value to one.
 
 Pattern: a word-bounded 64-character lowercase hex run, over all tracked paths
 except `package-lock.json` and lock files.
+
+Command:
+
+```
+git grep -nIE '\b[0-9a-f]{64}\b' <commit> -- ':(exclude)package-lock.json' ':(exclude)*.lock'
+```
 
 **3 hits**, all in backend test fixtures:
 
@@ -73,9 +91,10 @@ Two limits of this scan that a human confirming "no key material" needs:
 - The expected disposition this packet was drafted against — zero-valued
   `configId` literals and the secp256k1 curve order in
   `apps/web/src/lib/wallet/tool402-command.ts` — is **not** what the scan
-  returned. That file does contain a curve-order constant at
-  `apps/web/src/lib/wallet/tool402-command.ts:86`, but the scan's word-bounded
-  form does not match it. The expectation was confirmed against the repository
+  returned. That file does declare a curve-order constant at
+  `apps/web/src/lib/wallet/tool402-command.ts:86`, with the literal itself on
+  the next line, `:87`, but the scan's word-bounded form does not match it.
+  The expectation was confirmed against the repository
   rather than copied, and the actual result above is what is recorded.
 - The word-bounded form also does not reach `0x`-prefixed literals, because
   `0x` leaves no word boundary before the hex run. Re-derived without that
@@ -88,6 +107,12 @@ Two limits of this scan that a human confirming "no key material" needs:
 ### Scan 4 — seed phrase and mnemonic wording
 
 Pattern: `seed phrase` or `mnemonic`, case-insensitive, over all tracked paths.
+
+Command:
+
+```
+git grep -nIiE 'seed phrase|mnemonic' <commit>
+```
 
 **2 hits**, both in human-action evidence documents:
 

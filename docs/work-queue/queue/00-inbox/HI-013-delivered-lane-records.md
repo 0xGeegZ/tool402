@@ -10,8 +10,11 @@ and a half left before the submission deadline. This card supplies
 ready-to-paste decision rows, ownership paragraphs, ledger rows, card moves,
 and one recommended ruling for each open lane question so the root's
 integration is transcription and review rather than re-derivation. It
-authorizes no wallet, SDK, provider, transaction, deployment, or live action
-and changes no card's scope.
+authorizes no wallet, SDK, provider, transaction, deployment, or live action.
+The one exception is ruling 6 and the matching S39 ownership paragraph below,
+which extend S39's reservation to the module-scope `chipClass` helper and the
+five presentation imports it implies, beyond the four blocks the UI-S39
+manifest names as amendable; every other card's scope is unchanged.
 
 ## State
 
@@ -27,9 +30,9 @@ and changes no card's scope.
 ## Observation
 
 - Three delegated lanes are delivered, pushed, and open for the root as input
-  only. S38-T010 is pull request #105 on `work/s38` at head `1b33b4e6`;
+  only. S38-T010 is pull request #105 on `work/s38` at head `f5c07de6`;
   S39-T010 is pull request #103 on `work/s39` at head `d355a8bb`; S47-T010 is
-  pull request #114 on `work/world-human-check` at head `08a3e120`. Each pull
+  pull request #114 on `work/world-human-check` at head `b365f282`. Each pull
   request body states that the root integrates it and that it must not be
   merged by hand.
 - S47-T010's card and specification exist only on `work/world-human-check`,
@@ -107,7 +110,7 @@ step 3 and before its step 4; it remains the root's call.
 Each ruling is one recommendation with its basis. They are recommendations
 only; the root records the ruling it makes.
 
-**S38-T010, pull request #105, `work/s38`, head `1b33b4e6`.**
+**S38-T010, pull request #105, `work/s38`, head `f5c07de6`.**
 
 1. The RiskScan href written as the JSX expression `href={"/explore/riskscan/back"}` rather than a quoted
    attribute, against the href pin in `apps/web/tests/riskscan-detail.test.mjs`:
@@ -128,11 +131,17 @@ only; the root records the ruling it makes.
 
 3. The second `WalletIsland` mount inside the Funding section while S26-T010
    is active and `apps/web/src/app/layout.tsx` already mounts one on every
-   route: **accept with a named follow-up** that gives the deduplication to the
-   header-island owner rather than to S39. Basis: the second island is
-   unreachable on the shipping route today because `back/page.tsx` passes
-   `projection={null}`, and suppressing the header island would require S39 to
-   reserve `layout.tsx`, which widens the card.
+   route: **needs re-ruling, not accepted here**. The route is reachable, not
+   unreachable: `back/page.tsx` renders `<BackingFlow projection={projection}
+   />` from a loaded `loadRiskScanBackingProjection`, and `projection={null}`
+   appears only in the `Suspense` fallback while the projection loads. So in
+   the loaded state the second `WalletIsland` sits alongside the shell header's
+   island on every visit to the route, not only transiently. This card
+   withdraws the "accept with a named follow-up owned by the header-island
+   owner" recommendation and leaves the root to weigh accept-with-follow-up
+   against requiring S39 to suppress or dedupe the second island itself before
+   the previous recommendation's alternative (reserving `layout.tsx`, which
+   widens the card) can be ruled out.
 4. The relaxed back-page link scan in `apps/web/tests/backing-route.test.mjs`,
    where a blanket no-link assertion became exactly one `<Link`, exactly one
    `href=`, and that href pinned to `/explore/riskscan` with its label:
@@ -157,7 +166,7 @@ only; the root records the ruling it makes.
    wallet control the slice mounts replaces the sentence and the focused test
    now pins its absence, so the record, not the source, is what is missing.
 
-**S47-T010, pull request #114, `work/world-human-check`, head `08a3e120`.**
+**S47-T010, pull request #114, `work/world-human-check`, head `b365f282`.**
 
 8. Ownership and integration reservations: **accept exactly the Owner
    paragraph of the card on that branch**, reproduced as the ownership
@@ -229,9 +238,14 @@ S47-T010 owns new `apps/web/src/lib/world/human-check.ts`, new
 `apps/web/src/components/dashboard/dashboard-identity.tsx`, new
 `apps/web/src/components/dashboard/world-human-check.tsx`, new
 `apps/web/tests/world-human-check.test.mjs`, new
-`docs/specs/s47-world-human-check.md`, and new
-`docs/submission/world-selfie-check-feedback.md`. Its root-only integration
-reservations are limited to mounting `<DashboardIdentity />` once in
+`docs/specs/s47-world-human-check.md`, new
+`docs/submission/world-selfie-check-feedback.md`, and new
+`docs/work-queue/queue/00-inbox/S47-T010-world-human-check.md`. Its pull
+request also amends the root-owned `docs/work-queue/TASK-CATALOG.md`, which
+this ownership paragraph does not reserve; the root records that catalog
+amendment on its own account rather than under an S47 reservation. Its
+root-only integration reservations are limited to mounting
+`<DashboardIdentity />` once in
 `apps/web/src/app/dashboard/page.tsx` between the page header and
 `<DashboardCampaign />`; adding only `@worldcoin/idkit` at one pinned version
 to `apps/web/package.json` and the root `package-lock.json`; the matching
@@ -291,11 +305,19 @@ Root to confirm, with what is missing named for each:
   inside the session provider at `apps/web/src/app/layout.tsx`, merged pull
   request #112 re-did the header control and amended `layout.tsx`,
   `wallet-connect.tsx`, and the wallet-session contracts, merged pull request
-  #113 carries the dashboard surface the connected-badge navigation points at,
-  and the `backing-flow.tsx` island mount was transferred to M56-T010 by the
-  scoped ownership transfer recorded at the top of
-  `docs/work-queue/FILE-OWNERSHIP.md`. Nothing declared remains for S26 to
-  implement. Provenance matters for the reading, though:
+  #113 carries the dashboard surface the connected-badge navigation points at.
+  The scoped ownership transfer recorded at the top of
+  `docs/work-queue/FILE-OWNERSHIP.md` transfers only `BackingForm`'s
+  `useWalletSession`/`connectedWalletSession` composition and the
+  `section[aria-labelledby="backing-status"]` composition, and expressly bars
+  M56 from adding `WalletIsland`; on `main`, `backing-flow.tsx` has
+  `useWalletSession` at line 55 and no `WalletIsland`. S26's own card
+  (`docs/work-queue/queue/20-active/S26-T010-header-wallet-session.md`) makes
+  the `backing-flow.tsx` island mount conditional on S18-T010 acceptance, and
+  S18-T010 is `60-done`; that mount currently exists only in unmerged pull
+  request #103 (S39-T010). So S26's declared backing-flow island mount is
+  unimplemented on `main` and untransferred, not delivered elsewhere.
+  Provenance matters for the reading, though:
   `wallet-session.tsx` was created by `3c90da74`, "feat(web): share one
   MetaMask session from the shell header", which is S26's own lane merged
   under `S26_ROOT_INTEGRATION_ACTIVATION`, and pull request #112 amended that
@@ -307,9 +329,13 @@ Root to confirm, with what is missing named for each:
   the alternative; that choice is the root's, and this card recommends the
   acceptance path because the delivery is S26's own.
 
-- **M51-T010.** Newest record is `D-M51-010-003`, RED accepted and GREEN
-  authorized for its six declared Backend/Web paths. Missing: an independent
-  GREEN review and an integration or acceptance record at a named head.
+- **M51-T010.** Newest record is `D-M51-010-006`, PUBLIC ADAPTER RED ACCEPTED
+  AND GREEN AUTHORIZED, which authorizes only
+  `packages/backend/convex/command_dispatch.ts` and its exact test for a
+  minimal closed parser extension. Missing: the GREEN review for that scoped
+  adapter change, plus the earlier `D-M51-010-003` through `D-M51-010-005`
+  Backend/Web paths' own GREEN reviews, and an integration or acceptance
+  record at a named head.
 - **M53-T010.** Newest record is
   `M53_STAGE_B_FACTORY_RECEIPT_LOG_SELECTION_ACTIVATION`, which activates only
   the bridge/test pair for the minimal decoder correction. Missing: a GREEN
@@ -325,9 +351,16 @@ Root to confirm, with what is missing named for each:
 - **M56-T010.** Newest record is
   `M56_RISKSCAN_BACKING_DEMO_MVP_RED_ACCEPTANCE` at `27b0d762`, which permits
   minimal GREEN only. Merged pull request #107 carries the GREEN. Missing: the
-  GREEN review and integration record, and the activation of the conditional
-  M56-S26 ownership transfer, which by its own text takes effect only when the
-  rebased M56 integration commits M56's card, specification, and catalog row.
+  GREEN review and integration record. The M56-S26 ownership transfer's own
+  condition — that canonical `main` carry M56's card, specification, and
+  catalog row — is already satisfied at `ce080a16`: M56's card and
+  specification are tracked at
+  `docs/work-queue/queue/20-active/M56-T010-riskscan-backing-demo-mvp.md` and
+  `docs/specs/m56-riskscan-backing-demo-mvp.md`, and its catalog row was
+  committed by merged pull request #107. The root should record the transfer
+  as already in effect rather than pending activation; `FILE-OWNERSHIP.md`
+  still carries the conditional wording and needs the root to update it to
+  say so.
 - **S40-T010.** Newest record is `S40_ACTIVE_ACCOUNT_BINDING_REFINEMENT`, a
   directed repair inside the existing synchronizer, test, and authenticated
   navigation mount; merged pull request #110 carries that binding work.
