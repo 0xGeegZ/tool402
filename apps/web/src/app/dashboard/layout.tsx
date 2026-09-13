@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 
+import { DashboardSessionSync } from "../../components/auth/dashboard-session-sync";
 import { readDashboardSession, readDashboardSessionCookieName } from "../../lib/dashboard-auth/dashboard-auth.ts";
 
 async function DashboardGate({
@@ -18,7 +19,12 @@ async function DashboardGate({
     redirect("/sign-in");
   }
 
-  return children;
+  return (
+    <>
+      <DashboardSessionSync address={session.address} />
+      {children}
+    </>
+  );
 }
 
 export default function DashboardLayout({

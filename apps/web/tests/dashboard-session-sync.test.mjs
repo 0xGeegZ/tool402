@@ -15,18 +15,25 @@ const navigationUrl = new URL(
   "../src/components/auth/dashboard-navigation.tsx",
   import.meta.url,
 );
+const dashboardLayoutUrl = new URL(
+  "../src/app/dashboard/layout.tsx",
+  import.meta.url,
+);
 const implementedTest = existsSync(fileURLToPath(sourceUrl)) ? test : test.skip;
 
-test("mounts the dashboard session synchronizer only from the authenticated navigation boundary", async () => {
+test("mounts the dashboard session synchronizer from the server-validated dashboard layout", async () => {
   assert.equal(
     existsSync(fileURLToPath(sourceUrl)),
     true,
     `missing S40 sign-out synchronizer: ${fileURLToPath(sourceUrl)}`,
   );
-  const navigation = await readFile(navigationUrl, "utf8");
-  assert.match(navigation, /import\s*\{\s*DashboardSessionSync\s*\}\s*from\s*["'][^"']*dashboard-session-sync["']/u);
-  assert.equal((navigation.match(/<DashboardSessionSync\s+address=\{session\.address\}\s*\/>/gu) ?? []).length, 1);
-  assert.match(navigation, /session\s*===\s*null\s*\?\s*null\s*:\s*<DashboardSessionSync\s+address=\{session\.address\}\s*\/>/u);
+  const [layout, navigation] = await Promise.all([
+    readFile(dashboardLayoutUrl, "utf8"),
+    readFile(navigationUrl, "utf8"),
+  ]);
+  assert.match(layout, /import\s*\{\s*DashboardSessionSync\s*\}\s*from\s*["'][^"']*dashboard-session-sync["']/u);
+  assert.equal((layout.match(/<DashboardSessionSync\s+address=\{session\.address\}\s*\/>/gu) ?? []).length, 1);
+  assert.doesNotMatch(navigation, /\bDashboardSessionSync\b/u);
 });
 
 async function loadSynchronizer({

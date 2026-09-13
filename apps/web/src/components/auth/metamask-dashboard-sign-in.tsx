@@ -94,6 +94,7 @@ function MetaMaskSignInButton({ session, tour, demoStep }: { session: WalletSess
       }
 
       router.replace(dashboardTourHref(tour, demoStep));
+      router.refresh();
     } catch {
       setFailure(failureMessage);
     } finally {

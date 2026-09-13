@@ -2,7 +2,6 @@ import { cookies } from "next/headers";
 
 import { LocalNavigation } from "../discovery/local-navigation";
 import { readDashboardSession, readDashboardSessionCookieName } from "../../lib/dashboard-auth/dashboard-auth";
-import { DashboardSessionSync } from "./dashboard-session-sync";
 
 export async function DashboardNavigation() {
   const sessionCookieName = readDashboardSessionCookieName(process.env);
@@ -13,10 +12,5 @@ export async function DashboardNavigation() {
     Date.now(),
   );
 
-  return (
-    <>
-      <LocalNavigation showDashboard={session !== null} />
-      {session === null ? null : <DashboardSessionSync address={session.address} />}
-    </>
-  );
+  return <LocalNavigation showDashboard={session !== null} />;
 }

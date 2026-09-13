@@ -3,6 +3,9 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { runInNewContext } from "node:vm";
+import * as jsxRuntime from "react/jsx-runtime";
+import typescript from "typescript";
 
 const coreUrl = new URL("../src/lib/dashboard-auth/dashboard-auth.ts", import.meta.url);
 const clientUrl = new URL("../src/components/auth/metamask-dashboard-sign-in.tsx", import.meta.url);
@@ -39,6 +42,94 @@ allS38AbsentTest("reports every declared S38 source path that remains absent", (
 
 async function loadApi() {
   return import(coreUrl.href);
+}
+
+function elements(node) {
+  if (Array.isArray(node)) return node.flatMap(elements);
+  if (node === null || typeof node !== "object" || !("props" in node)) return [];
+  return [node, ...elements(node.props.children)];
+}
+
+async function signInHarness() {
+  const slots = [];
+  const routes = [];
+  const fetches = [];
+  let cursor = 0;
+  const provider = {
+    async request({ method }) {
+      switch (method) {
+        case "eth_chainId": return "0x128";
+        case "eth_accounts": return [address];
+        case "personal_sign": return `0x${"11".repeat(65)}`;
+        default: assert.fail(`unexpected provider request: ${method}`);
+      }
+    },
+  };
+  const { outputText } = typescript.transpileModule(await readFile(clientUrl, "utf8"), {
+    fileName: fileURLToPath(clientUrl),
+    compilerOptions: {
+      target: typescript.ScriptTarget.ES2022,
+      module: typescript.ModuleKind.CommonJS,
+      jsx: typescript.JsxEmit.ReactJSX,
+    },
+  });
+  const module = { exports: {} };
+  runInNewContext(outputText, {
+    exports: module.exports,
+    module,
+    Object,
+    fetch: async (path, init) => {
+      fetches.push([path, init]);
+      return {
+        ok: true,
+        async json() {
+          return path === "/api/auth/metamask/challenge"
+            ? { message: "Tool402 sign-in", expiresAt: "2026-09-13T12:05:00.000Z", challenge: "challenge" }
+            : { outcome: "authenticated" };
+        },
+      };
+    },
+    require(specifier) {
+      const imports = {
+        react: {
+          useRef(initial) {
+            const index = cursor++;
+            if (!(index in slots)) slots[index] = { current: initial };
+            return slots[index];
+          },
+          useState(initial) {
+            const index = cursor++;
+            if (!(index in slots)) slots[index] = typeof initial === "function" ? initial() : initial;
+            return [slots[index], (value) => { slots[index] = typeof value === "function" ? value(slots[index]) : value; }];
+          },
+        },
+        "react/jsx-runtime": jsxRuntime,
+        "next/navigation": { useRouter: () => ({ replace: (href) => routes.push(["replace", href]), refresh: () => routes.push(["refresh"]) }) },
+        "../../lib/wallet/wallet-state.ts": { readCurrentSession: async () => ({ state: { kind: "connected", address } }) },
+        "../ui/button": { Button: "Button" },
+        "../demo/demo-tour-navigation": { dashboardTourHref: () => "/dashboard?tour=1&demoStep=identity" },
+        "../wallet/wallet-session": {
+          useWalletSession: () => ({ state: { kind: "connected", address }, provider }),
+          connectedWalletSession: (wallet) => ({ address: wallet.state.address, provider: wallet.provider }),
+        },
+      };
+      assert.ok(Object.hasOwn(imports, specifier), `unexpected sign-in import: ${specifier}`);
+      return imports[specifier];
+    },
+  }, { filename: fileURLToPath(clientUrl) });
+  return {
+    fetches,
+    routes,
+    signIn() {
+      cursor = 0;
+      const tree = module.exports.MetaMaskDashboardSignIn({ tour: "1", demoStep: "identity" });
+      const signer = elements(tree).find((element) => element.type.name === "MetaMaskSignInButton");
+      assert.ok(signer, "the connected wallet renders the signing control");
+      const button = elements(signer.type(signer.props)).find((element) => element.type === "Button");
+      assert.ok(button, "the signing control renders its explicit action");
+      return button.props.onClick();
+    },
+  };
 }
 
 function fixedDependencies(overrides = {}) {
@@ -376,18 +467,18 @@ test("declares the owner-authorized server dashboard-navigation boundary", () =>
 });
 
 dashboardNavigationTest("shows Dashboard only after server-side session validation and keeps the root fallback public", async () => {
-  const [dashboardNavigation, rootLayout, localNavigation] = await Promise.all([
+  const [dashboardNavigation, rootLayout, localNavigation, dashboardLayout] = await Promise.all([
     readFile(dashboardNavigationUrl, "utf8"),
     readFile(rootLayoutUrl, "utf8"),
     readFile(localNavigationUrl, "utf8"),
+    readFile(dashboardLayoutUrl, "utf8"),
   ]);
 
   assert.match(dashboardNavigation, /\bcookies\(\)/u);
   assert.match(dashboardNavigation, /\breadDashboardSession\b/u);
   assert.match(dashboardNavigation, /\bLocalNavigation\b/u);
   assert.match(dashboardNavigation, /showDashboard\s*=\s*\{\s*session\s*!==\s*null\s*\}/u);
-  assert.match(dashboardNavigation, /import\s*\{\s*DashboardSessionSync\s*\}\s*from\s*["'][^"']*dashboard-session-sync["']/u);
-  assert.match(dashboardNavigation, /session\s*===\s*null\s*\?\s*null\s*:\s*<DashboardSessionSync\s+address=\{session\.address\}\s*\/>/u);
+  assert.doesNotMatch(dashboardNavigation, /\bDashboardSessionSync\b/u);
   assert.doesNotMatch(dashboardNavigation, /\b(?:WalletIsland|useWalletSession|wallet-connect|wallet-session|discoverMetaMaskProvider|readCurrentSession|watchWalletSessionChanges|eth_requestAccounts|eth_sendTransaction|personal_sign|eth_signTypedData_v4|window\.ethereum)\b/u);
   assert.doesNotMatch(dashboardNavigation, /\b(?:provider|ethereum)\s*\.\s*request\s*\(/u);
   assert.doesNotMatch(dashboardNavigation, /from\s*["'][^"']*\/wallet\//u);
@@ -395,6 +486,9 @@ dashboardNavigationTest("shows Dashboard only after server-side session validati
   assert.match(rootLayout, /\bDashboardNavigation\b/u);
   assert.match(rootLayout, /<Suspense\s+fallback=\{\s*<LocalNavigation\s*\/>\s*\}>\s*<DashboardNavigation\s*\/>\s*<\/Suspense>/u);
   assert.doesNotMatch(rootLayout, /\bcookies\(\)/u);
+
+  assert.match(dashboardLayout, /import\s*\{\s*DashboardSessionSync\s*\}\s*from\s*["'][^"']*dashboard-session-sync["']/u);
+  assert.equal((dashboardLayout.match(/<DashboardSessionSync\s+address=\{session\.address\}\s*\/>/gu) ?? []).length, 1);
 
   assert.match(localNavigation, /showDashboard\s*=\s*false/u);
   assert.match(localNavigation, /showDashboard\s*\?/u);
@@ -427,6 +521,21 @@ clientTest("keeps sign-in limited to the accepted local authentication boundary"
   assert.doesNotMatch(client, /\b(?:eth_send(?:Raw)?Transaction|send(?:Raw)?Transaction|transaction|relay|localStorage|sessionStorage|indexedDB|setTimeout|setInterval|discover(?:y)?|requestProvider)\b/u);
 });
 
+clientTest("refreshes the root server navigation after a successful dashboard sign-in", async () => {
+  const harness = await signInHarness();
+
+  await harness.signIn();
+
+  assert.deepEqual(harness.fetches.map(([path]) => path), [
+    "/api/auth/metamask/challenge",
+    "/api/auth/metamask/verify",
+  ]);
+  assert.deepEqual(harness.routes, [
+    ["replace", "/dashboard?tour=1&demoStep=identity"],
+    ["refresh"],
+  ]);
+});
+
 signInTest("redirects valid sessions and otherwise renders the public sign-in boundary", async () => {
   const signIn = await readFile(signInUrl, "utf8");
   assert.match(signIn, /\breadDashboardSession\b/u);
@@ -448,6 +557,7 @@ dashboardLayoutTest("guards dashboard descendants on the server before rendering
   assert.match(layout, /\bSuspense\b/u);
   assert.match(layout, /\breadDashboardSessionCookieName\b/u);
   assert.match(layout, /redirect\(\s*["']\/sign-in["']\s*\)/u);
-  assert.match(layout, /return\s+children/u);
+  assert.match(layout, /<DashboardSessionSync\s+address=\{session\.address\}\s*\/>/u);
+  assert.match(layout, /\{children\}/u);
   assert.doesNotMatch(layout, /["']use client["']/u);
 });
