@@ -238,8 +238,9 @@ new `dashboard-session-sync.tsx` client component, its focused
 server-authenticated navigation boundary.
 After the shared wallet state has exposed one settled identity, a later
 `disconnected` state may send exactly one same-origin `POST /api/auth/logout`;
-after a successful response it replaces the route with `/sign-in` and refreshes
-the App Router. Initial disconnected, rejected-connect, connecting, and
+after a successful response it replaces the history entry with a document
+navigation to `/sign-in`, so stale App Router content cannot remain visible.
+Initial disconnected, rejected-connect, connecting, and
 wrong-chain states do nothing. The amendment adds no provider discovery,
 account request, event-payload trust, signature, storage, retry, transaction,
 relay, deployment, or external request, and it does not amend S26 or M50 source.

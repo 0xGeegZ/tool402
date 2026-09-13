@@ -162,8 +162,8 @@ registers the accepted account/chain change watcher. The synchronizer keeps the
 dashboard only when the settled Hedera Testnet
 address exactly equals the sealed session address; absent provider/account,
 wrong chain, or a different account logs out once. On success it replaces the
-current route with `/sign-in` and refreshes the App Router so the server
-session and authenticated navigation disappear together. The synchronizer
+current history entry with a document navigation to `/sign-in` so a stale App
+Router payload cannot continue to display protected dashboard content. The synchronizer
 neither reads the `HttpOnly` cookie nor trusts an event payload, requests an
 account, or asks for a signature; it reuses M50's passive provider helpers
 without changing M50 source.
@@ -181,8 +181,8 @@ without inventing account-specific data or a claim of account authority.
 | declined/invalid `personal_sign`, challenge failure, invalid cookie, expired value, wrong origin, or invalid session | generic `rejected` outcome or `/sign-in` redirect; no internal detail |
 | one successful signature | exactly one signed eight-hour session cookie and one navigation to `/dashboard` |
 | session expiration or signature tampering | redirect before dashboard content, clear invalid cookies only through logout or next successful verification |
-| MetaMask removes the selected account after a settled wallet identity | one same-origin logout request, then replace with `/sign-in` and refresh after success |
-| restored dashboard session has no selected MetaMask account, a wrong chain, or a different selected account | one same-origin logout request, then replace with `/sign-in` and refresh after success |
+| MetaMask removes the selected account after a settled wallet identity | one same-origin logout request, then document-navigate to `/sign-in` after success |
+| restored dashboard session has no selected MetaMask account, a wrong chain, or a different selected account | one same-origin logout request, then document-navigate to `/sign-in` after success |
 
 No automatic retry, provider discovery outside the shared wallet-session
 provider, storage API, timer,

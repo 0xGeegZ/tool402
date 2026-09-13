@@ -72,7 +72,11 @@ async function loadSynchronizer({
   const module = { exports: {} };
   runInNewContext(outputText, {
     exports: module.exports,
-    window: {},
+    window: {
+      location: {
+        replace: (href) => navigations.push(["replace", href]),
+      },
+    },
     fetch: async (...arguments_) => {
       requests.push(arguments_);
       if (reject) throw new Error("network unavailable");
@@ -84,13 +88,6 @@ async function loadSynchronizer({
           return react;
         case "react/jsx-runtime":
           return jsxRuntime;
-        case "next/navigation":
-          return {
-            useRouter: () => ({
-              replace: (href) => navigations.push(["replace", href]),
-              refresh: () => navigations.push(["refresh"]),
-            }),
-          };
         case "../wallet/wallet-session":
           return { useWalletSession: () => walletSession };
         default:
@@ -127,7 +124,7 @@ function assertLogout(harness) {
     method: "POST",
     credentials: "same-origin",
   }]]);
-  assert.deepEqual(harness.navigations, [["replace", "/sign-in"], ["refresh"]]);
+  assert.deepEqual(harness.navigations, [["replace", "/sign-in"]]);
 }
 
 implementedTest("waits for passive wallet restoration before comparing the dashboard session", async () => {
@@ -213,7 +210,6 @@ implementedTest("keeps sign-out synchronization inside the accepted local bounda
   assert.match(source, /fetch\(["']\/api\/auth\/logout["']/u);
   assert.match(source, /method:\s*["']POST["']/u);
   assert.match(source, /credentials:\s*["']same-origin["']/u);
-  assert.match(source, /router\.replace\(["']\/sign-in["']\)/u);
-  assert.match(source, /router\.refresh\(\)/u);
-  assert.doesNotMatch(source, /document\.cookie|localStorage|sessionStorage|indexedDB|provider\.request|personal_sign|eth_requestAccounts|eth_sendTransaction|setTimeout|setInterval|console|discoverMetaMaskProvider|readCurrentSession|watchWalletSessionChanges/u);
+  assert.match(source, /window\.location\.replace\(["']\/sign-in["']\)/u);
+  assert.doesNotMatch(source, /useRouter|router\.|document\.cookie|localStorage|sessionStorage|indexedDB|provider\.request|personal_sign|eth_requestAccounts|eth_sendTransaction|setTimeout|setInterval|console|discoverMetaMaskProvider|readCurrentSession|watchWalletSessionChanges/u);
 });
