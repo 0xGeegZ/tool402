@@ -136,10 +136,8 @@ the dashboard landing and every existing nested RiskScan dashboard route share
 the guard. Calling `cookies()` makes the layout dynamic, so no dashboard view
 is cached as public content.
 
-`/sign-in` waits for the actual request before it reads the session, rather
-than streaming an empty route shell. It redirects a valid session to
-`/dashboard`; otherwise it renders the MetaMask island and the sign-in
-control. On successful verification, the
+`/sign-in` redirects a valid session to `/dashboard`; otherwise it renders the
+MetaMask island and the sign-in control. On successful verification, the
 client uses the fixed internal App Router `replace("/dashboard")` transition,
 then refreshes the App Router so the root server navigation observes the new
 sealed session. The mounted root wallet-session provider is preserved for that

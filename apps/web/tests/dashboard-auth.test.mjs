@@ -540,9 +540,7 @@ signInTest("redirects valid sessions and otherwise renders the public sign-in bo
   const signIn = await readFile(signInUrl, "utf8");
   assert.match(signIn, /\breadDashboardSession\b/u);
   assert.match(signIn, /\bcookies\(\)/u);
-  assert.match(signIn, /import\s*\{\s*connection\s*\}\s*from\s*["']next\/server["']/u);
-  assert.match(signIn, /await\s+connection\(\)/u);
-  assert.doesNotMatch(signIn, /\bSuspense\b/u);
+  assert.match(signIn, /\bSuspense\b/u);
   assert.match(signIn, /\breadDashboardSessionCookieName\b/u);
   assert.match(signIn, /redirect\(dashboardTourHref\(tour, demoStep\)\)/u);
   assert.match(signIn, /requestedTour === "1"/u);

@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { connection } from "next/server";
+import { Suspense } from "react";
 
 import { MetaMaskDashboardSignIn } from "../../components/auth/metamask-dashboard-sign-in";
 import { dashboardTourHref } from "../../components/demo/demo-tour-navigation";
@@ -36,7 +36,10 @@ async function SignInBoundary({ searchParams }: SignInPageProps) {
   );
 }
 
-export default async function SignInPage({ searchParams }: SignInPageProps) {
-  await connection();
-  return <SignInBoundary searchParams={searchParams} />;
+export default function SignInPage({ searchParams }: SignInPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <SignInBoundary searchParams={searchParams} />
+    </Suspense>
+  );
 }
