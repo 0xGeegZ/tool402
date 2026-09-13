@@ -104,6 +104,15 @@
   shared header, authority, wallet, relay, transaction, or deployment behavior
   changes.
 
+- M58_VERIFIED_BACKING_RECORD_ACTIVATION: The owner authorizes an exact
+  successor to M56's submitted-only display: a same-signer dashboard-session
+  ingress may bind an already returned canonical transaction hash to its
+  already-admitted BACKER HEDERA_FUNDING attempt; a bounded server verifier may
+  persist only observed pending, confirmed, rejected, or unknown state. The
+  Back page and signed backer dashboard may read that durable projection after
+  reload. No wallet action, signing, retry, cancellation, authority/configuration
+  change, allocation, payout, deployment, or live test is authorized.
+
 - S43_FOOTER_POSITIONING_ACCEPTANCE: Source `f248368f` is accepted at 60-done.
   The mascot is grouped with the Tool402 logo in the first footer column;
   asset, decorative accessibility, breakpoint, links, copy and routes remain
