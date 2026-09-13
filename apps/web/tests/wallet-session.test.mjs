@@ -82,7 +82,8 @@ async function loadWagmiHook(hooks) {
 function wagmiHarness(options = {}) {
   const calls = { connection: 0, connectors: 0, connect: [], disconnect: [], switchChain: [] };
   const metaMask = { id: "metaMask", type: "injected" };
-  const connection = options.connection ?? {
+  const rabby = { id: "rabby", type: "injected" };
+  let connection = options.connection ?? {
     status: "disconnected",
     address: undefined,
     chainId: undefined,
@@ -99,7 +100,7 @@ function wagmiHarness(options = {}) {
       },
       useConnectors() {
         calls.connectors += 1;
-        return options.connectors ?? [metaMask];
+        return options.connectors ?? [rabby, metaMask];
       },
       useConnect() {
         return {
@@ -114,6 +115,12 @@ function wagmiHarness(options = {}) {
         return {
           mutateAsync: async (values) => {
             calls.disconnect.push(values);
+            connection = {
+              status: "disconnected",
+              address: undefined,
+              chainId: undefined,
+              connector: undefined,
+            };
           },
         };
       },
@@ -128,6 +135,7 @@ function wagmiHarness(options = {}) {
       },
     },
     currentConnector,
+    rabby,
   };
 }
 
@@ -202,6 +210,18 @@ test("derives connection display state solely from Wagmi values", async () => {
     }),
     { kind: "request_failed", operation: "connect" },
   );
+  assert.deepEqual(
+    deriveTool402WalletState({
+      status: "connected",
+      address: "0xC89F87052C3E080B4A9B021D4930055031EF378E",
+      chainId: 1,
+      connector: { id: "metaMask" },
+      hasMetaMaskConnector: true,
+      connectError: undefined,
+      switchError: new Error("switch rejected"),
+    }),
+    { kind: "request_failed", operation: "switch" },
+  );
 });
 
 test("uses direct Wagmi hooks and does nothing during a passive reconnect", async () => {
@@ -241,9 +261,17 @@ test("uses only explicit MetaMask connect, disconnect, and Hedera switch mutatio
 });
 
 test("keeps explicit disconnect across a passive remount and exposes connector failures", async () => {
-  const disconnected = wagmiHarness();
+  const disconnected = wagmiHarness({
+    connection: {
+      status: "connected",
+      address: "0xC89F87052C3E080B4A9B021D4930055031EF378E",
+      chainId: 296,
+      connector: { id: "metaMask" },
+    },
+  });
   const { useTool402Wallet } = await loadWagmiHook(disconnected.hooks);
   const wallet = useTool402Wallet();
+  assert.deepEqual(wallet.state, { kind: "connected", address });
   await wallet.disconnect();
   const remounted = useTool402Wallet();
   assert.deepEqual(remounted.state, { kind: "disconnected" });
@@ -257,6 +285,18 @@ test("keeps explicit disconnect across a passive remount and exposes connector f
   const rejected = wagmiHarness({ connectError: new Error("rejected") });
   const rejectedApi = await loadWagmiHook(rejected.hooks);
   assert.deepEqual(rejectedApi.useTool402Wallet().state, { kind: "request_failed", operation: "connect" });
+
+  const switchRejected = wagmiHarness({
+    connection: {
+      status: "connected",
+      address: "0xC89F87052C3E080B4A9B021D4930055031EF378E",
+      chainId: 1,
+      connector: { id: "metaMask" },
+    },
+    switchError: new Error("rejected"),
+  });
+  const switchRejectedApi = await loadWagmiHook(switchRejected.hooks);
+  assert.deepEqual(switchRejectedApi.useTool402Wallet().state, { kind: "request_failed", operation: "switch" });
 });
 
 test("owns no connection store or native provider listeners", async () => {
@@ -366,6 +406,7 @@ implementedTest("renders the compact header control from the Wagmi-derived walle
     [{ kind: "wrong_chain", chainId: 1 }, { label: "Switch to Hedera Testnet", variant: "outline", disabled: false }],
     [{ kind: "no_provider" }, { label: "Retry", variant: "outline", disabled: false }],
     [{ kind: "request_failed", operation: "connect" }, { label: "Retry", variant: "outline", disabled: false }],
+    [{ kind: "request_failed", operation: "switch" }, { label: "Retry", variant: "outline", disabled: false }],
     [{ kind: "connected", address }, { badge: true }],
   ];
 
