@@ -16,7 +16,7 @@ authorizes a new payment, ATS transaction, signing action, or backing transfer.
 | --- | --- | --- |
 | Public deployed build and discovery | ACTION REQUIRED | Confirm exact deployed SHA and public directory. |
 | Unsigned x402 boundary | ACTION REQUIRED | Show the real ToolLoop response. |
-| B03 Consumer Agent settlement | Not performed until local evidence is imported | Run preflight; after one authorized paid result, import its generated local packet and show `Settlement reported` / `Result received`, not blockchain verification. |
+| B03 Consumer Agent settlement | READY — one sanitized packet retained | Import the exact [B03 evidence packet](b03-payment-evidence.md) and show `Settlement reported` / `Result received`, not blockchain verification. |
 | ATS asset and lifecycle transfer | ACTION REQUIRED | Omit verified narration unless both receipts are independently accepted. |
 | Provider campaign/publication | ACTION REQUIRED | Use the current admitted Provider projection only. |
 | Backing | ACTION REQUIRED | Submitted means allocation pending. |
@@ -51,7 +51,8 @@ not repeated for a recording retake. Add `--evidence-output ./tool402-agent-evid
 to one authorized paid invocation. It writes a sanitized local packet only after
 the paid result has returned; if that write fails, retain the printed settlement
 reference and do not pay again. Use **Import Agent evidence** in `/demo` to load
-that one file. The page labels it as client-reported settlement/result evidence
+the exact artifact named in [the B03 evidence index](b03-payment-evidence.md).
+The page labels it as client-reported settlement/result evidence
 and renders a HashScan action as `Submitted — verification pending`.
 The copied preflight command derives `RISKSCAN_PAY_SOURCE_VERSION` with
 `git rev-parse --verify HEAD`; it identifies the local Agent checkout only.

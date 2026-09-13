@@ -10,8 +10,10 @@
   Proposed implementation paths are only
   `apps/agent/src/riskscan-tool-payment.ts`,
   `apps/agent/src/riskscan-pay-cli.ts`,
+  `apps/agent/src/riskscan-hedera-payer-key.ts`,
   `apps/agent/test/riskscan-tool-payment.test.mjs`,
   `apps/agent/test/riskscan-tool-payment-boundary.test.mjs`,
+  `apps/agent/test/riskscan-hedera-payer-key.test.mjs`,
   `apps/agent/package.json`, and the root `package-lock.json`.
 - Human actions: HA-X402-HEDERA-001 is accepted bounded evidence for one prior
   paid request and does not by itself authorize the live exercise. The live
@@ -123,8 +125,17 @@ now fail closed before any CLI output. The independent re-review is clear.
 No payment, signer, wallet, provider, account, transaction, deployment, or
 other external action occurred during this work.
 
+## Live exercise evidence
+
+HA-B03-AGENT-PAYMENT-001 was completed once under explicit Human Ops
+authorization. The secret-free execution facts and public-ledger corroboration
+are recorded in
+[the bounded execution record](../../evidence/HA-B03-AGENT-PAYMENT-001-execution-record.md).
+No repeat payment or retry is authorized.
+
 ## Blocker
 
-The card stays in 50-blocked until HA-B03-AGENT-PAYMENT-001 is explicitly
-authorized and supplies redacted testnet evidence for one real Agent payment
-exercise. Local GREEN does not substitute for that human-owned exercise.
+The live-evidence condition is satisfied. The card remains in `50-blocked`
+until the narrow ECDSA parser correction and its control update receive normal
+draft-PR review and merge; that review may accept the card only if the bounded
+record remains complete and secret-free.

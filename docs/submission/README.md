@@ -111,8 +111,8 @@ replace a missing payment or ATS transaction with a mocked success state.
   that commit, with any unrelated baseline failure explicitly classified.
 - [ ] Public HTTPS route from the centralized table, including a clean `GET
   /api/tools` and an unpaid `POST /api/riskscan` that returns `402`.
-- [ ] One Consumer Agent run with an approved bounded policy and the
-  centralized Hedera-testnet settlement reference.
+- [x] One Consumer Agent run with an approved bounded policy and the
+  [centralized Hedera-testnet settlement reference](b03-payment-evidence.md).
 - [ ] If Stage B is used in the demo: its human authorization, stop-condition
   record, transaction, Mirror Node/finality evidence, candidate address, and
   verified receipt outcome recorded in the centralized ATS reference.
