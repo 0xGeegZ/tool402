@@ -3,7 +3,7 @@
 ## State
 
 - Tier: PRIZE_OPTIONAL
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: none. S40-T010 acceptance is the activation gate for this
   card, not a catalog dependency: the card reads the signed dashboard session
   S40 establishes, so it cannot be activated before S40 is accepted, but it
@@ -111,7 +111,7 @@ account behaviour, and changes no existing authority record. It stores no
 proof, no nullifier, and no World identifier. It adds one dependency, two API
 routes, one server component, one client component, and one mount.
 
-## Human worktree lane request
+## Historical worktree lane request
 
 - Requested at `2026-09-12T00:00:00Z` by the human operator (repository owner)
   through the operator's delegated session, under the explicit-request rule of
@@ -136,3 +136,16 @@ routes, one server component, one client component, and one mount.
 - The delivery pull request is marked "root integrates; do not merge by hand".
   Nothing from this branch reaches `main` outside the root's integration
   decision.
+
+## Delivery reconciliation
+
+The lane was integrated by pull request #114 at merge commit
+`ab79395207070e451b73602b02f24ad36c19d59b`. On current
+`origin/main` `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, every declared
+source path, the dashboard mount, the specification, and the submission
+feedback document exist. The focused `world-human-check` contract passed
+(19/19) in this reconciliation.
+
+This marks the local source delivery done and releases its queue reservation.
+`HA-WORLD-SELFIE-001` remains pending: no Sandbox Selfie Check, World
+configuration, phone exercise, or end-to-end proof is claimed here.

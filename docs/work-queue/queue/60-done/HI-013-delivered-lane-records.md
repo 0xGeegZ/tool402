@@ -20,13 +20,19 @@ manifest names as amendable; every other card's scope is unchanged.
 ## State
 
 - Tier: intake
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: none
 - Raised by: human operator, 2026-09-12
 - Owner: root integrator on intake. Every decision row, ownership paragraph,
   ledger row, ruling, and card move below is root-recorded; nothing here is
   self-executing.
 - Human actions: none.
+
+## Historical intake snapshot
+
+The observation, requested sequence, and recommended rulings below were
+written before pull requests #103, #105, and #114 were merged. They remain
+historical input, not statements of the current queue state.
 
 ## Observation
 
@@ -421,3 +427,15 @@ was merged, through the operator's delegated session. The root records the
 decision rows, rulings, ownership paragraphs, ledger rows, card moves, and the
 pull request #53 supersession from this card, and keeps every review and
 integration decision.
+
+## Reconciliation outcome
+
+As of `origin/main` `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, S38-T010,
+S39-T010, and S47-T010 are integrated through pull requests #105, #103, and
+#114 respectively and are recorded in `60-done`. Their current ownership,
+ledger, catalog, and decision records are the authoritative reconciliation;
+the pre-merge recommendations above are retained only for auditability.
+
+This card records no completed human action. In particular,
+`HA-WORLD-SELFIE-001` remains pending and pull request #53 remains a
+human-owned closure decision.

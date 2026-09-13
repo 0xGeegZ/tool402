@@ -15,6 +15,17 @@ renders four terms tiles and one internal link. It is presentation plus one
 internal link. No fetch, client behaviour, state, capacity figure, wallet, or
 route changes.
 
+## Identifier clarification
+
+UI-S38 is the canonical identifier for this Back this tool entry-card manifest.
+Before this manifest existed, historical S40 MetaMask dashboard-auth material
+used `UI-S38` as a provisional label for its authentication protocol. Those
+records remain evidence of their original review context: [the S40 plan](../superpowers/plans/2026-09-11-metamask-dashboard-sign-in.md),
+[readiness review](../work-queue/evidence/S40-T010-ready-review.md), and
+[activation review](../work-queue/evidence/S40-T010-activation-review.md).
+They do not name this UI slice or create an S40 dependency on it. Current S40
+records use the [MetaMask dashboard sign-in specification](../specs/metamask-dashboard-sign-in.md).
+
 ## Local targets
 
 The slice may add or amend only:

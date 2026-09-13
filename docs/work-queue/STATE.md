@@ -1,5 +1,19 @@
 # Runtime queue state
 
+- S38_S39_S47_MERGED_LANE_RECONCILIATION: At `origin/main`
+  `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, S38-T010, S39-T010, and
+  S47-T010 are documented as completed local source deliveries. Their merged
+  pull requests are #105 (`d399a031`), #103 (`1f2c5b6f`), and #114
+  (`ab793952`); their focused current-source contracts pass 6/6, 10/10, and
+  19/19 respectively. The three cards are in `60-done`; this records neither
+  an OPEN offering nor a payment, World configuration, Sandbox phone exercise,
+  or other human/live action.
+
+- UI_S38_IDENTIFIER_CORRECTION: UI-S38 is the canonical Back this tool entry
+  card manifest. Historical S40 sign-in material that used UI-S38 for the
+  MetaMask authentication protocol is preserved with an explicit correction
+  in `docs/ui/UI-S38.md`; the current S40 card refers only to its specification.
+
 - S40_ACTIVE_ACCOUNT_BINDING_REFINEMENT: A review-confirmed dashboard session
   may survive a page reload or account switch because the prior synchronizer
   watched only an already-connected shared session. The owner directs a

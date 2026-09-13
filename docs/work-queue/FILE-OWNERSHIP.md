@@ -2,10 +2,10 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
-M56-S26 scoped ownership transfer: because canonical main does not yet contain
-M56's card, specification, and catalog row, this is a conditional reservation,
-not active M56 ownership. It takes effect only when the rebased M56 integration
-PR commits those controls. It then transfers only `BackingForm`'s
+M56-S26 scoped ownership transfer: canonical main now contains M56's card,
+specification, and catalog row, so the transfer condition is satisfied. The
+record remains a narrow ownership boundary, not an acceptance or live-action
+finding. It transfers only `BackingForm`'s
 `useWalletSession`/`connectedWalletSession` composition and the
 `section[aria-labelledby="backing-status"]` composition in `backing-flow.tsx`,
 plus the matching shared-session assertions in `backing-route.test.mjs`. S26
@@ -14,9 +14,8 @@ preserve `useWalletSession`, `connectedWalletSession`, and the one shared
 session; it may not add `WalletIsland`, local duplicate wallet state, discovery,
 signature, authority, or other wallet behavior. The transfer excludes
 `wallet-session.tsx`, `wallet-connect.tsx`, layout/header, provider-deploy
-integration, the session state machine, and unrelated tests. M56 must rebase on
-this canonical record, run focused backing/S26 compatibility tests, and receive
-joint review before integration.
+integration, the session state machine, and unrelated tests. Any later review
+of this shared seam must retain the focused backing/S26 compatibility boundary.
 
 M54-T010 is a root-owned `20-active` CORE_P0 candidate recovery correction. It
 owns its card, specification, queue/review records, integration, commits, and
@@ -1717,3 +1716,20 @@ M54 explicit recovery, S26 shared-session control, S36 callback, and S42
 signer-exact read remain retained by their original owners. Every transferred
 seam requires joint compatibility review before integration; all other active
 reservations remain unchanged.
+
+## Reconciled merged lanes
+
+S38-T010's former reservation covered its new Back this tool card and focused
+test plus the two declared detail-aside mounts. It is released after PR #105
+(`d399a031`); no projection, funding, payment, or live boundary is transferred.
+
+S39-T010's former reservation covered its two presentation files, focused test,
+and declared backing-flow, back-page, and route-test amendments. It is released
+after PR #103 (`1f2c5b6f`); no backing state, wallet/session authority, payment,
+allocation, or live boundary is transferred.
+
+S47-T010's former reservation covered its declared World sources, dashboard
+mount, specification, submission feedback, configuration-name documentation,
+and matching dependency/test literals. It is released after PR #114
+(`ab793952`). World configuration and the Sandbox Selfie Check remain solely
+human-owned under `HA-WORLD-SELFIE-001`.
