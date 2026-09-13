@@ -116,7 +116,7 @@ test("keeps the Provider guide within the current preview boundary", async (t) =
   for (const title of [
     "Tool details",
     "Interface and capability",
-    "Pricing and target agent customers",
+    "Pricing and customers",
     "Funding and revenue-note terms",
     "Review and sign",
   ]) {

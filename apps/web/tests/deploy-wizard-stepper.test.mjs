@@ -31,11 +31,14 @@ implementedTest("names the five wizard steps with the shortened pricing label", 
   assert.deepEqual(state.providerDeploySteps[2].editable, ["quickPrice", "standardPrice", "targetAgentCustomers"]);
 });
 
-implementedTest("keeps five equal progress columns, full labels, and a single caption beneath the row", async () => {
+implementedTest("renders one bar then one full label per step, with the current step emphasised", async () => {
   const wizard = await readFile(join(appRoot, wizardPath), "utf8");
   const progress = stepProgressSource(wizard);
 
   assert.match(progress, /<ol[^>]*className="[^"]*\bgrid-cols-5\b[^"]*"/);
+  assert.match(progress, /aria-hidden="true" className=\{`h-1\.5 w-full rounded-full/);
+  assert.match(progress, /`h-1\.5[^`]*\$\{isCurrent \|\| isComplete \? "bg-primary" : "bg-muted"\}`/);
+  assert.match(progress, /`text-sm[^`]*\$\{isCurrent \? "font-medium" : "text-muted-foreground"\}`/);
   assert.equal((wizard.match(/>\{stepCaption\(currentStep\)\}</g) ?? []).length, 1);
   assert.match(progress, /<\/ol>\s*<p[^>]*>\{stepCaption\(currentStep\)\}<\/p>/);
   assert.doesNotMatch(progress, /\btruncate\b/);
