@@ -128,7 +128,6 @@ export async function DashboardCampaign() {
               <Link href="/explore/riskscan" className="text-sm font-semibold text-primary transition-colors hover:text-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Explore RiskScan</Link>
             </div>
           </CardContent>
-          <CardContent className="space-y-3 border-t pt-4"><p className="text-sm font-semibold">Your tools</p><ProviderToolList /></CardContent>
         </Card>
       </section>
     );
