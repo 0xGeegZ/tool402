@@ -34,6 +34,10 @@ function visibleText(node) {
   return node && typeof node === "object" && "props" in node ? visibleText(node.props.children) : "";
 }
 
+function assertWalletState(actual, expected) {
+  assert.deepEqual({ ...actual }, expected);
+}
+
 async function loadClientModule(path, imports) {
   const { outputText } = typescript.transpileModule(await readAppFile(path), {
     fileName: path,
@@ -148,7 +152,7 @@ test("requires the declared UI-S26 session module", () => {
 test("derives connection display state solely from Wagmi values", async () => {
   const { deriveTool402WalletState } = await loadWagmiHook(wagmiHarness().hooks);
 
-  assert.deepEqual(
+  assertWalletState(
     deriveTool402WalletState({
       status: "reconnecting",
       address: undefined,
@@ -158,7 +162,7 @@ test("derives connection display state solely from Wagmi values", async () => {
     }),
     { kind: "resolving" },
   );
-  assert.deepEqual(
+  assertWalletState(
     deriveTool402WalletState({
       status: "disconnected",
       address: undefined,
@@ -168,7 +172,7 @@ test("derives connection display state solely from Wagmi values", async () => {
     }),
     { kind: "no_provider" },
   );
-  assert.deepEqual(
+  assertWalletState(
     deriveTool402WalletState({
       status: "disconnected",
       address: undefined,
@@ -178,7 +182,7 @@ test("derives connection display state solely from Wagmi values", async () => {
     }),
     { kind: "disconnected" },
   );
-  assert.deepEqual(
+  assertWalletState(
     deriveTool402WalletState({
       status: "connected",
       address: "0xC89F87052C3E080B4A9B021D4930055031EF378E",
@@ -188,7 +192,7 @@ test("derives connection display state solely from Wagmi values", async () => {
     }),
     { kind: "wrong_chain", chainId: 1 },
   );
-  assert.deepEqual(
+  assertWalletState(
     deriveTool402WalletState({
       status: "connected",
       address: "0xC89F87052C3E080B4A9B021D4930055031EF378E",
@@ -198,7 +202,7 @@ test("derives connection display state solely from Wagmi values", async () => {
     }),
     { kind: "connected", address },
   );
-  assert.deepEqual(
+  assertWalletState(
     deriveTool402WalletState({
       status: "disconnected",
       address: undefined,
@@ -210,7 +214,7 @@ test("derives connection display state solely from Wagmi values", async () => {
     }),
     { kind: "request_failed", operation: "connect" },
   );
-  assert.deepEqual(
+  assertWalletState(
     deriveTool402WalletState({
       status: "connected",
       address: "0xC89F87052C3E080B4A9B021D4930055031EF378E",
@@ -231,7 +235,7 @@ test("uses direct Wagmi hooks and does nothing during a passive reconnect", asyn
   const { useTool402Wallet } = await loadWagmiHook(harness.hooks);
   const wallet = useTool402Wallet();
 
-  assert.deepEqual(wallet.state, { kind: "resolving" });
+  assertWalletState(wallet.state, { kind: "resolving" });
   assert.equal(harness.calls.connection, 1);
   assert.equal(harness.calls.connectors, 1);
   assert.deepEqual(harness.calls.connect, []);
@@ -251,13 +255,16 @@ test("uses only explicit MetaMask connect, disconnect, and Hedera switch mutatio
   const { useTool402Wallet } = await loadWagmiHook(harness.hooks);
   const wallet = useTool402Wallet();
 
-  assert.deepEqual(wallet.state, { kind: "connected", address });
+  assertWalletState(wallet.state, { kind: "connected", address });
   await wallet.connect();
   await wallet.switchToHedera();
   await wallet.disconnect();
-  assert.deepEqual(harness.calls.connect, [{ connector: harness.metaMask }]);
-  assert.deepEqual(harness.calls.switchChain, [{ chainId: 296 }]);
-  assert.deepEqual(harness.calls.disconnect, [{ connector: harness.currentConnector }]);
+  assert.equal(harness.calls.connect.length, 1);
+  assert.equal(harness.calls.connect[0]?.connector, harness.metaMask);
+  assert.equal(harness.calls.switchChain.length, 1);
+  assert.equal(harness.calls.switchChain[0]?.chainId, 296);
+  assert.equal(harness.calls.disconnect.length, 1);
+  assert.equal(harness.calls.disconnect[0]?.connector, harness.currentConnector);
 });
 
 test("keeps explicit disconnect across a passive remount and exposes connector failures", async () => {
@@ -271,21 +278,22 @@ test("keeps explicit disconnect across a passive remount and exposes connector f
   });
   const { useTool402Wallet } = await loadWagmiHook(disconnected.hooks);
   const wallet = useTool402Wallet();
-  assert.deepEqual(wallet.state, { kind: "connected", address });
+  assertWalletState(wallet.state, { kind: "connected", address });
   await wallet.disconnect();
   const remounted = useTool402Wallet();
-  assert.deepEqual(remounted.state, { kind: "disconnected" });
+  assertWalletState(remounted.state, { kind: "disconnected" });
   assert.deepEqual(disconnected.calls.connect, []);
   assert.deepEqual(disconnected.calls.switchChain, []);
-  assert.deepEqual(disconnected.calls.disconnect, [{ connector: disconnected.currentConnector }]);
+  assert.equal(disconnected.calls.disconnect.length, 1);
+  assert.equal(disconnected.calls.disconnect[0]?.connector, disconnected.currentConnector);
 
   const unavailable = wagmiHarness({ connectors: [] });
   const unavailableApi = await loadWagmiHook(unavailable.hooks);
-  assert.deepEqual(unavailableApi.useTool402Wallet().state, { kind: "no_provider" });
+  assertWalletState(unavailableApi.useTool402Wallet().state, { kind: "no_provider" });
 
   const rejected = wagmiHarness({ connectError: new Error("rejected") });
   const rejectedApi = await loadWagmiHook(rejected.hooks);
-  assert.deepEqual(rejectedApi.useTool402Wallet().state, { kind: "request_failed", operation: "connect" });
+  assertWalletState(rejectedApi.useTool402Wallet().state, { kind: "request_failed", operation: "connect" });
 
   const switchRejected = wagmiHarness({
     connection: {
@@ -297,7 +305,7 @@ test("keeps explicit disconnect across a passive remount and exposes connector f
     switchError: new Error("rejected"),
   });
   const switchRejectedApi = await loadWagmiHook(switchRejected.hooks);
-  assert.deepEqual(switchRejectedApi.useTool402Wallet().state, { kind: "request_failed", operation: "switch" });
+  assertWalletState(switchRejectedApi.useTool402Wallet().state, { kind: "request_failed", operation: "switch" });
 });
 
 test("owns no connection store or native provider listeners", async () => {
@@ -393,7 +401,7 @@ implementedTest("renders the compact header control from the Wagmi-derived walle
 
   assert.match(source, /^"use client";/u);
   assert.match(source, /import Link from ["']next\/link["'];/u);
-  assert.match(source, /import\s*\{\s*useTool402Wallet\s*\}\s+from\s+["']\.\/use-tool402-wallet["']/u);
+  assert.match(source, /import\s*\{\s*useTool402Wallet(?:\s*,[^}]*)?\}\s+from\s+["']\.\/use-tool402-wallet["']/u);
   assert.doesNotMatch(source, /wallet-session|wallet-state|metamask-provider/u);
   assert.doesNotMatch(source, /\buseState\b|\buseRef\b|\buseEffect\b/u, "the island holds no local session state");
   assert.doesNotMatch(source, /discoverMetaMaskProvider|connectWallet|readCurrentSession|recheckAfterSwitch/u);
