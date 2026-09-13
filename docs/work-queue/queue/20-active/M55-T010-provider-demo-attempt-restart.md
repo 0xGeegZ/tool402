@@ -89,3 +89,13 @@ end-to-end deployment is available.
 Implementation completion requires the plan's exact-head tests/reviews and
 separate browser, CI, deployment, and human-testnet evidence. A committed
 specification is not proof that the new-tool button works.
+
+## User-directed receipt recheck amendment
+
+For a selected provider tool, one accepted `external.attachCandidate` command
+already schedules the durable server-side receipt verifier. The Stage 3
+**Recheck receipt** control may therefore refresh only the selected tool's
+existing durable projection; it must not build, sign, relay, or transact a
+second attachment command. While corroboration remains pending, Stage 4 stays
+blocked. This narrow amendment is limited to the selected-tool branch of
+`deploy-stage-signing.tsx` and its focused test.

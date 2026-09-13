@@ -205,10 +205,12 @@ for multi-tool binding. A's deployment must never make B READY.
    admitted legacy rows and legitimate same-offering replays; this guard
    narrowly supersedes historical acceptance of conflicting legacy writes.
 4. Only corroborated new-tool attachment advances to READY. Unavailable or
-   ambiguous evidence leaves it pending. Retain recovery context; say
-   attachment was not accepted, not that no deployment happened. Existing
-   closed relay outcomes may remain. Verification retry is explicit and never
-   resends a transaction. All replay paths enforce these checks.
+   ambiguous evidence leaves it pending. The one signed attachment schedules
+   server-side corroboration; while it remains pending, **Recheck receipt**
+   explicitly re-reads the durable projection and never requests another
+   wallet signature or transaction. Retain recovery context; say attachment
+   was not accepted, not that no deployment happened. Existing closed relay
+   outcomes may remain. All replay paths enforce these checks.
 
 The existing HEDERA_FUNDING verifier is not ATS_CREATE proof. Preserve its
 behavior and legacy records when adding this new-tool path.
