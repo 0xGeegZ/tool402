@@ -1717,3 +1717,170 @@ M54 explicit recovery, S26 shared-session control, S36 callback, and S42
 signer-exact read remain retained by their original owners. Every transferred
 seam requires joint compatibility review before integration; all other active
 reservations remain unchanged.
+
+## Reconciliation of 2026-09-12
+
+The repository operator's rulings of 2026-09-12, recorded as `D-HI-013-001`
+and the acceptance rows beside it, accept every card below against the code
+merged on `main` at `07beeffe`. Each paragraph releases that card's
+reservations; the acceptance records in `docs/work-queue/STATE.md` and
+`docs/work-queue/DECISIONS.md` carry the delivering commit, the pull request,
+the merge commit, and the verification. Nothing here grants a wallet,
+provider, transaction, deployment, or live authority.
+
+M51-T010 is accepted. Its `packages/backend/convex/offerings.ts`,
+`packages/backend/convex/command_dispatch.ts`,
+`apps/web/src/lib/offering-projection.ts`,
+`apps/web/src/lib/provider-campaign-resume.ts`,
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, and
+focused-test reservations are released, together with the wiring-only
+`apps/web/tests/deploy-stage-signing.test.mjs` amendment. `D-M51-010-007`
+records the acceptance.
+
+M53-T010 is accepted. Its reservation on
+`apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts` and
+`apps/web/tests/stage-b-browser-provider-bridge.test.mjs`, transferred to it by
+B04-T010 for the receipt-log selection defect, is released. `D-M53-010-001`
+records the acceptance.
+
+M54-T010 is accepted. Its five provider-deploy and bridge source paths and its
+four focused Web contracts are released. `D-M54-010-001` records the
+acceptance.
+
+M55-T010 is accepted. Task 1's twelve declared paths, the reserved
+`/internal/provider-tools` route-inventory expectation in
+`packages/backend/tests/http-command-ingress.test.mjs`, and the Tasks 2 to 6
+transfers recorded in
+`docs/work-queue/evidence/M55-T010-tasks2-6-activation.md` are all released.
+Every seam M55 borrowed from M51-T010, M53-T010, M54-T010, S26-T010, S36-T010,
+S42-T010, and B04-T010 is accepted in the same ruling against the same merged
+state, so the joint compatibility review those transfers required no longer
+gates anything and no transfer stays open. `D-M55-010-010` records the
+acceptance.
+
+M56-T010 is accepted. Its declared source and test paths are released.
+`D-M56-010-001` records the acceptance.
+
+The M56-S26 scoped ownership transfer recorded at the top of this file is no
+longer conditional. Its condition is satisfied: canonical `main` carries M56's
+card at `docs/work-queue/queue/60-done/M56-T010-riskscan-backing-demo-mvp.md`,
+its specification at `docs/specs/m56-riskscan-backing-demo-mvp.md`, and its
+catalog row, committed through pull request #107 and confirmed at `ce080a16`.
+The transfer is therefore in effect rather than pending activation. Both
+M56-T010 and S26-T010 are now accepted, so the transferred `BackingForm`
+`useWalletSession`/`connectedWalletSession` and
+`section[aria-labelledby="backing-status"]` composition and the matching
+shared-session assertions in `apps/web/tests/backing-route.test.mjs` carry no
+continuing reservation either. This paragraph supersedes only the conditional
+wording of that transfer; every exclusion it names remains in force.
+
+S26-T010 is accepted. `apps/web/src/components/wallet/wallet-session.tsx`,
+`apps/web/tests/wallet-session.test.mjs`,
+`apps/web/src/components/wallet/wallet-connect.tsx`, the header block and shell
+wrapper of `apps/web/src/app/layout.tsx`, the wallet block of
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`, the
+backing-flow island mount, and the shared-session assertions in the accepted
+tests are released. `D-S26-010-001` records the acceptance and states that the
+operator accepted the merged verification in place of the card's declared
+browser evidence and independent review, neither of which was produced.
+
+S36-T010 is accepted. Its reservation on
+`apps/web/src/components/provider/deploy/provider-deploy-stages.tsx` and
+`apps/web/tests/provider-deploy-signature-handoff.test.mjs` is released.
+`D-S36-010-003` records the acceptance.
+
+S40-T010 is accepted. Its eight declared source paths, its four focused
+contracts, the two `.env.example` templates, and the root integration
+reservations on the header-navigation slot of `apps/web/src/app/layout.tsx` and
+the link-list contract of
+`apps/web/src/components/discovery/local-navigation.tsx` are released. The
+reserved amendment target `apps/web/tests/dashboard-workspace-reconciliation.test.mjs`
+was removed from `main` by commit `7bcedcb9` at merge commit `526d6a88`, so
+that reservation lapses unused. `D-S40-010-001` records the acceptance.
+
+S42-T010 is accepted. Its dashboard campaign source and focused-test
+reservations are released. `D-S42-010-001` records the acceptance.
+
+S44-T010 is accepted. Its provider page, status component and state module,
+technical-record control, generated provider hero asset, focused
+provider-status contract, Provider visual reconciliation contract, and
+Provider-only page-header assertions are released. `D-S44-010-001` records the
+acceptance.
+
+S45-T010 is accepted. Its five mascot PNGs, the logo lockups, its presentation
+sources and loader mounts, its focused contract, and the exact Explore and
+loading test reconciliations are released. `D-S45-010-001` records the
+acceptance.
+
+B04-T010 is accepted. Its eight declared RED contracts and its eight
+authorized GREEN sources are released, the bridge pair already transferred to
+M53-T010 included. `D-B04-010-002` records the acceptance.
+
+S38-T010 owns new `apps/web/src/components/backing/back-tool-card.tsx` and
+new `apps/web/tests/back-tool-card.test.mjs`. Its root-only integration
+reservation is limited to the aside block of
+`apps/web/src/components/riskscan/detail/riskscan-detail.tsx` and the aside
+block of `apps/web/src/components/entitycheck/detail/entitycheck-detail.tsx`,
+where the reservation additionally covers the complementary landmark the
+amendment creates around the existing accepted descriptive Card. Both call
+sites supply no projection, so the card renders its no-offering variant and
+adds no reachable link in this slice. It owns no route, reader, projection,
+fetch, client behavior, state, capacity figure, wallet, provider, payment,
+transaction, deployment, or live boundary, and it amends no accepted test.
+S38-T010 is accepted by `D-S38-010-001`, so this reservation is released; the
+created landmark is recorded here rather than left unwritten, and the UI-S38
+manifest prose correction and the second-landmark check are the named
+follow-ups that row carries.
+
+S39-T010 owns new `apps/web/src/components/backing/backing-presentation.ts`,
+new `apps/web/src/components/backing/backing-step-rail.tsx`, and new
+`apps/web/tests/backing-presentation.test.mjs`. Its root-only integration
+reservation is limited to the units, acknowledgement, funding, and
+`payment_submitted` blocks of
+`apps/web/src/components/backing/backing-flow.tsx` together with the
+module-scope `chipClass` helper and the five presentation imports that block
+implies, the single back link in
+`apps/web/src/app/explore/riskscan/back/page.tsx`, and, in
+`apps/web/tests/backing-route.test.mjs`, the source-path list, the required
+literals, and the named replacement of the blanket no-link scan by exactly one
+`<Link`, exactly one `href=`, and the pinned `/explore/riskscan` target with
+its label. `apps/web/src/components/backing/backing-state.ts` is not amended:
+the closed eight-kind union, picker bounds, integer amount, command payload,
+transfer, and every refusal and unknown outcome remain the accepted UI-S18
+contract. The reservation covers the wallet-island mount inside the Funding
+section as shipped. Ruling 3 is made: `D-S39-010-001` accepts that mount as
+shipped and defers deduplication against the shell-header island with no card,
+so no deduplication ownership is assigned to any card and the two mounts in
+`apps/web/src/app/layout.tsx` and `apps/web/src/components/backing/backing-flow.tsx`
+stand as they are. It owns no projection, API, session, authority, payment,
+settlement, transaction, deployment, or live boundary. S39-T010 is accepted by
+`D-S39-010-001`, so this reservation is released.
+
+S47-T010 owns new `apps/web/src/lib/world/human-check.ts`, new
+`apps/web/src/app/api/world/request/route.ts`, new
+`apps/web/src/app/api/world/verify/route.ts`, new
+`apps/web/src/components/dashboard/dashboard-identity.tsx`, new
+`apps/web/src/components/dashboard/world-human-check.tsx`, new
+`apps/web/tests/world-human-check.test.mjs`, new
+`docs/specs/s47-world-human-check.md`, new
+`docs/submission/world-selfie-check-feedback.md`, and its own card. Its pull
+request also amends the root-owned `docs/work-queue/TASK-CATALOG.md`, which
+this ownership paragraph does not reserve; the root records that catalog
+amendment on its own account rather than under an S47 reservation. Its
+root-only integration reservations are limited to mounting
+`<DashboardIdentity />` once in
+`apps/web/src/app/dashboard/page.tsx` between the page header and
+`<DashboardCampaign />`; adding only `@worldcoin/idkit` at one pinned version
+to `apps/web/package.json` and the root `package-lock.json`; the matching
+dependency literal in `apps/web/tests/static-shell.test.mjs`; and appending
+the five `WORLD_*` names with empty values to `apps/web/.env.example`. Both
+World routes read the signed dashboard session before acting and answer
+`401` unless the session address equals the address in the body. The slice
+unlocks nothing: every route, control, and command available before the check
+remains exactly as available after it. It stores no proof, nullifier, or
+World identifier, and it adds no command, relay, wallet, transaction, schema,
+Convex, authority, role, allowlist, payment, or account behavior. Clearing the
+human cookie on logout lives in
+`apps/web/src/lib/dashboard-auth/dashboard-auth-routes.ts` and stays outside
+this card; `D-S47-010-001` records it as an owed follow-up. S47-T010 is
+accepted by `D-S47-010-001`, so this reservation is released.
