@@ -26,7 +26,7 @@ implementedTest("fixes the five wizard steps, editable fields, categories, and a
   assert.deepEqual(state.providerDeploySteps, [
     { label: "Tool details", editable: ["toolName", "category", "oneLiner", "customerProblem"], fixed: [] },
     { label: "Interface and capability", editable: ["qualifyingResource", "capabilitySummary"], fixed: ["capability"] },
-    { label: "Pricing and target agent customers", editable: ["quickPrice", "standardPrice", "targetAgentCustomers"], fixed: [] },
+    { label: "Pricing and customers", editable: ["quickPrice", "standardPrice", "targetAgentCustomers"], fixed: [] },
     { label: "Funding and revenue-note terms", editable: ["useOfFunds", "risks", "acknowledgement"], fixed: ["termsV1Economics", "revenueNoteParameters"] },
     { label: "Review and sign", editable: [], fixed: ["reviewRows", "deploymentStages"] },
   ]);
