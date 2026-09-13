@@ -18,20 +18,24 @@ accepted HEDERA_FUNDING attempt + MetaMask hash
 
 ## Binding and verification
 
-The web server accepts one narrow body containing a prepared-attempt public ID
-and canonical transaction hash only when the request has the exact configured
-dashboard origin and a valid session. Its session signer must equal the attempt
-signer. The server forwards the assertion through the existing protected
-ingress secret; the browser never receives that secret.
+The web server accepts one narrow body containing a prepared-attempt public ID,
+canonical transaction hash, and the existing signed intent's canonical
+parameter preimage only when the request has the exact configured dashboard
+origin and a valid session. It recomputes the stored canonical-parameters hash
+before forwarding; the browser therefore cannot choose a different amount. Its
+session signer must equal the attempt signer. The server forwards the assertion
+through the existing protected provider-session ingress secret; the browser
+never receives that secret.
 
 The backend permits this route only for a `PREPARED` or identically
 `SUBMITTED` `HEDERA_FUNDING` attempt whose role is `BACKER`, chain is 296, and
 signer and expected target match the stored admitted command. It preserves the
-first hash and rejects conflicts. A bounded Hedera Testnet read verifies the
-transaction hash, `SUCCESS`, network, sender, target, and exact transfer value
-derived from the admitted canonical parameters. It writes `CONFIRMED` only on
-that evidence; unavailable or incomplete evidence remains non-terminal and no
-automatic resend occurs.
+first hash and rejects conflicts, then persists the hash and the hash-bound
+tinybar amount as optional compatible fields. A bounded Hedera Testnet JSON-RPC
+read verifies the transaction hash, receipt success, chain, sender, target,
+and exact transfer value derived from the admitted canonical parameters. It
+writes `CONFIRMED` only on that evidence; unavailable or incomplete evidence
+remains non-terminal and no automatic resend occurs.
 
 ## Presentation
 
@@ -52,7 +56,8 @@ calls allocation, issues units, or treats a transfer as allocation.
 - `apps/web/src/lib/dashboard-campaign.ts`
 - focused Web contracts for the route, state, server forwarder, and dashboard
 - `packages/backend/convex/backing_payment_records.ts`
-- `packages/backend/convex/http.ts`
+- `packages/backend/convex/provider_session_ingress.ts`
+- `packages/backend/convex/schema.ts`
 - `packages/backend/src/ats/hedera-funding-receipt-reader.ts`
 - focused Backend contracts for admission, verification, and durable reads
 

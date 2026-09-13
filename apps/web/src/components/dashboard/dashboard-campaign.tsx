@@ -4,6 +4,8 @@ import { cookies } from "next/headers";
 
 import { readDashboardSession, readDashboardSessionCookieName } from "../../lib/dashboard-auth/dashboard-auth";
 import { readDashboardCampaign, riskScanOfferingPublicId } from "../../lib/dashboard-campaign";
+import { hashscanTransactionUrl } from "../../lib/hashscan-links";
+import { loadBackerPayment } from "../../lib/backing-payment-server";
 import { readProviderProjections } from "../../lib/offering-projection";
 import { Badge } from "../ui/badge";
 import { buttonVariants } from "../ui/button";
@@ -21,11 +23,27 @@ export async function DashboardCampaign() {
   if (session === null) return null;
 
   const projections = await readProviderProjections(process.env, globalThis.fetch, riskScanOfferingPublicId);
+  const backing = await loadBackerPayment(process.env, sessionCookieName === null ? null : cookieStore.get(sessionCookieName)?.value ?? null);
   const campaign = projections.offering.outcome === "loaded"
     ? readDashboardCampaign(projections.offering.record, session.address)
     : null;
 
   if (campaign === null) {
+    if (backing !== null) {
+      const transactionUrl = hashscanTransactionUrl(backing.transactionHash);
+      return (
+        <section aria-label="Your backing">
+          <Card className="rounded-card border-border bg-card shadow-none">
+            <CardContent className="space-y-3 p-5">
+              <div className="flex flex-wrap items-center gap-2"><h2 className="text-xl font-bold tracking-[-0.035em] text-foreground">Your backing</h2><Badge variant="secondary">{backing.status}</Badge></div>
+              <p className="text-sm leading-6 text-muted-foreground">RiskScan · {backing.tinybars} tinybars. A confirmed payment remains allocation pending until the issuer signs.</p>
+              {transactionUrl === null ? null : <a href={transactionUrl} target="_blank" rel="noreferrer" className="text-sm font-semibold text-primary transition-colors hover:text-brand-purple">View on HashScan</a>}
+            </CardContent>
+            <CardContent className="space-y-3 border-t pt-4"><p className="text-sm font-semibold">Your tools</p><ProviderToolList /></CardContent>
+          </Card>
+        </section>
+      );
+    }
     return (
       <section aria-label="No campaign yet">
         <Card className="rounded-card border-brand-purple/25 bg-brand-purple/5 shadow-none">

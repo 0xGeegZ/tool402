@@ -81,11 +81,22 @@ implementedTest("uses the campaign ownership allowlist as the dashboard projecti
 implementedTest("renders one local empty card when the signed session has no campaign", async () => {
   const source = await readFile(componentUrl, "utf8");
 
-  assert.match(source, /if\s*\(campaign\s*===\s*null\)\s*\{\s*return\s*\(\s*<section[^>]*aria-label="No campaign yet"/su);
+  assert.match(source, /if\s*\(campaign\s*===\s*null\)\s*\{/su);
+  assert.match(source, /if\s*\(backing\s*!==\s*null\)\s*\{[\s\S]*?aria-label="Your backing"/su);
+  assert.match(source, /if\s*\(campaign\s*===\s*null\)\s*\{[\s\S]*?aria-label="No campaign yet"/su);
   assert.match(source, />No campaign yet</u);
   assert.match(source, /There is no RiskScan campaign associated with this signed dashboard session\./u);
   assert.match(source, /href="\/provider\/deploy"[^>]*>Prepare a tool</u);
   assert.match(source, /href="\/explore\/riskscan"[^>]*>Explore RiskScan</u);
+});
+
+implementedTest("projects durable backer proof without treating it as an issuer campaign", async () => {
+  const source = await readFile(componentUrl, "utf8");
+  assert.match(source, /loadBackerPayment/);
+  assert.match(source, /Your backing/);
+  assert.match(source, /View on HashScan/);
+  assert.match(source, /allocation pending until the issuer signs/);
+  assert.doesNotMatch(source, /Units issued|Payout/u);
 });
 
 implementedTest("uses the configured session cookie name when it reads the dashboard campaign", async () => {

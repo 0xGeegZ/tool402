@@ -14,11 +14,13 @@
 
 M58 extends the existing M56 `HEDERA_FUNDING` attempt only after MetaMask has
 returned a canonical transaction hash. It consumes S40's existing signed
-dashboard session without changing it. That session sends the hash to a
-server-only ingress. The backend attaches it to the already admitted attempt,
-reads the pinned Hedera Testnet evidence, and records only a verified
-`CONFIRMED`, `REJECTED`, or still-uncertain outcome. The backing page and the
-signed backer dashboard read that durable record after reload.
+dashboard session without changing it. That session reveals the already signed
+intent parameters alongside the hash; the server recomputes the stored
+commitment before forwarding through the existing protected provider-session
+ingress. The backend attaches it to the already admitted attempt, reads the
+pinned Hedera Testnet evidence, and records only a verified `CONFIRMED`,
+`REJECTED`, or still-uncertain outcome. The backing page and the signed backer
+dashboard read that durable record after reload.
 
 ## Exclusions
 

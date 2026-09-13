@@ -3,6 +3,8 @@
 import { useRef, useState, type ChangeEvent } from "react";
 
 import { isUserRejection } from "../../lib/wallet/metamask-provider.ts";
+import { hashscanTransactionUrl } from "../../lib/hashscan-links.ts";
+import type { BackingPaymentRecord } from "../../lib/backing-payment-server.ts";
 import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -38,7 +40,10 @@ function chipClass(selected: boolean): string {
   return `flex min-w-28 flex-col items-start gap-1 rounded-control border px-3 py-2 text-left text-sm ${selected ? "border-primary bg-muted" : "border-border"}`;
 }
 
-function describeView(view: BackingView): string {
+function describeView(view: BackingView, payment: BackingPaymentRecord | null): string {
+  if (payment?.status === "CONFIRMED") return `Payment confirmed on Hedera Testnet for ${formatHbar(BigInt(payment.tinybars))}. Allocation still needs the issuer's separate signature.`;
+  if (payment?.status === "REJECTED") return "The submitted payment does not match the signed backing intent. No units were issued.";
+  if (payment?.status === "SUBMITTED") return "Payment submitted — awaiting server verification. Nothing is sent again.";
   switch (view.kind) {
     case "choosing":
       return view.message ?? "Choose units, read the disclosure, and connect MetaMask. Nothing is requested until you sign.";
@@ -58,7 +63,7 @@ function describeView(view: BackingView): string {
   }
 }
 
-function BackingForm({ offering }: { offering: BackingOffering }) {
+function BackingForm({ offering, initialPayment, signedIn }: { offering: BackingOffering; initialPayment: BackingPaymentRecord | null; signedIn: boolean }) {
   const wallet = useWalletSession();
   const session: WalletSession | null = connectedWalletSession(wallet);
   const presets = presetUnits(offering.terms);
@@ -69,12 +74,13 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
   const [request, setRequest] = useState<BackingIntent | null>(null);
   const [transferring, setTransferring] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [payment, setPayment] = useState<BackingPaymentRecord | null>(initialPayment);
   const sendingRef = useRef(false);
   const validation = validateUnits(offering, unitsInput);
-  const label = backingLifecycleLabels[view.kind];
+  const label = payment?.status === "CONFIRMED" ? "payment_confirmed" : payment?.status === "REJECTED" ? "payment_rejected" : backingLifecycleLabels[view.kind];
   const committed = request ?? ("intent" in view ? view.intent : null);
-  const locked = view.kind !== "choosing" || request !== null;
-  const canPrepare = validation.ok && acknowledged && session !== null && !locked;
+  const locked = payment !== null || view.kind !== "choosing" || request !== null;
+  const canPrepare = validation.ok && acknowledged && session !== null && signedIn && !locked;
   const readoutUnits = committed !== null ? committed.units : validation.ok ? validation.units : null;
   const readoutTinybars = committed !== null ? committed.tinybars : validation.ok ? paymentTinybars(offering, validation.units) : null;
 
@@ -122,6 +128,26 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
       setView(viewAfterTransfer(view, result));
     } catch {
       setView(viewAfterTransfer(view, { kind: "no_hash" }));
+    }
+    if (result.kind === "hash") {
+      try {
+        const response = await fetch("/api/backing/payment", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ attemptPublicId: view.intent.idempotencyKey, transactionHash: result.hash, parameters: view.intent.parameters }),
+        });
+        const value: unknown = await response.json();
+        if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+          const record = value as Record<string, unknown>;
+          if ((record.status === "CONFIRMED" || record.status === "REJECTED" || record.status === "SUBMITTED")
+            && typeof record.transactionHash === "string" && /^0x[0-9a-f]{64}$/u.test(record.transactionHash)
+            && typeof record.tinybars === "string" && /^(?:0|[1-9][0-9]*)$/u.test(record.tinybars)) {
+            setPayment({ status: record.status, transactionHash: record.transactionHash as `0x${string}`, tinybars: record.tinybars });
+          }
+        }
+      } catch {
+        setNotice("Payment was submitted, but its server status could not be read. Nothing is sent again.");
+      }
     }
     if (result.kind === "declined") sendingRef.current = false;
     setTransferring(false);
@@ -196,12 +222,12 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
           <h2 id="backing-status" className="text-lg font-semibold">Funding</h2>
           {label === null ? null : <Badge variant="outline">{label}</Badge>}
         </div>
-        <p aria-live="polite" className="text-sm text-muted-foreground">{notice ?? describeView(view)}</p>
+        <p aria-live="polite" className="text-sm text-muted-foreground">{notice ?? describeView(view, payment)}</p>
         <WalletIsland />
         {view.kind === "choosing" ? (
           <div className="space-y-2">
             <Button disabled={!canPrepare} aria-disabled={!canPrepare} onClick={prepare}>Prepare and fund</Button>
-            <p className="text-xs text-muted-foreground">Two confirmations: one signature, one HBAR transfer.</p>
+            <p className="text-xs text-muted-foreground">{signedIn ? "Two confirmations: one signature, one HBAR transfer." : "Sign in to the dashboard first so a submitted payment can be confirmed and restored."}</p>
           </div>
         ) : null}
         {request !== null && session !== null ? <SignatureDialog provider={session.provider} request={request} onResult={onSignature} /> : null}
@@ -219,12 +245,15 @@ function BackingForm({ offering }: { offering: BackingOffering }) {
             </ol>
           </div>
         ) : null}
+        {payment !== null && hashscanTransactionUrl(payment.transactionHash) !== null ? (
+          <a href={hashscanTransactionUrl(payment.transactionHash)!} target="_blank" rel="noreferrer" className="inline-flex text-sm font-semibold text-primary hover:text-brand-purple">View on HashScan</a>
+        ) : null}
       </section>
     </div>
   );
 }
 
-export function BackingFlow({ projection }: { projection: BackingProjection | null }) {
+export function BackingFlow({ projection, initialPayment = null, signedIn = false }: { projection: BackingProjection | null; initialPayment?: BackingPaymentRecord | null; signedIn?: boolean }) {
   const offering = readBackingOffering(projection);
   if (offering === null) {
     return (
@@ -236,5 +265,5 @@ export function BackingFlow({ projection }: { projection: BackingProjection | nu
       </Card>
     );
   }
-  return <BackingForm offering={offering} />;
+  return <BackingForm offering={offering} initialPayment={initialPayment} signedIn={signedIn} />;
 }

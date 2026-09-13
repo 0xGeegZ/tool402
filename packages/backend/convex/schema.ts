@@ -78,9 +78,11 @@ export default defineSchema({
     candidateTransactionId: v.optional(v.string()),
     candidateEvmAddress: v.optional(v.string()),
     verifiedEvmTransactionHash: v.optional(v.string()),
+    backingTinybars: v.optional(v.string()),
     nextReconciliationAt: v.optional(v.int64()),
     acceptedAt: v.int64(),
-  }).index("by_idempotency_key", ["idempotencyKey"]),
+  }).index("by_idempotency_key", ["idempotencyKey"])
+    .index("by_operation_kind_and_canonical_signer_address", ["operationKind", "canonicalSignerAddress"]),
   offerings: defineTable({
     offeringPublicId: v.string(),
     subjectPublicId: v.string(),
