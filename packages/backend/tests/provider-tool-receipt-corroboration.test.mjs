@@ -3,6 +3,7 @@ import test from "node:test";
 
 const sourceUrl = new URL("../convex/ats_candidate_receipts.ts", import.meta.url);
 const canonicalSignerAddress = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+const selfServiceSignerAddress = "0x1111111111111111111111111111111111111111";
 const toolPublicId = "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const offeringPublicId = "offering_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const attemptId = "externalPrepareCommandAttempts:selected";
@@ -129,27 +130,37 @@ function database(rows) {
   return { rows, writes, ctx: { db } };
 }
 
-async function fixture() {
+async function fixture({ selfService = false } = {}) {
   const [{ createProviderToolAtsConfiguration }, { buildFactoryDeployBondRequest, encodeFactoryDeployBond }] = await Promise.all([
     import("../src/ats/provider-tool-ats-configuration.ts"),
     import("../../../apps/web/src/lib/ats/factory-deploy-bond.ts"),
   ]);
+  const signer = selfService ? selfServiceSignerAddress : canonicalSignerAddress;
+  const principalPublicId = selfService ? `self_service_${signer.slice(2)}` : "issuer_42";
+  const authorityVersion = selfService ? "public_testnet_v1" : "issuer_v1";
   const configuration = createProviderToolAtsConfiguration({
-    toolPublicId, subjectPublicId: toolPublicId, title: "RiskScan", canonicalSignerAddress,
+    toolPublicId, subjectPublicId: toolPublicId, title: "RiskScan", canonicalSignerAddress: signer,
   });
   const input = encodeFactoryDeployBond(buildFactoryDeployBondRequest(
     configuration.atsCreateConfiguration,
-    { issuerEvmAddress: canonicalSignerAddress },
+    { issuerEvmAddress: signer },
   ));
   return {
     rows: {
-      commandAuthorities: [authority()],
-      providerTools: [providerTool()],
-      offerings: [offering()],
-      externalPrepareCommandAttempts: [attempt(configuration.canonicalParametersHash)],
+      commandAuthorities: selfService ? [] : [authority()],
+      selfServiceAccounts: selfService ? [{
+        _id: "selfServiceAccounts:active", _creationTime: 1,
+        canonicalSignerAddress: signer, chainId: 296, principalPublicId,
+        policyVersion: "public_testnet_v1", status: "ACTIVE", createdAt: 1n, updatedAt: 1n,
+      }] : [],
+      providerTools: [providerTool({ canonicalSignerAddress: signer, principalPublicId, authorityVersion })],
+      offerings: [offering({ canonicalSignerAddress: signer, principalPublicId, authorityVersion })],
+      externalPrepareCommandAttempts: [attempt(configuration.canonicalParametersHash, {
+        canonicalSignerAddress: signer, principalPublicId, authorityVersion,
+      })],
       providerToolReceiptBindings: [],
     },
-    transaction: { hash: transactionHash, chainId: 296, from: canonicalSignerAddress, to: "0xd1f118a40f3b02883d35909ef2517e7edd78379d", input },
+    transaction: { hash: transactionHash, chainId: 296, from: signer, to: "0xd1f118a40f3b02883d35909ef2517e7edd78379d", input },
     receipt: { transactionHash, status: "0x1", logs: [{ address: "0xd1f118a40f3b02883d35909ef2517e7edd78379d", eventName: "BondDeployed", asset }] },
   };
 }
@@ -169,6 +180,25 @@ test("corroborates only independently encoded exact calldata and writes READY af
   assert.equal(db.rows.providerToolReceiptBindings.length, 1);
   assert.equal(db.rows.providerToolReceiptBindings[0].evmTransactionHash, transactionHash);
   assert.equal(db.rows.externalPrepareCommandAttempts[0].verifiedEvmTransactionHash, transactionHash);
+});
+
+test("corroborates a selected self-service owner's exact receipt without a legacy authority", async () => {
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
+    const api = await import(sourceUrl.href);
+    const data = await fixture({ selfService: true });
+    const db = database(data.rows);
+    assert.deepEqual(
+      await api.corroborateSelectedProviderToolAtsReceipt._handler(db.ctx, {
+        attemptId, transaction: data.transaction, receipt: data.receipt,
+      }),
+      { status: "CONFIRMED", state: "READY" },
+    );
+    assert.equal(db.rows.offerings[0].state, "READY");
+  } finally {
+    process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous;
+  }
 });
 
 test("keeps selected offerings pending for UNKNOWN or mismatched evidence", async () => {
