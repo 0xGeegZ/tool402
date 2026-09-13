@@ -13,7 +13,8 @@ export type HederaFundingReceipt = Readonly<{
   from: string;
   to: string;
   value: bigint;
-  status: "0x1";
+  /** A mined EVM receipt is terminal, whether it succeeded or reverted. */
+  status: "0x1" | "0x0";
 }>;
 
 type RpcResult = Readonly<{ status: "DOCUMENT"; value: unknown } | { status: "UNKNOWN" }>;
@@ -70,9 +71,9 @@ function transaction(input: unknown, hash: string): Omit<HederaFundingReceipt, "
   return Object.freeze({ hash: hash as `0x${string}`, chainId: 296, from: value.from, to: value.to, value: transferValue });
 }
 
-function receipt(input: unknown, hash: string): boolean {
+function receipt(input: unknown, hash: string): "0x1" | "0x0" | null {
   const value = record(input);
-  return value?.transactionHash === hash && value.status === "0x1";
+  return value?.transactionHash === hash && (value.status === "0x1" || value.status === "0x0") ? value.status : null;
 }
 
 /** Reads exactly one Hedera Testnet EVM transaction and its receipt. */
@@ -84,7 +85,8 @@ export function createHederaFundingReceiptReader(fetcher: Fetcher): (hash: `0x${
     const observedTransaction = transaction(transactionResult.value, hash);
     if (observedTransaction === null) return null;
     const receiptResult = await json(fetcher, { jsonrpc: "2.0", id: 1, method: "eth_getTransactionReceipt", params: [hash] });
-    if (receiptResult.status !== "DOCUMENT" || !receipt(receiptResult.value, hash)) return null;
-    return Object.freeze({ ...observedTransaction, status: "0x1" });
+    const observedReceipt = receiptResult.status === "DOCUMENT" ? receipt(receiptResult.value, hash) : null;
+    if (observedReceipt === null) return null;
+    return Object.freeze({ ...observedTransaction, status: observedReceipt });
   };
 }

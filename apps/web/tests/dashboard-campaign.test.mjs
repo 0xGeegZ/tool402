@@ -82,12 +82,19 @@ implementedTest("renders one local empty card when the signed session has no cam
   const source = await readFile(componentUrl, "utf8");
 
   assert.match(source, /if\s*\(campaign\s*===\s*null\)\s*\{/su);
-  assert.match(source, /if\s*\(backing\s*!==\s*null\)\s*\{[\s\S]*?aria-label="Your backing"/su);
+  assert.match(source, /if\s*\(backing\s*!==\s*null\)\s*\{[\s\S]*?<DashboardBacking backing=\{backing\}/su);
   assert.match(source, /if\s*\(campaign\s*===\s*null\)\s*\{[\s\S]*?aria-label="No campaign yet"/su);
   assert.match(source, />No campaign yet</u);
   assert.match(source, /There is no RiskScan campaign associated with this signed dashboard session\./u);
   assert.match(source, /href="\/provider\/deploy"[^>]*>Prepare a tool</u);
   assert.match(source, /href="\/explore\/riskscan"[^>]*>Explore RiskScan</u);
+});
+
+implementedTest("keeps campaign and backing projections independent in all four dashboard combinations", async () => {
+  const source = await readFile(componentUrl, "utf8");
+  assert.match(source, /if\s*\(campaign\s*===\s*null\)\s*\{[\s\S]*?if\s*\(backing\s*!==\s*null\)/su);
+  assert.match(source, /if\s*\(campaign\s*===\s*null\)[\s\S]*?aria-label="No campaign yet"/su);
+  assert.match(source, /aria-label="Your campaign"[\s\S]*?\{backing\s*===\s*null\s*\?\s*null\s*:\s*<DashboardBacking/su);
 });
 
 implementedTest("projects durable backer proof without treating it as an issuer campaign", async () => {

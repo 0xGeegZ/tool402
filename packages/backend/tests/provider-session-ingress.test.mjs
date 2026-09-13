@@ -82,6 +82,38 @@ implementedTest("accepts one valid provider-session assertion and binds its requ
   assert.deepEqual(allocations, [{ canonicalSignerAddress, requestId }]);
 });
 
+implementedTest("forwards signed backing writes and reload-safe backing reads only after HMAC, expiry, and replay checks", async () => {
+  const { handleProviderSessionIngressForTest } = await import(ingressUrl.href);
+  const transactionHash = `0x${"ab".repeat(32)}`;
+  const backingBody = JSON.stringify({
+    type: "backing", canonicalSignerAddress, attemptPublicId: nonce, transactionHash,
+    parameters: { offeringPublicId: "riskscan_revenue_note_demo", units: "10", tinybars: "1000000000", purchaseIntentId: nonce },
+    sessionExpiresAt: "2025-01-01T08:00:00.000Z",
+  });
+  const { request, key } = await signedRequest(backingBody);
+  const calls = [];
+  const seams = {
+    nowMilliseconds: () => 1_735_689_600_000,
+    resolveIngressKey: () => key,
+    claimReplay: () => "claimed",
+    allocate: async () => { throw new Error("must not allocate"); },
+    list: async () => { throw new Error("must not list"); },
+    read: async () => { throw new Error("must not read"); },
+    deployment: async () => { throw new Error("must not deploy"); },
+    backing: async (input) => { calls.push(["backing", input]); return { status: "OUTCOME_UNKNOWN", transactionHash, tinybars: "1000000000" }; },
+    backingRead: async (input) => { calls.push(["backing_read", input]); return { status: "CONFIRMED", transactionHash, tinybars: "1000000000" }; },
+  };
+  assert.equal((await handleProviderSessionIngressForTest({}, request, seams)).status, 200);
+  const read = await signedRequest(JSON.stringify({ type: "backing_read", canonicalSignerAddress, sessionExpiresAt: "2025-01-01T08:00:00.000Z" }));
+  assert.equal((await handleProviderSessionIngressForTest({}, read.request, { ...seams, resolveIngressKey: () => read.key })).status, 200);
+  assert.deepEqual(calls, [
+    ["backing", { canonicalSignerAddress, attemptPublicId: nonce, transactionHash, parameters: { offeringPublicId: "riskscan_revenue_note_demo", units: "10", tinybars: "1000000000", purchaseIntentId: nonce } }],
+    ["backing_read", { canonicalSignerAddress }],
+  ]);
+  const replay = await signedRequest(backingBody);
+  assert.equal((await handleProviderSessionIngressForTest({}, replay.request, { ...seams, resolveIngressKey: () => replay.key, claimReplay: () => "already_claimed" })).status, 401);
+});
+
 implementedTest("rejects a command-domain MAC and replay before allocation", async () => {
   const { handleProviderSessionIngressForTest } = await import(ingressUrl.href);
   for (const [name, path, claimReplay] of [

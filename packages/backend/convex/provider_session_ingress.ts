@@ -22,6 +22,7 @@ type ProviderToolRequest =
   | Readonly<{ type: "read"; canonicalSignerAddress: string; toolPublicId: string; sessionExpiresAt: string }>
   | Readonly<{ type: "deployment"; canonicalSignerAddress: string; toolPublicId: string; sessionExpiresAt: string }>
   | Readonly<{ type: "backing"; canonicalSignerAddress: string; attemptPublicId: string; transactionHash: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string }; sessionExpiresAt: string }>
+  | Readonly<{ type: "backing_reserve"; canonicalSignerAddress: string; attemptPublicId: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string }; sessionExpiresAt: string }>
   | Readonly<{ type: "backing_read"; canonicalSignerAddress: string; sessionExpiresAt: string }>;
 type Seams = {
   readonly nowMilliseconds: () => number;
@@ -32,6 +33,7 @@ type Seams = {
   readonly read: (input: { canonicalSignerAddress: string; toolPublicId: string }) => Promise<ToolRead>;
   readonly deployment: (input: { canonicalSignerAddress: string; toolPublicId: string }) => Promise<ToolRead>;
   readonly backing: (input: { canonicalSignerAddress: string; attemptPublicId: string; transactionHash: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string } }) => Promise<unknown>;
+  readonly backingReserve: (input: { canonicalSignerAddress: string; attemptPublicId: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string } }) => Promise<unknown>;
   readonly backingRead: (input: { canonicalSignerAddress: string }) => Promise<unknown>;
 };
 
@@ -41,7 +43,8 @@ const readReference = makeFunctionReference<"query">("provider_tools:readOwnedTo
 const deploymentReference = makeFunctionReference<"query">("provider_tools:readOwnedToolDeployment");
 const claimReplayReference = makeFunctionReference<"mutation">("wallet_command_replay:claimIngressReplayIdentity");
 const backingReference = makeFunctionReference<"action">("backing_payment_records:confirmBackingPayment");
-const backingReadReference = makeFunctionReference<"query">("backing_payment_store:readBackerPayment");
+const backingReserveReference = makeFunctionReference<"action">("backing_payment_records:reserveBackingPayment");
+const backingReadReference = makeFunctionReference<"action">("backing_payment_records:reverifyBackerPayment");
 
 function response(body: unknown, status: number): Response {
   try {
@@ -167,6 +170,14 @@ function exactBody(bytes: Uint8Array): ProviderToolRequest | null {
         || typeof parameters.offeringPublicId !== "string" || typeof parameters.units !== "string" || typeof parameters.tinybars !== "string" || typeof parameters.purchaseIntentId !== "string") return null;
       return { type: "backing", canonicalSignerAddress: record.canonicalSignerAddress, attemptPublicId: record.attemptPublicId, transactionHash: record.transactionHash, parameters: { offeringPublicId: parameters.offeringPublicId, units: parameters.units, tinybars: parameters.tinybars, purchaseIntentId: parameters.purchaseIntentId }, sessionExpiresAt: record.sessionExpiresAt };
     }
+    if (record.type === "backing_reserve" && JSON.stringify(Object.keys(record)) === JSON.stringify(["type", "canonicalSignerAddress", "attemptPublicId", "parameters", "sessionExpiresAt"])
+      && typeof record.attemptPublicId === "string" && noncePattern.test(record.attemptPublicId)
+      && record.parameters !== null && typeof record.parameters === "object" && !Array.isArray(record.parameters)) {
+      const parameters = record.parameters as Record<string, unknown>;
+      if (JSON.stringify(Object.keys(parameters)) !== JSON.stringify(["offeringPublicId", "units", "tinybars", "purchaseIntentId"])
+        || typeof parameters.offeringPublicId !== "string" || typeof parameters.units !== "string" || typeof parameters.tinybars !== "string" || typeof parameters.purchaseIntentId !== "string") return null;
+      return { type: "backing_reserve", canonicalSignerAddress: record.canonicalSignerAddress, attemptPublicId: record.attemptPublicId, parameters: { offeringPublicId: parameters.offeringPublicId, units: parameters.units, tinybars: parameters.tinybars, purchaseIntentId: parameters.purchaseIntentId }, sessionExpiresAt: record.sessionExpiresAt };
+    }
     if (record.type === "backing_read" && JSON.stringify(Object.keys(record)) === JSON.stringify(["type", "canonicalSignerAddress", "sessionExpiresAt"])) {
       return { type: "backing_read", canonicalSignerAddress: record.canonicalSignerAddress, sessionExpiresAt: record.sessionExpiresAt };
     }
@@ -215,6 +226,9 @@ async function handle(ctx: ActionContext, request: Request, seams: Seams): Promi
     if (body.type === "backing") {
       return response(await seams.backing({ canonicalSignerAddress: body.canonicalSignerAddress, attemptPublicId: body.attemptPublicId, transactionHash: body.transactionHash, parameters: body.parameters }), 200);
     }
+    if (body.type === "backing_reserve") {
+      return response(await seams.backingReserve({ canonicalSignerAddress: body.canonicalSignerAddress, attemptPublicId: body.attemptPublicId, parameters: body.parameters }), 200);
+    }
     if (body.type === "backing_read") {
       return response(await seams.backingRead({ canonicalSignerAddress: body.canonicalSignerAddress }), 200);
     }
@@ -246,7 +260,8 @@ export async function handleProviderSessionIngress(ctx: ActionContext, request: 
     read: (input) => ctx.runQuery(readReference, input) as Promise<ToolRead>,
     deployment: (input) => ctx.runQuery(deploymentReference, input) as Promise<ToolRead>,
     backing: (input) => ctx.runAction(backingReference, input),
-    backingRead: (input) => ctx.runQuery(backingReadReference, input),
+    backingReserve: (input) => ctx.runAction(backingReserveReference, input),
+    backingRead: (input) => ctx.runAction(backingReadReference, input),
   });
 }
 

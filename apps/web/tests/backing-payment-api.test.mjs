@@ -1,12 +1,62 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { readFile } from "node:fs/promises";
 
 const serverUrl = new URL("../src/lib/backing-payment-server.ts", import.meta.url);
 const routeUrl = new URL("../src/app/api/backing/payment/route.ts", import.meta.url);
 
-test("declares the same-origin authenticated backing payment API", () => {
-  assert.equal(existsSync(fileURLToPath(serverUrl)), true);
-  assert.equal(existsSync(fileURLToPath(routeUrl)), true);
+const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+const env = {
+  TOOL402_DASHBOARD_AUTH_ORIGIN: "https://tool402.test",
+  TOOL402_DASHBOARD_AUTH_SECRET: "a".repeat(64),
+};
+const payload = {
+  attemptPublicId: "AbCdEfGhIjKlMnOpQrStUw",
+  transactionHash: `0x${"ab".repeat(32)}`,
+  parameters: { offeringPublicId: "riskscan_revenue_note_demo", units: "10", tinybars: "1000000000", purchaseIntentId: "ZyXwVuTsRqPoNmLkJiHgFw" },
+};
+
+function request(body = JSON.stringify(payload), origin = "https://tool402.test") {
+  return new Request("https://tool402.test/api/backing/payment", { method: "POST", headers: { "content-type": "application/json", origin, cookie: "__Host-tool402-dashboard-session=session" }, body });
+}
+
+test("requires a valid same-origin dashboard session and forwards only its signer", async () => {
+  const { handleBackingPaymentRequest } = await import(serverUrl.href);
+  const forwarded = [];
+  const response = await handleBackingPaymentRequest(request(), env, {
+    readSession: async () => ({ address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" }),
+    forward: async (input) => { forwarded.push(input); return { status: "CONFIRMED", transactionHash: payload.transactionHash, tinybars: "1000000000" }; },
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { status: "CONFIRMED", transactionHash: payload.transactionHash, tinybars: "1000000000" });
+  assert.equal(forwarded[0].canonicalSignerAddress, signer);
+  assert.equal(forwarded[0].type, "backing");
+});
+
+test("rejects missing session, wrong origin, malformed body, and unavailable upstream without exposing secrets", async () => {
+  const { handleBackingPaymentRequest } = await import(serverUrl.href);
+  const unavailable = await handleBackingPaymentRequest(request(), env, { readSession: async () => null });
+  assert.equal(unavailable.status, 401);
+  const wrongOrigin = await handleBackingPaymentRequest(request(JSON.stringify(payload), "https://evil.test"), env, { readSession: async () => ({ address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" }) });
+  assert.equal(wrongOrigin.status, 401);
+  const malformed = await handleBackingPaymentRequest(request("{}"), env, { readSession: async () => ({ address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" }) });
+  assert.equal(malformed.status, 401);
+  const upstream = await handleBackingPaymentRequest(request(), env, { readSession: async () => ({ address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" }), forward: async () => null });
+  assert.deepEqual(await upstream.json(), { outcome: "unavailable" });
+  const source = await readFile(routeUrl, "utf8");
+  assert.doesNotMatch(source, /TOOL402_INGRESS_SECRET|TOOL402_DASHBOARD_AUTH_SECRET/);
+});
+
+test("fails closed for forged or expired sessions, oversized bodies, missing ingress configuration, and untrusted results", async () => {
+  const { handleBackingPaymentRequest } = await import(serverUrl.href);
+  const session = { address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" };
+  const forged = await handleBackingPaymentRequest(request(), env, { readSession: async () => null });
+  assert.equal(forged.status, 401);
+  const oversized = new Request("https://tool402.test/api/backing/payment", { method: "POST", headers: { "content-type": "application/json", origin: "https://tool402.test", cookie: "__Host-tool402-dashboard-session=session", "content-length": "4097" }, body: JSON.stringify(payload) });
+  assert.equal((await handleBackingPaymentRequest(oversized, env, { readSession: async () => session })).status, 401);
+  const missingConfig = await handleBackingPaymentRequest(request(), env, { readSession: async () => session, forward: async () => ({ unexpected: "result" }) });
+  assert.equal(missingConfig.status, 503);
+  const unconfigured = await handleBackingPaymentRequest(request(), { ...env, TOOL402_INGRESS_KEY_ID: undefined, TOOL402_INGRESS_SECRET: undefined, TOOL402_CONVEX_SITE_URL: undefined }, { readSession: async () => session });
+  assert.equal(unconfigured.status, 503);
+  assert.ok((await missingConfig.text()).length < 100, "the public error response is bounded");
 });

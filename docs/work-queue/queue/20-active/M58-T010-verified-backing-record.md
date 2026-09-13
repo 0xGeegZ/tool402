@@ -22,6 +22,15 @@ pinned Hedera Testnet evidence, and records only a verified `CONFIRMED`,
 `REJECTED`, or still-uncertain outcome. The backing page and the signed backer
 dashboard read that durable record after reload.
 
+M58 additionally owns one hash-to-attempt claim, including a race-safe indexed
+transactional claim and identical-request idempotency. That claim, not the
+shared ATS prepare attempt, owns its payment lifecycle, plus a bounded reload verification of
+`SUBMITTED`/`OUTCOME_UNKNOWN`. It passes the actual signed dashboard address
+into the Back island and requires it to equal the connected MetaMask account
+both before preparation and immediately before the sole transfer. The dashboard
+renders independent campaign and backing cards when both historical projections
+exist. None of this authorizes concurrent authorities.
+
 ## Exclusions
 
 This card does not send, repeat, speed up, cancel, or sign a wallet action. It

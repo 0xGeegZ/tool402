@@ -341,7 +341,6 @@ const expectedM32 = {
       candidateTransactionId: optional(string),
       candidateEvmAddress: optional(string),
       verifiedEvmTransactionHash: optional(string),
-      backingTinybars: optional(string),
       nextReconciliationAt: optional(bigint),
       acceptedAt: bigint,
     }),

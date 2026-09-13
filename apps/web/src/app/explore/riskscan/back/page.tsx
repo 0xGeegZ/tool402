@@ -16,7 +16,7 @@ async function BackingFlowRegion() {
     readDashboardSession(sessionCookie, process.env),
     loadBackerPayment(process.env, sessionCookie),
   ]);
-  return <BackingFlow projection={projection} signedIn={session !== null} initialPayment={payment} />;
+  return <BackingFlow projection={projection} dashboardAddress={session?.address ?? null} initialPayment={payment} />;
 }
 
 export default function RiskScanBackPage() {
