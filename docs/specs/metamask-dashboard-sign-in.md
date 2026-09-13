@@ -146,10 +146,12 @@ mobile main menus only when it is valid. It must be wrapped in the existing
 root-header `Suspense` boundary so Cache Components do not make the root shell
 dynamic; its fallback is the existing public menu without that link. This
 does not reuse wallet connection state, alter the S26 wallet/header contract,
-or expose an identity in the navigation. `POST /api/auth/logout` clears both
-cookie names and returns `204` with `Cache-Control: no-store`. The authenticated
-navigation boundary mounts a client synchronizer that consumes only the
-accepted shared wallet state. After it
+or expose an identity in the navigation. The authenticated `/dashboard` layout,
+after its existing server-side session validation, mounts the client
+synchronizer so an App Router cache of the root navigation cannot bypass the
+active-account check. `POST /api/auth/logout` clears both cookie names and
+returns `204` with `Cache-Control: no-store`. The synchronizer consumes only
+the accepted shared wallet state. After it
 has observed one settled wallet identity (`connected` or `not_issuer`), a later
 `disconnected` state sends exactly one same-origin logout request. To bind a
 restored dashboard session to the active account after a refresh, the
