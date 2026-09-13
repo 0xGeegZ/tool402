@@ -17,7 +17,24 @@ async function ProviderStatusRegions({ selectedToolPublicId }: { selectedToolPub
   return <ProviderStatus projections={projections} />;
 }
 
-export default async function ProviderPage({ searchParams }: { searchParams: Promise<{ tool?: string | string[] }> }) {
+type ProviderPageProps = {
+  readonly searchParams: Promise<{ tool?: string | string[] }>;
+};
+
+export default function ProviderPage({ searchParams }: ProviderPageProps) {
+  return (
+    <>
+      <main aria-label="Tool operator Campaign status" className="-mt-10">
+        <Suspense fallback={<p aria-live="polite" className="py-10 text-sm text-muted-foreground">Loading admitted records.</p>}>
+          <ProviderPageBoundary searchParams={searchParams} />
+        </Suspense>
+      </main>
+      <LandingFooter />
+    </>
+  );
+}
+
+async function ProviderPageBoundary({ searchParams }: ProviderPageProps) {
   const tool = (await searchParams).tool;
   const selectedToolPublicId = tool === undefined
     ? undefined
@@ -25,12 +42,5 @@ export default async function ProviderPage({ searchParams }: { searchParams: Pro
       ? parseProviderToolId(tool)
       : null;
   if (selectedToolPublicId === null) notFound();
-  return (
-    <>
-      <main aria-label="Tool operator Campaign status" className="-mt-10">
-        <Suspense fallback={<p aria-live="polite" className="py-10 text-sm text-muted-foreground">Loading admitted records.</p>}><ProviderStatusRegions selectedToolPublicId={selectedToolPublicId} /></Suspense>
-      </main>
-      <LandingFooter />
-    </>
-  );
+  return <ProviderStatusRegions selectedToolPublicId={selectedToolPublicId} />;
 }

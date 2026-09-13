@@ -442,7 +442,10 @@ test("two identical forms reach independent OPEN tools through signed orchestrat
       "next/navigation": { notFound() { assert.fail("selected Provider route must exist"); } },
     });
     const routeTree = await page.default({ searchParams: Promise.resolve(Object.fromEntries(url.searchParams)) });
-    const region = elements(routeTree).find((node) => typeof node.type === "function" && node.type.name === "ProviderStatusRegions");
+    const boundary = elements(routeTree).find((node) => typeof node.type === "function" && node.type.name === "ProviderPageBoundary");
+    assert.ok(boundary);
+    const boundaryTree = await boundary.type(boundary.props);
+    const region = elements(boundaryTree).find((node) => typeof node.type === "function" && node.type.name === "ProviderStatusRegions");
     assert.ok(region);
     const status = await region.type(region.props);
     assert.equal(status.props.projections.offering.outcome, "loaded", JSON.stringify(state.events.filter((event) => event.name === "error")));
