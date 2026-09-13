@@ -52,8 +52,9 @@ test("keeps guide presentation free of environment and automatic action while al
   const [page, steps, control, room] = await Promise.all([readAppFile(pagePath), readAppFile(stepsPath), readAppFile(controlPath), readAppFile(roomPath)]);
   const source = page + "\n" + steps + "\n" + control + "\n" + room;
   assert.doesNotMatch(source, /\b(?:sessionStorage|indexedDB|process\.env|import\.meta\.env)\b/i);
-  assert.match(room, /readStoredDemoEvidenceState\(window\.localStorage\)/);
-  assert.match(room, /tryWriteStoredDemoEvidence\(window\.localStorage, next\)/);
+  assert.match(room, /function browserStorage\(\)/);
+  assert.match(room, /readStoredDemoEvidenceState\(storage\)/);
+  assert.match(room, /tryWriteStoredDemoEvidence\(storage, next\)/);
   assert.match(room, /window\.addEventListener\("focus", refreshEvidence\)/);
   assert.match(room, /Reload local evidence/);
   assert.match(room, /Import Agent evidence/);

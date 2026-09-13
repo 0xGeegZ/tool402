@@ -28,7 +28,7 @@ function text(node) {
   return node && typeof node === "object" && "props" in node ? text(node.props.children) : "";
 }
 
-async function harness(storage) {
+async function harness(storage, storageGetter = () => storage) {
   const source = await readFile(roomUrl, "utf8");
   const { outputText } = typescript.transpileModule(source, {
     fileName: fileURLToPath(roomUrl),
@@ -57,10 +57,10 @@ async function harness(storage) {
   };
   const component = { exports: {} };
   const window = {
-    localStorage: storage,
     addEventListener(event, listener) { listeners.set(event, listener); },
     removeEventListener(event) { listeners.delete(event); },
   };
+  Object.defineProperty(window, "localStorage", { get: storageGetter });
   const demoEvidence = await import("../src/components/demo/demo-evidence.ts");
   runInNewContext(outputText, {
     exports: component.exports,
@@ -96,15 +96,23 @@ async function flush() {
   for (let index = 0; index < 8; index += 1) await Promise.resolve();
 }
 
+function importInput(tree) {
+  const input = elements(tree).find((node) => node.type === "input");
+  assert.notEqual(input, undefined);
+  return input;
+}
+
+async function importPacket(page, tree, body = evidence()) {
+  importInput(tree).props.onChange({ target: { files: [{ size: body.length, text: async () => body }], value: "" } });
+  await flush();
+  return page.render();
+}
+
 test("keeps imported evidence and both HashScan actions during storage write and focus read failure", async () => {
   const storage = { getItem: () => { throw new Error("denied"); }, setItem: () => { throw new Error("denied"); } };
   const page = await harness(storage);
   let tree = page.render();
-  const input = elements(tree).find((node) => node.type === "input");
-  assert.notEqual(input, undefined);
-  input.props.onChange({ target: { files: [{ size: evidence().length, text: async () => evidence() }], value: "" } });
-  await flush();
-  tree = page.render();
+  tree = await importPacket(page, tree);
   assert.match(text(tree), /Evidence imported for this tab only/u);
   assert.equal(elements(tree).filter((node) => node.type === "a" && node.props.href === "https://hashscan.io/testnet/transaction/0.0.1002-1720000000-000000001").length, 2);
   page.focus();
@@ -113,4 +121,37 @@ test("keeps imported evidence and both HashScan actions during storage write and
   assert.match(text(tree), /0\.0\.1002@1720000000\.000000001/u);
   const exportButton = elements(tree).find((node) => node.type === "Button" && text(node) === "Export evidence summary");
   assert.equal(exportButton.props.disabled, false);
+});
+
+test("keeps a valid packet in memory when obtaining localStorage throws", async () => {
+  const page = await harness(undefined, () => { throw new DOMException("blocked", "SecurityError"); });
+  let tree = page.render();
+  tree = await importPacket(page, tree);
+  assert.match(text(tree), /Evidence imported for this tab only/u);
+  assert.equal(elements(tree).filter((node) => node.type === "a" && node.props.href === "https://hashscan.io/testnet/transaction/0.0.1002-1720000000-000000001").length, 2);
+  page.focus();
+  tree = page.render();
+  assert.match(text(tree), /Saved evidence could not be read; current in-memory evidence is retained/u);
+  assert.match(text(tree), /0\.0\.1002@1720000000\.000000001/u);
+  assert.equal(elements(tree).find((node) => node.type === "Button" && text(node) === "Export evidence summary").props.disabled, false);
+});
+
+test("retains saved evidence when storage becomes unavailable and rejects malformed replacements", async () => {
+  let available = true;
+  let persisted = null;
+  const storage = { getItem: () => persisted, setItem: (_key, value) => { persisted = value; } };
+  const page = await harness(storage, () => {
+    if (!available) throw new DOMException("blocked", "SecurityError");
+    return storage;
+  });
+  let tree = page.render();
+  tree = await importPacket(page, tree);
+  assert.match(text(tree), /Evidence imported and saved locally/u);
+  available = false;
+  page.focus();
+  tree = page.render();
+  assert.match(text(tree), /Saved evidence could not be read; current in-memory evidence is retained/u);
+  tree = await importPacket(page, tree, "{not json");
+  assert.match(text(tree), /Evidence import failed; no payment was retried/u);
+  assert.match(text(tree), /0\.0\.1002@1720000000\.000000001/u);
 });

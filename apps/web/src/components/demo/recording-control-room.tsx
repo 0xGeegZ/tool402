@@ -50,6 +50,14 @@ function CopyCommandButton({ label, value }: { label: string; value: string }) {
   );
 }
 
+function browserStorage(): Pick<Storage, "getItem" | "setItem"> | null {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
 export function RecordingControlRoom() {
   const start = recordingSteps[0];
   const inputRef = useRef<HTMLInputElement>(null);
@@ -61,7 +69,12 @@ export function RecordingControlRoom() {
     setEvidence(next);
   }
   function refreshEvidence(): void {
-    const result = reconcileStoredDemoEvidence(evidenceRef.current, readStoredDemoEvidenceState(window.localStorage));
+    const storage = browserStorage();
+    if (storage === null) {
+      setImportStatus("storage-unavailable");
+      return;
+    }
+    const result = reconcileStoredDemoEvidence(evidenceRef.current, readStoredDemoEvidenceState(storage));
     retain(result.records);
     setImportStatus(result.kind === "available" ? "idle" : result.kind === "memory-only" ? "memory-only" : "storage-unavailable");
   }
@@ -79,7 +92,8 @@ export function RecordingControlRoom() {
       if (parsed === null) { setImportStatus("invalid"); return; }
       const next = mergeDemoEvidence(evidenceRef.current, parsed);
       retain(next);
-      setImportStatus(tryWriteStoredDemoEvidence(window.localStorage, next) ? "saved" : "memory-only");
+      const storage = browserStorage();
+      setImportStatus(storage !== null && tryWriteStoredDemoEvidence(storage, next) ? "saved" : "memory-only");
     } catch { setImportStatus("invalid"); }
   }
   function exportSummary(): void {
