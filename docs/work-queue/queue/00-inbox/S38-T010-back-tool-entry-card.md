@@ -91,3 +91,27 @@ progress, or balance figure, countdown, external link, EntityCheck funding
 route, catalog card change, header change, dependency, or change to
 `backing-state.ts`, `backing-flow.tsx`, the back page, or the discovery
 cards. The manifest's exclusions govern; this card does not restate them.
+
+## Human worktree lane request
+
+- Requested at `2026-09-12T00:00:00Z` by the human operator (repository
+  owner) through the operator's delegated session, under the
+  explicit-request rule of the [runtime worktree policy](../../WORKTREE-POLICY.md).
+  The card's tier, dependencies, declared paths, verification list, and
+  boundary are unchanged.
+- Worktree `.worktrees/s38`, branch `work/s38`, pushed to `origin/work/s38`.
+  Implementer: the human operator's delegated Claude Code session
+  (yannick). Reviewer: the root's independent task review and module
+  review, unchanged.
+- The lane delivers, in this commit order on that branch: the local
+  implementation plan (the card itself); one test-only RED commit adding
+  exactly the declared focused tests, failing only because the declared
+  source paths are absent; the minimal GREEN commits limited to the
+  declared source paths; and a delivery pull request marked "root
+  integrates; do not merge by hand."
+- The branch changes no queue state, ledger, catalog, ownership, STATE,
+  decision, human-action, or evidence file. The root keeps the ready
+  review, the activation decision, the independent reviews, the
+  integration decision, and every queue record. The branch is mirrored as
+  a pull request for human visibility only; nothing from it reaches `main`
+  outside the root's integration decision.
