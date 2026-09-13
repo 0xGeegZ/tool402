@@ -336,13 +336,13 @@ test("keeps the state library free of network, storage, timers, and logging", as
   assert.doesNotMatch(source, /wallet_addEthereumChain|eip6963/u);
 });
 
-test("renders every wallet state from a client island that passively restores or explicitly selects a session", async () => {
-  const source = [
-    await readAppFile("src/components/wallet/wallet-session.tsx"),
-    await readAppFile("src/components/wallet/wallet-connect.tsx"),
-  ].join("\n");
+test("keeps legacy session synchronization isolated from the Wagmi wallet island", async () => {
+  const sessionSource = await readAppFile("src/components/wallet/wallet-session.tsx");
+  const headerSource = await readAppFile("src/components/wallet/wallet-connect.tsx");
+  const source = [sessionSource, headerSource].join("\n");
 
-  assert.match(source, /^"use client";/u);
+  assert.match(sessionSource, /^"use client";/u);
+  assert.match(headerSource, /^"use client";/u);
   assert.match(
     source,
     /from\s+["']\.\.\/\.\.\/lib\/wallet\/wallet-state\.ts["']/u,
@@ -355,30 +355,33 @@ test("renders every wallet state from a client island that passively restores or
   assert.match(source, /\breadCurrentSession\b/u);
   assert.match(source, /from\s+["']\.\.\/ui\/button["']/u);
   for (const kind of [
+    "resolving",
     "disconnected",
     "connecting",
     "no_provider",
-    "multiple_providers",
     "wrong_chain",
-    "not_issuer",
+    "request_failed",
     "connected",
   ]) {
-    assert.match(source, new RegExp(`case\\s+["']${kind}["']`, "u"));
+    assert.match(headerSource, new RegExp(`case\\s+["']${kind}["']`, "u"));
   }
+  assert.match(headerSource, /from\s+["']\.\/use-tool402-wallet["']/u);
+  assert.doesNotMatch(headerSource, /wallet-session|wallet-state|metamask-provider/u);
   assert.match(source, /\buseEffect\b/u);
   assert.equal(
-    [...source.matchAll(/discoverMetaMaskProvider\(\s*window\s*\)/gu)].length,
+    [...sessionSource.matchAll(/discoverMetaMaskProvider\(\s*window\s*\)/gu)].length,
     2,
-    "provider discovery is limited to initial passive restoration and explicit Connect or Retry",
+    "the temporary legacy session owns passive restoration and the explicit Connect path",
   );
   assert.match(
-    source,
+    sessionSource,
     /async function connect\(approvedIssuerAddress\?: string\)[\s\S]*?discoverMetaMaskProvider\(\s*window\s*\)/u,
   );
-  const initialEffectStart = source.indexOf("useEffect(");
-  const effectStart = source.indexOf("useEffect(", initialEffectStart + 1);
+  const initialEffectStart = sessionSource.indexOf("useEffect(() =>");
+  assert.notEqual(initialEffectStart, -1);
+  const effectStart = sessionSource.indexOf("useEffect(() =>", initialEffectStart + 1);
   assert.notEqual(effectStart, -1);
-  const effectBody = extractBracedBody(source, source.indexOf("=>", effectStart));
+  const effectBody = extractBracedBody(sessionSource, sessionSource.indexOf("=>", effectStart));
   const cleanupBinding = effectBody.match(
     /\b(?:const|let)\s+([A-Za-z_$][\w$]*)\s*=\s*watchWalletSessionChanges\s*\(/u,
   );
@@ -408,9 +411,14 @@ test("renders every wallet state from a client island that passively restores or
     new RegExp(`${escapeRegExp(cleanupRef)}\\.current\\?\\.\\s*\\(\\s*\\)`, "u"),
     "local disconnect invokes the shared listener cleanup",
   );
-  const sessionChangeStart = source.lastIndexOf("watchWalletSessionChanges(");
+  const initialSessionChangeStart = sessionSource.indexOf("watchWalletSessionChanges(");
+  assert.notEqual(initialSessionChangeStart, -1);
+  const sessionChangeStart = sessionSource.indexOf(
+    "watchWalletSessionChanges(",
+    initialSessionChangeStart + 1,
+  );
   assert.notEqual(sessionChangeStart, -1);
-  const sessionChangeHandler = extractBracedBody(source, sessionChangeStart);
+  const sessionChangeHandler = extractBracedBody(sessionSource, sessionChangeStart);
   const connecting = sessionChangeHandler.search(
     /setState\(\s*\{\s*kind:\s*["']connecting["']\s*\}\s*\)/u,
   );
@@ -440,7 +448,8 @@ test("renders every wallet state from a client island that passively restores or
   assert.match(source, /Switch to Hedera Testnet/u);
   assert.match(source, /Retry/u);
   assert.match(source, /aria-live=["']polite["']/u);
-  assert.doesNotMatch(source, /WalletConnect|Coinbase|wagmi|rainbow/iu);
+  assert.doesNotMatch(headerSource, /WalletConnect|Coinbase|rainbow/iu);
+  assert.match(headerSource, /\buseTool402Wallet\b/u);
   assert.doesNotMatch(source, /0\.0\.\d+|HBAR|balance/u);
 });
 
