@@ -112,6 +112,16 @@ function isCurrentIssuer(value: unknown, address: string): value is {
     && record.ownedSubjectPublicIds[0] === planned.ownedSubjectPublicIds[0];
 }
 
+function activeSelfServiceAccount(value: unknown, address: string): value is { principalPublicId: string; policyVersion: "public_testnet_v1" } {
+  if (value === null || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return record.canonicalSignerAddress === address
+    && record.chainId === 296
+    && record.principalPublicId === `self_service_${address.slice(2)}`
+    && record.policyVersion === "public_testnet_v1"
+    && record.status === "ACTIVE";
+}
+
 function projectAllocation(value: unknown): ToolAllocation | null {
   if (value === null || typeof value !== "object") return null;
   const record = value as Record<string, unknown>;
@@ -298,9 +308,19 @@ export const allocateForIssuer = internalMutation({
       .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
         query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress)
       )).take(2);
-    if (authorities.length !== 1 || !isCurrentIssuer(authorities[0], args.canonicalSignerAddress)) {
-      return { outcome: "rejected" as const };
+    let owner: { principalPublicId: string; authorityVersion: string } | null = null;
+    if (authorities.length === 1 && isCurrentIssuer(authorities[0], args.canonicalSignerAddress)) {
+      owner = { principalPublicId: authorities[0].principalPublicId, authorityVersion: authorities[0].authorityVersion };
+    } else if (authorities.length === 0) {
+      const accounts = await ctx.db.query("selfServiceAccounts")
+        .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+          query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress)
+        )).take(2);
+      if (accounts.length === 1 && activeSelfServiceAccount(accounts[0], args.canonicalSignerAddress)) {
+        owner = { principalPublicId: accounts[0].principalPublicId, authorityVersion: accounts[0].policyVersion };
+      }
     }
+    if (owner === null) return { outcome: "rejected" as const };
     const prior = await ctx.db.query("providerTools")
       .withIndex("by_owner_and_chain_and_request", (query) => (
         query.eq("canonicalSignerAddress", args.canonicalSignerAddress).eq("chainId", 296).eq("requestId", args.requestId)
@@ -322,13 +342,12 @@ export const allocateForIssuer = internalMutation({
         .withIndex("by_tool_public_id", (query) => query.eq("toolPublicId", identity.toolPublicId))
         .take(1);
       if (collisions.length !== 0) continue;
-      const authority = authorities[0];
       await ctx.db.insert("providerTools", {
         ...identity,
         canonicalSignerAddress: args.canonicalSignerAddress,
         chainId: 296,
-        principalPublicId: authority.principalPublicId,
-        authorityVersion: authority.authorityVersion,
+        principalPublicId: owner.principalPublicId,
+        authorityVersion: owner.authorityVersion,
         requestId: args.requestId,
         offeringVersion: 1,
         directoryVersion: 1,

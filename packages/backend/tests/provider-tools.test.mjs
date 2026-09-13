@@ -25,9 +25,10 @@ function authority(overrides = {}) {
   };
 }
 
-function database({ authorities = [], tools = [], offerings = [], attempts = [], serializeSameRequestReads = false } = {}) {
+function database({ authorities = [], accounts = [], tools = [], offerings = [], attempts = [], serializeSameRequestReads = false } = {}) {
   const rows = {
     commandAuthorities: structuredClone(authorities),
+    selfServiceAccounts: structuredClone(accounts),
     providerTools: structuredClone(tools),
     offerings: structuredClone(offerings),
     externalPrepareCommandAttempts: structuredClone(attempts),
@@ -236,6 +237,20 @@ implementedTest("rejects revoked, non-issuer, and ambiguous authorities without 
     );
     assert.equal(db.writes.length, 0);
   }
+});
+
+implementedTest("allocates a distinct owned tool for an active self-service membership without a command authority", async () => {
+  const { allocateForIssuer } = await import(sourceUrl.href);
+  const db = database({ accounts: [{
+    _id: "selfServiceAccounts:a", _creationTime: 1,
+    canonicalSignerAddress, chainId: 296,
+    principalPublicId: `self_service_${canonicalSignerAddress.slice(2)}`,
+    policyVersion: "public_testnet_v1", status: "ACTIVE",
+  }] });
+  const outcome = await allocateForIssuer._handler(db.ctx, { canonicalSignerAddress, requestId });
+  assert.equal(outcome.outcome, "allocated");
+  assert.equal(db.writes[0].principalPublicId, `self_service_${canonicalSignerAddress.slice(2)}`);
+  assert.equal(db.writes[0].authorityVersion, "public_testnet_v1");
 });
 
 implementedTest("does not replay an allocation after its issuer authority is revoked", async () => {
