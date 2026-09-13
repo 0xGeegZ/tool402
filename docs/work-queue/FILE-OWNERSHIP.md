@@ -9,8 +9,62 @@ S48-T010 has accepted its focused RED and may amend
 only in `apps/web/src/app/layout.tsx`,
 `apps/web/tests/product-landing.test.mjs`, and
 `apps/web/tests/public-landing-reconciliation.test.mjs`, plus its card,
-specification, UI manifest, catalog, ledger, state, readiness review, and root
-records. The S26 header and shell wrapper in `layout.tsx` remain excluded.
+ specification, UI manifest, catalog, ledger, state, readiness review, and root
+ records. The S26 header and shell wrapper in `layout.tsx` remain excluded.
+
+W01-T010 is a root-owned `10-ready` successor migration. It owns its card,
+specification, design, plan, readiness evidence, queue records,
+`apps/web/package.json`, `package-lock.json`, `README.md`, and exactly these
+candidate source paths: `apps/web/src/app/layout.tsx`,
+`apps/web/src/app/dashboard/layout.tsx`,
+`apps/web/src/components/wallet/wallet-providers.tsx`,
+`apps/web/src/components/wallet/use-tool402-wallet.ts`,
+`apps/web/src/components/wallet/wallet-connect.tsx`,
+`apps/web/src/components/wallet/signature-dialog.tsx`,
+`apps/web/src/components/wallet/wallet-session.tsx`,
+`apps/web/src/lib/wallet/wagmi-config.ts`,
+`apps/web/src/lib/wallet/tool402-command.ts`,
+`apps/web/src/lib/wallet/command-relay.ts`,
+`apps/web/src/lib/wallet/command-bridge.ts`,
+`apps/web/src/lib/wallet/wallet-state.ts`,
+`apps/web/src/lib/wallet/metamask-provider.ts`,
+`apps/web/src/components/auth/metamask-dashboard-sign-in.tsx`,
+`apps/web/src/components/auth/dashboard-session-sync.tsx`,
+`apps/web/src/components/provider/deploy/ats-create-action.tsx`,
+`apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`,
+`apps/web/src/components/backing/backing-flow.tsx`,
+`apps/web/src/components/backing/backing-state.ts`, and
+`apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`. Its exact candidate
+test paths are `wagmi-provider.test.mjs`, `wallet-session.test.mjs`,
+`wallet-state.test.mjs`, `wallet-session-sync.test.mjs`,
+`metamask-provider.test.mjs`, `dashboard-auth.test.mjs`,
+`dashboard-session-sync.test.mjs`, `tool402-command.test.mjs`,
+`tool402-command-wagmi-compatibility.test.mjs`, `commands-api.test.mjs`,
+`backing-route.test.mjs`, `backing-state.test.mjs`,
+`stage-b-browser-provider-bridge.test.mjs`, `ats-create-action.test.mjs`, and
+`deploy-stage-signing.test.mjs`, all under `apps/web/tests/`. All candidate
+source, test, package and lockfile changes are prohibited until a separate
+W01 test-only RED activation.
+
+The root transfers only client-transport migration seams to W01: S26 transfers
+the shared session/header/layout/deploy-signing/backing-flow composition;
+S40 transfers sign-in, dashboard session sync and dashboard layout; M58
+transfers backing flow/state and backing tests; M51 transfers only the
+transport adaptation in deploy-signing/test; M53 transfers only the bridge/
+bridge-test transport adaptation; M54 transfers only bridge, ATS action,
+deploy-signing and their tests; M56 transfers backing flow/state and backing
+tests; and B04 transfers only the overlapping bridge and bridge-test transport
+adaptation. S36's provider-stage handoff is not transferred or modified. W01
+must preserve M51 durable-resume, M53 receipt selection, M54 read-only
+recovery, M56/M58 reservation/hash evidence, B04 identity constraints, and
+accepted M49/M50 calldata/candidate/passive-session safety.
+
+Open PR #118 remains an external conflict record, not W01-owned source: at
+head `db83f47a` against `main` `9bd52322` it changes
+`wallet-connect.tsx`, `wallet-session.tsx`, `wallet-balance.ts`,
+`wallet-balance.test.mjs`, `wallet-session-sync.test.mjs`,
+`wallet-session.test.mjs`, `wallet-state.test.mjs`, `UI-S37.md`, and the S37
+inbox card. It must be rechecked before W01's final rebase.
 
 M56-S26 scoped ownership transfer: canonical main now contains M56's card,
 specification, and catalog row, so the transfer condition is satisfied. The
@@ -26,6 +80,16 @@ signature, authority, or other wallet behavior. The transfer excludes
 `wallet-session.tsx`, `wallet-connect.tsx`, layout/header, provider-deploy
 integration, the session state machine, and unrelated tests. Any later review
 of this shared seam must retain the focused backing/S26 compatibility boundary.
+
+W01-M56 successor transfer: for W01 only, the M56-S26 requirement to retain
+the named custom `useWalletSession` and `connectedWalletSession` symbols is
+superseded by the W01 derived Wagmi wallet hook. The transfer is limited to
+`backing-flow.tsx`, `backing-state.ts`, `backing-route.test.mjs`, and
+`backing-state.test.mjs`; it retains one shared connection authority, no local
+wallet island/store/discovery, the exact funding command/reservation, one
+explicit transport, attempt-scoped returned hash, read-only verification and
+all M56 durable projection behavior. It neither changes offering data, server
+backing verification, allocation, authority, or a human/live action.
 
 M54-T010 is a root-owned `20-active` CORE_P0 candidate recovery correction. It
 owns its card, specification, queue/review records, integration, commits, and

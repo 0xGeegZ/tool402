@@ -33,11 +33,10 @@
 - [ ] **Step 1: Write the failing test**
 
 ```js
-test('uses one SSR-enabled Wagmi config for chain 296', async () => {
-  const source = await readAppFile('src/lib/wallet/wagmi-config.ts')
-  assert.match(source, /ssr:\s*true/)
-  assert.match(source, /296/)
-  assert.match(await readAppFile('src/app/layout.tsx'), /<WalletProviders>/)
+test('creates one SSR connection configuration for Hedera Testnet', async () => {
+  const { tool402WagmiConfig } = await import('../src/lib/wallet/wagmi-config.ts')
+  assert.deepEqual(tool402WagmiConfig.chains.map((chain) => chain.id), [296])
+  assert.equal(tool402WagmiConfig.state.status, 'disconnected')
 })
 ```
 
@@ -71,10 +70,11 @@ Pin `wagmi@3.7.7` and `@tanstack/react-query@5.102.8`; create exactly one
 - [ ] **Step 1: Write failing behavior tests**
 
 ```js
-test('waits for reconnection without requesting an account', async () => {
-  const source = await readAppFile('src/components/wallet/use-tool402-wallet.ts')
-  assert.match(source, /useConnection\(/)
-  assert.doesNotMatch(source, /eth_requestAccounts|accountsChanged|chainChanged/)
+test('keeps the dashboard session intact while a mock connector reconnects', async () => {
+  const connector = createMockMetaMaskConnector({ state: 'reconnecting' })
+  const screen = await renderWalletHarness({ connector, dashboardAddress: accountA })
+  assert.equal(screen.logoutCalls, 0)
+  assert.equal(connector.requestAccountCalls, 0)
 })
 
 test('keeps an explicit disconnect after remount', async () => {
@@ -123,7 +123,7 @@ test('does not redirect after a failed server logout', async () => {
 - Modify: `apps/web/src/lib/wallet/tool402-command.ts`, `apps/web/src/lib/wallet/command-relay.ts`, `apps/web/src/components/wallet/signature-dialog.tsx`, `apps/web/src/lib/wallet/command-bridge.ts`, `apps/web/tests/tool402-command.test.mjs`, `apps/web/tests/commands-api.test.mjs`
 - Create: `apps/web/tests/tool402-command-wagmi-compatibility.test.mjs`
 
-**Interfaces:** `signCommand(command, signTypedData)` consumes a narrow async signer and returns the existing signed envelope after grammar and recovered-signer validation.
+**Interfaces:** `signCommand(command, signTypedData)` consumes a narrow async signer and returns the existing signed envelope after grammar and recovered-signer validation. `signAndRelayCommand(context, request, dependencies)` accepts a `readCurrentContext(): WalletActionContext | null` assertion and checks it before signature and immediately before relay.
 
 - [ ] **Step 1: Write failing compatibility tests**
 
@@ -134,16 +134,18 @@ test('keeps the canonical typed-data digest and command body', async () => {
   assert.equal(createCommandBody(await signFixture(request), fixture.payload), fixture.body)
 })
 
-test('does not relay a signature after its account changed', async () => {
-  await dialog.begin()
-  wallet.setAccount(accountB)
-  await dialog.resolveSignature(signatureForA)
+test('does not relay after the injected context changes during signing', async () => {
+  const context = createMutableWalletContext(accountA, 296)
+  const operation = signAndRelayCommand({ readCurrentContext: context.read }, request, dependencies)
+  context.set(accountB, 296)
+  await resolveSignature(signatureForA)
+  await operation
   assert.equal(relay.calls.length, 0)
 })
 ```
 
 - [ ] **Step 2: Verify RED** — run command and new compatibility tests.
-- [ ] **Step 3: Implement** — retain the existing typed-data object/expiry/body; call `useSignTypedData().mutateAsync` with `retry: false`, recover/compare signer, and keep no `personal_sign` fallback.
+- [ ] **Step 3: Implement** — define `WalletActionContext = { address; chainId: 296; connectorId; generation }`, retain the existing typed-data object/expiry/body, call `useSignTypedData().mutateAsync` with `retry: false`, recover/compare signer, and require the injected context assertion before signing and before relay. Keep no `personal_sign` fallback.
 - [ ] **Step 4: Verify GREEN** — command/compatibility tests pass.
 - [ ] **Step 5: Commit** — `refactor: Sign Tool402 commands through Wagmi`.
 

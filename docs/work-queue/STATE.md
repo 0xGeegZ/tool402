@@ -43,13 +43,31 @@
   remain separately controlled.
 
 - W01_WAGMI_WALLET_SESSION_INTAKE: At `origin/dev`
-  `02c22d6906c7ef117d05ccd28ff2c37236356e64`, the owner requests replacing
+  `b52829e5a390ca49f09de3986d9157b19eacb716`, the owner requests replacing
   the in-house MetaMask connection/session transport with Wagmi v3 and Viem.
   W01-T010 begins in `00-inbox` with its committed local specification and
   design only. No application source, dependency, lockfile, wallet request,
   signature, transaction, authority, deployment, merge or live action is
   authorized until a separate root readiness and RED activation reconciles
   active S26/S36/S40/M49/M50/M58 ownership and open PR #118.
+
+- W01_WAGMI_WALLET_SESSION_READY: Independent readiness records the rebase on
+  `origin/dev` `b52829e5`, source/test ownership, successor transfers for
+  transport transfers from S26/S40/M51/M53/M54/M56/M58/B04, the preserved S36
+  boundary, M49/M50 invariant preservation, the live
+  PR #118 overlap/disposition, behavioral RED requirements and two preexisting
+  Web baseline failures. W01-T010 moves to `10-ready` only; every package,
+  source, wallet, signature, transaction, authority, deployment, merge and
+  live action remains prohibited pending separate test-only activation. That
+  activation may reserve only `wagmi-provider.test.mjs`,
+  `wallet-session.test.mjs`, `wallet-state.test.mjs`,
+  `wallet-session-sync.test.mjs`, `metamask-provider.test.mjs`,
+  `dashboard-auth.test.mjs`, `dashboard-session-sync.test.mjs`,
+  `tool402-command.test.mjs`, `tool402-command-wagmi-compatibility.test.mjs`,
+  `commands-api.test.mjs`, `backing-route.test.mjs`, `backing-state.test.mjs`,
+  `stage-b-browser-provider-bridge.test.mjs`, `ats-create-action.test.mjs`,
+  and `deploy-stage-signing.test.mjs`, all below `apps/web/tests/`; no source
+  path is authorized until a later RED acceptance.
 
 - S38_S39_S47_MERGED_LANE_RECONCILIATION: At `origin/main`
   `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, S38-T010, S39-T010, and

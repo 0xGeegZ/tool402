@@ -7,7 +7,7 @@ wallet-session plumbing with Wagmi v3 and Viem. It is a migration of client
 transport and connection state, not a change to dashboard authentication,
 business authorization, command admission, or payment finality.
 
-The delivery base is `origin/dev` at `02c22d6906c7ef117d05ccd28ff2c37236356e64`.
+The delivery base is `origin/dev` at `b52829e5a390ca49f09de3986d9157b19eacb716`.
 W01 is not active until the root records readiness and accepts a focused RED
 contract. Until then, this document grants no source, package, or runtime
 change.
