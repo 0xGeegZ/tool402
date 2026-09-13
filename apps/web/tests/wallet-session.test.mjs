@@ -276,6 +276,7 @@ test("keeps explicit disconnect across a passive remount and exposes connector f
   const remounted = useTool402Wallet();
   assert.deepEqual(remounted.state, { kind: "disconnected" });
   assert.deepEqual(disconnected.calls.connect, []);
+  assert.deepEqual(disconnected.calls.switchChain, []);
   assert.deepEqual(disconnected.calls.disconnect, [{ connector: disconnected.currentConnector }]);
 
   const unavailable = wagmiHarness({ connectors: [] });
@@ -469,7 +470,10 @@ implementedTest("renders the compact header control from the Wagmi-derived walle
       assert.equal(button.props.variant, expected.variant);
       button.props.onClick();
       assert.equal(calls.length, 1);
-      assert.equal(calls[0][0], state.kind === "wrong_chain" ? "switchToHedera" : "connect");
+      const retriesSwitch = state.kind === "wrong_chain" || (
+        state.kind === "request_failed" && state.operation === "switch"
+      );
+      assert.equal(calls[0][0], retriesSwitch ? "switchToHedera" : "connect");
       assert.equal(calls[0].length, 1, "the header selects no account or authority itself");
     }
   }
