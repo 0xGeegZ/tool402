@@ -483,7 +483,7 @@ dashboardNavigationTest("shows Dashboard only after server-side session validati
   assert.doesNotMatch(rootLayout, /\bcookies\(\)/u);
 
   assert.match(dashboardLayout, /import\s*\{\s*DashboardSessionSync\s*\}\s*from\s*["'][^"']*dashboard-session-sync["']/u);
-  assert.equal((dashboardLayout.match(/<DashboardSessionSync\s+address=\{session\.address\}\s*\/>/gu) ?? []).length, 1);
+  assert.equal((dashboardLayout.match(/<DashboardSessionSync\s+address=\{session\.address\}\s*>/gu) ?? []).length, 1);
 
   assert.match(localNavigation, /showDashboard\s*=\s*false/u);
   assert.match(localNavigation, /showDashboard\s*\?/u);
@@ -556,7 +556,7 @@ dashboardLayoutTest("guards dashboard descendants on the server before rendering
   assert.match(layout, /\bSuspense\b/u);
   assert.match(layout, /\breadDashboardSessionCookieName\b/u);
   assert.match(layout, /redirect\(\s*["']\/sign-in["']\s*\)/u);
-  assert.match(layout, /<DashboardSessionSync\s+address=\{session\.address\}\s*\/>/u);
+  assert.match(layout, /<DashboardSessionSync\s+address=\{session\.address\}\s*>/u);
   assert.match(layout, /\{children\}/u);
   assert.doesNotMatch(layout, /["']use client["']/u);
 });

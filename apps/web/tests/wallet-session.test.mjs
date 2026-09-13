@@ -81,7 +81,10 @@ function reactMock(contextValue) {
 
 async function loadWagmiHook(hooks) {
   assert.equal(wagmiHookExists, true, `missing declared source path: ${wagmiHookPath}`);
-  return loadClientModule(wagmiHookPath, { wagmi: hooks });
+  return loadClientModule(wagmiHookPath, {
+    react: { useRef: (initial) => ({ current: initial }) },
+    wagmi: hooks,
+  });
 }
 
 function wagmiHarness(options = {}) {
@@ -261,6 +264,7 @@ test("uses direct Wagmi hooks and does nothing during a passive reconnect", asyn
   assertWalletState(wallet.state, { kind: "resolving" });
   assert.equal(wallet.resolved, false);
   assert.deepEqual({ ...wallet.connection }, {
+    generation: 0,
     status: "reconnecting",
     account: undefined,
     chainId: undefined,
@@ -288,6 +292,7 @@ test("uses only explicit MetaMask connect, disconnect, and Hedera switch mutatio
   assertWalletState(wallet.state, { kind: "connected", address });
   assert.equal(wallet.resolved, true);
   assert.equal(wallet.connection.status, "connected");
+  assert.equal(wallet.connection.generation, 0);
   assert.equal(wallet.connection.account, address);
   assert.equal(wallet.connection.chainId, 296);
   assert.equal(wallet.connection.connector?.id, "metaMask");
@@ -374,7 +379,9 @@ test("owns no connection store or native provider listeners", async () => {
   for (const hook of ["useConnection", "useConnectors", "useConnect", "useDisconnect", "useSwitchChain"]) {
     assert.match(source, new RegExp(`\\b${hook}\\s*\\(`, "u"));
   }
-  assert.doesNotMatch(source, /\b(?:useState|useEffect|useRef|accountsChanged|chainChanged|eip6963)\b/u);
+  assert.doesNotMatch(source, /\b(?:useState|useEffect|accountsChanged|chainChanged|eip6963)\b/u);
+  assert.match(source, /const\s+generationRef\s*=\s*useRef\(/u);
+  assert.match(source, /generation:\s*generationRef\.current\.generation/u);
 });
 
 implementedTest("exports the fixed session API and throws outside the provider", async () => {

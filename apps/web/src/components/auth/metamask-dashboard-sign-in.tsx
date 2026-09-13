@@ -54,6 +54,7 @@ function isCurrentConnection(
   expected: Tool402WalletConnection,
 ): boolean {
   return current.status === "connected"
+    && current.generation === expected.generation
     && current.status === expected.status
     && current.account === expected.account
     && current.chainId === 296

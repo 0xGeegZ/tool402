@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import {
   ProviderNotFoundError,
   useConnect,
@@ -35,6 +36,7 @@ export type Tool402WalletState =
   | { readonly kind: "connected"; readonly address: string };
 
 export interface Tool402WalletConnection {
+  readonly generation: number;
   readonly status: ConnectionStatus;
   readonly account: string | undefined;
   readonly chainId: number | undefined;
@@ -74,7 +76,16 @@ export function useTool402Wallet() {
   const { mutateAsync: switchChainAsync, error: switchError } = useSwitchChain();
   const metaMask = connectors.find((connector) => connector.id === metaMaskConnectorId);
   const account = connection.address?.toLowerCase();
+  const identity = `${connection.status}:${account ?? ""}:${connection.chainId ?? ""}:${connection.connector?.id ?? ""}`;
+  const generationRef = useRef({ identity, generation: 0 });
+  if (generationRef.current.identity !== identity) {
+    generationRef.current = {
+      identity,
+      generation: generationRef.current.generation + 1,
+    };
+  }
   const currentConnection: Tool402WalletConnection = {
+    generation: generationRef.current.generation,
     status: connection.status,
     account,
     chainId: connection.chainId,
