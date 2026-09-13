@@ -1244,6 +1244,14 @@ existing same-origin logout route once when the provider/account/chain is not
 an exact match. It may not request an account, sign, trust an event payload,
 store data, retry, relay, transact, deploy, or change S26/M50 source or tests.
 
+M59-T010 is an `00-inbox` CORE_P0 public Testnet self-service onboarding card.
+It owns only its card, design, future implementation plan, later control
+records, and root queue integration at this intake head. It has no active
+source or test reservation. Any future activation must separately map and
+transfer the selected M55/M58/provider/session/ATS/backing paths, preserve
+legacy branches, and retain human control of configuration, deployment,
+migration, wallet actions, and live evidence.
+
 S41-T010 is an `00-inbox` CORE_P0 follow-up with no active source or test
 reservation. S40 acceptance is an explicit activation gate while the card is
 still speculative. After that gate and its own independent readiness/activation

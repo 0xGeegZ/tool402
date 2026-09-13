@@ -1,5 +1,14 @@
 # Runtime queue state
 
+- M59_PUBLIC_TESTNET_SELF_SERVICE_ONBOARDING_INTAKE: The repository owner
+  authorizes a new public Hedera Testnet self-service policy, disabled by
+  default. M59-T010 is `00-inbox`; its design selects one stable
+  server-provisioned membership with command-scoped provider/backer capability,
+  rather than ambiguous duplicate legacy authorities. No source/test path is
+  active until independent readiness and RED activation. Existing RiskScan,
+  privileged authorities, B03/x402 behavior, deployment, migration, feature
+  enablement, wallet actions, and live evidence remain separately controlled.
+
 - S38_S39_S47_MERGED_LANE_RECONCILIATION: At `origin/main`
   `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, S38-T010, S39-T010, and
   S47-T010 are documented as completed local source deliveries. Their merged
