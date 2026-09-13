@@ -47,8 +47,11 @@ passively select an already-authorized MetaMask provider, read exactly
 `eth_chainId` and `eth_accounts`, and retain the resulting existing session.
 It never calls `eth_requestAccounts`, signs, switches a chain, stores data, or
 retries. The explicit `connect` handler remains the only way to request an
-account. `switchChain` reuses `recheckAfterSwitch`; `disconnect` clears both
-values. `useWalletSession()` throws outside the provider. The session lives in
+account. It exposes a `settled` readiness signal only after the initial passive
+read, explicit connect, switch, or disconnect has reached a final local state;
+consumers must not treat the initial `disconnected` placeholder as a result.
+`switchChain` reuses `recheckAfterSwitch`; `disconnect` clears both values.
+`useWalletSession()` throws outside the provider. The session lives in
 the root layout, so it survives client-side navigation and restores an
 already-authorized account after a full reload. Nothing is persisted to
 storage. A connected session is not an authority; the server re-reads the

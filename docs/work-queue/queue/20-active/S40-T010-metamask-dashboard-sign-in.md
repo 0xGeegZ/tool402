@@ -249,9 +249,11 @@ relay, deployment, or external request, and it does not amend S26 or M50 source.
 The owner directs the root to repair the review-confirmed gap where a restored
 dashboard cookie outlives a missing, changed, or wrong-chain MetaMask account.
 Within the existing synchronizer, its focused test, and the authenticated
-navigation mount, the browser may passively select the existing provider, read
-only `eth_chainId` and `eth_accounts`, and use the accepted account/chain
-watcher. It must retain the session only when the settled Hedera Testnet
+navigation mount, the synchronizer consumes only the shared wallet session and
+waits for its explicit settled result. The shared session alone may passively
+select the existing provider, read only `eth_chainId` and `eth_accounts`, and
+use the accepted account/chain watcher. The synchronizer must retain the
+session only when the settled Hedera Testnet
 address exactly matches the server-validated session address; otherwise it
 may call the existing same-origin logout route once. It adds no account
 request, signature, event-payload trust, storage, retry, transaction, relay,

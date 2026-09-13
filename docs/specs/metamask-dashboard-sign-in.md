@@ -154,13 +154,12 @@ after its existing server-side session validation, mounts the client
 synchronizer so an App Router cache of the root navigation cannot bypass the
 active-account check. `POST /api/auth/logout` clears both cookie names and
 returns `204` with `Cache-Control: no-store`. The synchronizer consumes only
-the accepted shared wallet state. After it
-has observed one settled wallet identity (`connected` or `not_issuer`), a later
-`disconnected` state sends exactly one same-origin logout request. To bind a
-restored dashboard session to the active account after a refresh, the
-synchronizer also passively selects the existing MetaMask provider, reads only
-`eth_chainId` and `eth_accounts`, and registers the accepted account/chain
-change watcher. It keeps the dashboard only when the settled Hedera Testnet
+the accepted shared wallet state and waits for its `settled` readiness signal,
+so the initial `disconnected` placeholder cannot revoke a session before the
+passive read completes. The shared wallet provider alone passively selects the
+existing MetaMask provider, reads only `eth_chainId` and `eth_accounts`, and
+registers the accepted account/chain change watcher. The synchronizer keeps the
+dashboard only when the settled Hedera Testnet
 address exactly equals the sealed session address; absent provider/account,
 wrong chain, or a different account logs out once. On success it replaces the
 current route with `/sign-in` and refreshes the App Router so the server
@@ -186,7 +185,7 @@ without inventing account-specific data or a claim of account authority.
 | restored dashboard session has no selected MetaMask account, a wrong chain, or a different selected account | one same-origin logout request, then replace with `/sign-in` and refresh after success |
 
 No automatic retry, provider discovery outside the shared wallet-session
-provider and authenticated synchronizer, storage API, timer,
+provider, storage API, timer,
 analytics, console logging, external fetch, payment, transaction, command
 relay, role decision, or configuration fallback other than the fixed Vercel
 Preview origin derivation is allowed.
