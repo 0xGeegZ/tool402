@@ -31,14 +31,18 @@ test("parses canonical Hedera account identifiers", () => {
   assert.equal(parseHederaAccountId("0.0.123"), "0.0.123");
 });
 
-test("parses zero-, one-, and nine-digit canonical transaction nanoseconds", () => {
+test("parses zero-padded SDK transaction nanoseconds without changing their meaning", () => {
   assert.equal(
     parseHederaTransactionId("0.0.123@1700000000.0"),
     "0.0.123@1700000000.0",
   );
   assert.equal(
-    parseHederaTransactionId("0.0.123@1700000000.1"),
-    "0.0.123@1700000000.1",
+    parseHederaTransactionId("0.0.123@1700000000.000000001"),
+    "0.0.123@1700000000.000000001",
+  );
+  assert.equal(
+    parseHederaTransactionId("0.0.123@1700000000.012345678"),
+    "0.0.123@1700000000.012345678",
   );
   assert.equal(
     parseHederaTransactionId("0.0.123@1700000000.123456789"),
@@ -68,6 +72,7 @@ test("rejects malformed Hedera identifiers", () => {
     "0.0.123@01.1",
     "0.0.123@1.01",
     "0.0.123@1.1234567890",
+    "0.0.123@1.1000000000",
     "0.0.123@1.1.1",
     "01.0.123@1.1",
     "0.0.123@-1.1",

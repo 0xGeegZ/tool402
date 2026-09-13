@@ -1,18 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "../ui/button";
-import { recordingReadiness, recordingSteps, recordingTourHref, type RecordingStatus } from "./demo-control-room";
+import { recordingReadinessForEvidence, recordingSteps, recordingTourHref, type RecordingStatus } from "./demo-control-room";
+import {
+  exportDemoEvidenceSummary,
+  mergeDemoEvidence,
+  parseDemoEvidenceImport,
+  readStoredDemoEvidenceState,
+  reconcileStoredDemoEvidence,
+  summarizeDemoEvidence,
+  tryWriteStoredDemoEvidence,
+  type AgentPaymentEvidence,
+} from "./demo-evidence";
 
-const preflightCommand = "export RISKSCAN_PAY_SERVICE_BASE_URL='https://tool402.vercel.app'\nexport RISKSCAN_PAY_INPUT_JSON='{\"requestRef\":\"b03-release-001\",\"subjectRef\":\"tool402-release\",\"context\":\"One authorized Hedera-testnet RiskScan exercise\",\"declarations\":{\"identity\":true,\"pricing\":true,\"limitations\":true,\"evidence\":true}}'\nexport RISKSCAN_PAY_POLICY_JSON='{\"network\":\"hedera:testnet\",\"asset\":\"0.0.0\",\"maximumAmount\":\"100000\"}'\nnode --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts --preflight";
-const paidCommand = ": \"$" + "{RISKSCAN_PAY_PAYER_ACCOUNT_ID:?set privately in ignored runtime configuration}\"\n: \"$" + "{RISKSCAN_PAY_PAYER_PRIVATE_KEY:?set privately in ignored runtime configuration}\"\nnode --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts";
+const preflightCommand = "export RISKSCAN_PAY_SERVICE_BASE_URL='https://tool402.vercel.app'\nexport RISKSCAN_PAY_INPUT_JSON='{\"requestRef\":\"b03-release-001\",\"subjectRef\":\"tool402-release\",\"context\":\"One authorized Hedera-testnet RiskScan exercise\",\"declarations\":{\"identity\":true,\"pricing\":true,\"limitations\":true,\"evidence\":true}}'\nexport RISKSCAN_PAY_POLICY_JSON='{\"network\":\"hedera:testnet\",\"asset\":\"0.0.0\",\"maximumAmount\":\"100000\"}'\nexport RISKSCAN_PAY_RECORDING_RUN_REF='b03-release-001'\nexport RISKSCAN_PAY_SOURCE_VERSION=\"$(git rev-parse --verify HEAD)\"\nnode --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts --preflight";
+const paidCommand = ": \"$" + "{RISKSCAN_PAY_PAYER_ACCOUNT_ID:?set privately in ignored runtime configuration}\"\n: \"$" + "{RISKSCAN_PAY_PAYER_PRIVATE_KEY:?set privately in ignored runtime configuration}\"\nnode --experimental-strip-types apps/agent/src/riskscan-pay-cli.ts --evidence-output ./tool402-agent-evidence.json";
 const expectedPreflight = "RISKSCAN_PAY_DIAGNOSTIC PREFLIGHT_GUARD_REACHED";
-const expectedPaidResult = "RISKSCAN_PAY_OUTCOME paid\nRISKSCAN_PAY_SETTLEMENT <non-empty-safe-settlement-reference>\nRISKSCAN_PAY_DIAGNOSTIC PAID";
+const expectedPaidResult = "RISKSCAN_PAY_OUTCOME paid\nRISKSCAN_PAY_SETTLEMENT <non-empty-safe-settlement-reference>\nRISKSCAN_PAY_EVIDENCE_EXPORTED\nRISKSCAN_PAY_DIAGNOSTIC PAID";
 
 function tone(status: RecordingStatus): string {
   if (status === "READY") return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700";
+  if (status === "Settlement reported") return "border-sky-500/30 bg-sky-500/10 text-sky-700";
   if (status === "OPTIONAL") return "border-sky-500/30 bg-sky-500/10 text-sky-700";
   if (status === "NOT AVAILABLE") return "border-border bg-muted text-muted-foreground";
   return "border-amber-500/30 bg-amber-500/10 text-amber-800";
@@ -39,8 +50,60 @@ function CopyCommandButton({ label, value }: { label: string; value: string }) {
   );
 }
 
+function browserStorage(): Pick<Storage, "getItem" | "setItem"> | null {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
 export function RecordingControlRoom() {
   const start = recordingSteps[0];
+  const inputRef = useRef<HTMLInputElement>(null);
+  const evidenceRef = useRef<readonly AgentPaymentEvidence[]>([]);
+  const [evidence, setEvidence] = useState<readonly AgentPaymentEvidence[]>([]);
+  const [importStatus, setImportStatus] = useState<"idle" | "saved" | "memory-only" | "invalid" | "storage-unavailable">("idle");
+  function retain(next: readonly AgentPaymentEvidence[]): void {
+    evidenceRef.current = next;
+    setEvidence(next);
+  }
+  function refreshEvidence(): void {
+    const storage = browserStorage();
+    if (storage === null) {
+      setImportStatus("storage-unavailable");
+      return;
+    }
+    const result = reconcileStoredDemoEvidence(evidenceRef.current, readStoredDemoEvidenceState(storage));
+    retain(result.records);
+    setImportStatus(result.kind === "available" ? "idle" : result.kind === "memory-only" ? "memory-only" : "storage-unavailable");
+  }
+  useEffect(() => {
+    refreshEvidence();
+    window.addEventListener("focus", refreshEvidence);
+    return () => window.removeEventListener("focus", refreshEvidence);
+  }, []);
+  const summary = summarizeDemoEvidence(evidence).agentPayment;
+  const readiness = recordingReadinessForEvidence(evidence);
+  async function importEvidence(file: File | undefined): Promise<void> {
+    if (file === undefined || file.size > 16_384) { setImportStatus("invalid"); return; }
+    try {
+      const parsed = parseDemoEvidenceImport(await file.text());
+      if (parsed === null) { setImportStatus("invalid"); return; }
+      const next = mergeDemoEvidence(evidenceRef.current, parsed);
+      retain(next);
+      const storage = browserStorage();
+      setImportStatus(storage !== null && tryWriteStoredDemoEvidence(storage, next) ? "saved" : "memory-only");
+    } catch { setImportStatus("invalid"); }
+  }
+  function exportSummary(): void {
+    try {
+      const blob = new Blob([exportDemoEvidenceSummary(evidence)], { type: "application/json" });
+      const href = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = href; link.download = "tool402-demo-evidence-summary.json"; link.click(); URL.revokeObjectURL(href);
+    } catch { setImportStatus("invalid"); }
+  }
   return (
     <div className="space-y-8">
       <section aria-labelledby="recording-readiness" className="rounded-panel border border-brand-purple/20 bg-brand-purple/5 p-5 sm:p-6">
@@ -55,7 +118,7 @@ export function RecordingControlRoom() {
           </Link>
         </div>
         <ul className="mt-5 grid gap-3 md:grid-cols-2">
-          {recordingReadiness.map((item) => (
+          {readiness.map((item) => (
             <li key={item.label} className="rounded-card border border-border bg-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-semibold">{item.label}</p>
@@ -70,29 +133,47 @@ export function RecordingControlRoom() {
       <section aria-labelledby="consumer-agent-card" className="rounded-card border border-border bg-card p-5 sm:p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Step 04</p>
         <h2 id="consumer-agent-card" className="mt-1 text-xl font-bold">Consumer Agent paid request</h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">Run preflight first. If one verified payment already exists, show its evidence and do not pay again for a retake.</p>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">Run preflight first. If one client-reported paid result already exists, show its evidence and do not pay again for a retake.</p>
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-control bg-muted p-4">
+          <div className="rounded-control bg-muted p-4 min-w-0">
             <p className="font-semibold">DO</p>
             <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm leading-6"><li>Run preflight.</li><li>Run one authorized paid request only when it has not already completed.</li></ol>
           </div>
-          <div className="rounded-control bg-muted p-4">
+          <div className="rounded-control bg-muted p-4 min-w-0">
             <p className="font-semibold">SHOW</p>
-            <p className="mt-2 text-sm leading-6">Expected preflight:</p><pre className="mt-1 overflow-x-auto text-xs leading-5">{expectedPreflight}</pre><p className="mt-3 text-sm leading-6">Expected paid result:</p><pre className="mt-1 overflow-x-auto text-xs leading-5">{expectedPaidResult}</pre>
+            <p className="mt-2 text-sm leading-6">Expected preflight:</p><pre className="mt-1 max-w-full overflow-x-auto text-xs leading-5">{expectedPreflight}</pre><p className="mt-3 text-sm leading-6">Expected paid result:</p><pre className="mt-1 max-w-full overflow-x-auto text-xs leading-5">{expectedPaidResult}</pre>
           </div>
         </div>
         <div className="mt-4 grid gap-3 lg:grid-cols-2">
-          <div className="rounded-control border border-border p-3"><pre className="overflow-x-auto text-xs leading-5">{preflightCommand}</pre><div className="mt-3"><CopyCommandButton label="Copy preflight command" value={preflightCommand} /></div></div>
-          <div className="rounded-control border border-border p-3"><pre className="overflow-x-auto text-xs leading-5">{paidCommand}</pre><div className="mt-3"><CopyCommandButton label="Copy paid-command template" value={paidCommand} /></div></div>
+          <div className="rounded-control border border-border p-3 min-w-0"><pre className="max-w-full overflow-x-auto text-xs leading-5">{preflightCommand}</pre><div className="mt-3"><CopyCommandButton label="Copy preflight command" value={preflightCommand} /></div></div>
+          <div className="rounded-control border border-border p-3 min-w-0"><pre className="max-w-full overflow-x-auto text-xs leading-5">{paidCommand}</pre><div className="mt-3"><CopyCommandButton label="Copy paid-command template" value={paidCommand} /></div></div>
         </div>
-        <p className="mt-4 text-sm font-medium text-muted-foreground">Recorded payment evidence: NOT AVAILABLE. No explorer link is rendered until a real verified settlement reference is available.</p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <input ref={inputRef} type="file" accept="application/json" className="sr-only" onChange={(event) => { void importEvidence(event.target.files?.[0]); event.target.value = ""; }} />
+          <Button type="button" variant="outline" onClick={() => inputRef.current?.click()}>Import Agent evidence</Button>
+          <Button type="button" variant="outline" onClick={refreshEvidence}>Reload local evidence</Button>
+          <Button type="button" variant="outline" onClick={exportSummary} disabled={evidence.length === 0}>Export evidence summary</Button>
+          <span aria-live="polite" className="text-sm text-muted-foreground">{importStatus === "saved" ? "Evidence imported and saved locally." : importStatus === "memory-only" ? "Evidence imported for this tab only; local storage was unavailable." : importStatus === "storage-unavailable" ? "Saved evidence could not be read; current in-memory evidence is retained." : importStatus === "invalid" ? "Evidence import failed; no payment was retried." : "Local-only evidence survives this browser reload when storage is available."}</span>
+        </div>
+        <div className="mt-4 rounded-control border border-border p-3 text-sm">
+          <p className="font-semibold">Recorded payment evidence: {summary.status}</p>
+          <p className="mt-1 text-muted-foreground">{summary.detail}</p>
+          {evidence.at(-1) === undefined ? null : <dl className="mt-3 grid gap-x-4 gap-y-1 text-muted-foreground sm:grid-cols-2">
+            <div className="min-w-0"><dt className="font-semibold text-foreground">Service</dt><dd className="break-all">{evidence.at(-1)?.service.id} at {evidence.at(-1)?.service.host}</dd></div>
+            <div className="min-w-0"><dt className="font-semibold text-foreground">Quoted amount</dt><dd className="break-all">{evidence.at(-1)?.payment.quotedAmount} atomic units of {evidence.at(-1)?.payment.asset}</dd></div>
+            <div className="min-w-0"><dt className="font-semibold text-foreground">Payer → recipient</dt><dd className="break-all">{evidence.at(-1)?.payment.payer} → {evidence.at(-1)?.payment.recipient}</dd></div>
+            <div className="min-w-0"><dt className="font-semibold text-foreground">Observed / local source</dt><dd className="break-all">{evidence.at(-1)?.observedAt} / {evidence.at(-1)?.sourceVersion ?? "not recorded"}</dd></div>
+            <div className="min-w-0"><dt className="font-semibold text-foreground">Transaction</dt><dd className="break-all">{evidence.at(-1)?.payment.settlementRef}</dd></div>
+          </dl>}
+          {summary.hashscanUrl === null ? null : <a href={summary.hashscanUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-10 items-center rounded-control border border-border px-3 py-2 font-semibold hover:bg-muted">Open Agent payment in HashScan</a>}
+        </div>
       </section>
 
       <section aria-labelledby="retake-options" className="rounded-card border border-border bg-card p-5 sm:p-6">
         <h2 id="retake-options" className="text-xl font-bold">Retake options</h2>
         <ul className="mt-3 grid gap-3 text-sm leading-6 text-muted-foreground">
           <li><strong className="text-foreground">Narration mistake:</strong> restart only the guide navigation.</li>
-          <li><strong className="text-foreground">B03 or ATS already completed:</strong> reuse verified evidence; do not send again.</li>
+          <li><strong className="text-foreground">B03 or ATS already completed:</strong> reuse the client-reported B03 packet or verified ATS evidence; do not send again.</li>
           <li><strong className="text-foreground">Backing submitted:</strong> reuse pending or explorer evidence where available; do not blindly fund again.</li>
           <li><strong className="text-foreground">Fresh Provider tool:</strong> use M55 only after it is integrated and selected by its owner.</li>
         </ul>
@@ -102,7 +183,7 @@ export function RecordingControlRoom() {
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Final step</p>
         <h2 id="final-evidence-recap" className="mt-1 text-2xl font-bold">Tool402 demo evidence</h2>
         <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-          <div><dt className="font-semibold">Consumer Agent payment</dt><dd className="text-muted-foreground">Not available in this build.</dd></div>
+          <div><dt className="font-semibold">Consumer Agent payment</dt><dd className="text-muted-foreground">{summary.status}: {summary.detail}{summary.hashscanUrl === null ? null : <a href={summary.hashscanUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-10 items-center rounded-control border border-border px-3 py-2 font-semibold hover:bg-muted">Open Agent payment in HashScan</a>}</dd></div>
           <div><dt className="font-semibold">ATS deployment and lifecycle</dt><dd className="text-muted-foreground">Action required: verified asset and transfer evidence.</dd></div>
           <div><dt className="font-semibold">Provider campaign</dt><dd className="text-muted-foreground">Show current admitted status on the Provider route.</dd></div>
           <div><dt className="font-semibold">Backing</dt><dd className="text-muted-foreground">Submitted is allocation pending until independent confirmation.</dd></div>

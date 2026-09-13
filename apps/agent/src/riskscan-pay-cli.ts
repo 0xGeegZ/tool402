@@ -1,4 +1,6 @@
 import { createRequire } from "node:module";
+import { accessSync, constants, lstatSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import { x402Client, x402HTTPClient } from "@x402/core/client";
 import { decodePaymentRequiredHeader } from "@x402/core/http";
 import type { SchemeNetworkClient } from "@x402/core/types";
@@ -8,6 +10,10 @@ import type { RiskScanQuickInput } from "@tool402/core";
 import {
   createRiskScanQuickPaymentAgent,
 } from "./riskscan-tool-payment.ts";
+import {
+  createRiskScanPaymentEvidence,
+  writeRiskScanPaymentEvidence,
+} from "./riskscan-payment-evidence.ts";
 import { discoverRiskScanQuick } from "./riskscan-tool-directory.ts";
 import {
   diagnosticForRiskScanPayPhase,
@@ -46,10 +52,44 @@ type RuntimeConfiguration = ServiceConfiguration & {
 };
 
 type PaymentPhase = "initial_request" | "payment_payload" | "signed_retry" | "settlement" | "result" | "terminal";
+type EvidenceExport = Readonly<{
+  outputPath: string;
+  recordingRunRef: string;
+  sourceVersion: string;
+}>;
+
+const safeReferencePattern = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,95}$/u;
+const sourceVersionPattern = /^[0-9a-f]{7,64}$/u;
+const b03RecordingRunRef = "b03-release-001";
+const b03ServiceOrigin = "https://tool402.vercel.app";
 
 function requiredEnvironmentValue(name: string): string | null {
   const value = process.env[name]?.trim();
   return value === undefined || value.length === 0 ? null : value;
+}
+
+function configuredRequestReference(): string | null {
+  const raw = requiredEnvironmentValue("RISKSCAN_PAY_INPUT_JSON");
+  if (raw === null) return null;
+  try {
+    const value = JSON.parse(raw) as unknown;
+    return typeof value === "object" && value !== null && !Array.isArray(value)
+      && typeof (value as { requestRef?: unknown }).requestRef === "string"
+      ? (value as { requestRef: string }).requestRef
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function usesB03Service(): boolean {
+  const raw = requiredEnvironmentValue("RISKSCAN_PAY_SERVICE_BASE_URL");
+  if (raw === null) return false;
+  try {
+    return new URL(raw).origin === b03ServiceOrigin;
+  } catch {
+    return false;
+  }
 }
 
 function readServiceConfiguration(): ServiceConfiguration | null {
@@ -129,6 +169,47 @@ function writeOutcome(outcome: RiskScanQuickPaymentOutcome): void {
   if (outcome.kind === "paid") {
     process.stdout.write(`RISKSCAN_PAY_SETTLEMENT ${outcome.settlementRef}\n`);
   }
+}
+
+function evidenceExport(argumentsList: readonly string[]): EvidenceExport | "invalid" | "exists" | undefined {
+  const indexes = argumentsList.reduce<number[]>((result, value, index) => value === "--evidence-output" ? [...result, index] : result, []);
+  if (indexes.length === 0) return undefined;
+  if (indexes.length !== 1) return "invalid";
+  const outputPath = argumentsList[indexes[0] + 1];
+  const suppliedArguments = argumentsList.slice(2);
+  const isExactExport = suppliedArguments.length === 2
+    && suppliedArguments[0] === "--evidence-output" && suppliedArguments[1] === outputPath;
+  const isExactPreflightExport = suppliedArguments.length === 3
+    && ((suppliedArguments[0] === "--preflight" && suppliedArguments[1] === "--evidence-output" && suppliedArguments[2] === outputPath)
+      || (suppliedArguments[0] === "--evidence-output" && suppliedArguments[1] === outputPath && suppliedArguments[2] === "--preflight"));
+  const recordingRunRef = requiredEnvironmentValue("RISKSCAN_PAY_RECORDING_RUN_REF");
+  const sourceVersion = requiredEnvironmentValue("RISKSCAN_PAY_SOURCE_VERSION");
+  const requestReference = configuredRequestReference();
+  const isB03Run = recordingRunRef === b03RecordingRunRef;
+  const isB03Request = requestReference === b03RecordingRunRef;
+  if ((!isExactExport && !isExactPreflightExport)
+    || typeof outputPath !== "string" || outputPath.startsWith("-") || outputPath.length === 0 || outputPath.length > 1_024
+    || recordingRunRef === null || !safeReferencePattern.test(recordingRunRef)
+    || (usesB03Service() && isB03Run !== isB03Request)
+    || sourceVersion === null || !sourceVersionPattern.test(sourceVersion)) return "invalid";
+  try {
+    const destination = lstatSync(outputPath, { throwIfNoEntry: false });
+    if (destination !== undefined) return destination.isFile() ? "exists" : "invalid";
+    const parent = lstatSync(dirname(outputPath));
+    if (!parent.isDirectory()) return "invalid";
+    accessSync(dirname(outputPath), constants.W_OK);
+  } catch {
+    return "invalid";
+  }
+  return Object.freeze({ outputPath, recordingRunRef, sourceVersion });
+}
+
+function writeEvidenceCaptureFailure(): void {
+  process.stdout.write("RISKSCAN_PAY_EVIDENCE_CAPTURE_FAILED\n");
+}
+
+function writeExistingEvidenceNotice(): void {
+  process.stdout.write("RISKSCAN_PAY_EVIDENCE_EXISTS inspect_or_import_existing_file\n");
 }
 
 function writeDiagnostic(phase: Parameters<typeof diagnosticForRiskScanPayPhase>[0]): void {
@@ -250,7 +331,7 @@ function diagnosticForOutcome(
   return { phase: "initial_request" };
 }
 
-async function payment(): Promise<void> {
+async function payment(exportConfiguration: EvidenceExport | undefined): Promise<void> {
   const configuration = readRuntimeConfiguration();
   if (configuration === null) {
     writeNormalConfigurationFailure();
@@ -306,13 +387,43 @@ async function payment(): Promise<void> {
     configuration.policy,
   );
   writeOutcome(outcome);
+  if (outcome.kind === "paid" && exportConfiguration !== undefined) {
+    try {
+      const evidence = createRiskScanPaymentEvidence({
+        outcome,
+        serviceBase: configuration.serviceBase,
+        payerAccountId: configuration.payerAccountId,
+        recordingRunRef: exportConfiguration.recordingRunRef,
+        sourceVersion: exportConfiguration.sourceVersion,
+        observedAt: new Date().toISOString(),
+      });
+      writeRiskScanPaymentEvidence(evidence, exportConfiguration.outputPath, (path, body) => {
+        writeFileSync(path, body, { encoding: "utf8", flag: "wx" });
+      });
+      process.stdout.write("RISKSCAN_PAY_EVIDENCE_EXPORTED\n");
+    } catch {
+      writeEvidenceCaptureFailure();
+    }
+  }
   writeDiagnostic(diagnosticForOutcome(outcome, phase.current));
   if (outcome.kind !== "paid") process.exitCode = 1;
 }
 
 async function main(): Promise<void> {
+  const exportConfiguration = evidenceExport(process.argv);
+  if (exportConfiguration === "exists") {
+    writeExistingEvidenceNotice();
+    writeDiagnostic({ phase: "configuration" });
+    process.exitCode = 1;
+    return;
+  }
+  if (exportConfiguration === "invalid") {
+    writeNormalConfigurationFailure();
+    process.exitCode = 1;
+    return;
+  }
   if (process.argv.includes("--preflight")) return preflight();
-  return payment();
+  return payment(exportConfiguration);
 }
 
 void main().catch(() => {

@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { execFile } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -11,6 +13,7 @@ const { encodePaymentRequiredHeader } = require("@x402/core/http");
 const { assessRiskScanQuick } = require("@tool402/core");
 const paymentSource = new URL("../src/riskscan-tool-payment.ts", import.meta.url);
 const cliSource = new URL("../src/riskscan-pay-cli.ts", import.meta.url);
+const demoEvidenceModule = new URL("../../web/src/components/demo/demo-evidence.ts", import.meta.url);
 const paymentModuleSpecifier = "../src/riskscan-tool-payment.ts";
 let paymentModule;
 let paymentModuleError;
@@ -49,6 +52,14 @@ const input = {
   declarations: { identity: true, pricing: true, limitations: true, evidence: true },
 };
 const policy = { network: "hedera:testnet", asset: "0.0.429274", maximumAmount: "10000" };
+const b03Base = new URL("https://tool402.vercel.app");
+const b03Input = {
+  requestRef: "b03-release-001",
+  subjectRef: "tool402-release",
+  context: "One authorized Hedera-testnet RiskScan exercise",
+  declarations: { identity: true, pricing: true, limitations: true, evidence: true },
+};
+const b03Policy = { network: "hedera:testnet", asset: "0.0.0", maximumAmount: "100000" };
 
 function entityCheckDescriptor() {
   return {
@@ -112,6 +123,16 @@ function requirements() {
     maxTimeoutSeconds: 60,
     extra: {},
   };
+}
+
+function b03Requirements() {
+  return { ...requirements(), asset: "0.0.0", amount: "100000" };
+}
+
+function b03Directory() {
+  const result = directory();
+  result.tools[0].payment = { ...result.tools[0].payment, asset: "0.0.0", amount: "100000" };
+  return result;
 }
 
 function safeFailureHarness(failureSource) {
@@ -224,11 +245,24 @@ function runCliPreflight({
   signedRetryStatus = 200,
   terminalCatch = false,
   preflightInput = input,
+  b03InputOverride,
+  extraArguments = [],
+  b03Mode = false,
+  paymentMode = defaultPayment,
+  recordingRunRef,
+  sourceVersion,
+  settlementRef = "0.0.1@1.2",
+  evidenceWriteFailure = false,
 } = {}) {
+  const serviceBase = b03Mode ? b03Base : base;
+  const serviceInput = b03Mode ? b03InputOverride ?? b03Input : preflightInput;
+  const servicePolicy = b03Mode ? b03Policy : preflightPolicy;
+  const serviceDirectory = b03Mode ? b03Directory() : directory();
+  const serviceRequirements = b03Mode ? b03Requirements() : requirements();
   const paymentRequired = {
     x402Version: 2,
-    resource: { url: new URL("/api/riskscan", base).href },
-    accepts: [requirements()],
+    resource: { url: new URL("/api/riskscan", serviceBase).href },
+    accepts: [serviceRequirements],
   };
   const coreClientStub = [
     "const boundaries = globalThis.__B03_TEST_PAYMENT_BOUNDARIES;",
@@ -242,7 +276,7 @@ function runCliPreflight({
     "  getPaymentRequiredResponse() { boundaries.push('challenge_decode'); return globalThis.__B03_TEST_PAYMENT_REQUIRED; }",
     `  async createPaymentPayload() { boundaries.push('payment_payload'); if (${JSON.stringify(failurePhase)} === 'payment_payload') throw new Error('SECRET_SENTINEL_B03'); if (${JSON.stringify(failurePhase)} === 'signer') return globalThis.__B03_TEST_SIGNER.createPartiallySignedTransferTransaction(); return {}; }`,
     "  encodePaymentSignatureHeader() { boundaries.push('payment_header'); return { 'payment-signature': 'test' }; }",
-    `  getPaymentSettleResponse() { boundaries.push('settlement_decode'); if (${JSON.stringify(failurePhase)} === 'settlement') throw new Error('SECRET_SENTINEL_B03'); return { success: true, network: 'hedera:testnet', transaction: '0.0.1@1.2' }; }`,
+    `  getPaymentSettleResponse() { boundaries.push('settlement_decode'); if (${JSON.stringify(failurePhase)} === 'settlement') throw new Error('SECRET_SENTINEL_B03'); return { success: true, network: 'hedera:testnet', transaction: ${JSON.stringify(settlementRef)} }; }`,
     "}",
   ].join("\n");
   const coreClientStubUrl = `data:text/javascript,${encodeURIComponent(coreClientStub)}`;
@@ -255,14 +289,14 @@ function runCliPreflight({
   const loader = [
     "import Module, { register, syncBuiltinESMExports } from 'node:module';",
     `register(${JSON.stringify(`data:text/javascript,${encodeURIComponent(moduleLoader)}`)});`,
-    `const directory = ${JSON.stringify(directory())};`,
+    `const directory = ${JSON.stringify(serviceDirectory)};`,
     `const paymentRequired = ${JSON.stringify(paymentRequired)};`,
     `const paymentRequiredHeader = ${JSON.stringify(paymentRequiredHeader ?? encodePaymentRequiredHeader(paymentRequired))};`,
     `const omitPaymentRequiredHeader = ${JSON.stringify(omitPaymentRequiredHeader)};`,
     `const directoryFails = ${JSON.stringify(directoryFails)};`,
     `const initialStatus = ${JSON.stringify(initialStatus)};`,
     `const signedRetryStatus = ${JSON.stringify(signedRetryStatus)};`,
-    `const paymentResult = ${JSON.stringify(assessRiskScanQuick(input))};`,
+    `const paymentResult = ${JSON.stringify(assessRiskScanQuick(b03Mode ? b03Input : input))};`,
     `const payerAccessAllowed = ${JSON.stringify(defaultPayment)};`,
     `const terminalCatch = ${JSON.stringify(terminalCatch)};`,
     "const originalProcess = process;",
@@ -271,6 +305,7 @@ function runCliPreflight({
     "const transportAttempts = [];",
     "const blockedBuiltinModules = ['node:http', 'http', 'node:https', 'https', 'node:http2', 'http2', 'node:net', 'net', 'node:tls', 'tls', 'node:dgram', 'dgram', 'undici', 'node:undici', 'node:process', 'process'];",
     "const originalGetBuiltinModule = originalProcess.getBuiltinModule.bind(originalProcess);",
+    `if (${JSON.stringify(evidenceWriteFailure)}) originalGetBuiltinModule('node:fs').writeFileSync = () => { throw new Error('B03_TEST_EVIDENCE_WRITE_FAILED'); };`,
     "if (terminalCatch) Object.defineProperty(originalProcess, 'argv', { configurable: true, value: new Proxy(originalProcess.argv, { get(target, key, receiver) { if (key === 'includes') throw new Error('SECRET_SENTINEL_B03'); return Reflect.get(target, key, receiver); } }) });",
     "const failTransport = (name) => () => { transportAttempts.push(name); throw new Error(`B03_TEST_BLOCKED_TRANSPORT:${name}`); };",
     "for (const [name, members] of [['node:http', ['request', 'get']], ['node:https', ['request', 'get']], ['node:http2', ['connect']], ['node:net', ['connect', 'createConnection']], ['node:tls', ['connect']], ['node:dgram', ['createSocket']]]) { const builtin = originalGetBuiltinModule(name); for (const member of members) builtin[member] = failTransport(`${name}.${member}`); } originalGetBuiltinModule('node:net').Socket.prototype.connect = failTransport('node:net.Socket.prototype.connect'); originalGetBuiltinModule('node:tls').TLSSocket.prototype.connect = failTransport('node:tls.TLSSocket.prototype.connect');",
@@ -293,9 +328,9 @@ function runCliPreflight({
     "Object.defineProperty(originalProcess, 'getBuiltinModule', { configurable: true, writable: true, value(name) { if (blockedBuiltinModules.includes(name)) { transportAttempts.push(name); throw new Error(`B03_TEST_BLOCKED_BUILTIN:${name}`); } return originalGetBuiltinModule(name); } });",
     "const requests = [];",
     "let riskScanRequests = 0;",
-    `const configuredOrigin = ${JSON.stringify(base.origin)};`,
-    `const directoryUrl = ${JSON.stringify(new URL("/api/tools", base).href)};`,
-    `const riskScanUrl = ${JSON.stringify(new URL("/api/riskscan", base).href)};`,
+    `const configuredOrigin = ${JSON.stringify(serviceBase.origin)};`,
+    `const directoryUrl = ${JSON.stringify(new URL("/api/tools", serviceBase).href)};`,
+    `const riskScanUrl = ${JSON.stringify(new URL("/api/riskscan", serviceBase).href)};`,
     "globalThis.fetch = async (target, init = {}) => {",
     "  const url = new URL(String(target));",
     "  const headers = new Headers(init.headers);",
@@ -329,15 +364,17 @@ function runCliPreflight({
   return new Promise((resolve) => {
     execFile(
       process.execPath,
-      ["--import", `data:text/javascript,${encodeURIComponent(loader)}`, "--experimental-strip-types", fileURLToPath(cliSource), ...(defaultPayment ? [] : ["--preflight"])],
+      ["--import", `data:text/javascript,${encodeURIComponent(loader)}`, "--experimental-strip-types", fileURLToPath(cliSource), ...(paymentMode ? [] : ["--preflight"]), ...extraArguments],
       {
         cwd: fileURLToPath(new URL("../", import.meta.url)),
         env: {
           B03_SECRET_SENTINEL: "SECRET_SENTINEL_B03",
           NODE_NO_WARNINGS: "1",
-          RISKSCAN_PAY_SERVICE_BASE_URL: base.href,
-          RISKSCAN_PAY_INPUT_JSON: JSON.stringify(preflightInput),
-          RISKSCAN_PAY_POLICY_JSON: JSON.stringify(preflightPolicy),
+          RISKSCAN_PAY_SERVICE_BASE_URL: serviceBase.href,
+          RISKSCAN_PAY_INPUT_JSON: JSON.stringify(serviceInput),
+          RISKSCAN_PAY_POLICY_JSON: JSON.stringify(servicePolicy),
+          ...(recordingRunRef === undefined ? {} : { RISKSCAN_PAY_RECORDING_RUN_REF: recordingRunRef }),
+          ...(sourceVersion === undefined ? {} : { RISKSCAN_PAY_SOURCE_VERSION: sourceVersion }),
           ...(defaultPayment ? {
             RISKSCAN_PAY_PAYER_ACCOUNT_ID: "0.0.1001",
             RISKSCAN_PAY_PAYER_PRIVATE_KEY: "test-private-key",
@@ -494,8 +531,10 @@ boundaryTest("maps signer or SDK sentinels to a closed safe outcome without proc
 boundaryTest("keeps the CLI as the only runtime configuration edge and redacts a missing-config failure", async () => {
   const text = await readFile(cliSource, "utf8");
   assert.match(text, /process\.env/u);
+  assert.match(text, /import \{ accessSync, constants, lstatSync, writeFileSync \} from "node:fs"/u);
+  assert.match(text, /writeFileSync\(path, body, \{ encoding: "utf8", flag: "wx" \}\)/u);
   for (const forbidden of [
-    /(?:node:)?fs|child_process|worker_threads|localStorage|sessionStorage|indexedDB/u,
+    /child_process|worker_threads|localStorage|sessionStorage|indexedDB/u,
     /["'](?:node:)?(?:https?|http2|net|tls|dgram|undici)["']/u,
     /process\.getBuiltinModule/u,
     /console\.(?:log|info|warn|error|debug)\s*\([^)]*process\.env/u,
@@ -809,4 +848,206 @@ boundaryTest("preserves normal payment output and exit behavior while adding onl
     "payment_header",
     "settlement_decode",
   ]);
+});
+
+boundaryTest("keeps a completed payment single-shot when opt-in evidence storage fails", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "tool402-agent-evidence-write-failure-"));
+  const output = join(directory, "evidence.json");
+  try {
+  const { error, stdout, stderr } = await runCliPreflight({
+    defaultPayment: true,
+    extraArguments: ["--evidence-output", output],
+    recordingRunRef: "b03-release-001",
+    sourceVersion: "a".repeat(40),
+    evidenceWriteFailure: true,
+  });
+
+  assert.equal(error, null);
+  assert.equal(stderr, "");
+  const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
+  assert.deepEqual(diagnostic, [
+    "RISKSCAN_PAY_OUTCOME paid",
+    "RISKSCAN_PAY_SETTLEMENT 0.0.1@1.2",
+    "RISKSCAN_PAY_EVIDENCE_CAPTURE_FAILED",
+    "RISKSCAN_PAY_DIAGNOSTIC PAID",
+  ]);
+  assert.equal(requests.length, 3);
+  assert.deepEqual(transportAttempts, []);
+  assert.equal(boundaries.filter((item) => item === "payment_payload").length, 1);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+boundaryTest("exports one sanitized packet after a paid result without another request", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "tool402-agent-evidence-"));
+  const output = join(directory, "evidence.json");
+  try {
+    const { error, stdout, stderr } = await runCliPreflight({
+      defaultPayment: true,
+      extraArguments: ["--evidence-output", output],
+      recordingRunRef: "b03-release-001",
+      sourceVersion: "a".repeat(40),
+    });
+    assert.equal(error, null);
+    assert.equal(stderr, "");
+    const { diagnostic, requests } = preflightTrace(stdout);
+    assert.deepEqual(diagnostic, [
+      "RISKSCAN_PAY_OUTCOME paid",
+      "RISKSCAN_PAY_SETTLEMENT 0.0.1@1.2",
+      "RISKSCAN_PAY_EVIDENCE_EXPORTED",
+      "RISKSCAN_PAY_DIAGNOSTIC PAID",
+    ]);
+    assert.equal(requests.length, 3);
+    const packet = JSON.parse(await readFile(output, "utf8"));
+    assert.equal(packet.kind, "tool402.agent-payment");
+    assert.equal(packet.payment.settlementRef, "0.0.1@1.2");
+    assert.equal(packet.result.receivedAndValidatedByClient, true);
+    assert.doesNotMatch(JSON.stringify(packet), /caller disclosure|private|signature|cookie/i);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+boundaryTest("rejects a requested evidence destination before reading a payer or starting payment", async () => {
+  const { error, stdout, stderr } = await runCliPreflight({
+    b03Mode: true,
+    paymentMode: true,
+    extraArguments: ["--evidence-output", "."],
+    recordingRunRef: "b03-release-001",
+    sourceVersion: "a".repeat(40),
+  });
+  assert.notEqual(error, null);
+  assert.equal(stderr, "RISKSCAN_PAY_CONFIGURATION_INVALID\n");
+  const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
+  assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC CONFIGURATION_INVALID"]);
+  assert.deepEqual(requests, []);
+  assert.deepEqual(boundaries, []);
+  assert.deepEqual(transportAttempts, []);
+});
+
+boundaryTest("rejects unknown arguments in evidence-export mode before reading a payer or starting payment", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "tool402-agent-evidence-arguments-"));
+  const output = join(directory, "evidence.json");
+  try {
+    const { error, stdout, stderr } = await runCliPreflight({
+      b03Mode: true,
+      paymentMode: true,
+      extraArguments: ["--evidence-output", output, "--typo"],
+      recordingRunRef: "b03-release-001",
+      sourceVersion: "a".repeat(40),
+    });
+    assert.notEqual(error, null);
+    assert.equal(stderr, "RISKSCAN_PAY_CONFIGURATION_INVALID\n");
+    const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
+    assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC CONFIGURATION_INVALID"]);
+    assert.deepEqual(requests, []);
+    assert.deepEqual(boundaries, []);
+    assert.deepEqual(transportAttempts, []);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+boundaryTest("rejects a mismatched recording run before reading a payer or starting payment", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "tool402-agent-evidence-run-"));
+  const output = join(directory, "evidence.json");
+  try {
+    const { error, stdout, stderr } = await runCliPreflight({
+      b03Mode: true,
+      paymentMode: true,
+      extraArguments: ["--evidence-output", output],
+      recordingRunRef: "retake-2",
+      sourceVersion: "a".repeat(40),
+    });
+    assert.notEqual(error, null);
+    assert.equal(stderr, "RISKSCAN_PAY_CONFIGURATION_INVALID\n");
+    const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
+    assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC CONFIGURATION_INVALID"]);
+    assert.deepEqual(requests, []);
+    assert.deepEqual(boundaries, []);
+    assert.deepEqual(transportAttempts, []);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+boundaryTest("rejects a B03 recording run with a different request before reading a payer or starting payment", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "tool402-agent-evidence-request-"));
+  const output = join(directory, "evidence.json");
+  try {
+    const { error, stdout, stderr } = await runCliPreflight({
+      b03Mode: true,
+      b03InputOverride: { ...b03Input, requestRef: "retake-2" },
+      paymentMode: true,
+      extraArguments: ["--evidence-output", output],
+      recordingRunRef: "b03-release-001",
+      sourceVersion: "a".repeat(40),
+    });
+    assert.notEqual(error, null);
+    assert.equal(stderr, "RISKSCAN_PAY_CONFIGURATION_INVALID\n");
+    const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
+    assert.deepEqual(diagnostic, ["RISKSCAN_PAY_DIAGNOSTIC CONFIGURATION_INVALID"]);
+    assert.deepEqual(requests, []);
+    assert.deepEqual(boundaries, []);
+    assert.deepEqual(transportAttempts, []);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+boundaryTest("directs the operator to an existing evidence file before any payment boundary", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "tool402-agent-evidence-existing-"));
+  const output = join(directory, "tool402-agent-evidence.json");
+  await writeFile(output, "existing safe evidence\n", "utf8");
+  try {
+    const { error, stdout, stderr } = await runCliPreflight({
+      b03Mode: true,
+      paymentMode: true,
+      extraArguments: ["--evidence-output", output],
+      recordingRunRef: "b03-release-001",
+      sourceVersion: "a".repeat(40),
+    });
+    assert.notEqual(error, null);
+    assert.equal(stderr, "");
+    const { diagnostic, requests, boundaries, transportAttempts } = preflightTrace(stdout);
+    assert.deepEqual(diagnostic, [
+      "RISKSCAN_PAY_EVIDENCE_EXISTS inspect_or_import_existing_file",
+      "RISKSCAN_PAY_DIAGNOSTIC CONFIGURATION_INVALID",
+    ]);
+    assert.deepEqual(requests, []);
+    assert.deepEqual(boundaries, []);
+    assert.deepEqual(transportAttempts, []);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+boundaryTest("exports the exact B03 demo command packet for the real Web importer", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "tool402-b03-demo-command-"));
+  const output = join(directory, "tool402-agent-evidence.json");
+  try {
+    const { error, stdout, stderr } = await runCliPreflight({
+      b03Mode: true,
+      defaultPayment: true,
+      extraArguments: ["--evidence-output", output],
+      recordingRunRef: "b03-release-001",
+      sourceVersion: "a".repeat(40),
+      settlementRef: "0.0.1002@1720000000.000000001",
+    });
+    assert.equal(error, null);
+    assert.equal(stderr, "");
+    const { diagnostic, requests } = preflightTrace(stdout);
+    assert.deepEqual(diagnostic, [
+      "RISKSCAN_PAY_OUTCOME paid",
+      "RISKSCAN_PAY_SETTLEMENT 0.0.1002@1720000000.000000001",
+      "RISKSCAN_PAY_EVIDENCE_EXPORTED",
+      "RISKSCAN_PAY_DIAGNOSTIC PAID",
+    ]);
+    assert.equal(requests.length, 3);
+    const { parseDemoEvidenceImport } = await import(demoEvidenceModule.href);
+    assert.notEqual(parseDemoEvidenceImport(await readFile(output, "utf8")), null);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });

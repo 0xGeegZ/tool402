@@ -11,6 +11,7 @@ test("defines a stable, non-mutating recording itinerary with truthful evidence 
   const {
     recordingSteps,
     recordingReadiness,
+    recordingReadinessForEvidence,
     recordingTourHref,
   } = await import(moduleUrl.href);
 
@@ -56,4 +57,14 @@ test("defines a stable, non-mutating recording itinerary with truthful evidence 
   assert.equal(recordingTourHref("/explore/riskscan/tool-loop?demo=tool-loop", "x402-boundary"), "/explore/riskscan/tool-loop?demo=tool-loop&tour=1&demoStep=x402-boundary");
   assert.throws(() => recordingTourHref("/provider", "unknown-step"), TypeError);
   assert.throws(() => recordingTourHref("/\\\\evil.example", "provider-terms"), TypeError);
+
+  const evidence = {
+    schemaVersion: 1, kind: "tool402.agent-payment", recordingRunRef: "run-1", sourceVersion: null, observedAt: "2026-09-12T09:00:00.000Z",
+    service: { id: "riskscan.quick", host: "tool402.example" },
+    payment: { network: "hedera:testnet", asset: "0.0.0", quotedAmount: "100000", settlementRef: "0.0.1002@1720000000.123456789", payer: "0.0.1001", recipient: "0.0.1002", settlementReportedBy: "client" },
+    result: { requestRef: "recording-request-1", digest: "a".repeat(64), receivedAndValidatedByClient: true },
+  };
+  const liveReadiness = recordingReadinessForEvidence([evidence]);
+  assert.equal(liveReadiness.find((item) => item.label === "B03 Consumer Agent settlement")?.status, "Settlement reported");
+  assert.match(liveReadiness.find((item) => item.label === "B03 Consumer Agent settlement")?.detail ?? "", /Result received/i);
 });

@@ -16,7 +16,7 @@ authorizes a new payment, ATS transaction, signing action, or backing transfer.
 | --- | --- | --- |
 | Public deployed build and discovery | ACTION REQUIRED | Confirm exact deployed SHA and public directory. |
 | Unsigned x402 boundary | ACTION REQUIRED | Show the real ToolLoop response. |
-| B03 Consumer Agent settlement | NOT AVAILABLE | Show the safe preflight only; do not imply payment or show an explorer link. |
+| B03 Consumer Agent settlement | Not performed until local evidence is imported | Run preflight; after one authorized paid result, import its generated local packet and show `Settlement reported` / `Result received`, not blockchain verification. |
 | ATS asset and lifecycle transfer | ACTION REQUIRED | Omit verified narration unless both receipts are independently accepted. |
 | Provider campaign/publication | ACTION REQUIRED | Use the current admitted Provider projection only. |
 | Backing | ACTION REQUIRED | Submitted means allocation pending. |
@@ -29,7 +29,7 @@ authorizes a new payment, ATS transaction, signing action, or backing transfer.
 | 01 Introduce Tool402 | / | none | Explain the testnet product. | Product scope. |
 | 02 Discover RiskScan | /explore | none | Open RiskScan. | Listed capability, price, limitations. |
 | 03 x402 request boundary | /explore/riskscan/tool-loop?demo=tool-loop | none | Review existing sample, click Inspect request boundary. | Real 402 or truthful unavailable outcome. |
-| 04 Consumer Agent evidence | /demo | Human Ops payer | Run preflight; reuse a verified paid result if one exists. | Safe terminal lines; settlement link only after verification. |
+| 04 Consumer Agent evidence | /demo | Human Ops payer | Run preflight; reuse the imported paid result if one exists. | Safe terminal lines; submitted HashScan link while verification is pending. |
 | 05 Provider sign-in | /sign-in | PROVIDER | Use the existing shared wallet control on Hedera Testnet. | Current wallet/session result. |
 | 06 Provider campaign | /provider/deploy | PROVIDER | Continue the existing RiskScan campaign. | Campaign summary. |
 | 07 Campaign terms | /provider/deploy | PROVIDER | Review prefilled content and terms. | Editable values; acknowledgement remains unchecked. |
@@ -47,8 +47,18 @@ authorizes a new payment, ATS transaction, signing action, or backing transfer.
 The control room provides Copy preflight command and Copy paid-command template.
 It contains no payer key, signed header, or payment payload. The direct CLI
 preflight output is exactly RISKSCAN_PAY_DIAGNOSTIC PREFLIGHT_GUARD_REACHED. A paid command is
-not repeated for a recording retake. A HashScan action appears only when a real
-verified settlement identifier is available.
+not repeated for a recording retake. Add `--evidence-output ./tool402-agent-evidence.json`
+to one authorized paid invocation. It writes a sanitized local packet only after
+the paid result has returned; if that write fails, retain the printed settlement
+reference and do not pay again. Use **Import Agent evidence** in `/demo` to load
+that one file. The page labels it as client-reported settlement/result evidence
+and renders a HashScan action as `Submitted — verification pending`.
+The copied preflight command derives `RISKSCAN_PAY_SOURCE_VERSION` with
+`git rev-parse --verify HEAD`; it identifies the local Agent checkout only.
+Record the deployed service SHA separately: it is not inferred from local CLI
+provenance. The CLI checks the output path and both identifiers before reading
+a payer or starting payment. An existing evidence file must be imported or
+inspected, never overwritten or replaced by another paid request.
 
 Expected direct-CLI successful paid output, shown only after one authorized
 successful request, is:
@@ -56,14 +66,15 @@ successful request, is:
 ```text
 RISKSCAN_PAY_OUTCOME paid
 RISKSCAN_PAY_SETTLEMENT <non-empty-safe-settlement-reference>
+RISKSCAN_PAY_EVIDENCE_EXPORTED
 RISKSCAN_PAY_DIAGNOSTIC PAID
 ```
 
 ## Retake rules
 
 - Narration/UI mistake: restart the guide only. It changes no product state.
-- B03 payment or ATS deployment already completed: reuse independently verified
-  evidence; do not send again.
+- B03 payment or ATS deployment already completed: reuse the client-reported
+  B03 packet or independently verified ATS evidence; do not send again.
 - Backing hash returned: show pending/explorer evidence if it exists; do not
   blindly fund again.
 - Fresh Provider tool: use M55 only when it is integrated and selected by its

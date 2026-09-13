@@ -1,4 +1,6 @@
-export type RecordingStatus = "READY" | "ACTION REQUIRED" | "OPTIONAL" | "NOT AVAILABLE";
+import { summarizeDemoEvidence, type AgentPaymentEvidence } from "./demo-evidence.ts";
+
+export type RecordingStatus = "READY" | "ACTION REQUIRED" | "OPTIONAL" | "NOT AVAILABLE" | "Not performed" | "Settlement reported";
 
 export type RecordingStep = Readonly<{
   id: string;
@@ -15,7 +17,7 @@ export const recordingSteps: readonly RecordingStep[] = Object.freeze([
   { id: "introduce", href: "/", title: "Introduce Tool402", wallet: null, do: "Open the home page and introduce the testnet product.", say: "Tool402 helps agents discover tools and pay for useful work on Hedera testnet.", show: "The product promise and testnet scope." },
   { id: "discover", href: "/explore", title: "Discover RiskScan", wallet: null, do: "Open RiskScan from the catalogue.", say: "RiskScan is a listed tool. An agent can inspect its price and limitations before calling it.", show: "The RiskScan catalogue card." },
   { id: "x402-boundary", href: "/explore/riskscan/tool-loop?demo=tool-loop", title: "Show the x402 request boundary", wallet: null, do: "Review the prefilled request and select Inspect request boundary.", say: "No result was released. The agent now decides whether the quote fits its spending policy.", show: "The real 402 challenge or the truthful unavailable result." },
-  { id: "consumer-agent", href: "/demo", title: "Show Consumer Agent payment evidence", wallet: "Human Ops payer", do: "Run the safe preflight. Use an existing verified payment instead of paying again.", say: "The Consumer Agent checks the exact quote before one authorized paid retry.", show: "Safe terminal lines and a verified settlement link when one exists.", nextAction: "Continue without unverified payment" },
+  { id: "consumer-agent", href: "/demo", title: "Show Consumer Agent payment evidence", wallet: "Human Ops payer", do: "Run the safe preflight. Use existing local evidence instead of paying again.", say: "The Consumer Agent checks the exact quote before one authorized paid retry.", show: "Safe terminal lines and a submitted HashScan link while verification is pending.", nextAction: "Continue without unverified payment" },
   { id: "provider-sign-in", href: "/sign-in", title: "Sign in as Provider", wallet: "PROVIDER", do: "Connect the Provider wallet and use Hedera Testnet.", say: "This signed session selects the Provider campaign. A connected wallet alone is not authority.", show: "The current wallet and signed-session result." },
   { id: "provider-campaign", href: "/provider/deploy", title: "Open the Provider campaign", wallet: "PROVIDER", do: "Use the existing RiskScan campaign. Do not create a second campaign for a retake.", say: "The campaign keeps the tool details and boundaries in one reviewed flow.", show: "RiskScan and the short campaign summary." },
   { id: "provider-terms", href: "/provider/deploy", title: "Review campaign terms", wallet: "PROVIDER", do: "Review the prefilled fields and terms. Do not pre-check acknowledgements.", say: "The ordinary campaign content is ready to review, but confirmation remains an explicit human step.", show: "The editable fields and unchecked acknowledgement." },
@@ -26,7 +28,7 @@ export const recordingSteps: readonly RecordingStep[] = Object.freeze([
   { id: "backing", href: "/explore/riskscan/back", title: "Back RiskScan", wallet: "BACKER", do: "Use the existing amount and read the acknowledgement before choosing it.", say: "The Backer signs intent first and explicitly submits the HBAR transfer second.", show: "Units, HBAR amount, unchecked acknowledgement, then allocation pending after submission.", nextAction: "Continue without funding" },
   { id: "backing-evidence", href: "/explore/riskscan/back", title: "Show backing evidence", wallet: "BACKER", do: "After a hash, do not send again. Use existing evidence if available.", say: "Payment submitted means allocation is pending until independent confirmation.", show: "Submitted — allocation pending." },
   { id: "dashboard", href: "/sign-in", title: "Show repeatability", wallet: "PROVIDER", do: "Open the signed dashboard through the existing sign-in route.", say: "The dashboard restores the campaign linked to the signed session without recreating it.", show: "The current campaign or honest empty state." },
-  { id: "evidence-recap", href: "/demo", title: "Final evidence recap", wallet: null, do: "Return to the control room and show only verified links.", say: "Every claim in this recording is tied to a real product state or public evidence.", show: "The final evidence recap." },
+  { id: "evidence-recap", href: "/demo", title: "Final evidence recap", wallet: null, do: "Return to the control room, show the submitted HashScan link and label it verification pending.", say: "Every claim in this recording is tied to a real product state or public evidence.", show: "The final evidence recap." },
 ]);
 
 export const recordingReadiness = Object.freeze([
@@ -39,6 +41,21 @@ export const recordingReadiness = Object.freeze([
   { label: "Backing route and BACKER wallet", status: "ACTION REQUIRED" as const, detail: "The route is available; a submitted hash remains allocation pending." },
   { label: "World proof", status: "OPTIONAL" as const, detail: "No integrated valid-proof route is currently available to this guide." },
 ]);
+
+export function recordingReadinessForEvidence(
+  evidence: readonly AgentPaymentEvidence[],
+): readonly Readonly<{ label: string; status: RecordingStatus; detail: string }>[] {
+  const agentPayment = summarizeDemoEvidence(evidence).agentPayment;
+  return recordingReadiness.map((item) => item.label !== "B03 Consumer Agent settlement"
+    ? item
+    : {
+        label: item.label,
+        status: agentPayment.status,
+        detail: agentPayment.status === "Not performed"
+          ? "No paid Agent evidence is stored locally for this retake."
+          : agentPayment.detail,
+      });
+}
 
 function knownStep(id: string): boolean {
   return recordingSteps.some((step) => step.id === id);

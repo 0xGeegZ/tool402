@@ -12,7 +12,7 @@ const canonicalInteger = /^(?:0|[1-9][0-9]*)$/u;
 const canonicalAccountId =
   /^(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)$/u;
 const canonicalTransactionId =
-  /^(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)@(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]{0,8})$/u;
+  /^(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)@(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]{0,7}|[0-9]{9})$/u;
 
 function parseCanonicalInteger(input: unknown): bigint | undefined {
   if (typeof input !== "string" || !canonicalInteger.test(input)) {
