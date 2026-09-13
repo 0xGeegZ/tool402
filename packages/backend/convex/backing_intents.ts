@@ -14,6 +14,7 @@ const integerPattern = /^(?:0|[1-9][0-9]*)$/u;
 const timestampPattern = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z$/u;
 const parameterHashPattern = /^[0-9a-f]{64}$/u;
 const maxLifetimeMilliseconds = 300_000;
+const legacyRiskScanOfferingPublicId = "riskscan_revenue_note_demo";
 
 const intentValidator = v.object({
   idempotencyKey: v.string(),
@@ -161,23 +162,30 @@ export const freezeBackingIntent = internalMutation({
     const now = Date.now();
     const expires = timestamp(args.expiresAt);
     if (
-      !isPublicTestnetSelfServiceEnabled() || !isCanonicalEvmAddress(args.canonicalSignerAddress)
+      !isCanonicalEvmAddress(args.canonicalSignerAddress)
       || !publicIdPattern.test(args.offeringPublicId) || !integerPattern.test(args.units) || BigInt(args.units) < 1n
       || !noncePattern.test(args.idempotencyKey) || !noncePattern.test(args.purchaseIntentId)
       || expires === null || !Number.isSafeInteger(now) || expires <= now || expires - now > maxLifetimeMilliseconds
     ) return reject();
 
-    const accounts = await ctx.db.query("selfServiceAccounts")
+    const selfService = isPublicTestnetSelfServiceEnabled();
+    const legacyAuthorities = selfService ? [] : await ctx.db.query("commandAuthorities")
       .withIndex("by_chain_id_and_canonical_signer_address", (query) => query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress))
       .take(2);
-    if (accounts.length !== 1) return reject();
-    const account = readStoredRecord(accounts[0], ["canonicalSignerAddress", "chainId", "principalPublicId", "policyVersion", "status", "createdAt", "updatedAt"]);
-    if (
+    if (!selfService && (args.offeringPublicId !== legacyRiskScanOfferingPublicId || legacyAuthorities.length !== 1
+      || legacyAuthorities[0]?.role !== "BACKER" || legacyAuthorities[0]?.enabled !== true
+      || legacyAuthorities[0]?.canonicalSignerAddress !== args.canonicalSignerAddress)) return reject();
+    const accounts = selfService ? await ctx.db.query("selfServiceAccounts")
+      .withIndex("by_chain_id_and_canonical_signer_address", (query) => query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress))
+      .take(2) : [];
+    if (selfService && accounts.length !== 1) return reject();
+    const account = selfService ? readStoredRecord(accounts[0], ["canonicalSignerAddress", "chainId", "principalPublicId", "policyVersion", "status", "createdAt", "updatedAt"]) : null;
+    if (selfService && (account === null ||
       account.canonicalSignerAddress !== args.canonicalSignerAddress || account.chainId !== 296
       || account.principalPublicId !== `self_service_${args.canonicalSignerAddress.slice(2)}`
       || account.policyVersion !== "public_testnet_v1" || account.status !== "ACTIVE"
       || !isInt64(account.createdAt) || !isInt64(account.updatedAt)
-    ) return reject();
+    )) return reject();
 
     const offerings = await ctx.db.query("offerings")
       .withIndex("by_offering_public_id_and_version", (query) => query.eq("offeringPublicId", args.offeringPublicId).eq("version", 1))
@@ -209,6 +217,10 @@ export const freezeBackingIntent = internalMutation({
       .take(2);
     if (existing.length > 1) return reject();
     if (existing.length === 1) return reject();
+    if (!selfService) {
+      await ctx.db.insert("backingIntents", { ...intent, canonicalSignerAddress: args.canonicalSignerAddress, offeringVersion: offering.offeringVersion, offeringTermsDigest: offering.offeringTermsDigest, createdAt: BigInt(now) });
+      return { outcome: "PREPARED" as const, intent };
+    }
     const maximumPending = readSelfServiceMaxPendingAttempts();
     if (maximumPending === null) return reject();
     const pending = await ctx.db.query("backingIntents")
