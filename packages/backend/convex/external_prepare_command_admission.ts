@@ -14,6 +14,7 @@ import {
   isSelectedProviderToolSubject,
   resolveSelectedProviderToolSubject,
 } from "./provider_tool_authority.ts";
+import { isPublicTestnetSelfServiceEnabled } from "./self_service_accounts.ts";
 import type schema from "./schema.ts";
 
 const contextValidators = {
@@ -206,6 +207,51 @@ function revalidateAuthority(input: unknown, command: ReturnType<typeof bindCont
   ) reject();
 }
 
+async function resolveCurrentAuthority(
+  ctx: Parameters<typeof resolveSelectedProviderToolSubject>[0],
+  command: ReturnType<typeof bindContext>,
+): Promise<unknown> {
+  const authorities = await ctx.db.query("commandAuthorities")
+    .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+      query.eq("chainId", command.chainId).eq("canonicalSignerAddress", command.canonicalSignerAddress)
+    ))
+    .take(2);
+  if (authorities.length === 1) return authorities[0];
+  if (authorities.length !== 0 || !isPublicTestnetSelfServiceEnabled()) return reject();
+
+  const accounts = await ctx.db.query("selfServiceAccounts")
+    .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+      query.eq("chainId", 296).eq("canonicalSignerAddress", command.canonicalSignerAddress)
+    ))
+    .take(2);
+  if (accounts.length !== 1 || accounts[0] === undefined) return reject();
+  const account = readRecord(accounts[0], [
+    "canonicalSignerAddress", "chainId", "principalPublicId", "policyVersion", "status", "createdAt", "updatedAt",
+  ], true);
+  if (
+    account.chainId !== 296
+    || account.canonicalSignerAddress !== command.canonicalSignerAddress
+    || account.principalPublicId !== `self_service_${command.canonicalSignerAddress.slice(2)}`
+    || account.principalPublicId !== command.principalPublicId
+    || account.policyVersion !== "public_testnet_v1"
+    || account.policyVersion !== command.authorityVersion
+    || account.status !== "ACTIVE"
+    || !isInt64(account.createdAt)
+    || !isInt64(account.updatedAt)
+  ) return reject();
+  return {
+    _id: account._id,
+    _creationTime: account._creationTime,
+    principalPublicId: account.principalPublicId,
+    canonicalSignerAddress: account.canonicalSignerAddress,
+    chainId: 296,
+    role: command.payload.operationKind === "HEDERA_FUNDING" ? "BACKER" : "ISSUER",
+    ownedSubjectPublicIds: [],
+    authorityVersion: account.policyVersion,
+    enabled: true,
+  };
+}
+
 async function revalidateSelectedPrepareAuthority(
   ctx: Parameters<typeof resolveSelectedProviderToolSubject>[0],
   input: unknown,
@@ -283,15 +329,11 @@ export const admitExternalPrepareCommand = internalMutation({
   ),
   handler: async (ctx, args) => {
     const { bound, replayIdentity, durableNow } = bindCommand(args);
-    const authorities = await ctx.db.query("commandAuthorities")
-      .withIndex("by_chain_id_and_canonical_signer_address", (query) =>
-        query.eq("chainId", bound.chainId).eq("canonicalSignerAddress", bound.canonicalSignerAddress))
-      .take(2);
-    if (authorities.length !== 1) return reject();
+    const authority = await resolveCurrentAuthority(ctx, bound);
     const selected = isSelectedProviderToolSubject(bound.payload.subjectPublicId)
-      ? await revalidateSelectedPrepareAuthority(ctx, authorities[0], bound)
+      ? await revalidateSelectedPrepareAuthority(ctx, authority, bound)
       : null;
-    if (selected === null) revalidateAuthority(authorities[0], bound);
+    if (selected === null) revalidateAuthority(authority, bound);
     if (bound.payload.operationKind === "ATS_CREATE") return reject();
     assertCurrentAtsPrepareAuthority(bound.payload);
 
@@ -355,15 +397,11 @@ export const admitAtsCreateAndMarkAssetPending = internalMutation({
     const { bound, replayIdentity, durableNow } = bindCommand(args);
     if (bound.payload.operationKind !== "ATS_CREATE") return reject();
 
-    const authorities = await ctx.db.query("commandAuthorities")
-      .withIndex("by_chain_id_and_canonical_signer_address", (query) =>
-        query.eq("chainId", bound.chainId).eq("canonicalSignerAddress", bound.canonicalSignerAddress))
-      .take(2);
-    if (authorities.length !== 1) return reject();
+    const authority = await resolveCurrentAuthority(ctx, bound);
     const selected = isSelectedProviderToolSubject(bound.payload.subjectPublicId)
-      ? await revalidateSelectedPrepareAuthority(ctx, authorities[0], bound)
+      ? await revalidateSelectedPrepareAuthority(ctx, authority, bound)
       : null;
-    if (selected === null) revalidateAuthority(authorities[0], bound);
+    if (selected === null) revalidateAuthority(authority, bound);
     if (selected === null) {
       assertStageBAtsCreateRuntimeBinding(bound);
       assertCurrentAtsPrepareAuthority(bound.payload);

@@ -793,14 +793,42 @@ export async function linkAtsCreateAttemptToDraftOffering(
         query.eq("chainId", 296).eq("canonicalSignerAddress", binding.canonicalSignerAddress)
       ))
       .take(2);
-    if (authorities.length !== 1) return reject();
-    const selected = await resolveSelectedProviderToolSubject(ctx, authorities[0], {
+    let authority: unknown = authorities.length === 1 ? authorities[0] : null;
+    if (authority === null && authorities.length === 0 && isPublicTestnetSelfServiceEnabled()) {
+      const accounts = await ctx.db.query("selfServiceAccounts")
+        .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+          query.eq("chainId", 296).eq("canonicalSignerAddress", binding.canonicalSignerAddress)
+        ))
+        .take(2);
+      const account = accounts[0];
+      if (
+        accounts.length === 1 && account !== undefined
+        && account.status === "ACTIVE" && account.policyVersion === "public_testnet_v1"
+        && account.principalPublicId === binding.principalPublicId
+        && account.principalPublicId === `self_service_${binding.canonicalSignerAddress.slice(2)}`
+        && account.policyVersion === binding.authorityVersion
+      ) {
+        authority = {
+          _id: account._id,
+          _creationTime: account._creationTime,
+          principalPublicId: account.principalPublicId,
+          canonicalSignerAddress: binding.canonicalSignerAddress,
+          chainId: 296,
+          role: "ISSUER",
+          ownedSubjectPublicIds: [],
+          authorityVersion: account.policyVersion,
+          enabled: true,
+        };
+      }
+    }
+    if (authority === null) return reject();
+    const selected = await resolveSelectedProviderToolSubject(ctx, authority, {
       subjectPublicId: binding.subjectPublicId,
     });
     if (
       selected.subjectPublicId !== binding.subjectPublicId
-      || (authorities[0]?.principalPublicId !== binding.principalPublicId)
-      || (authorities[0]?.authorityVersion !== binding.authorityVersion)
+      || ((authority as Record<string, unknown>).principalPublicId !== binding.principalPublicId)
+      || ((authority as Record<string, unknown>).authorityVersion !== binding.authorityVersion)
     ) return reject();
     selectedOfferingPublicId = selected.offeringPublicId;
   }

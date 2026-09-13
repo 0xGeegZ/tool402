@@ -20,6 +20,7 @@ function registeredMutationSource(name, nextName) {
   return source.slice(start, end);
 }
 const signer = "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454";
+const selfServiceSigner = "0x1111111111111111111111111111111111111111";
 const now = Date.parse("2026-09-07T19:00:30.000Z");
 const attemptId = "externalPrepareCommandAttempts:accepted";
 const payloadHash = "0xfe32ed7989dfa94699ffc6529b4f5c6214721ef63d4f1a2d08f028366fe19b18";
@@ -133,6 +134,33 @@ function selectedAtsCreateInput(suffix, nonce = "CCCCCCCCCCCCCCCCCCCCCg") {
   return args;
 }
 
+function selectedSelfServiceAtsCreateInput(suffix, nonce = "DDDDDDDDDDDDDDDDDDDDDQ") {
+  const args = m47AtsCreateInput();
+  const toolPublicId = `tool_${suffix}`;
+  const principalPublicId = `self_service_${selfServiceSigner.slice(2)}`;
+  const configuration = createProviderToolAtsConfiguration({
+    toolPublicId,
+    subjectPublicId: toolPublicId,
+    title: "RiskScan Revenue Note",
+    canonicalSignerAddress: selfServiceSigner,
+  });
+  args.canonicalSignerAddress = selfServiceSigner;
+  args.principalPublicId = principalPublicId;
+  args.authorityVersion = "public_testnet_v1";
+  args.role = "ISSUER";
+  args.nonce = nonce;
+  args.replayIdentity = `tool402:wallet-command:v1:296:${selfServiceSigner}:${nonce}`;
+  args.payload = {
+    ...args.payload,
+    subjectPublicId: toolPublicId,
+    expectedTarget: configuration.atsCreateConfiguration.expectedTarget,
+    canonicalParametersHash: configuration.canonicalParametersHash,
+    idempotencyKey: nonce,
+  };
+  args.payloadHash = hashPayload(args.payload);
+  return args;
+}
+
 function selectedProviderTool(args, suffix = args.payload.subjectPublicId.slice("tool_".length)) {
   const toolPublicId = `tool_${suffix}`;
   return {
@@ -201,12 +229,15 @@ function selectedOffering(args, suffix, overrides = {}) {
 function selectedAtomicDatabase({
   args,
   offerings,
+  authorities = [authority(args)],
+  selfServiceAccounts = [],
   providerTools = [selectedProviderTool(args)],
   claims = [],
   attempts = [],
 }) {
   const rows = {
-    commandAuthorities: [authority(args)],
+    commandAuthorities: structuredClone(authorities),
+    selfServiceAccounts: structuredClone(selfServiceAccounts),
     providerTools: structuredClone(providerTools),
     offerings: structuredClone(offerings),
     externalPrepareCommandReplayClaims: structuredClone(claims),
@@ -724,7 +755,7 @@ atomicTest("requires the M47 real-issuer binding after M32 authority revalidatio
     true,
     "the atomic mutation must consume the private M47 binding rather than a caller-selected configuration",
   );
-  const revalidated = atomic.indexOf("revalidateAuthority(authorities[0], bound)");
+  const revalidated = atomic.indexOf("revalidateAuthority(authority, bound)");
   const binding = atomic.indexOf("assertStageBAtsCreateRuntimeBinding(bound)");
   const m33 = atomic.indexOf("assertCurrentAtsPrepareAuthority(bound.payload)");
   const replay = atomic.indexOf('ctx.db.query("externalPrepareCommandReplayClaims")');
@@ -818,6 +849,40 @@ atomicTest("keeps selected Tool B atomic admission and command replay isolated f
   assert.equal(db.writes.length, writesAfterAdmission);
   assert.equal(db.rows.offerings[0].subjectPublicId, `tool_${suffixA}`);
   assert.equal(db.rows.offerings[1].subjectPublicId, `tool_${suffixB}`);
+});
+
+atomicTest("admits an active self-service owner's selected ATS_CREATE without a legacy authority", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now });
+  const { admitAtsCreateAndMarkAssetPending: atomic } = await import(moduleUrl);
+  const suffix = "c".repeat(32);
+  const args = selectedSelfServiceAtsCreateInput(suffix);
+  const db = selectedAtomicDatabase({
+    args,
+    authorities: [],
+    selfServiceAccounts: [{
+      _id: "selfServiceAccounts:active",
+      _creationTime: now - 1_000,
+      canonicalSignerAddress: selfServiceSigner,
+      chainId: 296,
+      principalPublicId: args.principalPublicId,
+      policyVersion: "public_testnet_v1",
+      status: "ACTIVE",
+      createdAt: 1n,
+      updatedAt: 1n,
+    }],
+    offerings: [selectedOffering(args, suffix)],
+  });
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
+    assert.deepEqual(
+      await atomic._handler(db.ctx, args),
+      { status: "NEW", attemptId: "externalPrepareCommandAttempts:selected", state: "PREPARED" },
+    );
+  } finally {
+    process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous;
+  }
+  assert.equal(db.rows.offerings[0].state, "ASSET_PENDING");
 });
 
 atomicTest("rejects M42/M47 payload and authority-context drift before replay or durable activity", async (t) => {
