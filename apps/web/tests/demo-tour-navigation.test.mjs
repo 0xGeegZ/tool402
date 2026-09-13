@@ -20,7 +20,7 @@ test("keeps the validated dashboard tour redirect fixed", async (t) => {
   await t.test("accepts only a local application return destination", () => {
     assert.equal(safeDashboardReturnHref("/explore/provider/offering_abc/back"), "/explore/provider/offering_abc/back");
     assert.equal(safeDashboardReturnHref("/provider/deploy?tool=tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), "/provider/deploy?tool=tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-    for (const value of [undefined, "", "/sign-in", "https://evil.example", "//evil.example", "/\\evil", "/provider#external"]) {
+    for (const value of [undefined, "", "/sign-in", "https://evil.example", "//evil.example", "/%2e%2e//evil.example", "/\\evil", "/provider#external"]) {
       assert.equal(safeDashboardReturnHref(value), null);
     }
   });

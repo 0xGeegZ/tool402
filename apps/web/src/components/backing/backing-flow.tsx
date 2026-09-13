@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent } from "react";
+import Link from "next/link";
 
 import { isUserRejection } from "../../lib/wallet/metamask-provider.ts";
 import { hashscanTransactionUrl } from "../../lib/hashscan-links.ts";
@@ -37,6 +38,7 @@ import { assessFundingBalance } from "./backing-balance";
 
 const finalPhases: ReadonlySet<SignatureResult["phase"]> = new Set(["complete", "rejected", "failed", "unknown"]);
 const pendingAttachmentPrefix = "tool402-backing-pending-attachment-v2:";
+const preparedIntentPrefix = "tool402-backing-prepared-intent-v1:";
 type PendingAttachment = Readonly<{ canonicalSignerAddress: string; offeringPublicId: string; intent: Pick<BackingIntent, "idempotencyKey" | "parameters">; transactionHash: `0x${string}` }>;
 
 function pendingAttachmentKey(canonicalSignerAddress: string, offeringPublicId: string, attemptPublicId: string): string {
@@ -63,6 +65,26 @@ function pendingAttachment(canonicalSignerAddress: string | null, offeringPublic
     }
     return null;
   } catch { return null; }
+}
+
+function preparedIntentKey(canonicalSignerAddress: string, offeringPublicId: string, attemptPublicId: string): string {
+  return `${preparedIntentPrefix}${canonicalSignerAddress}:${offeringPublicId}:${attemptPublicId}`;
+}
+
+function preparedIntent(canonicalSignerAddress: string | null, offering: BackingOffering): BackingIntent | null {
+  if (canonicalSignerAddress === null || typeof window === "undefined") return null;
+  try {
+    const prefix = `${preparedIntentPrefix}${canonicalSignerAddress}:${offering.offeringPublicId}:`;
+    for (const key of Object.keys(window.localStorage)) {
+      if (!key.startsWith(prefix)) continue;
+      const value: unknown = JSON.parse(window.localStorage.getItem(key) ?? "null");
+      if (value === null || typeof value !== "object" || Array.isArray(value)) continue;
+      const record = value as Record<string, unknown>;
+      if (record.canonicalSignerAddress !== canonicalSignerAddress || record.offeringPublicId !== offering.offeringPublicId || record.frozen === null || typeof record.frozen !== "object") continue;
+      try { return createFrozenBackingIntent(offering, record.frozen as Parameters<typeof createFrozenBackingIntent>[1], Date.now()); } catch { continue; }
+    }
+  } catch { /* browser recovery is best effort only */ }
+  return null;
 }
 
 function chipClass(selected: boolean): string {
@@ -100,7 +122,8 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   const [preset, setPreset] = useState<bigint | null>(offering.terms.minimumPurchaseUnits);
   const [unitsInput, setUnitsInput] = useState(offering.terms.minimumPurchaseUnits.toString());
   const [acknowledged, setAcknowledged] = useState(false);
-  const [view, setView] = useState<BackingView>({ kind: "choosing" });
+  const recoveredIntent = preparedIntent(dashboardAddress, offering);
+  const [view, setView] = useState<BackingView>(() => recoveredIntent === null ? { kind: "choosing" } : { kind: "prepared", intent: recoveredIntent });
   const [request, setRequest] = useState<BackingIntent | null>(null);
   const [preparing, setPreparing] = useState(false);
   const [transferring, setTransferring] = useState(false);
@@ -111,11 +134,16 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   const validation = validateUnits(offering, unitsInput);
   const label = payment?.status === "CONFIRMED" ? "payment_confirmed" : payment?.status === "REJECTED" ? "payment_rejected" : backingLifecycleLabels[view.kind];
   const committed = request ?? ("intent" in view ? view.intent : null);
-  const locked = payment !== null || view.kind !== "choosing" || request !== null || preparing;
+  const resumedReservation = payment?.status === "PREPARED" && view.kind === "prepared";
+  const locked = (payment !== null && !resumedReservation) || view.kind !== "choosing" || request !== null || preparing;
   const dashboardMatchesWallet = session !== null && dashboardAddress !== null && session.address === dashboardAddress;
-  const canPrepare = validation.ok && acknowledged && dashboardMatchesWallet && !locked;
+  const canPrepare = payment === null && validation.ok && acknowledged && dashboardMatchesWallet && !locked;
   const readoutUnits = committed !== null ? committed.units : validation.ok ? validation.units : null;
   const readoutTinybars = committed !== null ? committed.tinybars : validation.ok ? paymentTinybars(offering, validation.units) : null;
+  const backingPath = offering.offeringPublicId === "riskscan_revenue_note_demo"
+    ? "/explore/riskscan/back"
+    : `/explore/provider/${encodeURIComponent(offering.offeringPublicId)}/back`;
+  const signInHref = `/sign-in?returnTo=${encodeURIComponent(backingPath)}`;
 
   async function prepare() {
     if (!validation.ok || !canPrepare) return;
@@ -129,7 +157,11 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       if (!response.ok || value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("frozen intent unavailable");
       const frozen = (value as Record<string, unknown>).intent;
       if (frozen === null || typeof frozen !== "object" || Array.isArray(frozen)) throw new Error("invalid frozen intent");
-      setRequest(createFrozenBackingIntent(offering, frozen as Parameters<typeof createFrozenBackingIntent>[1], Date.now()));
+      const intent = createFrozenBackingIntent(offering, frozen as Parameters<typeof createFrozenBackingIntent>[1], Date.now());
+      if (dashboardAddress !== null) {
+        try { window.localStorage.setItem(preparedIntentKey(dashboardAddress, offering.offeringPublicId, intent.idempotencyKey), JSON.stringify({ canonicalSignerAddress: dashboardAddress, offeringPublicId: offering.offeringPublicId, frozen })); } catch { /* authoritative reservation remains server-side */ }
+      }
+      setRequest(intent);
     } catch {
       setView({ kind: "choosing", message: "The funding intent could not be prepared. Nothing was signed or sent." });
     } finally {
@@ -153,6 +185,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
           && typeof record.tinybars === "string" && /^(?:0|[1-9][0-9]*)$/u.test(record.tinybars)) {
           setPayment({ status: record.status, transactionHash: record.transactionHash as `0x${string}`, tinybars: record.tinybars });
           try { window.localStorage.removeItem(pendingAttachmentKey(dashboardAddress ?? "", offering.offeringPublicId, intent.idempotencyKey)); } catch { /* recovery storage is best effort only */ }
+          try { window.localStorage.removeItem(preparedIntentKey(dashboardAddress ?? "", offering.offeringPublicId, intent.idempotencyKey)); } catch { /* recovery storage is best effort only */ }
           setPending(null);
           return;
         }
@@ -335,7 +368,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
         {view.kind === "choosing" ? (
           <div className="space-y-2">
             <Button disabled={!canPrepare} aria-disabled={!canPrepare} onClick={prepare}>Prepare and fund</Button>
-            <p className="text-xs text-muted-foreground">{dashboardAddress === null ? "Sign in to the dashboard first so a submitted payment can be confirmed and restored." : dashboardMatchesWallet ? "Two confirmations: one signature, one HBAR transfer." : "The connected MetaMask wallet must match the signed dashboard wallet before funding."}</p>
+            <p className="text-xs text-muted-foreground">{dashboardAddress === null ? <><Link href={signInHref} className="font-semibold text-primary">Sign in</Link> to continue this backing route and restore a submitted payment.</> : dashboardMatchesWallet ? "Two confirmations: one signature, one HBAR transfer." : "The connected MetaMask wallet must match the signed dashboard wallet before funding."}</p>
           </div>
         ) : null}
         {request !== null && session !== null ? <SignatureDialog provider={session.provider} request={request} onResult={onSignature} /> : null}
