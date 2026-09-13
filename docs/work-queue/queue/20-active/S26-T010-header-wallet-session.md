@@ -92,12 +92,15 @@ API change. The manifest's exclusions govern; this card does not restate them.
 
 The repository owner directs the existing shared wallet session to restore one
 already-authorized MetaMask account after a full reload, so the header no
-longer requires a second Connect click. Only `wallet-session.tsx` and
-`wallet-session.test.mjs` may change: after mount, the provider may use the
+longer requires a second Connect click. Only `wallet-session.tsx`,
+`wallet-session.test.mjs`, and the existing `wallet-session-sync.test.mjs`
+runtime harness may change: after mount, the provider may use the
 accepted discovery seam and read only `eth_chainId` and `eth_accounts` once.
-It must never call `eth_requestAccounts`, sign, switch, store, retry, transact,
-or infer authority; an explicit header click remains required to request an
-account.
+The runtime harness may verify that this passive restoration neither requests
+an account nor signs. The connected-address dashboard link may disable prefetch
+so the server dashboard guard is evaluated on its click. Neither change may
+call `eth_requestAccounts`, sign, switch, store, retry, transact, or infer
+authority; an explicit header click remains required to request an account.
 
 ## Human worktree lane request
 

@@ -1129,11 +1129,15 @@ internal `/dashboard` navigation. It neither reads nor grants the separate S38
 signed dashboard session.
 
 User-directed S26 passive restoration amendment: the root additionally reserves
-only `apps/web/src/components/wallet/wallet-session.tsx` and
-`apps/web/tests/wallet-session.test.mjs` to restore an already-authorized
+only `apps/web/src/components/wallet/wallet-session.tsx`,
+`apps/web/tests/wallet-session.test.mjs`, and the existing
+`apps/web/tests/wallet-session-sync.test.mjs` runtime harness to restore an already-authorized
 MetaMask account once after mount via `eth_chainId` and `eth_accounts`. It may
 not call `eth_requestAccounts`, sign, switch, store, retry, transact, or alter
-the server dashboard-session guard.
+the server dashboard-session guard. It also reserves only the connected-address
+dashboard Link in `wallet-connect.tsx` and its assertion in
+`wallet-session.test.mjs` to disable prefetch; the server guard remains the
+sole dashboard access decision.
 
 The owner-directed deploy-form amendment further reserves only the existing
 `deploy-stage-signing.tsx` signing block and its existing

@@ -69,8 +69,10 @@ unreachable, exactly as the accepted UI-S15 rule states; the badge branch
 exists only so the closed union is handled. The accepted
 UI-S15 sentence for the current kind renders in one visually hidden
 `aria-live="polite"` region so the "not an authority" copy stays available to
-assistive technology. Both address badges are internal links to `/dashboard`;
-they are navigation only, not authentication or authority proof. A connected
+assistive technology. Both address badges are internal links to `/dashboard`
+with prefetch disabled, so a click evaluates the server dashboard guard against
+the current signed session. They are navigation only, not authentication or
+authority proof. A connected
 but unsigned visitor is intentionally sent to the S38 `/sign-in` surface,
 which must explain that one safe authentication signature is the remaining
 step before the dashboard opens. The server dashboard guard remains the sole
