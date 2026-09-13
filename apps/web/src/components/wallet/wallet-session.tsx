@@ -14,6 +14,7 @@ import {
   type Eip1193Provider,
   watchWalletSessionChanges,
 } from "../../lib/wallet/metamask-provider.ts";
+import { formatHbar, readHbarBalance } from "../../lib/wallet/wallet-balance.ts";
 import {
   connectWallet,
   readCurrentSession,
@@ -29,6 +30,7 @@ export interface WalletSession {
 export interface WalletSessionValue {
   readonly state: WalletState;
   readonly provider: Eip1193Provider | null;
+  readonly balance: string | null | undefined;
   connect(approvedIssuerAddress?: string): Promise<void>;
   switchChain(): Promise<void>;
   disconnect(): void;
@@ -44,11 +46,14 @@ const WalletSessionContext = createContext<WalletSessionValue | null>(null);
 
 export function WalletSessionProvider({ children }: { readonly children: ReactNode }) {
   const [state, setState] = useState<WalletState>({ kind: "disconnected" });
+  const [balance, setBalance] = useState<string | null | undefined>(undefined);
   const providerRef = useRef<Eip1193Provider | null>(null);
   const approvedIssuerRef = useRef<string | undefined>(undefined);
   const cleanupRef = useRef<(() => void) | null>(null);
   const sessionReadGenerationRef = useRef(0);
   const provider = providerRef.current;
+  const balanceAddress =
+    state.kind === "connected" || state.kind === "not_issuer" ? state.address : null;
 
   useEffect(() => {
     if (provider === null) {
@@ -74,6 +79,29 @@ export function WalletSessionProvider({ children }: { readonly children: ReactNo
       cleanup();
     };
   }, [provider]);
+
+  useEffect(() => {
+    if (provider === null || balanceAddress === null) {
+      setBalance(undefined);
+      return;
+    }
+    let live = true;
+    void readHbarBalance(provider, balanceAddress).then(
+      (weibarHex) => {
+        if (live) {
+          setBalance(formatHbar(weibarHex));
+        }
+      },
+      () => {
+        if (live) {
+          setBalance(null);
+        }
+      },
+    );
+    return () => {
+      live = false;
+    };
+  }, [provider, balanceAddress]);
 
   async function connect(approvedIssuerAddress?: string) {
     const generation = sessionReadGenerationRef.current + 1;
@@ -112,7 +140,9 @@ export function WalletSessionProvider({ children }: { readonly children: ReactNo
   }
 
   return (
-    <WalletSessionContext.Provider value={{ state, provider, connect, switchChain, disconnect }}>
+    <WalletSessionContext.Provider
+      value={{ state, provider, balance, connect, switchChain, disconnect }}
+    >
       {children}
     </WalletSessionContext.Provider>
   );

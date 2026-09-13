@@ -34,7 +34,7 @@ function shortenAddress(address: string): string {
 }
 
 export function WalletIsland() {
-  const { state, connect, switchChain } = useWalletSession();
+  const { state, balance, connect, switchChain } = useWalletSession();
 
   return (
     <div data-slot="wallet-island" className="flex items-center gap-2">
@@ -61,8 +61,10 @@ export function WalletIsland() {
       ) : null}
       {state.kind === "connected" || state.kind === "not_issuer" ? (
         <Link href="/dashboard" aria-label="Open dashboard" className="touch-target rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
-          <Badge variant="secondary" title={state.address}>
-            {shortenAddress(state.address)}
+          <Badge variant="secondary" title={`${state.address} HBAR on Hedera Testnet`}>
+            {balance === undefined
+              ? shortenAddress(state.address)
+              : `${shortenAddress(state.address)} · ${balance ?? "balance unavailable"}`}
           </Badge>
         </Link>
       ) : null}

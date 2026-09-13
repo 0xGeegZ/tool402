@@ -1,6 +1,7 @@
+import { formatHbar as formatTinybarHbar } from "../hbar-format.ts";
 import type { Eip1193Provider } from "./metamask-provider.ts";
 
-const WEIBAR_PER_HBAR = 10n ** 18n;
+const weibarPerTinybar = 10n ** 10n;
 
 export async function readHbarBalance(provider: Eip1193Provider, address: string): Promise<string> {
   const answer = await provider.request({ method: "eth_getBalance", params: [address, "latest"] });
@@ -11,8 +12,5 @@ export async function readHbarBalance(provider: Eip1193Provider, address: string
 }
 
 export function formatHbar(weibarHex: string): string {
-  const weibar = BigInt(weibarHex);
-  const whole = weibar / WEIBAR_PER_HBAR;
-  const fraction = ((weibar % WEIBAR_PER_HBAR) * 100n) / WEIBAR_PER_HBAR;
-  return `${whole}.${String(fraction).padStart(2, "0")} HBAR`;
+  return formatTinybarHbar(BigInt(weibarHex) / weibarPerTinybar);
 }
