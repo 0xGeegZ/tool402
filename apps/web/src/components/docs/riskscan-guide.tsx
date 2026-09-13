@@ -13,12 +13,15 @@ const topics = [
   { href: "#scope", label: "What Quick covers" },
   { href: "#request-shape", label: "Request shape" },
   { href: "#result-boundary", label: "Result boundary" },
+  { href: "#payment-boundary", label: "Payment and B03" },
+  { href: "#backing-boundary", label: "Backing" },
   { href: "#local-routes", label: "Local routes" },
 ] as const;
 
 const localRoutes = [
   { href: "/explore/riskscan", label: "Open RiskScan", description: "Read the current local detail route." },
   { href: "/explore/riskscan/tool-loop", label: "Follow ToolLoop", description: "Inspect the bounded local request journey." },
+  { href: "/explore/riskscan/back", label: "Inspect Back RiskScan", description: "Read the current backing conditions before attempting any testnet action." },
   { href: "/demo", label: "Open guided demo", description: "Continue through the local product tour." },
 ] as const;
 
@@ -92,17 +95,49 @@ export function RiskScanGuide() {
             </div>
             <Card className="rounded-panel bg-secondary/35 shadow-none">
               <CardContent className="pt-5 text-sm leading-6 text-muted-foreground">
-                x402 configuration is host-specific. When it is not configured, the current unavailable boundary is returned; this guide does not expose configuration values.
+                x402 configuration is host-specific. When it is configured, the route can return <code className="rounded bg-background px-1.5 py-0.5 font-mono text-xs text-foreground">402 Payment Required</code>; when it is not, the current unavailable boundary is returned. A challenge, request, or client-presented record is not settlement proof.
+              </CardContent>
+            </Card>
+          </section>
+
+          <section id="payment-boundary" aria-labelledby="payment-boundary-title" className="space-y-4 scroll-mt-24">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-primary">04 · Payment and B03</p>
+              <h2 id="payment-boundary-title" className="text-2xl font-bold tracking-tight">Keep discovery separate from payment</h2>
+              <p className="max-w-prose text-base leading-7 text-muted-foreground">
+                Native Hedera x402 configuration uses <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-foreground">hedera:testnet</code>. The descriptor is the source of truth for the host&apos;s published payment metadata; this guide does not copy a payee, asset, or amount.
+              </p>
+            </div>
+            <Card className="rounded-panel bg-secondary/35 shadow-none">
+              <CardContent className="space-y-3 pt-5 text-sm leading-6 text-muted-foreground">
+                <p>The B03 consumer-agent path has a non-payable preflight. It reads the descriptor, makes one unsigned initial request, and stops at its guard before payment construction, signing, retry, settlement, or result parsing.</p>
+                <p>A paid B03 request is a separate Human Ops testnet action. It is not started by these docs or by a 402 challenge in the browser.</p>
+              </CardContent>
+            </Card>
+          </section>
+
+          <section id="backing-boundary" aria-labelledby="backing-boundary-title" className="space-y-4 scroll-mt-24">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-primary">05 · Backing</p>
+              <h2 id="backing-boundary-title" className="text-2xl font-bold tracking-tight">Back only an OPEN offering</h2>
+              <p className="max-w-prose text-base leading-7 text-muted-foreground">
+                <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-foreground">/explore/riskscan/back</code> stays unavailable unless the host projects an OPEN offering. If unavailable, nothing is requested, signed, or sent.
+              </p>
+            </div>
+            <Card className="rounded-panel bg-secondary/35 shadow-none">
+              <CardContent className="space-y-3 pt-5 text-sm leading-6 text-muted-foreground">
+                <p>For an OPEN offering, the flow prepares one <code className="rounded bg-background px-1.5 py-0.5 font-mono text-xs text-foreground">HEDERA_FUNDING</code> command, then asks MetaMask for a separate HBAR transfer on Hedera Testnet. A signature is not a payment.</p>
+                <p>A submitted transfer is not confirmed in that page, and note units are allocated only after the issuer signs the allocation. The backing route is a testnet experiment with no real funds.</p>
               </CardContent>
             </Card>
           </section>
 
           <section id="local-routes" aria-labelledby="local-routes-title" className="space-y-4 scroll-mt-24">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-primary">04 · Continue locally</p>
+              <p className="text-sm font-semibold text-primary">06 · Continue locally</p>
               <h2 id="local-routes-title" className="text-2xl font-bold tracking-tight">Choose a local next step</h2>
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2">
               {localRoutes.map((route) => (
                 <Card key={route.href} className="rounded-panel shadow-none">
                   <CardContent className="space-y-4 pt-5">

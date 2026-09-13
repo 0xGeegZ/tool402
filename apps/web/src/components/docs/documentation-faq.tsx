@@ -13,7 +13,7 @@ const questions = [
   },
   {
     question: "How does the Tool402 flow work?",
-    answer: "The current route flow is Discover → Request → 402 Payment Required → inspect the boundary → choose a local next step. A route does not turn a payment requirement into proof of settlement.",
+    answer: "The current RiskScan route flow is Discover → Request → a result or 402 Payment Required → inspect the boundary → choose the next step. A route does not turn a payment requirement into proof of settlement.",
   },
   {
     question: "What does RiskScan Quick assess?",
@@ -21,11 +21,23 @@ const questions = [
   },
   {
     question: "What is x402?",
-    answer: "x402 is the payment boundary used by a tool to say that payment is required before access. Receiving a 402 challenge alone is not proof of a completed payment.",
+    answer: "x402 is the payment boundary used by a tool to say that payment is required before access. The native Hedera mode uses hedera:testnet, but the descriptor is the source of truth for the current host. Receiving a 402 challenge alone is not proof of a completed payment.",
+  },
+  {
+    question: "What does the B03 consumer-agent path do?",
+    answer: "Its non-payable preflight reads the descriptor, makes one unsigned initial request, and stops before payment construction, signing, retry, settlement, or result parsing. A paid B03 request remains a separate Human Ops testnet action.",
+  },
+  {
+    question: "Can I back RiskScan?",
+    answer: "Only when /explore/riskscan/back has an OPEN offering. It first prepares HEDERA_FUNDING, then asks MetaMask for a separate HBAR transfer on Hedera Testnet. A signature is not a payment, and note units are allocated only after the issuer signs the allocation.",
   },
   {
     question: "Does the Provider path deploy an ATS asset?",
-    answer: "No. A Provider preview, review, or signature is not an ATS deployment and does not publish a public tool offering.",
+    answer: "Not by opening the wizard, reviewing it, or signing one stage. The issuer wallet follows four separate stages: record the draft, prepare ATS_CREATE, create and attach the revenue-note candidate in MetaMask, then publish after the required receipt conditions. A relayed accepted signature is not an on-chain fact.",
+  },
+  {
+    question: "What does World verification do?",
+    answer: "The signed dashboard can request a World App Selfie Check for the connected Hedera Testnet account. It confirms a live person, not identity or KYC; when verified, the browser-bound result lasts 30 days. It is unavailable when the host is not configured.",
   },
   {
     question: "Is there a public MCP endpoint?",

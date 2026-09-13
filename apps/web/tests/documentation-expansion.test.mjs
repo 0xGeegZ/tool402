@@ -92,11 +92,17 @@ test("keeps the API reference and FAQ factual, static, and local", async (t) => 
   }
   assert.match(sources.apiReference, /host-specific/i);
   assert.match(sources.apiReference, /unavailable/i);
+  assert.match(sources.apiReference, /two public, unauthenticated RiskScan HTTP boundaries/i);
+  assert.match(sources.apiReference, /hedera:testnet/i);
+  assert.match(sources.apiReference, /session-protected dashboard controls/i);
   assert.match(sources.apiReference, /public MCP endpoint is not part of the current local routes/i);
   assert.match(sources.faq, /testnet/i);
   assert.match(sources.faq, /caller-supplied/i);
   assert.match(sources.faq, /not proof of a completed payment/i);
-  assert.match(sources.faq, /not an ATS deployment/i);
+  assert.match(sources.faq, /B03 consumer-agent path/i);
+  assert.match(sources.faq, /HEDERA_FUNDING/);
+  assert.match(sources.faq, /World App/i);
+  assert.match(sources.faq, /issuer signs the allocation/i);
 
   const docs = [sources.apiPage, sources.faqPage, sources.apiReference, sources.faq].join("\n");
   const hrefs = [

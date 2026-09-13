@@ -7,23 +7,24 @@ import { Card, CardContent, CardHeader } from "../ui/card";
 import { PageHeader } from "../ui/page-header";
 
 const providerSteps = [
-  { number: "01", title: "Tool details", detail: "Name the local tool and describe the boundary shown by the preview." },
-  { number: "02", title: "Interface and capability", detail: "Review the local capability description and interface details." },
-  { number: "03", title: "Pricing and target agent customers", detail: "Use the existing wizard label to review the local preview fields." },
-  { number: "04", title: "Funding and revenue-note terms", detail: "Use the existing wizard label to review the local preview fields." },
-  { number: "05", title: "Review and sign", detail: "Read the non-editable review and sign surface before returning to the local route." },
+  { number: "01", title: "Tool details", detail: "Set the title, category, one-line description, and customer problem for the offering draft." },
+  { number: "02", title: "Interface and capability", detail: "Set the qualifying resource and capability summary; the declared capability remains fixed." },
+  { number: "03", title: "Pricing and target agent customers", detail: "Set advertised tiers and target customers. The live x402 requirement remains the payment authority." },
+  { number: "04", title: "Funding and revenue-note terms", detail: "Record use of funds, risks, and acknowledgement. The v1 economics and revenue-note parameters are fixed for the offering version." },
+  { number: "05", title: "Review and sign", detail: "Review the non-editable summary before requesting the separately gated deployment-stage signatures." },
 ] as const;
 
 const topics = [
-  { href: "#provider-preview", label: "Provider preview" },
-  { href: "#five-steps", label: "Five local steps" },
+  { href: "#provider-preview", label: "Provider status" },
+  { href: "#five-steps", label: "Five wizard steps" },
+  { href: "#issuer-and-ats", label: "Issuer and ATS" },
   { href: "#control-boundary", label: "Control boundary" },
   { href: "#local-next-steps", label: "Local next steps" },
 ] as const;
 
 const localRoutes = [
   { href: "/provider", label: "Open Provider", description: "Read the current provider projection." },
-  { href: "/provider/deploy", label: "Open the local preview", description: "Continue through the existing RiskScan provider route." },
+  { href: "/provider/deploy", label: "Open campaign deployment", description: "Continue through the existing RiskScan provider wizard and its stage rail." },
   { href: "/explore/riskscan", label: "Open RiskScan", description: "Return to the current RiskScan detail route." },
   { href: "/demo", label: "Open guided demo", description: "Continue through the local product tour." },
 ] as const;
@@ -36,8 +37,8 @@ export function ProviderRiskScanGuide() {
         <div className="space-y-5">
           <Badge variant="outline" className="border-border bg-background">RiskScan · Provider guide</Badge>
           <PageHeader
-            title="Prepare a RiskScan provider preview"
-            description="A route-by-route guide to preparing a tool offering preview, reviewing its controls, and understanding what is not deployed or published."
+            title="Prepare a RiskScan Provider campaign"
+            description="A route-by-route guide to the current five-step wizard, issuer-controlled ATS preparation, and the evidence required before a campaign can be OPEN."
           />
         </div>
       </section>
@@ -46,15 +47,15 @@ export function ProviderRiskScanGuide() {
         <div className="min-w-0 space-y-8">
           <section id="provider-preview" aria-labelledby="provider-preview-title" className="space-y-4 scroll-mt-24">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-primary">01 · Provider preview</p>
+              <p className="text-sm font-semibold text-primary">01 · Provider status</p>
               <h2 id="provider-preview-title" className="text-2xl font-bold tracking-tight">Read the current local surface</h2>
               <p className="max-w-prose text-base leading-7 text-muted-foreground">
-                The Provider overview is read-only. It reflects the current local projection and does not publish a public campaign.
+                The Provider overview is read-only. It reflects admitted campaign records and does not itself change a campaign.
               </p>
             </div>
             <Card className="rounded-panel bg-card shadow-none">
               <CardContent className="pt-5 text-sm leading-6 text-muted-foreground">
-                The local preview keeps its existing route and fields. This guide only explains where each step belongs.
+                Use <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-foreground">/provider/deploy</code> to work through the campaign wizard. A missing record, command bridge, or accepted authority leaves the corresponding step unavailable.
               </CardContent>
             </Card>
           </section>
@@ -62,9 +63,9 @@ export function ProviderRiskScanGuide() {
           <section id="five-steps" aria-labelledby="five-steps-title" className="space-y-4 scroll-mt-24">
             <div className="space-y-2">
               <p className="text-sm font-semibold text-primary">02 · Five steps</p>
-              <h2 id="five-steps-title" className="text-2xl font-bold tracking-tight">Follow the local preview</h2>
+              <h2 id="five-steps-title" className="text-2xl font-bold tracking-tight">Follow the campaign wizard</h2>
               <p className="max-w-prose text-base leading-7 text-muted-foreground">
-                The first four steps contain the documented local editable fields. Review and sign is a non-editable review and sign surface.
+                The first four steps contain the current editable fields. Review and sign is a non-editable review surface; signed durable values cannot be changed from that review.
               </p>
             </div>
             <ol className="grid gap-4 sm:grid-cols-2">
@@ -84,22 +85,35 @@ export function ProviderRiskScanGuide() {
             </ol>
           </section>
 
-          <section id="control-boundary" aria-labelledby="control-boundary-title" className="space-y-4 scroll-mt-24">
+          <section id="issuer-and-ats" aria-labelledby="issuer-and-ats-title" className="space-y-4 scroll-mt-24">
             <div className="space-y-2">
               <p className="text-sm font-semibold text-primary">03 · Control boundary</p>
-              <h2 id="control-boundary-title" className="text-2xl font-bold tracking-tight">Keep the current boundary clear</h2>
+              <h2 id="issuer-and-ats-title" className="text-2xl font-bold tracking-tight">Issuer and ATS stages</h2>
             </div>
             <Card className="rounded-panel bg-secondary/35 shadow-none">
               <CardContent className="space-y-3 pt-5 text-sm leading-6 text-muted-foreground">
-                <p>A review or signature is not an ATS deployment.</p>
-                <p>The current control is conditionally gated. It does not create a deployed asset or publish a public campaign.</p>
+                <p>The review uses an issuer wallet on Hedera Testnet, chain 296. The current stage rail is: Record the draft offering; Prepare asset creation (<code className="rounded bg-background px-1.5 py-0.5 font-mono text-xs text-foreground">ATS_CREATE</code>); Create the revenue note in MetaMask and attach its returned candidate; then Publish to the Tool Directory.</p>
+                <p>Prepare asset creation records an external preparation before any wallet transaction. The revenue-note action and directory publication each need their own accepted inputs and receipts.</p>
+              </CardContent>
+            </Card>
+          </section>
+
+          <section id="control-boundary" aria-labelledby="control-boundary-title" className="space-y-4 scroll-mt-24">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-primary">04 · Control boundary</p>
+              <h2 id="control-boundary-title" className="text-2xl font-bold tracking-tight">Do not infer deployment from a signature</h2>
+            </div>
+            <Card className="rounded-panel bg-secondary/35 shadow-none">
+              <CardContent className="space-y-3 pt-5 text-sm leading-6 text-muted-foreground">
+                <p>A review or signature is not an ATS deployment. A relayed accepted signature is not an on-chain fact, and a prepared record is not a created revenue note.</p>
+                <p>The directory becomes OPEN only after the full staged path and corroborated receipt conditions are met. Until then, the relevant handoff remains unavailable or blocked.</p>
               </CardContent>
             </Card>
           </section>
 
           <section id="local-next-steps" aria-labelledby="local-next-steps-title" className="space-y-4 scroll-mt-24">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-primary">04 · Continue locally</p>
+              <p className="text-sm font-semibold text-primary">05 · Continue locally</p>
               <h2 id="local-next-steps-title" className="text-2xl font-bold tracking-tight">Choose a local next step</h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
