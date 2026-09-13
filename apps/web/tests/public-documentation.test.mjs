@@ -102,8 +102,15 @@ test("keeps the documentation entry and RiskScan guide factual and local", async
   assert.match(riskScanGuide, /caller-supplied declarations/i);
   assert.match(riskScanGuide, /host-specific/i);
   assert.match(riskScanGuide, /unavailable boundary/i);
+  assert.match(riskScanGuide, /402 Payment Required/);
+  assert.match(riskScanGuide, /B03 consumer-agent path/i);
+  assert.match(riskScanGuide, /non-payable/i);
+  assert.match(riskScanGuide, /before payment construction, signing, retry, settlement, or result parsing/i);
+  assert.match(riskScanGuide, /HEDERA_FUNDING/);
+  assert.match(riskScanGuide, /issuer signs the allocation/i);
   assert.match(riskScanGuide, /href: "\/explore\/riskscan"/);
   assert.match(riskScanGuide, /href: "\/explore\/riskscan\/tool-loop"/);
+  assert.match(riskScanGuide, /href: "\/explore\/riskscan\/back"/);
   assert.match(riskScanGuide, /href: "\/demo"/);
 });
 
@@ -125,7 +132,12 @@ test("keeps the Provider guide within the current preview boundary", async (t) =
   assert.match(providerGuide, /first four steps/i);
   assert.match(providerGuide, /non-editable/i);
   assert.match(providerGuide, /read-only/i);
-  assert.match(providerGuide, /conditionally gated/i);
+  assert.match(providerGuide, /issuer wallet/i);
+  assert.match(providerGuide, /Hedera Testnet.*chain 296/i);
+  assert.match(providerGuide, /Prepare asset creation.*ATS_CREATE/i);
+  assert.match(providerGuide, /Create the revenue note.*MetaMask/i);
+  assert.match(providerGuide, /Publish to the Tool Directory/i);
+  assert.match(providerGuide, /signature.*not an on-chain fact/i);
   assert.match(providerGuide, /href: "\/provider"/);
   assert.match(providerGuide, /href: "\/provider\/deploy"/);
   assert.match(providerGuide, /href: "\/explore\/riskscan"/);
@@ -155,16 +167,20 @@ test("keeps the guides static, flat, focusable, and free of public-capability cl
     "/docs/faq",
     "/explore/riskscan",
     "/explore/riskscan/tool-loop",
+    "/explore/riskscan/back",
     "/demo",
     "/provider",
     "/provider/deploy",
     "#scope",
     "#request-shape",
     "#result-boundary",
+    "#payment-boundary",
+    "#backing-boundary",
     "#local-routes",
     "#provider-preview",
     "#five-steps",
     "#control-boundary",
+    "#issuer-and-ats",
     "#local-next-steps",
   ]);
   const hrefLiterals = [

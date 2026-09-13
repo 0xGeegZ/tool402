@@ -33,9 +33,9 @@ export function ApiReference() {
         <section aria-labelledby="api-routes-title" className="space-y-5">
           <div className="max-w-2xl space-y-2">
             <p className="text-sm font-semibold text-primary">01 · Current routes</p>
-            <h2 id="api-routes-title" className="text-2xl font-bold tracking-tight">Two current HTTP boundaries</h2>
+            <h2 id="api-routes-title" className="text-2xl font-bold tracking-tight">Two public, unauthenticated RiskScan HTTP boundaries</h2>
             <p className="max-w-prose text-base leading-7 text-muted-foreground">
-              These route descriptions are static. They do not run a request or expose configuration values.
+              This reference covers RiskScan, not every application route. These descriptions are static: they do not run a request or expose private configuration values.
             </p>
           </div>
 
@@ -46,7 +46,7 @@ export function ApiReference() {
                 <div className="space-y-2">
                   <h3 className="font-mono text-lg font-bold tracking-tight">GET /api/tools</h3>
                   <p className="max-w-prose text-sm leading-6 text-muted-foreground">
-                    The default boundary returns the current tool descriptor. It does not establish a configured payment path.
+                    The default boundary returns the current tool descriptor, including only the payment metadata the host publishes. Read it before relying on a payment path.
                   </p>
                 </div>
               </CardHeader>
@@ -104,8 +104,9 @@ export function ApiReference() {
           </div>
           <Card className="rounded-panel bg-secondary/35 shadow-none">
             <CardContent className="space-y-3 pt-6 text-sm leading-6 text-muted-foreground">
-              <p>x402 configuration is host-specific. If it is not configured, the existing unavailable boundary can be returned.</p>
+              <p>x402 configuration is host-specific. Native Hedera metadata uses <code className="rounded bg-background px-1.5 py-0.5 font-mono text-xs text-foreground">hedera:testnet</code>; if the host is not configured, the existing unavailable boundary can be returned.</p>
               <p>A 402 boundary is not proof of a completed payment.</p>
+              <p>World and Provider actions are session-protected dashboard controls, not public integration endpoints. They use their own route and authority checks.</p>
               <p>A public MCP endpoint is not part of the current local routes.</p>
             </CardContent>
           </Card>

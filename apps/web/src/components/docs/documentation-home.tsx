@@ -16,8 +16,8 @@ const guides = [
   },
   {
     eyebrow: "For providers",
-    title: "Follow the local Provider path",
-    description: "How a provider prepares an offering in the five-step wizard, and what stays local until a human approves the next stage.",
+    title: "Follow the Provider campaign path",
+    description: "How an issuer wallet progresses through the five-step campaign wizard and its separately gated deployment stages.",
     href: "/docs/providers",
     action: "Read the Provider guide",
   },
@@ -31,7 +31,7 @@ const guides = [
   {
     eyebrow: "Current scope",
     title: "FAQ",
-    description: "Short answers on the testnet, RiskScan, and the provider path, including what is not built yet.",
+    description: "Short answers on testnet payment, B03, Backing, World verification, and the Provider path.",
     href: "/docs/faq",
     action: "Read the FAQ",
   },
@@ -45,7 +45,7 @@ export function DocumentationHome() {
         <PageHeader
           eyebrow="Documentation"
           title="Tool402, explained clearly"
-          description="Tool402 lets an agent find a tool, receive its 402 challenge, and get a bounded answer once that challenge is met on Hedera testnet. These guides explain each step and where the current build stops."
+          description="Tool402 lets an agent discover a tool and inspect its x402 boundary on Hedera Testnet. A configured 402 is a payment requirement, not payment or settlement proof; these guides explain the current routes and their limits."
         />
       </section>
 
