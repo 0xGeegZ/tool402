@@ -90,6 +90,15 @@ implementedTest("renders one local empty card when the signed session has no cam
   assert.match(source, /href="\/explore\/riskscan"[^>]*>Explore RiskScan</u);
 });
 
+implementedTest("keeps the empty campaign state focused on starting a campaign", async () => {
+  const source = await readFile(componentUrl, "utf8");
+  const emptyState = source.match(/<section aria-label="No campaign yet">([\s\S]*?)<\/section>/u)?.[1];
+
+  assert.ok(emptyState, "the dashboard must retain its empty campaign state");
+  assert.doesNotMatch(emptyState, /ProviderToolList/u);
+  assert.doesNotMatch(emptyState, />Your tools</u);
+});
+
 implementedTest("keeps campaign and backing projections independent in all four dashboard combinations", async () => {
   const source = await readFile(componentUrl, "utf8");
   assert.match(source, /if\s*\(campaign\s*===\s*null\)\s*\{[\s\S]*?if\s*\(backing\s*!==\s*null\)/su);
