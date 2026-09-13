@@ -20,6 +20,7 @@ import {
   formatRiskScanPayDiagnostic,
   matchesRiskScanPayPreflightChallenge,
 } from "./riskscan-pay-observability.ts";
+import { parseRiskScanHederaPayerPrivateKey } from "./riskscan-hedera-payer-key.ts";
 import type {
   ClientHederaSigner,
   RiskScanPaymentClientFactory,
@@ -30,7 +31,7 @@ const require = createRequire(import.meta.url);
 
 type HederaRuntime = {
   ExactHederaScheme: new (signer: ClientHederaSigner) => SchemeNetworkClient;
-  PrivateKey: { fromString(value: string): unknown };
+  PrivateKey: { fromStringECDSA(value: string): unknown };
   createClientHederaSigner(
     accountId: string,
     privateKey: unknown,
@@ -343,7 +344,7 @@ async function payment(exportConfiguration: EvidenceExport | undefined): Promise
   try {
     signer = createClientHederaSigner(
       configuration.payerAccountId,
-      PrivateKey.fromString(configuration.payerPrivateKey),
+      parseRiskScanHederaPayerPrivateKey(PrivateKey, configuration.payerPrivateKey),
       { network: "hedera:testnet" },
     );
   } catch {

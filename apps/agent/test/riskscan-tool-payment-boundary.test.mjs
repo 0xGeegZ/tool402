@@ -316,7 +316,7 @@ function runCliPreflight({
     "  if (request !== '@x402/hedera') return originalLoad.call(this, request, parent, isMain);",
     "  return {",
     "    ExactHederaScheme: class { constructor() { boundaries.push('scheme'); } },",
-    "    PrivateKey: { fromString() { boundaries.push('private_key'); return {}; } },",
+    "    PrivateKey: { fromStringECDSA() { boundaries.push('private_key'); return {}; } },",
     `    createClientHederaSigner() { boundaries.push('signer'); const signer = { accountId: '0.0.1001', async createPartiallySignedTransferTransaction() { boundaries.push('sign'); if (${JSON.stringify(failurePhase)} === 'signer') throw new Error('SECRET_SENTINEL_B03'); return 'test'; } }; globalThis.__B03_TEST_SIGNER = signer; return signer; },`,
     "  };",
     "};",
