@@ -16,6 +16,17 @@ export function isPublicTestnetSelfServiceEnabled(): boolean {
   return process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED === "true";
 }
 
+function boundedPositiveInteger(value: string | undefined, maximum: number): number | null {
+  if (value === undefined || !/^(?:[1-9]|[1-9][0-9]{1,2})$/u.test(value)) return null;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed <= maximum ? parsed : null;
+}
+
+/** A missing or malformed public quota fails closed instead of becoming unbounded. */
+export function readSelfServiceMaxTools(): number | null {
+  return boundedPositiveInteger(process.env.TOOL402_SELF_SERVICE_MAX_TOOLS, 100);
+}
+
 function timestamp(): bigint | null {
   const value = Date.now();
   return Number.isSafeInteger(value) && value >= 0 ? BigInt(value) : null;

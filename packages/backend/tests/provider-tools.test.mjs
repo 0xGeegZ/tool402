@@ -241,7 +241,9 @@ implementedTest("rejects revoked, non-issuer, and ambiguous authorities without 
 
 implementedTest("allocates a distinct owned tool for an active self-service membership without a command authority", async () => {
   const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  const previousMaximum = process.env.TOOL402_SELF_SERVICE_MAX_TOOLS;
   process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  process.env.TOOL402_SELF_SERVICE_MAX_TOOLS = "2";
   try {
   const { allocateForIssuer } = await import(sourceUrl.href);
   const db = database({ accounts: [{
@@ -254,7 +256,41 @@ implementedTest("allocates a distinct owned tool for an active self-service memb
   assert.equal(outcome.outcome, "allocated");
   assert.equal(db.writes[0].principalPublicId, `self_service_${canonicalSignerAddress.slice(2)}`);
   assert.equal(db.writes[0].authorityVersion, "public_testnet_v1");
-  } finally { process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous; }
+  } finally {
+    process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous;
+    if (previousMaximum === undefined) delete process.env.TOOL402_SELF_SERVICE_MAX_TOOLS;
+    else process.env.TOOL402_SELF_SERVICE_MAX_TOOLS = previousMaximum;
+  }
+});
+
+implementedTest("fails closed for a missing, malformed, or exhausted self-service tool quota", async () => {
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  const previousMaximum = process.env.TOOL402_SELF_SERVICE_MAX_TOOLS;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
+    const { allocateForIssuer } = await import(sourceUrl.href);
+    const account = {
+      _id: "selfServiceAccounts:a", _creationTime: 1, canonicalSignerAddress, chainId: 296,
+      principalPublicId: `self_service_${canonicalSignerAddress.slice(2)}`,
+      policyVersion: "public_testnet_v1", status: "ACTIVE",
+    };
+    for (const maximum of [undefined, "zero", "101"]) {
+      process.env.TOOL402_SELF_SERVICE_MAX_TOOLS = maximum;
+      const db = database({ accounts: [account] });
+      assert.deepEqual(await allocateForIssuer._handler(db.ctx, { canonicalSignerAddress, requestId }), { outcome: "rejected" });
+      assert.equal(db.writes.length, 0);
+    }
+    process.env.TOOL402_SELF_SERVICE_MAX_TOOLS = "1";
+    const db = database({ accounts: [account], tools: [tool({
+      principalPublicId: account.principalPublicId, authorityVersion: account.policyVersion,
+    })] });
+    assert.deepEqual(await allocateForIssuer._handler(db.ctx, { canonicalSignerAddress, requestId: "413d5c4d-21d9-4f02-a62b-47f49f3b17ad" }), { outcome: "rejected" });
+    assert.equal(db.writes.length, 0);
+  } finally {
+    process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous;
+    if (previousMaximum === undefined) delete process.env.TOOL402_SELF_SERVICE_MAX_TOOLS;
+    else process.env.TOOL402_SELF_SERVICE_MAX_TOOLS = previousMaximum;
+  }
 });
 
 implementedTest("rejects self-service allocation when the server flag is disabled", async () => {

@@ -11,6 +11,7 @@ import type { GenericId } from "convex/values";
 import { createProviderToolIdentity, parseProviderToolId } from "@tool402/core";
 import { createStageBIssuerAtsCreateAuthority } from "../src/ats/stage-b-issuer-ats-create-authority.ts";
 import { createProviderToolAtsConfiguration } from "../src/ats/provider-tool-ats-configuration.ts";
+import { readSelfServiceMaxTools } from "./self_service_accounts.ts";
 import type schema from "./schema.ts";
 
 const internalMutation: MutationBuilder<DataModelFromSchemaDefinition<typeof schema>, "internal"> = internalMutationGeneric;
@@ -309,6 +310,7 @@ export const allocateForIssuer = internalMutation({
         query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress)
       )).take(2);
     let owner: { principalPublicId: string; authorityVersion: string } | null = null;
+    let selfService = false;
     if (authorities.length === 1 && isCurrentIssuer(authorities[0], args.canonicalSignerAddress)) {
       owner = { principalPublicId: authorities[0].principalPublicId, authorityVersion: authorities[0].authorityVersion };
     } else if (authorities.length === 0) {
@@ -319,6 +321,7 @@ export const allocateForIssuer = internalMutation({
       if (process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED === "true"
         && accounts.length === 1 && activeSelfServiceAccount(accounts[0], args.canonicalSignerAddress)) {
         owner = { principalPublicId: accounts[0].principalPublicId, authorityVersion: accounts[0].policyVersion };
+        selfService = true;
       }
     }
     if (owner === null) return { outcome: "rejected" as const };
@@ -333,6 +336,16 @@ export const allocateForIssuer = internalMutation({
         : { outcome: "replayed" as const, tool: replay };
     }
     if (prior.length > 1) return { outcome: "rejected" as const };
+
+    if (selfService) {
+      const maximum = readSelfServiceMaxTools();
+      if (maximum === null) return { outcome: "rejected" as const };
+      const existing = await ctx.db.query("providerTools")
+        .withIndex("by_owner_and_chain_and_created", (query) => (
+          query.eq("canonicalSignerAddress", args.canonicalSignerAddress).eq("chainId", 296)
+        )).take(maximum + 1);
+      if (existing.length >= maximum) return { outcome: "rejected" as const };
+    }
 
     const createdAt = now();
     if (createdAt === null) return { outcome: "rejected" as const };
