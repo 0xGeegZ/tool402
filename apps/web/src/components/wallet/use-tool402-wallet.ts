@@ -48,7 +48,13 @@ export function isTool402MetaMaskConnector(
   connector: { readonly id: string; readonly rdns?: string | readonly string[] } | undefined,
 ): boolean {
   return connector?.id === metaMaskConnectorId
-    || connector?.rdns === metaMaskRdns
+    || hasMetaMaskRdns(connector);
+}
+
+function hasMetaMaskRdns(
+  connector: { readonly rdns?: string | readonly string[] } | undefined,
+): boolean {
+  return connector?.rdns === metaMaskRdns
     || (Array.isArray(connector?.rdns) && connector.rdns.includes(metaMaskRdns));
 }
 
@@ -89,7 +95,7 @@ export function useTool402Wallet() {
   const { mutateAsync: connectAsync, error: connectError } = useConnect();
   const { mutateAsync: disconnectAsync } = useDisconnect();
   const { mutateAsync: switchChainAsync, error: switchError } = useSwitchChain();
-  const metaMask = connectors.find((connector) => isTool402MetaMaskConnector(connector))
+  const metaMask = connectors.find((connector) => hasMetaMaskRdns(connector))
     ?? connectors.find((connector) => connector.id === metaMaskConnectorId);
   const account = connection.address?.toLowerCase();
   const identity = `${connection.status}:${account ?? ""}:${connection.chainId ?? ""}:${connection.connector?.id ?? ""}`;

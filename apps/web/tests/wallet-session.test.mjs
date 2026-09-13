@@ -69,8 +69,9 @@ test("derives display state from Wagmi without connecting during passive restora
 });
 
 test("selects the Wagmi-discovered MetaMask connector rather than another injected wallet", async () => {
+  const fallbackMetaMask = { id: "metaMask" };
   const discoveredMetaMask = { id: "io.metamask", rdns: ["io.metamask"] };
-  const instance = harness({ connectors: [{ id: "rabby", rdns: "io.rabby" }, discoveredMetaMask] });
+  const instance = harness({ connectors: [fallbackMetaMask, { id: "rabby", rdns: "io.rabby" }, discoveredMetaMask] });
   const { isTool402MetaMaskConnector, useTool402Wallet } = await loadHook(instance.hooks);
   const wallet = useTool402Wallet();
 
