@@ -352,6 +352,22 @@
   keys; they do not configure a runtime, contain a secret, or authorize TLS
   trust, wallet permission, signature, transaction, deployment, or live action.
 
+- ROOT_ENVIRONMENT_TEMPLATE_PARITY_AMENDMENT: The repository owner explicitly
+  directs the root `.env.example` to add only the eight missing names from the
+  root `.env.local`: `TOOL402_CONVEX_SITE_URL`, `TOOL402_INGRESS_KEY_ID`,
+  `TOOL402_INGRESS_SECRET`, `WORLD_APP_ID`, `WORLD_RP_ID`,
+  `WORLD_RP_SIGNING_KEY`, `WORLD_ACTION`, and `WORLD_ENVIRONMENT`. Their
+  assignments remain empty; no local value enters the repository. This is
+  documentation only and adds no runtime configuration, TLS trust, wallet
+  permission, signature, relay, transaction, deployment, or live authority.
+
+- ROOT_ENVIRONMENT_TEMPLATE_GROUPING_AMENDMENT: The repository owner explicitly
+  directs a presentation-only regrouping of every existing root `.env.example`
+  placeholder under descriptive comments. It may reorder comments and existing
+  assignments only; it may not add, remove, rename, or populate any name. This
+  adds no runtime configuration, secret, wallet permission, signature, relay,
+  transaction, deployment, or live authority.
+
 - S40_VERCEL_PREVIEW_ORIGIN_AMENDMENT: The repository owner explicitly
   requires ephemeral Vercel previews to derive their exact canonical origin
   from `VERCEL_URL` only when `VERCEL_ENV=preview` and the explicit origin is
