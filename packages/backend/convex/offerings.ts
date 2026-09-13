@@ -28,6 +28,7 @@ import {
   isSelectedProviderToolSubject,
   resolveSelectedProviderToolSubject,
 } from "./provider_tool_authority.ts";
+import { isPublicTestnetSelfServiceEnabled } from "./self_service_accounts.ts";
 import type schema from "./schema.ts";
 
 const definitionValidator = v.object({
@@ -614,10 +615,32 @@ export const admitOfferingCreate = internalMutation({
         query.eq("chainId", 296).eq("canonicalSignerAddress", command.canonicalSignerAddress)
       ))
       .take(2);
-    if (authorities.length !== 1) {
-      return reject();
+    let authority: unknown = authorities.length === 1 ? authorities[0] : null;
+    if (authority === null && authorities.length === 0 && isPublicTestnetSelfServiceEnabled()) {
+      const accounts = await ctx.db.query("selfServiceAccounts")
+        .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+          query.eq("chainId", 296).eq("canonicalSignerAddress", command.canonicalSignerAddress)
+        )).take(2);
+      const account = accounts[0];
+      if (accounts.length === 1 && account !== undefined && account.status === "ACTIVE" && account.policyVersion === "public_testnet_v1"
+        && account.principalPublicId === command.principalPublicId
+        && account.principalPublicId === `self_service_${command.canonicalSignerAddress.slice(2)}`
+        && command.authorityVersion === account.policyVersion) {
+        authority = {
+          _id: account._id,
+          _creationTime: account._creationTime,
+          principalPublicId: account.principalPublicId,
+          canonicalSignerAddress: command.canonicalSignerAddress,
+          chainId: 296,
+          role: "ISSUER",
+          ownedSubjectPublicIds: [],
+          authorityVersion: account.policyVersion,
+          enabled: true,
+        };
+      }
     }
-    const selected = await revalidateSelectedOfferingAuthority(ctx, authorities[0], command);
+    if (authority === null) return reject();
+    const selected = await revalidateSelectedOfferingAuthority(ctx, authority, command);
 
     const claims = await ctx.db.query("walletCommandReplayClaims")
       .withIndex("by_replay_identity", (query) => query.eq("replayIdentity", command.replayIdentity))

@@ -12,7 +12,7 @@ const outcomeValidator = v.union(
   v.literal("UNAVAILABLE"),
 );
 
-function enabled(): boolean {
+export function isPublicTestnetSelfServiceEnabled(): boolean {
   return process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED === "true";
 }
 
@@ -25,7 +25,7 @@ export const ensureSelfServiceAccount = internalMutation({
   args: { canonicalSignerAddress: v.string() },
   returns: v.object({ outcome: outcomeValidator }),
   handler: async (ctx, args) => {
-    if (!enabled()) return { outcome: "DISABLED" as const };
+    if (!isPublicTestnetSelfServiceEnabled()) return { outcome: "DISABLED" as const };
     if (!addressPattern.test(args.canonicalSignerAddress)) return { outcome: "UNAVAILABLE" as const };
     const matches = await ctx.db.query("selfServiceAccounts")
       .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
