@@ -18,7 +18,7 @@ files at that commit. This packet runs that scan ahead of time at the current
 and a signature rather than an investigation.
 
 - Prepared: 2026-09-12, by the human operator's delegated session, under
-  [the HI-013 intake card](../queue/00-inbox/HI-013-delivered-lane-records.md).
+  [the HI-013 intake card](../queue/60-done/HI-013-delivered-lane-records.md).
 - Scanned commit: `ce080a16`, the `main` head at preparation time. This is
   **not** the submitted commit; the human re-runs the same commands at that
   commit and records the result below.

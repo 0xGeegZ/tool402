@@ -156,7 +156,7 @@ RED acceptance.
 
 The independent [S40 durable RED review](../../evidence/S40-T010-red-review.md)
 is clear at `5a7ca33bd23e3877f77798a8b3490d643eb9a154`. The focused RED contract
-has exactly one source-absence failure covering all eight declared S38 sources
+has exactly one source-absence failure covering all eight declared S40 source paths
 and twenty staged skips. The card may now implement only its eight declared
 production source paths and the root-reserved dashboard eyebrow plus two
 matching wording assertions in the plan's staged order. Every other path and

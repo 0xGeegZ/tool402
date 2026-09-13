@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: S18-T010 accepted, M16-T010 accepted, S15-T010 accepted; the
   root sequences this card after S26-T010 (header wallet control and shared
   session) when S26 is integrated first, so the Funding section positions the
@@ -117,7 +117,7 @@ change to `backing-state.ts`, the signature dialog, the wallet island
 internals, the relay, or any API route. The manifest's exclusions govern;
 this card does not restate them.
 
-## Human worktree lane request
+## Historical worktree lane request
 
 - Requested at `2026-09-12T00:00:00Z` by the human operator (repository
   owner) through the operator's delegated session, under the
@@ -140,3 +140,16 @@ this card does not restate them.
   integration decision, and every queue record. The branch is mirrored as
   a pull request for human visibility only; nothing from it reaches `main`
   outside the root's integration decision.
+
+## Delivery reconciliation
+
+The lane was integrated by pull request #103 at merge commit
+`1f2c5b6f5bf891fe4138777db1f956168f80226c`. On current
+`origin/main` `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, the three declared
+new paths and the declared backing-flow, back-page, and route-test amendments
+exist. The focused `backing-presentation` contract passed (10/10) in this
+reconciliation.
+
+This marks the local source delivery done and releases its queue reservation.
+It does not assert a funded backer, payment, allocation, or any human or
+live-runtime action.

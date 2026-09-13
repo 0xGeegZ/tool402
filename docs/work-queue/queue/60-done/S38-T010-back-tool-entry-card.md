@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: M02-T070 accepted, S23-T010 accepted, S25-T010 accepted,
   S18-T010 accepted. S39-T010 is a sibling in this batch and neither card
   blocks the other: they share no path.
@@ -92,7 +92,7 @@ route, catalog card change, header change, dependency, or change to
 `backing-state.ts`, `backing-flow.tsx`, the back page, or the discovery
 cards. The manifest's exclusions govern; this card does not restate them.
 
-## Human worktree lane request
+## Historical worktree lane request
 
 - Requested at `2026-09-12T00:00:00Z` by the human operator (repository
   owner) through the operator's delegated session, under the
@@ -115,3 +115,15 @@ cards. The manifest's exclusions govern; this card does not restate them.
   integration decision, and every queue record. The branch is mirrored as
   a pull request for human visibility only; nothing from it reaches `main`
   outside the root's integration decision.
+
+## Delivery reconciliation
+
+The lane was integrated by pull request #105 at merge commit
+`d399a031dca8e36da5024e5eaa2809421aad1a06`. On current
+`origin/main` `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, the two declared
+new paths and both declared detail-aside mounts exist. The focused
+`back-tool-card` contract passed (6/6) in this reconciliation.
+
+This marks the local source delivery done and releases its queue reservation.
+It does not assert an OPEN offering, a reachable funding path, a payment,
+or any human or live-runtime action.
