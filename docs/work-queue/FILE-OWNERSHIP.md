@@ -12,7 +12,7 @@ only in `apps/web/src/app/layout.tsx`,
  specification, UI manifest, catalog, ledger, state, readiness review, and root
  records. The S26 header and shell wrapper in `layout.tsx` remain excluded.
 
-W01-T010 is a root-owned `10-ready` successor migration. It owns its card,
+W01-T010 is a root-owned `20-active` successor migration. It owns its card,
 specification, design, plan, readiness evidence, queue records,
 `apps/web/package.json`, `package-lock.json`, `README.md`, and exactly these
 candidate source paths: `apps/web/src/app/layout.tsx`,
@@ -44,8 +44,9 @@ test paths are `wagmi-provider.test.mjs`, `wallet-session.test.mjs`,
 `stage-b-browser-provider-bridge.test.mjs`, `ats-create-action.test.mjs`, and
 `deploy-stage-signing.test.mjs`, and `provider-tool-journey.test.mjs`, all
 under `apps/web/tests/`. All candidate
-source, test, package and lockfile changes are prohibited until a separate
-W01 test-only RED activation.
+source, package and lockfile changes are prohibited until RED acceptance. Its
+sixteen exact candidate test paths are reserved for durable RED; no other test
+path is active.
 
 The root transfers only client-transport migration seams to W01: S26 transfers
 the shared session/header/layout/deploy-signing/backing-flow composition;

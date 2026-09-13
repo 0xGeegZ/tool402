@@ -70,6 +70,14 @@
   below `apps/web/tests/`; no source
   path is authorized until a later RED acceptance.
 
+- W01_WAGMI_WALLET_SESSION_ACTIVATION: Fresh independent activation review at
+  `966847b3` accepts only the sixteen exact W01 Web test paths listed in
+  `W01-T010-wagmi-wallet-session.md` for durable RED. W01 moves to `20-active`.
+  Every source, package, lockfile, wallet, signature, transaction, authority,
+  deployment, merge and live boundary remains prohibited until an independent
+  RED review accepts the intended failures. The existing provider-journey
+  Stage-2 and wallet-state discovery-count failures remain baseline context.
+
 - S38_S39_S47_MERGED_LANE_RECONCILIATION: At `origin/main`
   `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, S38-T010, S39-T010, and
   S47-T010 are documented as completed local source deliveries. Their merged
