@@ -124,8 +124,19 @@ export const readCommandAuthorities = internalQuery({
         query.eq("chainId", args.chainId).eq("canonicalSignerAddress", args.canonicalSignerAddress)
       ))
       .take(2);
-    const projected = authorities.map(projectAuthority);
-    if (!projected.every((authority) => authority !== null)) return [];
+    const initialProjection = authorities.map(projectAuthority);
+    if (!initialProjection.every((authority) => authority !== null)) return [];
+    let projected: ProjectedAuthority[] = initialProjection as ProjectedAuthority[];
+    if (projected.length === 0) {
+      if (process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED !== "true") return [];
+      const accounts = await ctx.db.query("selfServiceAccounts")
+        .withIndex("by_chain_id_and_canonical_signer_address", (query) => query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress))
+        .take(2);
+      const account = accounts.length === 1 ? accounts[0] : undefined;
+      if (account === undefined || account.status !== "ACTIVE" || account.policyVersion !== "public_testnet_v1"
+        || account.principalPublicId !== `self_service_${args.canonicalSignerAddress.slice(2)}`) return [];
+      projected = [{ principalPublicId: account.principalPublicId, canonicalSignerAddress: args.canonicalSignerAddress, chainId: 296, role: args.selection === undefined ? "BACKER" : "ISSUER", ownedSubjectPublicIds: [], authorityVersion: account.policyVersion, enabled: true }];
+    }
     if (args.selection === undefined) return projected;
     if (projected.length !== 1 || projected[0] === undefined) return [];
     try {
