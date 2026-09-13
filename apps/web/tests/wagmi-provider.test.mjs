@@ -17,6 +17,7 @@ const implementedConfigTest = configExists ? test : test.skip;
 const implementedProviderTest = configExists && providersExist ? test : test.skip;
 let api;
 let getConnectors;
+let getPublicClient;
 
 test("requires the declared W01 Wagmi configuration module", () => {
   assert.equal(configExists, true, `missing W01 Wagmi configuration: ${configPath}`);
@@ -29,7 +30,7 @@ test("requires the declared W01 client provider module", () => {
 test.before(async () => {
   if (configExists) {
     api = await import(configUrl.href);
-    ({ getConnectors } = await import("wagmi/actions"));
+    ({ getConnectors, getPublicClient } = await import("wagmi/actions"));
   }
 });
 
@@ -49,6 +50,41 @@ implementedConfigTest("starts server-neutral with one injected MetaMask connecto
   const connectors = getConnectors(api.tool402WagmiConfig);
   assert.equal(connectors.length, 1);
   assert.equal(connectors[0]?.type, "injected");
+  assert.equal(connectors[0]?.id, "injected");
+});
+
+implementedConfigTest("uses the configured Hashio transport for its public client", () => {
+  const client = getPublicClient(api.tool402WagmiConfig);
+  assert.equal(client?.transport.url, "https://testnet.hashio.io/api");
+});
+
+async function captureConfigOptions() {
+  const { outputText } = typescript.transpileModule(await readFile(configUrl, "utf8"), {
+    fileName: configPath,
+    compilerOptions: { target: typescript.ScriptTarget.ES2022, module: typescript.ModuleKind.CommonJS },
+  });
+  const module = { exports: {} };
+  let options;
+  runInNewContext(outputText, {
+    exports: module.exports,
+    require(specifier) {
+      if (specifier === "wagmi") return { createConfig: (value) => { options = value; return value; } };
+      if (specifier === "wagmi/connectors") return { injected: (value) => ({ type: "injected", ...value }) };
+      if (specifier === "viem") return {
+        defineChain: (value) => value,
+        http: (url) => ({ url }),
+      };
+      throw new Error(`unexpected config import: ${specifier}`);
+    },
+  }, { filename: configPath });
+  return options;
+}
+
+implementedConfigTest("enables SSR and explicitly targets MetaMask", async () => {
+  const options = await captureConfigOptions();
+  assert.equal(options?.ssr, true);
+  assert.deepEqual(options?.connectors, [{ type: "injected", target: "metaMask" }]);
+  assert.equal(options?.transports?.[296]?.url, "https://testnet.hashio.io/api");
 });
 
 async function loadProviders() {
@@ -64,12 +100,18 @@ async function loadProviders() {
   const queryCalls = [];
   const module = { exports: {} };
   class QueryClient {}
+  let queryClient;
   runInNewContext(outputText, {
     exports: module.exports,
     require(specifier) {
       switch (specifier) {
         case "react":
-          return { useState: (create) => [create()] };
+          return {
+            useState: (create) => {
+              queryClient ??= create();
+              return [queryClient];
+            },
+          };
         case "react/jsx-runtime":
           return jsxRuntime;
         case "wagmi":
@@ -92,10 +134,13 @@ async function loadProviders() {
 implementedProviderTest("mounts one Wagmi config around one browser QueryClient", async () => {
   const harness = await loadProviders();
   assert.equal(harness.WalletProviders({ children: "shell" }), "shell");
-  assert.equal(harness.wagmiCalls.length, 1);
+  assert.equal(harness.WalletProviders({ children: "shell" }), "shell");
+  assert.equal(harness.wagmiCalls.length, 2);
   assert.equal(harness.wagmiCalls[0]?.config, api.tool402WagmiConfig);
-  assert.equal(harness.queryCalls.length, 1);
+  assert.equal(harness.wagmiCalls[1]?.config, api.tool402WagmiConfig);
+  assert.equal(harness.queryCalls.length, 2);
   assert.equal(harness.queryCalls[0]?.client instanceof harness.QueryClient, true);
+  assert.equal(harness.queryCalls[0]?.client, harness.queryCalls[1]?.client);
 });
 
 implementedProviderTest("mounts the client provider once from the root layout", async () => {
@@ -120,11 +165,11 @@ implementedProviderTest("mounts the client provider once from the root layout", 
     },
   }, { filename: layoutPath });
   const root = module.exports.default({ children: "route" });
-  const containsProvider = (node) => {
-    if (node === null || typeof node !== "object") return false;
-    if (node.type === WalletProviders) return true;
+  const countProviders = (node) => {
+    if (node === null || typeof node !== "object") return 0;
+    const self = node.type === WalletProviders ? 1 : 0;
     const children = node.props?.children;
-    return Array.isArray(children) ? children.some(containsProvider) : containsProvider(children);
+    return self + (Array.isArray(children) ? children.reduce((total, child) => total + countProviders(child), 0) : countProviders(children));
   };
-  assert.equal(containsProvider(root), true);
+  assert.equal(countProviders(root), 1);
 });
