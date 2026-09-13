@@ -282,7 +282,7 @@ export function DeployStageSigning({
     ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">This tool has its own offering and directory identity. {selectedAts === null ? "ATS creation stays unavailable until its server-derived configuration is admitted." : "Its ATS configuration was derived from the admitted offering."}</p>
     : reviewing && constructionError ? <p role="status" aria-live="polite" className="rounded-control border border-warning bg-warning px-3 py-2 text-sm text-warning-foreground">{constructionError}</p> : null;
   const stages = reviewing ? <ProviderDeployStages states={visibleStates} projection={projection} enabledStage={enabledStage} onActivate={activate} session={session} candidate={candidate} onCandidate={receiveCandidate} atsConfiguration={selectedAts?.configuration} selectedTool={selectedToolPublicId !== undefined} selectedToolPublicId={selectedToolPublicId} /> : null;
-  const dialog = reviewing && request && session ? <SignatureDialog provider={session.provider} request={request} onResult={finish} onCancel={() => finish({ phase: "rejected", outcome: null })} /> : null;
+  const dialog = reviewing && request && session ? <SignatureDialog request={request} onResult={finish} onCancel={() => finish({ phase: "rejected", outcome: null })} /> : null;
 
   if (renderReview) {
     return renderReview({ connect, resumeNotice, constructionNotice, stages, dialog, footer });

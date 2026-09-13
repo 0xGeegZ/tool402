@@ -24,7 +24,7 @@ import * as backingIntents from "../../../packages/backend/convex/backing_intent
 import { handleProviderSessionIngress } from "../../../packages/backend/convex/provider_session_ingress.ts";
 import { handleProviderToolsRequest, handleProviderToolDeploymentRequest } from "../src/lib/provider-tools-server.ts";
 import { createChallenge, verifyChallenge } from "../src/lib/dashboard-auth/dashboard-auth.ts";
-import { handleCommandRelayPost, signAndRelayCommand } from "../src/lib/wallet/command-relay.ts";
+import { handleCommandRelayPost, signAndRelayCommand as relayCommand } from "../src/lib/wallet/command-relay.ts";
 import { buildStageSignatureRequest, providerDeploymentTarget } from "../src/lib/wallet/command-bridge.ts";
 import { completeDirectoryRecordLiteral, directoryRecordForProviderTool } from "../src/components/provider/deploy/directory-record-literal.ts";
 import { createStageBBrowserProviderBridge } from "../src/lib/ats/stage-b-browser-provider-bridge.ts";
@@ -328,6 +328,34 @@ test("a self-service provider reaches independent OPEN tools through signed orch
     }
     assert.fail(`unexpected backer wallet operation ${input.method}`);
   } };
+  function walletContextFor(activeProvider) {
+    return {
+      address: activeProvider === backerProvider ? backer : issuer,
+      chainId: 296,
+      connectorId: "metaMask",
+      generation: 0,
+    };
+  }
+  async function signAndRelayCommand(activeProvider, request) {
+    const walletContext = walletContextFor(activeProvider);
+    return relayCommand(walletContext, request, {
+      readCurrentContext: () => walletContext,
+      signTypedData: async (typedData) => activeProvider.request({
+        method: "eth_signTypedData_v4",
+        params: [typedData.message.signer, JSON.stringify({
+          ...typedData,
+          types: {
+            EIP712Domain: [
+              { name: "name", type: "string" },
+              { name: "version", type: "string" },
+              { name: "chainId", type: "uint256" },
+            ],
+            ...typedData.types,
+          },
+        })],
+      }),
+    });
+  }
 
   const challenge = await createChallenge({ address: issuer, env: environment });
   const session = await verifyChallenge({ challengeCookie: challenge.cookie, message: challenge.message, signature: await signer.signMessage({ message: challenge.message }), origin, env: environment }, {

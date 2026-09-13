@@ -440,7 +440,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
             <p className="text-xs text-muted-foreground">{dashboardAddress === null ? <><Link href={signInHref} className="font-semibold text-primary">Sign in</Link> to continue this backing route and restore a submitted payment.</> : dashboardMatchesWallet ? "Two confirmations: one signature, one HBAR transfer." : "The connected MetaMask wallet must match the signed dashboard wallet before funding."}</p>
           </div>
         ) : null}
-        {request !== null && session !== null ? <SignatureDialog provider={session.provider} request={request} onResult={onSignature} /> : null}
+        {request !== null && session !== null ? <SignatureDialog request={request} onResult={onSignature} /> : null}
         {view.kind === "prepared" ? (
           <Button disabled={transferring || session === null} aria-disabled={transferring || session === null} onClick={send}>
             Send {formatHbar(view.intent.tinybars)} to the treasury

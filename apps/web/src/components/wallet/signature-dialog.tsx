@@ -1,14 +1,16 @@
 "use client";
 
 import { useRef, useState, type KeyboardEvent } from "react";
+import { useSignTypedData } from "wagmi";
 
 import {
   signAndRelayCommand,
   type RelayOutcome,
   type SignatureFlowResult,
   type SignatureRequest,
+  type WalletActionContext,
 } from "../../lib/wallet/command-relay.ts";
-import type { Eip1193Provider } from "../../lib/wallet/metamask-provider.ts";
+import { useTool402Wallet } from "./use-tool402-wallet";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -42,7 +44,6 @@ export interface SignatureResult {
 }
 
 export interface SignatureDialogProps {
-  readonly provider: Eip1193Provider;
   readonly request: SignatureDialogRequest;
   readonly onResult?: (result: SignatureResult) => void;
   readonly onCancel?: () => void;
@@ -168,13 +169,37 @@ function clockTime(iso: string): string {
   return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
+function currentActionContext(
+  wallet: ReturnType<typeof useTool402Wallet>,
+): WalletActionContext | null {
+  const { connection, resolved } = wallet;
+  if (
+    !resolved
+    || connection.status !== "connected"
+    || connection.account === undefined
+    || connection.chainId !== 296
+    || connection.connector?.id !== "metaMask"
+  ) {
+    return null;
+  }
+  return {
+    address: connection.account,
+    chainId: 296,
+    connectorId: connection.connector.id,
+    generation: connection.generation,
+  };
+}
+
 export function SignatureDialog({
-  provider,
   request,
   onResult,
   onCancel,
   relay,
 }: SignatureDialogProps) {
+  const wallet = useTool402Wallet();
+  const walletRef = useRef(wallet);
+  walletRef.current = wallet;
+  const { mutateAsync: signTypedData } = useSignTypedData({ mutation: { retry: false } });
   const [state, setState] = useState<DialogState>(idleState);
   const cardRef = useRef<HTMLElement>(null);
   const busy = state.phase === "waiting" || state.phase === "checking";
@@ -209,14 +234,24 @@ export function SignatureDialog({
   }
 
   async function sign() {
+    const context = currentActionContext(wallet);
+    if (context === null) {
+      finish(describeResult({ kind: "no_account" }));
+      return;
+    }
     setState({
       phase: "waiting",
       message: "Confirm the signature in MetaMask.",
       outcome: null,
     });
     cardRef.current?.focus();
-    const result = await signAndRelayCommand(provider, request, {
+    const result = await signAndRelayCommand(context, request, {
       relay,
+      readCurrentContext: () => currentActionContext(walletRef.current),
+      signTypedData: (typedData) => signTypedData({
+        ...typedData,
+        message: { ...typedData.message },
+      }),
       onSigned: () =>
         setState({
           phase: "checking",

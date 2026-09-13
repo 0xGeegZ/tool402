@@ -1,7 +1,5 @@
 import { keccak256 } from "viem";
 
-import type { Eip1193Provider } from "./metamask-provider.ts";
-
 export const TOOL402_TYPED_DATA_DOMAIN = Object.freeze({
   name: "Tool402",
   version: "1",
@@ -73,6 +71,13 @@ export interface UnsignedCommandInput {
   readonly expiresAt: string;
   readonly canonicalPayloadBytes: Uint8Array;
 }
+
+export type Tool402TypedDataSigner = (typedData: Readonly<{
+  domain: typeof TOOL402_TYPED_DATA_DOMAIN;
+  primaryType: typeof TOOL402_COMMAND_PRIMARY_TYPE;
+  types: { readonly Tool402Command: typeof TOOL402_TYPED_DATA_TYPES.Tool402Command };
+  message: UnsignedTool402Command;
+}>) => Promise<unknown>;
 
 const nonceByteLength = 16;
 const base64UrlAlphabet =
@@ -307,13 +312,14 @@ export function createTypedDataJson(command: UnsignedTool402Command): string {
 }
 
 export async function signCommand(
-  provider: Eip1193Provider,
   command: UnsignedTool402Command,
+  signTypedData: Tool402TypedDataSigner,
 ): Promise<SignedTool402Command> {
-  const typedDataJson = createTypedDataJson(command);
-  const signature = await provider.request({
-    method: "eth_signTypedData_v4",
-    params: [command.signer, typedDataJson],
+  const signature = await signTypedData({
+    domain: TOOL402_TYPED_DATA_DOMAIN,
+    primaryType: TOOL402_COMMAND_PRIMARY_TYPE,
+    types: { Tool402Command: TOOL402_TYPED_DATA_TYPES.Tool402Command },
+    message: command,
   });
   if (!isCanonicalSignature(signature)) {
     throw new TypeError(
