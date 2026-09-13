@@ -217,7 +217,11 @@ async function resolveCurrentAuthority(
     ))
     .take(2);
   if (authorities.length === 1) return authorities[0];
-  if (authorities.length !== 0 || !isPublicTestnetSelfServiceEnabled()) return reject();
+  if (
+    authorities.length !== 0
+    || !isPublicTestnetSelfServiceEnabled()
+    || command.payload.operationKind === "HEDERA_FUNDING"
+  ) return reject();
 
   const accounts = await ctx.db.query("selfServiceAccounts")
     .withIndex("by_chain_id_and_canonical_signer_address", (query) => (

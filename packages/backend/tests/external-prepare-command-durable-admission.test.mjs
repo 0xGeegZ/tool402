@@ -308,8 +308,8 @@ function selectedAtomicDatabase({
 }
 
 // The double preserves inserts so a second real handler invocation observes durable replay.
-function database({ authorities = [authority()], claims = [], attempts = [] } = {}) {
-  const rows = { commandAuthorities: [...authorities], externalPrepareCommandReplayClaims: [...claims], externalPrepareCommandAttempts: [...attempts] };
+function database({ authorities = [authority()], selfServiceAccounts = [], claims = [], attempts = [] } = {}) {
+  const rows = { commandAuthorities: [...authorities], selfServiceAccounts: [...selfServiceAccounts], externalPrepareCommandReplayClaims: [...claims], externalPrepareCommandAttempts: [...attempts] };
   const reads = [];
   const writes = [];
   const accesses = [];
@@ -537,6 +537,34 @@ test("keeps HEDERA_FUNDING on the enabled BACKER durable path", async (t) => {
   const replay = db.writes.find(({ table }) => table === "externalPrepareCommandReplayClaims").document;
   assert.equal(typeof replay.claimedAt, "bigint");
   assert.deepEqual(replay, { replayIdentity: args.replayIdentity, outcome: "NEW", attemptId, claimedAt: replay.claimedAt });
+});
+
+test("does not admit self-service HEDERA_FUNDING until offering-scoped terms are durably frozen", async (t) => {
+  const mutation = await loadMutation(t);
+  const principalPublicId = `self_service_${selfServiceSigner.slice(2)}`;
+  const args = input({
+    canonicalSignerAddress: selfServiceSigner,
+    principalPublicId,
+    role: "BACKER",
+    authorityVersion: "public_testnet_v1",
+    replayIdentity: `tool402:wallet-command:v1:296:${selfServiceSigner}:AAAAAAAAAAAAAAAAAAAAAA`,
+  });
+  const db = database({
+    authorities: [],
+    selfServiceAccounts: [{
+      _id: "selfServiceAccounts:active", _creationTime: now - 1,
+      canonicalSignerAddress: selfServiceSigner, chainId: 296, principalPublicId,
+      policyVersion: "public_testnet_v1", status: "ACTIVE", createdAt: 1n, updatedAt: 1n,
+    }],
+  });
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
+    await assert.rejects(() => mutation._handler(db.ctx, args), TypeError);
+  } finally {
+    process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous;
+  }
+  assert.deepEqual(db.writes, []);
 });
 
 test("returns replay before idempotency for all valid stored claim outcomes", async (t) => {
