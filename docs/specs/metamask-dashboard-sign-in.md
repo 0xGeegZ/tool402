@@ -137,9 +137,9 @@ is cached as public content.
 MetaMask island and the sign-in control. On successful verification, the
 client uses the fixed internal App Router `replace("/dashboard")` transition,
 then refreshes the App Router so the root server navigation observes the new
-sealed session and mounts its active-account synchronizer. The mounted root
-wallet-session provider is preserved for that navigation. The sealed `HttpOnly`
-cookie remains the sole durable dashboard-access state.
+sealed session. The mounted root wallet-session provider is preserved for that
+navigation. The sealed `HttpOnly` cookie remains the sole durable dashboard-access
+state.
 A server-only navigation boundary validates
 the same signed session and supplies a `Dashboard` link to both desktop and
 mobile main menus only when it is valid. It must be wrapped in the existing
