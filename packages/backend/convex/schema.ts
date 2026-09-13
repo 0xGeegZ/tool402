@@ -80,7 +80,18 @@ export default defineSchema({
     verifiedEvmTransactionHash: v.optional(v.string()),
     nextReconciliationAt: v.optional(v.int64()),
     acceptedAt: v.int64(),
-  }).index("by_idempotency_key", ["idempotencyKey"]),
+  }).index("by_idempotency_key", ["idempotencyKey"])
+    .index("by_operation_kind_and_canonical_signer_address", ["operationKind", "canonicalSignerAddress"]),
+  backingPaymentClaims: defineTable({
+    transactionHash: v.optional(v.string()),
+    attemptId: v.id("externalPrepareCommandAttempts"),
+    canonicalSignerAddress: v.string(),
+    tinybars: v.string(),
+    state: v.union(v.literal("PREPARED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN"), v.literal("CONFIRMED"), v.literal("REJECTED")),
+    claimedAt: v.int64(),
+  }).index("by_transaction_hash", ["transactionHash"])
+    .index("by_attempt_id", ["attemptId"])
+    .index("by_canonical_signer_address", ["canonicalSignerAddress"]),
   offerings: defineTable({
     offeringPublicId: v.string(),
     subjectPublicId: v.string(),

@@ -1,12 +1,22 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 
 import { BackingFlow } from "../../../../components/backing/backing-flow";
 import { loadRiskScanBackingProjection } from "../../../../lib/riskscan-backing-projection";
+import { readDashboardSession, readDashboardSessionCookieName } from "../../../../lib/dashboard-auth/dashboard-auth";
+import { loadBackerPayment } from "../../../../lib/backing-payment-server";
 
 async function BackingFlowRegion() {
-  const projection = await loadRiskScanBackingProjection(process.env, globalThis.fetch);
-  return <BackingFlow projection={projection} />;
+  const cookieStore = await cookies();
+  const name = readDashboardSessionCookieName(process.env);
+  const sessionCookie = name === null ? null : cookieStore.get(name)?.value ?? null;
+  const [projection, session, payment] = await Promise.all([
+    loadRiskScanBackingProjection(process.env, globalThis.fetch),
+    readDashboardSession(sessionCookie, process.env),
+    loadBackerPayment(process.env, sessionCookie),
+  ]);
+  return <BackingFlow projection={projection} dashboardAddress={session?.address ?? null} initialPayment={payment} />;
 }
 
 export default function RiskScanBackPage() {

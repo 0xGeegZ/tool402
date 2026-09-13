@@ -344,7 +344,7 @@ const expectedM32 = {
       nextReconciliationAt: optional(bigint),
       acceptedAt: bigint,
     }),
-    indexes: [["by_idempotency_key", ["idempotencyKey"]]],
+    indexes: [["by_idempotency_key", ["idempotencyKey"]], ["by_operation_kind_and_canonical_signer_address", ["operationKind", "canonicalSignerAddress"]]],
     searchIndexes: [],
     vectorIndexes: [],
   },

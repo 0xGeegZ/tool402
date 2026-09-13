@@ -31,7 +31,7 @@ test("loads one server-owned RiskScan backing projection before rendering the fl
   assert.match(page, /import \{ BackingFlow \} from "[./]+\/components\/backing\/backing-flow"/);
   assert.match(page, /loadRiskScanBackingProjection\(process\.env, globalThis\.fetch\)/);
   assert.match(page, /<Suspense fallback=\{<BackingFlow projection=\{null\} \/>\}>/);
-  assert.match(page, /<BackingFlow projection=\{projection\} \/>/);
+  assert.match(page, /<BackingFlow projection=\{projection\} dashboardAddress=\{session\?\.address \?\? null\} initialPayment=\{payment\} \/>/);
   assert.equal((page.match(/<Link\b/g) ?? []).length, 1);
   assert.equal((page.match(/href=/g) ?? []).length, 1);
   assert.match(page, /<Link\s+href="\/explore\/riskscan"[\s\S]*?>\s*Back to RiskScan\s*<\/Link>/);
@@ -56,7 +56,12 @@ test("consumes the shared wallet session, signature dialog, and relay without a 
   assert.doesNotMatch(flow, /discoverMetaMaskProvider|eth_requestAccounts|wallet_switchEthereumChain|eth_signTypedData|signCommand|createUnsignedCommand|relayCommandBody|\/api\/commands|createCommandNonce|keccak/);
   assert.equal((flow.match(/eth_sendTransaction/g) ?? []).length, 0);
   assert.match(flow, /transferRequest\(/);
-  assert.doesNotMatch(flow, /\bfetch\s*\(|process\.env|setTimeout|setInterval|localStorage|sessionStorage|https?:\/\/|href=/);
+  assert.doesNotMatch(flow, /process\.env|setTimeout|setInterval|sessionStorage|https?:\/\//);
+  assert.match(flow, /localStorage/);
+  assert.match(flow, /Attach recorded transaction/);
+  assert.match(flow, /fetch\("\/api\/backing\/payment"/);
+  assert.match(flow, /dashboardAddress/);
+  assert.match(flow, /session\.address === dashboardAddress/);
 });
 
 test("renders the fixed copy and none of the canvas's sample or simulation content", async () => {
@@ -76,8 +81,10 @@ test("renders the fixed copy and none of the canvas's sample or simulation conte
   assert.match(flow, /disabled=\{/);
   assert.match(flow, /Payment submitted — allocation pending\./);
 
-  assert.doesNotMatch(sources, /Units you hold|View verified evidence|Live testnet|\(sample\)|sample|simulat|hashscan|units remain|raised|funded|balance|0\.0\.\d/i);
+  assert.doesNotMatch(sources, /Units you hold|View verified evidence|Live testnet|\(sample\)|sample|simulat|units remain|raised|funded|balance|0\.0\.\d/i);
+  assert.match(flow, /Payment confirmed on Hedera Testnet/);
+  assert.match(flow, /View on HashScan/);
   assert.doesNotMatch(sources, /Connected\b/);
   assert.doesNotMatch(sources, /\b(?:paid|settled|verified|allocated|(?<!aria-)live)\b(?! only| record)/i);
-  assert.doesNotMatch(flow, /attachCandidate|attach/i);
+  assert.doesNotMatch(flow, /attachCandidate/u);
 });
