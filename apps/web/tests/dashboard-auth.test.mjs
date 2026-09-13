@@ -120,6 +120,7 @@ async function signInHarness({ deferVerification = false, initialConnection } = 
           resolved: true,
           connection,
           state: { kind: connection.status === "connected" ? "connected" : "request_failed" },
+          connectErrorCode: null,
           connect: () => {
             connectCalls += 1;
           },

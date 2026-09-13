@@ -26,6 +26,8 @@ async function actionHarness() {
   const slots = [];
   let cursor = 0;
   const fetchCalls = [];
+  let activeSession = null;
+  let generation = 0;
   const bridge = await import("../src/lib/ats/stage-b-browser-provider-bridge.ts");
   const imports = {
     react: {
@@ -46,6 +48,27 @@ async function actionHarness() {
     "../../../lib/ats/stage-b-browser-provider-bridge.ts": bridge,
     "../../ui/button": { Button: "Button" },
     "../../ui/status": { StatusRegion: "StatusRegion" },
+    wagmi: {
+      usePublicClient: () => activeSession === null ? undefined : ({
+        getTransactionReceipt: ({ hash }) => activeSession.provider.request({ method: "eth_getTransactionReceipt", params: [hash] }),
+      }),
+      useSendTransaction: () => ({
+        mutateAsync: ({ account, to, data, value }) => activeSession.provider.request({
+          method: "eth_sendTransaction",
+          params: [{ from: account, to, data, value: `0x${value.toString(16)}` }],
+        }),
+      }),
+    },
+    "../../wallet/use-tool402-wallet": {
+      isTool402MetaMaskConnector: () => true,
+      useTool402Wallet: () => activeSession === null ? {
+        resolved: true,
+        connection: { status: "disconnected", account: undefined, chainId: undefined, connector: undefined, generation },
+      } : {
+        resolved: true,
+        connection: { status: "connected", account: activeSession.address, chainId: 296, connector: { id: "metaMask" }, generation },
+      },
+    },
   };
   const { outputText } = typescript.transpileModule(await readFile(actionPath, "utf8"), {
     fileName: actionPath,
@@ -73,6 +96,10 @@ async function actionHarness() {
   }, { filename: actionPath });
   return {
     render(props) {
+      if (props.session !== undefined && props.session !== activeSession) {
+        activeSession = props.session;
+        generation += 1;
+      }
       cursor = 0;
       return module.exports.AtsCreateAction(props);
     },
@@ -285,7 +312,8 @@ test("mutually excludes create and recovery while the create read is in flight",
   const provider = {
     async request({ method }) {
       providerCalls.push(method);
-      if (method === "eth_chainId") return chainRead;
+      if (method === "eth_sendTransaction") return chainRead;
+      if (method === "eth_getTransactionReceipt") return null;
       assert.fail(`the in-flight create must not reach ${method}`);
     },
   };
@@ -316,10 +344,9 @@ test("mutually excludes create and recovery while the create read is in flight",
   await pendingRecover.props.onClick();
   assert.deepEqual(harness.fetchCalls(), []);
 
-  settleChain("0x0");
+  settleChain(transactionHash);
   await creating;
-  assert.deepEqual(providerCalls, ["eth_chainId"]);
-  assert.deepEqual(providerCalls.filter((method) => method === "eth_sendTransaction"), []);
+  assert.equal(providerCalls.filter((method) => method === "eth_sendTransaction").length, 1);
 });
 
 test("does not clear submitted-state protection when an equivalent configuration object is recreated", async () => {

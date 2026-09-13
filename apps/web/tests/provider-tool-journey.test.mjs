@@ -336,6 +336,20 @@ test("a self-service provider reaches independent OPEN tools through signed orch
       generation: 0,
     };
   }
+  function createStageBBridge(configuration, fetch) {
+    const walletContext = walletContextFor(provider);
+    return createStageBBrowserProviderBridge({
+      wallet: walletContext,
+      readCurrentWallet: () => walletContext,
+      sendTransaction: ({ account, to, data, value }) => provider.request({
+        method: "eth_sendTransaction",
+        params: [{ from: account, to, data, value: `0x${value.toString(16)}` }],
+      }),
+      getTransactionReceipt: ({ hash }) => provider.request({ method: "eth_getTransactionReceipt", params: [hash] }),
+      configuration,
+      fetch,
+    });
+  }
   async function signAndRelayCommand(activeProvider, request) {
     const walletContext = walletContextFor(activeProvider);
     return relayCommand(walletContext, request, {
@@ -415,7 +429,15 @@ test("a self-service provider reaches independent OPEN tools through signed orch
     const renderer = hooks();
     const component = loadSource("../src/components/provider/deploy/deploy-stage-signing.tsx", {
       react: renderer.react, "react/jsx-runtime": jsxRuntime,
-      "../../wallet/wallet-session": { useWalletSession: () => ({ state: { kind: "connected", address: issuer }, provider }), connectedWalletSession: (wallet) => ({ address: wallet.state.address, provider: wallet.provider }) },
+      "../../wallet/use-tool402-wallet": {
+        isTool402MetaMaskConnector: () => true,
+        useTool402Wallet: () => ({
+          resolved: true,
+          state: { kind: "connected", address: issuer },
+          connection: { status: "connected", account: issuer, chainId: 296, connector: { id: "metaMask" }, generation: 0 },
+          connect: async () => {},
+        }),
+      },
       "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
       "../../ui/button": { Button: "Button" },
       "./provider-icon": { ProviderGlyph: "ProviderGlyph" },
@@ -456,14 +478,14 @@ test("a self-service provider reaches independent OPEN tools through signed orch
     assert.deepEqual(deployment.durableValues, values, "the actual form data must survive protected reload");
     await signStage(mounted, 1);
     assert.equal((await loadProviderToolDeployment(tool.toolPublicId)).state, "ASSET_PENDING");
-    const bridge = createStageBBrowserProviderBridge({ provider, configuration: deployment.ats.configuration, async fetch(input) {
+    const bridge = createStageBBridge(deployment.ats.configuration, async (input) => {
       const url = new URL(input);
       assert.equal(url.origin + "/api/v1/", mirror);
       const tx = selectedTransaction;
       if (url.pathname.endsWith("/transactions")) return json({ transactions: [{ name: "ETHEREUMTRANSACTION", result: "SUCCESS", nonce: 0, consensus_timestamp: tx.timestamp, transaction_id: tx.transactionId }] });
       assert.ok(url.pathname.endsWith(tx.hash) || url.pathname.endsWith(tx.transactionId));
       return json({ hash: tx.hash, chain_id: "0x128", result: "SUCCESS", status: "0x1", from: issuer, to: factory, timestamp: tx.timestamp, logs: [tx.log], function_parameters: tx.transaction.input });
-    } });
+    });
     const created = await bridge.execute();
     assert.equal(created.kind, "candidate");
     const transaction = selectedTransaction;
@@ -609,13 +631,13 @@ test("a self-service provider reaches independent OPEN tools through signed orch
     ({ command }) => command.type === "external.attachCandidate",
   ).length;
   async function recoverCandidate(configuration, transaction) {
-    return createStageBBrowserProviderBridge({ provider, configuration, async fetch(input) {
+    return createStageBBridge(configuration, async (input) => {
       const url = new URL(input);
       assert.equal(url.origin + "/api/v1/", mirror);
       if (url.pathname.endsWith("/transactions")) return json({ transactions: [{ name: "ETHEREUMTRANSACTION", result: "SUCCESS", nonce: 0, consensus_timestamp: transaction.timestamp, transaction_id: transaction.transactionId }] });
       assert.ok(url.pathname.endsWith(transaction.hash) || url.pathname.endsWith(transaction.transactionId));
       return json({ hash: transaction.hash, chain_id: "0x128", result: "SUCCESS", status: "0x1", from: issuer, to: factory, timestamp: transaction.timestamp, logs: [transaction.log], function_parameters: transaction.transaction.input });
-    } }).recover(transaction.hash);
+    }).recover(transaction.hash);
   }
   assert.deepEqual(
     await recoverCandidate(b.deployment.ats.configuration, a.transaction),

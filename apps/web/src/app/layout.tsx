@@ -10,7 +10,6 @@ import { Logo } from "../components/tool402/logo";
 import { buttonVariants } from "../components/ui/button";
 import { WalletIsland } from "../components/wallet/wallet-connect";
 import { WalletProviders } from "../components/wallet/wallet-providers";
-import { WalletSessionProvider } from "../components/wallet/wallet-session";
 
 export const metadata: Metadata = {
   title: "Tool402 | Tools AI agents can pay to use",
@@ -26,8 +25,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-svh bg-background text-foreground antialiased">
         <WalletProviders>
-          <WalletSessionProvider>
-            <div data-ui-shell="s00" className="min-h-svh">
+          <div data-ui-shell="s00" className="min-h-svh">
               <div className="border-b border-brand-purple/20 bg-brand-purple/[0.07] text-center">
                 <p className="flex min-h-9 items-center justify-center gap-2 px-4 py-1.5 text-[10px] font-semibold leading-4 text-foreground sm:text-[11px]">
                   <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" className="size-3.5 shrink-0 text-brand-purple">
@@ -60,8 +58,7 @@ export default function RootLayout({
               <div className="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-6 sm:pb-20 lg:px-8 lg:pb-24">
                 <NuqsAdapter>{children}</NuqsAdapter>
               </div>
-            </div>
-          </WalletSessionProvider>
+          </div>
         </WalletProviders>
       </body>
     </html>

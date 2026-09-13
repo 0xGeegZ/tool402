@@ -153,7 +153,7 @@ function MetaMaskSignInButton({
 }
 
 export function MetaMaskDashboardSignIn({ tour = null, demoStep = null, returnTo = null }: { tour?: "1" | null; demoStep?: string | null; returnTo?: string | null }) {
-  const { connection, resolved, state, connect } = useTool402Wallet();
+  const { connection, resolved, state, connect, connectErrorCode } = useTool402Wallet();
   const connectionRef = useRef(connection);
   connectionRef.current = connection;
   const canSignIn = resolved
@@ -175,6 +175,11 @@ export function MetaMaskDashboardSignIn({ tour = null, demoStep = null, returnTo
           >
             {state.kind === "request_failed" || state.kind === "no_provider" ? "Retry MetaMask connection" : "Connect MetaMask"}
           </Button>
+          {state.kind === "request_failed" ? (
+            <p aria-live="polite" className="text-sm text-muted-foreground">
+              MetaMask rejected or could not complete the connection{connectErrorCode === null ? "." : ` (code ${connectErrorCode}).`}
+            </p>
+          ) : null}
         </div>
       ) : <MetaMaskSignInButton connection={connection} readCurrentConnection={() => connectionRef.current} tour={tour} demoStep={demoStep} returnTo={returnTo} />}
     </section>

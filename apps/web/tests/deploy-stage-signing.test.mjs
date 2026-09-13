@@ -92,13 +92,16 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
       },
     },
     "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
-    "../../wallet/wallet-session": {
-      useWalletSession: () => session,
-      connectedWalletSession(wallet) {
-        return wallet.state.kind === "connected" && wallet.provider !== null
-          ? { provider: wallet.provider, address: wallet.state.address }
-          : null;
-      },
+    "../../wallet/use-tool402-wallet": {
+      isTool402MetaMaskConnector: () => true,
+      useTool402Wallet: () => ({
+        resolved: true,
+        state: session.state,
+        connection: session.state.kind === "connected"
+          ? { status: "connected", account: session.state.address, chainId: 296, connector: { id: "metaMask" }, generation: 0 }
+          : { status: "disconnected", account: undefined, chainId: undefined, connector: undefined, generation: 0 },
+        connect: session.connect,
+      }),
     },
     "../../ui/button": { Button: "Button" },
     "../../ui/status": { Status: "Status" },
@@ -181,7 +184,7 @@ implementedTest("composes the accepted wallet island, signature dialog, and stag
   const island = await readIsland();
 
   assert.match(island, /^["']use client["'];/u);
-  assert.match(island, /import\s*\{[^}]*\buseWalletSession\b[^}]*\}\s+from\s+["']\.\.\/\.\.\/wallet\/wallet-session["']/u);
+  assert.match(island, /import\s*\{[^}]*\buseTool402Wallet\b[^}]*\}\s+from\s+["']\.\.\/\.\.\/wallet\/use-tool402-wallet["']/u);
   assert.match(island, /import\s*\{[^}]*\bSignatureDialog\b[^}]*\}\s+from\s+["']\.\.\/\.\.\/wallet\/signature-dialog["']/u);
   assert.match(island, /import\s*\{[^}]*\bProviderDeployStages\b[^}]*\}\s+from\s+["']\.\/provider-deploy-stages["']/u);
   assert.match(island, /import\s*\{[^}]*\bbuildStageSignatureRequest\b[^}]*\}\s+from\s+["'][^"']*lib\/wallet\/command-bridge(?:\.ts)?["']/u);
@@ -192,7 +195,7 @@ implementedTest("composes the accepted wallet island, signature dialog, and stag
   const activate = island.slice(island.indexOf("function activate"), island.indexOf("function finish"));
   assert.match(activate, /\bbuildStageSignatureRequest\s*\(/u);
   assert.doesNotMatch(activate, /\bprojection\s*:/u, "the signing island must not pass a stage-2 projection");
-  assert.equal((island.match(/useWalletSession\(\)/gu) ?? []).length, 1);
+  assert.equal((island.match(/useTool402Wallet\(\)/gu) ?? []).length, 1);
   assert.equal((island.match(/<SignatureDialog\b/gu) ?? []).length, 1);
   assert.match(island, /<SignatureDialog\b[^>]*\bonResult=/u);
   assert.match(island, /<ProviderDeployStages\b[^>]*\bonActivate=/u);
@@ -527,7 +530,7 @@ implementedTest("uses the shared connected session without an issuer-specific lo
   const stages = elements(tree).find((element) => element.type === "ProviderDeployStages");
 
   assert.equal(stages.props.enabledStage, 0);
-  assert.match(await readIsland(), /connectedWalletSession\(wallet\)/u);
+  assert.match(await readIsland(), /useTool402Wallet\(\)/u);
   const island = await readIsland();
   assert.doesNotMatch(island, /\b(?:isIssuerAdvisory|issuerEvmAddress|notIssuer|approved issuer)\b/u);
 });
@@ -569,7 +572,7 @@ implementedTest("keeps the deploy-form connection card available to retry discov
     risks: campaignFixture.risks.join("\n"),
   };
 
-  for (const state of [{ kind: "no_provider" }, { kind: "multiple_providers" }]) {
+  for (const state of [{ kind: "no_provider" }, { kind: "request_failed" }]) {
     const harness = await signingIslandHarness(values);
     harness.setWalletState(state);
     const tree = harness.render();

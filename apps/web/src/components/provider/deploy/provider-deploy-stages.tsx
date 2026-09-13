@@ -89,7 +89,6 @@ function orderedStageStates(states: readonly ProviderDeployStageState[]): readon
 
 function StageCommand({
   index,
-  session,
   stageTwoDone,
   candidate,
   atsConfiguration,
@@ -98,7 +97,6 @@ function StageCommand({
   onCandidate,
 }: {
   index: number;
-  session: { readonly provider: { request(input: { readonly method: string; readonly params?: readonly unknown[] }): Promise<unknown> }; readonly address: string } | null;
   stageTwoDone: boolean;
   candidate: AtsCreateCandidate | null;
   atsConfiguration?: unknown;
@@ -117,7 +115,7 @@ function StageCommand({
             <p className="font-medium text-foreground">{substepIndex + 1}. {substep.label}</p>
             {"returnsCandidate" in substep ? (
               <>
-                {index === 2 && substepIndex === 0 ? <AtsCreateAction session={session} configuration={atsConfiguration} selectedTool={selectedTool} selectedToolPublicId={selectedToolPublicId} stageTwoDone={stageTwoDone} hasCandidate={candidate !== null} onCandidate={onCandidate} /> : null}
+                {index === 2 && substepIndex === 0 ? <AtsCreateAction configuration={atsConfiguration} selectedTool={selectedTool} selectedToolPublicId={selectedToolPublicId} stageTwoDone={stageTwoDone} hasCandidate={candidate !== null} onCandidate={onCandidate} /> : null}
                 <p>The separately carded human action returns the candidate details required by the next sub-step.</p>
               </>
             ) : (
@@ -169,7 +167,7 @@ export function ProviderDeployStages({
   projection,
   enabledStage = -1,
   onActivate,
-  session = null,
+  walletConnected = false,
   candidate = null,
   onCandidate = () => {},
   atsConfiguration,
@@ -180,7 +178,7 @@ export function ProviderDeployStages({
   projection?: AtsCreateConfigurationProjection;
   enabledStage?: number;
   onActivate?: (index: number) => void;
-  session?: { readonly provider: { request(input: { readonly method: string; readonly params?: readonly unknown[] }): Promise<unknown> }; readonly address: string } | null;
+  walletConnected?: boolean;
   candidate?: AtsCreateCandidate | null;
   onCandidate?: (candidate: AtsCreateCandidate) => void;
   atsConfiguration?: unknown;
@@ -199,7 +197,7 @@ export function ProviderDeployStages({
   const focusedStage = enabledStage >= 0 ? enabledStage : Math.min(doneCount, providerDeployStages.length - 1);
   const focused = visibleStates[focusedStage] ?? { kind: "blocked" as const };
   const offering = offeringStates[doneCount] ?? offeringStates[0];
-  const walletNeeded = (index: number, stage: ProviderDeployStageState) => session === null && index === 0 && stage.kind === "unavailable";
+  const walletNeeded = (index: number, stage: ProviderDeployStageState) => !walletConnected && index === 0 && stage.kind === "unavailable";
   const describe = (index: number, stage: ProviderDeployStageState) =>
     walletNeeded(index, stage) ? "Connect MetaMask to request this signature." : stage.detail ?? stageStatusDescription[stage.kind];
 
@@ -238,7 +236,7 @@ export function ProviderDeployStages({
                   <Badge className={stageChipClassName[stage.kind]}>{chipLabel}</Badge>
                 </div>
                 <span className="text-[13px] leading-5 text-muted-foreground">{copy.description}</span>
-                <StageCommand index={index} session={session} stageTwoDone={stageTwoDone} candidate={candidate} atsConfiguration={atsConfiguration} selectedTool={selectedTool} selectedToolPublicId={selectedToolPublicId} onCandidate={onCandidate} />
+                <StageCommand index={index} stageTwoDone={stageTwoDone} candidate={candidate} atsConfiguration={atsConfiguration} selectedTool={selectedTool} selectedToolPublicId={selectedToolPublicId} onCandidate={onCandidate} />
                 {detail ? <span className="break-all font-mono text-xs text-foreground">{detail}</span> : null}
                 <p id={controlDescriptionId} className="sr-only">{describe(index, stage)} {control.description}</p>
               </div>

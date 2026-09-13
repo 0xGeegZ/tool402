@@ -47,6 +47,10 @@ projection, and transaction verification remain authoritative.
   Wagmi's connection, connector and chain values directly. It must not keep a
   second provider/address/chain/connected/connecting store or install its own
   `accountsChanged`/`chainChanged` listeners.
+- The former `wallet-session.tsx`, `wallet-state.ts`, and
+  `metamask-provider.ts` modules are removed after their consumers migrate.
+  Do not keep a legacy provider as a fallback, compatibility mount, feature
+  flag, or test harness dependency.
 
 ### Connection and display
 
@@ -119,6 +123,11 @@ projection, and transaction verification remain authoritative.
 | `dashboard-session-sync.tsx` | client account/session reconciliation | Wagmi connection effects plus one logout state machine | same-account retain, fail-closed mismatch/logout policy |
 | `tool402-command.ts`, `command-relay.ts`, `signature-dialog.tsx` | EIP-712 request/sign/relay | injected Wagmi typed-data signer | all canonical command and relay checks |
 | ATS Stage-B bridge and backing flow | MetaMask transaction transport | Wagmi/Viem send action with context guard | reservation, idempotency, recovery, hash evidence and verification |
+
+The Stage-B bridge receives only a Wagmi-derived wallet context plus injected
+send/receipt actions. It never reads an EIP-1193 provider directly; the active
+account, Hedera Testnet chain, connector and generation are checked before the
+send and after a returned hash.
 
 ## Required executable coverage
 

@@ -1,36 +1,52 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { usePublicClient, useSendTransaction } from "wagmi";
 
 import {
   createStageBBrowserProviderBridge,
   isCanonicalStageBTransactionHash,
   type StageBCandidate,
   type StageBBridgeOutcome,
-  type StageBEip1193Provider,
+  type StageBWalletContext,
 } from "../../../lib/ats/stage-b-browser-provider-bridge.ts";
 import { Button } from "../../ui/button";
 import { StatusRegion } from "../../ui/status";
-
-type WalletSession = Readonly<{
-  provider: StageBEip1193Provider;
-  address: string;
-}>;
+import { isTool402MetaMaskConnector, useTool402Wallet } from "../../wallet/use-tool402-wallet";
 
 type StageBActionController = Readonly<{
-  provider: StageBEip1193Provider;
-  address: string;
+  wallet: StageBWalletContext;
   execute: () => Promise<StageBBridgeOutcome>;
   recover: (transactionHash: string) => Promise<StageBBridgeOutcome>;
 }>;
-type ControllerContext = Readonly<{ selectedToolPublicId: string | undefined }>;
+type ControllerContext = Readonly<{ selectedToolPublicId: string | undefined; wallet: StageBWalletContext | null }>;
+
+function stageBWalletContext(wallet: ReturnType<typeof useTool402Wallet>): StageBWalletContext | null {
+  const { connection, resolved } = wallet;
+  if (
+    !resolved
+    || connection.status !== "connected"
+    || connection.account === undefined
+    || connection.chainId !== 296
+    || !isTool402MetaMaskConnector(connection.connector)
+  ) return null;
+  return {
+    address: connection.account,
+    chainId: 296,
+    connectorId: connection.connector?.id ?? "",
+    generation: connection.generation,
+  };
+}
 
 function isSameControllerContext(left: ControllerContext, right: ControllerContext): boolean {
-  return left.selectedToolPublicId === right.selectedToolPublicId;
+  return left.selectedToolPublicId === right.selectedToolPublicId
+    && left.wallet?.address === right.wallet?.address
+    && left.wallet?.chainId === right.wallet?.chainId
+    && left.wallet?.connectorId === right.wallet?.connectorId
+    && left.wallet?.generation === right.wallet?.generation;
 }
 
 export function AtsCreateAction({
-  session,
   configuration,
   selectedTool,
   selectedToolPublicId,
@@ -38,7 +54,6 @@ export function AtsCreateAction({
   hasCandidate,
   onCandidate,
 }: {
-  session: WalletSession | null;
   configuration?: unknown;
   selectedTool: boolean;
   selectedToolPublicId?: string;
@@ -46,8 +61,14 @@ export function AtsCreateAction({
   hasCandidate: boolean;
   onCandidate: (candidate: StageBCandidate) => void;
 }) {
+  const wallet = useTool402Wallet();
+  const walletRef = useRef(wallet);
+  walletRef.current = wallet;
+  const currentWallet = stageBWalletContext(wallet);
+  const publicClient = usePublicClient({ chainId: 296 });
+  const { mutateAsync: sendTransaction } = useSendTransaction({ mutation: { retry: false } });
   const controller = useRef<StageBActionController | null>(null);
-  const controllerContext = useRef<ControllerContext>({ selectedToolPublicId });
+  const controllerContext = useRef<ControllerContext>({ selectedToolPublicId, wallet: currentWallet });
   const actionInFlight = useRef<ControllerContext | null>(null);
   const sessionChanged = useRef(false);
   const [terminalOutcome, setTerminalOutcome] = useState<ControllerContext | null>(null);
@@ -55,26 +76,32 @@ export function AtsCreateAction({
   const [recovery, setRecovery] = useState<Readonly<{ context: ControllerContext; hash: string; pending: boolean }> | null>(null);
   const [, setInFlight] = useState<ControllerContext | null>(null);
 
+  const nextControllerContext = { selectedToolPublicId, wallet: currentWallet };
   if (controllerContext.current.selectedToolPublicId !== selectedToolPublicId) {
     controller.current = null;
     actionInFlight.current = null;
     sessionChanged.current = false;
-    controllerContext.current = { selectedToolPublicId };
+    controllerContext.current = nextControllerContext;
+  } else if (controller.current === null) {
+    controllerContext.current = nextControllerContext;
+  } else if (!isSameControllerContext(controllerContext.current, nextControllerContext)) {
+    sessionChanged.current = true;
   }
 
-  if (controller.current === null && session !== null && (!selectedTool || configuration !== undefined)) {
-    const bridge = createStageBBrowserProviderBridge({ provider: session.provider, fetch, configuration });
+  if (controller.current === null && currentWallet !== null && publicClient !== undefined && (!selectedTool || configuration !== undefined)) {
+    const bridge = createStageBBrowserProviderBridge({
+      wallet: currentWallet,
+      readCurrentWallet: () => stageBWalletContext(walletRef.current),
+      sendTransaction: (request) => sendTransaction(request),
+      getTransactionReceipt: ({ hash }) => publicClient.getTransactionReceipt({ hash }),
+      fetch,
+      configuration,
+    });
     controller.current = Object.freeze({
-      provider: session.provider,
-      address: session.address,
+      wallet: currentWallet,
       execute: bridge.execute,
       recover: bridge.recover,
     });
-  } else if (
-    controller.current !== null &&
-    (session === null || controller.current.provider !== session.provider || controller.current.address !== session.address)
-  ) {
-    sessionChanged.current = true;
   }
 
   const terminalForCurrentContext = terminalOutcome !== null && isSameControllerContext(terminalOutcome, controllerContext.current);
@@ -84,7 +111,7 @@ export function AtsCreateAction({
   const inFlightForCurrentContext = actionInFlight.current !== null
     && isSameControllerContext(actionInFlight.current, controllerContext.current);
   const publicAtsExecutionBlocked = selectedTool;
-  const recoveryAvailable = stageTwoDone && session !== null && (!selectedTool || configuration !== undefined) && !hasCandidate && !sessionChanged.current && controller.current !== null;
+  const recoveryAvailable = stageTwoDone && currentWallet !== null && (!selectedTool || configuration !== undefined) && !hasCandidate && !sessionChanged.current && controller.current !== null;
   const candidateActionAvailable = recoveryAvailable && !publicAtsExecutionBlocked;
   const enabled = candidateActionAvailable && !terminalForCurrentContext && !inFlightForCurrentContext;
   const recoveryEnabled = recoveryAvailable && !inFlightForCurrentContext && currentRecovery?.pending !== true && isCanonicalStageBTransactionHash(currentRecovery?.hash ?? "");

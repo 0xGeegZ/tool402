@@ -46,6 +46,8 @@ function fakeProvider({
   const calls = [];
   return {
     calls,
+    chainId,
+    accounts,
     async request({ method, params = [] }) {
       calls.push({ method, params });
       if (method === "eth_chainId") return chainId;
@@ -128,8 +130,33 @@ async function withJsonParse(parse, operation) {
   }
 }
 
+function bridgeInput(provider, fetch, wait = async () => {}, configuration, options = {}) {
+  const wallet = {
+    address: String(provider.accounts[0] ?? "").toLowerCase(),
+    chainId: Number.parseInt(provider.chainId, 16),
+    connectorId: "metaMask",
+    generation: 0,
+  };
+  return {
+    wallet,
+    readCurrentWallet: () => wallet,
+    sendTransaction: async ({ account, to, data, value }) => provider.request({
+      method: "eth_sendTransaction",
+      params: [{ from: account, to, data, value: `0x${value.toString(16)}` }],
+    }),
+    getTransactionReceipt: async ({ hash }) => provider.request({
+      method: "eth_getTransactionReceipt",
+      params: [hash],
+    }),
+    fetch,
+    wait,
+    ...(configuration === undefined ? {} : { configuration }),
+    ...options,
+  };
+}
+
 function createBridge(api, provider, fetch, wait = async () => {}, configuration) {
-  return api.createStageBBrowserProviderBridge({ provider, fetch, wait, ...(configuration === undefined ? {} : { configuration }) });
+  return api.createStageBBrowserProviderBridge(bridgeInput(provider, fetch, wait, configuration));
 }
 
 function selectedConfiguration(suffix, title = "Same RiskScan Title", owner = issuer) {
@@ -340,7 +367,7 @@ implementedTest("rejects a wrong wallet chain before any send, receipt, or Mirro
   const outcome = await createBridge(api, provider, mirror.fetch).execute();
 
   assert.equal(outcome.kind, "rejected");
-  assert.deepEqual(provider.calls.map(({ method }) => method), ["eth_chainId"]);
+  assert.deepEqual(provider.calls, []);
   assert.equal(mirror.calls.length, 0);
 });
 
@@ -351,7 +378,7 @@ implementedTest("rejects a valid but unauthorized wallet account before a send",
   const outcome = await createBridge(api, provider, mirror.fetch).execute();
 
   assert.equal(outcome.kind, "rejected");
-  assert.deepEqual(provider.calls.map(({ method }) => method), ["eth_chainId", "eth_accounts"]);
+  assert.deepEqual(provider.calls, []);
   assert.equal(mirror.calls.length, 0);
 });
 
@@ -368,7 +395,7 @@ implementedTest("accepts the fixed issuer once among other valid MetaMask accoun
   const outcome = await createBridge(api, provider, mirror.fetch).execute();
 
   assert.equal(outcome.kind, "submission_unknown");
-  assert.deepEqual(provider.calls.map(({ method }) => method).slice(0, 3), ["eth_chainId", "eth_accounts", "eth_sendTransaction"]);
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
   assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
   assert.equal(provider.calls.find(({ method }) => method === "eth_sendTransaction")?.params[0].from, issuer);
   assert.equal(mirror.calls.length, 0);
@@ -401,25 +428,25 @@ implementedTest("retains the MetaMask hash when bounded verification is unknown"
   assert.equal(mirror.calls.length, 0);
 });
 
-implementedTest("rejects duplicate issuer entries before a send", async () => {
+implementedTest("uses Wagmi's selected account without inspecting unrelated wallet accounts", async () => {
   const provider = fakeProvider({ accounts: [checksummedIssuer, issuer] });
   const mirror = responseQueue([]);
 
   const outcome = await createBridge(api, provider, mirror.fetch).execute();
 
-  assert.equal(outcome.kind, "rejected");
-  assert.deepEqual(provider.calls.map(({ method }) => method), ["eth_chainId", "eth_accounts"]);
+  assert.equal(outcome.kind, "submission_unknown");
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
   assert.equal(mirror.calls.length, 0);
 });
 
-implementedTest("rejects a malformed account entry before a send", async () => {
+implementedTest("does not inspect unrelated malformed wallet accounts after Wagmi selected one", async () => {
   const provider = fakeProvider({ accounts: [checksummedIssuer, "not-an-address"] });
   const mirror = responseQueue([]);
 
   const outcome = await createBridge(api, provider, mirror.fetch).execute();
 
-  assert.equal(outcome.kind, "rejected");
-  assert.deepEqual(provider.calls.map(({ method }) => method), ["eth_chainId", "eth_accounts"]);
+  assert.equal(outcome.kind, "submission_unknown");
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
   assert.equal(mirror.calls.length, 0);
 });
 
@@ -502,12 +529,9 @@ implementedTest("bounds a hung receipt to the injected receipt deadline and igno
   });
   const mirror = responseQueue([]);
   const deadlines = controlledTimers();
-  const bridge = api.createStageBBrowserProviderBridge({
-    provider,
-    fetch: mirror.fetch,
-    wait: async () => {},
+  const bridge = api.createStageBBrowserProviderBridge(bridgeInput(provider, mirror.fetch, async () => {}, undefined, {
     timers: deadlines.api,
-  });
+  }));
 
   const pending = bridge.execute();
   await waitsFor(
@@ -787,15 +811,10 @@ implementedTest("bounds all Mirror cycles to one five-second deadline through th
     return new Response("", { status: 404 });
   }]);
   const waits = [];
-  const bridge = api.createStageBBrowserProviderBridge({
-    provider,
-    fetch: mirror.fetch,
-    now: () => now,
-    wait: async (milliseconds) => {
+  const bridge = api.createStageBBrowserProviderBridge(bridgeInput(provider, mirror.fetch, async (milliseconds) => {
       waits.push(milliseconds);
       now += milliseconds;
-    },
-  });
+    }, undefined, { now: () => now }));
 
   const outcome = await bridge.execute();
 
@@ -825,12 +844,9 @@ implementedTest("keeps the one remaining Mirror deadline armed through a headers
       },
     }),
   }]);
-  const bridge = api.createStageBBrowserProviderBridge({
-    provider,
-    fetch: mirror.fetch,
-    wait: async () => {},
+  const bridge = api.createStageBBrowserProviderBridge(bridgeInput(provider, mirror.fetch, async () => {}, undefined, {
     timers: deadlines.api,
-  });
+  }));
 
   const pending = bridge.execute();
   await waitsFor(() => bodyReadStarted, "the JSON body must be consumed under the Mirror deadline");
@@ -861,9 +877,7 @@ implementedTest("rejects or ignores caller-supplied routing and transaction over
   let bridge;
   try {
     bridge = api.createStageBBrowserProviderBridge({
-      provider,
-      fetch: mirror.fetch,
-      wait: async () => {},
+      ...bridgeInput(provider, mirror.fetch, async () => {}),
       ...overrides,
     });
   } catch (error) {
@@ -1181,10 +1195,10 @@ implementedTest("contains the closed receipt, Factory-emitter, and bounded Mirro
   const source = readFileSync(sourcePath, "utf8");
 
   for (const requiredBoundary of [
-    "eth_getTransactionReceipt",
+    "getTransactionReceipt",
     "decodeBondDeployed",
     "normalizeHederaCandidateTransactionId",
   ]) assert.equal(source.includes(requiredBoundary), true, `missing boundary: ${requiredBoundary}`);
 
-  assert.doesNotMatch(source, /(?:window|globalThis\.fetch|localStorage|sessionStorage|indexedDB|process\.env|import\.meta\.env|setInterval|WalletConnect|createWalletClient|createPublicClient)/u);
+  assert.doesNotMatch(source, /(?:window|globalThis\.fetch|localStorage|sessionStorage|indexedDB|process\.env|import\.meta\.env|setInterval|WalletConnect|createWalletClient|createPublicClient|\.request\()/u);
 });

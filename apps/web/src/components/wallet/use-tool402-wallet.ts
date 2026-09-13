@@ -52,6 +52,12 @@ export function isTool402MetaMaskConnector(
     || (Array.isArray(connector?.rdns) && connector.rdns.includes(metaMaskRdns));
 }
 
+function walletErrorCode(error: unknown): string | null {
+  if (error === null || typeof error !== "object") return null;
+  const code = (error as { readonly code?: unknown }).code;
+  return typeof code === "number" || typeof code === "string" ? String(code) : null;
+}
+
 export function deriveTool402WalletState(input: WalletStateInput): Tool402WalletState {
   if (input.status === "reconnecting") {
     return { kind: "resolving" };
@@ -116,6 +122,7 @@ export function useTool402Wallet() {
     connection: currentConnection,
     resolved: connection.status !== "reconnecting",
     state,
+    connectErrorCode: walletErrorCode(connectError),
     async connect() {
       if (metaMask !== undefined) {
         try {

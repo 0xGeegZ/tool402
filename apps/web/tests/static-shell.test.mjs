@@ -17,6 +17,7 @@ test("declares the strict Next workspace boundary", async () => {
   assert.equal(manifest.private, true);
   assert.equal(manifest.scripts.typecheck, "next typegen && tsc --noEmit");
   assert.deepEqual(manifest.dependencies, {
+    "@tanstack/react-query": "5.102.8",
     "@tool402/agent": "file:../agent",
     "@tool402/core": "file:../../packages/core",
     "@hashgraph/asset-tokenization-contracts": "8.0.0",
@@ -32,6 +33,7 @@ test("declares the strict Next workspace boundary", async () => {
     "react-dom": "19.2.8",
     "tailwind-merge": "3.6.0",
     viem: "2.56.1",
+    wagmi: "3.7.7",
   });
   assert.deepEqual(manifest.devDependencies, {
     "@tailwindcss/postcss": "4.3.3",
