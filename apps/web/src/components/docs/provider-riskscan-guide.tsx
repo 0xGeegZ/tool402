@@ -9,7 +9,7 @@ import { PageHeader } from "../ui/page-header";
 const providerSteps = [
   { number: "01", title: "Tool details", detail: "Name the local tool and describe the boundary shown by the preview." },
   { number: "02", title: "Interface and capability", detail: "Review the local capability description and interface details." },
-  { number: "03", title: "Pricing and target agent customers", detail: "Use the existing wizard label to review the local preview fields." },
+  { number: "03", title: "Pricing and customers", detail: "Use the existing wizard label to review the local preview fields." },
   { number: "04", title: "Funding and revenue-note terms", detail: "Use the existing wizard label to review the local preview fields." },
   { number: "05", title: "Review and sign", detail: "Read the non-editable review and sign surface before returning to the local route." },
 ] as const;

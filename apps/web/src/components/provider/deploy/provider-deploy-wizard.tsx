@@ -141,18 +141,15 @@ function StepProgress({
 }) {
   return (
     <nav aria-label="Provider deploy progress" data-ui="provider-deploy-progress" className="flex flex-col gap-2 pb-1">
-      <ol className="grid grid-cols-5 gap-0">
+      <ol className="grid grid-cols-5 gap-2">
         {providerDeploySteps.map((step, index) => {
           const isCurrent = index === currentStep;
           const isComplete = index < currentStep;
-          const stateClass = isCurrent || isComplete ? "bg-primary text-primary-foreground" : "border-2 border-primary/35 bg-card text-primary";
           return (
-            <li key={step.label} className="relative flex min-w-0 flex-col items-center text-center">
-              {index > 0 ? <span aria-hidden="true" className={`absolute left-0 right-1/2 top-3 h-0.5 -translate-y-1/2 ${index <= currentStep ? "bg-primary" : "bg-primary/20"}`} /> : null}
-              {index < providerDeploySteps.length - 1 ? <span aria-hidden="true" className={`absolute left-1/2 right-0 top-3 h-0.5 -translate-y-1/2 ${index < currentStep ? "bg-primary" : "bg-primary/20"}`} /> : null}
-              <button type="button" aria-label={`Return to step ${index + 1}: ${step.label}`} aria-current={isCurrent ? "step" : undefined} disabled={index >= currentStep} onClick={() => onStepSelect(index)} className="relative z-10 flex min-w-0 flex-col items-center gap-2 rounded-md px-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100">
-                <span aria-hidden="true" className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ring-4 ring-background transition-colors ${stateClass}`}>{isComplete ? "✓" : index + 1}</span>
-                <span className={`max-w-36 text-[11px] font-medium leading-[1.35] ${isCurrent || isComplete ? "text-foreground" : "text-muted-foreground"}`}>{step.label}</span>
+            <li key={step.label} className="flex min-w-0 flex-col">
+              <button type="button" aria-label={`Return to step ${index + 1}: ${step.label}`} aria-current={isCurrent ? "step" : undefined} disabled={index >= currentStep} onClick={() => onStepSelect(index)} className="flex w-full min-w-0 flex-col items-start gap-2 rounded-md text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-100">
+                <span aria-hidden="true" className={`h-1.5 w-full rounded-full transition-colors ${isCurrent || isComplete ? "bg-primary" : "bg-muted"}`} />
+                <span className={`text-sm leading-[1.35] ${isCurrent ? "font-medium" : "text-muted-foreground"}`}>{step.label}</span>
               </button>
             </li>
           );
@@ -278,7 +275,7 @@ function PricingStep({ values, fieldErrors, onTextChange, durableFieldsLocked }:
   durableFieldsLocked: boolean;
 }) {
   return (
-    <StepCard title="Pricing and target agent customers" help="Per-task prices are advertised tiers. The live 402 requirements remain the only payment authority.">
+    <StepCard title="Pricing and customers" help="Per-task prices are advertised tiers. The live 402 requirements remain the only payment authority.">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Quick price per task (HBAR)" hint="0.1 HBAR is the largest accepted advertised price." error={fieldErrors.quickPrice} errorId={fieldErrorId("quickPrice")}>
           <input readOnly={durableFieldsLocked} inputMode="decimal" aria-invalid={fieldErrors.quickPrice ? true : undefined} aria-describedby={fieldErrors.quickPrice ? fieldErrorId("quickPrice") : undefined} className={`${fieldClassName(fieldErrors.quickPrice)} ${monoValueClassName}`} value={values.quickPrice} onChange={onTextChange("quickPrice")} />
