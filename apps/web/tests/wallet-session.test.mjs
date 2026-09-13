@@ -259,6 +259,13 @@ test("uses direct Wagmi hooks and does nothing during a passive reconnect", asyn
   const wallet = useTool402Wallet();
 
   assertWalletState(wallet.state, { kind: "resolving" });
+  assert.equal(wallet.resolved, false);
+  assert.deepEqual({ ...wallet.connection }, {
+    status: "reconnecting",
+    account: undefined,
+    chainId: undefined,
+    connector: undefined,
+  });
   assert.equal(harness.calls.connection, 1);
   assert.equal(harness.calls.connectors, 1);
   assert.deepEqual(harness.calls.connect, []);
@@ -279,6 +286,11 @@ test("uses only explicit MetaMask connect, disconnect, and Hedera switch mutatio
   const wallet = useTool402Wallet();
 
   assertWalletState(wallet.state, { kind: "connected", address });
+  assert.equal(wallet.resolved, true);
+  assert.equal(wallet.connection.status, "connected");
+  assert.equal(wallet.connection.account, address);
+  assert.equal(wallet.connection.chainId, 296);
+  assert.equal(wallet.connection.connector?.id, "metaMask");
   await wallet.connect();
   await wallet.switchToHedera();
   await wallet.disconnect();

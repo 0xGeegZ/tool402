@@ -34,6 +34,13 @@ export type Tool402WalletState =
   | { readonly kind: "request_failed"; readonly operation: "connect" | "switch" }
   | { readonly kind: "connected"; readonly address: string };
 
+export interface Tool402WalletConnection {
+  readonly status: ConnectionStatus;
+  readonly account: string | undefined;
+  readonly chainId: number | undefined;
+  readonly connector: { readonly id: string } | undefined;
+}
+
 export function deriveTool402WalletState(input: WalletStateInput): Tool402WalletState {
   if (input.status === "reconnecting") {
     return { kind: "resolving" };
@@ -66,6 +73,13 @@ export function useTool402Wallet() {
   const { mutateAsync: disconnectAsync } = useDisconnect();
   const { mutateAsync: switchChainAsync, error: switchError } = useSwitchChain();
   const metaMask = connectors.find((connector) => connector.id === metaMaskConnectorId);
+  const account = connection.address?.toLowerCase();
+  const currentConnection: Tool402WalletConnection = {
+    status: connection.status,
+    account,
+    chainId: connection.chainId,
+    connector: connection.connector,
+  };
   const state = deriveTool402WalletState({
     status: connection.status,
     address: connection.address,
@@ -78,6 +92,8 @@ export function useTool402Wallet() {
   });
 
   return {
+    connection: currentConnection,
+    resolved: connection.status !== "reconnecting",
     state,
     async connect() {
       if (metaMask !== undefined) {
