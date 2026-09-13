@@ -1009,3 +1009,20 @@ No secrets, account keys, or private evidence belong in this file.
   compatibility tests, and receive joint review before integration. This neither
   accepts S26 nor authorizes runtime configuration, authority provisioning,
   transfer, deployment, or live action.
+
+- HI_011_PRODUCTION_CONTROL_PREPARATION: The earlier Production Stage 1
+  preflight closed before signature. The new production control review binds
+  the observed alias, source `027ebc9bb0dc281e02b0a556be595e487c0cadc9`, and
+  Vercel deployment `6420584027` only as a DRAFT prerequisite; Human Ops must
+  re-attest that pair at acceptance and create a fresh 30-minute ISSUER
+  activation timestamp. No authority mutation, signature, relay, durable
+  attempt, transaction, Stage B, or video is authorized by this record.
+
+- M56_PRODUCTION_CONTROL_PREPARATION: Production lacks a recorded
+  `TOOL402_FUNDING_EVM_ADDRESS` configuration. The new M56 packet requires
+  Human Ops to set it only in Vercel Production, redeploy, and attest presence
+  without value before any later BACKER exercise. BACKER and ISSUER remain
+  distinct and cannot coexist for the same signer/chain under the current
+  exact-one command-authority reader. No configuration mutation, authority
+  activation, signature, transfer, deployment, allocation, or recording is
+  authorized by this preparation record.

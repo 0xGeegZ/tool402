@@ -23,13 +23,14 @@ creates its own execution precondition.
 
 ## Requested sequence
 
-1. Present the draft
-   [prepared-attempt decision packet](../../evidence/HA-ATS-PREPARED-ATTEMPT-001-recommended-decision.md)
-   for an explicit human decision. It permits only the named temporary
-   authority record, one offering.create signature, and one external.prepare
-   signature; it forbids a transaction, Factory calldata, Mirror read,
-   candidate attachment, verification, lifecycle, funding, deployment, and
-   retry.
+1. For the public path, present the fresh
+   [Production prepared-attempt decision packet](../../evidence/HA-ATS-PREPARED-ATTEMPT-001-production-recommended-decision.md)
+   only after rechecking its named source/deployment pair. It permits only the
+   named temporary ISSUER authority record, one offering.create signature, and
+   one external.prepare signature; it forbids a transaction, Factory calldata,
+   Mirror read, candidate attachment, verification, lifecycle, funding,
+   deployment, and retry. The former local packet remains historical and is
+   not authority for Production.
 2. If the human accepts and Human Ops returns the required redacted evidence,
    root independently reviews the exact durable PREPARED attempt and linked
    ASSET_PENDING offering fact. ACCEPTED is the relay outcome; PREPARED is the
@@ -49,6 +50,10 @@ creates its own execution precondition.
 - The accepted M42 digest, target, issuer, M47 projection, M48 mapping, and
   M49 code remain unchanged. This card creates no source, schema, package,
   environment, deployment, or provider authority.
+- The shared signer/chain lookup accepts one total authority record only. An
+  ISSUER record for this flow and M56's BACKER record must be removed between
+  their separate terminal windows; neither role inherits or coexists with the
+  other.
 - The later Stage-B candidate attachment is governed prospectively by
   D-M49-010-002. It may be separately clicked only after the candidate is
   fully corroborated; M43 positive verification and all lifecycle work remain
