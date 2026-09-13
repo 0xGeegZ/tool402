@@ -316,7 +316,8 @@ export const allocateForIssuer = internalMutation({
         .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
           query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress)
         )).take(2);
-      if (accounts.length === 1 && activeSelfServiceAccount(accounts[0], args.canonicalSignerAddress)) {
+      if (process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED === "true"
+        && accounts.length === 1 && activeSelfServiceAccount(accounts[0], args.canonicalSignerAddress)) {
         owner = { principalPublicId: accounts[0].principalPublicId, authorityVersion: accounts[0].policyVersion };
       }
     }

@@ -240,6 +240,9 @@ implementedTest("rejects revoked, non-issuer, and ambiguous authorities without 
 });
 
 implementedTest("allocates a distinct owned tool for an active self-service membership without a command authority", async () => {
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
   const { allocateForIssuer } = await import(sourceUrl.href);
   const db = database({ accounts: [{
     _id: "selfServiceAccounts:a", _creationTime: 1,
@@ -251,6 +254,18 @@ implementedTest("allocates a distinct owned tool for an active self-service memb
   assert.equal(outcome.outcome, "allocated");
   assert.equal(db.writes[0].principalPublicId, `self_service_${canonicalSignerAddress.slice(2)}`);
   assert.equal(db.writes[0].authorityVersion, "public_testnet_v1");
+  } finally { process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous; }
+});
+
+implementedTest("rejects self-service allocation when the server flag is disabled", async () => {
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "false";
+  try {
+    const { allocateForIssuer } = await import(sourceUrl.href);
+    const db = database({ accounts: [{ canonicalSignerAddress, chainId: 296, principalPublicId: `self_service_${canonicalSignerAddress.slice(2)}`, policyVersion: "public_testnet_v1", status: "ACTIVE" }] });
+    assert.deepEqual(await allocateForIssuer._handler(db.ctx, { canonicalSignerAddress, requestId }), { outcome: "rejected" });
+    assert.equal(db.writes.length, 0);
+  } finally { process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous; }
 });
 
 implementedTest("does not replay an allocation after its issuer authority is revoked", async () => {
