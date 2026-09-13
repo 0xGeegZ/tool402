@@ -136,8 +136,10 @@ is cached as public content.
 `/sign-in` redirects a valid session to `/dashboard`; otherwise it renders the
 MetaMask island and the sign-in control. On successful verification, the
 client uses the fixed internal App Router `replace("/dashboard")` transition,
-which preserves the mounted root wallet-session provider for that navigation.
-The sealed `HttpOnly` cookie remains the sole durable dashboard-access state.
+then refreshes the App Router so the root server navigation observes the new
+sealed session and mounts its active-account synchronizer. The mounted root
+wallet-session provider is preserved for that navigation. The sealed `HttpOnly`
+cookie remains the sole durable dashboard-access state.
 A server-only navigation boundary validates
 the same signed session and supplies a `Dashboard` link to both desktop and
 mobile main menus only when it is valid. It must be wrapped in the existing
