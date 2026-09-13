@@ -3,7 +3,7 @@
 ## State
 
 - Tier: PRIZE_OPTIONAL
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: none. S40-T010 acceptance is the activation gate for this
   card, not a catalog dependency: the card reads the signed dashboard session
   S40 establishes, so it cannot be activated before S40 is accepted, but it
@@ -136,3 +136,56 @@ routes, one server component, one client component, and one mount.
 - The delivery pull request is marked "root integrates; do not merge by hand".
   Nothing from this branch reaches `main` outside the root's integration
   decision.
+
+## Acceptance
+
+S47-T010 is accepted by the repository operator's ruling of 2026-09-12. The
+delegated lane on `work/world-human-check` was integrated as pull request #114
+at merge commit `ab793952`, which is also the first commit that brings this
+card and `docs/specs/s47-world-human-check.md` onto `main`. Every declared new
+path exists on `main`: `apps/web/src/lib/world/human-check.ts`, the two
+`apps/web/src/app/api/world/` routes,
+`apps/web/src/components/dashboard/dashboard-identity.tsx`,
+`apps/web/src/components/dashboard/world-human-check.tsx`,
+`apps/web/tests/world-human-check.test.mjs`, the specification, and
+`docs/submission/world-selfie-check-feedback.md`. The complete Web suite at `07beeffe` passes 547 of 548 with no failure and one
+skip, Web typecheck is clean, and the Web build renders 37 of 37 routes. S40-T010, the recorded
+activation gate for this card, is accepted in the same reconciliation.
+
+Four lane questions are ruled, on HI-013's recommendations:
+
+8. Ownership and the integration reservations are accepted exactly as this
+   card's Owner paragraph states them, reproduced as the S47 paragraph in
+   `docs/work-queue/FILE-OWNERSHIP.md`. The pull request also amended the
+   root-owned `docs/work-queue/TASK-CATALOG.md`; the root records that catalog
+   amendment on its own account and not under an S47 reservation.
+9. Reading the dashboard session cookie from the request header rather than
+   through the framework's header accessor, to gate both World routes, is
+   accepted. Without the gate the request route is an open RP-signature oracle
+   and the verify route mints a thirty-day cookie for a caller who is not
+   signed in; reading the header keeps both routes loadable in the existing
+   test harness and adds no authority.
+10. Logout not clearing the `tool402-world-human` cookie is accepted. The
+    clearing path lives in
+    `apps/web/src/lib/dashboard-auth/dashboard-auth-routes.ts`, outside this
+    lane's declared paths, and the cookie is address-bound and MAC-verified, so
+    a different account on the same browser already reads it as unverified. The
+    clearing change is recorded as an owed follow-up on D-S47-010-001; no card
+    is created by that ruling.
+11. The strict `signal_hash` equality check is accepted as shipped. It is a
+    trust-boundary check the task pinned, and loosening it to absent-or-matching
+    would be a security-relevant change needing its own decision rather than a
+    lane ruling.
+
+The two further items the pull request flagged without requesting a ruling, the
+absent nonce and action binding and the cookie MAC secret derived from the
+World signing key by domain-separated hashing, are left unruled and unchanged.
+No `docs/ui/UI-S47.md` exists on `main`, so this slice stays
+specification-backed through this card and `docs/specs/s47-world-human-check.md`
+and receives no UI slice ledger row.
+
+The slice unlocks nothing: every route, control, and command available before
+the check remains exactly as available after it, and it stores no proof,
+nullifier, or World identifier. `HA-WORLD-SELFIE-001` is unchanged, no human
+action is completed by this acceptance, and no end-to-end Sandbox proof is
+claimed.

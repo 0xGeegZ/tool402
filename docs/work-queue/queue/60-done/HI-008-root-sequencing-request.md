@@ -12,7 +12,7 @@ deployment, or live action and changes no card's scope.
 ## State
 
 - Tier: intake
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: none
 - Raised by: human operator, 2026-09-10
 - Owner: root integrator on intake. The decision row is root-recorded.
@@ -71,3 +71,16 @@ not move any card between queue states by itself.
 The human operator ruled GO on the requested sequence at the time this card
 was merged, through the operator's delegated session. The root records the
 decision row from this card.
+
+## Resolution
+
+The root records HI-008 on 2026-09-12 as `D-HI-008-001`, taking the sequence
+from the drafted row HI-013 supplied and the operator's GO of the same day.
+Every step the card names is now either complete or superseded by a later
+delivered lane, so the row closes HI-008 as an input record rather than an open
+sequence: M47-T010 is accepted, the HI-007 mirror-form ruling is recorded and
+satisfied, B03-T020 is accepted at `60-done`, and S25-T010, S23-T010, S18-T010,
+S22-T010, and S24-T010 are all accepted at `60-done`. HI-008 moves to
+`60-done`. No card tier, dependency, path, boundary, or human-action row
+changes, and no wallet, SDK, provider, transaction, deployment, or live
+authority is granted.

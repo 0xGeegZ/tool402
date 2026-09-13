@@ -11,7 +11,7 @@ wallet, SDK, provider, transaction, deployment, or live action.
 ## State
 
 - Tier: intake
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: none
 - Raised by: human operator, 2026-09-09
 - Owner: root integrator on intake. The decision row is root-recorded.
@@ -71,3 +71,27 @@ provider interaction, transaction, deployment, or live behavior.
 The human operator ruled GO on the requested ruling at the time this card was
 merged, through the operator's delegated session. The root records the
 decision row and the M44 amendment from this card.
+
+## Resolution
+
+The root closes HI-007 on 2026-09-12 because every record it requested exists
+on `main` at `07beeffe`.
+
+1. The decision row is `D-HI-007-001`, which settles M44 candidate transaction
+   ids at the mirror form `0.0.N-seconds-NNNNNNNNN`.
+2. The M44 amendment is recorded: `docs/specs/m44-ats-issuer-client-seam.md`
+   states that `normalizeHederaCandidateTransactionId` turns a valid SDK
+   `0.0.N@seconds.nanos` or mirror form into exactly
+   `0.0.N-seconds-NNNNNNNNN` and rejects anything else, and
+   `docs/work-queue/queue/60-done/M44-T020-ats-contracts-viem-seam.md` names the
+   HI-007 mirror normalization in its accepted scope. The implementation is
+   `apps/web/src/lib/ats/factory-deploy-bond.ts`, which zero-pads the
+   nanosecond group to nine digits, and the RED vector for the zero-padded `@`
+   input is pinned in `apps/web/tests/factory-deploy-bond.test.mjs`, where
+   `0.0.9213391@1789430400.1` must normalize to
+   `0.0.9213391-1789430400-000000001`. M38, M43, and S21 remain unchanged.
+3. No human-action row changed, as the card required.
+
+`D-HI-007-002` records the closure and HI-007 moves to `60-done`. The closure
+authorizes no configuration bridge, durable attempt, wallet or provider
+interaction, transaction, deployment, or live behavior.

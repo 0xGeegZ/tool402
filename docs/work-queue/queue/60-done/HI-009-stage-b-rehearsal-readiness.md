@@ -14,7 +14,7 @@ provider, authority row, transaction, deployment, or live action.
 ## State
 
 - Tier: intake
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: none
 - Raised by: human operator, 2026-09-10
 - Owner: root integrator on intake. The acceptance is human-owned and
@@ -117,3 +117,27 @@ between queue states by itself.
 The human operator ruled GO on the acceptance and the requested sequence at
 the time this card was merged, through the operator's delegated session. The
 root records the decision rows from this card.
+
+## Resolution
+
+The root records HI-009 on 2026-09-12 as `D-HI-009-001` and `D-HI-009-002`,
+from the drafted rows HI-013 supplied and the operator's GO of the same day.
+
+`D-HI-009-001` records the operator's Phase A acceptance of
+`HA-ATS-M33-ENABLEMENT-001` and its effect on M48-T010, which is accepted at
+`60-done`. `D-HI-009-002` records the trimmed live Stage B ruling as the
+operator's decision rather than as a recommendation: a live Stage B packet may
+be requested, conditional on both M48-T010 and the transaction-execution
+successor being accepted first and on the rehearsal commit being named with a
+local host or runtime proof; if either acceptance does not land before the
+submission deadline, the operator's own fallback applies without a further
+ruling and the demo keeps its truthful pending gate with no Stage B claim.
+
+Item 4's position in the working order is recorded as the operator's
+preference and this card's recommendation: after HI-008 step 3 and before its
+step 4.
+
+HI-009 moves to `60-done`. `HA-ATS-STAGE-B-001` remains PENDING and stays the
+sole execution gate; every live, provider, wallet, authority-row, deployment,
+host, transaction, candidate, receipt-verifier, funding, and lifecycle action
+stays rejected, and no human-action row changed.

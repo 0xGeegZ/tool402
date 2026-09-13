@@ -1,5 +1,109 @@
 # Runtime queue state
 
+- HI_013_QUEUE_RECONCILIATION: 2026-09-12. On the operator's GO, the root
+  reconciles the work-queue records with the code merged on `main` at
+  `07beeffe`. Twelve `20-active` cards, the three delivered lanes S38-T010,
+  S39-T010, and S47-T010, and the satisfied human intakes HI-007, HI-008,
+  HI-009, HI-012, and HI-013 move to `60-done` with acceptance records naming
+  the delivering commit, the pull request, the merge commit, and the same
+  verification: the complete Web suite passes 547 of 548 with one skip, Web
+  typecheck is clean, and the Web build renders 37 of 37 routes. HI-013 states
+  that nothing moves on its own evidence because the acceptance was the root's
+  to make; the operator made it, and these records carry it. HI-010 and HI-011
+  stay in `00-inbox`, S27-T010 and S37-T010 keep their live lanes, S41-T010
+  stays in `00-inbox`, and B03-T010 stays in `50-blocked`. The reconciliation
+  is documentation only: it completes no human action, authorizes no wallet,
+  provider, SDK, signature, authority row, schema change, transaction,
+  deployment, publication, or live behavior, and merges, rebases, or closes no
+  pull request.
+
+- S47_WORLD_HUMAN_CHECK_ACCEPTANCE: 2026-09-12. S47-T010 is accepted on merged
+  `main` at `07beeffe`. The delegated lane on `work/world-human-check` was
+  integrated as pull request #114 at merge commit `ab793952`, which is also the
+  first commit that brings the card and `docs/specs/s47-world-human-check.md`
+  onto `main`. Every declared new path exists, and S40-T010, the recorded
+  activation gate, is accepted in the same reconciliation. The complete Web
+  suite passes 547 of 548 with one skip, typecheck is clean, and the build
+  renders 37 of 37 routes. Lane rulings 8 to 11 are accepted: the card's own
+  Owner paragraph becomes the ownership record, the request-header session read
+  gating both World routes stands, the strict `signal_hash` equality check
+  stands as shipped, and clearing the human cookie on logout is an owed
+  follow-up in `dashboard-auth-routes.ts` outside this lane. No
+  `docs/ui/UI-S47.md` exists, so the slice stays specification-backed with no
+  UI ledger row. The slice unlocks nothing and stores no proof, nullifier, or
+  World identifier; `HA-WORLD-SELFIE-001` is unchanged and no end-to-end
+  Sandbox proof is claimed.
+
+- S39_BACKER_PRESETS_ACCEPTANCE: 2026-09-12. S39-T010 is accepted on merged
+  `main` at `07beeffe`. The delegated lane on `work/s39`, requested through
+  pull request #101 at merge commit `19ad0343`, was integrated as pull request
+  #103 at merge commit `1f2c5b6f`. The three new paths and the reserved
+  amendments exist, and `backing-state.ts` is unchanged. The complete Web suite
+  passes 547 of 548 with one skip, typecheck is clean, and the build renders 37
+  of 37 routes. Lane rulings 3 to 7 are accepted. Ruling 3 is ruled as shipped:
+  the shell header mounts one `WalletIsland` at `layout.tsx` line 49 and the
+  Funding section mounts a second at `backing-flow.tsx` line 200, both render
+  together for an OPEN offering, and deduplication is deferred with no card.
+  The relaxed back-page link scan, the manifest-mandated literals, the
+  module-scope `chipClass` helper, and the deleted UI-S18 paragraph are
+  accepted, with the manifest-exclusion and UI-S18 ledger corrections recorded
+  as named follow-ups on D-S39-010-001.
+
+- S38_BACK_TOOL_CARD_ACCEPTANCE: 2026-09-12. S38-T010 is accepted on merged
+  `main` at `07beeffe`. The delegated lane on `work/s38`, requested through
+  pull request #101 at merge commit `19ad0343`, was integrated as pull request
+  #105 at merge commit `d399a031`. Both new declared paths exist and both
+  reserved aside blocks are amended. The complete Web suite passes 547 of 548
+  with one skip, typecheck is clean, and the build renders 37 of 37 routes.
+  Lane rulings 1 and 2 are accepted: the JSX-expression RiskScan href stands so
+  the accepted href pin is left untouched, and the complementary landmark
+  created around the existing descriptive Card in `entitycheck-detail.tsx`
+  stands because the alternative wraps that Card onto a second grid row. The
+  UI-S38 manifest prose correction and the second-landmark check are named
+  follow-ups on D-S38-010-001. Both call sites supply no projection, so the
+  card renders its no-offering variant and adds no reachable link.
+
+- HI_012_S18_LANE_RESOLUTION: 2026-09-12. HI-012 is recorded as D-HI-012-001
+  and moves to `60-done`. The lane order is satisfied: S18-T010 is accepted at
+  `60-done` at rebased source `164f170`. The two rulings HI-002 deferred to S18
+  ready time are already settled on `main` by `D-S18-010-003` and confirmed by
+  `D-S18-010-004`: no enabled `BACKER` `commandAuthorities` row is provisioned
+  and M40 adds no `fundingTreasuryAccount` field, so S18 advances only as the
+  local supplied-projection UI boundary and its direct route stays unavailable.
+  No authority row, schema field, wallet action, transaction, deployment, live
+  behavior, or human-action row changes.
+
+- HI_009_STAGE_B_RESOLUTION: 2026-09-12. HI-009 is recorded as `D-HI-009-001`
+  and `D-HI-009-002` and moves to `60-done`. Phase A acceptance of
+  `HA-ATS-M33-ENABLEMENT-001` is recorded and M48-T010 is accepted at
+  `60-done`. The trimmed live Stage B ruling is recorded as the operator's
+  decision rather than a recommendation: a live Stage B packet may be requested
+  only after both M48-T010 and the transaction-execution successor are
+  accepted and the rehearsal commit is named with a local host or runtime
+  proof; otherwise the operator's own fallback applies and the demo keeps its
+  truthful pending gate with no Stage B claim. Item 4's position is recorded as
+  after HI-008 step 3 and before its step 4. `HA-ATS-STAGE-B-001` remains
+  PENDING and is the sole execution gate.
+
+- HI_008_SEQUENCE_RESOLUTION: 2026-09-12. HI-008 is recorded as `D-HI-008-001`
+  and moves to `60-done`. Every step of the working order it names is complete
+  or superseded by a later delivered lane on `main` at `07beeffe`: M47-T010 is
+  accepted, the HI-007 mirror-form ruling is recorded and satisfied, B03-T020
+  is accepted, and S25-T010, S23-T010, S18-T010, S22-T010, and S24-T010 are all
+  accepted at `60-done`. The row closes the card as an input record; no card
+  tier, dependency, path, boundary, or human-action row changes.
+
+- HI_007_MIRROR_FORM_RESOLUTION: 2026-09-12. HI-007 is closed as
+  `D-HI-007-002` and moves to `60-done` because `main` at `07beeffe` already
+  carries every record it requested. `D-HI-007-001` settles the mirror form;
+  `docs/specs/m44-ats-issuer-client-seam.md` and the M44-T020 card carry the
+  amendment; `apps/web/src/lib/ats/factory-deploy-bond.ts` zero-pads the
+  nanosecond group to nine digits; and
+  `apps/web/tests/factory-deploy-bond.test.mjs` pins the zero-padded `@` RED
+  vector, requiring `0.0.9213391@1789430400.1` to normalize to
+  `0.0.9213391-1789430400-000000001`. M38, M43, and S21 remain unchanged and no
+  human-action row changed.
+
 - B04_SECURITY_SCAN_REMEDIATION_ACCEPTANCE: 2026-09-12. B04-T010 is accepted
   on merged `main` at `07beeffe`. Commit `a64edd97` delivered the minimal GREEN
   at merge commit `44054b96` through pull request #76. All sixteen declared

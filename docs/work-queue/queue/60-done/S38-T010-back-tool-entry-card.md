@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: M02-T070 accepted, S23-T010 accepted, S25-T010 accepted,
   S18-T010 accepted. S39-T010 is a sibling in this batch and neither card
   blocks the other: they share no path.
@@ -115,3 +115,38 @@ cards. The manifest's exclusions govern; this card does not restate them.
   integration decision, and every queue record. The branch is mirrored as
   a pull request for human visibility only; nothing from it reaches `main`
   outside the root's integration decision.
+
+## Acceptance
+
+S38-T010 is accepted by the repository operator's ruling of 2026-09-12. The
+delegated lane on `work/s38`, requested through pull request #101 at merge
+commit `19ad0343`, was integrated as pull request #105 at merge commit
+`d399a031`. Both new declared paths exist on `main`,
+`apps/web/src/components/backing/back-tool-card.tsx` and
+`apps/web/tests/back-tool-card.test.mjs`, and both reserved aside blocks are
+amended in `apps/web/src/components/riskscan/detail/riskscan-detail.tsx` and
+`apps/web/src/components/entitycheck/detail/entitycheck-detail.tsx`. The complete Web suite at `07beeffe` passes 547 of 548 with no failure and one
+skip, Web typecheck is clean, and the Web build renders 37 of 37 routes.
+
+Two lane questions are ruled, on HI-013's recommendations:
+
+1. The RiskScan href written as the JSX expression
+   `href={"/explore/riskscan/back"}` rather than a quoted attribute is accepted
+   as shipped, because the accepted href pin in
+   `apps/web/tests/riskscan-detail.test.mjs` stays untouched and switching the
+   source would require amending an accepted test under a new reservation. The
+   correction of the UI-S38 manifest prose, so it states the expression
+   spelling and why the accepted lock is left alone, is recorded as a named
+   follow-up on D-S38-010-001; no separate card is created by that ruling.
+2. The complementary landmark newly created around the existing accepted
+   descriptive Card in `entitycheck-detail.tsx` is accepted, because the
+   alternative placement wraps that Card onto a second grid row. The created
+   landmark is recorded in the S38 integration reservation in
+   `docs/work-queue/FILE-OWNERSHIP.md`, and checking that the page carries no
+   second complementary landmark is the matching named follow-up.
+
+Both call sites supply no projection, so the card renders its no-offering
+variant and adds no reachable link in this slice. The acceptance releases the
+S38 source and test reservation and grants no route, reader, projection, fetch,
+client behavior, state, capacity figure, wallet, provider, payment,
+transaction, deployment, or live boundary.

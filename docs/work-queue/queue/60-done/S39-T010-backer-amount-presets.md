@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: S18-T010 accepted, M16-T010 accepted, S15-T010 accepted; the
   root sequences this card after S26-T010 (header wallet control and shared
   session) when S26 is integrated first, so the Funding section positions the
@@ -140,3 +140,54 @@ this card does not restate them.
   integration decision, and every queue record. The branch is mirrored as
   a pull request for human visibility only; nothing from it reaches `main`
   outside the root's integration decision.
+
+## Acceptance
+
+S39-T010 is accepted by the repository operator's ruling of 2026-09-12. The
+delegated lane on `work/s39`, requested through pull request #101 at merge
+commit `19ad0343`, was integrated as pull request #103 at merge commit
+`1f2c5b6f`. The three new declared paths exist on `main`,
+`apps/web/src/components/backing/backing-presentation.ts`,
+`apps/web/src/components/backing/backing-step-rail.tsx`, and
+`apps/web/tests/backing-presentation.test.mjs`, alongside the reserved
+amendments in `apps/web/src/components/backing/backing-flow.tsx`,
+`apps/web/src/app/explore/riskscan/back/page.tsx`, and
+`apps/web/tests/backing-route.test.mjs`. The complete Web suite at `07beeffe` passes 547 of 548 with no failure and one
+skip, Web typecheck is clean, and the Web build renders 37 of 37 routes.
+
+Five lane questions are ruled:
+
+3. The second `WalletIsland` mounted inside the Funding section is accepted as
+   shipped. On `main` the shell header mounts one island at
+   `apps/web/src/app/layout.tsx` line 49 and the Funding section mounts a
+   second at `apps/web/src/components/backing/backing-flow.tsx` line 200, so
+   both render together whenever the loaded projection carries an OPEN
+   offering. Deduplication against the shell-header island is deferred and no
+   card is created for it.
+4. The relaxed back-page link scan in `apps/web/tests/backing-route.test.mjs`
+   is accepted, with the relaxation named explicitly in the S39 integration
+   reservation: the blanket no-link assertion is replaced by exactly one
+   `<Link`, exactly one `href=`, and that href pinned to `/explore/riskscan`
+   with its label. The manifest mandates the link, so the original assertion
+   could not survive verbatim, and the replacement is otherwise strictly
+   tighter.
+5. The literals "Mirror Node records the transfer" and "allocation_pending",
+   fixed verbatim by the UI-S39 Control contract and also named in its Explicit
+   exclusions, are accepted as shipped copy. The Control contract is the more
+   specific rule; correcting the exclusion text is a named follow-up on
+   D-S39-010-001.
+6. The module-scope `chipClass(selected)` helper in `backing-flow.tsx` is
+   accepted under the S39 integration reservation, which is extended to cover
+   it and the five presentation imports it implies. It serves only the reserved
+   units card, and the alternative duplicates the same class string twice.
+7. The deleted accepted UI-S18 paragraph beginning "Connect MetaMask from the
+   header" is accepted, because the wallet control the slice mounts replaces
+   the sentence and the focused test now pins its absence. Recording the
+   deletion in the UI-S18 ledger row is a named follow-up on D-S39-010-001.
+
+`apps/web/src/components/backing/backing-state.ts` is not amended: the closed
+eight-kind union, picker bounds, integer amount, command payload, transfer, and
+every refusal and unknown outcome remain the accepted UI-S18 contract. The
+acceptance releases the S39 source and test reservation and grants no
+projection, API, session, authority, payment, settlement, transaction,
+deployment, or live boundary.

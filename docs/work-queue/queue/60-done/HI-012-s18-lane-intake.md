@@ -13,7 +13,7 @@ deployment, or live action and changes no card's scope.
 ## State
 
 - Tier: intake
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: none
 - Raised by: human operator, 2026-09-11
 - Owner: root integrator on intake. The decision row is root-recorded.
@@ -75,3 +75,23 @@ close any pull request.
 The human operator ruled GO on the requested sequence at the time this card
 was merged, through the operator's delegated session. The root records the
 decision row from this card.
+
+## Resolution
+
+The root records HI-012 on 2026-09-12 as `D-HI-012-001`, from the drafted row
+HI-013 supplied and the operator's GO of the same day. The lane order the card
+asks for is satisfied: `work/backing` was taken as input for the S18-T010 ready
+review and S18-T010 is accepted at `60-done` at rebased source `164f170` with
+no continuing reservation.
+
+The two rulings HI-002 deferred to S18 ready time are already settled on `main`
+by `D-S18-010-003` and confirmed by `D-S18-010-004`: no enabled `BACKER`
+`commandAuthorities` row is provisioned, and M40 adds no
+`fundingTreasuryAccount` field. S18 therefore advances only as the local
+supplied-projection UI boundary, and its direct route remains unavailable
+because it passes `null`. `D-HI-012-001` records that answer rather than
+reopening it.
+
+HI-012 moves to `60-done`. The record provisions no authority row, schema
+field, wallet action, transaction, deployment, or live behavior, and no
+human-action row changed.

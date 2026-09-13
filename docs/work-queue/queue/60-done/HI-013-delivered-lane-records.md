@@ -20,7 +20,7 @@ manifest names as amendable; every other card's scope is unchanged.
 ## State
 
 - Tier: intake
-- Queue state: 00-inbox
+- Queue state: 60-done
 - Dependencies: none
 - Raised by: human operator, 2026-09-12
 - Owner: root integrator on intake. Every decision row, ownership paragraph,
@@ -421,3 +421,40 @@ was merged, through the operator's delegated session. The root records the
 decision rows, rulings, ownership paragraphs, ledger rows, card moves, and the
 pull request #53 supersession from this card, and keeps every review and
 integration decision.
+
+## Resolution
+
+The root records HI-013 on 2026-09-12 as `D-HI-013-001`, on the operator's GO
+of the same day, and carries out the requested sequence against merged `main`
+at `07beeffe`.
+
+- The three missing inbox decision rows are recorded as `D-HI-008-001`,
+  `D-HI-009-001`, `D-HI-009-002`, and `D-HI-012-001`, with `D-HI-009-002`
+  written as a recorded ruling rather than a recommendation and `D-HI-012-001`
+  pointed at the answer `D-S18-010-003` already carries.
+- The eleven lane questions are ruled and recorded with the integration
+  decision for each lane, on this card's recommendations. Ruling 3, which this
+  card withdrew for the root's own re-derivation, is ruled as accepted as
+  shipped: the second `WalletIsland` inside the S39 Funding section stands, and
+  deduplication against the shell-header island is deferred with no card.
+- The three ownership paragraphs are appended to
+  `docs/work-queue/FILE-OWNERSHIP.md`, with the S39 paragraph amended to record
+  ruling 3 as made rather than pending.
+- The `UI-S38` and `UI-S39` rows are appended to `docs/ui/IMPORT-LEDGER.md`. No
+  `UI-S47` row is added, because no `docs/ui/UI-S47.md` exists on `main` and
+  every row in that ledger is manifest-backed; S47 stays specification-backed.
+- The card-move list is superseded by the operator's own ruling. This card
+  states that nothing moves to `60-done` on its evidence, because the
+  acceptance was the root's to make; the operator made it on 2026-09-12, so the
+  eleven named `20-active` cards, B04-T010, the three delivered lanes, and the
+  satisfied human intakes all move to `60-done` with acceptance records naming
+  the merge commit and the verification.
+- Pull request #53 is recorded as superseded by pull request #114 in
+  `D-S47-010-002`. The human closes it; this reconciliation closes no pull
+  request.
+
+HI-013 moves to `60-done`. The reconciliation is documentation only: it
+authorizes no wallet, provider, SDK, signature, `commandAuthorities` row,
+schema change, configuration bridge, durable attempt, transaction, deployment,
+publication, submission, or live behavior, it completes no human action, and it
+merges, rebases, or closes no pull request.
