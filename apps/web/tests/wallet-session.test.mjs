@@ -100,6 +100,7 @@ implementedTest("exports the fixed session API and throws outside the provider",
     "react/jsx-runtime": jsxRuntime,
     "../../lib/wallet/metamask-provider.ts": providerApi,
     "../../lib/wallet/wallet-state.ts": walletStateApi,
+    "../../lib/wallet/wallet-balance.ts": await import("../src/lib/wallet/wallet-balance.ts"),
   });
   assert.equal(typeof api.WalletSessionProvider, "function");
   assert.throws(() => api.useWalletSession(), /WalletSessionProvider/u);
@@ -204,7 +205,7 @@ implementedTest("renders the compact header control per session kind from the sh
       assert.equal(buttons.length, 0, `${state.kind} renders no button`);
       assert.equal(badges.length, 1);
       assert.equal(badges[0].props.variant, "secondary");
-      assert.equal(badges[0].props.title, address);
+      assert.equal(badges[0].props.title, `${address} HBAR on Hedera Testnet`);
       assert.equal(visibleText(badges[0]), "0xc89f…378e");
       const dashboardLinks = elements(tree).filter((element) => element.type === "Link");
       assert.equal(dashboardLinks.length, 1, `${state.kind} renders one dashboard link`);

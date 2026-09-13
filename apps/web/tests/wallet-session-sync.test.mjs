@@ -203,6 +203,7 @@ async function walletIslandHarness(provider) {
       "../../lib/wallet/metamask-provider": discovery,
       "../../lib/wallet/wallet-state.ts": walletStateApi,
       "../../lib/wallet/wallet-state": walletStateApi,
+      "../../lib/wallet/wallet-balance.ts": { readHbarBalance: async () => "0x0", formatHbar: () => "0 HBAR" },
     },
     [walletIslandUrl.href]: {
       "react/jsx-runtime": jsxRuntime,

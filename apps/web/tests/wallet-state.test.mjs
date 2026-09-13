@@ -440,7 +440,7 @@ test("renders every wallet state from a client island that synchronizes only an 
   assert.match(source, /Retry/u);
   assert.match(source, /aria-live=["']polite["']/u);
   assert.doesNotMatch(source, /WalletConnect|Coinbase|wagmi|rainbow/iu);
-  assert.doesNotMatch(source, /0\.0\.\d+|HBAR|balance/u);
+  assert.doesNotMatch(source, /0\.0\.\d+/u);
 });
 
 test("renders the closed seven-phase signature dialog with refusal copy inside existing phases", async () => {

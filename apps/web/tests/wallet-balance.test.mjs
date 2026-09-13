@@ -61,19 +61,36 @@ implementedTest("propagates a rejected provider request as-is", async () => {
   await assert.rejects(() => readHbarBalance(fake.provider, address), (error) => error === refusal);
 });
 
-implementedTest("formats weibar as truncated two-decimal HBAR with BigInt only", async () => {
+implementedTest("formats weibar through the shared tinybar HBAR formatter with BigInt only", async () => {
   const { formatHbar } = await import("../src/lib/wallet/wallet-balance.ts");
   const source = await readAppFile(balancePath);
 
-  assert.equal(formatHbar("0x0"), "0.00 HBAR");
-  assert.equal(formatHbar("0xde0b6b3a7640000"), "1.00 HBAR");
-  assert.equal(formatHbar("0x11355d6e217bffff"), "1.23 HBAR");
-  assert.equal(formatHbar("0x42ecf6330552400000"), "1234.56 HBAR");
+  assert.equal(formatHbar("0x0"), "0 HBAR");
+  assert.equal(formatHbar("0xde0b6b3a7640000"), "1 HBAR");
+  assert.equal(formatHbar("0x11355d6e217bffff"), "1.23999999 HBAR");
+  assert.equal(formatHbar("0x42ecf6330552400000"), "1,234.56 HBAR");
 
+  assert.match(source, /from\s+["']\.\.\/hbar-format\.ts["']/u, "the module owns no second HBAR formatter");
   assert.match(source, /export async function readHbarBalance\(/u);
   assert.match(source, /export function formatHbar\(/u);
   assert.match(source, /\bBigInt\b|\d+n\b/u);
   assert.doesNotMatch(source, /\bimport .*\breact\b/u, "the balance module imports no React");
   assert.doesNotMatch(source, /parseFloat|Number\(|toFixed|Math\./u, "weibar never touches floating point");
   assert.doesNotMatch(source, /\bfetch\b|mirror|viem|setInterval|setTimeout/u);
+});
+
+implementedTest("wires one guarded balance read into the session and renders the badge contract", async () => {
+  const session = await readAppFile("src/components/wallet/wallet-session.tsx");
+  const island = await readAppFile("src/components/wallet/wallet-connect.tsx");
+
+  assert.match(session, /import\s*\{[^}]*\breadHbarBalance\b[^}]*\}\s+from\s+["']\.\.\/\.\.\/lib\/wallet\/wallet-balance\.ts["']/u);
+  assert.equal([...session.matchAll(/readHbarBalance\(/gu)].length, 1, "the session reads the balance from exactly one call site");
+  assert.match(session, /state\.kind === "connected" \|\| state\.kind === "not_issuer"/u, "the read is guarded by a settled connected or not_issuer kind");
+  assert.match(session, /\}, \[provider, balanceAddress\]\);/u, "the read follows account and chain changes, nothing else");
+  assert.doesNotMatch(session, /setInterval|setTimeout/u, "the balance never refreshes on a timer");
+  assert.doesNotMatch(session, /\bfetch\b|mirror|viem/u);
+  assert.doesNotMatch(island, /setInterval|setTimeout|\buseState\b|\buseEffect\b|\buseRef\b/u, "the badge holds no balance state of its own");
+  assert.match(island, / · /u, "the badge separates the address from the balance");
+  assert.match(island, /balance unavailable/u);
+  assert.match(island, /HBAR on Hedera Testnet/u);
 });
