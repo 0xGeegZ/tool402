@@ -12,6 +12,7 @@ type ForwardInput = Readonly<{
   cursor?: string | null;
   toolPublicId?: string;
   deploymentToolPublicId?: string;
+  ensureSelfService?: true;
   sessionExpiresAt: string;
 }>;
 type Dependencies = Readonly<{
@@ -158,7 +159,9 @@ async function forwardAssertion(input: ForwardInput, env: DashboardAuthEnvironme
   try {
     const configuration = ingressConfiguration(env);
     if (configuration === null) return json({ outcome: "not_configured" }, 503);
-    const payload = input.requestId === undefined
+    const payload = input.ensureSelfService === true
+      ? { type: "self_service_ensure", canonicalSignerAddress: input.canonicalSignerAddress, sessionExpiresAt: input.sessionExpiresAt }
+      : input.requestId === undefined
       ? input.deploymentToolPublicId !== undefined
         ? { type: "deployment", canonicalSignerAddress: input.canonicalSignerAddress, toolPublicId: input.deploymentToolPublicId, sessionExpiresAt: input.sessionExpiresAt }
         : input.toolPublicId === undefined
@@ -238,4 +241,24 @@ export async function handleProviderToolDeploymentRequest(
   } catch {
     return json({ outcome: "unavailable" }, 503);
   }
+}
+
+export async function ensureSelfServiceMembership(
+  env: DashboardAuthEnvironment,
+  sessionCookie: string | null,
+  dependencies: Dependencies = {},
+): Promise<{ outcome: string }> {
+  const readSession = dependencies.readSession ?? ((cookie) => readDashboardSession(cookie, env));
+  let session: Session | null;
+  try { session = await readSession(sessionCookie); } catch { session = null; }
+  if (session === null) return { outcome: "rejected" };
+  const forward = dependencies.forward ?? ((input) => forwardAssertion(input, env));
+  try {
+    const response = await boundedResponse(await forward({ canonicalSignerAddress: session.address, ensureSelfService: true, sessionExpiresAt: session.expiresAt }));
+    if (response.status !== 200) return { outcome: "unavailable" };
+    const value: unknown = await response.json();
+    return value !== null && typeof value === "object" && typeof (value as { outcome?: unknown }).outcome === "string"
+      ? { outcome: (value as { outcome: string }).outcome }
+      : { outcome: "unavailable" };
+  } catch { return { outcome: "unavailable" }; }
 }
