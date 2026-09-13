@@ -55,7 +55,7 @@ over all tracked paths.
 Command:
 
 ```
-git grep -nIE '(SECRET|PRIVATE_KEY|SIGNING_KEY|MNEMONIC|SEED_PHRASE)=[^[:space:]]' <commit> -- ':(exclude)package-lock.json'
+git grep -nIE '(SECRET|PRIVATE_KEY|SIGNING_KEY|MNEMONIC|SEED_PHRASE)=[^[:space:]]' <commit>
 ```
 
 **0 hits.** Every occurrence of these names in tracked files is a name only:

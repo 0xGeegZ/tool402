@@ -8,8 +8,9 @@ and eleven `20-active` cards carry merged work on `main` that no ledger entry
 records, so the root is holding every outstanding record at once with a day
 and a half left before the submission deadline. This card supplies
 ready-to-paste decision rows, ownership paragraphs, ledger rows, card moves,
-and one recommended ruling for each open lane question so the root's
-integration is transcription and review rather than re-derivation. It
+and one recommended ruling for each open lane question, except ruling 3
+below, which this card withdraws for the root's own re-derivation, so the
+root's integration is transcription and review rather than re-derivation. It
 authorizes no wallet, SDK, provider, transaction, deployment, or live action.
 The one exception is ruling 6 and the matching S39 ownership paragraph below,
 which extend S39's reservation to the module-scope `chipClass` helper and the
@@ -107,7 +108,8 @@ step 3 and before its step 4; it remains the root's call.
 
 ### 2. Recommended rulings for the three delivered lanes
 
-Each ruling is one recommendation with its basis. They are recommendations
+Each ruling is one recommendation with its basis, except ruling 3, which this
+card withdraws for the root's own re-derivation. They are recommendations
 only; the root records the ruling it makes.
 
 **S38-T010, pull request #105, `work/s38`, head `f5c07de6`.**
@@ -134,9 +136,10 @@ only; the root records the ruling it makes.
    route: **needs re-ruling, not accepted here**. The route is reachable, not
    unreachable: `back/page.tsx` renders `<BackingFlow projection={projection}
    />` from a loaded `loadRiskScanBackingProjection`, and `projection={null}`
-   appears only in the `Suspense` fallback while the projection loads. So in
-   the loaded state the second `WalletIsland` sits alongside the shell header's
-   island on every visit to the route, not only transiently. This card
+   appears only in the `Suspense` fallback while the projection loads.
+   Whenever the loaded projection carries an OPEN offering, the second
+   `WalletIsland` renders alongside the shell header's island; it is absent
+   only in the `Suspense` fallback and in the no-offering card. This card
    withdraws the "accept with a named follow-up owned by the header-island
    owner" recommendation and leaves the root to weigh accept-with-follow-up
    against requiring S39 to suppress or dedupe the second island itself before
@@ -228,8 +231,9 @@ its label. `apps/web/src/components/backing/backing-state.ts` is not amended:
 the closed eight-kind union, picker bounds, integer amount, command payload,
 transfer, and every refusal and unknown outcome remain the accepted UI-S18
 contract. The reservation covers the wallet-island mount inside the Funding
-section only as shipped; deduplication against the shell header island belongs
-to the header-island owner, not to S39. It owns no projection, API, session,
+section as shipped; ownership of the deduplication against the shell-header
+island is pending the root's re-ruling on ruling 3 and is not assigned here.
+It owns no projection, API, session,
 authority, payment, settlement, transaction, deployment, or live boundary.
 
 S47-T010 owns new `apps/web/src/lib/world/human-check.ts`, new
@@ -306,17 +310,15 @@ Root to confirm, with what is missing named for each:
   request #112 re-did the header control and amended `layout.tsx`,
   `wallet-connect.tsx`, and the wallet-session contracts, merged pull request
   #113 carries the dashboard surface the connected-badge navigation points at.
-  The scoped ownership transfer recorded at the top of
-  `docs/work-queue/FILE-OWNERSHIP.md` transfers only `BackingForm`'s
+  The scoped M56-S26 transfer recorded at the top of
+  `docs/work-queue/FILE-OWNERSHIP.md` covers only `BackingForm`'s
   `useWalletSession`/`connectedWalletSession` composition and the
   `section[aria-labelledby="backing-status"]` composition, and expressly bars
-  M56 from adding `WalletIsland`; on `main`, `backing-flow.tsx` has
-  `useWalletSession` at line 55 and no `WalletIsland`. S26's own card
-  (`docs/work-queue/queue/20-active/S26-T010-header-wallet-session.md`) makes
-  the `backing-flow.tsx` island mount conditional on S18-T010 acceptance, and
-  S18-T010 is `60-done`; that mount currently exists only in unmerged pull
-  request #103 (S39-T010). So S26's declared backing-flow island mount is
-  unimplemented on `main` and untransferred, not delivered elsewhere.
+  M56 from adding `WalletIsland`. The S26-reserved backing-flow island-mount
+  amendment was delivered on `main` by `d46cbf25`, which replaced
+  `backing-flow.tsx`'s `WalletIsland` with the shared `useWalletSession`
+  (line 55 today); the island in unmerged pull request #103 is S39's new
+  Funding-section control, not S26's mount.
   Provenance matters for the reading, though:
   `wallet-session.tsx` was created by `3c90da74`, "feat(web): share one
   MetaMask session from the shell header", which is S26's own lane merged
@@ -333,9 +335,10 @@ Root to confirm, with what is missing named for each:
   AND GREEN AUTHORIZED, which authorizes only
   `packages/backend/convex/command_dispatch.ts` and its exact test for a
   minimal closed parser extension. Missing: the GREEN review for that scoped
-  adapter change, plus the earlier `D-M51-010-003` through `D-M51-010-005`
-  Backend/Web paths' own GREEN reviews, and an integration or acceptance
-  record at a named head.
+  adapter change, plus the earlier `D-M51-010-003` and `D-M51-010-004`
+  Backend/Web paths' own GREEN reviews — `D-M51-010-005` is a RED activation
+  already discharged by `D-M51-010-006` and authorizes no GREEN path — and an
+  integration or acceptance record at a named head.
 - **M53-T010.** Newest record is
   `M53_STAGE_B_FACTORY_RECEIPT_LOG_SELECTION_ACTIVATION`, which activates only
   the bridge/test pair for the minimal decoder correction. Missing: a GREEN
