@@ -2,18 +2,15 @@
 
 import { useEffect, useRef } from "react";
 
-import { useWalletSession } from "../wallet/wallet-session";
+import { useTool402Wallet } from "../wallet/use-tool402-wallet";
 
 export function DashboardSessionSync({ address }: { readonly address: string }) {
-  const { state, settled } = useWalletSession();
+  const { connection, resolved } = useTool402Wallet();
   const logoutStarted = useRef(false);
 
   useEffect(() => {
-    if (!settled) return;
-    if (
-      (state.kind === "connected" || state.kind === "not_issuer")
-      && state.address === address
-    ) return;
+    if (!resolved) return;
+    if (connection.status === "connected" && connection.chainId === 296 && connection.account === address) return;
     if (logoutStarted.current) return;
     logoutStarted.current = true;
     void fetch("/api/auth/logout", {
@@ -23,7 +20,7 @@ export function DashboardSessionSync({ address }: { readonly address: string }) 
       if (response.status !== 204) return;
       window.location.replace("/sign-in");
     }).catch(() => undefined);
-  }, [address, settled, state]);
+  }, [address, connection, resolved]);
 
   return null;
 }

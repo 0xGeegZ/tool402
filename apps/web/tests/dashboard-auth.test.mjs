@@ -54,17 +54,8 @@ async function signInHarness() {
   const slots = [];
   const routes = [];
   const fetches = [];
+  const messages = [];
   let cursor = 0;
-  const provider = {
-    async request({ method }) {
-      switch (method) {
-        case "eth_chainId": return "0x128";
-        case "eth_accounts": return [address];
-        case "personal_sign": return `0x${"11".repeat(65)}`;
-        default: assert.fail(`unexpected provider request: ${method}`);
-      }
-    },
-  };
   const { outputText } = typescript.transpileModule(await readFile(clientUrl, "utf8"), {
     fileName: fileURLToPath(clientUrl),
     compilerOptions: {
@@ -105,13 +96,16 @@ async function signInHarness() {
         },
         "react/jsx-runtime": jsxRuntime,
         "next/navigation": { useRouter: () => ({ replace: (href) => routes.push(["replace", href]), refresh: () => routes.push(["refresh"]) }) },
-        "../../lib/wallet/wallet-state.ts": { readCurrentSession: async () => ({ state: { kind: "connected", address } }) },
+        wagmi: { useSignMessage: () => ({ mutateAsync: async ({ message }) => {
+          messages.push(message);
+          return `0x${"11".repeat(65)}`;
+        } }) },
         "../ui/button": { Button: "Button" },
         "../demo/demo-tour-navigation": { dashboardTourHref: () => "/dashboard?tour=1&demoStep=identity" },
-        "../wallet/wallet-session": {
-          useWalletSession: () => ({ state: { kind: "connected", address }, provider }),
-          connectedWalletSession: (wallet) => ({ address: wallet.state.address, provider: wallet.provider }),
-        },
+        "../wallet/use-tool402-wallet": { useTool402Wallet: () => ({
+          resolved: true,
+          connection: { status: "connected", account: address, chainId: 296, connector: { id: "metaMask" } },
+        }) },
       };
       assert.ok(Object.hasOwn(imports, specifier), `unexpected sign-in import: ${specifier}`);
       return imports[specifier];
@@ -119,6 +113,7 @@ async function signInHarness() {
   }, { filename: fileURLToPath(clientUrl) });
   return {
     fetches,
+    messages,
     routes,
     signIn() {
       cursor = 0;
@@ -501,24 +496,24 @@ dashboardNavigationTest("shows Dashboard only after server-side session validati
 clientTest("keeps sign-in limited to the accepted local authentication boundary", async () => {
   const client = await readFile(clientUrl, "utf8");
   assert.match(client, /["']use client["']/u);
-  assert.match(client, /\buseWalletSession\b/u);
+  assert.match(client, /\buseTool402Wallet\b/u);
   assert.match(client, /Sign in with MetaMask/u);
   assert.match(client, /Sign and open dashboard/u);
   assert.match(client, /does not send funds or cost HBAR/u);
-  assert.match(client, /\breadCurrentSession\b/u);
-  assert.match(client, /\bpersonal_sign\b/u);
+  assert.match(client, /\buseSignMessage\b/u);
+  assert.match(client, /useSignMessage\(\{\s*mutation:\s*\{\s*retry:\s*false\s*\}\s*\}\)/u);
   assert.match(client, /\/api\/auth\/metamask\/challenge/u);
   assert.match(client, /\/api\/auth\/metamask\/verify/u);
   assert.match(client, /credentials\s*:\s*["']same-origin["']/u);
   assert.match(client, /challenge\s*:\s*challenge\.challenge/u);
-  assert.match(client, /params\s*:\s*\[\s*message\s*,\s*address\s*\]/u);
+  assert.match(client, /await\s+signMessage\(\{\s*message\s*\}\)/u);
   assert.match(client, /disabled\s*=\s*\{\s*pending\s*\}/u);
   assert.match(client, /aria-live\s*=\s*["']polite["']/u);
   assert.match(client, /import\s*\{\s*useRouter\s*\}\s+from\s+["']next\/navigation["']/u);
   assert.match(client, /const router = useRouter\(\)/u);
   assert.match(client, /router\.replace\(returnTo \?\? dashboardTourHref\(tour, demoStep\)\)/u);
   assert.doesNotMatch(client, /window\.location/u);
-  assert.doesNotMatch(client, /\b(?:eth_send(?:Raw)?Transaction|send(?:Raw)?Transaction|transaction|relay|localStorage|sessionStorage|indexedDB|setTimeout|setInterval|discover(?:y)?|requestProvider)\b/u);
+  assert.doesNotMatch(client, /\b(?:WalletSession|readCurrentSession|personal_sign|eth_send(?:Raw)?Transaction|send(?:Raw)?Transaction|transaction|relay|localStorage|sessionStorage|indexedDB|setTimeout|setInterval|discover(?:y)?|requestProvider)\b/u);
 });
 
 clientTest("refreshes the root server navigation after a successful dashboard sign-in", async () => {
@@ -530,6 +525,7 @@ clientTest("refreshes the root server navigation after a successful dashboard si
     "/api/auth/metamask/challenge",
     "/api/auth/metamask/verify",
   ]);
+  assert.deepEqual(harness.messages, ["Tool402 sign-in"]);
   assert.deepEqual(harness.routes, [
     ["replace", "/dashboard?tour=1&demoStep=identity"],
     ["refresh"],

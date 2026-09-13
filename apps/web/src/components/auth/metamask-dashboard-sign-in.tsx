@@ -2,11 +2,11 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSignMessage } from "wagmi";
 
-import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
 import { Button } from "../ui/button";
 import { dashboardTourHref } from "../demo/demo-tour-navigation";
-import { connectedWalletSession, useWalletSession, type WalletSession } from "../wallet/wallet-session";
+import { useTool402Wallet, type Tool402WalletConnection } from "../wallet/use-tool402-wallet";
 
 const failureMessage = "Sign-in could not be completed. Please try again.";
 
@@ -49,12 +49,37 @@ async function postJson(path: string, body: object): Promise<unknown> {
   }
 }
 
-function MetaMaskSignInButton({ session, tour, demoStep, returnTo }: { session: WalletSession; tour: "1" | null; demoStep: string | null; returnTo: string | null }) {
+function isCurrentConnection(
+  current: Tool402WalletConnection,
+  expected: Tool402WalletConnection,
+): boolean {
+  return current.status === "connected"
+    && current.status === expected.status
+    && current.account === expected.account
+    && current.chainId === 296
+    && current.chainId === expected.chainId
+    && current.connector?.id === "metaMask"
+    && current.connector?.id === expected.connector?.id;
+}
+
+function MetaMaskSignInButton({
+  connection,
+  readCurrentConnection,
+  tour,
+  demoStep,
+}: {
+  readonly connection: Tool402WalletConnection;
+  readonly readCurrentConnection: () => Tool402WalletConnection;
+  readonly tour: "1" | null;
+  readonly demoStep: string | null;
+  readonly returnTo: string | null;
+}) {
   const router = useRouter();
+  const { mutateAsync: signMessage } = useSignMessage({ mutation: { retry: false } });
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const inProgress = useRef(false);
-  const { address, provider } = session;
+  const address = connection.account;
 
   async function signIn() {
     if (pending || inProgress.current) {
@@ -65,8 +90,7 @@ function MetaMaskSignInButton({ session, tour, demoStep, returnTo }: { session: 
     setPending(true);
     setFailure(null);
     try {
-      const current = await readCurrentSession(provider);
-      if (current.state.kind !== "connected" || current.state.address !== address) {
+      if (address === undefined || !isCurrentConnection(readCurrentConnection(), connection)) {
         throw new Error("wallet session changed");
       }
 
@@ -76,12 +100,16 @@ function MetaMaskSignInButton({ session, tour, demoStep, returnTo }: { session: 
       }
 
       const message = challenge.message;
-      const signature = await provider.request({
-        method: "personal_sign",
-        params: [message, address],
-      });
+      if (!isCurrentConnection(readCurrentConnection(), connection)) {
+        throw new Error("wallet session changed");
+      }
+      const signature = await signMessage({ message });
       if (typeof signature !== "string") {
         throw new Error("signature rejected");
+      }
+
+      if (!isCurrentConnection(readCurrentConnection(), connection)) {
+        throw new Error("wallet session changed");
       }
 
       const verification = await postJson("/api/auth/metamask/verify", {
@@ -121,15 +149,21 @@ function MetaMaskSignInButton({ session, tour, demoStep, returnTo }: { session: 
 }
 
 export function MetaMaskDashboardSignIn({ tour = null, demoStep = null, returnTo = null }: { tour?: "1" | null; demoStep?: string | null; returnTo?: string | null }) {
-  const wallet = useWalletSession();
-  const session: WalletSession | null = connectedWalletSession(wallet);
+  const { connection, resolved } = useTool402Wallet();
+  const connectionRef = useRef(connection);
+  connectionRef.current = connection;
+  const canSignIn = resolved
+    && connection.status === "connected"
+    && connection.account !== undefined
+    && connection.chainId === 296
+    && connection.connector?.id === "metaMask";
 
   return (
     <section aria-labelledby="metamask-dashboard-sign-in-title" className="space-y-3">
       <h2 id="metamask-dashboard-sign-in-title" className="text-lg font-semibold">Sign in with MetaMask</h2>
-      {session === null ? (
+      {!canSignIn ? (
         <p aria-live="polite" className="text-sm text-muted-foreground">Connect MetaMask from the header on Hedera Testnet, then sign to unlock the dashboard.</p>
-      ) : <MetaMaskSignInButton session={session} tour={tour} demoStep={demoStep} returnTo={returnTo} />}
+      ) : <MetaMaskSignInButton connection={connection} readCurrentConnection={() => connectionRef.current} tour={tour} demoStep={demoStep} returnTo={returnTo} />}
     </section>
   );
 }

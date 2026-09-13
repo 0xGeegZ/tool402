@@ -39,7 +39,10 @@ test("mounts the dashboard session synchronizer from the server-validated dashbo
 async function loadSynchronizer({
   responseStatus = 204,
   reject = false,
-  walletSession = { state: { kind: "disconnected" }, settled: true },
+  wallet = {
+    connection: { status: "disconnected", account: undefined, chainId: undefined, connector: undefined },
+    resolved: true,
+  },
 } = {}) {
   const { outputText } = typescript.transpileModule(await readFile(sourceUrl, "utf8"), {
     fileName: fileURLToPath(sourceUrl),
@@ -88,8 +91,8 @@ async function loadSynchronizer({
           return react;
         case "react/jsx-runtime":
           return jsxRuntime;
-        case "../wallet/wallet-session":
-          return { useWalletSession: () => walletSession };
+        case "../wallet/use-tool402-wallet":
+          return { useTool402Wallet: () => wallet };
         default:
           throw new Error(`unexpected synchronizer import: ${specifier}`);
       }
@@ -99,8 +102,8 @@ async function loadSynchronizer({
   return {
     requests,
     navigations,
-    setWalletSession(next) {
-      Object.assign(walletSession, next);
+    setWallet(next) {
+      Object.assign(wallet, next);
     },
     render(address) {
       cursor = 0;
@@ -131,12 +134,12 @@ implementedTest("waits for passive wallet restoration before comparing the dashb
   const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
   const harness = await loadSynchronizer();
 
-  harness.setWalletSession({ state: { kind: "disconnected" }, settled: false });
+  harness.setWallet({ connection: { status: "reconnecting", account: undefined, chainId: undefined, connector: undefined }, resolved: false });
   harness.render(address);
   await flushMicrotasks();
   assert.equal(harness.requests.length, 0);
 
-  harness.setWalletSession({ state: { kind: "connected", address }, settled: true });
+  harness.setWallet({ connection: { status: "connected", account: address, chainId: 296, connector: { id: "metaMask" } }, resolved: true });
   harness.render(address);
   await flushMicrotasks();
   assert.equal(harness.requests.length, 0);
@@ -157,21 +160,21 @@ implementedTest("logs out a restored dashboard session without a selected accoun
 
 implementedTest("logs out after the selected MetaMask account changes", async () => {
   const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
-  const harness = await loadSynchronizer({ walletSession: { state: { kind: "connected", address }, settled: true } });
+  const harness = await loadSynchronizer({ wallet: { connection: { status: "connected", account: address, chainId: 296, connector: { id: "metaMask" } }, resolved: true } });
 
   harness.render(address);
   await flushMicrotasks();
   assert.equal(harness.requests.length, 0);
 
-  harness.setWalletSession({ state: { kind: "connected", address: "0x0000000000000000000000000000000000000402" } });
+  harness.setWallet({ connection: { status: "connected", account: "0x0000000000000000000000000000000000000402", chainId: 296, connector: { id: "metaMask" } } });
   harness.render(address);
   await flushMicrotasks();
 
   assertLogout(harness);
 });
 
-implementedTest("logs out a restored dashboard session without a MetaMask provider", async () => {
-  const harness = await loadSynchronizer({ walletSession: { state: { kind: "no_provider" }, settled: true } });
+implementedTest("logs out a restored dashboard session without a MetaMask account", async () => {
+  const harness = await loadSynchronizer({ wallet: { connection: { status: "disconnected", account: undefined, chainId: undefined, connector: undefined }, resolved: true } });
 
   harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
@@ -180,7 +183,7 @@ implementedTest("logs out a restored dashboard session without a MetaMask provid
 });
 
 implementedTest("logs out a restored dashboard session on the wrong chain", async () => {
-  const harness = await loadSynchronizer({ walletSession: { state: { kind: "wrong_chain", chainId: "0x1" }, settled: true } });
+  const harness = await loadSynchronizer({ wallet: { connection: { status: "connected", account: "0xc89f87052c3e080b4a9b021d4930055031ef378e", chainId: 1, connector: { id: "metaMask" } }, resolved: true } });
 
   harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
@@ -203,13 +206,14 @@ implementedTest("keeps sign-out synchronization inside the accepted local bounda
   const source = await readFile(sourceUrl, "utf8");
 
   assert.match(source, /^"use client";/u);
-  assert.match(source, /import\s*\{\s*useWalletSession\s*\}\s*from\s*["']\.\.\/wallet\/wallet-session["']/u);
-  assert.match(source, /const\s*\{\s*state,\s*settled\s*\}\s*=\s*useWalletSession\(\)/u);
-  assert.match(source, /if\s*\(\s*!settled\s*\)\s*return;/u);
-  assert.match(source, /state\.address\s*===\s*address/u);
+  assert.match(source, /import\s*\{\s*useTool402Wallet\s*\}\s*from\s*["']\.\.\/wallet\/use-tool402-wallet["']/u);
+  assert.match(source, /const\s*\{\s*connection,\s*resolved\s*\}\s*=\s*useTool402Wallet\(\)/u);
+  assert.match(source, /if\s*\(\s*!resolved\s*\)\s*return;/u);
+  assert.match(source, /connection\.account\s*===\s*address/u);
+  assert.match(source, /connection\.chainId\s*===\s*296/u);
   assert.match(source, /fetch\(["']\/api\/auth\/logout["']/u);
   assert.match(source, /method:\s*["']POST["']/u);
   assert.match(source, /credentials:\s*["']same-origin["']/u);
   assert.match(source, /window\.location\.replace\(["']\/sign-in["']\)/u);
-  assert.doesNotMatch(source, /useRouter|router\.|document\.cookie|localStorage|sessionStorage|indexedDB|provider\.request|personal_sign|eth_requestAccounts|eth_sendTransaction|setTimeout|setInterval|console|discoverMetaMaskProvider|readCurrentSession|watchWalletSessionChanges/u);
+  assert.doesNotMatch(source, /useRouter|router\.|document\.cookie|localStorage|sessionStorage|indexedDB|provider\.request|personal_sign|eth_requestAccounts|eth_sendTransaction|setTimeout|setInterval|console|discoverMetaMaskProvider|readCurrentSession|watchWalletSessionChanges|useWalletSession/u);
 });
