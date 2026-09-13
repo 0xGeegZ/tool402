@@ -1,4 +1,5 @@
 import { DashboardCampaign } from "../../components/dashboard/dashboard-campaign";
+import { DashboardIdentity } from "../../components/dashboard/dashboard-identity";
 import { LandingFooter } from "../../components/landing/landing-footer";
 import { PageHeader } from "../../components/ui/page-header";
 
@@ -11,6 +12,7 @@ export default function DashboardPage() {
           title="Your campaign"
           description="Review the current RiskScan campaign associated with your signed dashboard session."
         />
+        <DashboardIdentity />
         <DashboardCampaign />
       </main>
       <LandingFooter />
