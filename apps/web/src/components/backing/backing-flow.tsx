@@ -49,10 +49,6 @@ function pendingAttachmentKey(canonicalSignerAddress: string, offeringPublicId: 
   return `${pendingAttachmentPrefix}${canonicalSignerAddress}:${offeringPublicId}:${attemptPublicId}`;
 }
 
-function currentBackingConnection(connection: Tool402WalletConnection, resolved: boolean): Tool402WalletConnection | null {
-  return connectedTool402Wallet(connection, resolved);
-}
-
 function isSameBackingConnection(left: Tool402WalletConnection, right: Tool402WalletConnection): boolean {
   return left.generation === right.generation
     && left.account === right.account
@@ -147,7 +143,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   connectionRef.current = wallet.connection;
   const publicClient = usePublicClient({ chainId: 296 });
   const { mutateAsync: sendTransaction } = useSendTransaction({ mutation: { retry: false } });
-  const connection = currentBackingConnection(wallet.connection, wallet.resolved);
+  const connection = connectedTool402Wallet(wallet.connection, wallet.resolved);
   const presets = presetUnits(offering.terms);
   const [preset, setPreset] = useState<bigint | null>(offering.terms.minimumPurchaseUnits);
   const [unitsInput, setUnitsInput] = useState(offering.terms.minimumPurchaseUnits.toString());

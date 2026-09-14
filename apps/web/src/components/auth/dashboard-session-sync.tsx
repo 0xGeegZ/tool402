@@ -16,6 +16,7 @@ export function DashboardSessionSync({
 }) {
   const { connection, resolved } = useTool402Wallet();
   const logoutStarted = useRef(false);
+  const hasMatchedSessionWallet = useRef(false);
   const connectionRef = useRef(connection);
   connectionRef.current = connection;
   const [logoutFailed, setLogoutFailed] = useState(false);
@@ -58,18 +59,26 @@ export function DashboardSessionSync({
     endSession();
   }, [endSession]);
 
-  useConnectionEffect({ onDisconnect: endSession });
+  useConnectionEffect({
+    onDisconnect() {
+      if (hasMatchedSessionWallet.current) endSession();
+    },
+  });
 
   useEffect(() => {
     if (!resolved) return;
     if (currentSessionMatches) {
+      hasMatchedSessionWallet.current = true;
       if (logoutStarted.current) setLogoutInvalidated(true);
       return;
     }
-    endSession();
-  }, [currentSessionMatches, endSession, resolved]);
+    if (connection.status === "connected" || hasMatchedSessionWallet.current) endSession();
+  }, [connection.status, currentSessionMatches, endSession, resolved]);
 
   if (!resolved || (currentSessionMatches && !logoutInvalidated)) return children;
+  if (!hasMatchedSessionWallet.current && connection.status !== "connected") {
+    return <div role="status" aria-live="polite" className="p-6 text-sm text-muted-foreground">Restoring the signed MetaMask wallet…</div>;
+  }
   return (
     <div role="alert" aria-live="polite" className="p-6 text-sm text-muted-foreground">
       <p>{logoutInvalidated

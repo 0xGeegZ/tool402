@@ -178,17 +178,14 @@ implementedTest("waits for passive wallet restoration before comparing the dashb
   assert.equal(harness.requests.length, 0);
 });
 
-implementedTest("logs out a restored dashboard session without a selected account", async () => {
+implementedTest("keeps the signed session while its initial wallet restoration is unresolved", async () => {
   const harness = await loadSynchronizer();
 
-  harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
+  const tree = harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
 
-  assertLogout(harness);
-
-  harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
-  await flushMicrotasks();
-  assert.equal(harness.requests.length, 1);
+  assert.equal(harness.requests.length, 0);
+  assert.match(visibleText(tree), /Restoring the signed MetaMask wallet/u);
 });
 
 implementedTest("logs out after the selected MetaMask account changes", async () => {
@@ -225,13 +222,13 @@ implementedTest("does not redirect when a stale logout completes after the walle
   assert.match(visibleText(harness.render(address)), /changed while ending/u);
 });
 
-implementedTest("logs out a restored dashboard session without a MetaMask account", async () => {
+implementedTest("does not clear a server session merely because a refreshed wallet has not reconnected", async () => {
   const harness = await loadSynchronizer({ wallet: { connection: { status: "disconnected", account: undefined, chainId: undefined, connector: undefined }, resolved: true } });
 
   harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
 
-  assertLogout(harness);
+  assert.equal(harness.requests.length, 0);
 });
 
 implementedTest("starts only one logout when Wagmi reports an explicit disconnect", async () => {
@@ -257,7 +254,7 @@ implementedTest("logs out a restored dashboard session on the wrong chain", asyn
 
 implementedTest("does not navigate when active-account logout is rejected or unavailable", async () => {
   for (const failure of [{ responseStatus: 401 }, { reject: true }]) {
-    const harness = await loadSynchronizer({ ...failure });
+    const harness = await loadSynchronizer({ ...failure, wallet: { connection: { status: "connected", account: "0x0000000000000000000000000000000000000402", chainId: 296, connector: { id: "metaMask" } }, resolved: true } });
     harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
     await flushMicrotasks();
 
@@ -268,7 +265,7 @@ implementedTest("does not navigate when active-account logout is rejected or una
 });
 
 implementedTest("offers an explicit retry after logout fails without restoring dashboard content", async () => {
-  const harness = await loadSynchronizer({ responseStatus: 401 });
+  const harness = await loadSynchronizer({ responseStatus: 401, wallet: { connection: { status: "connected", account: "0x0000000000000000000000000000000000000402", chainId: 296, connector: { id: "metaMask" } }, resolved: true } });
   harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
   const tree = harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
@@ -286,7 +283,7 @@ implementedTest("keeps sign-out synchronization inside the accepted local bounda
   assert.match(source, /^"use client";/u);
   assert.match(source, /import\s*\{\s*useTool402Wallet\s*\}\s*from\s*["']\.\.\/wallet\/use-tool402-wallet["']/u);
   assert.match(source, /import\s*\{\s*useConnectionEffect\s*\}\s*from\s*["']wagmi["']/u);
-  assert.match(source, /useConnectionEffect\(\{\s*onDisconnect:\s*endSession\s*\}\)/u);
+  assert.match(source, /useConnectionEffect\(\{\s*onDisconnect\(\)\s*\{\s*if\s*\(hasMatchedSessionWallet\.current\)\s*endSession\(\);/u);
   assert.match(source, /const\s*\{\s*connection,\s*resolved\s*\}\s*=\s*useTool402Wallet\(\)/u);
   assert.match(source, /if\s*\(\s*!resolved\s*\)\s*return;/u);
   assert.match(source, /connection\.account\s*===\s*address/u);

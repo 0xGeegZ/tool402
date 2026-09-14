@@ -137,7 +137,7 @@ export function useTool402Wallet() {
     chainId: connection.chainId,
     connector: connection.connector,
   };
-  const derivedState = deriveTool402WalletState({
+  const state = deriveTool402WalletState({
     status: connection.status,
     address: connection.address,
     chainId: connection.chainId,
@@ -146,8 +146,6 @@ export function useTool402Wallet() {
     connectError,
     switchError,
   });
-  const state = derivedState;
-
   return {
     connection: currentConnection,
     resolved: connection.status !== "reconnecting" && connection.status !== "connecting",
