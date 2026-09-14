@@ -39,7 +39,7 @@ async function loadHook(hooks, hydrated = true) {
 }
 
 function harness({ connection, connectors, connectError, switchError } = {}) {
-  const calls = { connect: [], disconnect: [], switchChain: [] };
+  const calls = { connect: [], disconnect: [], switchChain: [], removeStorage: [] };
   const metaMask = { id: "metaMask", rdns: "io.metamask" };
   let current = connection ?? { status: "disconnected", address: undefined, chainId: undefined, connector: undefined };
   return {
@@ -47,6 +47,7 @@ function harness({ connection, connectors, connectError, switchError } = {}) {
     metaMask,
     hooks: {
       ProviderNotFoundError,
+      useConfig: () => ({ storage: { removeItem: async (key) => { calls.removeStorage.push(key); } } }),
       useConnection: () => current,
       useConnectors: () => connectors ?? [metaMask],
       useConnect: () => ({ error: connectError, mutateAsync: async (input) => { calls.connect.push(input); } }),
@@ -66,7 +67,7 @@ test("derives display state from Wagmi without connecting during passive restora
 
   assert.deepEqual({ ...wallet.state }, { kind: "resolving" });
   assert.equal(wallet.resolved, false);
-  assert.deepEqual(instance.calls, { connect: [], disconnect: [], switchChain: [] });
+  assert.deepEqual(instance.calls, { connect: [], disconnect: [], switchChain: [], removeStorage: [] });
 });
 
 test("selects the Wagmi-discovered MetaMask connector rather than another injected wallet", async () => {
@@ -92,7 +93,7 @@ test("holds the UI in a resolving state until Wagmi persistence hydrates", async
   assert.equal(wallet.resolved, false);
 });
 
-test("can clear a connection attempt that has not established a connector", async () => {
+test("cancels a connection attempt and clears its persisted reconnect target", async () => {
   const instance = harness({ connection: { status: "connecting", address: undefined, chainId: undefined, connector: undefined } });
   const { useTool402Wallet } = await loadHook(instance.hooks);
   const wallet = useTool402Wallet();
@@ -100,6 +101,7 @@ test("can clear a connection attempt that has not established a connector", asyn
   await wallet.cancelConnection();
   assert.equal(instance.calls.disconnect.length, 1);
   assert.equal(instance.calls.disconnect[0], undefined);
+  assert.deepEqual(instance.calls.removeStorage, ["recentConnectorId"]);
 });
 
 test("centralizes the eligible Tool402 wallet connection invariant", async () => {

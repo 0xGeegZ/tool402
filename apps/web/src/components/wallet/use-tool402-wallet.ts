@@ -4,6 +4,7 @@ import { useRef } from "react";
 import {
   ProviderNotFoundError,
   useConnect,
+  useConfig,
   useConnection,
   useConnectors,
   useDisconnect,
@@ -114,6 +115,7 @@ export function deriveTool402WalletState(input: WalletStateInput): Tool402Wallet
 }
 
 export function useTool402Wallet() {
+  const config = useConfig();
   const hydrated = useWalletHydrated();
   const connection = useConnection();
   const connectors = useConnectors();
@@ -180,6 +182,10 @@ export function useTool402Wallet() {
         await disconnectAsync();
       } catch {
         // The current connection remains authoritative until Wagmi reports otherwise.
+      } finally {
+        // A cancelled request must not be selected again by Wagmi's automatic
+        // reconnect on the next refresh.
+        await config.storage?.removeItem("recentConnectorId");
       }
     },
     async switchToHedera() {
