@@ -73,7 +73,7 @@ test("keeps one demo-first CTA hierarchy on existing local destinations", async 
     ["/provider", "Provider overview"],
     ["/explore", "Explore tools"],
     ["/explore/riskscan", "RiskScan"],
-    ["/demo", "Guided demo"],
+    ["/demo", "See the demo"],
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
     ["/docs/providers", "Provider documentation"],
@@ -96,7 +96,7 @@ test("keeps the fuller footer limited to existing local routes", async () => {
   assert.deepEqual(links, [
     ["/explore", "Explore tools"],
     ["/explore/riskscan", "RiskScan"],
-    ["/demo", "Guided demo"],
+    ["/demo", "See the demo"],
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
     ["/docs/providers", "Provider documentation"],

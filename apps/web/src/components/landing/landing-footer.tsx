@@ -24,7 +24,7 @@ export function LandingFooter() {
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
               <li><Link href="/explore" className="transition-colors hover:text-foreground touch-target">Explore tools</Link></li>
               <li><Link href="/explore/riskscan" className="transition-colors hover:text-foreground touch-target">RiskScan</Link></li>
-              <li><Link href="/demo" className="transition-colors hover:text-foreground touch-target">Guided demo</Link></li>
+              <li><Link href="/demo" className="transition-colors hover:text-foreground touch-target">See the demo</Link></li>
             </ul>
           </nav>
           <nav aria-label="Provider links">
