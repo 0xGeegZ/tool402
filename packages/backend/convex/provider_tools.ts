@@ -11,6 +11,7 @@ import type { GenericId } from "convex/values";
 import { createProviderToolIdentity, parseProviderToolId } from "@tool402/core";
 import { createStageBIssuerAtsCreateAuthority } from "../src/ats/stage-b-issuer-ats-create-authority.ts";
 import { createProviderToolAtsConfiguration } from "../src/ats/provider-tool-ats-configuration.ts";
+import { readSelfServiceMaxTools } from "./self_service_accounts.ts";
 import type schema from "./schema.ts";
 
 const internalMutation: MutationBuilder<DataModelFromSchemaDefinition<typeof schema>, "internal"> = internalMutationGeneric;
@@ -110,6 +111,16 @@ function isCurrentIssuer(value: unknown, address: string): value is {
     && Array.isArray(record.ownedSubjectPublicIds)
     && record.ownedSubjectPublicIds.length === 1
     && record.ownedSubjectPublicIds[0] === planned.ownedSubjectPublicIds[0];
+}
+
+function activeSelfServiceAccount(value: unknown, address: string): value is { principalPublicId: string; policyVersion: "public_testnet_v1" } {
+  if (value === null || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return record.canonicalSignerAddress === address
+    && record.chainId === 296
+    && record.principalPublicId === `self_service_${address.slice(2)}`
+    && record.policyVersion === "public_testnet_v1"
+    && record.status === "ACTIVE";
 }
 
 function projectAllocation(value: unknown): ToolAllocation | null {
@@ -298,9 +309,22 @@ export const allocateForIssuer = internalMutation({
       .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
         query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress)
       )).take(2);
-    if (authorities.length !== 1 || !isCurrentIssuer(authorities[0], args.canonicalSignerAddress)) {
-      return { outcome: "rejected" as const };
+    let owner: { principalPublicId: string; authorityVersion: string } | null = null;
+    let selfService = false;
+    if (authorities.length === 1 && isCurrentIssuer(authorities[0], args.canonicalSignerAddress)) {
+      owner = { principalPublicId: authorities[0].principalPublicId, authorityVersion: authorities[0].authorityVersion };
+    } else {
+      const accounts = await ctx.db.query("selfServiceAccounts")
+        .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+          query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress)
+        )).take(2);
+      if (process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED === "true"
+        && accounts.length === 1 && activeSelfServiceAccount(accounts[0], args.canonicalSignerAddress)) {
+        owner = { principalPublicId: accounts[0].principalPublicId, authorityVersion: accounts[0].policyVersion };
+        selfService = true;
+      }
     }
+    if (owner === null) return { outcome: "rejected" as const };
     const prior = await ctx.db.query("providerTools")
       .withIndex("by_owner_and_chain_and_request", (query) => (
         query.eq("canonicalSignerAddress", args.canonicalSignerAddress).eq("chainId", 296).eq("requestId", args.requestId)
@@ -313,6 +337,16 @@ export const allocateForIssuer = internalMutation({
     }
     if (prior.length > 1) return { outcome: "rejected" as const };
 
+    if (selfService) {
+      const maximum = readSelfServiceMaxTools();
+      if (maximum === null) return { outcome: "rejected" as const };
+      const existing = await ctx.db.query("providerTools")
+        .withIndex("by_owner_and_chain_and_created", (query) => (
+          query.eq("canonicalSignerAddress", args.canonicalSignerAddress).eq("chainId", 296)
+        )).take(maximum + 1);
+      if (existing.length >= maximum) return { outcome: "rejected" as const };
+    }
+
     const createdAt = now();
     if (createdAt === null) return { outcome: "rejected" as const };
     for (let attempts = 0; attempts < 8; attempts += 1) {
@@ -322,13 +356,12 @@ export const allocateForIssuer = internalMutation({
         .withIndex("by_tool_public_id", (query) => query.eq("toolPublicId", identity.toolPublicId))
         .take(1);
       if (collisions.length !== 0) continue;
-      const authority = authorities[0];
       await ctx.db.insert("providerTools", {
         ...identity,
         canonicalSignerAddress: args.canonicalSignerAddress,
         chainId: 296,
-        principalPublicId: authority.principalPublicId,
-        authorityVersion: authority.authorityVersion,
+        principalPublicId: owner.principalPublicId,
+        authorityVersion: owner.authorityVersion,
         requestId: args.requestId,
         offeringVersion: 1,
         directoryVersion: 1,
@@ -377,5 +410,23 @@ export const readOwnedToolDeployment = internalQuery({
       .take(2);
     if (rows.length !== 1 || rows[0]?.canonicalSignerAddress !== args.canonicalSignerAddress) return null;
     return projectDeployment(ctx, rows[0]);
+  },
+});
+
+/** Exposes only the submitted owned ATS attempt to the verifier bridge. */
+export const readOwnedToolDeploymentAttempt = internalQuery({
+  args: { canonicalSignerAddress: v.string(), toolPublicId: v.string() },
+  returns: v.union(v.object({ attemptId: v.id("externalPrepareCommandAttempts") }), v.null()),
+  handler: async (ctx, args) => {
+    if (!addressPattern.test(args.canonicalSignerAddress) || parseProviderToolId(args.toolPublicId) === null) return null;
+    const tools = await ctx.db.query("providerTools").withIndex("by_tool_public_id", (q) => q.eq("toolPublicId", args.toolPublicId)).take(2);
+    if (tools.length !== 1 || tools[0]?.canonicalSignerAddress !== args.canonicalSignerAddress) return null;
+    const offerings = await ctx.db.query("offerings").withIndex("by_offering_public_id_and_version", (q) => q.eq("offeringPublicId", tools[0]!.offeringPublicId)).take(2);
+    const offering = offerings[0];
+    if (offerings.length !== 1 || offering === undefined || offering.atsAttemptId === undefined) return null;
+    const attempt = await ctx.db.get(offering.atsAttemptId);
+    if (attempt === null || attempt.operationKind !== "ATS_CREATE" || attempt.state !== "SUBMITTED"
+      || attempt.canonicalSignerAddress !== args.canonicalSignerAddress || attempt.subjectPublicId !== tools[0]!.subjectPublicId) return null;
+    return { attemptId: offering.atsAttemptId };
   },
 });

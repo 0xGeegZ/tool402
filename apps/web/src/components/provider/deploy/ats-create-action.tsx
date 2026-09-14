@@ -83,9 +83,11 @@ export function AtsCreateAction({
     : null;
   const inFlightForCurrentContext = actionInFlight.current !== null
     && isSameControllerContext(actionInFlight.current, controllerContext.current);
-  const candidateActionAvailable = stageTwoDone && session !== null && (!selectedTool || configuration !== undefined) && !hasCandidate && !sessionChanged.current && controller.current !== null;
+  const publicAtsExecutionBlocked = selectedTool;
+  const recoveryAvailable = stageTwoDone && session !== null && (!selectedTool || configuration !== undefined) && !hasCandidate && !sessionChanged.current && controller.current !== null;
+  const candidateActionAvailable = recoveryAvailable && !publicAtsExecutionBlocked;
   const enabled = candidateActionAvailable && !terminalForCurrentContext && !inFlightForCurrentContext;
-  const recoveryEnabled = candidateActionAvailable && !inFlightForCurrentContext && currentRecovery?.pending !== true && isCanonicalStageBTransactionHash(currentRecovery?.hash ?? "");
+  const recoveryEnabled = recoveryAvailable && !inFlightForCurrentContext && currentRecovery?.pending !== true && isCanonicalStageBTransactionHash(currentRecovery?.hash ?? "");
 
   async function requestCandidate() {
     if (!enabled || controller.current === null || actionInFlight.current !== null) return;
@@ -178,7 +180,9 @@ export function AtsCreateAction({
           </Button>
         </div>
       ) : null}
-      <StatusRegion className="mt-2 text-sm text-muted-foreground">{feedback ?? (sessionChanged.current ? "The wallet session changed. Reload before choosing any new action." : null)}</StatusRegion>
+      <StatusRegion className="mt-2 text-sm text-muted-foreground">{feedback ?? (publicAtsExecutionBlocked
+        ? "Public ATS deployment is unavailable until a durable pre-wallet dispatch record prevents reload or multi-tab redeployment. Existing transaction recovery remains read-only."
+        : sessionChanged.current ? "The wallet session changed. Reload before choosing any new action." : null)}</StatusRegion>
     </div>
   );
 }

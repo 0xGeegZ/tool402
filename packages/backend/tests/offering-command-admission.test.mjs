@@ -252,6 +252,7 @@ function database({
   offerings = [],
   attempts = [],
   providerTools = [],
+  selfServiceAccounts = [],
   getRows = {},
   queryResults = {},
 } = {}) {
@@ -261,6 +262,7 @@ function database({
     offerings: [...offerings],
     externalPrepareCommandAttempts: [...attempts],
     providerTools: [...providerTools],
+    selfServiceAccounts: [...selfServiceAccounts],
   };
   const reads = [];
   const writes = [];
@@ -601,6 +603,7 @@ const offeringProjectionValidator = object({
   advertisedQuickPriceTinybars: string,
   advertisedStandardPriceTinybars: string,
   canonicalSignerAddress: string,
+  fundingRecipient: optional(string),
   atsAssetEvmAddress: optional(string),
   atsAttemptPublicId: optional(string),
   acceptedAt: bigint,
@@ -772,6 +775,69 @@ selectedToolTest("admits equal-content tools independently and rejects selected 
   }
 });
 
+selectedToolTest("admits a selected tool only for an enabled active self-service membership", async (t) => {
+  const { offerings } = await loadOfferings(t);
+  const suffix = "d".repeat(32);
+  const principalPublicId = `self_service_${canonicalSignerAddress.slice(2)}`;
+  const input = selectedInput(suffix, {
+    principalPublicId,
+    authorityVersion: "public_testnet_v1",
+  });
+  const selfServiceAccount = {
+    _id: "selfServiceAccounts:active",
+    _creationTime: durableNow - 1,
+    canonicalSignerAddress,
+    chainId: 296,
+    principalPublicId,
+    policyVersion: "public_testnet_v1",
+    status: "ACTIVE",
+  };
+  const queryResults = {};
+  const db = database({
+    providerTools: [providerTool(input)],
+    selfServiceAccounts: [selfServiceAccount],
+    queryResults,
+  });
+  useExactIndexRows(db, queryResults, {
+    commandAuthorities: ["by_chain_id_and_canonical_signer_address"],
+    selfServiceAccounts: ["by_chain_id_and_canonical_signer_address"],
+    providerTools: ["by_tool_public_id"],
+    walletCommandReplayClaims: ["by_replay_identity"],
+    offerings: ["by_offering_public_id_and_version"],
+  });
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
+    assert.deepEqual(
+      await offerings.admitOfferingCreate._handler(db.ctx, input),
+      { status: "NEW", targetId: offeringId, state: "DRAFT" },
+    );
+  } finally {
+    process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous;
+  }
+
+  const disabledResults = {};
+  const disabledDb = database({
+    providerTools: [providerTool(input)],
+    selfServiceAccounts: [selfServiceAccount],
+    queryResults: disabledResults,
+  });
+  useExactIndexRows(disabledDb, disabledResults, {
+    commandAuthorities: ["by_chain_id_and_canonical_signer_address"],
+    providerTools: ["by_tool_public_id"],
+    walletCommandReplayClaims: ["by_replay_identity"],
+    offerings: ["by_offering_public_id_and_version"],
+  });
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "false";
+  try {
+    await assert.rejects(() => offerings.admitOfferingCreate._handler(disabledDb.ctx, input), TypeError);
+    assert.deepEqual(disabledDb.writes, []);
+    assert.deepEqual(disabledDb.accesses, ["commandAuthorities"]);
+  } finally {
+    process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous;
+  }
+});
+
 selectedToolTest("links preparation only to the selected tool after a fresh ownership check", async (t) => {
   const { offerings } = await loadOfferings(t);
   const inputA = selectedInput("a".repeat(32));
@@ -927,6 +993,7 @@ implementedTest("registers the exact closed M40 admission, asset-seam, and publi
     "admitOfferingCreate",
     "getPublicProjection",
     ...(atomicHelperSourceDeclared ? ["linkAtsCreateAttemptToDraftOffering"] : []),
+    "listPublicProviderBacking",
     "markAssetPending",
     "markAssetReady",
     "readAtsCreateReplayOffering",
@@ -944,6 +1011,8 @@ implementedTest("registers the exact closed M40 admission, asset-seam, and publi
   }
   assert.equal(offerings.getPublicProjection.isQuery, true);
   assert.equal(offerings.getPublicProjection.isPublic, true);
+  assert.equal(offerings.listPublicProviderBacking.isQuery, true);
+  assert.equal(offerings.listPublicProviderBacking.isPublic, true);
   for (const flag of ["isInternal", "isMutation", "isAction"]) {
     assert.equal(offerings.getPublicProjection[flag], undefined);
   }

@@ -101,9 +101,10 @@ test("reads the offering terms through the accepted constructor and refuses anyt
 
   assert.equal(state.readBackingOffering(null), null);
   assert.equal(state.readBackingOffering(undefined), null);
-  for (const campaignState of ["DRAFT", "ASSET_PENDING", "READY", "CLOSED"]) {
+  for (const campaignState of ["DRAFT", "ASSET_PENDING", "READY"]) {
     assert.equal(state.readBackingOffering(record({ state: campaignState })), null, campaignState);
   }
+  assert.equal(state.readBackingOffering(record({ state: "CLOSED" }))?.fundingOpen, false);
   assert.equal(state.readBackingOffering(record({ definition: { ...record().definition, terms: { ...termsV1, reserveShareBps: "1000", issuerShareBps: "9000" } } })), null);
   assert.equal(state.readBackingOffering(record({ definition: { ...record().definition, terms: { ...termsV1, noteUnitPriceTinybars: "1.5" } } })), null);
 });
@@ -188,6 +189,32 @@ test("builds the HEDERA_FUNDING command over the canonical parameters preimage",
   assert.throws(() => state.createBackingIntent(offering, 5n, nowMilliseconds, fixedBytes(1)), RangeError);
 });
 
+test("builds a backing signature only from an exact server-frozen offer, amount, and recipient", async () => {
+  const state = await loadState();
+  const { canonicalizeRequirements } = await import("@tool402/core");
+  const { keccak256 } = await import("viem");
+  const offering = state.readBackingOffering(record());
+  const parameters = {
+    offeringPublicId: offering.offeringPublicId, units: "25", tinybars: "2500000000",
+    purchaseIntentId: "ZyXwVuTsRqPoNmLkJiHgFw",
+  };
+  const frozen = {
+    idempotencyKey: "AbCdEfGhIjKlMnOpQrStUw", purchaseIntentId: parameters.purchaseIntentId,
+    offeringPublicId: offering.offeringPublicId, subjectPublicId: offering.subjectPublicId,
+    recipient: treasury, units: parameters.units, tinybars: parameters.tinybars,
+    canonicalParametersHash: keccak256(new TextEncoder().encode(canonicalizeRequirements(parameters))).slice(2),
+    expiresAt: "2026-09-10T18:05:00.000Z",
+  };
+  const intent = state.createFrozenBackingIntent(offering, frozen, nowMilliseconds);
+  assert.equal(intent.idempotencyKey, frozen.idempotencyKey);
+  assert.equal(intent.purchaseIntentId, frozen.purchaseIntentId);
+  assert.deepEqual(intent.parameters, parameters);
+  assert.equal(intent.treasury, treasury);
+  assert.throws(() => state.createFrozenBackingIntent(offering, { ...frozen, tinybars: "1" }, nowMilliseconds));
+  assert.throws(() => state.createFrozenBackingIntent(offering, { ...frozen, recipient: "0x1111111111111111111111111111111111111111" }, nowMilliseconds));
+  assert.throws(() => state.createFrozenBackingIntent(offering, { ...frozen, canonicalParametersHash: "a".repeat(64) }, nowMilliseconds));
+});
+
 test("refuses to fund without an explicit lowercase treasury address and never derives one", async () => {
   const state = await loadState();
 
@@ -199,7 +226,7 @@ test("refuses to fund without an explicit lowercase treasury address and never d
   assert.doesNotMatch(source, /toLowerCase|getAddress|checksum|0\.0\.|padStart|parseHederaAccountId|Long|shard|realm/);
 });
 
-test("orders the two confirmations and moves a returned hash only to payment_submitted", async () => {
+test("orders the two confirmations and preserves a declined wallet dispatch as ambiguous", async () => {
   const state = await loadState();
   const offering = state.readBackingOffering(record());
   const intent = state.createBackingIntent(offering, 25n, nowMilliseconds, fixedBytes(2));
@@ -220,7 +247,7 @@ test("orders the two confirmations and moves a returned hash only to payment_sub
   assert.deepEqual(submitted, { kind: "payment_submitted", intent, transactionHash: hash });
   assert.throws(() => state.viewAfterTransfer(prepared, { kind: "hash", hash: "0xABC" }), TypeError);
   assert.throws(() => state.viewAfterTransfer({ kind: "choosing" }, { kind: "hash", hash }), TypeError);
-  assert.equal(state.viewAfterTransfer(prepared, { kind: "declined" }).kind, "prepared");
+  assert.equal(state.viewAfterTransfer(prepared, { kind: "declined" }).kind, "payment_outcome_unknown");
 
   for (const outcome of ["REJECTED", "CONFLICT", "UNSUPPORTED_TYPE", "not_configured", "REPLAYED"]) {
     const refused = state.viewAfterSignature({ phase: "failed", outcome }, intent);
@@ -245,12 +272,54 @@ test("rechecks the accepted intent before the one explicit transfer", async () =
   assert.equal(state.isCurrentBackingIntent(offering, { ...intent, weibarHex: "0x1" }), false);
 });
 
+test("reload with a hash awaiting attachment remains payment_submitted and cannot construct another transfer", async () => {
+  const state = await loadState();
+  const offering = state.readBackingOffering(record());
+  const intent = state.createBackingIntent(offering, 25n, nowMilliseconds, fixedBytes(5));
+  const recovered = state.viewForRecoveredPendingPayment(intent, {
+    intent: { idempotencyKey: intent.idempotencyKey, parameters: intent.parameters },
+    transactionHash: `0x${"ab".repeat(32)}`,
+  });
+  assert.equal(recovered.kind, "payment_submitted");
+  assert.throws(() => state.transferRequest(recovered, "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"), TypeError);
+
+  const mismatched = state.viewForRecoveredPendingPayment(intent, {
+    intent: { idempotencyKey: intent.idempotencyKey, parameters: { ...intent.parameters, tinybars: "1" } },
+    transactionHash: `0x${"ab".repeat(32)}`,
+  });
+  assert.equal(mismatched.kind, "prepared");
+});
+
+test("an authoritative ambiguous payment state never reopens Send when browser storage is missing", async () => {
+  const state = await loadState();
+  const offering = state.readBackingOffering(record());
+  const intent = state.createBackingIntent(offering, 25n, nowMilliseconds, fixedBytes(51));
+
+  const recovered = state.viewForRecoveredPendingPayment(intent, null, "OUTCOME_UNKNOWN");
+  assert.equal(recovered.kind, "payment_outcome_unknown");
+  assert.throws(() => state.transferRequest(recovered, "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"), TypeError);
+});
+
+test("reconstructs an expired frozen intent only for hash recovery and never for Send", async () => {
+  const state = await loadState();
+  const offering = state.readBackingOffering(record());
+  const parameters = { offeringPublicId: offering.offeringPublicId, units: "25", tinybars: "2500000000", purchaseIntentId: "ZyXwVuTsRqPoNmLkJiHgFw" };
+  const { canonicalizeRequirements } = await import("@tool402/core");
+  const { keccak256 } = await import("viem");
+  const frozen = { idempotencyKey: "AbCdEfGhIjKlMnOpQrStUw", purchaseIntentId: parameters.purchaseIntentId, offeringPublicId: offering.offeringPublicId, subjectPublicId: offering.subjectPublicId, recipient: treasury, units: parameters.units, tinybars: parameters.tinybars, canonicalParametersHash: keccak256(new TextEncoder().encode(canonicalizeRequirements(parameters))).slice(2), expiresAt: "2026-09-10T17:59:00.000Z" };
+  const recovered = state.createRecoveredBackingIntent(offering, frozen, nowMilliseconds);
+  assert.equal(recovered.idempotencyKey, frozen.idempotencyKey);
+  assert.equal(state.viewForRecoveredPendingPayment(recovered, null, "OUTCOME_UNKNOWN").kind, "payment_outcome_unknown");
+  assert.throws(() => state.createFrozenBackingIntent(offering, frozen, nowMilliseconds));
+});
+
 test("retries nothing: an unknown wallet return, a transport failure, and an unexpected response reach the unknown kind", async () => {
   const state = await loadState();
   const offering = state.readBackingOffering(record());
   const intent = state.createBackingIntent(offering, 25n, nowMilliseconds, fixedBytes(3));
   const prepared = state.viewAfterSignature({ phase: "complete", outcome: "ACCEPTED" }, intent);
 
+  assert.equal(state.viewAfterTransfer(prepared, { kind: "declined" }).kind, "payment_outcome_unknown");
   assert.equal(state.viewAfterTransfer(prepared, { kind: "no_hash" }).kind, "payment_outcome_unknown");
   assert.equal(state.viewAfterSignature({ phase: "failed", outcome: "transport_failure" }, intent).kind, "payment_outcome_unknown");
   assert.equal(state.viewAfterSignature({ phase: "failed", outcome: "unexpected_response" }, intent).kind, "payment_outcome_unknown");

@@ -1,5 +1,18 @@
 # Runtime queue state
 
+- M59_PUBLIC_TESTNET_SELF_SERVICE_ONBOARDING_CURRENT: M59-T010 is `20-active`
+  on PR #130 against `dev`. Root owns the implementation-local self-service
+  membership, command/durable admission, offer-scoped backing recovery,
+  provider/backer entry, and their focused contracts in that PR. This supersedes
+  the earlier inbox-only statement; it records implementation work only, not a
+  historical readiness or live acceptance. The policy remains disabled by
+  default. Public ATS deployment is explicitly gated until a separate durable
+  pre-wallet dispatch record can bind the exact tool, attempt, configuration,
+  owner, and returned hash across reloads and tabs; recovery remains read-only.
+  Existing RiskScan/privileged authority, B03/x402 behavior,
+  deployment, migration, feature enablement, wallet actions, and live evidence
+  remain separately controlled.
+
 - S38_S39_S47_MERGED_LANE_RECONCILIATION: At `origin/main`
   `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, S38-T010, S39-T010, and
   S47-T010 are documented as completed local source deliveries. Their merged

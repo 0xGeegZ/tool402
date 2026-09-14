@@ -105,10 +105,18 @@ function hbarFromTinybars(value: unknown): string | null {
 }
 
 export async function loadProviderToolDeployment(toolPublicId: string): Promise<ProviderToolDeployment | null> {
+  return requestProviderToolDeployment(toolPublicId, "GET");
+}
+
+export async function recheckProviderToolDeployment(toolPublicId: string): Promise<ProviderToolDeployment | null> {
+  return requestProviderToolDeployment(toolPublicId, "POST");
+}
+
+async function requestProviderToolDeployment(toolPublicId: string, method: "GET" | "POST"): Promise<ProviderToolDeployment | null> {
   if (!toolIdPattern.test(toolPublicId)) return null;
   try {
     const response = await globalThis.fetch(`/api/provider/tools/${toolPublicId}/deployment`, {
-      method: "GET", headers: { accept: "application/json" }, credentials: "same-origin", cache: "no-store",
+      method, headers: { accept: "application/json" }, credentials: "same-origin", cache: "no-store",
     });
     if (response.status !== 200) return null;
     return parseProviderToolDeployment(await response.json(), toolPublicId);

@@ -132,12 +132,12 @@ function createBridge(api, provider, fetch, wait = async () => {}, configuration
   return api.createStageBBrowserProviderBridge({ provider, fetch, wait, ...(configuration === undefined ? {} : { configuration }) });
 }
 
-function selectedConfiguration(suffix, title = "Same RiskScan Title") {
+function selectedConfiguration(suffix, title = "Same RiskScan Title", owner = issuer) {
   return createProviderToolAtsConfiguration({
     toolPublicId: `tool_${suffix}`,
     subjectPublicId: `tool_${suffix}`,
     title,
-    canonicalSignerAddress: issuer,
+    canonicalSignerAddress: owner,
   }).atsCreateConfiguration;
 }
 
@@ -372,6 +372,22 @@ implementedTest("accepts the fixed issuer once among other valid MetaMask accoun
   assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
   assert.equal(provider.calls.find(({ method }) => method === "eth_sendTransaction")?.params[0].from, issuer);
   assert.equal(mirror.calls.length, 0);
+});
+
+implementedTest("uses the selected self-service tool owner for the one explicit MetaMask deployment", async () => {
+  const api = await import(sourceUrl.href);
+  const configuration = selectedConfiguration("c".repeat(32), "Same RiskScan Title", otherEmitter);
+  const provider = fakeProvider({
+    accounts: [otherEmitter],
+    send: () => { throw { code: 4001 }; },
+  });
+  const bridge = createBridge(api, provider, async () => { throw new Error("Mirror must not be called after a rejected send"); }, async () => {}, configuration);
+
+  assert.deepEqual(await bridge.execute(), { kind: "rejected" });
+  const send = provider.calls.find(({ method }) => method === "eth_sendTransaction");
+  assert.notEqual(send, undefined);
+  assert.equal(send.params[0].from, otherEmitter);
+  assert.equal(send.params[0].to, factory);
 });
 
 implementedTest("retains the MetaMask hash when bounded verification is unknown", async () => {

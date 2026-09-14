@@ -98,8 +98,8 @@ export type ProviderToolAtsConfiguration = Readonly<{
   canonicalParametersHash: string;
 }>;
 
-const canonicalSigner = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
 const titleControlCharacter = /[\u0000-\u001F\u007F-\u009F]/u;
+const canonicalAddress = /^0x[0-9a-f]{40}$/u;
 
 function reject(): never {
   throw new TypeError("invalid provider-tool ATS configuration");
@@ -147,13 +147,14 @@ function readInput(input: AdmittedToolConfigurationInput): AdmittedToolConfigura
       toolPublicId === null
       || values.subjectPublicId !== toolPublicId
       || !validTitle(values.title)
-      || values.canonicalSignerAddress !== canonicalSigner
+      || typeof values.canonicalSignerAddress !== "string"
+      || !canonicalAddress.test(values.canonicalSignerAddress)
     ) return reject();
     return Object.freeze({
       toolPublicId,
       subjectPublicId: toolPublicId,
       title: values.title,
-      canonicalSignerAddress: canonicalSigner,
+      canonicalSignerAddress: values.canonicalSignerAddress,
     });
   } catch {
     return reject();

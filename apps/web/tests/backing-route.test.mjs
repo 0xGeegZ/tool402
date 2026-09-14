@@ -52,7 +52,7 @@ test("consumes the shared wallet session, signature dialog, and relay without a 
   assert.equal((flow.match(/<WalletIsland\b/g) ?? []).length, 1);
   assert.match(flow, /import \{ presetUnits, railPosition \} from "\.\/backing-presentation"/);
   assert.match(flow, /import \{ BackingStepRail \} from "\.\/backing-step-rail"/);
-  assert.doesNotMatch(flow, /approvedIssuerAddress|canonicalSignerAddress/);
+  assert.doesNotMatch(flow, /approvedIssuerAddress/);
   assert.doesNotMatch(flow, /discoverMetaMaskProvider|eth_requestAccounts|wallet_switchEthereumChain|eth_signTypedData|signCommand|createUnsignedCommand|relayCommandBody|\/api\/commands|createCommandNonce|keccak/);
   assert.equal((flow.match(/eth_sendTransaction/g) ?? []).length, 0);
   assert.match(flow, /transferRequest\(/);
@@ -62,6 +62,8 @@ test("consumes the shared wallet session, signature dialog, and relay without a 
   assert.match(flow, /fetch\("\/api\/backing\/payment"/);
   assert.match(flow, /dashboardAddress/);
   assert.match(flow, /session\.address === dashboardAddress/);
+  assert.match(flow, /assessFundingBalance/);
+  assert.match(flow, /Insufficient testnet HBAR/);
 });
 
 test("renders the fixed copy and none of the canvas's sample or simulation content", async () => {
@@ -81,7 +83,7 @@ test("renders the fixed copy and none of the canvas's sample or simulation conte
   assert.match(flow, /disabled=\{/);
   assert.match(flow, /Payment submitted — allocation pending\./);
 
-  assert.doesNotMatch(sources, /Units you hold|View verified evidence|Live testnet|\(sample\)|sample|simulat|units remain|raised|funded|balance|0\.0\.\d/i);
+  assert.doesNotMatch(sources, /Units you hold|View verified evidence|Live testnet|\(sample\)|sample|simulat|units remain|raised|funded|0\.0\.\d/i);
   assert.match(flow, /Payment confirmed on Hedera Testnet/);
   assert.match(flow, /View on HashScan/);
   assert.doesNotMatch(sources, /Connected\b/);

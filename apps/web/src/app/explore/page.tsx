@@ -1,4 +1,5 @@
 import { ExploreCatalog } from "../../components/discovery/explore-catalog";
+import { ProviderBackingDiscovery } from "../../components/discovery/provider-backing-discovery";
 import { PageHeader } from "../../components/ui/page-header";
 
 export default function ExplorePage() {
@@ -12,6 +13,7 @@ export default function ExplorePage() {
         />
       </section>
       <ExploreCatalog />
+      <ProviderBackingDiscovery />
     </main>
   );
 }
