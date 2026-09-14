@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 10-ready
+- Queue state: 20-active
 - Dependencies: M11-T010, S22-T010, and S43-T010 accepted.
 - Raised by: repository owner, 2026-09-14. The owner requests a draft PR
   against `dev` that makes the public landing understandable to a first-time
@@ -36,6 +36,15 @@ draft PR. The root readiness review is recorded in
 dependencies, the exact static scope, and the Node 22 focused baseline are
 clear. S48 is ready; no source or test path is active until a separate RED
 activation.
+
+## RED activation
+
+At ready source `b1c4d995`, the root moves S48 to `20-active` for
+`apps/web/tests/product-landing.test.mjs` and
+`apps/web/tests/public-landing-reconciliation.test.mjs` only. The activation
+record is [`S48-T010-red-activation`](../../evidence/S48-T010-red-activation.md).
+Production copy remains frozen until the focused test fails for the approved
+message contract and that RED result is recorded.
 
 ## Boundary
 

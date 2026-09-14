@@ -17,6 +17,12 @@
   clear. S48-T010 moves to `10-ready`; no production copy or test path is
   reserved until separate RED activation.
 
+- S48_LANDING_MESSAGE_CLARITY_RED_ACTIVATION: At ready source `b1c4d995`, the
+  root moves S48-T010 to `20-active` solely for the two focused landing test
+  files. Hero, sections, footer, and metadata remain frozen pending an
+  observed message-contract RED. The S26 header and shell-wrapper reservation
+  remains unchanged.
+
 - S38_S39_S47_MERGED_LANE_RECONCILIATION: At `origin/main`
   `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, S38-T010, S39-T010, and
   S47-T010 are documented as completed local source deliveries. Their merged

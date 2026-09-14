@@ -2,7 +2,10 @@
 
 CP-S00 reserves docs/work-queue, AI_USAGE.md, generated files, and lockfiles to the root integrator. Local task cards declare owned paths and resource locks before entering 10-ready.
 
-S48-T010 is `10-ready`. Its proposed source/test boundary is
+S48-T010 is `20-active` only for
+`apps/web/tests/product-landing.test.mjs` and
+`apps/web/tests/public-landing-reconciliation.test.mjs`. Its future source
+boundary is
 `apps/web/src/components/landing/landing-hero.tsx`,
 `apps/web/src/components/landing/landing-sections.tsx`,
 `apps/web/src/components/landing/landing-footer.tsx`, the `metadata` object
@@ -10,8 +13,9 @@ only in `apps/web/src/app/layout.tsx`,
 `apps/web/tests/product-landing.test.mjs`, and
 `apps/web/tests/public-landing-reconciliation.test.mjs`, plus its card,
 specification, UI manifest, catalog, ledger, state, readiness review, and root
-records. No source or test is reserved before separate RED activation. The S26
-header and shell wrapper in `layout.tsx` remain excluded.
+records. The landing sources and layout metadata remain frozen until an
+observed RED acceptance; the S26 header and shell wrapper in `layout.tsx`
+remain excluded.
 
 M56-S26 scoped ownership transfer: canonical main now contains M56's card,
 specification, and catalog row, so the transfer condition is satisfied. The
