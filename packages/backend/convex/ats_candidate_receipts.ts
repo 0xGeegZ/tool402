@@ -406,7 +406,11 @@ async function readSelectedProviderToolReceiptContext(
   // This is recovery for an already-submitted attempt, not admission for a new
   // self-service command. A later kill switch or membership suspension must not
   // erase the immutable attempt/offer binding needed to corroborate its receipt.
-  if (authority === null && authorities.length === 0) {
+  // A legacy row may coexist with a self-service tool but cannot corroborate
+  // it unless its immutable principal/version exactly match the attempt.
+  if (authority === null || (authorities.length === 1
+    && ((authority as Record<string, unknown>).principalPublicId !== attempt.principalPublicId
+      || (authority as Record<string, unknown>).authorityVersion !== attempt.authorityVersion))) {
     const accounts = await ctx.db.query("selfServiceAccounts")
       .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
         query.eq("chainId", 296).eq("canonicalSignerAddress", attempt.canonicalSignerAddress)
