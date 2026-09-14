@@ -35,8 +35,9 @@ export function DashboardSessionSync({
       credentials: "same-origin",
       body: JSON.stringify({ address, issuedAt }),
     }).then((response) => {
+      const switchedWalletIsStillActive = connectionRef.current.status === "connected" && connectionRef.current.account !== address;
       if (connectionRef.current.generation !== logoutGeneration) {
-        if (connectionRef.current.status === "connected" && connectionRef.current.account !== address) {
+        if (switchedWalletIsStillActive) {
           window.location.replace("/sign-in");
           return;
         }
@@ -44,6 +45,10 @@ export function DashboardSessionSync({
         return;
       }
       if (response.status === 409) {
+        if (switchedWalletIsStillActive) {
+          window.location.replace("/sign-in");
+          return;
+        }
         setLogoutInvalidated(true);
         return;
       }
