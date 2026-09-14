@@ -6,7 +6,7 @@ import { MetaMaskDashboardSignIn } from "../../components/auth/metamask-dashboar
 import { dashboardTourHref, safeDashboardReturnHref } from "../../components/demo/demo-tour-navigation";
 import { readDashboardSession, readDashboardSessionCookieName } from "../../lib/dashboard-auth/dashboard-auth.ts";
 
-type SignInPageProps = { searchParams: Promise<{ tour?: string | string[]; demoStep?: string | string[]; returnTo?: string | string[] }> };
+type SignInPageProps = { searchParams: Promise<{ tour?: string | string[]; demoStep?: string | string[]; returnTo?: string | string[]; switch?: string | string[] }> };
 
 async function SignInBoundary({ searchParams }: SignInPageProps) {
   const requested = await searchParams;
@@ -16,13 +16,15 @@ async function SignInBoundary({ searchParams }: SignInPageProps) {
   const tour = requestedTour === "1" ? "1" : null;
   const demoStep = typeof requestedDemoStep === "string" ? requestedDemoStep : null;
   const returnTo = safeDashboardReturnHref(typeof requestedReturnTo === "string" ? requestedReturnTo : null);
+  const requestedSwitch = requested.switch;
+  const switchingAccount = requestedSwitch === "1";
   const sessionCookieName = readDashboardSessionCookieName(process.env);
   const session = await readDashboardSession(
     sessionCookieName === null ? null : (await cookies()).get(sessionCookieName)?.value ?? null,
     process.env,
     Date.now(),
   );
-  if (session !== null) {
+  if (session !== null && !switchingAccount) {
     redirect(returnTo ?? dashboardTourHref(tour, demoStep));
   }
 

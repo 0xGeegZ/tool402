@@ -248,7 +248,7 @@ implementedTest("redirects to sign-in when logout reports a concurrent session a
   harness.render(address);
   await flushMicrotasks();
 
-  assert.deepEqual(harness.navigations, [["replace", "/sign-in"]]);
+  assert.deepEqual(harness.navigations, [["replace", "/sign-in?switch=1"]]);
 });
 
 implementedTest("does not clear a server session merely because a refreshed wallet has not reconnected", async () => {
