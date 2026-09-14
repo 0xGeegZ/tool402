@@ -13,6 +13,8 @@ const addressPattern = /^0x[0-9a-f]{40}$/u;
 const hashPattern = /^0x[0-9a-f]{64}$/u;
 const integerPattern = /^(?:0|[1-9][0-9]*)$/u;
 const legacyRiskScanOfferingPublicId = "riskscan_revenue_note_demo";
+const legacyRiskScanClaimPageSize = 64;
+const legacyRiskScanClaimPageLimit = 2;
 
 const outcomeValidator = v.union(v.literal("PREPARED"), v.literal("CONFIRMED"), v.literal("REJECTED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN"));
 const resultValidator = v.union(v.null(), v.object({ status: outcomeValidator, transactionHash: v.union(v.null(), v.string()), tinybars: v.string() }));
@@ -62,6 +64,39 @@ function validAttempt(value: unknown, input: { attemptPublicId: string; canonica
     && typeof record.expectedTarget === "string" && addressPattern.test(record.expectedTarget)
     && typeof record.canonicalParametersHash === "string" && /^[0-9a-f]{64}$/u.test(record.canonicalParametersHash)
     && (record.state === "PREPARED" || record.state === "SUBMITTED" || record.state === "CONFIRMED" || record.state === "OUTCOME_UNKNOWN" || record.state === "REJECTED");
+}
+
+function validLegacyRiskScanAttempt(value: unknown, canonicalSignerAddress: string): value is Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  return typeof record.idempotencyKey === "string"
+    && validAttempt(record, { attemptPublicId: record.idempotencyKey, canonicalSignerAddress })
+    && record.subjectPublicId === legacyRiskScanOfferingPublicId;
+}
+
+async function oldestUnscopedLegacyRiskScanClaim(
+  ctx: DatabaseContext,
+  canonicalSignerAddress: string,
+  state: "OUTCOME_UNKNOWN" | "SUBMITTED",
+  excludedAttemptId: string | null,
+): Promise<UnresolvedClaim | null | undefined> {
+  let cursor: string | null = null;
+  for (let pageNumber = 0; pageNumber < legacyRiskScanClaimPageLimit; pageNumber += 1) {
+    const page = await ctx.db.query(backingPaymentClaimStore)
+      .withIndex("by_backer_offering_state_and_claimed_at", (query) => (
+        query.eq("canonicalSignerAddress", canonicalSignerAddress).eq("offeringPublicId", undefined).eq("state", state)
+      ))
+      .order("asc")
+      .paginate({ cursor, numItems: legacyRiskScanClaimPageSize });
+    for (const claim of page.page) {
+      if (claim.attemptId === excludedAttemptId) continue;
+      const attempt = await ctx.db.get(claim.attemptId);
+      if (validLegacyRiskScanAttempt(attempt, canonicalSignerAddress)) return claim;
+    }
+    if (page.isDone) return undefined;
+    cursor = page.continueCursor;
+  }
+  return null;
 }
 
 function now(): bigint { return BigInt(Date.now()); }
@@ -139,7 +174,7 @@ async function unresolvedSiblingBackingPaymentClaim(
   canonicalSignerAddress: string,
   offeringPublicId: string,
   excludedAttemptId: string | null,
-): Promise<UnresolvedClaim | undefined> {
+): Promise<UnresolvedClaim | null | undefined> {
   const candidates: UnresolvedClaim[] = [];
   for (const state of ["OUTCOME_UNKNOWN", "SUBMITTED"] as const) {
     const claims = await ctx.db.query(backingPaymentClaimStore)
@@ -150,6 +185,13 @@ async function unresolvedSiblingBackingPaymentClaim(
       .take(2);
     const claim = claims[0];
     if (claim !== undefined && claim.attemptId !== excludedAttemptId) candidates.push(claim);
+  }
+  if (offeringPublicId === legacyRiskScanOfferingPublicId) {
+    for (const state of ["OUTCOME_UNKNOWN", "SUBMITTED"] as const) {
+      const claim = await oldestUnscopedLegacyRiskScanClaim(ctx, canonicalSignerAddress, state, excludedAttemptId);
+      if (claim === null) return null;
+      if (claim !== undefined) candidates.push(claim);
+    }
   }
   return candidates.sort((left, right) => left.claimedAt === right.claimedAt ? 0 : left.claimedAt < right.claimedAt ? -1 : 1)[0];
 }
@@ -204,6 +246,7 @@ export const beginBackingPaymentDispatch = internalMutation({
     if (intents.length !== 1 || !validFrozenIntent(intents[0], { idempotencyKey: args.attemptPublicId, canonicalSignerAddress: args.canonicalSignerAddress, tinybars: args.tinybars })) return null;
     const intent = intents[0]!;
     const sibling = await unresolvedSiblingBackingPaymentClaim(ctx, args.canonicalSignerAddress, intent.offeringPublicId, rows[0]!._id);
+    if (sibling === null) return null;
     if (sibling !== undefined) {
       const recoveryAttempt = await ctx.db.get(sibling.attemptId);
       if (!validAttempt(recoveryAttempt, { attemptPublicId: recoveryAttempt?.idempotencyKey ?? "", canonicalSignerAddress: args.canonicalSignerAddress })) return null;
@@ -381,6 +424,7 @@ export const readBackerPaymentForOffering = internalQuery({
   handler: async (ctx, args) => {
     if (!addressPattern.test(args.canonicalSignerAddress) || !/^[A-Za-z0-9_-]{1,96}$/u.test(args.offeringPublicId)) return null;
     const unresolved = await unresolvedSiblingBackingPaymentClaim(ctx, args.canonicalSignerAddress, args.offeringPublicId, null);
+    if (unresolved === null) return null;
     const claims = unresolved === undefined ? await ctx.db.query(backingPaymentClaimStore)
       .withIndex("by_backer_offering_and_claimed_at", (query) => (
         query.eq("canonicalSignerAddress", args.canonicalSignerAddress).eq("offeringPublicId", args.offeringPublicId)
@@ -427,6 +471,7 @@ export const readBackingPaymentVerificationContextForOffering = internalQuery({
   handler: async (ctx, args) => {
     if (!addressPattern.test(args.canonicalSignerAddress) || !/^[A-Za-z0-9_-]{1,96}$/u.test(args.offeringPublicId)) return null;
     const unresolved = await unresolvedSiblingBackingPaymentClaim(ctx, args.canonicalSignerAddress, args.offeringPublicId, null);
+    if (unresolved === null) return null;
     const claims = unresolved === undefined ? await ctx.db.query(backingPaymentClaimStore)
       .withIndex("by_backer_offering_and_claimed_at", (query) => (
         query.eq("canonicalSignerAddress", args.canonicalSignerAddress).eq("offeringPublicId", args.offeringPublicId)

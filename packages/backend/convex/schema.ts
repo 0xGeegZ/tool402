@@ -117,7 +117,8 @@ export default defineSchema({
     .index("by_attempt_id", ["attemptId"])
     .index("by_canonical_signer_address", ["canonicalSignerAddress"])
     .index("by_backer_offering_and_claimed_at", ["canonicalSignerAddress", "offeringPublicId", "claimedAt"])
-    .index("by_backer_offering_and_state", ["canonicalSignerAddress", "offeringPublicId", "state"]),
+    .index("by_backer_offering_and_state", ["canonicalSignerAddress", "offeringPublicId", "state"])
+    .index("by_backer_offering_state_and_claimed_at", ["canonicalSignerAddress", "offeringPublicId", "state", "claimedAt"]),
   backingIntents: defineTable({
     idempotencyKey: v.string(),
     purchaseIntentId: v.string(),

@@ -80,6 +80,242 @@ test("refuses a replacement dispatch and names the unresolved sibling attempt", 
   assert.equal(store.rows.backingPaymentClaims.find((claim) => claim._id === "backingPaymentClaims:b").state, "PREPARED");
 });
 
+test("refuses a replacement dispatch for an expired current intent when an unscoped pre-M59 RiskScan claim is submitted", async (t) => {
+  const { beginBackingPaymentDispatch } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const legacyAttemptPublicId = "AAAAAAAAAAAAAAAAAAAAAA";
+  const replacementAttemptPublicId = "BBBBBBBBBBBBBBBBBBBBBA";
+  const hash = `0x${"ab".repeat(32)}`;
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "false";
+  t.after(() => { process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous; });
+  const store = reservationStoreDatabase({
+    attempts: [
+      { _id: "externalPrepareCommandAttempts:legacy", idempotencyKey: legacyAttemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "a".repeat(64), state: "SUBMITTED", subjectPublicId: "riskscan_revenue_note_demo" },
+      { _id: "externalPrepareCommandAttempts:replacement", idempotencyKey: replacementAttemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "b".repeat(64), state: "PREPARED", subjectPublicId: "riskscan_revenue_note_demo" },
+    ],
+    intents: [{ _id: "backingIntents:replacement", idempotencyKey: replacementAttemptPublicId, canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7", expiresAt: new Date(Date.now() - 1).toISOString() }],
+    authorities: [{ _id: "commandAuthorities:backer", canonicalSignerAddress: signer, chainId: 296, principalPublicId: "legacy_backer", role: "BACKER", authorityVersion: "legacy_v1", enabled: true }],
+    claims: [
+      { _id: "backingPaymentClaims:legacy", attemptId: "externalPrepareCommandAttempts:legacy", canonicalSignerAddress: signer, tinybars: "7", transactionHash: hash, state: "SUBMITTED", claimedAt: 1n },
+      { _id: "backingPaymentClaims:replacement", attemptId: "externalPrepareCommandAttempts:replacement", canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7", state: "PREPARED", claimedAt: 2n },
+    ],
+  });
+
+  assert.deepEqual(
+    await beginBackingPaymentDispatch._handler({ db: store.db }, { attemptPublicId: replacementAttemptPublicId, canonicalSignerAddress: signer, tinybars: "7" }),
+    { status: "RECOVERY_REQUIRED", recoveryAttemptPublicId: legacyAttemptPublicId, transactionHash: hash, tinybars: "7" },
+  );
+  assert.equal(store.rows.backingPaymentClaims.find((claim) => claim._id === "backingPaymentClaims:replacement").state, "PREPARED");
+});
+
+test("refuses a replacement dispatch for an unscoped legacy unknown claim without a hash", async () => {
+  const { beginBackingPaymentDispatch } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const legacyAttemptPublicId = "AAAAAAAAAAAAAAAAAAAAAA";
+  const replacementAttemptPublicId = "BBBBBBBBBBBBBBBBBBBBBA";
+  const store = reservationStoreDatabase({
+    attempts: [
+      { _id: "externalPrepareCommandAttempts:legacy", idempotencyKey: legacyAttemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "a".repeat(64), state: "OUTCOME_UNKNOWN", subjectPublicId: "riskscan_revenue_note_demo" },
+      { _id: "externalPrepareCommandAttempts:replacement", idempotencyKey: replacementAttemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "b".repeat(64), state: "PREPARED", subjectPublicId: "riskscan_revenue_note_demo" },
+    ],
+    intents: [{ _id: "backingIntents:replacement", idempotencyKey: replacementAttemptPublicId, canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7", expiresAt: new Date(Date.now() - 1).toISOString() }],
+    authorities: [{ _id: "commandAuthorities:backer", canonicalSignerAddress: signer, chainId: 296, principalPublicId: "legacy_backer", role: "BACKER", authorityVersion: "legacy_v1", enabled: true }],
+    claims: [
+      { _id: "backingPaymentClaims:legacy", attemptId: "externalPrepareCommandAttempts:legacy", canonicalSignerAddress: signer, tinybars: "7", state: "OUTCOME_UNKNOWN", claimedAt: 1n },
+      { _id: "backingPaymentClaims:replacement", attemptId: "externalPrepareCommandAttempts:replacement", canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7", state: "PREPARED", claimedAt: 2n },
+    ],
+  });
+
+  assert.deepEqual(
+    await beginBackingPaymentDispatch._handler({ db: store.db }, { attemptPublicId: replacementAttemptPublicId, canonicalSignerAddress: signer, tinybars: "7" }),
+    { status: "RECOVERY_REQUIRED", recoveryAttemptPublicId: legacyAttemptPublicId, transactionHash: null, tinybars: "7" },
+  );
+});
+
+test("uses the original unscoped legacy payment for offer-scoped recovery", async () => {
+  const { readBackerPaymentForOffering, readBackingPaymentVerificationContextForOffering } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const hash = `0x${"ab".repeat(32)}`;
+  const attemptPublicId = "AAAAAAAAAAAAAAAAAAAAAA";
+  const store = reservationStoreDatabase({
+    attempts: [{ _id: "externalPrepareCommandAttempts:legacy", idempotencyKey: attemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "a".repeat(64), state: "SUBMITTED", subjectPublicId: "riskscan_revenue_note_demo" }],
+    intents: [],
+    claims: [
+      { _id: "backingPaymentClaims:legacy", attemptId: "externalPrepareCommandAttempts:legacy", canonicalSignerAddress: signer, tinybars: "7", transactionHash: hash, state: "SUBMITTED", claimedAt: 1n },
+      { _id: "backingPaymentClaims:scoped", attemptId: "externalPrepareCommandAttempts:scoped", canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7", transactionHash: `0x${"cd".repeat(32)}`, state: "OUTCOME_UNKNOWN", claimedAt: 2n },
+    ],
+  });
+
+  assert.deepEqual(
+    await readBackerPaymentForOffering._handler({ db: store.db }, { canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo" }),
+    { status: "SUBMITTED", transactionHash: hash, tinybars: "7" },
+  );
+  assert.deepEqual(
+    await readBackingPaymentVerificationContextForOffering._handler({ db: store.db }, { canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo" }),
+    { attemptPublicId, expectedTarget: "0x1111111111111111111111111111111111111111", transactionHash: hash, tinybars: "7", state: "SUBMITTED" },
+  );
+});
+
+test("allows a new legacy RiskScan purchase after its prior unscoped claim is resolved", async () => {
+  const { beginBackingPaymentDispatch } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const replacementAttemptPublicId = "BBBBBBBBBBBBBBBBBBBBBA";
+  const store = reservationStoreDatabase({
+    attempts: [
+      { _id: "externalPrepareCommandAttempts:legacy", idempotencyKey: "AAAAAAAAAAAAAAAAAAAAAA", operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "a".repeat(64), state: "REJECTED", subjectPublicId: "riskscan_revenue_note_demo" },
+      { _id: "externalPrepareCommandAttempts:replacement", idempotencyKey: replacementAttemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "b".repeat(64), state: "PREPARED", subjectPublicId: "riskscan_revenue_note_demo" },
+    ],
+    intents: [{ _id: "backingIntents:replacement", idempotencyKey: replacementAttemptPublicId, canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7" }],
+    authorities: [{ _id: "commandAuthorities:backer", canonicalSignerAddress: signer, chainId: 296, principalPublicId: "legacy_backer", role: "BACKER", authorityVersion: "legacy_v1", enabled: true }],
+    claims: [
+      { _id: "backingPaymentClaims:legacy", attemptId: "externalPrepareCommandAttempts:legacy", canonicalSignerAddress: signer, tinybars: "7", state: "REJECTED", claimedAt: 1n },
+      { _id: "backingPaymentClaims:replacement", attemptId: "externalPrepareCommandAttempts:replacement", canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7", state: "PREPARED", claimedAt: 2n },
+    ],
+  });
+
+  assert.deepEqual(
+    await beginBackingPaymentDispatch._handler({ db: store.db }, { attemptPublicId: replacementAttemptPublicId, canonicalSignerAddress: signer, tinybars: "7" }),
+    { status: "OUTCOME_UNKNOWN", transactionHash: null, tinybars: "7" },
+  );
+});
+
+test("does not let an unscoped legacy confirmation prohibit a separate new RiskScan purchase", async () => {
+  const { beginBackingPaymentDispatch } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const replacementAttemptPublicId = "BBBBBBBBBBBBBBBBBBBBBA";
+  const store = reservationStoreDatabase({
+    attempts: [
+      { _id: "externalPrepareCommandAttempts:legacy", idempotencyKey: "AAAAAAAAAAAAAAAAAAAAAA", operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "a".repeat(64), state: "CONFIRMED", subjectPublicId: "riskscan_revenue_note_demo" },
+      { _id: "externalPrepareCommandAttempts:replacement", idempotencyKey: replacementAttemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "b".repeat(64), state: "PREPARED", subjectPublicId: "riskscan_revenue_note_demo" },
+    ],
+    intents: [{ _id: "backingIntents:replacement", idempotencyKey: replacementAttemptPublicId, canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7" }],
+    authorities: [{ _id: "commandAuthorities:backer", canonicalSignerAddress: signer, chainId: 296, principalPublicId: "legacy_backer", role: "BACKER", authorityVersion: "legacy_v1", enabled: true }],
+    claims: [
+      { _id: "backingPaymentClaims:legacy", attemptId: "externalPrepareCommandAttempts:legacy", canonicalSignerAddress: signer, tinybars: "7", state: "CONFIRMED", claimedAt: 1n },
+      { _id: "backingPaymentClaims:replacement", attemptId: "externalPrepareCommandAttempts:replacement", canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7", state: "PREPARED", claimedAt: 2n },
+    ],
+  });
+
+  assert.deepEqual(
+    await beginBackingPaymentDispatch._handler({ db: store.db }, { attemptPublicId: replacementAttemptPublicId, canonicalSignerAddress: signer, tinybars: "7" }),
+    { status: "OUTCOME_UNKNOWN", transactionHash: null, tinybars: "7" },
+  );
+});
+
+test("ignores foreign and other-wallet unscoped legacy claims", async () => {
+  const { beginBackingPaymentDispatch } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const foreignSigner = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const replacementAttemptPublicId = "BBBBBBBBBBBBBBBBBBBBBA";
+  const store = reservationStoreDatabase({
+    attempts: [
+      { _id: "externalPrepareCommandAttempts:foreign-subject", idempotencyKey: "AAAAAAAAAAAAAAAAAAAAAA", operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "a".repeat(64), state: "OUTCOME_UNKNOWN", subjectPublicId: "foreign_subject" },
+      { _id: "externalPrepareCommandAttempts:other-wallet", idempotencyKey: "CCCCCCCCCCCCCCCCCCCCCg", operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: foreignSigner, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "c".repeat(64), state: "OUTCOME_UNKNOWN", subjectPublicId: "riskscan_revenue_note_demo" },
+      { _id: "externalPrepareCommandAttempts:replacement", idempotencyKey: replacementAttemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "b".repeat(64), state: "PREPARED", subjectPublicId: "riskscan_revenue_note_demo" },
+    ],
+    intents: [{ _id: "backingIntents:replacement", idempotencyKey: replacementAttemptPublicId, canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7" }],
+    authorities: [{ _id: "commandAuthorities:backer", canonicalSignerAddress: signer, chainId: 296, principalPublicId: "legacy_backer", role: "BACKER", authorityVersion: "legacy_v1", enabled: true }],
+    claims: [
+      { _id: "backingPaymentClaims:foreign-subject", attemptId: "externalPrepareCommandAttempts:foreign-subject", canonicalSignerAddress: signer, tinybars: "7", state: "OUTCOME_UNKNOWN", claimedAt: 1n },
+      { _id: "backingPaymentClaims:other-wallet", attemptId: "externalPrepareCommandAttempts:other-wallet", canonicalSignerAddress: foreignSigner, tinybars: "7", state: "OUTCOME_UNKNOWN", claimedAt: 2n },
+      { _id: "backingPaymentClaims:replacement", attemptId: "externalPrepareCommandAttempts:replacement", canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7", state: "PREPARED", claimedAt: 3n },
+    ],
+  });
+
+  assert.deepEqual(
+    await beginBackingPaymentDispatch._handler({ db: store.db }, { attemptPublicId: replacementAttemptPublicId, canonicalSignerAddress: signer, tinybars: "7" }),
+    { status: "OUTCOME_UNKNOWN", transactionHash: null, tinybars: "7" },
+  );
+});
+
+test("finds an unresolved unscoped legacy RiskScan claim beyond one hundred newer parent attempts", async () => {
+  const { beginBackingPaymentDispatch } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const legacyAttemptPublicId = "AAAAAAAAAAAAAAAAAAAAAA";
+  const replacementAttemptPublicId = "BBBBBBBBBBBBBBBBBBBBBA";
+  const hash = `0x${"ab".repeat(32)}`;
+  const newerAttempts = Array.from({ length: 100 }, (_, index) => ({
+    _id: `externalPrepareCommandAttempts:newer-${index}`,
+    idempotencyKey: `newer-${index}`,
+    operationKind: "HEDERA_FUNDING",
+    role: "BACKER",
+    chainId: 296,
+    canonicalSignerAddress: signer,
+    expectedTarget: "0x1111111111111111111111111111111111111111",
+    canonicalParametersHash: "c".repeat(64),
+    state: "REJECTED",
+    subjectPublicId: "riskscan_revenue_note_demo",
+    acceptedAt: BigInt(index + 2),
+  }));
+  const store = reservationStoreDatabase({
+    attempts: [
+      { _id: "externalPrepareCommandAttempts:legacy", idempotencyKey: legacyAttemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "a".repeat(64), state: "SUBMITTED", subjectPublicId: "riskscan_revenue_note_demo", acceptedAt: 1n },
+      ...newerAttempts,
+      { _id: "externalPrepareCommandAttempts:replacement", idempotencyKey: replacementAttemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "b".repeat(64), state: "PREPARED", subjectPublicId: "riskscan_revenue_note_demo", acceptedAt: 102n },
+    ],
+    intents: [{ _id: "backingIntents:replacement", idempotencyKey: replacementAttemptPublicId, canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7" }],
+    authorities: [{ _id: "commandAuthorities:backer", canonicalSignerAddress: signer, chainId: 296, principalPublicId: "legacy_backer", role: "BACKER", authorityVersion: "legacy_v1", enabled: true }],
+    claims: [
+      { _id: "backingPaymentClaims:legacy", attemptId: "externalPrepareCommandAttempts:legacy", canonicalSignerAddress: signer, tinybars: "7", transactionHash: hash, state: "SUBMITTED", claimedAt: 1n },
+      { _id: "backingPaymentClaims:replacement", attemptId: "externalPrepareCommandAttempts:replacement", canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7", state: "PREPARED", claimedAt: 102n },
+    ],
+  });
+
+  assert.deepEqual(
+    await beginBackingPaymentDispatch._handler({ db: store.db }, { attemptPublicId: replacementAttemptPublicId, canonicalSignerAddress: signer, tinybars: "7" }),
+    { status: "RECOVERY_REQUIRED", recoveryAttemptPublicId: legacyAttemptPublicId, transactionHash: hash, tinybars: "7" },
+  );
+});
+
+test("fails closed before Send when bounded legacy recovery is exhausted by foreign unscoped claims", async () => {
+  const { beginBackingPaymentDispatch } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const legacyAttemptPublicId = "AAAAAAAAAAAAAAAAAAAAAA";
+  const replacementAttemptPublicId = "BBBBBBBBBBBBBBBBBBBBBA";
+  const foreignAttempts = Array.from({ length: 128 }, (_, index) => ({
+    _id: `externalPrepareCommandAttempts:foreign-${index}`,
+    idempotencyKey: `foreign-${index}`,
+    operationKind: "HEDERA_FUNDING",
+    role: "BACKER",
+    chainId: 296,
+    canonicalSignerAddress: signer,
+    expectedTarget: "0x1111111111111111111111111111111111111111",
+    canonicalParametersHash: "c".repeat(64),
+    state: "OUTCOME_UNKNOWN",
+    subjectPublicId: "foreign_subject",
+    acceptedAt: BigInt(index + 1),
+  }));
+  const foreignClaims = foreignAttempts.map((attempt, index) => ({
+    _id: `backingPaymentClaims:foreign-${index}`,
+    attemptId: attempt._id,
+    canonicalSignerAddress: signer,
+    tinybars: "7",
+    state: "OUTCOME_UNKNOWN",
+    claimedAt: BigInt(index + 1),
+  }));
+  const store = reservationStoreDatabase({
+    attempts: [
+      ...foreignAttempts,
+      { _id: "externalPrepareCommandAttempts:legacy", idempotencyKey: legacyAttemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "a".repeat(64), state: "OUTCOME_UNKNOWN", subjectPublicId: "riskscan_revenue_note_demo", acceptedAt: 129n },
+      { _id: "externalPrepareCommandAttempts:replacement", idempotencyKey: replacementAttemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "b".repeat(64), state: "PREPARED", subjectPublicId: "riskscan_revenue_note_demo", acceptedAt: 130n },
+    ],
+    intents: [{ _id: "backingIntents:replacement", idempotencyKey: replacementAttemptPublicId, canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7" }],
+    authorities: [{ _id: "commandAuthorities:backer", canonicalSignerAddress: signer, chainId: 296, principalPublicId: "legacy_backer", role: "BACKER", authorityVersion: "legacy_v1", enabled: true }],
+    claims: [
+      ...foreignClaims,
+      { _id: "backingPaymentClaims:legacy", attemptId: "externalPrepareCommandAttempts:legacy", canonicalSignerAddress: signer, tinybars: "7", state: "OUTCOME_UNKNOWN", claimedAt: 129n },
+      { _id: "backingPaymentClaims:replacement", attemptId: "externalPrepareCommandAttempts:replacement", canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7", state: "PREPARED", claimedAt: 130n },
+    ],
+  });
+
+  assert.equal(
+    await beginBackingPaymentDispatch._handler({ db: store.db }, { attemptPublicId: replacementAttemptPublicId, canonicalSignerAddress: signer, tinybars: "7" }),
+    null,
+  );
+  assert.equal(store.rows.backingPaymentClaims.find((claim) => claim._id === "backingPaymentClaims:replacement").state, "PREPARED");
+});
+
 test("selects the oldest unresolved sibling for bounded recovery when historical uncertainty is duplicated", async () => {
   const { beginBackingPaymentDispatch } = await import(storeUrl.href);
   const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
@@ -228,11 +464,25 @@ function reservationStoreDatabase({ attempts, intents, accounts = [], authoritie
             const filters = [];
             const query = { eq(field, value) { filters.push([field, value]); return query; } };
             configure(query);
+            const matching = rows[table].filter((row) => filters.every(([field, value]) => row[field] === value));
             return {
-              order() { return this; },
-              async take(limit) {
-                return rows[table].filter((row) => filters.every(([field, value]) => row[field] === value)).slice(0, limit);
+              order(direction) {
+                const ordered = [...matching].sort((left, right) => {
+                  const field = table === "backingPaymentClaims" ? "claimedAt" : "acceptedAt";
+                  const leftValue = left[field] ?? 0n;
+                  const rightValue = right[field] ?? 0n;
+                  return direction === "desc" ? Number(rightValue - leftValue) : Number(leftValue - rightValue);
+                });
+                return {
+                  async take(limit) { return ordered.slice(0, limit); },
+                  async paginate({ cursor, numItems }) {
+                    const start = cursor === null ? 0 : Number(cursor);
+                    const page = ordered.slice(start, start + numItems);
+                    return { page, isDone: start + page.length >= ordered.length, continueCursor: String(start + page.length) };
+                  },
+                };
               },
+              async take(limit) { return matching.slice(0, limit); },
             };
           },
         };
@@ -288,7 +538,22 @@ function occReservationStoreDatabase({ attempts, intents, accounts = [], authori
             const expected = matching(snapshot, table, filters);
             reads.push({ table, filters, expected: comparable(expected) });
             return {
-              order() { return this; },
+              order(direction) {
+                const ordered = [...expected].sort((left, right) => {
+                  const field = table === "backingPaymentClaims" ? "claimedAt" : "acceptedAt";
+                  const leftValue = left[field] ?? 0n;
+                  const rightValue = right[field] ?? 0n;
+                  return direction === "desc" ? Number(rightValue - leftValue) : Number(leftValue - rightValue);
+                });
+                return {
+                  async take(limit) { return ordered.slice(0, limit); },
+                  async paginate({ cursor, numItems }) {
+                    const start = cursor === null ? 0 : Number(cursor);
+                    const page = ordered.slice(start, start + numItems);
+                    return { page, isDone: start + page.length >= ordered.length, continueCursor: String(start + page.length) };
+                  },
+                };
+              },
               async take(limit) { return expected.slice(0, limit); },
             };
           },
@@ -360,6 +625,35 @@ test("retries an OCC-conflicted stale-tab dispatch and preserves one unresolved 
   assert.equal(outcomes.filter((outcome) => outcome?.status === "RECOVERY_REQUIRED").length, 1);
   assert.equal(store.conflicts, 1, "the second mutation reruns after the indexed unresolved-claim range changes");
   assert.equal(store.rows.backingPaymentClaims.filter((claim) => claim.state === "OUTCOME_UNKNOWN").length, 1);
+});
+
+test("retries the legacy parent-claim guard when a concurrent reconciliation changes its unresolved state", async () => {
+  const { beginBackingPaymentDispatch, recordBackingPayment } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const legacyAttemptPublicId = "AAAAAAAAAAAAAAAAAAAAAA";
+  const replacementAttemptPublicId = "BBBBBBBBBBBBBBBBBBBBBA";
+  const hash = `0x${"ab".repeat(32)}`;
+  const store = occReservationStoreDatabase({
+    attempts: [
+      { _id: "externalPrepareCommandAttempts:legacy", idempotencyKey: legacyAttemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "a".repeat(64), state: "PREPARED", subjectPublicId: "riskscan_revenue_note_demo" },
+      { _id: "externalPrepareCommandAttempts:replacement", idempotencyKey: replacementAttemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "b".repeat(64), state: "PREPARED", subjectPublicId: "riskscan_revenue_note_demo" },
+    ],
+    intents: [{ _id: "backingIntents:replacement", idempotencyKey: replacementAttemptPublicId, canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7" }],
+    authorities: [{ _id: "commandAuthorities:backer", canonicalSignerAddress: signer, chainId: 296, principalPublicId: "legacy_backer", role: "BACKER", authorityVersion: "legacy_v1", enabled: true }],
+    claims: [
+      { _id: "backingPaymentClaims:legacy", attemptId: "externalPrepareCommandAttempts:legacy", canonicalSignerAddress: signer, tinybars: "7", transactionHash: hash, state: "SUBMITTED", claimedAt: 1n },
+      { _id: "backingPaymentClaims:replacement", attemptId: "externalPrepareCommandAttempts:replacement", canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7", state: "PREPARED", claimedAt: 2n },
+    ],
+  });
+  const [dispatch, reconciliation] = await Promise.all([
+    store.runMutation(beginBackingPaymentDispatch._handler, { attemptPublicId: replacementAttemptPublicId, canonicalSignerAddress: signer, tinybars: "7" }),
+    store.runMutation(recordBackingPayment._handler, { attemptPublicId: legacyAttemptPublicId, canonicalSignerAddress: signer, transactionHash: hash, tinybars: "7", outcome: "OUTCOME_UNKNOWN" }),
+  ]);
+
+  assert.deepEqual(dispatch, { status: "RECOVERY_REQUIRED", recoveryAttemptPublicId: legacyAttemptPublicId, transactionHash: hash, tinybars: "7" });
+  assert.deepEqual(reconciliation, { status: "OUTCOME_UNKNOWN", transactionHash: hash, tinybars: "7" });
+  assert.equal(store.conflicts, 1, "the dispatch retries after the legacy claim query range changes");
+  assert.equal(store.rows.backingPaymentClaims.find((claim) => claim._id === "backingPaymentClaims:replacement").state, "PREPARED");
 });
 
 test("reads an actual scoped payment even after more than twenty abandoned intents", async () => {
