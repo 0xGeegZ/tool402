@@ -5,9 +5,12 @@ import Link from "next/link";
 
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { usePassiveWalletRestore } from "./wallet-providers";
 import { useTool402Wallet, type Tool402WalletState } from "./use-tool402-wallet";
 
-function describe(state: Tool402WalletState): string {
+function describe(state: Tool402WalletState, isCheckingConnection: boolean): string {
+  if (isCheckingConnection) return "Checking whether MetaMask is already connected.";
+
   switch (state.kind) {
     case "resolving":
       return "Restoring the MetaMask connection without requesting an account.";
@@ -34,18 +37,21 @@ function shortenAddress(address: string): string {
 
 export function WalletIsland() {
   const { state, connect, cancelConnection, disconnect, switchToHedera } = useTool402Wallet();
+  const isPassiveReconnectPending = usePassiveWalletRestore();
+  const isCheckingConnection = isPassiveReconnectPending || state.kind === "resolving";
 
   return (
     <div data-slot="wallet-island" className="flex items-center gap-2">
-      {state.kind === "disconnected" ? (
+      {state.kind === "disconnected" && !isCheckingConnection ? (
         <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap" onClick={() => void connect()}>
           <Image src="/brand/metamask-fox.svg" alt="" aria-hidden="true" width={18} height={18} />
           Connect MetaMask
         </Button>
       ) : null}
-      {state.kind === "resolving" ? (
-        <Button size="sm" className="whitespace-nowrap" disabled aria-disabled="true">
-          Connecting…
+      {isCheckingConnection ? (
+        <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap" disabled aria-disabled="true">
+          <span aria-hidden="true" className="size-4 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" />
+          Checking MetaMask…
         </Button>
       ) : null}
       {state.kind === "connecting" ? (
@@ -81,7 +87,7 @@ export function WalletIsland() {
         </>
       ) : null}
       <p aria-live="polite" className="sr-only">
-        {describe(state)}
+        {describe(state, isCheckingConnection)}
       </p>
     </div>
   );

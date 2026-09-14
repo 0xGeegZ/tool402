@@ -208,3 +208,12 @@ implementedProviderTest("delays the passive reconnect until the injected wallet 
   assert.match(providers, /status:\s*["']disconnected["']/u);
   assert.match(providers, /<WagmiProvider\s+config=\{config\}\s+initialState=\{initialState\}\s+reconnectOnMount=\{false\}>/u);
 });
+
+implementedProviderTest("keeps restoration pending until the passive reconnect settles", async () => {
+  const providers = await readFile(providersUrl, "utf8");
+
+  assert.match(providers, /createContext\(true\)/u);
+  assert.match(providers, /const \[isPassiveReconnectPending, setPassiveReconnectPending\] = useState\(true\);/u);
+  assert.match(providers, /setPassiveReconnectPending\(false\);/u);
+  assert.match(providers, /PassiveWalletRestoreContext\.Provider value=\{isPassiveReconnectPending\}/u);
+});

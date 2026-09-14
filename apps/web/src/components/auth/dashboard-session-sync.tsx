@@ -22,7 +22,6 @@ export function DashboardSessionSync({
   const connectionRef = useRef(connection);
   connectionRef.current = connection;
   const [logoutFailed, setLogoutFailed] = useState(false);
-  const [logoutInvalidated, setLogoutInvalidated] = useState(false);
   const currentSessionMatches = connection.status === "connected"
     && connection.chainId === 296
     && connection.account === address;
@@ -36,42 +35,32 @@ export function DashboardSessionSync({
     );
   }, [address, router]);
 
+  const navigateToAccountChangedSignIn = useCallback(() => {
+    router.replace("/sign-in/account-changed");
+  }, [router]);
+
   const endSession = useCallback(() => {
     if (logoutStarted.current) return;
     logoutStarted.current = true;
-    const logoutGeneration = connectionRef.current.generation;
     void fetch("/api/auth/logout", {
       method: "POST",
       headers: { "content-type": "application/json" },
       credentials: "same-origin",
       body: JSON.stringify({ address, issuedAt }),
     }).then((response) => {
-      const switchedWalletIsStillActive = connectionRef.current.status === "connected" && connectionRef.current.account !== address;
-      if (connectionRef.current.generation !== logoutGeneration) {
-        if (switchedWalletIsStillActive) {
-          navigateToSignIn();
-          return;
-        }
-        setLogoutInvalidated(true);
+      if (response.status === 204) {
+        navigateToSignIn();
         return;
       }
       if (response.status === 409) {
-        if (switchedWalletIsStillActive) {
-          navigateToSignIn();
-          return;
-        }
-        setLogoutInvalidated(true);
+        navigateToAccountChangedSignIn();
         return;
       }
-      if (response.status !== 204) {
-        setLogoutFailed(true);
-        return;
-      }
-      navigateToSignIn();
+      setLogoutFailed(true);
     }).catch(() => {
       setLogoutFailed(true);
     });
-  }, [address, issuedAt, navigateToSignIn]);
+  }, [address, issuedAt, navigateToAccountChangedSignIn, navigateToSignIn]);
 
   const retryLogout = useCallback(() => {
     logoutStarted.current = false;
@@ -89,25 +78,21 @@ export function DashboardSessionSync({
     if (!resolved) return;
     if (currentSessionMatches) {
       hasMatchedSessionWallet.current = true;
-      if (logoutStarted.current) setLogoutInvalidated(true);
       return;
     }
     if (connection.status === "connected" || hasMatchedSessionWallet.current) endSession();
   }, [connection.status, currentSessionMatches, endSession, resolved]);
 
-  if (!resolved || (currentSessionMatches && !logoutInvalidated)) return children;
+  if (!resolved || currentSessionMatches) return children;
   if (!hasMatchedSessionWallet.current && connection.status !== "connected") {
     return <div role="status" aria-live="polite" className="p-6 text-sm text-muted-foreground">Restoring the signed MetaMask wallet…</div>;
   }
   return (
     <div role="alert" aria-live="polite" className="p-6 text-sm text-muted-foreground">
-      <p>{logoutInvalidated
-        ? "Your wallet changed while ending the dashboard session. Reload the page to check the signed session."
-        : logoutFailed
+      <p>{logoutFailed
         ? "Your dashboard session could not be ended safely. Retry ending it before continuing."
         : "Ending the dashboard session safely…"}</p>
-      {logoutInvalidated ? <button type="button" onClick={() => router.refresh()}>Reload dashboard session</button> : null}
-      {logoutFailed && !logoutInvalidated ? <button type="button" onClick={retryLogout}>Retry ending dashboard session</button> : null}
+      {logoutFailed ? <button type="button" onClick={retryLogout}>Retry ending dashboard session</button> : null}
     </div>
   );
 }

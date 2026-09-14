@@ -10,6 +10,7 @@ import { ProviderNotFoundError } from "wagmi";
 
 const appRoot = fileURLToPath(new URL("..", import.meta.url));
 const hookPath = "src/components/wallet/use-tool402-wallet.ts";
+const walletConnectPath = "src/components/wallet/wallet-connect.tsx";
 const layoutPath = "src/app/layout.tsx";
 const legacyPaths = [
   "src/components/wallet/wallet-session.tsx",
@@ -172,4 +173,14 @@ test("removes the legacy wallet store and mounts only the shared Wagmi provider"
   assert.match(layout, /<WalletProviders initialState=\{initialState\}>/u);
   assert.doesNotMatch(layout, /WalletSessionProvider|wallet-session/u);
   for (const path of legacyPaths) assert.equal(existsSync(join(appRoot, path)), false, `legacy wallet path remains: ${path}`);
+});
+
+test("shows a neutral connection check instead of the MetaMask button during passive restoration", async () => {
+  const source = await readFile(join(appRoot, walletConnectPath), "utf8");
+
+  assert.match(source, /usePassiveWalletRestore/u);
+  assert.match(source, /const isCheckingConnection = isPassiveReconnectPending \|\| state\.kind === "resolving";/u);
+  assert.match(source, /state\.kind === "disconnected" && !isCheckingConnection/u);
+  assert.match(source, /animate-spin/u);
+  assert.match(source, /Checking MetaMask/u);
 });

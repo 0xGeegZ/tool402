@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { type ReactNode, useEffect, useState } from "react";
+import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 import { type State, WagmiProvider } from "wagmi";
 import { reconnect } from "wagmi/actions";
 
@@ -11,6 +11,11 @@ const passiveReconnectDelayMs = 500;
 const passiveReconnectTimeoutMs = 8_000;
 const metaMaskRdns = "io.metamask";
 type WalletConfig = Parameters<typeof reconnect>[0];
+const PassiveWalletRestoreContext = createContext(true);
+
+export function usePassiveWalletRestore(): boolean {
+  return useContext(PassiveWalletRestoreContext);
+}
 
 function isMetaMaskConnector(connector: { readonly id: string; readonly rdns?: string | readonly string[] }): boolean {
   return connector.id === "metaMask"
@@ -38,8 +43,10 @@ export function WalletProviders({
 }) {
   const [config] = useState(getTool402WagmiConfig);
   const [queryClient] = useState(() => new QueryClient());
+  const [isPassiveReconnectPending, setPassiveReconnectPending] = useState(true);
 
   useEffect(() => {
+    let active = true;
     const timer = window.setTimeout(() => {
       const connectors = config.connectors.filter(isMetaMaskConnector);
       void Promise.race([
@@ -51,14 +58,21 @@ export function WalletProviders({
         if (result === "timeout") clearPendingReconnect(config);
       }).catch(() => {
         clearPendingReconnect(config);
+      }).finally(() => {
+        if (active) setPassiveReconnectPending(false);
       });
     }, passiveReconnectDelayMs);
-    return () => window.clearTimeout(timer);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
   }, [config]);
 
   return (
-    <WagmiProvider config={config} initialState={initialState} reconnectOnMount={false}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </WagmiProvider>
+    <PassiveWalletRestoreContext.Provider value={isPassiveReconnectPending}>
+      <WagmiProvider config={config} initialState={initialState} reconnectOnMount={false}>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </WagmiProvider>
+    </PassiveWalletRestoreContext.Provider>
   );
 }

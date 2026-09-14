@@ -200,7 +200,7 @@ implementedTest("logs out after the selected MetaMask account changes", async ()
   assertLogout(harness, "/sign-in/account-changed");
 });
 
-implementedTest("does not redirect when a stale logout completes after the wallet recovers", async () => {
+implementedTest("redirects after a successful logout even when the wallet recovers before it completes", async () => {
   const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
   const harness = await loadSynchronizer({ deferLogout: true, wallet: { connection: { status: "connected", account: address, chainId: 296, connector: { id: "metaMask" }, generation: 1 }, resolved: true } });
 
@@ -215,8 +215,7 @@ implementedTest("does not redirect when a stale logout completes after the walle
   harness.resolveLogout();
   await flushMicrotasks();
 
-  assert.deepEqual(harness.navigations, []);
-  assert.match(visibleText(harness.render(address)), /changed while ending/u);
+  assert.deepEqual(harness.navigations, [["replace", "/sign-in"]]);
 });
 
 implementedTest("redirects to sign-in when the active account remains different after logout changes generation", async () => {
@@ -242,6 +241,18 @@ implementedTest("redirects to sign-in when logout reports a concurrent session a
 
   harness.render(address);
   harness.setWallet({ connection: { status: "connected", account: switchedAddress, chainId: 296, connector: { id: "metaMask" }, generation: 2 } });
+  harness.render(address);
+  await flushMicrotasks();
+
+  assert.deepEqual(harness.navigations, [["replace", "/sign-in/account-changed"]]);
+});
+
+implementedTest("routes a concurrent dashboard session through account-changed even after the wallet recovers", async () => {
+  const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const harness = await loadSynchronizer({ responseStatus: 409, wallet: { connection: { status: "connected", account: address, chainId: 296, connector: { id: "metaMask" }, generation: 1 }, resolved: true } });
+
+  harness.render(address);
+  harness.setWallet({ connection: { status: "connected", account: address, chainId: 1, connector: { id: "metaMask" }, generation: 2 } });
   harness.render(address);
   await flushMicrotasks();
 
