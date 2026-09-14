@@ -88,10 +88,18 @@ implementedConfigTest("uses SSR cookie persistence and the MetaMask connector", 
   const options = await captureConfigOptions();
   assert.equal(options?.ssr, true);
   assert.equal(options?.storage?.configuredStorage, true);
-  assert.equal(options?.storage?.storage?.kind, "cookieStorage");
+  assert.equal(typeof options?.storage?.storage?.getItem, "function");
   assert.equal(options?.connectors?.length, 1);
   assert.equal(options?.connectors?.[0]?.type, "metaMask");
   assert.equal(options?.transports?.[296]?.url, "https://testnet.hashio.io/api");
+});
+
+implementedConfigTest("migrates an existing Wagmi local session into cookie persistence", async () => {
+  const source = await readFile(configUrl, "utf8");
+
+  assert.match(source, /cookieStorage\.getItem\(key\)\s*\?\?\s*readLegacyWalletStorage\(key\)/u);
+  assert.match(source, /cookieStorage\.setItem\(key, value\);\s*removeLegacyWalletStorage\(key\);/u);
+  assert.match(source, /cookieStorage\.removeItem\(key\);\s*removeLegacyWalletStorage\(key\);/u);
 });
 
 async function loadProviders() {
