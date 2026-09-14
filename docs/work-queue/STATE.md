@@ -1,5 +1,34 @@
 # Runtime queue state
 
+- S48_LANDING_MESSAGE_CLARITY_INTAKE: The repository owner requests a
+  `dev`-based draft PR that rewrites the public landing for first-time
+  developers and tool creators. S48-T010 is `00-inbox`; its card,
+  specification, and UI manifest define only static English copy, exact
+  existing CTA destinations, and the root `metadata` object. No source or test
+  reservation exists until readiness and RED activation. S26 retains the
+  layout header and shell wrapper; this card excludes them. No product,
+  wallet, payment, provider, transaction, deployment, or live authority is
+  added.
+
+- S48_LANDING_MESSAGE_CLARITY_READY: At control source `29d9713f`, the
+  `dev` baseline and M11/S22/S43 dependencies are accepted; S26's active
+  header and shell-wrapper reservation is disjoint from S48's metadata-only
+  seam. Node 22 focused landing tests pass 11/11 and queue validation is
+  clear. S48-T010 moves to `10-ready`; no production copy or test path is
+  reserved until separate RED activation.
+
+- S48_LANDING_MESSAGE_CLARITY_RED_ACTIVATION: At ready source `b1c4d995`, the
+  root moves S48-T010 to `20-active` solely for the two focused landing test
+  files. Hero, sections, footer, and metadata remain frozen pending an
+  observed message-contract RED. The S26 header and shell-wrapper reservation
+  remains unchanged.
+
+- S48_LANDING_MESSAGE_CLARITY_RED_ACCEPTANCE: At test-only source `10233dae`,
+  focused Node 22 landing contracts pass 7/12 and fail 5/12 solely for the
+  absent approved marketplace copy, CTA labels, card facts, metadata, and
+  benefits heading. The observed RED is accepted; only the four static copy
+  seams and two focused contracts may now change for GREEN. S26's header and
+  shell wrapper remain excluded.
 - M59_PUBLIC_TESTNET_SELF_SERVICE_ONBOARDING_CURRENT: M59-T010 is `20-active`
   on PR #130 against `dev`. Root owns the implementation-local self-service
   membership, command/durable admission, offer-scoped backing recovery,
