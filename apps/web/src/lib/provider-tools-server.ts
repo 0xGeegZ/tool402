@@ -4,6 +4,8 @@ import {
   readDashboardSessionCookieName,
   type DashboardAuthEnvironment,
 } from "./dashboard-auth/dashboard-auth.ts";
+import { readDashboardCampaign, riskScanOfferingPublicId } from "./dashboard-campaign.ts";
+import { readProviderProjections } from "./offering-projection.ts";
 
 type Session = Readonly<{ address: string; issuedAt: string; expiresAt: string }>;
 type ForwardInput = Readonly<{
@@ -264,4 +266,15 @@ export async function ensureSelfServiceMembership(
       ? { outcome: (value as { outcome: string }).outcome }
       : { outcome: "unavailable" };
   } catch { return { outcome: "unavailable" }; }
+}
+
+export async function canResumeLegacyProviderCampaign(
+  env: DashboardAuthEnvironment,
+  canonicalSignerAddress: string,
+): Promise<boolean> {
+  const projections = await readProviderProjections(env as NodeJS.ProcessEnv, globalThis.fetch, riskScanOfferingPublicId);
+  const campaign = projections.offering.outcome === "loaded"
+    ? readDashboardCampaign(projections.offering.record, canonicalSignerAddress)
+    : null;
+  return campaign?.href === "/provider/deploy?resume=legacy";
 }

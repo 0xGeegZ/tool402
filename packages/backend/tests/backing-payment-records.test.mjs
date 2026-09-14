@@ -162,9 +162,44 @@ test("reconciles an existing pre-M59 pending RiskScan claim without inventing an
   assert.equal(store.rows.backingIntents.length, 0);
 });
 
+test("keeps a rejected foreign candidate from owning the rightful payer's hash", async () => {
+  const { recordBackingPayment } = await import(storeUrl.href);
+  const signerA = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const signerB = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const hash = `0x${"ab".repeat(32)}`;
+  const attemptA = "AAAAAAAAAAAAAAAAAAAAAA";
+  const attemptB = "BBBBBBBBBBBBBBBBBBBBBA";
+  const store = reservationStoreDatabase({
+    attempts: [
+      { _id: "externalPrepareCommandAttempts:a", idempotencyKey: attemptA, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signerA, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "a".repeat(64), state: "PREPARED" },
+      { _id: "externalPrepareCommandAttempts:b", idempotencyKey: attemptB, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signerB, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "b".repeat(64), state: "PREPARED" },
+    ],
+    intents: [
+      { _id: "backingIntents:a", idempotencyKey: attemptA, canonicalSignerAddress: signerA, offeringPublicId: "offering_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", tinybars: "7" },
+      { _id: "backingIntents:b", idempotencyKey: attemptB, canonicalSignerAddress: signerB, offeringPublicId: "offering_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", tinybars: "7" },
+    ],
+    claims: [
+      { _id: "backingPaymentClaims:a", attemptId: "externalPrepareCommandAttempts:a", canonicalSignerAddress: signerA, offeringPublicId: "offering_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", tinybars: "7", state: "PREPARED", claimedAt: 1n },
+      { _id: "backingPaymentClaims:b", attemptId: "externalPrepareCommandAttempts:b", canonicalSignerAddress: signerB, offeringPublicId: "offering_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", tinybars: "7", state: "PREPARED", claimedAt: 2n },
+    ],
+  });
+  const ctx = { db: store.db };
+  assert.deepEqual(
+    await recordBackingPayment._handler(ctx, { attemptPublicId: attemptB, canonicalSignerAddress: signerB, transactionHash: hash, tinybars: "7", outcome: "REJECTED" }),
+    { status: "REJECTED", transactionHash: hash, tinybars: "7" },
+  );
+  assert.deepEqual(
+    await recordBackingPayment._handler(ctx, { attemptPublicId: attemptA, canonicalSignerAddress: signerA, transactionHash: hash, tinybars: "7", outcome: "CONFIRMED" }),
+    { status: "CONFIRMED", transactionHash: hash, tinybars: "7" },
+  );
+  assert.equal(store.rows.backingPaymentClaims.find((claim) => claim._id === "backingPaymentClaims:b").verifiedTransactionHash, undefined);
+  assert.equal(store.rows.backingPaymentClaims.find((claim) => claim._id === "backingPaymentClaims:a").verifiedTransactionHash, hash);
+});
+
 test("keeps the shared ATS prepare attempt PREPARED while the dedicated backing claim changes state", async () => {
   const source = await readFile(storeUrl, "utf8");
-  assert.match(source, /ctx\.db\.patch\(claim\._id, \{ transactionHash: args\.transactionHash, state: next \}\)/u);
+  assert.match(source, /by_verified_transaction_hash/u);
+  assert.match(source, /verifiedTransactionHash: args\.transactionHash/u);
   assert.doesNotMatch(source, /ctx\.db\.patch\(row\._id, \{ state: next \}\)/u);
 });
 
@@ -432,6 +467,32 @@ test("persists a submitted hash before observation and later re-verifies it with
   const rejected = await reverifyBackerPaymentForTest({ ...ctx, runQuery: async () => ({ ...context, state: "OUTCOME_UNKNOWN" }) }, { canonicalSignerAddress: signer }, async () => ({ from: signer, to: signer, value: 10_000_000_000_000_000_000n, status: "0x0" }));
   assert.equal(rejected.status, "REJECTED");
   assert.deepEqual(writes.map((write) => write.outcome), ["SUBMITTED", "OUTCOME_UNKNOWN", "CONFIRMED", "REJECTED"]);
+});
+
+test("re-verifies a revoked pre-M59 RiskScan candidate through the legacy read path", async () => {
+  const { reverifyLegacyRiskScanPaymentForTest } = await import(recordsUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const transactionHash = `0x${"cd".repeat(32)}`;
+  const writes = [];
+  const context = {
+    attemptPublicId: "AAAAAAAAAAAAAAAAAAAAAA",
+    expectedTarget: "0x1111111111111111111111111111111111111111",
+    transactionHash,
+    tinybars: "7",
+    state: "OUTCOME_UNKNOWN",
+  };
+  const ctx = {
+    runQuery: async () => context,
+    runMutation: async (_reference, input) => {
+      writes.push(input);
+      return { status: input.outcome, transactionHash: input.transactionHash, tinybars: input.tinybars };
+    },
+  };
+  assert.deepEqual(
+    await reverifyLegacyRiskScanPaymentForTest(ctx, { canonicalSignerAddress: signer }, async () => ({ from: signer, to: context.expectedTarget, value: 70_000_000_000n, status: "0x1" })),
+    { status: "CONFIRMED", transactionHash, tinybars: "7" },
+  );
+  assert.deepEqual(writes.map((write) => write.outcome), ["CONFIRMED"]);
 });
 
 test("re-verifies the selected offer's pending claim instead of the wallet's latest claim", async () => {

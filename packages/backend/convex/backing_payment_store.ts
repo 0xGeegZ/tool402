@@ -207,8 +207,10 @@ export const recordBackingPayment = internalMutation({
     const rows = await ctx.db.query("externalPrepareCommandAttempts").withIndex("by_idempotency_key", (q) => q.eq("idempotencyKey", args.attemptPublicId)).take(2);
     if (rows.length !== 1 || !validAttempt(rows[0], args)) return null;
     const row = rows[0];
-    const claims = await ctx.db.query(backingPaymentClaimStore).withIndex("by_transaction_hash", (q) => q.eq("transactionHash", args.transactionHash)).take(2);
-    if (claims.length > 1) return null;
+    const verifiedClaims = await ctx.db.query(backingPaymentClaimStore)
+      .withIndex("by_verified_transaction_hash", (q) => q.eq("verifiedTransactionHash", args.transactionHash))
+      .take(2);
+    if (verifiedClaims.length > 1) return null;
     const attempts = await ctx.db.query(backingPaymentClaimStore).withIndex("by_attempt_id", (q) => q.eq("attemptId", row._id)).take(2);
     if (attempts.length > 1) return null;
     const claim = attempts[0];
@@ -232,14 +234,29 @@ export const recordBackingPayment = internalMutation({
       && (offeringPublicId !== legacyRiskScanOfferingPublicId
         || !await mayReserveNewBackingPayment(ctx, args.canonicalSignerAddress, offeringPublicId))
     ) return null;
-    const next = resolveBackingPaymentClaim(claims[0], claim, { attemptId: row._id, transactionHash: args.transactionHash, tinybars: args.tinybars, outcome: args.outcome });
+    const next = resolveBackingPaymentClaim(verifiedClaims[0], claim, { attemptId: row._id, transactionHash: args.transactionHash, tinybars: args.tinybars, outcome: args.outcome });
     if (next === null || (claim === undefined && (row.state === "CONFIRMED" || row.state === "REJECTED"))) return null;
     if (claim === undefined) {
-      await ctx.db.insert(backingPaymentClaimStore, { transactionHash: args.transactionHash, attemptId: row._id, canonicalSignerAddress: args.canonicalSignerAddress, offeringPublicId, tinybars: args.tinybars, state: next, claimedAt: now() });
+      await ctx.db.insert(backingPaymentClaimStore, {
+        transactionHash: args.transactionHash,
+        ...(next === "CONFIRMED" ? { verifiedTransactionHash: args.transactionHash } : {}),
+        attemptId: row._id,
+        canonicalSignerAddress: args.canonicalSignerAddress,
+        offeringPublicId,
+        tinybars: args.tinybars,
+        state: next,
+        claimedAt: now(),
+      });
     } else if (claim.state !== next) {
-      await ctx.db.patch(claim._id, { transactionHash: args.transactionHash, state: next });
+      await ctx.db.patch(claim._id, {
+        transactionHash: args.transactionHash,
+        ...(next === "CONFIRMED" ? { verifiedTransactionHash: args.transactionHash } : {}),
+        state: next,
+      });
     } else if (claim.transactionHash === undefined) {
       await ctx.db.patch(claim._id, { transactionHash: args.transactionHash });
+    } else if (next === "CONFIRMED" && claim.verifiedTransactionHash === undefined) {
+      await ctx.db.patch(claim._id, { verifiedTransactionHash: args.transactionHash });
     }
     return { status: next, transactionHash: args.transactionHash, tinybars: args.tinybars };
   },
@@ -277,6 +294,33 @@ export const readLegacyRiskScanPayment = internalQuery({
       if (claims.length === 1 && claim !== undefined && integerPattern.test(claim.tinybars)
         && (claim.transactionHash === undefined || hashPattern.test(claim.transactionHash))) {
         return { status: claim.state, transactionHash: claim.transactionHash ?? null, tinybars: claim.tinybars };
+      }
+    }
+    return null;
+  },
+});
+
+/** Pending M58 evidence remains owned by its immutable attempt even after current BACKER access is revoked. */
+export const readLegacyRiskScanPaymentVerificationContext = internalQuery({
+  args: { canonicalSignerAddress: v.string() },
+  returns: v.union(v.null(), v.object({
+    attemptPublicId: v.string(), expectedTarget: v.string(), transactionHash: v.string(), tinybars: v.string(), state: outcomeValidator,
+  })),
+  handler: async (ctx, args) => {
+    if (!addressPattern.test(args.canonicalSignerAddress)) return null;
+    const attempts = await ctx.db.query("externalPrepareCommandAttempts")
+      .withIndex("by_funding_backer_and_subject", (query) => (
+        query.eq("operationKind", "HEDERA_FUNDING").eq("canonicalSignerAddress", args.canonicalSignerAddress).eq("subjectPublicId", legacyRiskScanOfferingPublicId)
+      ))
+      .order("desc").take(100);
+    for (const attempt of attempts) {
+      if (!validAttempt(attempt, { attemptPublicId: attempt.idempotencyKey, canonicalSignerAddress: args.canonicalSignerAddress })) continue;
+      const claims = await ctx.db.query(backingPaymentClaimStore).withIndex("by_attempt_id", (query) => query.eq("attemptId", attempt._id)).take(2);
+      const claim = claims[0];
+      const transactionHash = claim?.transactionHash;
+      if (claims.length === 1 && claim !== undefined && claim.state !== "PREPARED" && claim.state !== "CONFIRMED" && claim.state !== "REJECTED"
+        && typeof transactionHash === "string" && hashPattern.test(transactionHash) && integerPattern.test(claim.tinybars)) {
+        return { attemptPublicId: attempt.idempotencyKey, expectedTarget: attempt.expectedTarget, transactionHash, tinybars: claim.tinybars, state: claim.state };
       }
     }
     return null;

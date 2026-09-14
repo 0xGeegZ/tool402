@@ -491,6 +491,61 @@ implementedTest("projects one selected issuer authority from an active self-serv
   } finally { process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous; }
 });
 
+implementedTest("does not let an unrelated enabled legacy issuer mask a selected self-service tool", async () => {
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
+    const { readCommandAuthorities } = await import(replayUrl);
+    const suffix = "d".repeat(32);
+    const subjectPublicId = `tool_${suffix}`;
+    const principalPublicId = `self_service_${canonicalSignerAddress.slice(2)}`;
+    const legacy = {
+      principalPublicId: "legacy_issuer",
+      canonicalSignerAddress,
+      chainId: 296,
+      role: "ISSUER",
+      ownedSubjectPublicIds: ["riskscan_revenue_note_demo"],
+      authorityVersion: "legacy_v1",
+      enabled: true,
+    };
+    const rows = {
+      commandAuthorities: [legacy],
+      selfServiceAccounts: [{ canonicalSignerAddress, chainId: 296, principalPublicId, policyVersion: "public_testnet_v1", status: "ACTIVE" }],
+      providerTools: [{ _id: "providerTools:self-service", _creationTime: 1, toolPublicId: subjectPublicId, subjectPublicId, offeringPublicId: `offering_${suffix}`, serviceId: subjectPublicId, serviceSlug: `tool-${suffix}`, canonicalSignerAddress, chainId: 296, principalPublicId, authorityVersion: "public_testnet_v1", requestId: "00000000-0000-4000-8000-000000000000", offeringVersion: 1, directoryVersion: 1, createdAt: 1n }],
+    };
+    const ctx = { db: { query(table) { return { withIndex(_index, select) { const filters = []; const range = { eq(field, value) { filters.push([field, value]); return range; } }; select(range); return { async take(limit) { return rows[table].filter((row) => filters.every(([field, value]) => row[field] === value)).slice(0, limit); } }; } }; } } };
+    assert.deepEqual(
+      await readCommandAuthorities._handler(ctx, { chainId: 296, canonicalSignerAddress, selection: { subjectPublicId, offeringPublicId: `offering_${suffix}` } }),
+      [{ principalPublicId, canonicalSignerAddress, chainId: 296, role: "ISSUER", ownedSubjectPublicIds: [subjectPublicId], authorityVersion: "public_testnet_v1", enabled: true }],
+    );
+  } finally {
+    process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous;
+  }
+});
+
+implementedTest("resolves an attachment authority from its immutable attempt before legacy role fallback", async () => {
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
+    const { readCommandAuthorities } = await import(replayUrl);
+    const suffix = "e".repeat(32);
+    const subjectPublicId = `tool_${suffix}`;
+    const principalPublicId = `self_service_${canonicalSignerAddress.slice(2)}`;
+    const attemptPublicId = "AAAAAAAAAAAAAAAAAAAAAA";
+    const rows = {
+      commandAuthorities: [{ principalPublicId: "legacy_issuer", canonicalSignerAddress, chainId: 296, role: "ISSUER", ownedSubjectPublicIds: ["riskscan_revenue_note_demo"], authorityVersion: "legacy_v1", enabled: true }],
+      selfServiceAccounts: [{ canonicalSignerAddress, chainId: 296, principalPublicId, policyVersion: "public_testnet_v1", status: "ACTIVE" }],
+      providerTools: [{ _id: "providerTools:self-service", _creationTime: 1, toolPublicId: subjectPublicId, subjectPublicId, offeringPublicId: `offering_${suffix}`, serviceId: subjectPublicId, serviceSlug: `tool-${suffix}`, canonicalSignerAddress, chainId: 296, principalPublicId, authorityVersion: "public_testnet_v1", requestId: "00000000-0000-4000-8000-000000000000", offeringVersion: 1, directoryVersion: 1, createdAt: 1n }],
+      externalPrepareCommandAttempts: [{ _id: "externalPrepareCommandAttempts:self-service", idempotencyKey: attemptPublicId, canonicalSignerAddress, principalPublicId, authorityVersion: "public_testnet_v1", role: "ISSUER", subjectPublicId }],
+    };
+    const ctx = { db: { query(table) { return { withIndex(_index, select) { const filters = []; const range = { eq(field, value) { filters.push([field, value]); return range; } }; select(range); return { async take(limit) { return rows[table].filter((row) => filters.every(([field, value]) => row[field] === value)).slice(0, limit); } }; } }; } } };
+    assert.deepEqual(
+      await readCommandAuthorities._handler(ctx, { chainId: 296, canonicalSignerAddress, selection: { attemptPublicId } }),
+      [{ principalPublicId, canonicalSignerAddress, chainId: 296, role: "ISSUER", ownedSubjectPublicIds: [subjectPublicId], authorityVersion: "public_testnet_v1", enabled: true }],
+    );
+  } finally { process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous; }
+});
+
 implementedTest("projects an active self-service issuer for deferred attempt and offering ownership", async () => {
   const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
   process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";

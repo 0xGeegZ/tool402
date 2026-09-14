@@ -54,6 +54,7 @@ export interface BackingOffering {
   readonly terms: OfferingTerms;
   readonly maturityAt: string;
   readonly treasury: string;
+  readonly fundingOpen: boolean;
 }
 
 export interface BackingParameters {
@@ -132,7 +133,7 @@ const refusalMessages: Readonly<Record<Exclude<RelayOutcome, "ACCEPTED" | "trans
 
 export function readBackingOffering(projection: BackingProjection | null | undefined): BackingOffering | null {
   if (projection === null || projection === undefined) return null;
-  if (projection.state !== "OPEN") return null;
+  if (projection.state !== "OPEN" && projection.state !== "CLOSED") return null;
   const treasury = projection.fundingTreasuryAddress;
   if (typeof treasury !== "string" || !treasuryPattern.test(treasury)) return null;
   let terms: OfferingTerms;
@@ -147,6 +148,7 @@ export function readBackingOffering(projection: BackingProjection | null | undef
     terms,
     maturityAt: projection.definition.maturityAt,
     treasury,
+    fundingOpen: projection.state === "OPEN",
   });
 }
 

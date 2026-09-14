@@ -6,7 +6,7 @@ import {
   type QueryBuilder,
 } from "convex/server";
 import { v } from "convex/values";
-import { resolveSelectedProviderToolSubject } from "./provider_tool_authority.ts";
+import { isSelectedProviderToolSubject, resolveSelectedProviderToolSubject } from "./provider_tool_authority.ts";
 import type schema from "./schema.ts";
 
 const internalMutation: MutationBuilder<
@@ -27,6 +27,25 @@ type ProjectedAuthority = {
   readonly authorityVersion: string;
   readonly enabled: boolean;
 };
+
+type TargetSelection = Readonly<{ subjectPublicId?: string; offeringPublicId?: string; attemptPublicId?: string }>;
+
+async function resolveAuthorityTarget(ctx: Parameters<typeof resolveSelectedProviderToolSubject>[0], authority: ProjectedAuthority, selection: TargetSelection): Promise<string> {
+  if (typeof selection.subjectPublicId === "string") {
+    return (await resolveSelectedProviderToolSubject(ctx, authority, { subjectPublicId: selection.subjectPublicId, ...(selection.offeringPublicId === undefined ? {} : { offeringPublicId: selection.offeringPublicId }) })).subjectPublicId;
+  }
+  if (typeof selection.attemptPublicId !== "string") throw new TypeError("missing durable target");
+  const attemptPublicId = selection.attemptPublicId;
+  const attempts = await ctx.db.query("externalPrepareCommandAttempts")
+    .withIndex("by_idempotency_key", (query) => query.eq("idempotencyKey", attemptPublicId))
+    .take(2);
+  const attempt = attempts[0];
+  if (attempts.length !== 1 || attempt === undefined || attempt.canonicalSignerAddress !== authority.canonicalSignerAddress
+    || attempt.principalPublicId !== authority.principalPublicId || attempt.authorityVersion !== authority.authorityVersion
+    || attempt.role !== authority.role || typeof attempt.subjectPublicId !== "string") throw new TypeError("attempt authority mismatch");
+  if (!isSelectedProviderToolSubject(attempt.subjectPublicId)) return attempt.subjectPublicId;
+  return (await resolveSelectedProviderToolSubject(ctx, authority, { subjectPublicId: attempt.subjectPublicId })).subjectPublicId;
+}
 
 function claimTimestamp(): bigint {
   const now = Date.now();
@@ -105,8 +124,9 @@ export const readCommandAuthorities = internalQuery({
     chainId: v.literal(296),
     canonicalSignerAddress: v.string(),
     selection: v.optional(v.object({
-      subjectPublicId: v.string(),
+      subjectPublicId: v.optional(v.string()),
       offeringPublicId: v.optional(v.string()),
+      attemptPublicId: v.optional(v.string()),
     })),
     purpose: v.optional(v.union(v.literal("BACKING"), v.literal("OWNER"))),
   },
@@ -127,28 +147,39 @@ export const readCommandAuthorities = internalQuery({
       .take(2);
     const initialProjection = authorities.map(projectAuthority);
     if (!initialProjection.every((authority) => authority !== null)) return [];
-    let projected: ProjectedAuthority[] = initialProjection as ProjectedAuthority[];
-    const compatibleLegacy = projected.length === 1 && projected[0]?.enabled === true
-      && (args.purpose === "BACKING" ? projected[0].role === "BACKER" : projected[0].role === "ISSUER");
-    if (!compatibleLegacy) {
-      if (process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED !== "true") return [];
-      const accounts = await ctx.db.query("selfServiceAccounts")
-        .withIndex("by_chain_id_and_canonical_signer_address", (query) => query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress))
-        .take(2);
-      const account = accounts.length === 1 ? accounts[0] : undefined;
-      if (account === undefined || account.status !== "ACTIVE" || account.policyVersion !== "public_testnet_v1"
-        || account.principalPublicId !== `self_service_${args.canonicalSignerAddress.slice(2)}`) return [];
-      projected = [{ principalPublicId: account.principalPublicId, canonicalSignerAddress: args.canonicalSignerAddress, chainId: 296, role: args.purpose === "OWNER" || args.selection !== undefined ? "ISSUER" : "BACKER", ownedSubjectPublicIds: [], authorityVersion: account.policyVersion, enabled: true }];
+    const legacy = initialProjection.length === 1 ? initialProjection[0] : undefined;
+    const compatibleLegacy = legacy !== undefined && legacy.enabled === true
+      && (args.purpose === "BACKING" ? legacy.role === "BACKER" : legacy.role === "ISSUER");
+    if (compatibleLegacy && args.selection === undefined) return [legacy];
+    if (compatibleLegacy && args.selection !== undefined) {
+      try {
+        const subjectPublicId = await resolveAuthorityTarget(ctx, legacy, args.selection);
+        return [{ ...legacy, ownedSubjectPublicIds: [subjectPublicId] }];
+      } catch {
+        // The selected durable tool belongs to another principal/version. It
+        // must not make an unrelated legacy issuer mask active self-service.
+      }
     }
-    if (args.selection === undefined) return projected;
-    if (projected.length !== 1 || projected[0] === undefined) return [];
+    if (process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED !== "true") return [];
+    const accounts = await ctx.db.query("selfServiceAccounts")
+      .withIndex("by_chain_id_and_canonical_signer_address", (query) => query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress))
+      .take(2);
+    const account = accounts.length === 1 ? accounts[0] : undefined;
+    if (account === undefined || account.status !== "ACTIVE" || account.policyVersion !== "public_testnet_v1"
+      || account.principalPublicId !== `self_service_${args.canonicalSignerAddress.slice(2)}`) return [];
+    const projected: ProjectedAuthority = {
+      principalPublicId: account.principalPublicId,
+      canonicalSignerAddress: args.canonicalSignerAddress,
+      chainId: 296,
+      role: args.purpose === "OWNER" || args.selection !== undefined ? "ISSUER" : "BACKER",
+      ownedSubjectPublicIds: [],
+      authorityVersion: account.policyVersion,
+      enabled: true,
+    };
+    if (args.selection === undefined) return [projected];
     try {
-      const selected = await resolveSelectedProviderToolSubject(
-        ctx,
-        projected[0],
-        args.selection,
-      );
-      return [{ ...projected[0], ownedSubjectPublicIds: [selected.subjectPublicId] }];
+      const subjectPublicId = await resolveAuthorityTarget(ctx, projected, args.selection);
+      return [{ ...projected, ownedSubjectPublicIds: [subjectPublicId] }];
     } catch {
       return [];
     }

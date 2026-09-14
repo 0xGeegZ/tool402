@@ -153,7 +153,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   const resumedReservation = payment?.status === "PREPARED" && view.kind === "prepared";
   const locked = (payment !== null && !resumedReservation) || view.kind !== "choosing" || request !== null || preparing;
   const dashboardMatchesWallet = session !== null && dashboardAddress !== null && session.address === dashboardAddress;
-  const canPrepare = payment === null && validation.ok && acknowledged && dashboardMatchesWallet && !locked;
+  const canPrepare = offering.fundingOpen && payment === null && validation.ok && acknowledged && dashboardMatchesWallet && !locked;
   const readoutUnits = committed !== null ? committed.units : validation.ok ? validation.units : null;
   const readoutTinybars = committed !== null ? committed.tinybars : validation.ok ? paymentTinybars(offering, validation.units) : null;
   const backingPath = offering.offeringPublicId === "riskscan_revenue_note_demo"
@@ -258,6 +258,10 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   async function send() {
     if (session === null || dashboardAddress === null || session.address !== dashboardAddress || view.kind !== "prepared" || transferring || sendingRef.current) {
       if (session !== null && dashboardAddress !== null && session.address !== dashboardAddress) setNotice("The connected MetaMask wallet differs from the signed dashboard wallet. Sign in with this backing wallet before funding; nothing was sent.");
+      return;
+    }
+    if (!offering.fundingOpen) {
+      setNotice("This offering is closed. The recorded payment can be recovered or rechecked, but no new transfer is sent.");
       return;
     }
     sendingRef.current = true;

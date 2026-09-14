@@ -134,12 +134,22 @@ function paymentHistory(value: unknown): BackingPaymentHistoryRecord[] | null {
   return records;
 }
 
+function hasExactlyEnumerableDataFields(value: object, fields: readonly string[]): boolean {
+  const keys = Reflect.ownKeys(value);
+  if (keys.length !== fields.length || keys.some((key) => typeof key !== "string" || !fields.includes(key))) return false;
+  return fields.every((field) => {
+    const descriptor = Object.getOwnPropertyDescriptor(value, field);
+    return descriptor?.enumerable === true && Object.hasOwn(descriptor, "value")
+      && !Object.hasOwn(descriptor, "get") && !Object.hasOwn(descriptor, "set");
+  });
+}
+
 function frozenIntent(value: unknown): FrozenBackingIntent | null {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
   const outer = value as Record<string, unknown>;
   if (outer.outcome !== "PREPARED" || outer.intent === null || typeof outer.intent !== "object" || Array.isArray(outer.intent)) return null;
   const intent = outer.intent as Record<string, unknown>;
-  if (JSON.stringify(Object.keys(intent)) !== JSON.stringify(["idempotencyKey", "purchaseIntentId", "offeringPublicId", "subjectPublicId", "recipient", "units", "tinybars", "canonicalParametersHash", "expiresAt"])
+  if (!hasExactlyEnumerableDataFields(intent, ["idempotencyKey", "purchaseIntentId", "offeringPublicId", "subjectPublicId", "recipient", "units", "tinybars", "canonicalParametersHash", "expiresAt"])
     || typeof intent.idempotencyKey !== "string" || !attemptPattern.test(intent.idempotencyKey)
     || typeof intent.purchaseIntentId !== "string" || !attemptPattern.test(intent.purchaseIntentId)
     || typeof intent.offeringPublicId !== "string" || !/^[A-Za-z0-9_-]{1,96}$/u.test(intent.offeringPublicId)

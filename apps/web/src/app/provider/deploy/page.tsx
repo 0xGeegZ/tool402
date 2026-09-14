@@ -2,14 +2,14 @@ import { LandingFooter } from "../../../components/landing/landing-footer";
 import { ProviderDeployWizard } from "../../../components/provider/deploy/provider-deploy-wizard";
 import { NewToolAction } from "../../../components/provider/deploy/new-tool-action";
 import { readDashboardSession, readDashboardSessionCookieName } from "../../../lib/dashboard-auth/dashboard-auth";
-import { ensureSelfServiceMembership } from "../../../lib/provider-tools-server";
+import { canResumeLegacyProviderCampaign, ensureSelfServiceMembership } from "../../../lib/provider-tools-server";
 import { parseProviderToolId } from "@tool402/core";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 
 type ProviderDeployPageProps = {
-  readonly searchParams: Promise<{ tool?: string }>;
+  readonly searchParams: Promise<{ tool?: string; resume?: string }>;
 };
 
 export default function ProviderDeployPage({ searchParams }: ProviderDeployPageProps) {
@@ -21,20 +21,32 @@ export default function ProviderDeployPage({ searchParams }: ProviderDeployPageP
 }
 
 async function ProviderDeployBoundary({ searchParams }: ProviderDeployPageProps) {
-  const tool = (await searchParams).tool;
+  const { tool, resume } = await searchParams;
   const parsedToolPublicId = tool === undefined ? undefined : parseProviderToolId(tool);
   if (parsedToolPublicId === null) notFound();
+  if ((resume !== undefined && resume !== "legacy") || (resume === "legacy" && parsedToolPublicId !== undefined)) notFound();
   const selectedToolPublicId = parsedToolPublicId;
   const sessionCookieName = readDashboardSessionCookieName(process.env);
   const cookieStore = await cookies();
   const sessionCookie = sessionCookieName === null ? null : cookieStore.get(sessionCookieName)?.value ?? null;
   const session = await readDashboardSession(sessionCookie, process.env, Date.now());
-  const returnTo = selectedToolPublicId === undefined ? "/provider/deploy" : `/provider/deploy?tool=${encodeURIComponent(selectedToolPublicId)}`;
+  const returnTo = selectedToolPublicId === undefined
+    ? resume === "legacy" ? "/provider/deploy?resume=legacy" : "/provider/deploy"
+    : `/provider/deploy?tool=${encodeURIComponent(selectedToolPublicId)}`;
   if (session === null) redirect(`/sign-in?returnTo=${encodeURIComponent(returnTo)}`);
   await ensureSelfServiceMembership(
     process.env,
     sessionCookie,
   );
+  if (resume === "legacy") {
+    if (!await canResumeLegacyProviderCampaign(process.env, session.address)) notFound();
+    return (
+      <>
+        <ProviderDeployWizard />
+        <LandingFooter />
+      </>
+    );
+  }
   if (selectedToolPublicId === undefined) {
     return (
       <>

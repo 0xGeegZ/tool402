@@ -18,6 +18,7 @@ import * as offerings from "../../../packages/backend/convex/offerings.ts";
 import * as prepare from "../../../packages/backend/convex/external_prepare_command_admission.ts";
 import * as receipts from "../../../packages/backend/convex/ats_candidate_receipts.ts";
 import * as verification from "../../../packages/backend/convex/ats_receipt_verification.ts";
+import * as providerToolRecheck from "../../../packages/backend/convex/provider_tool_recheck.ts";
 import * as directories from "../../../packages/backend/convex/directory_versions.ts";
 import * as backingIntents from "../../../packages/backend/convex/backing_intents.ts";
 import { handleProviderSessionIngress } from "../../../packages/backend/convex/provider_session_ingress.ts";
@@ -27,7 +28,7 @@ import { handleCommandRelayPost, signAndRelayCommand } from "../src/lib/wallet/c
 import { buildStageSignatureRequest, providerDeploymentTarget } from "../src/lib/wallet/command-bridge.ts";
 import { completeDirectoryRecordLiteral, directoryRecordForProviderTool } from "../src/components/provider/deploy/directory-record-literal.ts";
 import { createStageBBrowserProviderBridge } from "../src/lib/ats/stage-b-browser-provider-bridge.ts";
-import { loadProviderToolDeployment } from "../src/lib/provider-tool-deployment-client.ts";
+import { loadProviderToolDeployment, recheckProviderToolDeployment } from "../src/lib/provider-tool-deployment-client.ts";
 import { readProviderProjections } from "../src/lib/offering-projection.ts";
 import { createProviderToolAllocationRequest, parseProviderToolAllocation } from "../src/lib/provider-tools-client.ts";
 import { campaignFixture } from "../src/components/provider/deploy/campaign-fixture.ts";
@@ -133,7 +134,7 @@ async function settled(render, ready) {
 // Only persistence and Convex function routing are emulated. Every admission,
 // authority, replay, lifecycle and receipt decision belongs to its real handler.
 function runtime({ selfService = false } = {}) {
-  const modules = { provider_tools: providerTools, wallet_command_replay: replay, offerings, external_prepare_command_admission: prepare, ats_candidate_receipts: receipts, ats_receipt_verification: verification, directory_versions: directories };
+  const modules = { provider_tools: providerTools, provider_tool_recheck: providerToolRecheck, wallet_command_replay: replay, offerings, external_prepare_command_admission: prepare, ats_candidate_receipts: receipts, ats_receipt_verification: verification, directory_versions: directories };
   let rows = {
     commandAuthorities: selfService ? [] : [{ _id: "commandAuthorities:issuer", _creationTime: 1, principalPublicId: "tool402_ats_issuer_testnet_v1", canonicalSignerAddress: issuer, chainId: 296, role: "ISSUER", ownedSubjectPublicIds: ["riskscan_revenue_note_demo"], authorityVersion: "ats_issuer_testnet_v1", enabled: true }],
     selfServiceAccounts: selfService ? [
@@ -229,6 +230,7 @@ function runtime({ selfService = false } = {}) {
     db,
     runQuery: (reference, args) => invoke(reference, args),
     runMutation: (reference, args) => invoke(reference, args, true),
+    runAction: (reference, args) => invoke(reference, args),
     scheduler: { async runAfter(delay, reference, args) {
       assert.equal(delay, 0);
       scheduled.push({ reference, args });
@@ -610,12 +612,10 @@ test("a self-service provider reaches independent OPEN tools through signed orch
   assert.equal(state.rows.providerToolReceiptBindings.length, 1);
   receiptAlias = null;
   const signaturesBeforeReceiptRecheck = wireCommands.length;
-  (await b.mounted.ready()).stages.props.onActivate(2);
-  await b.mounted.ready();
+  const recheckedB = await recheckProviderToolDeployment(b.tool.toolPublicId);
+  assert.equal(recheckedB?.state, "READY", "the authenticated deployment POST must invoke the verifier");
   assert.equal(wireCommands.length, signaturesBeforeReceiptRecheck, "receipt recheck must not require another attachment signature");
-  const bAttempt = state.rows.externalPrepareCommandAttempts.find((attempt) => attempt.subjectPublicId === b.tool.subjectPublicId);
-  assert.ok(bAttempt, "B must retain its exact submitted ATS attempt for server re-verification");
-  assert.deepEqual(await state.reverify(bAttempt._id), { outcome: "CONFIRMED" });
+  assert.equal((await loadProviderToolDeployment(b.tool.toolPublicId)).state, "READY", "the authenticated deployment POST must invoke the verifier");
   (await b.mounted.ready()).stages.props.onActivate(2);
   await b.mounted.ready();
   await verifyAndPublish(b, { alreadyVerified: true });
@@ -650,12 +650,10 @@ test("a self-service provider reaches independent OPEN tools through signed orch
   assert.equal(state.scheduled.length, 0, "an unknown reader outcome must not schedule retries");
   assert.equal(state.rows.providerToolReceiptBindings.length, 2);
   const signaturesBefore = wireCommands.length;
-  (await c.mounted.ready()).stages.props.onActivate(2);
-  await c.mounted.ready();
+  const recheckedC = await recheckProviderToolDeployment(c.tool.toolPublicId);
+  assert.equal(recheckedC?.state, "ASSET_PENDING", "the authenticated deployment POST retains unknown evidence without another wallet request");
   assert.equal(wireCommands.length, signaturesBefore, "an unknown receipt recheck must not request another attachment signature");
-  const cAttempt = state.rows.externalPrepareCommandAttempts.find((attempt) => attempt.subjectPublicId === c.tool.subjectPublicId);
-  assert.ok(cAttempt, "C must retain its exact submitted ATS attempt for server re-verification");
-  assert.deepEqual(await state.reverify(cAttempt._id), { outcome: "OUTCOME_UNKNOWN" });
+  assert.equal((await loadProviderToolDeployment(c.tool.toolPublicId)).state, "ASSET_PENDING", "the authenticated deployment POST retains unknown evidence without another wallet request");
   layout = await c.mounted.ready();
   assert.equal(layout.stages.props.enabledStage, 2);
   assert.equal(layout.stages.props.states[3].kind, "blocked");

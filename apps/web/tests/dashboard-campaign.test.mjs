@@ -38,7 +38,7 @@ implementedTest("returns the current RiskScan campaign only for its exact canoni
   assert.deepEqual(readDashboardCampaign(record, signer), {
     title: "RiskScan",
     state: "ASSET_PENDING",
-    href: "/provider/deploy",
+    href: "/provider/deploy?resume=legacy",
   });
 
   assert.deepEqual(readDashboardCampaign({ ...record, state: "OPEN" }, signer), {
@@ -56,6 +56,14 @@ implementedTest("returns the current RiskScan campaign only for its exact canoni
   ]) {
     assert.equal(readDashboardCampaign(candidate, signer), null);
   }
+});
+
+implementedTest("keeps the owner-checked legacy resume route distinct from generic tool allocation", async () => {
+  const page = await readFile(new URL("../src/app/provider/deploy/page.tsx", import.meta.url), "utf8");
+  assert.match(page, /resume === "legacy"/u);
+  assert.match(page, /canResumeLegacyProviderCampaign/u);
+  assert.match(page, /<ProviderDeployWizard\s*\/>/u);
+  assert.match(page, /<NewToolAction\s*\/>/u);
 });
 
 implementedTest("fails closed when the session signer is malformed or the projection is unavailable", async () => {

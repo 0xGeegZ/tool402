@@ -19,7 +19,7 @@ function record(overrides = {}) {
   };
 }
 
-test("projects only an OPEN selected provider offering with its persisted owner-recipient policy", async () => {
+test("projects OPEN funding and CLOSED recovery evidence with its persisted owner-recipient policy", async () => {
   const { loadProviderBackingProjection } = await import(moduleUrl.href);
   const projection = await loadProviderBackingProjection(
     { TOOL402_CONVEX_SITE_URL: "https://convex.test/" },
@@ -30,6 +30,14 @@ test("projects only an OPEN selected provider offering with its persisted owner-
   );
   assert.equal(projection?.fundingTreasuryAddress, owner);
   assert.equal(projection?.state, "OPEN");
+  const closed = await loadProviderBackingProjection(
+    { TOOL402_CONVEX_SITE_URL: "https://convex.test/" },
+    async (url) => url.pathname === `/public/offerings/${offeringPublicId}`
+      ? new Response(JSON.stringify({ outcome: "FOUND", record: record({ state: "CLOSED" }) }), { status: 200, headers: { "content-type": "application/json" } })
+      : new Response(null, { status: 404 }),
+    offeringPublicId,
+  );
+  assert.equal(closed?.state, "CLOSED");
   const rejected = await loadProviderBackingProjection(
     { TOOL402_CONVEX_SITE_URL: "https://convex.test/" },
     async (url) => url.pathname === `/public/offerings/${offeringPublicId}`

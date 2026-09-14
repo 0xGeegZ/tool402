@@ -204,8 +204,9 @@ implementedTest("registers the exact internal transport-replay and authority-rea
     chainId: literal(296),
     canonicalSignerAddress: string,
     selection: optional(object({
-      subjectPublicId: string,
+      subjectPublicId: optional(string),
       offeringPublicId: optional(string),
+      attemptPublicId: optional(string),
     })),
     purpose: optional(union("BACKING", "OWNER")),
   }));

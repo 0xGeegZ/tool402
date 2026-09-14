@@ -101,9 +101,10 @@ test("reads the offering terms through the accepted constructor and refuses anyt
 
   assert.equal(state.readBackingOffering(null), null);
   assert.equal(state.readBackingOffering(undefined), null);
-  for (const campaignState of ["DRAFT", "ASSET_PENDING", "READY", "CLOSED"]) {
+  for (const campaignState of ["DRAFT", "ASSET_PENDING", "READY"]) {
     assert.equal(state.readBackingOffering(record({ state: campaignState })), null, campaignState);
   }
+  assert.equal(state.readBackingOffering(record({ state: "CLOSED" }))?.fundingOpen, false);
   assert.equal(state.readBackingOffering(record({ definition: { ...record().definition, terms: { ...termsV1, reserveShareBps: "1000", issuerShareBps: "9000" } } })), null);
   assert.equal(state.readBackingOffering(record({ definition: { ...record().definition, terms: { ...termsV1, noteUnitPriceTinybars: "1.5" } } })), null);
 });

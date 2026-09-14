@@ -15,7 +15,7 @@ export async function loadProviderBackingProjection(
   const offering = projections.offering.record;
   if (
     offering.offeringPublicId !== offeringPublicId || offering.subjectPublicId !== `tool_${match[1]}`
-    || offering.state !== "OPEN" || offering.fundingRecipient === undefined
+    || (offering.state !== "OPEN" && offering.state !== "CLOSED") || offering.fundingRecipient === undefined
   ) return null;
   const candidate = Object.freeze({ ...offering, fundingTreasuryAddress: offering.fundingRecipient });
   return readBackingOffering(candidate) === null ? null : candidate;

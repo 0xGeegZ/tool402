@@ -101,6 +101,9 @@ export default defineSchema({
     .index("by_funding_backer_and_subject", ["operationKind", "canonicalSignerAddress", "subjectPublicId"]),
   backingPaymentClaims: defineTable({
     transactionHash: v.optional(v.string()),
+    // A submitted hash is candidate evidence. Only a receipt verified against
+    // the immutable attempt receives globally exclusive ownership.
+    verifiedTransactionHash: v.optional(v.string()),
     attemptId: v.id("externalPrepareCommandAttempts"),
     canonicalSignerAddress: v.string(),
     // Added after the first legacy claims. New claims are deliberately
@@ -110,6 +113,7 @@ export default defineSchema({
     state: v.union(v.literal("PREPARED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN"), v.literal("CONFIRMED"), v.literal("REJECTED")),
     claimedAt: v.int64(),
   }).index("by_transaction_hash", ["transactionHash"])
+    .index("by_verified_transaction_hash", ["verifiedTransactionHash"])
     .index("by_attempt_id", ["attemptId"])
     .index("by_canonical_signer_address", ["canonicalSignerAddress"])
     .index("by_backer_offering_and_claimed_at", ["canonicalSignerAddress", "offeringPublicId", "claimedAt"]),

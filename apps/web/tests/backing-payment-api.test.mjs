@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
+import { convexToJson, jsonToConvex } from "convex/values";
 
 const serverUrl = new URL("../src/lib/backing-payment-server.ts", import.meta.url);
 const routeUrl = new URL("../src/app/api/backing/payment/route.ts", import.meta.url);
@@ -68,6 +69,30 @@ test("freezes a backing intent server-side and never accepts a browser-supplied 
   assert.notEqual(forwarded[0].idempotencyKey, forwarded[0].purchaseIntentId);
   const malformed = await prepareBackingIntentRequest(intentRequest(JSON.stringify({ offeringPublicId: "riskscan_revenue_note_demo", units: "10", recipient: signer })), env, { readSession: async () => session });
   assert.equal(malformed.status, 401);
+});
+
+test("accepts a frozen intent after the installed Convex JSON round trip", async () => {
+  const { prepareBackingIntentRequest } = await import(serverUrl.href);
+  const session = { address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" };
+  const response = await prepareBackingIntentRequest(intentRequest(), env, {
+    readSession: async () => session,
+    forward: async (input) => jsonToConvex(convexToJson({
+      outcome: "PREPARED",
+      intent: {
+        idempotencyKey: input.idempotencyKey,
+        purchaseIntentId: input.purchaseIntentId,
+        offeringPublicId: input.offeringPublicId,
+        subjectPublicId: "riskscan_revenue_note_demo",
+        recipient: "0xc89f87052c3e080b4a9b021d4930055031ef378e",
+        units: input.units,
+        tinybars: "1000000000",
+        canonicalParametersHash: "a".repeat(64),
+        expiresAt: input.expiresAt,
+      },
+    })),
+  });
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).intent.offeringPublicId, "riskscan_revenue_note_demo");
 });
 
 test("rejects missing session, wrong origin, malformed body, and unavailable upstream without exposing secrets", async () => {
