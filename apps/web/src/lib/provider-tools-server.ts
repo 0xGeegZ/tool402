@@ -12,6 +12,7 @@ type ForwardInput = Readonly<{
   cursor?: string | null;
   toolPublicId?: string;
   deploymentToolPublicId?: string;
+  deploymentRecheckToolPublicId?: string;
   ensureSelfService?: true;
   sessionExpiresAt: string;
 }>;
@@ -162,7 +163,9 @@ async function forwardAssertion(input: ForwardInput, env: DashboardAuthEnvironme
     const payload = input.ensureSelfService === true
       ? { type: "self_service_ensure", canonicalSignerAddress: input.canonicalSignerAddress, sessionExpiresAt: input.sessionExpiresAt }
       : input.requestId === undefined
-      ? input.deploymentToolPublicId !== undefined
+      ? input.deploymentRecheckToolPublicId !== undefined
+        ? { type: "deployment_recheck", canonicalSignerAddress: input.canonicalSignerAddress, toolPublicId: input.deploymentRecheckToolPublicId, sessionExpiresAt: input.sessionExpiresAt }
+        : input.deploymentToolPublicId !== undefined
         ? { type: "deployment", canonicalSignerAddress: input.canonicalSignerAddress, toolPublicId: input.deploymentToolPublicId, sessionExpiresAt: input.sessionExpiresAt }
         : input.toolPublicId === undefined
           ? { type: "list", canonicalSignerAddress: input.canonicalSignerAddress, cursor: input.cursor ?? null, sessionExpiresAt: input.sessionExpiresAt }
@@ -219,7 +222,7 @@ export async function handleProviderToolDeploymentRequest(
   toolPublicId: string,
   dependencies: Dependencies = {},
 ): Promise<Response> {
-  if (request.method !== "GET" || !toolIdPattern.test(toolPublicId)) return json({ outcome: "rejected" }, 401);
+  if ((request.method !== "GET" && request.method !== "POST") || !toolIdPattern.test(toolPublicId)) return json({ outcome: "rejected" }, 401);
   try {
     if (new URL(request.url).search !== "") return json({ outcome: "rejected" }, 401);
   } catch {
@@ -235,7 +238,7 @@ export async function handleProviderToolDeploymentRequest(
   try {
     return boundedResponse(await forward({
       canonicalSignerAddress: session.address,
-      deploymentToolPublicId: toolPublicId,
+      ...(request.method === "POST" ? { deploymentRecheckToolPublicId: toolPublicId } : { deploymentToolPublicId: toolPublicId }),
       sessionExpiresAt: session.expiresAt,
     }));
   } catch {

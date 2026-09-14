@@ -18,6 +18,7 @@ const integerPattern = /^(?:0|[1-9][0-9]*)$/u;
 const contextReference = makeFunctionReference<"query", { attemptPublicId: string; canonicalSignerAddress: string }, { expectedTarget: string; canonicalParametersHash: string } | null>("backing_payment_store:readBackingPaymentContext");
 const recordReference = makeFunctionReference<"mutation", { attemptPublicId: string; canonicalSignerAddress: string; transactionHash: string; tinybars: string; outcome: Status }, Outcome>("backing_payment_store:recordBackingPayment");
 const reserveReference = makeFunctionReference<"mutation", { attemptPublicId: string; canonicalSignerAddress: string; tinybars: string }, Reservation>("backing_payment_store:reserveBackingPayment");
+const beginDispatchReference = makeFunctionReference<"mutation", { attemptPublicId: string; canonicalSignerAddress: string; tinybars: string }, Reservation>("backing_payment_store:beginBackingPaymentDispatch");
 const verificationContextReference = makeFunctionReference<"query", { canonicalSignerAddress: string }, { attemptPublicId: string; expectedTarget: string; transactionHash: string; tinybars: string; state: Status } | null>("backing_payment_store:readBackingPaymentVerificationContext");
 const paymentReference = makeFunctionReference<"query", { canonicalSignerAddress: string }, Reservation>("backing_payment_store:readBackerPayment");
 const legacyRiskScanPaymentReference = makeFunctionReference<"query", { canonicalSignerAddress: string }, Reservation>("backing_payment_store:readLegacyRiskScanPayment");
@@ -94,6 +95,12 @@ export const reserveBackingPayment = internalActionGeneric({
   args: { attemptPublicId: v.string(), canonicalSignerAddress: v.string(), parameters: v.object({ offeringPublicId: v.string(), units: v.string(), tinybars: v.string(), purchaseIntentId: v.string() }) },
   returns: v.union(v.null(), v.object({ status: v.union(v.literal("PREPARED"), v.literal("CONFIRMED"), v.literal("REJECTED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN")), transactionHash: v.union(v.null(), v.string()), tinybars: v.string() })),
   handler: reserve,
+});
+
+export const beginBackingPaymentDispatch = internalActionGeneric({
+  args: { attemptPublicId: v.string(), canonicalSignerAddress: v.string(), parameters: v.object({ offeringPublicId: v.string(), units: v.string(), tinybars: v.string(), purchaseIntentId: v.string() }) },
+  returns: v.union(v.null(), v.object({ status: v.union(v.literal("PREPARED"), v.literal("CONFIRMED"), v.literal("REJECTED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN")), transactionHash: v.union(v.null(), v.string()), tinybars: v.string() })),
+  handler: async (ctx, args) => ctx.runMutation(beginDispatchReference, { attemptPublicId: args.attemptPublicId, canonicalSignerAddress: args.canonicalSignerAddress, tinybars: args.parameters.tinybars }),
 });
 
 export const reverifyBackerPayment = internalActionGeneric({

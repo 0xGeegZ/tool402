@@ -12,7 +12,7 @@ import {
 import { SignatureDialog, type SignatureResult } from "../../wallet/signature-dialog";
 import { loadProviderCampaignResume } from "../../../lib/provider-campaign-resume.ts";
 import { loadProviderDirectoryConfiguration } from "../../../lib/provider-directory-configuration-client.ts";
-import { loadProviderToolDeployment, type ProviderToolDeployment, type ProviderToolDurableValues } from "../../../lib/provider-tool-deployment-client.ts";
+import { loadProviderToolDeployment, recheckProviderToolDeployment, type ProviderToolDeployment, type ProviderToolDurableValues } from "../../../lib/provider-tool-deployment-client.ts";
 import type { ProviderToolAtsStageProjection } from "../../../lib/ats/provider-tool-ats-projection.ts";
 import { connectedWalletSession, useWalletSession, type WalletSession } from "../../wallet/wallet-session";
 import { Button } from "../../ui/button";
@@ -206,7 +206,9 @@ export function DeployStageSigning({
       && states[stage]?.detail?.startsWith("Recheck the attached receipt")
     ) {
       setResumePending(true);
-      setSelectedRefresh((current) => current + 1);
+      void recheckProviderToolDeployment(selectedToolPublicId).then((deployment) => {
+        if (deployment !== null) setSelectedRefresh((current) => current + 1);
+      }).finally(() => setResumePending(false));
       return;
     }
     try {

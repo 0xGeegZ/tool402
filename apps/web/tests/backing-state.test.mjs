@@ -289,6 +289,16 @@ test("reload with a hash awaiting attachment remains payment_submitted and canno
   assert.equal(mismatched.kind, "prepared");
 });
 
+test("an authoritative ambiguous payment state never reopens Send when browser storage is missing", async () => {
+  const state = await loadState();
+  const offering = state.readBackingOffering(record());
+  const intent = state.createBackingIntent(offering, 25n, nowMilliseconds, fixedBytes(51));
+
+  const recovered = state.viewForRecoveredPendingPayment(intent, null, "OUTCOME_UNKNOWN");
+  assert.equal(recovered.kind, "payment_outcome_unknown");
+  assert.throws(() => state.transferRequest(recovered, "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"), TypeError);
+});
+
 test("retries nothing: an unknown wallet return, a transport failure, and an unexpected response reach the unknown kind", async () => {
   const state = await loadState();
   const offering = state.readBackingOffering(record());

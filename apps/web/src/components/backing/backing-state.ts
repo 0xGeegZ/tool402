@@ -310,6 +310,7 @@ export function isCurrentBackingIntent(offering: BackingOffering, intent: Backin
 export function viewForRecoveredPendingPayment(
   intent: BackingIntent | null,
   pending: RecoveredPendingBackingPayment | null,
+  durableStatus: "PREPARED" | "CONFIRMED" | "REJECTED" | "SUBMITTED" | "OUTCOME_UNKNOWN" | null = null,
 ): BackingView {
   if (intent === null) return Object.freeze({ kind: "choosing" });
   if (
@@ -320,6 +321,9 @@ export function viewForRecoveredPendingPayment(
     && pending.intent.parameters.tinybars === intent.parameters.tinybars
     && pending.intent.parameters.purchaseIntentId === intent.parameters.purchaseIntentId
   ) return Object.freeze({ kind: "payment_submitted", intent, transactionHash: pending.transactionHash });
+  if (durableStatus === "OUTCOME_UNKNOWN" || durableStatus === "SUBMITTED" || durableStatus === "CONFIRMED" || durableStatus === "REJECTED") {
+    return Object.freeze({ kind: "payment_outcome_unknown", intent, message: unknownMessage });
+  }
   return Object.freeze({ kind: "prepared", intent });
 }
 

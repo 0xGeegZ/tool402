@@ -21,10 +21,12 @@ type ProviderToolRequest =
   | Readonly<{ type: "list"; canonicalSignerAddress: string; cursor: string | null; sessionExpiresAt: string }>
   | Readonly<{ type: "read"; canonicalSignerAddress: string; toolPublicId: string; sessionExpiresAt: string }>
   | Readonly<{ type: "deployment"; canonicalSignerAddress: string; toolPublicId: string; sessionExpiresAt: string }>
+  | Readonly<{ type: "deployment_recheck"; canonicalSignerAddress: string; toolPublicId: string; sessionExpiresAt: string }>
   | Readonly<{ type: "self_service_ensure"; canonicalSignerAddress: string; sessionExpiresAt: string }>
   | Readonly<{ type: "backing_intent"; canonicalSignerAddress: string; offeringPublicId: string; units: string; idempotencyKey: string; purchaseIntentId: string; expiresAt: string; sessionExpiresAt: string }>
   | Readonly<{ type: "backing"; canonicalSignerAddress: string; attemptPublicId: string; transactionHash: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string }; sessionExpiresAt: string }>
   | Readonly<{ type: "backing_reserve"; canonicalSignerAddress: string; attemptPublicId: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string }; sessionExpiresAt: string }>
+  | Readonly<{ type: "backing_dispatch"; canonicalSignerAddress: string; attemptPublicId: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string }; sessionExpiresAt: string }>
   | Readonly<{ type: "backing_read"; canonicalSignerAddress: string; sessionExpiresAt: string }>
   | Readonly<{ type: "backing_read_legacy"; canonicalSignerAddress: string; sessionExpiresAt: string }>
   | Readonly<{ type: "backing_list"; canonicalSignerAddress: string; sessionExpiresAt: string }>
@@ -37,10 +39,12 @@ type Seams = {
   readonly list: (input: { canonicalSignerAddress: string; cursor: string | null }) => Promise<ToolPage>;
   readonly read: (input: { canonicalSignerAddress: string; toolPublicId: string }) => Promise<ToolRead>;
   readonly deployment: (input: { canonicalSignerAddress: string; toolPublicId: string }) => Promise<ToolRead>;
+  readonly deploymentRecheck: (input: { canonicalSignerAddress: string; toolPublicId: string }) => Promise<ToolRead>;
   readonly ensureSelfService: (input: { canonicalSignerAddress: string }) => Promise<unknown>;
   readonly freezeBackingIntent: (input: { canonicalSignerAddress: string; offeringPublicId: string; units: string; idempotencyKey: string; purchaseIntentId: string; expiresAt: string }) => Promise<unknown>;
   readonly backing: (input: { canonicalSignerAddress: string; attemptPublicId: string; transactionHash: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string } }) => Promise<unknown>;
   readonly backingReserve: (input: { canonicalSignerAddress: string; attemptPublicId: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string } }) => Promise<unknown>;
+  readonly backingDispatch: (input: { canonicalSignerAddress: string; attemptPublicId: string; parameters: { offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string } }) => Promise<unknown>;
   readonly backingRead: (input: { canonicalSignerAddress: string }) => Promise<unknown>;
   readonly backingReadLegacy: (input: { canonicalSignerAddress: string }) => Promise<unknown>;
   readonly backingList: (input: { canonicalSignerAddress: string }) => Promise<unknown>;
@@ -51,11 +55,13 @@ const allocateReference = makeFunctionReference<"mutation">("provider_tools:allo
 const listReference = makeFunctionReference<"query">("provider_tools:listOwnedTools");
 const readReference = makeFunctionReference<"query">("provider_tools:readOwnedTool");
 const deploymentReference = makeFunctionReference<"query">("provider_tools:readOwnedToolDeployment");
+const deploymentRecheckReference = makeFunctionReference<"action">("provider_tool_recheck:recheckOwnedToolDeployment");
 const ensureSelfServiceReference = makeFunctionReference<"mutation">("self_service_accounts:ensureSelfServiceAccount");
 const freezeBackingIntentReference = makeFunctionReference<"mutation">("backing_intents:freezeBackingIntent");
 const claimReplayReference = makeFunctionReference<"mutation">("wallet_command_replay:claimIngressReplayIdentity");
 const backingReference = makeFunctionReference<"action">("backing_payment_records:confirmBackingPayment");
 const backingReserveReference = makeFunctionReference<"action">("backing_payment_records:reserveBackingPayment");
+const backingDispatchReference = makeFunctionReference<"action">("backing_payment_records:beginBackingPaymentDispatch");
 const backingReadReference = makeFunctionReference<"action">("backing_payment_records:reverifyBackerPayment");
 const backingReadLegacyReference = makeFunctionReference<"action">("backing_payment_records:readLegacyRiskScanPayment");
 const backingListReference = makeFunctionReference<"action">("backing_payment_records:listBackerPayments");
@@ -176,6 +182,10 @@ function exactBody(bytes: Uint8Array): ProviderToolRequest | null {
       && typeof record.toolPublicId === "string" && /^tool_[0-9a-f]{32}$/u.test(record.toolPublicId)) {
       return { type: "deployment", canonicalSignerAddress: record.canonicalSignerAddress, toolPublicId: record.toolPublicId, sessionExpiresAt: record.sessionExpiresAt };
     }
+    if (record.type === "deployment_recheck" && JSON.stringify(Object.keys(record)) === JSON.stringify(["type", "canonicalSignerAddress", "toolPublicId", "sessionExpiresAt"])
+      && typeof record.toolPublicId === "string" && /^tool_[0-9a-f]{32}$/u.test(record.toolPublicId)) {
+      return { type: "deployment_recheck", canonicalSignerAddress: record.canonicalSignerAddress, toolPublicId: record.toolPublicId, sessionExpiresAt: record.sessionExpiresAt };
+    }
     if (record.type === "self_service_ensure" && JSON.stringify(Object.keys(record)) === JSON.stringify(["type", "canonicalSignerAddress", "sessionExpiresAt"])) {
       return { type: "self_service_ensure", canonicalSignerAddress: record.canonicalSignerAddress, sessionExpiresAt: record.sessionExpiresAt };
     }
@@ -207,6 +217,14 @@ function exactBody(bytes: Uint8Array): ProviderToolRequest | null {
       if (JSON.stringify(Object.keys(parameters)) !== JSON.stringify(["offeringPublicId", "units", "tinybars", "purchaseIntentId"])
         || typeof parameters.offeringPublicId !== "string" || typeof parameters.units !== "string" || typeof parameters.tinybars !== "string" || typeof parameters.purchaseIntentId !== "string") return null;
       return { type: "backing_reserve", canonicalSignerAddress: record.canonicalSignerAddress, attemptPublicId: record.attemptPublicId, parameters: { offeringPublicId: parameters.offeringPublicId, units: parameters.units, tinybars: parameters.tinybars, purchaseIntentId: parameters.purchaseIntentId }, sessionExpiresAt: record.sessionExpiresAt };
+    }
+    if (record.type === "backing_dispatch" && JSON.stringify(Object.keys(record)) === JSON.stringify(["type", "canonicalSignerAddress", "attemptPublicId", "parameters", "sessionExpiresAt"])
+      && typeof record.attemptPublicId === "string" && noncePattern.test(record.attemptPublicId)
+      && record.parameters !== null && typeof record.parameters === "object" && !Array.isArray(record.parameters)) {
+      const parameters = record.parameters as Record<string, unknown>;
+      if (JSON.stringify(Object.keys(parameters)) !== JSON.stringify(["offeringPublicId", "units", "tinybars", "purchaseIntentId"])
+        || typeof parameters.offeringPublicId !== "string" || typeof parameters.units !== "string" || typeof parameters.tinybars !== "string" || typeof parameters.purchaseIntentId !== "string") return null;
+      return { type: "backing_dispatch", canonicalSignerAddress: record.canonicalSignerAddress, attemptPublicId: record.attemptPublicId, parameters: { offeringPublicId: parameters.offeringPublicId, units: parameters.units, tinybars: parameters.tinybars, purchaseIntentId: parameters.purchaseIntentId }, sessionExpiresAt: record.sessionExpiresAt };
     }
     if (record.type === "backing_read" && JSON.stringify(Object.keys(record)) === JSON.stringify(["type", "canonicalSignerAddress", "sessionExpiresAt"])) {
       return { type: "backing_read", canonicalSignerAddress: record.canonicalSignerAddress, sessionExpiresAt: record.sessionExpiresAt };
@@ -263,6 +281,9 @@ async function handle(ctx: ActionContext, request: Request, seams: Seams): Promi
     if (body.type === "deployment") {
       return response(await seams.deployment({ canonicalSignerAddress: body.canonicalSignerAddress, toolPublicId: body.toolPublicId }), 200);
     }
+    if (body.type === "deployment_recheck") {
+      return response(await seams.deploymentRecheck({ canonicalSignerAddress: body.canonicalSignerAddress, toolPublicId: body.toolPublicId }), 200);
+    }
     if (body.type === "self_service_ensure") {
       return response(await seams.ensureSelfService({ canonicalSignerAddress: body.canonicalSignerAddress }), 200);
     }
@@ -282,6 +303,9 @@ async function handle(ctx: ActionContext, request: Request, seams: Seams): Promi
     }
     if (body.type === "backing_reserve") {
       return response(await seams.backingReserve({ canonicalSignerAddress: body.canonicalSignerAddress, attemptPublicId: body.attemptPublicId, parameters: body.parameters }), 200);
+    }
+    if (body.type === "backing_dispatch") {
+      return response(await seams.backingDispatch({ canonicalSignerAddress: body.canonicalSignerAddress, attemptPublicId: body.attemptPublicId, parameters: body.parameters }), 200);
     }
     if (body.type === "backing_read") {
       return response(await seams.backingRead({ canonicalSignerAddress: body.canonicalSignerAddress }), 200);
@@ -322,10 +346,12 @@ export async function handleProviderSessionIngress(ctx: ActionContext, request: 
     list: (input) => ctx.runQuery(listReference, input) as Promise<ToolPage>,
     read: (input) => ctx.runQuery(readReference, input) as Promise<ToolRead>,
     deployment: (input) => ctx.runQuery(deploymentReference, input) as Promise<ToolRead>,
+    deploymentRecheck: (input) => ctx.runAction(deploymentRecheckReference, input) as Promise<ToolRead>,
     ensureSelfService: (input) => ctx.runMutation(ensureSelfServiceReference, input),
     freezeBackingIntent: (input) => ctx.runMutation(freezeBackingIntentReference, input),
     backing: (input) => ctx.runAction(backingReference, input),
     backingReserve: (input) => ctx.runAction(backingReserveReference, input),
+    backingDispatch: (input) => ctx.runAction(backingDispatchReference, input),
     backingRead: (input) => ctx.runAction(backingReadReference, input),
     backingReadLegacy: (input) => ctx.runAction(backingReadLegacyReference, input),
     backingList: (input) => ctx.runAction(backingListReference, input),

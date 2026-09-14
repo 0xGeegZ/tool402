@@ -1,5 +1,7 @@
 import { internalMutationGeneric, internalQueryGeneric, type DataModelFromSchemaDefinition, type GenericMutationCtx, type MutationBuilder, type QueryBuilder } from "convex/server";
 import { v } from "convex/values";
+import { canonicalizeRequirements, createOfferingTerms } from "@tool402/core";
+import { keccak256 } from "viem";
 import { isInt64, readStoredRecord } from "../src/offering-command-admission.ts";
 import type schema from "./schema.ts";
 import { backingPaymentClaimStore } from "./backing_payment_claims.ts";
@@ -19,14 +21,19 @@ type Status = "PREPARED" | "CONFIRMED" | "REJECTED" | "SUBMITTED" | "OUTCOME_UNK
 type ExistingClaim = Readonly<{ attemptId: string; transactionHash?: string; tinybars: string; state: Status }>;
 type Context = GenericMutationCtx<DataModelFromSchemaDefinition<typeof schema>>;
 
-function validFrozenIntent(value: unknown, input: { idempotencyKey: string; canonicalSignerAddress: string; tinybars: string }): value is Readonly<{ offeringPublicId: string; expiresAt?: string }> {
+type FrozenIntent = Readonly<{ offeringPublicId: string; offeringVersion?: 1; offeringTermsDigest?: string; recipient?: string; expiresAt?: string }>;
+
+function validFrozenIntent(value: unknown, input: { idempotencyKey: string; canonicalSignerAddress: string; tinybars: string }): value is FrozenIntent {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
   const record = value as Record<string, unknown>;
   return record.idempotencyKey === input.idempotencyKey
     && record.canonicalSignerAddress === input.canonicalSignerAddress
     && record.tinybars === input.tinybars
     && typeof record.offeringPublicId === "string"
-    && /^[A-Za-z0-9_-]{1,96}$/u.test(record.offeringPublicId);
+    && /^[A-Za-z0-9_-]{1,96}$/u.test(record.offeringPublicId)
+    && (record.offeringVersion === undefined || record.offeringVersion === 1)
+    && (record.offeringTermsDigest === undefined || (typeof record.offeringTermsDigest === "string" && /^[0-9a-f]{64}$/u.test(record.offeringTermsDigest)))
+    && (record.recipient === undefined || (typeof record.recipient === "string" && addressPattern.test(record.recipient)));
 }
 
 function hasLiveSelfServiceBackingIntent(intent: Readonly<{ expiresAt?: string }>, now = Date.now()): boolean {
@@ -95,6 +102,30 @@ async function mayReserveNewBackingPayment(
   return accounts.length === 1 && isActiveSelfServiceBacker(accounts[0], canonicalSignerAddress);
 }
 
+/** New dispatches additionally bind the live OPEN offer to the immutable tuple reviewed by the backer. */
+async function mayBeginNewBackingPaymentDispatch(
+  ctx: Context,
+  canonicalSignerAddress: string,
+  intent: FrozenIntent,
+): Promise<boolean> {
+  if (!await mayReserveNewBackingPayment(ctx, canonicalSignerAddress, intent.offeringPublicId)) return false;
+  if (intent.offeringPublicId === legacyRiskScanOfferingPublicId) return true;
+  if (intent.offeringVersion !== 1 || intent.offeringTermsDigest === undefined || intent.recipient === undefined) return false;
+  const offerings = await ctx.db.query("offerings")
+    .withIndex("by_offering_public_id_and_version", (query) => query.eq("offeringPublicId", intent.offeringPublicId))
+    .take(2);
+  const offering = offerings[0];
+  if (offerings.length !== 1 || offering === undefined || offering.state !== "OPEN" || offering.version !== intent.offeringVersion
+    || offering.fundingRecipient !== intent.recipient || offering.canonicalSignerAddress === canonicalSignerAddress) return false;
+  try {
+    return keccak256(new TextEncoder().encode(canonicalizeRequirements(offering.definition.terms)))
+      .slice(2) === intent.offeringTermsDigest
+      && createOfferingTerms(offering.definition.terms).noteUnitPriceTinybars > 0n;
+  } catch {
+    return false;
+  }
+}
+
 /** Pure admission policy; the mutation applies it while reading both indexed claims transactionally. */
 export function resolveBackingPaymentClaim(
   claimedHash: ExistingClaim | undefined,
@@ -130,6 +161,27 @@ export const reserveBackingPayment = internalMutation({
       return { status: "PREPARED" as const, transactionHash: null, tinybars: args.tinybars };
     }
     return { status: claim.state, transactionHash: claim.transactionHash ?? null, tinybars: claim.tinybars };
+  },
+});
+
+/** Atomically consumes the one Send permit before the browser invokes MetaMask. */
+export const beginBackingPaymentDispatch = internalMutation({
+  args: { attemptPublicId: v.string(), canonicalSignerAddress: v.string(), tinybars: v.string() },
+  returns: resultValidator,
+  handler: async (ctx, args) => {
+    if (!addressPattern.test(args.canonicalSignerAddress) || !integerPattern.test(args.tinybars) || BigInt(args.tinybars) < 1n) return null;
+    const rows = await ctx.db.query("externalPrepareCommandAttempts").withIndex("by_idempotency_key", (q) => q.eq("idempotencyKey", args.attemptPublicId)).take(2);
+    if (rows.length !== 1 || !validAttempt(rows[0], args)) return null;
+    const intents = await ctx.db.query("backingIntents").withIndex("by_idempotency_key", (q) => q.eq("idempotencyKey", args.attemptPublicId)).take(2);
+    if (intents.length !== 1 || !validFrozenIntent(intents[0], { idempotencyKey: args.attemptPublicId, canonicalSignerAddress: args.canonicalSignerAddress, tinybars: args.tinybars })) return null;
+    const intent = intents[0]!;
+    if ((intent.offeringPublicId !== legacyRiskScanOfferingPublicId && !hasLiveSelfServiceBackingIntent(intent))
+      || !await mayBeginNewBackingPaymentDispatch(ctx, args.canonicalSignerAddress, intent)) return null;
+    const claims = await ctx.db.query(backingPaymentClaimStore).withIndex("by_attempt_id", (q) => q.eq("attemptId", rows[0]!._id)).take(2);
+    if (claims.length !== 1 || claims[0]!.tinybars !== args.tinybars || claims[0]!.state !== "PREPARED") return null;
+    const claim = claims[0]!;
+    await ctx.db.patch(claim._id, { state: "OUTCOME_UNKNOWN" });
+    return { status: "OUTCOME_UNKNOWN" as const, transactionHash: null, tinybars: args.tinybars };
   },
 });
 
@@ -196,16 +248,12 @@ export const readBackerPayment = internalQuery({
   },
 });
 
-/** Legacy records are visible only to a still-enabled legacy backer and only when their attempt targets RiskScan. */
+/** Historic RiskScan evidence is scoped to its immutable attempt and authenticated signer, not current authority. */
 export const readLegacyRiskScanPayment = internalQuery({
   args: { canonicalSignerAddress: v.string() },
   returns: resultValidator,
   handler: async (ctx, args) => {
     if (!addressPattern.test(args.canonicalSignerAddress)) return null;
-    const authorities = await ctx.db.query("commandAuthorities")
-      .withIndex("by_chain_id_and_canonical_signer_address", (query) => query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress))
-      .take(2);
-    if (authorities.length !== 1 || authorities[0]?.role !== "BACKER" || authorities[0]?.enabled !== true) return null;
     const attempts = await ctx.db.query("externalPrepareCommandAttempts")
       .withIndex("by_funding_backer_and_subject", (query) => (
         query.eq("operationKind", "HEDERA_FUNDING").eq("canonicalSignerAddress", args.canonicalSignerAddress).eq("subjectPublicId", legacyRiskScanOfferingPublicId)

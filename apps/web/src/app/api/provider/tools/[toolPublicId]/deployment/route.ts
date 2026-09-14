@@ -7,3 +7,11 @@ export async function GET(
   const { toolPublicId } = await params;
   return handleProviderToolDeploymentRequest(request, process.env, toolPublicId);
 }
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ toolPublicId: string }> },
+): Promise<Response> {
+  const { toolPublicId } = await params;
+  return handleProviderToolDeploymentRequest(request, process.env, toolPublicId);
+}

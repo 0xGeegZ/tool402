@@ -86,6 +86,10 @@ async function signingIslandHarness(values, renderReview, resume = null, onResum
         const deployment = typeof options.deployment === "function" ? options.deployment() : options.deployment ?? null;
         return { then(resolve) { resolve(deployment); return { catch() {} }; } };
       },
+      recheckProviderToolDeployment() {
+        const deployment = typeof options.deployment === "function" ? options.deployment() : options.deployment ?? null;
+        return { then(resolve) { resolve(deployment); return { finally(done) { done(); } }; } };
+      },
     },
     "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
     "../../wallet/wallet-session": {
@@ -505,7 +509,7 @@ implementedTest("rehydrates the exact submitted candidate and refreshes a select
   );
   harness.render();
   const after = elements(harness.render()).find((element) => element.type === "ProviderDeployStages");
-  assert.equal(reads, 2);
+  assert.equal(reads, 3, "the user action performs one authenticated recheck before refreshing the projection");
   assert.deepEqual(after.props.states.map((state) => state.kind), ["done", "done", "done", "actionable"]);
   assert.equal(after.props.enabledStage, 3);
 });

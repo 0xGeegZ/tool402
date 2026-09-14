@@ -125,7 +125,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   const [acknowledged, setAcknowledged] = useState(false);
   const recoveredIntent = preparedIntent(dashboardAddress, offering);
   const recoveredPending = pendingAttachment(dashboardAddress, offering.offeringPublicId);
-  const [view, setView] = useState<BackingView>(() => viewForRecoveredPendingPayment(recoveredIntent, recoveredPending));
+  const [view, setView] = useState<BackingView>(() => viewForRecoveredPendingPayment(recoveredIntent, recoveredPending, initialPayment?.status ?? null));
   const [request, setRequest] = useState<BackingIntent | null>(null);
   const [preparing, setPreparing] = useState(false);
   const [transferring, setTransferring] = useState(false);
@@ -215,6 +215,22 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
     }
   }
 
+  async function beginDispatch(intent: BackingIntent): Promise<boolean> {
+    try {
+      const response = await fetch("/api/backing/payment/dispatch", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ attemptPublicId: intent.idempotencyKey, parameters: intent.parameters }),
+      });
+      const value: unknown = await response.json();
+      if (!response.ok || value === null || typeof value !== "object" || Array.isArray(value)
+        || (value as Record<string, unknown>).status !== "OUTCOME_UNKNOWN") throw new Error("dispatch claim unavailable");
+      return true;
+    } catch {
+      setNotice("The funding dispatch could not be claimed. Nothing was sent.");
+      return false;
+    }
+  }
+
   function onSignature(result: SignatureResult) {
     if (request === null || !finalPhases.has(result.phase)) return;
     const next = viewAfterSignature(result, request);
@@ -274,6 +290,18 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
     }
     if (reservedBalance === "UNAVAILABLE") {
       setNotice("Your testnet HBAR balance or fee estimate is unavailable. The funding reservation remains; nothing was sent.");
+      sendingRef.current = false;
+      setTransferring(false);
+      return;
+    }
+    const immediatelyBeforeDispatch = await readCurrentSession(session.provider);
+    if (immediatelyBeforeDispatch.state.kind !== "connected" || immediatelyBeforeDispatch.state.address !== session.address || immediatelyBeforeDispatch.state.address !== dashboardAddress) {
+      setNotice("MetaMask's account or network changed while funding was prepared. Nothing was sent.");
+      sendingRef.current = false;
+      setTransferring(false);
+      return;
+    }
+    if (!await beginDispatch(view.intent)) {
       sendingRef.current = false;
       setTransferring(false);
       return;

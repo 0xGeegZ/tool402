@@ -157,6 +157,7 @@ implementedTest("exposes internal owner-scoped allocation and reads without a pu
     "listOwnedTools",
     "readOwnedTool",
     "readOwnedToolDeployment",
+    "readOwnedToolDeploymentAttempt",
   ]);
   assert.equal(providerTools.allocateForIssuer.isInternal, true);
   assert.equal(providerTools.allocateForIssuer.isMutation, true);
@@ -166,6 +167,8 @@ implementedTest("exposes internal owner-scoped allocation and reads without a pu
   assert.equal(providerTools.readOwnedTool.isQuery, true);
   assert.equal(providerTools.readOwnedToolDeployment.isInternal, true);
   assert.equal(providerTools.readOwnedToolDeployment.isQuery, true);
+  assert.equal(providerTools.readOwnedToolDeploymentAttempt.isInternal, true);
+  assert.equal(providerTools.readOwnedToolDeploymentAttempt.isQuery, true);
   for (const operation of Object.values(providerTools)) {
     assert.equal(operation.isPublic, undefined);
   }

@@ -35,6 +35,22 @@ test("admits one durable hash claim exactly once per attempt and preserves termi
   assert.equal(resolveBackingPaymentClaim({ ...claim, state: "CONFIRMED" }, { ...claim, state: "CONFIRMED" }, input), "CONFIRMED", "terminal confirmation is immutable");
 });
 
+test("starts dispatch once atomically and never treats an existing reservation as a reusable Send permit", async () => {
+  const { beginBackingPaymentDispatch } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const attemptPublicId = "AAAAAAAAAAAAAAAAAAAAAA";
+  const store = reservationStoreDatabase({
+    attempts: [{ _id: "externalPrepareCommandAttempts:legacy", idempotencyKey: attemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "a".repeat(64), state: "PREPARED" }],
+    intents: [{ _id: "backingIntents:legacy", idempotencyKey: attemptPublicId, canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7" }],
+    authorities: [{ _id: "commandAuthorities:backer", canonicalSignerAddress: signer, chainId: 296, principalPublicId: "legacy_backer", role: "BACKER", authorityVersion: "legacy_v1", enabled: true }],
+    claims: [{ _id: "backingPaymentClaims:prepared", attemptId: "externalPrepareCommandAttempts:legacy", canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7", state: "PREPARED", claimedAt: 1n }],
+  });
+  const ctx = { db: store.db };
+  assert.deepEqual(await beginBackingPaymentDispatch._handler(ctx, { attemptPublicId, canonicalSignerAddress: signer, tinybars: "7" }), { status: "OUTCOME_UNKNOWN", transactionHash: null, tinybars: "7" });
+  assert.equal(await beginBackingPaymentDispatch._handler(ctx, { attemptPublicId, canonicalSignerAddress: signer, tinybars: "7" }), null);
+  assert.equal(store.rows.backingPaymentClaims[0].state, "OUTCOME_UNKNOWN");
+});
+
 function paymentStoreDatabase(claims) {
   return {
     db: {
@@ -80,6 +96,7 @@ function reservationStoreDatabase({ attempts, intents, accounts = [], authoritie
             const query = { eq(field, value) { filters.push([field, value]); return query; } };
             configure(query);
             return {
+              order() { return this; },
               async take(limit) {
                 return rows[table].filter((row) => filters.every(([field, value]) => row[field] === value)).slice(0, limit);
               },
@@ -120,6 +137,15 @@ test("lists only offer-scoped durable claims and never relabels an arbitrary leg
   ];
   const result = await listBackerPayments._handler(paymentStoreDatabase(claims), { canonicalSignerAddress: signer });
   assert.deepEqual(result, [{ offeringPublicId: "offering_generic", status: "CONFIRMED", transactionHash: `0x${"cd".repeat(32)}`, tinybars: "11" }]);
+});
+
+test("keeps a pre-M59 RiskScan claim visible after BACKER authority revocation", async () => {
+  const { readLegacyRiskScanPayment } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const attempt = { _id: "externalPrepareCommandAttempts:legacy", idempotencyKey: "AAAAAAAAAAAAAAAAAAAAAA", operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "a".repeat(64), state: "CONFIRMED", subjectPublicId: "riskscan_revenue_note_demo" };
+  const claim = { _id: "backingPaymentClaims:legacy", attemptId: attempt._id, canonicalSignerAddress: signer, tinybars: "7", state: "CONFIRMED", transactionHash: `0x${"ab".repeat(32)}`, claimedAt: 1n };
+  const store = reservationStoreDatabase({ attempts: [attempt], intents: [], authorities: [{ _id: "commandAuthorities:revoked", canonicalSignerAddress: signer, chainId: 296, principalPublicId: "legacy", role: "BACKER", authorityVersion: "legacy_v1", enabled: false }], claims: [claim] });
+  assert.deepEqual(await readLegacyRiskScanPayment._handler({ db: store.db }, { canonicalSignerAddress: signer }), { status: "CONFIRMED", transactionHash: claim.transactionHash, tinybars: "7" });
 });
 
 test("keeps the shared ATS prepare attempt PREPARED while the dedicated backing claim changes state", async () => {

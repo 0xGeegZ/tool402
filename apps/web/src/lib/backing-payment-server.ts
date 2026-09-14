@@ -111,7 +111,7 @@ function record(value: unknown): BackingPaymentRecord | null {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
   const input = value as Record<string, unknown>;
   return (input.status === "PREPARED" || input.status === "CONFIRMED" || input.status === "REJECTED" || input.status === "SUBMITTED" || input.status === "OUTCOME_UNKNOWN")
-    && (input.status === "PREPARED" ? input.transactionHash === null : typeof input.transactionHash === "string" && hashPattern.test(input.transactionHash))
+    && ((input.status === "PREPARED" || input.status === "OUTCOME_UNKNOWN") ? input.transactionHash === null || (typeof input.transactionHash === "string" && hashPattern.test(input.transactionHash)) : typeof input.transactionHash === "string" && hashPattern.test(input.transactionHash))
     && typeof input.tinybars === "string" && integerPattern.test(input.tinybars)
     ? { status: input.status, transactionHash: input.transactionHash === null ? null : input.transactionHash as `0x${string}`, tinybars: input.tinybars }
     : null;
@@ -164,23 +164,29 @@ async function sessionFor(request: Request, env: DashboardAuthEnvironment, readS
   return value === null ? null : readSession(value, env);
 }
 
-async function handle(request: Request, env: DashboardAuthEnvironment, dependencies: Dependencies, reserve: boolean): Promise<Response> {
+async function handle(request: Request, env: DashboardAuthEnvironment, dependencies: Dependencies, dispatch: "reserve" | "begin" | "record"): Promise<Response> {
   if (request.method !== "POST") return json({ outcome: "rejected" }, 401);
-  const [session, input] = await Promise.all([sessionFor(request, env, dependencies.readSession), body(request, !reserve)]);
+  const [session, input] = await Promise.all([sessionFor(request, env, dependencies.readSession), body(request, dispatch === "record")]);
   if (session === null || input === null) return json({ outcome: "rejected" }, 401);
-  const payload = reserve
+  const payload = dispatch === "reserve"
     ? { type: "backing_reserve", canonicalSignerAddress: session.address, attemptPublicId: input.attemptPublicId, parameters: input.parameters, sessionExpiresAt: session.expiresAt }
-    : { type: "backing", canonicalSignerAddress: session.address, attemptPublicId: input.attemptPublicId, transactionHash: input.transactionHash!, parameters: input.parameters, sessionExpiresAt: session.expiresAt };
+    : dispatch === "begin"
+      ? { type: "backing_dispatch", canonicalSignerAddress: session.address, attemptPublicId: input.attemptPublicId, parameters: input.parameters, sessionExpiresAt: session.expiresAt }
+      : { type: "backing", canonicalSignerAddress: session.address, attemptPublicId: input.attemptPublicId, transactionHash: input.transactionHash!, parameters: input.parameters, sessionExpiresAt: session.expiresAt };
   const result = record(await (dependencies.forward === undefined ? forward(env, payload) : dependencies.forward(payload)));
   return result === null ? json({ outcome: "unavailable" }, 503) : json(result, 200);
 }
 
 export function handleBackingPaymentRequest(request: Request, env: DashboardAuthEnvironment, dependencies: Dependencies = {}): Promise<Response> {
-  return handle(request, env, dependencies, false);
+  return handle(request, env, dependencies, "record");
 }
 
 export function reserveBackingPaymentRequest(request: Request, env: DashboardAuthEnvironment, dependencies: Dependencies = {}): Promise<Response> {
-  return handle(request, env, dependencies, true);
+  return handle(request, env, dependencies, "reserve");
+}
+
+export function beginBackingPaymentDispatchRequest(request: Request, env: DashboardAuthEnvironment, dependencies: Dependencies = {}): Promise<Response> {
+  return handle(request, env, dependencies, "begin");
 }
 
 export async function prepareBackingIntentRequest(request: Request, env: DashboardAuthEnvironment, dependencies: Dependencies = {}): Promise<Response> {

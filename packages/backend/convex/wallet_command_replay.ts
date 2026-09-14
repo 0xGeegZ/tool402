@@ -128,7 +128,9 @@ export const readCommandAuthorities = internalQuery({
     const initialProjection = authorities.map(projectAuthority);
     if (!initialProjection.every((authority) => authority !== null)) return [];
     let projected: ProjectedAuthority[] = initialProjection as ProjectedAuthority[];
-    if (projected.length === 0) {
+    const compatibleLegacy = projected.length === 1 && projected[0]?.enabled === true
+      && (args.purpose === "BACKING" ? projected[0].role === "BACKER" : projected[0].role === "ISSUER");
+    if (!compatibleLegacy) {
       if (process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED !== "true") return [];
       const accounts = await ctx.db.query("selfServiceAccounts")
         .withIndex("by_chain_id_and_canonical_signer_address", (query) => query.eq("chainId", 296).eq("canonicalSignerAddress", args.canonicalSignerAddress))
