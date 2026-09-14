@@ -369,9 +369,11 @@ export const admitDirectoryPublish = internalMutation({
         index.eq("chainId", 296).eq("canonicalSignerAddress", command.canonicalSignerAddress))
       .take(2);
     let authority: unknown;
-    if (authorities.length === 1) {
+    if (authorities.length === 1
+      && authorities[0]?.principalPublicId === command.principalPublicId
+      && authorities[0]?.authorityVersion === command.authorityVersion) {
       authority = authorities[0];
-    } else if (authorities.length === 0 && isPublicTestnetSelfServiceEnabled()) {
+    } else if (isPublicTestnetSelfServiceEnabled()) {
       const accounts = await ctx.db.query("selfServiceAccounts")
         .withIndex("by_chain_id_and_canonical_signer_address", (index) => (
           index.eq("chainId", 296).eq("canonicalSignerAddress", command.canonicalSignerAddress)

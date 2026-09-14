@@ -17,6 +17,7 @@ import { connectedWalletSession, useWalletSession, type WalletSession } from "..
 import { presetUnits, railPosition } from "./backing-presentation";
 import {
   backingLifecycleLabels,
+  createRecoveredBackingIntent,
   createFrozenBackingIntent,
   formatHbar,
   formatShare,
@@ -32,6 +33,7 @@ import {
   type BackingOffering,
   type BackingProjection,
   type BackingView,
+  type FrozenBackingIntentInput,
   type TransferResult,
 } from "./backing-state";
 import { BackingStepRail } from "./backing-step-rail";
@@ -40,7 +42,7 @@ import { assessFundingBalance } from "./backing-balance";
 const finalPhases: ReadonlySet<SignatureResult["phase"]> = new Set(["complete", "rejected", "failed", "unknown"]);
 const pendingAttachmentPrefix = "tool402-backing-pending-attachment-v2:";
 const preparedIntentPrefix = "tool402-backing-prepared-intent-v1:";
-type PendingAttachment = Readonly<{ canonicalSignerAddress: string; offeringPublicId: string; intent: Pick<BackingIntent, "idempotencyKey" | "parameters">; transactionHash: `0x${string}` }>;
+type PendingAttachment = Readonly<{ canonicalSignerAddress: string; offeringPublicId: string; intent: Pick<BackingIntent, "idempotencyKey" | "parameters">; transactionHash: `0x${string}`; frozen?: FrozenBackingIntentInput }>;
 
 function pendingAttachmentKey(canonicalSignerAddress: string, offeringPublicId: string, attemptPublicId: string): string {
   return `${pendingAttachmentPrefix}${canonicalSignerAddress}:${offeringPublicId}:${attemptPublicId}`;
@@ -61,11 +63,21 @@ function pendingAttachment(canonicalSignerAddress: string | null, offeringPublic
         && typeof record.transactionHash === "string" && /^0x[0-9a-f]{64}$/u.test(record.transactionHash)
         && intent !== null && typeof intent === "object" && !Array.isArray(intent)
         && typeof (intent as Record<string, unknown>).idempotencyKey === "string") {
-        return { canonicalSignerAddress, offeringPublicId, intent: intent as PendingAttachment["intent"], transactionHash: record.transactionHash as `0x${string}` };
+        return { canonicalSignerAddress, offeringPublicId, intent: intent as PendingAttachment["intent"], transactionHash: record.transactionHash as `0x${string}`, ...(record.frozen !== null && typeof record.frozen === "object" && !Array.isArray(record.frozen) ? { frozen: record.frozen as FrozenBackingIntentInput } : {}) };
       }
     }
     return null;
   } catch { return null; }
+}
+
+function recoveryFrozenIntent(intent: BackingIntent): FrozenBackingIntentInput {
+  const payload = JSON.parse(new TextDecoder().decode(intent.canonicalPayloadBytes)) as Record<string, unknown>;
+  return {
+    idempotencyKey: intent.idempotencyKey, purchaseIntentId: intent.purchaseIntentId,
+    offeringPublicId: intent.parameters.offeringPublicId, subjectPublicId: payload.subjectPublicId as string,
+    recipient: intent.treasury, units: intent.parameters.units, tinybars: intent.parameters.tinybars,
+    canonicalParametersHash: payload.canonicalParametersHash as string, expiresAt: intent.expiresAt,
+  };
 }
 
 function preparedIntentKey(canonicalSignerAddress: string, offeringPublicId: string, attemptPublicId: string): string {
@@ -123,8 +135,10 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   const [preset, setPreset] = useState<bigint | null>(offering.terms.minimumPurchaseUnits);
   const [unitsInput, setUnitsInput] = useState(offering.terms.minimumPurchaseUnits.toString());
   const [acknowledged, setAcknowledged] = useState(false);
-  const recoveredIntent = preparedIntent(dashboardAddress, offering);
   const recoveredPending = pendingAttachment(dashboardAddress, offering.offeringPublicId);
+  const recoveredIntent = preparedIntent(dashboardAddress, offering) ?? (recoveredPending?.frozen === undefined ? null : (() => {
+    try { return createRecoveredBackingIntent(offering, recoveredPending.frozen, Date.now()); } catch { return null; }
+  })());
   const [view, setView] = useState<BackingView>(() => viewForRecoveredPendingPayment(recoveredIntent, recoveredPending, initialPayment?.status ?? null));
   const [request, setRequest] = useState<BackingIntent | null>(null);
   const [preparing, setPreparing] = useState(false);
@@ -306,6 +320,13 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       setTransferring(false);
       return;
     }
+    const afterDispatchClaim = await readCurrentSession(session.provider);
+    if (afterDispatchClaim.state.kind !== "connected" || afterDispatchClaim.state.address !== session.address || afterDispatchClaim.state.address !== dashboardAddress) {
+      setView({ kind: "payment_outcome_unknown", intent: view.intent, message: "The dispatch was reserved, but MetaMask changed before invocation. Nothing was sent." });
+      setNotice("MetaMask's account or network changed before the wallet request. Nothing was sent.");
+      setTransferring(false);
+      return;
+    }
     let result: TransferResult;
     try {
       const response = await session.provider.request(request);
@@ -319,7 +340,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       setView(viewAfterTransfer(view, { kind: "no_hash" }));
     }
     if (result.kind === "hash" && /^0x[0-9a-f]{64}$/u.test(result.hash)) {
-      const attachment = { canonicalSignerAddress: dashboardAddress, offeringPublicId: offering.offeringPublicId, intent: { idempotencyKey: view.intent.idempotencyKey, parameters: view.intent.parameters }, transactionHash: result.hash as `0x${string}` };
+      const attachment = { canonicalSignerAddress: dashboardAddress, offeringPublicId: offering.offeringPublicId, intent: { idempotencyKey: view.intent.idempotencyKey, parameters: view.intent.parameters }, transactionHash: result.hash as `0x${string}`, frozen: recoveryFrozenIntent(view.intent) };
       try { window.localStorage.setItem(pendingAttachmentKey(dashboardAddress, offering.offeringPublicId, view.intent.idempotencyKey), JSON.stringify(attachment)); } catch { /* the authoritative attachment still proceeds */ }
       setPending(attachment);
       await persistPayment(attachment.intent, attachment.transactionHash);
@@ -413,7 +434,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
         ) : null}
         {view.kind === "payment_submitted" ? (
           <div className="space-y-2">
-            {payment === null ? <Button variant="outline" onClick={() => void persistPayment(view.intent, view.transactionHash)}>Retry payment verification</Button> : null}
+            {(payment === null || payment.status === "SUBMITTED" || payment.status === "OUTCOME_UNKNOWN") ? <Button variant="outline" onClick={() => void persistPayment(view.intent, view.transactionHash)}>Retry payment verification</Button> : null}
             <h3 className="text-sm font-medium">What happens next</h3>
             <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
               <li>Mirror Node records the transfer. The request moves to allocation_pending.</li>
@@ -421,7 +442,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
             </ol>
           </div>
         ) : null}
-        {payment?.status === "PREPARED" && pending !== null ? <Button variant="outline" onClick={() => void persistPayment(pending.intent, pending.transactionHash)}>Attach recorded transaction</Button> : null}
+        {pending !== null && payment?.status !== "CONFIRMED" && payment?.status !== "REJECTED" ? <Button variant="outline" onClick={() => void persistPayment(pending.intent, pending.transactionHash)}>Attach recorded transaction</Button> : null}
         {payment !== null && hashscanTransactionUrl(payment.transactionHash) !== null ? (
           <a href={hashscanTransactionUrl(payment.transactionHash)!} target="_blank" rel="noreferrer" className="inline-flex text-sm font-semibold text-primary hover:text-brand-purple">View on HashScan</a>
         ) : null}

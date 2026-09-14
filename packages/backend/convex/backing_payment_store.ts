@@ -207,15 +207,26 @@ export const recordBackingPayment = internalMutation({
     const rows = await ctx.db.query("externalPrepareCommandAttempts").withIndex("by_idempotency_key", (q) => q.eq("idempotencyKey", args.attemptPublicId)).take(2);
     if (rows.length !== 1 || !validAttempt(rows[0], args)) return null;
     const row = rows[0];
-    const intents = await ctx.db.query("backingIntents").withIndex("by_idempotency_key", (q) => q.eq("idempotencyKey", args.attemptPublicId)).take(2);
-    if (intents.length !== 1 || !validFrozenIntent(intents[0], { idempotencyKey: args.attemptPublicId, canonicalSignerAddress: args.canonicalSignerAddress, tinybars: args.tinybars })) return null;
-    const intent = intents[0]!;
-    const offeringPublicId = intent.offeringPublicId;
     const claims = await ctx.db.query(backingPaymentClaimStore).withIndex("by_transaction_hash", (q) => q.eq("transactionHash", args.transactionHash)).take(2);
     if (claims.length > 1) return null;
     const attempts = await ctx.db.query(backingPaymentClaimStore).withIndex("by_attempt_id", (q) => q.eq("attemptId", row._id)).take(2);
     if (attempts.length > 1) return null;
     const claim = attempts[0];
+    const intents = await ctx.db.query("backingIntents").withIndex("by_idempotency_key", (q) => q.eq("idempotencyKey", args.attemptPublicId)).take(2);
+    const currentIntent = intents.length === 1 && validFrozenIntent(intents[0], { idempotencyKey: args.attemptPublicId, canonicalSignerAddress: args.canonicalSignerAddress, tinybars: args.tinybars })
+      ? intents[0]
+      : null;
+    // M58 legacy claims predate backingIntents. They may only attach their own
+    // hash to the immutable admitted RiskScan attempt; this branch never creates
+    // a claim or grants fresh funding admission.
+    const historicLegacyRecovery = currentIntent === null
+      && intents.length === 0
+      && row.subjectPublicId === legacyRiskScanOfferingPublicId
+      && claim !== undefined
+      && claim.canonicalSignerAddress === args.canonicalSignerAddress
+      && claim.offeringPublicId === undefined;
+    if (currentIntent === null && !historicLegacyRecovery) return null;
+    const offeringPublicId = currentIntent?.offeringPublicId ?? legacyRiskScanOfferingPublicId;
     if (
       claim === undefined
       && (offeringPublicId !== legacyRiskScanOfferingPublicId

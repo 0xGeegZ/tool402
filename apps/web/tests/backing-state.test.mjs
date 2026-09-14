@@ -299,6 +299,19 @@ test("an authoritative ambiguous payment state never reopens Send when browser s
   assert.throws(() => state.transferRequest(recovered, "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"), TypeError);
 });
 
+test("reconstructs an expired frozen intent only for hash recovery and never for Send", async () => {
+  const state = await loadState();
+  const offering = state.readBackingOffering(record());
+  const parameters = { offeringPublicId: offering.offeringPublicId, units: "25", tinybars: "2500000000", purchaseIntentId: "ZyXwVuTsRqPoNmLkJiHgFw" };
+  const { canonicalizeRequirements } = await import("@tool402/core");
+  const { keccak256 } = await import("viem");
+  const frozen = { idempotencyKey: "AbCdEfGhIjKlMnOpQrStUw", purchaseIntentId: parameters.purchaseIntentId, offeringPublicId: offering.offeringPublicId, subjectPublicId: offering.subjectPublicId, recipient: treasury, units: parameters.units, tinybars: parameters.tinybars, canonicalParametersHash: keccak256(new TextEncoder().encode(canonicalizeRequirements(parameters))).slice(2), expiresAt: "2026-09-10T17:59:00.000Z" };
+  const recovered = state.createRecoveredBackingIntent(offering, frozen, nowMilliseconds);
+  assert.equal(recovered.idempotencyKey, frozen.idempotencyKey);
+  assert.equal(state.viewForRecoveredPendingPayment(recovered, null, "OUTCOME_UNKNOWN").kind, "payment_outcome_unknown");
+  assert.throws(() => state.createFrozenBackingIntent(offering, frozen, nowMilliseconds));
+});
+
 test("retries nothing: an unknown wallet return, a transport failure, and an unexpected response reach the unknown kind", async () => {
   const state = await loadState();
   const offering = state.readBackingOffering(record());

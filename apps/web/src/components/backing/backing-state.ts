@@ -219,6 +219,24 @@ export function createFrozenBackingIntent(
   frozen: FrozenBackingIntentInput,
   nowMilliseconds: number,
 ): BackingIntent {
+  return createFrozenBackingIntentAt(offering, frozen, nowMilliseconds, true);
+}
+
+/** Rebuilds immutable evidence for attachment/reconciliation only; it never grants Send. */
+export function createRecoveredBackingIntent(
+  offering: BackingOffering,
+  frozen: FrozenBackingIntentInput,
+  nowMilliseconds: number,
+): BackingIntent {
+  return createFrozenBackingIntentAt(offering, frozen, nowMilliseconds, false);
+}
+
+function createFrozenBackingIntentAt(
+  offering: BackingOffering,
+  frozen: FrozenBackingIntentInput,
+  nowMilliseconds: number,
+  requiresLiveExpiry: boolean,
+): BackingIntent {
   if (!Number.isSafeInteger(nowMilliseconds) || nowMilliseconds < 0) throw new TypeError("a frozen backing intent needs a canonical current time");
   if (
     frozen.offeringPublicId !== offering.offeringPublicId || frozen.subjectPublicId !== offering.subjectPublicId
@@ -226,7 +244,7 @@ export function createFrozenBackingIntent(
     || !/^[A-Za-z0-9_-]{21}[AQgw]$/u.test(frozen.purchaseIntentId) || !wholeUnitsPattern.test(frozen.units)
     || !wholeUnitsPattern.test(frozen.tinybars) || BigInt(frozen.units) < 1n || BigInt(frozen.tinybars) < 1n
     || !/^[0-9a-f]{64}$/u.test(frozen.canonicalParametersHash) || !Number.isFinite(Date.parse(frozen.expiresAt))
-    || new Date(Date.parse(frozen.expiresAt)).toISOString() !== frozen.expiresAt || nowMilliseconds >= Date.parse(frozen.expiresAt)
+    || new Date(Date.parse(frozen.expiresAt)).toISOString() !== frozen.expiresAt || (requiresLiveExpiry && nowMilliseconds >= Date.parse(frozen.expiresAt))
   ) throw new TypeError("invalid frozen backing intent");
   const units = BigInt(frozen.units);
   const validation = validateUnits(offering, frozen.units);

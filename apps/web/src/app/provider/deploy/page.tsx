@@ -1,5 +1,6 @@
 import { LandingFooter } from "../../../components/landing/landing-footer";
 import { ProviderDeployWizard } from "../../../components/provider/deploy/provider-deploy-wizard";
+import { NewToolAction } from "../../../components/provider/deploy/new-tool-action";
 import { readDashboardSession, readDashboardSessionCookieName } from "../../../lib/dashboard-auth/dashboard-auth";
 import { ensureSelfServiceMembership } from "../../../lib/provider-tools-server";
 import { parseProviderToolId } from "@tool402/core";
@@ -34,6 +35,14 @@ async function ProviderDeployBoundary({ searchParams }: ProviderDeployPageProps)
     process.env,
     sessionCookie,
   );
+  if (selectedToolPublicId === undefined) {
+    return (
+      <>
+        <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6"><section className="rounded-card border bg-card p-6"><h1 className="text-3xl font-bold tracking-tight">Create your provider tool</h1><p className="mt-3 text-sm leading-6 text-muted-foreground">Create one tool explicitly, then continue its own resumable deployment. This does not modify the legacy RiskScan campaign.</p><div className="mt-6"><NewToolAction /></div></section></main>
+        <LandingFooter />
+      </>
+    );
+  }
   return (
     <>
       <ProviderDeployWizard selectedToolPublicId={selectedToolPublicId} />

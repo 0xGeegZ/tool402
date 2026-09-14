@@ -84,6 +84,13 @@ test("rejects missing session, wrong origin, malformed body, and unavailable ups
   assert.doesNotMatch(source, /TOOL402_INGRESS_SECRET|TOOL402_DASHBOARD_AUTH_SECRET/);
 });
 
+test("keeps a valid bounded 21-record backing history instead of relabeling it as empty", async () => {
+  const { loadBackerPayments } = await import(serverUrl.href);
+  const records = Array.from({ length: 21 }, (_, index) => ({ offeringPublicId: `offering_${index}`, status: "CONFIRMED", transactionHash: `0x${index.toString(16).padStart(2, "0").repeat(32)}`, tinybars: "7" }));
+  const result = await loadBackerPayments(env, "session", { readSession: async () => ({ address: signer, issuedAt: "2026-09-10T00:00:00.000Z", expiresAt: "2026-09-11T00:00:00.000Z" }), forward: async () => records });
+  assert.equal(result.length, 21);
+});
+
 test("fails closed for forged or expired sessions, oversized bodies, missing ingress configuration, and untrusted results", async () => {
   const { handleBackingPaymentRequest } = await import(serverUrl.href);
   const session = { address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" };

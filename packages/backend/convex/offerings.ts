@@ -627,8 +627,11 @@ export const admitOfferingCreate = internalMutation({
         query.eq("chainId", 296).eq("canonicalSignerAddress", command.canonicalSignerAddress)
       ))
       .take(2);
-    let authority: unknown = authorities.length === 1 ? authorities[0] : null;
-    if (authority === null && authorities.length === 0 && isPublicTestnetSelfServiceEnabled()) {
+    let authority: unknown = authorities.length === 1
+      && authorities[0]?.principalPublicId === command.principalPublicId
+      && authorities[0]?.authorityVersion === command.authorityVersion
+      ? authorities[0] : null;
+    if (authority === null && isPublicTestnetSelfServiceEnabled()) {
       const accounts = await ctx.db.query("selfServiceAccounts")
         .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
           query.eq("chainId", 296).eq("canonicalSignerAddress", command.canonicalSignerAddress)
@@ -808,8 +811,11 @@ export async function linkAtsCreateAttemptToDraftOffering(
         query.eq("chainId", 296).eq("canonicalSignerAddress", binding.canonicalSignerAddress)
       ))
       .take(2);
-    let authority: unknown = authorities.length === 1 ? authorities[0] : null;
-    if (authority === null && authorities.length === 0 && isPublicTestnetSelfServiceEnabled()) {
+    let authority: unknown = authorities.length === 1
+      && authorities[0]?.principalPublicId === binding.principalPublicId
+      && authorities[0]?.authorityVersion === binding.authorityVersion
+      ? authorities[0] : null;
+    if (authority === null && isPublicTestnetSelfServiceEnabled()) {
       const accounts = await ctx.db.query("selfServiceAccounts")
         .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
           query.eq("chainId", 296).eq("canonicalSignerAddress", binding.canonicalSignerAddress)

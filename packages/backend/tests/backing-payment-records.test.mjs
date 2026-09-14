@@ -148,6 +148,20 @@ test("keeps a pre-M59 RiskScan claim visible after BACKER authority revocation",
   assert.deepEqual(await readLegacyRiskScanPayment._handler({ db: store.db }, { canonicalSignerAddress: signer }), { status: "CONFIRMED", transactionHash: claim.transactionHash, tinybars: "7" });
 });
 
+test("reconciles an existing pre-M59 pending RiskScan claim without inventing an intent or funding permission", async () => {
+  const { recordBackingPayment } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const attemptPublicId = "AAAAAAAAAAAAAAAAAAAAAA";
+  const hash = `0x${"ab".repeat(32)}`;
+  const store = reservationStoreDatabase({
+    attempts: [{ _id: "externalPrepareCommandAttempts:legacy", idempotencyKey: attemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "a".repeat(64), state: "PREPARED", subjectPublicId: "riskscan_revenue_note_demo" }],
+    intents: [],
+    claims: [{ _id: "backingPaymentClaims:legacy", attemptId: "externalPrepareCommandAttempts:legacy", canonicalSignerAddress: signer, tinybars: "7", state: "PREPARED", claimedAt: 1n }],
+  });
+  assert.deepEqual(await recordBackingPayment._handler({ db: store.db }, { attemptPublicId, canonicalSignerAddress: signer, transactionHash: hash, tinybars: "7", outcome: "SUBMITTED" }), { status: "SUBMITTED", transactionHash: hash, tinybars: "7" });
+  assert.equal(store.rows.backingIntents.length, 0);
+});
+
 test("keeps the shared ATS prepare attempt PREPARED while the dedicated backing claim changes state", async () => {
   const source = await readFile(storeUrl, "utf8");
   assert.match(source, /ctx\.db\.patch\(claim\._id, \{ transactionHash: args\.transactionHash, state: next \}\)/u);

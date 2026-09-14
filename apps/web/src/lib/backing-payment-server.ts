@@ -118,7 +118,9 @@ function record(value: unknown): BackingPaymentRecord | null {
 }
 
 function paymentHistory(value: unknown): BackingPaymentHistoryRecord[] | null {
-  if (!Array.isArray(value) || value.length > 20) return null;
+  // Match the bounded Convex projection. A large valid history is distinct
+  // from an unavailable or malformed response.
+  if (!Array.isArray(value) || value.length > 100) return null;
   const seen = new Set<string>();
   const records: BackingPaymentHistoryRecord[] = [];
   for (const item of value) {
@@ -220,10 +222,12 @@ export async function loadLegacyRiskScanPayment(env: DashboardAuthEnvironment, s
   return record(await forward(env, { type: "backing_read_legacy", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt }));
 }
 
-export async function loadBackerPayments(env: DashboardAuthEnvironment, sessionCookie: string | null): Promise<BackingPaymentHistoryRecord[]> {
-  const session = await readDashboardSession(sessionCookie, env);
+export async function loadBackerPayments(env: DashboardAuthEnvironment, sessionCookie: string | null, dependencies: Dependencies = {}): Promise<BackingPaymentHistoryRecord[]> {
+  if (sessionCookie === null) return [];
+  const readSession = dependencies.readSession ?? ((value: string) => readDashboardSession(value, env));
+  const session = await readSession(sessionCookie, env);
   if (session === null || !addressPattern.test(session.address)) return [];
-  return paymentHistory(await forward(env, { type: "backing_list", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt })) ?? [];
+  return paymentHistory(await (dependencies.forward === undefined ? forward(env, { type: "backing_list", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt }) : dependencies.forward({ type: "backing_list", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt }))) ?? [];
 }
 
 export async function loadBackerPaymentForOffering(env: DashboardAuthEnvironment, sessionCookie: string | null, offeringPublicId: string): Promise<BackingPaymentRecord | null> {
