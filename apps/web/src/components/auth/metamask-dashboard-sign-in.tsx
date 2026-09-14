@@ -172,7 +172,7 @@ function MetaMaskSignInButton({
 }
 
 export function MetaMaskDashboardSignIn({ tour = null, demoStep = null, returnTo = null }: { tour?: "1" | null; demoStep?: string | null; returnTo?: string | null }) {
-  const { connection, resolved, state, connect, connectErrorCode, switchToHedera } = useTool402Wallet();
+  const { connection, resolved, state, cancelConnection, connect, connectErrorCode, switchToHedera } = useTool402Wallet();
   const connectionRef = useRef(connection);
   connectionRef.current = connection;
   const canSignIn = connectedTool402Wallet(connection, resolved) !== null;
@@ -184,11 +184,11 @@ export function MetaMaskDashboardSignIn({ tour = null, demoStep = null, returnTo
         <div className="space-y-2">
           <p aria-live="polite" className="text-sm text-muted-foreground">Connect MetaMask on Hedera Testnet, then sign to unlock the dashboard.</p>
           <Button
-            disabled={state.kind === "resolving" || state.kind === "connecting"}
-            aria-disabled={state.kind === "resolving" || state.kind === "connecting"}
-            onClick={() => void (state.kind === "wrong_chain" ? switchToHedera() : connect())}
+            disabled={state.kind === "resolving"}
+            aria-disabled={state.kind === "resolving"}
+            onClick={() => void (state.kind === "connecting" ? cancelConnection() : state.kind === "wrong_chain" ? switchToHedera() : connect())}
           >
-            {state.kind === "wrong_chain" ? "Switch to Hedera Testnet" : state.kind === "request_failed" || state.kind === "no_provider" ? "Retry MetaMask connection" : "Connect MetaMask"}
+            {state.kind === "connecting" ? "Cancel MetaMask connection" : state.kind === "wrong_chain" ? "Switch to Hedera Testnet" : state.kind === "request_failed" || state.kind === "no_provider" ? "Retry MetaMask connection" : "Connect MetaMask"}
           </Button>
           {state.kind === "request_failed" ? (
             <p aria-live="polite" className="text-sm text-muted-foreground">

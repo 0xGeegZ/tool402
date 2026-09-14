@@ -78,6 +78,9 @@ async function signInHarness({ deferVerification = false, initialConnection } = 
     Object,
     fetch: async (path, init) => {
       fetches.push([path, init]);
+      if (path === "/api/auth/logout") {
+        return { ok: true, status: 204, async json() { return null; } };
+      }
       return {
         ok: true,
         async json() {
@@ -599,6 +602,11 @@ clientTest("does not navigate after the wallet changes during verification", asy
   await operation;
 
   assert.deepEqual(harness.routes, []);
+  assert.deepEqual(harness.fetches.map(([path]) => path), [
+    "/api/auth/metamask/challenge",
+    "/api/auth/metamask/verify",
+    "/api/auth/logout",
+  ]);
 });
 
 signInTest("redirects valid sessions and otherwise renders the public sign-in boundary", async () => {

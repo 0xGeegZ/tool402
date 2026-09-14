@@ -18,7 +18,7 @@ const legacyPaths = [
 ];
 const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
 
-async function loadHook(hooks) {
+async function loadHook(hooks, hydrated = true) {
   const source = await readFile(join(appRoot, hookPath), "utf8");
   const { outputText } = typescript.transpileModule(source, {
     fileName: hookPath,
@@ -31,7 +31,7 @@ async function loadHook(hooks) {
     require(specifier) {
       if (specifier === "react") return { useRef: (initial) => ({ current: initial }) };
       if (specifier === "wagmi") return hooks;
-      if (specifier === "./wallet-providers") return { useWalletHydrated: () => true };
+      if (specifier === "./wallet-providers") return { useWalletHydrated: () => hydrated };
       assert.fail(`unexpected hook import: ${specifier}`);
     },
   }, { filename: hookPath });
@@ -81,6 +81,25 @@ test("selects the Wagmi-discovered MetaMask connector rather than another inject
   await wallet.connect();
   assert.equal(instance.calls.connect.length, 1);
   assert.equal(instance.calls.connect[0]?.connector, discoveredMetaMask);
+});
+
+test("holds the UI in a resolving state until Wagmi persistence hydrates", async () => {
+  const instance = harness({ connection: { status: "connecting", address: undefined, chainId: undefined, connector: undefined } });
+  const { useTool402Wallet } = await loadHook(instance.hooks, false);
+  const wallet = useTool402Wallet();
+
+  assert.deepEqual({ ...wallet.state }, { kind: "resolving" });
+  assert.equal(wallet.resolved, false);
+});
+
+test("can clear a connection attempt that has not established a connector", async () => {
+  const instance = harness({ connection: { status: "connecting", address: undefined, chainId: undefined, connector: undefined } });
+  const { useTool402Wallet } = await loadHook(instance.hooks);
+  const wallet = useTool402Wallet();
+
+  await wallet.cancelConnection();
+  assert.equal(instance.calls.disconnect.length, 1);
+  assert.equal(instance.calls.disconnect[0], undefined);
 });
 
 test("centralizes the eligible Tool402 wallet connection invariant", async () => {

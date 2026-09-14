@@ -33,7 +33,7 @@ function shortenAddress(address: string): string {
 }
 
 export function WalletIsland() {
-  const { state, connect, disconnect, switchToHedera } = useTool402Wallet();
+  const { state, connect, cancelConnection, disconnect, switchToHedera } = useTool402Wallet();
 
   return (
     <div data-slot="wallet-island" className="flex items-center gap-2">
@@ -43,9 +43,14 @@ export function WalletIsland() {
           Connect MetaMask
         </Button>
       ) : null}
-      {state.kind === "resolving" || state.kind === "connecting" ? (
+      {state.kind === "resolving" ? (
         <Button size="sm" className="whitespace-nowrap" disabled aria-disabled="true">
           Connecting…
+        </Button>
+      ) : null}
+      {state.kind === "connecting" ? (
+        <Button variant="outline" size="sm" className="whitespace-nowrap" onClick={() => void cancelConnection()}>
+          Cancel MetaMask connection
         </Button>
       ) : null}
       {state.kind === "wrong_chain" ? (

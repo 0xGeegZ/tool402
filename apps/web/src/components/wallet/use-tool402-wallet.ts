@@ -139,7 +139,7 @@ export function useTool402Wallet() {
     chainId: connection.chainId,
     connector: connection.connector,
   };
-  const state = deriveTool402WalletState({
+  const derivedState = deriveTool402WalletState({
     status: connection.status,
     address: connection.address,
     chainId: connection.chainId,
@@ -148,6 +148,7 @@ export function useTool402Wallet() {
     connectError,
     switchError,
   });
+  const state: Tool402WalletState = hydrated ? derivedState : { kind: "resolving" };
 
   return {
     connection: currentConnection,
@@ -171,6 +172,15 @@ export function useTool402Wallet() {
         } catch {
           // The current connection remains authoritative until Wagmi reports otherwise.
         }
+      }
+    },
+    async cancelConnection() {
+      try {
+        // A connection request has no established connector yet. Omitting it clears Wagmi's
+        // pending state without issuing another request to MetaMask.
+        await disconnectAsync();
+      } catch {
+        // The current connection remains authoritative until Wagmi reports otherwise.
       }
     },
     async switchToHedera() {
