@@ -2,15 +2,11 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
-import { type State, WagmiProvider } from "wagmi";
-import { reconnect } from "wagmi/actions";
+import { useConnectors, useReconnect, WagmiProvider } from "wagmi";
 
 import { getTool402WagmiConfig } from "../../lib/wallet/wagmi-config";
 
-const passiveReconnectDelayMs = 500;
-const passiveReconnectTimeoutMs = 8_000;
 const metaMaskRdns = "io.metamask";
-type WalletConfig = Parameters<typeof reconnect>[0];
 const PassiveWalletRestoreContext = createContext(true);
 
 export function usePassiveWalletRestore(): boolean {
@@ -24,55 +20,46 @@ function isMetaMaskConnector(connector: { readonly id: string; readonly rdns?: s
     || (Array.isArray(connector.rdns) && connector.rdns.includes(metaMaskRdns));
 }
 
-function clearPendingReconnect(config: WalletConfig) {
-  if (config.state.status !== "connecting" && config.state.status !== "reconnecting") return;
-  config.setState((current) => ({
-    ...current,
-    connections: new Map(),
-    current: null,
-    status: "disconnected",
-  }));
-}
-
-export function WalletProviders({
-  children,
-  initialState,
-}: {
-  readonly children: ReactNode;
-  readonly initialState: State | undefined;
-}) {
-  const [config] = useState(getTool402WagmiConfig);
-  const [queryClient] = useState(() => new QueryClient());
+function PassiveWalletRestore({ children }: { readonly children: ReactNode }) {
+  const connectors = useConnectors();
+  const { mutateAsync: reconnectAsync } = useReconnect();
   const [isPassiveReconnectPending, setPassiveReconnectPending] = useState(true);
 
   useEffect(() => {
     let active = true;
-    const timer = window.setTimeout(() => {
-      const connectors = config.connectors.filter(isMetaMaskConnector);
-      void Promise.race([
-        reconnect(config, { connectors }),
-        new Promise<"timeout">((resolve) => {
-          window.setTimeout(() => resolve("timeout"), passiveReconnectTimeoutMs);
-        }),
-      ]).then((result) => {
-        if (result === "timeout") clearPendingReconnect(config);
-      }).catch(() => {
-        clearPendingReconnect(config);
-      }).finally(() => {
-        if (active) setPassiveReconnectPending(false);
-      });
-    }, passiveReconnectDelayMs);
+    const metaMaskConnectors = connectors.filter(isMetaMaskConnector);
+
+    void reconnectAsync({ connectors: metaMaskConnectors }).catch(() => {
+      // A rejected passive reconnect only finishes resolution; it never opens a wallet request.
+    }).finally(() => {
+      if (active) setPassiveReconnectPending(false);
+    });
+
     return () => {
       active = false;
-      window.clearTimeout(timer);
     };
-  }, [config]);
+  }, [connectors, reconnectAsync]);
 
   return (
     <PassiveWalletRestoreContext.Provider value={isPassiveReconnectPending}>
-      <WagmiProvider config={config} initialState={initialState} reconnectOnMount={false}>
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-      </WagmiProvider>
+      {children}
     </PassiveWalletRestoreContext.Provider>
+  );
+}
+
+export function WalletProviders({
+  children,
+}: {
+  readonly children: ReactNode;
+}) {
+  const [config] = useState(getTool402WagmiConfig);
+  const [queryClient] = useState(() => new QueryClient());
+
+  return (
+    <WagmiProvider config={config} reconnectOnMount={false}>
+      <QueryClientProvider client={queryClient}>
+        <PassiveWalletRestore>{children}</PassiveWalletRestore>
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }

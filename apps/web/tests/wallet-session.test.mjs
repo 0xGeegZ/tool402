@@ -32,6 +32,7 @@ async function loadHook(hooks) {
     require(specifier) {
       if (specifier === "react") return { useEffect: () => {}, useRef: (initial) => ({ current: initial }) };
       if (specifier === "wagmi") return hooks;
+      if (specifier === "./wallet-providers") return { usePassiveWalletRestore: () => false };
       assert.fail(`unexpected hook import: ${specifier}`);
     },
   }, { filename: hookPath });
@@ -47,16 +48,10 @@ function harness({ connection, connectors, connectError, switchError } = {}) {
     metaMask,
     hooks: {
       ProviderNotFoundError,
-      useConfig: () => ({
-        setState: (updater) => { current = updater(current); },
-        storage: {
-        removeItem: async (key) => { calls.removeStorage.push(key); },
-        setItem: async (key, value) => { calls.setStorage.push([key, value]); },
-        },
-      }),
       useConnection: () => current,
       useConnectors: () => connectors ?? [metaMask],
       useConnect: () => ({ error: connectError, mutateAsync: async (input) => { calls.connect.push(input); } }),
+      useDisconnect: () => ({ mutateAsync: async (input) => { calls.disconnect.push(input); } }),
       useSwitchChain: () => ({ error: switchError, mutateAsync: async (input) => { calls.switchChain.push(input); } }),
     },
   };
@@ -72,15 +67,16 @@ test("derives display state from Wagmi without connecting during passive restora
   assert.deepEqual(instance.calls, { connect: [], disconnect: [], switchChain: [], removeStorage: [], setStorage: [] });
 });
 
-test("clears the reconnect target without revoking the wallet's site permission", async () => {
+test("uses Wagmi disconnect to cancel an in-flight connection", async () => {
   const instance = harness({ connection: { status: "connecting", address: undefined, chainId: undefined, connector: undefined } });
   const { useTool402Wallet } = await loadHook(instance.hooks);
 
   void useTool402Wallet().cancelConnection();
   await new Promise(setImmediate);
-  assert.deepEqual(instance.calls.setStorage, [["metaMask.disconnected", true]]);
-  assert.deepEqual(instance.calls.removeStorage, ["recentConnectorId"]);
-  assert.deepEqual(instance.calls.disconnect, []);
+  assert.equal(instance.calls.disconnect.length, 1);
+  assert.equal(instance.calls.disconnect[0]?.connector?.id, "metaMask");
+  assert.deepEqual(instance.calls.removeStorage, []);
+  assert.deepEqual(instance.calls.setStorage, []);
 });
 
 test("selects the Wagmi-discovered MetaMask connector rather than another injected wallet", async () => {
@@ -97,15 +93,16 @@ test("selects the Wagmi-discovered MetaMask connector rather than another inject
   assert.equal(instance.calls.connect[0]?.connector, discoveredMetaMask);
 });
 
-test("cancels a connection attempt and clears its persisted reconnect target", async () => {
+test("cancels a connection attempt through Wagmi", async () => {
   const instance = harness({ connection: { status: "connecting", address: undefined, chainId: undefined, connector: undefined } });
   const { useTool402Wallet } = await loadHook(instance.hooks);
   const wallet = useTool402Wallet();
 
   await wallet.cancelConnection();
-  assert.equal(instance.calls.disconnect.length, 0);
-  assert.deepEqual(instance.calls.setStorage, [["metaMask.disconnected", true]]);
-  assert.deepEqual(instance.calls.removeStorage, ["recentConnectorId"]);
+  assert.equal(instance.calls.disconnect.length, 1);
+  assert.equal(instance.calls.disconnect[0]?.connector?.id, "metaMask");
+  assert.deepEqual(instance.calls.setStorage, []);
+  assert.deepEqual(instance.calls.removeStorage, []);
 });
 
 test("centralizes the eligible Tool402 wallet connection invariant", async () => {
@@ -134,8 +131,9 @@ test("uses only explicit Wagmi mutations and normalizes the connected identity",
   await wallet.disconnect();
   assert.equal(instance.calls.switchChain.length, 1);
   assert.equal(instance.calls.switchChain[0]?.chainId, 296);
-  assert.equal(instance.calls.disconnect.length, 0);
-  assert.deepEqual(instance.calls.setStorage, [["metaMask.disconnected", true]]);
+  assert.equal(instance.calls.disconnect.length, 1);
+  assert.equal(instance.calls.disconnect[0]?.connector?.id, "metaMask");
+  assert.deepEqual(instance.calls.setStorage, []);
 });
 
 test("reports a missing provider or rejected Wagmi operation without a fallback provider store", async () => {
@@ -170,7 +168,7 @@ test("removes the legacy wallet store and mounts only the shared Wagmi provider"
 
   assert.match(hook, /from\s+["']wagmi["']/u);
   assert.doesNotMatch(hook, /(?:useState|accountsChanged|chainChanged|eip6963|window\.ethereum)/u);
-  assert.match(layout, /<WalletProviders initialState=\{initialState\}>/u);
+  assert.match(layout, /<WalletProviders><ApplicationShell>\{children\}<\/ApplicationShell><\/WalletProviders>/u);
   assert.doesNotMatch(layout, /WalletSessionProvider|wallet-session/u);
   for (const path of legacyPaths) assert.equal(existsSync(join(appRoot, path)), false, `legacy wallet path remains: ${path}`);
 });

@@ -4,11 +4,13 @@ import { useRef } from "react";
 import {
   ProviderNotFoundError,
   useConnect,
-  useConfig,
   useConnection,
   useConnectors,
+  useDisconnect,
   useSwitchChain,
 } from "wagmi";
+
+import { usePassiveWalletRestore } from "./wallet-providers";
 
 export const tool402HederaTestnetChainId = 296;
 const metaMaskConnectorId = "metaMask";
@@ -16,6 +18,7 @@ const metaMaskRdns = "io.metamask";
 type ConnectionStatus = "connected" | "connecting" | "disconnected" | "reconnecting";
 
 interface WalletStateInput {
+  readonly restoring: boolean;
   readonly status: ConnectionStatus;
   readonly address: string | undefined;
   readonly chainId: number | undefined;
@@ -87,7 +90,7 @@ function walletErrorCode(error: unknown): string | null {
 }
 
 export function deriveTool402WalletState(input: WalletStateInput): Tool402WalletState {
-  if (input.status === "reconnecting") {
+  if (input.restoring || input.status === "reconnecting") {
     return { kind: "resolving" };
   }
   if (input.status === "connected" && input.address !== undefined) {
@@ -112,11 +115,12 @@ export function deriveTool402WalletState(input: WalletStateInput): Tool402Wallet
 }
 
 export function useTool402Wallet() {
-  const config = useConfig();
   const connection = useConnection();
   const connectors = useConnectors();
   const { mutateAsync: connectAsync, error: connectError } = useConnect();
+  const { mutateAsync: disconnectAsync } = useDisconnect();
   const { mutateAsync: switchChainAsync, error: switchError } = useSwitchChain();
+  const isPassiveRestorePending = usePassiveWalletRestore();
   const metaMask = connectors.find((connector) => connector.id === metaMaskRdns || hasMetaMaskRdns(connector))
     ?? connectors.find((connector) => connector.id === metaMaskConnectorId);
   const account = connection.address?.toLowerCase();
@@ -136,6 +140,7 @@ export function useTool402Wallet() {
     connector: connection.connector,
   };
   const state = deriveTool402WalletState({
+    restoring: isPassiveRestorePending,
     status: connection.status,
     address: connection.address,
     chainId: connection.chainId,
@@ -144,22 +149,9 @@ export function useTool402Wallet() {
     connectError,
     switchError,
   });
-  async function clearConnection(connector: typeof metaMask | Tool402WalletConnection["connector"]) {
-    if (connector !== undefined) {
-      await config.storage?.setItem(`${connector.id}.disconnected`, true);
-    }
-    await config.storage?.removeItem("recentConnectorId");
-    config.setState((current) => ({
-      ...current,
-      connections: new Map(),
-      current: null,
-      status: "disconnected",
-    }));
-  }
-
   return {
     connection: currentConnection,
-    resolved: connection.status !== "reconnecting" && connection.status !== "connecting",
+    resolved: !isPassiveRestorePending && connection.status !== "reconnecting" && connection.status !== "connecting",
     state,
     connectErrorCode: walletErrorCode(connectError),
     async connect() {
@@ -172,12 +164,10 @@ export function useTool402Wallet() {
       }
     },
     async disconnect() {
-      await clearConnection(connection.connector ?? metaMask);
+      await disconnectAsync({ connector: connection.connector ?? metaMask });
     },
     async cancelConnection() {
-      // This only abandons the app's pending reconnect. It must not revoke
-      // the site's existing MetaMask permission through an injected-wallet RPC.
-      await clearConnection(connection.connector ?? metaMask);
+      await disconnectAsync({ connector: connection.connector ?? metaMask });
     },
     async switchToHedera() {
       try {

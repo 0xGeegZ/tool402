@@ -526,7 +526,9 @@ dashboardNavigationTest("shows Dashboard only after server-side session validati
 
   assert.match(rootLayout, /\bDashboardNavigation\b/u);
   assert.match(rootLayout, /<Suspense\s+fallback=\{\s*<LocalNavigation\s*\/>\s*\}>\s*<DashboardNavigation\s*\/>\s*<\/Suspense>/u);
-  assert.doesNotMatch(rootLayout, /\bcookies\(\)/u);
+  assert.doesNotMatch(rootLayout, /\b(?:cookieToInitialState|cookies)\(/u);
+  assert.doesNotMatch(rootLayout, /export const instant = false;/u);
+  assert.doesNotMatch(rootLayout, /\breadDashboardSession\b/u);
 
   assert.match(dashboardLayout, /import\s*\{\s*DashboardSessionSync\s*\}\s*from\s*["'][^"']*dashboard-session-sync["']/u);
   assert.equal((dashboardLayout.match(/<DashboardSessionSync\s+address=\{session\.address\}\s+issuedAt=\{session\.issuedAt\}\s*>/gu) ?? []).length, 1);

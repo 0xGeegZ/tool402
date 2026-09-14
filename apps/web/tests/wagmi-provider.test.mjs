@@ -148,9 +148,11 @@ async function loadProviders() {
         case "react/jsx-runtime":
           return jsxRuntime;
         case "wagmi":
-          return { WagmiProvider: (props) => { wagmiCalls.push(props); return props.children; } };
-        case "wagmi/actions":
-          return { reconnect: (...args) => { reconnectCalls.push(args); return []; } };
+          return {
+            WagmiProvider: (props) => { wagmiCalls.push(props); return props.children; },
+            useConnectors: () => [rabby, metaMask],
+            useReconnect: () => ({ mutateAsync: async (input) => { reconnectCalls.push(input); } }),
+          };
         case "@tanstack/react-query":
           return {
             QueryClient,
@@ -177,13 +179,13 @@ implementedProviderTest("mounts one Wagmi config around one browser QueryClient"
     node !== null && typeof node === "object" && typeof node.type === "function"
       ? render(node.type(node.props))
       : node;
-  assert.equal(render(harness.WalletProviders({ children: "shell", initialState: undefined })), "shell");
-  assert.equal(render(harness.WalletProviders({ children: "shell", initialState: undefined })), "shell");
+  assert.equal(render(harness.WalletProviders({ children: "shell" })), "shell");
+  assert.equal(render(harness.WalletProviders({ children: "shell" })), "shell");
   assert.equal(harness.wagmiCalls.length, 2);
   assert.equal(harness.wagmiCalls[0]?.config?.name, "tool402-config");
   assert.equal(harness.wagmiCalls[1]?.config?.name, "tool402-config");
   assert.equal(harness.reconnectCalls.length, 2);
-  assert.deepEqual(harness.reconnectCalls[0]?.[1]?.connectors, [{ id: "io.metamask", rdns: "io.metamask" }]);
+  assert.deepEqual(harness.reconnectCalls[0]?.connectors, [{ id: "io.metamask", rdns: "io.metamask" }]);
   assert.equal(harness.queryCalls.length, 2);
   assert.equal(harness.queryCalls[0]?.client instanceof harness.QueryClient, true);
   assert.equal(harness.queryCalls[0]?.client, harness.queryCalls[1]?.client);
@@ -192,21 +194,19 @@ implementedProviderTest("mounts one Wagmi config around one browser QueryClient"
 implementedProviderTest("mounts the client provider once from the root layout", async () => {
   const layout = await readFile(new URL("../src/app/layout.tsx", import.meta.url), "utf8");
 
-  assert.match(layout, /cookieToInitialState\(/u);
-  assert.match(layout, /export const instant = false;/u);
-  assert.match(layout, /<WalletProviders initialState=\{initialState\}><ApplicationShell>\{children\}<\/ApplicationShell><\/WalletProviders>/u);
+  assert.doesNotMatch(layout, /cookieToInitialState\(|\bcookies\(\)|export const instant = false;/u);
+  assert.match(layout, /<WalletProviders><ApplicationShell>\{children\}<\/ApplicationShell><\/WalletProviders>/u);
 });
 
-implementedProviderTest("delays the passive reconnect until the injected wallet is ready", async () => {
+implementedProviderTest("uses the Wagmi reconnect lifecycle without a bespoke timeout", async () => {
   const providers = await readFile(providersUrl, "utf8");
 
-  assert.match(providers, /import\s+\{\s*reconnect\s*\}\s+from\s+["']wagmi\/actions["']/u);
-  assert.match(providers, /passiveReconnectTimeoutMs\s*=\s*8_000/u);
-  assert.match(providers, /const connectors = config\.connectors\.filter\(isMetaMaskConnector\);/u);
-  assert.match(providers, /Promise\.race\(\[\s*reconnect\(config, \{ connectors \}\),/u);
+  assert.match(providers, /useReconnect/u);
+  assert.match(providers, /const metaMaskConnectors = connectors\.filter\(isMetaMaskConnector\);/u);
+  assert.match(providers, /reconnectAsync\(\{ connectors: metaMaskConnectors \}\)/u);
   assert.match(providers, /connector\.rdns === metaMaskRdns/u);
-  assert.match(providers, /status:\s*["']disconnected["']/u);
-  assert.match(providers, /<WagmiProvider\s+config=\{config\}\s+initialState=\{initialState\}\s+reconnectOnMount=\{false\}>/u);
+  assert.doesNotMatch(providers, /Promise\.race|passiveReconnect(?:Delay|Timeout)Ms|config\.setState/u);
+  assert.match(providers, /<WagmiProvider\s+config=\{config\}\s+reconnectOnMount=\{false\}>/u);
 });
 
 implementedProviderTest("keeps restoration pending until the passive reconnect settles", async () => {

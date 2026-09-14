@@ -176,13 +176,13 @@ implementedTest("waits for passive wallet restoration before comparing the dashb
 });
 
 implementedTest("keeps the signed session while its initial wallet restoration is unresolved", async () => {
-  const harness = await loadSynchronizer();
+  const harness = await loadSynchronizer({ wallet: { connection: { status: "reconnecting", account: undefined, chainId: undefined, connector: undefined }, resolved: false } });
 
   const tree = harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
 
   assert.equal(harness.requests.length, 0);
-  assert.match(visibleText(tree), /Restoring the signed MetaMask wallet/u);
+  assert.equal(visibleText(tree), "dashboard content");
 });
 
 implementedTest("logs out after the selected MetaMask account changes", async () => {
@@ -259,13 +259,13 @@ implementedTest("routes a concurrent dashboard session through account-changed e
   assert.deepEqual(harness.navigations, [["replace", "/sign-in/account-changed"]]);
 });
 
-implementedTest("does not clear a server session merely because a refreshed wallet has not reconnected", async () => {
+implementedTest("logs out a server session after restoration completes without a wallet", async () => {
   const harness = await loadSynchronizer({ wallet: { connection: { status: "disconnected", account: undefined, chainId: undefined, connector: undefined }, resolved: true } });
 
   harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
 
-  assert.equal(harness.requests.length, 0);
+  assertLogout(harness);
 });
 
 implementedTest("starts only one logout when Wagmi reports an explicit disconnect", async () => {

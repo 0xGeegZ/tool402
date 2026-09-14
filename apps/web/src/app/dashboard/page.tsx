@@ -3,8 +3,6 @@ import { DashboardIdentity } from "../../components/dashboard/dashboard-identity
 import { LandingFooter } from "../../components/landing/landing-footer";
 import { PageHeader } from "../../components/ui/page-header";
 
-export const instant = false;
-
 export default function DashboardPage() {
   return (
     <>

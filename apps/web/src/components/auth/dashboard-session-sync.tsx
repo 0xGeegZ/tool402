@@ -80,13 +80,10 @@ export function DashboardSessionSync({
       hasMatchedSessionWallet.current = true;
       return;
     }
-    if (connection.status === "connected" || hasMatchedSessionWallet.current) endSession();
+    endSession();
   }, [connection.status, currentSessionMatches, endSession, resolved]);
 
   if (!resolved || currentSessionMatches) return children;
-  if (!hasMatchedSessionWallet.current && connection.status !== "connected") {
-    return <div role="status" aria-live="polite" className="p-6 text-sm text-muted-foreground">Restoring the signed MetaMask wallet…</div>;
-  }
   return (
     <div role="alert" aria-live="polite" className="p-6 text-sm text-muted-foreground">
       <p>{logoutFailed

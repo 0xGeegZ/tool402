@@ -56,6 +56,15 @@ initial test-only restriction: all nineteen named test paths and only the
 declared client-transport source/package paths are active; no other test or
 source path is active.
 
+Owner-directed W01 integration amendment: the migration also owns the narrow
+account-change sign-in presentation at
+`apps/web/src/app/sign-in/account-changed/page.tsx` and
+`apps/web/src/components/auth/dashboard-sign-in-prompt.tsx`, plus the root
+`apps/web/src/app/favicon.ico` metadata asset used by the shared application
+shell. These paths may only preserve the existing sign-in protocol or remove
+browser runtime noise; they grant no account request, signature, transaction,
+deployment, or authority.
+
 The root transfers only client-transport migration seams to W01: S26 transfers
 the shared session/header/layout/deploy-signing/backing-flow composition;
 S40 transfers sign-in, dashboard session sync and dashboard layout; M58
