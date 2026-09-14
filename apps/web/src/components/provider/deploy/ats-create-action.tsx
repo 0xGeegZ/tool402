@@ -18,6 +18,7 @@ import {
   createStageBRecoveryScope,
   hasStageBRecovery,
   persistStageBRecovery,
+  reconcileStageBRecovery,
   readStageBRecovery,
   releaseStageBRecoveryReservation,
   stageBRecoveryStatus,
@@ -249,14 +250,15 @@ export function AtsCreateAction({
     }
     if (claim.kind === "existing") {
       const existingHash = readStageBRecovery(actionRecoveryScope);
-      if (existingHash !== recoveryHash) {
+      if (existingHash !== null && existingHash !== recoveryHash) {
         actionInFlight.current = null;
         setInFlight(null);
-        setRecovery({ context: actionContext, hash: existingHash ?? recoveryHash, pending: false, persisted: existingHash !== null });
+        setRecovery({ context: actionContext, hash: existingHash, pending: false, persisted: true });
         setSubmittedFor(actionContext);
         setFeedback("A different transaction is already retained for this prepared attempt. Creation remains blocked.");
         return;
       }
+      if (existingHash === null) setFeedback("The retained submission has no transaction hash. Verifying the supplied public hash; creation remains blocked.");
     }
     try {
       const outcome = await controller.current.recover(recoveryHash);
@@ -266,6 +268,22 @@ export function AtsCreateAction({
           setRecovery({ context: actionContext, hash: recoveryHash, pending: false, persisted: false });
           setFeedback("The corroborated transaction could not be retained safely. Creation remains blocked.");
           return;
+        }
+        if (claim.kind === "existing") {
+          const reconciliation = await reconcileStageBRecovery(actionRecoveryScope, recoveryHash);
+          if (controllerContext.current !== actionContext || sessionChanged.current) return;
+          if (reconciliation.kind === "conflict") {
+            const existingHash = readStageBRecovery(actionRecoveryScope);
+            setRecovery({ context: actionContext, hash: existingHash ?? recoveryHash, pending: false, persisted: existingHash !== null });
+            setSubmittedFor(actionContext);
+            setFeedback("A different transaction is already retained for this prepared attempt. Creation remains blocked.");
+            return;
+          }
+          if (reconciliation.kind === "unavailable") {
+            setRecovery({ context: actionContext, hash: recoveryHash, pending: false, persisted: false });
+            setFeedback("The corroborated transaction could not be retained safely. Creation remains blocked.");
+            return;
+          }
         }
         setRecovery({ context: actionContext, hash: recoveryHash, pending: false, persisted: true });
         setSubmittedFor(actionContext);
@@ -323,7 +341,8 @@ export function AtsCreateAction({
       <StatusRegion className="mt-2 text-sm text-muted-foreground">{feedback ?? (publicAtsExecutionBlocked
         ? "Public ATS deployment is unavailable until a durable pre-wallet dispatch record prevents reload or multi-tab redeployment. Existing transaction recovery remains read-only."
         : recoveryStorageStatus === "unavailable" ? "Transaction recovery storage is unavailable or corrupt. Creation remains blocked."
-          : sessionChanged.current ? "The wallet session changed. Reload before choosing any new action." : null)}</StatusRegion>
+          : recoveryStorageStatus === "existing" && currentRecovery?.persisted !== true ? "A retained submission has no transaction hash. Verify the original public hash; creation remains blocked."
+            : sessionChanged.current ? "The wallet session changed. Reload before choosing any new action." : null)}</StatusRegion>
     </div>
   );
 }

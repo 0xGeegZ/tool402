@@ -4,6 +4,9 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { runInNewContext } from "node:vm";
+import * as jsxRuntime from "react/jsx-runtime";
+import typescript from "typescript";
 
 const appRoot = fileURLToPath(new URL("..", import.meta.url));
 const sourcePaths = [
@@ -16,6 +19,122 @@ const sourcePaths = [
 
 function readAppFile(path) {
   return readFile(join(appRoot, path), "utf8");
+}
+
+function elements(node) {
+  if (Array.isArray(node)) return node.flatMap(elements);
+  if (node === null || typeof node !== "object" || !("props" in node)) return [];
+  return [node, ...elements(node.props.children)];
+}
+
+async function backingHarness({ stored = new Map(), payment, response }) {
+  const flowPath = join(appRoot, "src/components/backing/backing-flow.tsx");
+  const slots = [];
+  const fetchCalls = [];
+  let cursor = 0;
+  let sends = 0;
+  const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const walletConnection = { status: "connected", account: address, chainId: 296, connector: { id: "metaMask" }, generation: 1 };
+  const storage = {
+    getItem(key) { return stored.get(key) ?? null; },
+    setItem(key, value) { stored.set(key, value); },
+    removeItem(key) { stored.delete(key); },
+  };
+  const offering = {
+    terms: { version: "v1", minimumPurchaseUnits: 1n, maximumNoteUnits: 10n, noteUnitPriceTinybars: 10n, payoutCapTinybars: 20n, reserveShareBps: 100n },
+    maturityAt: "2026-12-31T00:00:00.000Z",
+  };
+  const imports = {
+    react: {
+      useRef(initial) {
+        const index = cursor++;
+        if (!(index in slots)) {
+          let current = initial;
+          slots[index] = {};
+          Object.defineProperty(slots[index], "current", {
+            get() { return current; },
+            set(value) { current = value; },
+          });
+        }
+        return slots[index];
+      },
+      useState(initial) {
+        const index = cursor++;
+        if (!(index in slots)) slots[index] = typeof initial === "function" ? initial() : initial;
+        return [slots[index], (value) => { slots[index] = typeof value === "function" ? value(slots[index]) : value; }];
+      },
+      useEffect(effect) { effect(); },
+    },
+    "react/jsx-runtime": jsxRuntime,
+    wagmi: { useSendTransaction: () => ({ mutateAsync: async () => { sends += 1; throw new Error("a legacy recovery must never send"); } }) },
+    "../../lib/hashscan-links.ts": { hashscanTransactionUrl: () => null },
+    "../../lib/wallet/wallet-error.ts": { isUserRejectedWalletRequest: () => false },
+    "../ui/badge": { Badge: "Badge" },
+    "../ui/button": { Button: "Button" },
+    "../ui/card": { Card: "Card", CardContent: "CardContent", CardDescription: "CardDescription", CardHeader: "CardHeader", CardTitle: "CardTitle" },
+    "../ui/detail-list": { DetailList: "DetailList" },
+    "../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
+    "../wallet/wallet-connect": { WalletIsland: "WalletIsland" },
+    "../wallet/use-tool402-wallet": {
+      useTool402Wallet: () => ({ resolved: true, connection: walletConnection }),
+      connectedTool402Wallet: (connection, resolved) => resolved && connection.status === "connected" ? connection : null,
+    },
+    "./backing-presentation": { presetUnits: () => [1n], railPosition: () => ({}) },
+    "./backing-state": {
+      backingLifecycleLabels: { choosing: "choosing", prepared: "prepared", payment_submitted: "payment_submitted", payment_outcome_unknown: "payment_outcome_unknown", refused: "refused", allocation_pending: "allocation_pending", complete: "complete", offering_unavailable: "offering_unavailable" },
+      createBackingIntent: () => { throw new Error("not used by recovery"); },
+      formatHbar: (value) => `${value.toString()} HBAR`,
+      formatShare: (value) => value.toString(),
+      isCurrentBackingIntent: () => true,
+      paymentTinybars: () => 10n,
+      readBackingOffering: () => offering,
+      transferRequest: () => ({}),
+      validateUnits: () => ({ ok: true, units: 1n }),
+      viewAfterSignature: () => ({ kind: "choosing" }),
+      viewAfterTransfer: () => ({ kind: "choosing" }),
+    },
+    "./backing-step-rail": { BackingStepRail: "BackingStepRail" },
+  };
+  const { outputText } = typescript.transpileModule(await readFile(flowPath, "utf8"), {
+    fileName: flowPath,
+    compilerOptions: { target: typescript.ScriptTarget.ES2022, module: typescript.ModuleKind.CommonJS, jsx: typescript.JsxEmit.ReactJSX },
+  });
+  const module = { exports: {} };
+  const context = {
+    exports: module.exports,
+    module,
+    require(specifier) {
+      assert.ok(Object.hasOwn(imports, specifier), `unexpected backing-flow import: ${specifier}`);
+      return imports[specifier];
+    },
+    window: { localStorage: storage },
+    fetchCalls,
+    responseOk: response.ok,
+    responseText: JSON.stringify(response.body),
+    Promise,
+    Object,
+    Array,
+    BigInt,
+    Error,
+    JSON,
+  };
+  context.fetch = runInNewContext("async (...input) => { fetchCalls.push(input); return { ok: responseOk, json: async () => JSON.parse(responseText) }; }", context);
+  runInNewContext(outputText, context, { filename: flowPath });
+  return {
+    render() {
+      cursor = 0;
+      const first = module.exports.BackingFlow({ projection: {}, initialPayment: payment, dashboardAddress: address });
+      cursor = 0;
+      first.type(first.props);
+      cursor = 0;
+      const settled = module.exports.BackingFlow({ projection: {}, initialPayment: payment, dashboardAddress: address });
+      cursor = 0;
+      return settled.type(settled.props);
+    },
+    fetchCalls: () => fetchCalls,
+    sends: () => sends,
+    stored: () => new Map(stored),
+  };
 }
 
 test("declares exactly the five backing source paths", () => {
@@ -69,6 +188,48 @@ test("uses the Wagmi wallet context, signature dialog, and relay without a secon
   assert.match(flow, /assessFundingBalance/);
   assert.match(flow, /Insufficient testnet HBAR/);
   assert.doesNotMatch(flow, /pending-attachment-v1|legacyPending|Verify legacy recorded transaction/);
+});
+
+test("recovers legacy evidence for a prepared payment without signing or sending, while retaining it on rejection", async () => {
+  const attemptPublicId = "CCCCCCCCCCCCCCCCCCCCCg";
+  const transactionHash = `0x${"1".repeat(64)}`;
+  const parameters = { offeringPublicId: "riskscan", units: "1", tinybars: "10", purchaseIntentId: attemptPublicId };
+  const legacyKey = "tool402-backing-pending-attachment-v1";
+  const initialPayment = { status: "PREPARED", transactionHash: null, tinybars: "10" };
+  const confirmed = { ok: true, body: { status: "CONFIRMED", transactionHash, tinybars: "10" } };
+  const success = await backingHarness({
+    stored: new Map([[legacyKey, JSON.stringify({ intent: { idempotencyKey: attemptPublicId, parameters }, transactionHash })]]),
+    payment: initialPayment,
+    response: confirmed,
+  });
+
+  let tree = success.render();
+  let recovery = elements(tree).find((element) => element.type === "Button" && element.props.children === "Check legacy recorded transaction");
+  assert.ok(recovery, "a prepared reservation with only v1 evidence offers explicit recovery");
+  recovery.props.onClick();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(success.sends(), 0, "recovery never signs or sends a transaction");
+  assert.equal(success.fetchCalls().length, 1);
+  assert.equal(success.fetchCalls()[0][0], "/api/backing/payment");
+  assert.deepEqual(JSON.parse(success.fetchCalls()[0][1].body), { attemptPublicId, transactionHash, parameters });
+  tree = success.render();
+  assert.equal(success.stored().has(legacyKey), false, "only backend-admitted evidence is cleaned up");
+  assert.ok(elements(tree).some((element) => element.props.children === "Payment confirmed on Hedera Testnet for 10 HBAR. Allocation still needs the issuer's separate signature."));
+
+  const rejection = await backingHarness({
+    stored: new Map([[legacyKey, JSON.stringify({ intent: { idempotencyKey: attemptPublicId, parameters }, transactionHash })]]),
+    payment: initialPayment,
+    response: { ok: false, body: { outcome: "rejected" } },
+  });
+  tree = rejection.render();
+  recovery = elements(tree).find((element) => element.type === "Button" && element.props.children === "Check legacy recorded transaction");
+  assert.ok(recovery);
+  recovery.props.onClick();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(rejection.sends(), 0);
+  assert.equal(rejection.stored().has(legacyKey), true, "a rejected verification retains the original legacy record");
+  tree = rejection.render();
+  assert.ok(elements(tree).some((element) => element.props.children === "The legacy transaction was not admitted for this signed dashboard wallet. Nothing was sent and its local evidence was retained."));
 });
 
 test("renders the fixed copy and none of the canvas's sample or simulation content", async () => {

@@ -15,6 +15,7 @@ type StageBRecoveryRecord = Readonly<{
   claimId: string;
   state: "reserved" | "submitted";
   hash?: string;
+  recoveryHash?: string;
   scope: StageBRecoveryScope;
 }>;
 
@@ -56,12 +57,15 @@ function isLegacyRecord(value: unknown): value is LegacyStageBRecoveryRecord {
 function isRecord(value: unknown): value is StageBRecoveryRecord {
   const record = exactRecord(value);
   return record !== null
-    && (Object.keys(record).length === 4 || Object.keys(record).length === 5)
+    && (Object.keys(record).length === 4 || Object.keys(record).length === 5 || Object.keys(record).length === 6)
     && record.version === 2
     && typeof record.claimId === "string"
     && record.claimId.length > 0
     && (record.state === "reserved" || record.state === "submitted")
     && (record.hash === undefined || (record.state === "submitted" && isCanonicalStageBTransactionHash(record.hash)))
+    && (record.recoveryHash === undefined || (record.state === "reserved" && isCanonicalStageBTransactionHash(record.recoveryHash)))
+    && !(record.hash !== undefined && record.recoveryHash !== undefined)
+    && !(record.state === "submitted" && record.hash === undefined)
     && isScope(record.scope);
 }
 
@@ -107,7 +111,9 @@ export function readStageBRecovery(scope: StageBRecoveryScope): string | null {
   if (local === null) return null;
   try {
     const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
-    return isKnownRecord(parsed) && sameScope(parsed.scope, scope) && typeof parsed.hash === "string" ? parsed.hash : null;
+    return isKnownRecord(parsed) && sameScope(parsed.scope, scope)
+      ? parsed.hash ?? (isRecord(parsed) ? parsed.recoveryHash ?? null : null)
+      : null;
   } catch {
     return null;
   }
@@ -130,7 +136,8 @@ export function persistStageBRecovery(scope: StageBRecoveryScope, claimId: strin
   if (local === null) return false;
   try {
     const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
-    if (!isRecord(parsed) || !sameScope(parsed.scope, scope) || parsed.claimId !== claimId) return false;
+    if (!isRecord(parsed) || !sameScope(parsed.scope, scope) || parsed.claimId !== claimId || parsed.state !== "reserved") return false;
+    if (parsed.recoveryHash !== undefined && parsed.recoveryHash !== hash) return false;
     return writeStageBRecovery(Object.freeze({ version: 2, claimId, state: "submitted", hash, scope }));
   } catch {
     return false;
@@ -158,6 +165,12 @@ export function stageBRecoveryStatus(scope: StageBRecoveryScope): StageBRecovery
 export type StageBRecoveryClaim =
   | Readonly<{ kind: "claimed"; claimId: string }>
   | Readonly<{ kind: "existing" }>
+  | Readonly<{ kind: "unavailable" }>;
+
+export type StageBRecoveryReconciliation =
+  | Readonly<{ kind: "reconciled" }>
+  | Readonly<{ kind: "existing" }>
+  | Readonly<{ kind: "conflict" }>
   | Readonly<{ kind: "unavailable" }>;
 
 function createClaimId(): string {
@@ -189,12 +202,34 @@ export async function beginStageBRecovery(scope: StageBRecoveryScope): Promise<S
   }
 }
 
+export async function reconcileStageBRecovery(scope: StageBRecoveryScope, hash: string): Promise<StageBRecoveryReconciliation> {
+  const local = storage();
+  if (!isCanonicalStageBTransactionHash(hash) || local === null || typeof navigator === "undefined" || navigator.locks === undefined) return { kind: "unavailable" };
+  try {
+    return await navigator.locks.request(`tool402:ats-create:${key(scope)}`, { mode: "exclusive" }, () => {
+      try {
+        const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
+        if (!isRecord(parsed) || !sameScope(parsed.scope, scope)) return { kind: "unavailable" };
+        if (parsed.state === "submitted") return parsed.hash === hash ? { kind: "existing" } : { kind: "conflict" };
+        if (parsed.recoveryHash !== undefined) return parsed.recoveryHash === hash ? { kind: "existing" } : { kind: "conflict" };
+        return writeStageBRecovery(Object.freeze({ ...parsed, recoveryHash: hash }))
+          ? { kind: "reconciled" }
+          : { kind: "unavailable" };
+      } catch {
+        return { kind: "unavailable" };
+      }
+    });
+  } catch {
+    return { kind: "unavailable" };
+  }
+}
+
 export function releaseStageBRecoveryReservation(scope: StageBRecoveryScope, claimId: string): boolean {
   const local = storage();
   if (local === null) return false;
   try {
     const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
-    if (!isRecord(parsed) || !sameScope(parsed.scope, scope) || parsed.claimId !== claimId || parsed.state !== "reserved") return false;
+    if (!isRecord(parsed) || !sameScope(parsed.scope, scope) || parsed.claimId !== claimId || parsed.state !== "reserved" || parsed.recoveryHash !== undefined) return false;
     local.removeItem(key(scope));
     return true;
   } catch {

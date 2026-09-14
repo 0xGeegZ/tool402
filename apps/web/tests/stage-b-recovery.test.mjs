@@ -5,6 +5,7 @@ import {
   createStageBRecoveryScope,
   beginStageBRecovery,
   persistStageBRecovery,
+  reconcileStageBRecovery,
   readStageBRecovery,
   releaseStageBRecoveryReservation,
   stageBRecoveryStatus,
@@ -65,6 +66,40 @@ test("keeps an ambiguous reservation locked and releases only the rejecting call
     assert.equal(stageBRecoveryStatus(scope), "existing");
     assert.equal(releaseStageBRecoveryReservation(scope, first.claimId), true);
     assert.equal(stageBRecoveryStatus(scope), "clear");
+  } finally {
+    globalThis.window = previousWindow;
+    Object.defineProperty(globalThis, "navigator", { configurable: true, value: previousNavigator });
+  }
+});
+
+test("retains a corroborated hash on the original hashless reservation without replacing its claim", async () => {
+  const previousWindow = globalThis.window;
+  const previousNavigator = globalThis.navigator;
+  const stored = new Map();
+  globalThis.window = { localStorage: {
+    getItem(key) { return stored.get(key) ?? null; },
+    setItem(key, value) { stored.set(key, value); },
+    removeItem(key) { stored.delete(key); },
+  } };
+  Object.defineProperty(globalThis, "navigator", { configurable: true, value: { locks: { request(_name, _options, callback) { return callback(); } } } });
+  try {
+    const scope = createStageBRecoveryScope({ address, selectedToolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", preparedAttemptPublicId: attempt });
+    assert.ok(scope);
+    const reservation = await beginStageBRecovery(scope);
+    assert.equal(reservation.kind, "claimed");
+    const competingHash = `0x${"2".repeat(64)}`;
+    const [reconciliation, competingReconciliation] = await Promise.all([
+      reconcileStageBRecovery(scope, hash),
+      reconcileStageBRecovery(scope, competingHash),
+    ]);
+    assert.deepEqual(reconciliation, { kind: "reconciled" });
+    assert.deepEqual(competingReconciliation, { kind: "conflict" });
+    assert.equal(readStageBRecovery(scope), hash);
+    assert.equal(stageBRecoveryStatus(scope), "existing");
+    if (reservation.kind === "claimed") {
+      assert.equal(persistStageBRecovery(scope, reservation.claimId, competingHash), false);
+      assert.equal(persistStageBRecovery(scope, reservation.claimId, hash), true);
+    }
   } finally {
     globalThis.window = previousWindow;
     Object.defineProperty(globalThis, "navigator", { configurable: true, value: previousNavigator });
