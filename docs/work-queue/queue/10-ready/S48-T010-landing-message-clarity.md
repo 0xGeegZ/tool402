@@ -3,7 +3,7 @@
 ## State
 
 - Tier: POLISH
-- Queue state: 00-inbox
+- Queue state: 10-ready
 - Dependencies: M11-T010, S22-T010, and S43-T010 accepted.
 - Raised by: repository owner, 2026-09-14. The owner requests a draft PR
   against `dev` that makes the public landing understandable to a first-time
@@ -31,8 +31,11 @@ unchanged.
 ## Intake
 
 The owner approved the proposed developer-first message and a `dev`-based
-draft PR. S48 begins in inbox. No source or test path is active until its
-readiness, RED activation, and RED acceptance are recorded.
+draft PR. The root readiness review is recorded in
+[`S48-T010-ready-review`](../../evidence/S48-T010-ready-review.md): accepted
+dependencies, the exact static scope, and the Node 22 focused baseline are
+clear. S48 is ready; no source or test path is active until a separate RED
+activation.
 
 ## Boundary
 

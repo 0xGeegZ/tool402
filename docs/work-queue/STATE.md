@@ -10,6 +10,13 @@
   wallet, payment, provider, transaction, deployment, or live authority is
   added.
 
+- S48_LANDING_MESSAGE_CLARITY_READY: At control source `29d9713f`, the
+  `dev` baseline and M11/S22/S43 dependencies are accepted; S26's active
+  header and shell-wrapper reservation is disjoint from S48's metadata-only
+  seam. Node 22 focused landing tests pass 11/11 and queue validation is
+  clear. S48-T010 moves to `10-ready`; no production copy or test path is
+  reserved until separate RED activation.
+
 - S38_S39_S47_MERGED_LANE_RECONCILIATION: At `origin/main`
   `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, S38-T010, S39-T010, and
   S47-T010 are documented as completed local source deliveries. Their merged
