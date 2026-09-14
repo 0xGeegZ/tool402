@@ -171,18 +171,22 @@ function createClaimId(): string {
 export async function beginStageBRecovery(scope: StageBRecoveryScope): Promise<StageBRecoveryClaim> {
   const local = storage();
   if (local === null || typeof navigator === "undefined" || navigator.locks === undefined) return { kind: "unavailable" };
-  return navigator.locks.request(`tool402:ats-create:${key(scope)}`, { mode: "exclusive" }, () => {
-    try {
-      const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
-      if (parsed !== null) return isKnownRecord(parsed) && sameScope(parsed.scope, scope) ? { kind: "existing" } : { kind: "unavailable" };
-      const claimId = createClaimId();
-      return writeStageBRecovery(Object.freeze({ version: 2, claimId, state: "reserved", scope }))
-        ? { kind: "claimed", claimId }
-        : { kind: "unavailable" };
-    } catch {
-      return { kind: "unavailable" };
-    }
-  });
+  try {
+    return await navigator.locks.request(`tool402:ats-create:${key(scope)}`, { mode: "exclusive" }, () => {
+      try {
+        const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
+        if (parsed !== null) return isKnownRecord(parsed) && sameScope(parsed.scope, scope) ? { kind: "existing" } : { kind: "unavailable" };
+        const claimId = createClaimId();
+        return writeStageBRecovery(Object.freeze({ version: 2, claimId, state: "reserved", scope }))
+          ? { kind: "claimed", claimId }
+          : { kind: "unavailable" };
+      } catch {
+        return { kind: "unavailable" };
+      }
+    });
+  } catch {
+    return { kind: "unavailable" };
+  }
 }
 
 export function releaseStageBRecoveryReservation(scope: StageBRecoveryScope, claimId: string): boolean {

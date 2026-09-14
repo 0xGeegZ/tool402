@@ -7,6 +7,7 @@ import { useSignMessage } from "wagmi";
 import { Button } from "../ui/button";
 import { dashboardTourHref } from "../demo/demo-tour-navigation";
 import { connectedTool402Wallet, isTool402MetaMaskConnector, useTool402Wallet, type Tool402WalletConnection } from "../wallet/use-tool402-wallet";
+import { serializeDashboardSessionMutation } from "./dashboard-session-sync";
 
 const failureMessage = "Sign-in could not be completed. Please try again.";
 
@@ -58,13 +59,6 @@ async function endStaleDashboardSession(address: string, issuedAt: string): Prom
     body: JSON.stringify({ address, issuedAt }),
   });
   if (response.status !== 204 && response.status !== 409) throw new Error("stale dashboard session could not be cleared");
-}
-
-async function serializeDashboardSessionMutation<T>(operation: () => Promise<T>): Promise<T> {
-  if (typeof navigator === "undefined" || navigator.locks === undefined) {
-    return await operation();
-  }
-  return await navigator.locks.request("tool402:dashboard-session", { mode: "exclusive" }, operation);
 }
 
 function isCurrentConnection(
@@ -188,12 +182,13 @@ export function MetaMaskDashboardSignIn({ tour = null, demoStep = null, returnTo
         <div className="space-y-2">
           <p aria-live="polite" className="text-sm text-muted-foreground">Connect MetaMask on Hedera Testnet, then sign to unlock the dashboard.</p>
           <Button
-            disabled={state.kind === "resolving"}
-            aria-disabled={state.kind === "resolving"}
-            onClick={() => void (state.kind === "connecting" ? cancelConnection() : state.kind === "wrong_chain" ? switchToHedera() : connect())}
+            disabled={state.kind === "resolving" || state.kind === "connecting"}
+            aria-disabled={state.kind === "resolving" || state.kind === "connecting"}
+            onClick={() => void (state.kind === "wrong_chain" ? switchToHedera() : connect())}
           >
-            {state.kind === "connecting" ? "Cancel MetaMask connection" : state.kind === "wrong_chain" ? "Switch to Hedera Testnet" : state.kind === "request_failed" || state.kind === "no_provider" ? "Retry MetaMask connection" : "Connect MetaMask"}
+            {state.kind === "connecting" ? "Waiting for MetaMask…" : state.kind === "wrong_chain" ? "Switch to Hedera Testnet" : state.kind === "request_failed" || state.kind === "no_provider" ? "Retry MetaMask connection" : "Connect MetaMask"}
           </Button>
+          {state.kind === "connecting" ? <p className="text-sm text-muted-foreground">Accept or reject the connection request in MetaMask.</p> : null}
           {state.kind === "request_failed" ? (
             <p aria-live="polite" className="text-sm text-muted-foreground">
               MetaMask rejected or could not complete the connection{connectErrorCode === null ? "." : ` (code ${connectErrorCode}).`}

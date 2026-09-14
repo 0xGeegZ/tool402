@@ -129,6 +129,7 @@ async function signInHarness({ deferVerification = false, initialConnection } = 
             connectCalls += 1;
           },
         }), connectedTool402Wallet: (connection, resolved) => resolved && connection.status === "connected" && connection.account !== undefined && connection.chainId === 296 && connection.connector?.id === "metaMask" ? connection : null, isTool402MetaMaskConnector: (connector) => connector?.id === "metaMask" || connector?.id === "io.metamask" || connector?.rdns?.includes("io.metamask") === true },
+        "./dashboard-session-sync": { serializeDashboardSessionMutation: async (operation) => await operation() },
       };
       assert.ok(Object.hasOwn(imports, specifier), `unexpected sign-in import: ${specifier}`);
       return imports[specifier];

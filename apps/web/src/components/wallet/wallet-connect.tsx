@@ -36,7 +36,7 @@ function shortenAddress(address: string): string {
 }
 
 export function WalletIsland() {
-  const { state, connect, cancelConnection, disconnect, switchToHedera } = useTool402Wallet();
+  const { state, connect, disconnect, switchToHedera } = useTool402Wallet();
   const isPassiveReconnectPending = usePassiveWalletRestore();
   const isCheckingConnection = isPassiveReconnectPending || state.kind === "resolving";
 
@@ -44,7 +44,7 @@ export function WalletIsland() {
     <div data-slot="wallet-island" className="flex items-center gap-2">
       {state.kind === "disconnected" && !isCheckingConnection ? (
         <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap" onClick={() => void connect()}>
-          <Image src="/brand/metamask-fox.svg" alt="" aria-hidden="true" width={18} height={17} />
+          <Image src="/brand/metamask-fox.svg" alt="" aria-hidden="true" width={18} height={18} />
           Connect MetaMask
         </Button>
       ) : null}
@@ -55,8 +55,8 @@ export function WalletIsland() {
         </Button>
       ) : null}
       {state.kind === "connecting" ? (
-        <Button variant="outline" size="sm" className="whitespace-nowrap" onClick={() => void cancelConnection()}>
-          Cancel MetaMask connection
+        <Button variant="outline" size="sm" className="whitespace-nowrap" disabled aria-disabled="true">
+          Waiting for MetaMask…
         </Button>
       ) : null}
       {state.kind === "wrong_chain" ? (

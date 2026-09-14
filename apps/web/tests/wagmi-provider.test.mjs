@@ -4,8 +4,14 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { runInNewContext } from "node:vm";
+import { JSDOM } from "jsdom";
+import React, { StrictMode } from "react";
+import { act } from "react";
+import { createRoot } from "react-dom/client";
 import * as jsxRuntime from "react/jsx-runtime";
 import typescript from "typescript";
+import { connect, disconnect, getConnectors as getWagmiConnectors } from "wagmi/actions";
+import { useConnection } from "wagmi";
 
 const configUrl = new URL("../src/lib/wallet/wagmi-config.ts", import.meta.url);
 const configPath = fileURLToPath(configUrl);
@@ -216,4 +222,210 @@ implementedProviderTest("keeps restoration pending until the passive reconnect s
   assert.match(providers, /const \[isPassiveReconnectPending, setPassiveReconnectPending\] = useState\(true\);/u);
   assert.match(providers, /setPassiveReconnectPending\(false\);/u);
   assert.match(providers, /PassiveWalletRestoreContext\.Provider value=\{isPassiveReconnectPending\}/u);
+});
+
+function moduleUrl(source) {
+  return `data:text/javascript;base64,${Buffer.from(source).toString("base64")}`;
+}
+
+async function transpiledModule(url, replacements = []) {
+  let { outputText } = typescript.transpileModule(await readFile(url, "utf8"), {
+    fileName: fileURLToPath(url),
+    compilerOptions: {
+      target: typescript.ScriptTarget.ES2022,
+      module: typescript.ModuleKind.ESNext,
+      jsx: typescript.JsxEmit.ReactJSX,
+    },
+  });
+  for (const [from, to] of replacements) outputText = outputText.split(from).join(to);
+  return moduleUrl(outputText);
+}
+
+const browserTestImports = await Promise.all([
+  "wagmi",
+  "@tanstack/react-query",
+  "react",
+  "react/jsx-runtime",
+].map(async (specifier) => [`"${specifier}"`, `"${await import.meta.resolve(specifier)}"`]));
+
+function installDom() {
+  const dom = new JSDOM("<!doctype html><html><body><div id=\"root\"></div></body></html>", { url: "http://localhost:3000" });
+  const properties = ["window", "document", "navigator", "HTMLElement", "Event", "CustomEvent", "IS_REACT_ACT_ENVIRONMENT"];
+  const previous = new Map(properties.map((property) => [property, Object.getOwnPropertyDescriptor(globalThis, property)]));
+  for (const [property, value] of Object.entries({
+    window: dom.window,
+    document: dom.window.document,
+    navigator: dom.window.navigator,
+    HTMLElement: dom.window.HTMLElement,
+    Event: dom.window.Event,
+    CustomEvent: dom.window.CustomEvent,
+    IS_REACT_ACT_ENVIRONMENT: true,
+  })) {
+    Object.defineProperty(globalThis, property, { configurable: true, writable: true, value });
+  }
+  return () => {
+    for (const property of properties) {
+      const descriptor = previous.get(property);
+      if (descriptor === undefined) delete globalThis[property];
+      else Object.defineProperty(globalThis, property, descriptor);
+    }
+    dom.window.close();
+  };
+}
+
+function deferredMetaMask(address) {
+  const listeners = new Map();
+  const accountRequests = [];
+  const explicitAccountRequests = [];
+  const calls = [];
+  let accounts = [address];
+  let chainId = "0x128";
+  let holdAccounts = true;
+  let holdExplicitAccounts = true;
+  const provider = {
+    isMetaMask: true,
+    async request({ method }) {
+      calls.push(method);
+      if (method === "eth_accounts") {
+        if (!holdAccounts) return accounts;
+        return await new Promise((resolve) => accountRequests.push(resolve));
+      }
+      if (method === "eth_chainId") return chainId;
+      if (method === "wallet_requestPermissions") return [];
+      if (method === "eth_requestAccounts") {
+        if (!holdExplicitAccounts) return accounts;
+        return await new Promise((resolve) => explicitAccountRequests.push(resolve));
+      }
+      if (method === "wallet_revokePermissions") return null;
+      throw new Error(`unexpected provider request: ${method}`);
+    },
+    on(event, listener) {
+      const values = listeners.get(event) ?? new Set();
+      values.add(listener);
+      listeners.set(event, values);
+    },
+    removeListener(event, listener) {
+      listeners.get(event)?.delete(listener);
+    },
+  };
+  return {
+    calls,
+    provider,
+    get pendingAccountRequests() {
+      return accountRequests.length;
+    },
+    get pendingExplicitAccountRequests() {
+      return explicitAccountRequests.length;
+    },
+    resolveAccounts() {
+      holdAccounts = false;
+      for (const resolve of accountRequests.splice(0)) resolve(accounts);
+    },
+    resolveExplicitAccounts() {
+      holdExplicitAccounts = false;
+      for (const resolve of explicitAccountRequests.splice(0)) resolve(accounts);
+    },
+    emit(event, value) {
+      for (const listener of listeners.get(event) ?? []) listener(value);
+    },
+    setAccounts(next) {
+      accounts = next;
+    },
+    setChainId(next) {
+      chainId = next;
+    },
+  };
+}
+
+async function flushReact() {
+  await act(async () => {
+    for (let index = 0; index < 12; index += 1) await Promise.resolve();
+  });
+}
+
+async function until(predicate) {
+  for (let index = 0; index < 80; index += 1) {
+    await flushReact();
+    if (predicate()) return;
+  }
+  assert.fail("condition did not settle");
+}
+
+implementedProviderTest("uses real React and Wagmi lifecycle state for passive restore, wallet changes, and explicit disconnect", async () => {
+  const restoreDom = installDom();
+  try {
+    const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+    const changedAddress = "0x0000000000000000000000000000000000000402";
+    const metaMask = deferredMetaMask(address);
+    Object.defineProperty(window, "ethereum", { configurable: true, value: metaMask.provider });
+
+    const configModule = await import(await transpiledModule(configUrl, browserTestImports));
+    const config = configModule.getTool402WagmiConfig();
+    const providersModule = await import(await transpiledModule(providersUrl, [
+      ...browserTestImports,
+      ["\"../../lib/wallet/wagmi-config\"", `"${moduleUrl("export const getTool402WagmiConfig = () => globalThis.__tool402WagmiTestConfig;")}"`],
+    ]));
+    globalThis.__tool402WagmiTestConfig = config;
+
+    const observations = [];
+    function Probe() {
+      const connection = useConnection();
+      observations.push({
+        account: connection.address?.toLowerCase(),
+        chainId: connection.chainId,
+        restoring: providersModule.usePassiveWalletRestore(),
+        status: connection.status,
+      });
+      return null;
+    }
+    const root = createRoot(document.getElementById("root"));
+    await act(async () => {
+      root.render(React.createElement(StrictMode, null, React.createElement(providersModule.WalletProviders, null, React.createElement(Probe))));
+    });
+    await until(() => metaMask.pendingAccountRequests > 0);
+
+    assert.equal(observations.some((entry) => entry.restoring === true), true);
+    assert.equal(metaMask.calls.includes("eth_requestAccounts"), false);
+    await act(async () => { metaMask.resolveAccounts(); });
+    await until(() => observations.some((entry) => entry.restoring === false && entry.account === address));
+
+    await act(async () => { await disconnect(config, { connector: getWagmiConnectors(config)[0] }); });
+    await until(() => observations.at(-1)?.status === "disconnected");
+    let pendingConnection;
+    await act(async () => {
+      pendingConnection = connect(config, { connector: getWagmiConnectors(config)[0] });
+      await Promise.resolve();
+    });
+    await until(() => metaMask.pendingExplicitAccountRequests > 0 && observations.at(-1)?.status === "connecting");
+    await act(async () => {
+      metaMask.resolveExplicitAccounts();
+      await pendingConnection;
+    });
+    await until(() => observations.at(-1)?.account === address);
+    const explicitRequestCount = metaMask.calls.filter((method) => method === "eth_requestAccounts").length;
+
+    metaMask.setAccounts([changedAddress]);
+    await act(async () => { metaMask.emit("accountsChanged", [changedAddress]); });
+    await until(() => observations.some((entry) => entry.account === changedAddress));
+
+    metaMask.setChainId("0x1");
+    await act(async () => { metaMask.emit("chainChanged", "0x1"); });
+    await until(() => observations.some((entry) => entry.chainId === 1));
+
+    await act(async () => { await disconnect(config, { connector: getWagmiConnectors(config)[0] }); });
+    await until(() => observations.at(-1)?.status === "disconnected");
+    await act(async () => { root.unmount(); });
+
+    const refreshedRoot = createRoot(document.getElementById("root"));
+    await act(async () => {
+      refreshedRoot.render(React.createElement(providersModule.WalletProviders, null, React.createElement(Probe)));
+    });
+    await until(() => observations.at(-1)?.restoring === false);
+    assert.equal(observations.at(-1)?.status, "disconnected");
+    assert.equal(metaMask.calls.filter((method) => method === "eth_requestAccounts").length, explicitRequestCount);
+    await act(async () => { refreshedRoot.unmount(); });
+  } finally {
+    delete globalThis.__tool402WagmiTestConfig;
+    restoreDom();
+  }
 });

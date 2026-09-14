@@ -7,6 +7,19 @@ import { useConnectionEffect } from "wagmi";
 import { Button } from "../ui/button";
 import { useTool402Wallet } from "../wallet/use-tool402-wallet";
 
+export async function serializeDashboardSessionMutation<T>(operation: () => Promise<T>): Promise<T> {
+  if (typeof navigator === "undefined" || navigator.locks === undefined) {
+    return await operation();
+  }
+  return await navigator.locks.request("tool402:dashboard-session", { mode: "exclusive" }, operation);
+}
+
+function matchesDashboardWallet(connection: ReturnType<typeof useTool402Wallet>["connection"], address: string): boolean {
+  return connection.status === "connected"
+    && connection.account === address
+    && connection.chainId === 296;
+}
+
 export function DashboardSessionSync({
   address,
   issuedAt,
@@ -23,9 +36,7 @@ export function DashboardSessionSync({
   const connectionRef = useRef(connection);
   connectionRef.current = connection;
   const [logoutFailed, setLogoutFailed] = useState(false);
-  const currentSessionMatches = connection.status === "connected"
-    && connection.chainId === 296
-    && connection.account === address;
+  const currentSessionMatches = matchesDashboardWallet(connection, address);
 
   const navigateToSignIn = useCallback(() => {
     const wallet = connectionRef.current;
@@ -43,12 +54,17 @@ export function DashboardSessionSync({
   const endSession = useCallback(() => {
     if (logoutStarted.current) return;
     logoutStarted.current = true;
-    void fetch("/api/auth/logout", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      credentials: "same-origin",
-      body: JSON.stringify({ address, issuedAt }),
-    }).then((response) => {
+    void serializeDashboardSessionMutation(async () => {
+      if (matchesDashboardWallet(connectionRef.current, address)) {
+        logoutStarted.current = false;
+        return;
+      }
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ address, issuedAt }),
+      });
       if (response.status === 204) {
         navigateToSignIn();
         return;

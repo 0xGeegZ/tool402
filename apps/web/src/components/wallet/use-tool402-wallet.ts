@@ -166,9 +166,6 @@ export function useTool402Wallet() {
     async disconnect() {
       await disconnectAsync({ connector: connection.connector ?? metaMask });
     },
-    async cancelConnection() {
-      await disconnectAsync({ connector: connection.connector ?? metaMask });
-    },
     async switchToHedera() {
       try {
         await switchChainAsync({ chainId: tool402HederaTestnetChainId });

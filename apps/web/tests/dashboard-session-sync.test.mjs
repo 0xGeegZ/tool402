@@ -40,6 +40,7 @@ async function loadSynchronizer({
   responseStatus = 204,
   reject = false,
   deferLogout = false,
+  locks,
   wallet = {
     connection: { status: "disconnected", account: undefined, chainId: undefined, connector: undefined },
     resolved: true,
@@ -89,6 +90,7 @@ async function loadSynchronizer({
   const module = { exports: {} };
   runInNewContext(outputText, {
     exports: module.exports,
+    navigator: locks === undefined ? undefined : { locks },
     fetch: async (...arguments_) => {
       requests.push(arguments_);
       if (deferLogout) return new Promise((resolve) => { resolveLogout = () => resolve({ status: responseStatus }); });
@@ -116,6 +118,7 @@ async function loadSynchronizer({
   }, { filename: fileURLToPath(sourceUrl) });
 
   return {
+    serializeDashboardSessionMutation: module.exports.serializeDashboardSessionMutation,
     requests,
     navigations,
     disconnect() {
@@ -137,6 +140,17 @@ async function loadSynchronizer({
         }
       }
       return tree;
+    },
+  };
+}
+
+function exclusiveLocks() {
+  let tail = Promise.resolve();
+  return {
+    request(_name, _options, callback) {
+      const result = tail.then(callback);
+      tail = result.catch(() => undefined);
+      return result;
     },
   };
 }
@@ -175,6 +189,30 @@ implementedTest("waits for passive wallet restoration before comparing the dashb
   harness.render(address);
   await flushMicrotasks();
   assert.equal(harness.requests.length, 0);
+});
+
+implementedTest("serializes a stale logout before the next dashboard sign-in mutation", async () => {
+  const harness = await loadSynchronizer({ locks: exclusiveLocks() });
+  const ordering = [];
+  let finishLogout;
+  const logoutFinished = new Promise((resolve) => { finishLogout = resolve; });
+
+  const logout = harness.serializeDashboardSessionMutation(async () => {
+    ordering.push("logout started");
+    await logoutFinished;
+    ordering.push("logout finished");
+  });
+  await flushMicrotasks();
+  const signIn = harness.serializeDashboardSessionMutation(async () => {
+    ordering.push("sign-in started");
+    ordering.push("sign-in finished");
+  });
+  await flushMicrotasks();
+
+  assert.deepEqual(ordering, ["logout started"]);
+  finishLogout();
+  await Promise.all([logout, signIn]);
+  assert.deepEqual(ordering, ["logout started", "logout finished", "sign-in started", "sign-in finished"]);
 });
 
 implementedTest("keeps the signed session while its initial wallet restoration is unresolved", async () => {
@@ -275,6 +313,8 @@ implementedTest("starts only one logout when Wagmi reports an explicit disconnec
   const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
   const harness = await loadSynchronizer({ wallet: { connection: { status: "connected", account: address, chainId: 296, connector: { id: "metaMask" } }, resolved: true } });
 
+  harness.render(address);
+  harness.setWallet({ connection: { status: "disconnected", account: undefined, chainId: undefined, connector: undefined }, resolved: true });
   harness.render(address);
   harness.disconnect();
   harness.disconnect();

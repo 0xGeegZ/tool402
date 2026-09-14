@@ -112,6 +112,12 @@ projection, and transaction verification remain authoritative.
   even if the current screen becomes stale. Hash recovery/verification remains
   read-only; no refresh or unknown outcome may recreate an ATS, funding or
   allocation transaction.
+- A legacy v1 backing attachment has no local owner field. It remains opaque
+  until the signed dashboard session submits its original immutable attempt
+  payload to the existing backing-payment endpoint. Only a backend-admitted
+  attempt for that session may update the UI or remove the legacy record;
+  rejected or unavailable checks retain the local evidence and never send a
+  replacement transfer.
 
 ## Current-to-target map
 

@@ -22,7 +22,7 @@ function elements(node) {
   return [node, ...elements(node.props.children)];
 }
 
-async function actionHarness(stored = new Map()) {
+async function actionHarness(stored = new Map(), bridgeOverride) {
   const slots = [];
   let cursor = 0;
   const fetchCalls = [];
@@ -40,7 +40,7 @@ async function actionHarness(stored = new Map()) {
       request(_name, _options, callback) { return callback(); },
     },
   } });
-  const bridge = await import("../src/lib/ats/stage-b-browser-provider-bridge.ts");
+  const bridge = bridgeOverride ?? await import("../src/lib/ats/stage-b-browser-provider-bridge.ts");
   const recovery = await import("../src/components/provider/deploy/stage-b-recovery.ts");
   const imports = {
     react: {
@@ -370,6 +370,91 @@ test("retains an uncorroborated recovery hash for an explicit retry without send
 
   assert.equal(harness.fetchCalls().length, 2);
   assert.deepEqual(providerCalls.filter((method) => method === "eth_sendTransaction"), []);
+});
+
+test("persists a manually corroborated recovery before exposing its candidate", async () => {
+  const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const transactionHash = `0x${"8".repeat(64)}`;
+  const persisted = new Map();
+  const bridge = {
+    isCanonicalStageBTransactionHash: (value) => typeof value === "string" && /^0x[0-9a-f]{64}$/u.test(value),
+    createStageBBrowserProviderBridge: () => ({
+      async execute() { return { kind: "submission_unknown" }; },
+      async recover(hash) {
+        assert.equal(hash, transactionHash);
+        return { kind: "candidate", candidate: { transactionId: "0.0.9213391-1789430400-000000001", evmAddress: "0x52908400098527886e0f7030069857d2e4169ee7" } };
+      },
+    }),
+  };
+  const props = {
+    session: { provider: { async request() { assert.fail("manual recovery must not request MetaMask"); } }, address: issuer },
+    selectedTool: false,
+    selectedToolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    stageTwoDone: true,
+    hasCandidate: false,
+  };
+  const candidates = [];
+  const first = await actionHarness(persisted, bridge);
+  const initial = first.render({ ...props, onCandidate: (candidate) => candidates.push(candidate) });
+  const input = elements(initial).find((element) => element.props["data-stage-b-recovery-hash"] === "true");
+  assert.ok(input);
+  input.props.onChange({ target: { value: transactionHash } });
+  const armed = first.render({ ...props, onCandidate: (candidate) => candidates.push(candidate) });
+  const recover = elements(armed).find((element) => element.type === "Button" && element.props.children === "Recover candidate from transaction hash");
+  assert.equal(recover?.props.disabled, false);
+  await recover.props.onClick();
+
+  assert.equal(candidates.length, 1);
+  const remounted = await actionHarness(persisted, bridge);
+  const restored = remounted.render({ ...props, onCandidate() { assert.fail("remount must not attach automatically"); } });
+  const restoredCreate = elements(restored).find((element) => element.type === "Button" && element.props.children === "Create the note in MetaMask");
+  const restoredInput = elements(restored).find((element) => element.props["data-stage-b-recovery-hash"] === "true");
+  assert.equal(restoredCreate?.props.disabled, true);
+  assert.equal(restoredInput?.props.value, transactionHash);
+});
+
+test("keeps a conflicting persisted ATS recovery instead of accepting typed replacement evidence", async () => {
+  const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const originalHash = `0x${"6".repeat(64)}`;
+  const replacementHash = `0x${"7".repeat(64)}`;
+  const persisted = new Map();
+  const recovery = await import("../src/components/provider/deploy/stage-b-recovery.ts");
+  globalThis.window = { localStorage: {
+    getItem(key) { return persisted.get(key) ?? null; },
+    setItem(key, value) { persisted.set(key, value); },
+    removeItem(key) { persisted.delete(key); },
+  } };
+  Object.defineProperty(globalThis, "navigator", { configurable: true, value: { locks: { request(_name, _options, callback) { return callback(); } } } });
+  const scope = recovery.createStageBRecoveryScope({ address: issuer, selectedToolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", preparedAttemptPublicId: "CCCCCCCCCCCCCCCCCCCCCg" });
+  assert.ok(scope);
+  const claim = await recovery.beginStageBRecovery(scope);
+  assert.equal(claim.kind, "claimed");
+  if (claim.kind === "claimed") assert.equal(recovery.persistStageBRecovery(scope, claim.claimId, originalHash), true);
+  const bridge = {
+    isCanonicalStageBTransactionHash: (value) => typeof value === "string" && /^0x[0-9a-f]{64}$/u.test(value),
+    createStageBBrowserProviderBridge: () => ({
+      async execute() { return { kind: "submission_unknown" }; },
+      async recover() { assert.fail("a conflicting retained hash must not be replaced"); },
+    }),
+  };
+  const harness = await actionHarness(persisted, bridge);
+  const props = {
+    session: { provider: { async request() { assert.fail("recovery conflict must not reach MetaMask"); } }, address: issuer },
+    selectedTool: false,
+    selectedToolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    stageTwoDone: true,
+    hasCandidate: false,
+    onCandidate() { assert.fail("a conflicting recovery cannot attach a candidate"); },
+  };
+  const tree = harness.render(props);
+  const input = elements(tree).find((element) => element.props["data-stage-b-recovery-hash"] === "true");
+  assert.equal(input?.props.value, originalHash);
+  input.props.onChange({ target: { value: replacementHash } });
+  const changed = harness.render(props);
+  const recoverButton = elements(changed).find((element) => element.type === "Button" && element.props.children === "Recover candidate from transaction hash");
+  assert.equal(recoverButton?.props.disabled, false);
+  await recoverButton.props.onClick();
+  assert.equal(recovery.readStageBRecovery(scope), originalHash);
 });
 
 test("mutually excludes create and recovery while the create read is in flight", async () => {

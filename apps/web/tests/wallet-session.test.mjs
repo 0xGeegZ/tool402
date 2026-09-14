@@ -67,18 +67,6 @@ test("derives display state from Wagmi without connecting during passive restora
   assert.deepEqual(instance.calls, { connect: [], disconnect: [], switchChain: [], removeStorage: [], setStorage: [] });
 });
 
-test("uses Wagmi disconnect to cancel an in-flight connection", async () => {
-  const instance = harness({ connection: { status: "connecting", address: undefined, chainId: undefined, connector: undefined } });
-  const { useTool402Wallet } = await loadHook(instance.hooks);
-
-  void useTool402Wallet().cancelConnection();
-  await new Promise(setImmediate);
-  assert.equal(instance.calls.disconnect.length, 1);
-  assert.equal(instance.calls.disconnect[0]?.connector?.id, "metaMask");
-  assert.deepEqual(instance.calls.removeStorage, []);
-  assert.deepEqual(instance.calls.setStorage, []);
-});
-
 test("selects the Wagmi-discovered MetaMask connector rather than another injected wallet", async () => {
   const fallbackMetaMask = { id: "metaMask" };
   const discoveredMetaMask = { id: "io.metamask" };
@@ -93,16 +81,12 @@ test("selects the Wagmi-discovered MetaMask connector rather than another inject
   assert.equal(instance.calls.connect[0]?.connector, discoveredMetaMask);
 });
 
-test("cancels a connection attempt through Wagmi", async () => {
+test("does not expose a fake cancellation mutation for a pending wallet request", async () => {
   const instance = harness({ connection: { status: "connecting", address: undefined, chainId: undefined, connector: undefined } });
   const { useTool402Wallet } = await loadHook(instance.hooks);
-  const wallet = useTool402Wallet();
 
-  await wallet.cancelConnection();
-  assert.equal(instance.calls.disconnect.length, 1);
-  assert.equal(instance.calls.disconnect[0]?.connector?.id, "metaMask");
-  assert.deepEqual(instance.calls.setStorage, []);
-  assert.deepEqual(instance.calls.removeStorage, []);
+  assert.equal("cancelConnection" in useTool402Wallet(), false);
+  assert.deepEqual(instance.calls.disconnect, []);
 });
 
 test("centralizes the eligible Tool402 wallet connection invariant", async () => {
@@ -181,5 +165,5 @@ test("shows a neutral connection check instead of the MetaMask button during pas
   assert.match(source, /state\.kind === "disconnected" && !isCheckingConnection/u);
   assert.match(source, /animate-spin/u);
   assert.match(source, /Checking MetaMask/u);
-  assert.match(source, /width=\{18\} height=\{17\}/u);
+  assert.match(source, /width=\{18\} height=\{18\}/u);
 });
