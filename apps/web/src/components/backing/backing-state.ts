@@ -111,8 +111,8 @@ export type TransferResult =
   | Readonly<{ kind: "declined" }>;
 
 export interface TransferRequest {
-  readonly method: "eth_sendTransaction";
-  readonly params: readonly [Readonly<{ from: string; to: string; value: `0x${string}` }>];
+  readonly to: `0x${string}`;
+  readonly value: bigint;
 }
 
 const treasuryPattern = /^0x[0-9a-f]{40}$/u;
@@ -305,13 +305,13 @@ export function viewAfterSignature(result: SignatureResult, intent: BackingInten
   return viewForRelayOutcome(result.outcome, result.phase, intent);
 }
 
-export function transferRequest(view: BackingView, from: string): TransferRequest {
+export function transferRequest(view: BackingView): TransferRequest {
   if (view.kind !== "prepared") {
     throw new TypeError("a transfer is requested only after the funding command is accepted");
   }
   return Object.freeze({
-    method: "eth_sendTransaction",
-    params: [Object.freeze({ from, to: view.intent.treasury, value: view.intent.weibarHex })] as const,
+    to: view.intent.treasury as `0x${string}`,
+    value: BigInt(view.intent.weibarHex),
   });
 }
 

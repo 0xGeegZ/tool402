@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { connection } from "next/server";
+import { Suspense } from "react";
 
-import { MetaMaskDashboardSignIn } from "../../components/auth/metamask-dashboard-sign-in";
+import { DashboardSignInPrompt } from "../../components/auth/dashboard-sign-in-prompt";
 import { dashboardTourHref, safeDashboardReturnHref } from "../../components/demo/demo-tour-navigation";
 import { readDashboardSession, readDashboardSessionCookieName } from "../../lib/dashboard-auth/dashboard-auth.ts";
 
@@ -26,19 +26,13 @@ async function SignInBoundary({ searchParams }: SignInPageProps) {
     redirect(returnTo ?? dashboardTourHref(tour, demoStep));
   }
 
-  return (
-    <main className="mx-auto max-w-xl space-y-6">
-      <header className="space-y-2">
-        <p className="text-sm font-medium text-muted-foreground">Dashboard access</p>
-        <h1 className="text-3xl font-semibold tracking-tight">Unlock your dashboard</h1>
-        <p className="text-muted-foreground">Connect MetaMask on Hedera Testnet, then sign one secure authentication message to continue. It does not send funds or cost HBAR.</p>
-      </header>
-      <MetaMaskDashboardSignIn tour={tour} demoStep={demoStep} returnTo={returnTo} />
-    </main>
-  );
+  return <DashboardSignInPrompt tour={tour} demoStep={demoStep} returnTo={returnTo} />;
 }
 
 export default async function SignInPage({ searchParams }: SignInPageProps) {
-  await connection();
-  return <SignInBoundary searchParams={searchParams} />;
+  return (
+    <Suspense fallback={null}>
+      <SignInBoundary searchParams={searchParams} />
+    </Suspense>
+  );
 }

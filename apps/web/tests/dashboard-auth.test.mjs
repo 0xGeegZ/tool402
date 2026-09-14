@@ -11,6 +11,7 @@ const coreUrl = new URL("../src/lib/dashboard-auth/dashboard-auth.ts", import.me
 const clientUrl = new URL("../src/components/auth/metamask-dashboard-sign-in.tsx", import.meta.url);
 const dashboardNavigationUrl = new URL("../src/components/auth/dashboard-navigation.tsx", import.meta.url);
 const signInUrl = new URL("../src/app/sign-in/page.tsx", import.meta.url);
+const accountChangedSignInUrl = new URL("../src/app/sign-in/account-changed/page.tsx", import.meta.url);
 const dashboardLayoutUrl = new URL("../src/app/dashboard/layout.tsx", import.meta.url);
 const rootLayoutUrl = new URL("../src/app/layout.tsx", import.meta.url);
 const localNavigationUrl = new URL("../src/components/discovery/local-navigation.tsx", import.meta.url);
@@ -50,21 +51,19 @@ function elements(node) {
   return [node, ...elements(node.props.children)];
 }
 
-async function signInHarness() {
+async function signInHarness({ deferVerification = false, initialConnection } = {}) {
   const slots = [];
   const routes = [];
   const fetches = [];
+  const messages = [];
+  let connection = initialConnection ?? { generation: 0, status: "connected", account: address, chainId: 296, connector: { id: "metaMask" } };
+  let connectCalls = 0;
+  let resolveVerification;
+  let markVerificationRequested;
+  const verificationRequest = new Promise((resolve) => {
+    markVerificationRequested = resolve;
+  });
   let cursor = 0;
-  const provider = {
-    async request({ method }) {
-      switch (method) {
-        case "eth_chainId": return "0x128";
-        case "eth_accounts": return [address];
-        case "personal_sign": return `0x${"11".repeat(65)}`;
-        default: assert.fail(`unexpected provider request: ${method}`);
-      }
-    },
-  };
   const { outputText } = typescript.transpileModule(await readFile(clientUrl, "utf8"), {
     fileName: fileURLToPath(clientUrl),
     compilerOptions: {
@@ -80,12 +79,22 @@ async function signInHarness() {
     Object,
     fetch: async (path, init) => {
       fetches.push([path, init]);
+      if (path === "/api/auth/logout") {
+        return { ok: true, status: 204, async json() { return null; } };
+      }
       return {
         ok: true,
         async json() {
-          return path === "/api/auth/metamask/challenge"
-            ? { message: "Tool402 sign-in", expiresAt: "2026-09-13T12:05:00.000Z", challenge: "challenge" }
-            : { outcome: "authenticated" };
+          if (path === "/api/auth/metamask/challenge") {
+            return { message: "Tool402 sign-in", expiresAt: "2026-09-13T12:05:00.000Z", challenge: "challenge" };
+          }
+          if (deferVerification) {
+            markVerificationRequested();
+            return new Promise((resolve) => {
+              resolveVerification = () => resolve({ outcome: "authenticated", sessionIssuedAt: "2026-09-14T10:00:00.000Z" });
+            });
+          }
+          return { outcome: "authenticated", sessionIssuedAt: "2026-09-14T10:00:00.000Z" };
         },
       };
     },
@@ -105,13 +114,22 @@ async function signInHarness() {
         },
         "react/jsx-runtime": jsxRuntime,
         "next/navigation": { useRouter: () => ({ replace: (href) => routes.push(["replace", href]), refresh: () => routes.push(["refresh"]) }) },
-        "../../lib/wallet/wallet-state.ts": { readCurrentSession: async () => ({ state: { kind: "connected", address } }) },
+        wagmi: { useSignMessage: () => ({ mutateAsync: async ({ message }) => {
+          messages.push(message);
+          return `0x${"11".repeat(65)}`;
+        } }) },
         "../ui/button": { Button: "Button" },
         "../demo/demo-tour-navigation": { dashboardTourHref: () => "/dashboard?tour=1&demoStep=identity" },
-        "../wallet/wallet-session": {
-          useWalletSession: () => ({ state: { kind: "connected", address }, provider }),
-          connectedWalletSession: (wallet) => ({ address: wallet.state.address, provider: wallet.provider }),
-        },
+        "../wallet/use-tool402-wallet": { useTool402Wallet: () => ({
+          resolved: true,
+          connection,
+          state: { kind: connection.status === "connected" ? "connected" : "request_failed" },
+          connectErrorCode: null,
+          connect: () => {
+            connectCalls += 1;
+          },
+        }), connectedTool402Wallet: (connection, resolved) => resolved && connection.status === "connected" && connection.account !== undefined && connection.chainId === 296 && connection.connector?.id === "metaMask" ? connection : null, isTool402MetaMaskConnector: (connector) => connector?.id === "metaMask" || connector?.id === "io.metamask" || connector?.rdns?.includes("io.metamask") === true },
+        "./dashboard-session-sync": { serializeDashboardSessionMutation: async (operation) => await operation() },
       };
       assert.ok(Object.hasOwn(imports, specifier), `unexpected sign-in import: ${specifier}`);
       return imports[specifier];
@@ -119,7 +137,24 @@ async function signInHarness() {
   }, { filename: fileURLToPath(clientUrl) });
   return {
     fetches,
+    messages,
     routes,
+    get connectCalls() {
+      return connectCalls;
+    },
+    setConnection(next) {
+      connection = next;
+    },
+    refreshConnection() {
+      cursor = 0;
+      module.exports.MetaMaskDashboardSignIn({ tour: "1", demoStep: "identity" });
+    },
+    async waitForVerification() {
+      await verificationRequest;
+    },
+    resolveVerification() {
+      resolveVerification();
+    },
     signIn() {
       cursor = 0;
       const tree = module.exports.MetaMaskDashboardSignIn({ tour: "1", demoStep: "identity" });
@@ -127,6 +162,13 @@ async function signInHarness() {
       assert.ok(signer, "the connected wallet renders the signing control");
       const button = elements(signer.type(signer.props)).find((element) => element.type === "Button");
       assert.ok(button, "the signing control renders its explicit action");
+      return button.props.onClick();
+    },
+    connect() {
+      cursor = 0;
+      const tree = module.exports.MetaMaskDashboardSignIn({ tour: "1", demoStep: "identity" });
+      const button = elements(tree).find((element) => element.type === "Button" && element.props.children === "Retry MetaMask connection");
+      assert.ok(button, "the disconnected wallet renders an explicit retry action");
       return button.props.onClick();
     },
   };
@@ -485,10 +527,12 @@ dashboardNavigationTest("shows Dashboard only after server-side session validati
 
   assert.match(rootLayout, /\bDashboardNavigation\b/u);
   assert.match(rootLayout, /<Suspense\s+fallback=\{null\}>\s*<DashboardNavigation\s*\/>\s*<\/Suspense>/u);
-  assert.doesNotMatch(rootLayout, /\bcookies\(\)/u);
+  assert.doesNotMatch(rootLayout, /\b(?:cookieToInitialState|cookies)\(/u);
+  assert.doesNotMatch(rootLayout, /export const instant = false;/u);
+  assert.doesNotMatch(rootLayout, /\breadDashboardSession\b/u);
 
   assert.match(dashboardLayout, /import\s*\{\s*DashboardSessionSync\s*\}\s*from\s*["'][^"']*dashboard-session-sync["']/u);
-  assert.equal((dashboardLayout.match(/<DashboardSessionSync\s+address=\{session\.address\}\s*\/>/gu) ?? []).length, 1);
+  assert.equal((dashboardLayout.match(/<DashboardSessionSync\s+address=\{session\.address\}\s+issuedAt=\{session\.issuedAt\}\s*>/gu) ?? []).length, 1);
 
   assert.match(localNavigation, /showDashboard\s*=\s*false/u);
   assert.match(localNavigation, /showDashboard\s*\?/u);
@@ -501,24 +545,38 @@ dashboardNavigationTest("shows Dashboard only after server-side session validati
 clientTest("keeps sign-in limited to the accepted local authentication boundary", async () => {
   const client = await readFile(clientUrl, "utf8");
   assert.match(client, /["']use client["']/u);
-  assert.match(client, /\buseWalletSession\b/u);
+  assert.match(client, /\buseTool402Wallet\b/u);
   assert.match(client, /Sign in with MetaMask/u);
   assert.match(client, /Sign and open dashboard/u);
+  assert.match(client, /Connect MetaMask/u);
+  assert.match(client, /Retry MetaMask connection/u);
   assert.match(client, /does not send funds or cost HBAR/u);
-  assert.match(client, /\breadCurrentSession\b/u);
-  assert.match(client, /\bpersonal_sign\b/u);
+  assert.match(client, /\buseSignMessage\b/u);
+  assert.match(client, /useSignMessage\(\{\s*mutation:\s*\{\s*retry:\s*false\s*\}\s*\}\)/u);
   assert.match(client, /\/api\/auth\/metamask\/challenge/u);
   assert.match(client, /\/api\/auth\/metamask\/verify/u);
   assert.match(client, /credentials\s*:\s*["']same-origin["']/u);
   assert.match(client, /challenge\s*:\s*challenge\.challenge/u);
-  assert.match(client, /params\s*:\s*\[\s*message\s*,\s*address\s*\]/u);
+  assert.match(client, /await\s+signMessage\(\{\s*message\s*\}\)/u);
   assert.match(client, /disabled\s*=\s*\{\s*pending\s*\}/u);
   assert.match(client, /aria-live\s*=\s*["']polite["']/u);
   assert.match(client, /import\s*\{\s*useRouter\s*\}\s+from\s+["']next\/navigation["']/u);
   assert.match(client, /const router = useRouter\(\)/u);
   assert.match(client, /router\.replace\(returnTo \?\? dashboardTourHref\(tour, demoStep\)\)/u);
   assert.doesNotMatch(client, /window\.location/u);
-  assert.doesNotMatch(client, /\b(?:eth_send(?:Raw)?Transaction|send(?:Raw)?Transaction|transaction|relay|localStorage|sessionStorage|indexedDB|setTimeout|setInterval|discover(?:y)?|requestProvider)\b/u);
+  assert.doesNotMatch(client, /\b(?:WalletSession|readCurrentSession|personal_sign|eth_send(?:Raw)?Transaction|send(?:Raw)?Transaction|transaction|relay|localStorage|sessionStorage|indexedDB|setTimeout|setInterval|discover(?:y)?|requestProvider)\b/u);
+});
+
+clientTest("keeps a visible page-level wallet connection action before dashboard sign-in", async () => {
+  const harness = await signInHarness({
+    initialConnection: { generation: 0, status: "disconnected", account: undefined, chainId: undefined, connector: undefined },
+  });
+
+  await harness.connect();
+
+  assert.equal(harness.connectCalls, 1);
+  assert.deepEqual(harness.fetches, [], "connecting must not request an authentication challenge");
+  assert.deepEqual(harness.messages, [], "connecting must not request a signature");
 });
 
 clientTest("refreshes the root server navigation after a successful dashboard sign-in", async () => {
@@ -530,9 +588,28 @@ clientTest("refreshes the root server navigation after a successful dashboard si
     "/api/auth/metamask/challenge",
     "/api/auth/metamask/verify",
   ]);
+  assert.deepEqual(harness.messages, ["Tool402 sign-in"]);
   assert.deepEqual(harness.routes, [
     ["replace", "/dashboard?tour=1&demoStep=identity"],
     ["refresh"],
+  ]);
+});
+
+clientTest("does not navigate after the wallet changes during verification", async () => {
+  const harness = await signInHarness({ deferVerification: true });
+
+  const operation = harness.signIn();
+  await harness.waitForVerification();
+  harness.setConnection({ generation: 1, status: "connected", account: address, chainId: 296, connector: { id: "metaMask" } });
+  harness.refreshConnection();
+  harness.resolveVerification();
+  await operation;
+
+  assert.deepEqual(harness.routes, []);
+  assert.deepEqual(harness.fetches.map(([path]) => path), [
+    "/api/auth/metamask/challenge",
+    "/api/auth/metamask/verify",
+    "/api/auth/logout",
   ]);
 });
 
@@ -540,17 +617,24 @@ signInTest("redirects valid sessions and otherwise renders the public sign-in bo
   const signIn = await readFile(signInUrl, "utf8");
   assert.match(signIn, /\breadDashboardSession\b/u);
   assert.match(signIn, /\bcookies\(\)/u);
-  assert.match(signIn, /import\s*\{\s*connection\s*\}\s*from\s*["']next\/server["']/u);
-  assert.match(signIn, /await\s+connection\(\)/u);
-  assert.doesNotMatch(signIn, /\bSuspense\b/u);
+  assert.match(signIn, /import\s*\{\s*Suspense\s*\}\s*from\s*["']react["']/u);
+  assert.match(signIn, /<Suspense\s+fallback=\{null\}>\s*<SignInBoundary\s+searchParams=\{searchParams\}\s*\/>\s*<\/Suspense>/u);
+  assert.doesNotMatch(signIn, /\bconnection\s*\(/u);
   assert.match(signIn, /\breadDashboardSessionCookieName\b/u);
   assert.match(signIn, /safeDashboardReturnHref/u);
   assert.match(signIn, /redirect\(returnTo \?\? dashboardTourHref\(tour, demoStep\)\)/u);
   assert.match(signIn, /requestedTour === "1"/u);
   assert.match(signIn, /requestedDemoStep/u);
-  assert.match(signIn, /<MetaMaskDashboardSignIn tour=\{tour\} demoStep=\{demoStep\} returnTo=\{returnTo\}/u);
-  assert.match(signIn, /\bMetaMaskDashboardSignIn\b/u);
-  assert.match(signIn, /Unlock your dashboard/u);
+  assert.match(signIn, /<DashboardSignInPrompt tour=\{tour\} demoStep=\{demoStep\} returnTo=\{returnTo\}/u);
+  assert.match(signIn, /\bDashboardSignInPrompt\b/u);
+  assert.doesNotMatch(signIn, /\bswitch\b/u);
+});
+
+signInTest("uses a dedicated sign-in route when the active wallet changed", async () => {
+  const accountChangedSignIn = await readFile(accountChangedSignInUrl, "utf8");
+
+  assert.match(accountChangedSignIn, /<DashboardSignInPrompt\s+accountChanged\s*\/>/u);
+  assert.doesNotMatch(accountChangedSignIn, /\bcookies\(\)|\bredirect\(/u);
 });
 
 dashboardLayoutTest("guards dashboard descendants on the server before rendering them", async () => {
@@ -560,7 +644,7 @@ dashboardLayoutTest("guards dashboard descendants on the server before rendering
   assert.match(layout, /\bSuspense\b/u);
   assert.match(layout, /\breadDashboardSessionCookieName\b/u);
   assert.match(layout, /redirect\(\s*["']\/sign-in["']\s*\)/u);
-  assert.match(layout, /<DashboardSessionSync\s+address=\{session\.address\}\s*\/>/u);
+  assert.match(layout, /<DashboardSessionSync\s+address=\{session\.address\}\s+issuedAt=\{session\.issuedAt\}\s*>/u);
   assert.match(layout, /\{children\}/u);
   assert.doesNotMatch(layout, /["']use client["']/u);
 });

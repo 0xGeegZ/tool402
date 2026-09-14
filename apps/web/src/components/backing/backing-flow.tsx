@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import Link from "next/link";
+import { usePublicClient, useSendTransaction } from "wagmi";
 
-import { isUserRejection } from "../../lib/wallet/metamask-provider.ts";
 import { hashscanTransactionUrl } from "../../lib/hashscan-links.ts";
 import type { BackingPaymentRead, BackingPaymentRecord } from "../../lib/backing-payment-server.ts";
-import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
+import { isUserRejectedWalletRequest } from "../../lib/wallet/wallet-error.ts";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -14,7 +14,7 @@ import { DetailList } from "../ui/detail-list";
 import { StatusRegion } from "../ui/status";
 import { SignatureDialog, type SignatureResult } from "../wallet/signature-dialog";
 import { WalletIsland } from "../wallet/wallet-connect";
-import { connectedWalletSession, useWalletSession, type WalletSession } from "../wallet/wallet-session";
+import { connectedTool402Wallet, useTool402Wallet, type Tool402WalletConnection } from "../wallet/use-tool402-wallet";
 import { presetUnits, railPosition } from "./backing-presentation";
 import {
   backingLifecycleLabels,
@@ -41,12 +41,22 @@ import { BackingStepRail } from "./backing-step-rail";
 import { assessFundingBalance } from "./backing-balance";
 
 const finalPhases: ReadonlySet<SignatureResult["phase"]> = new Set(["complete", "rejected", "failed", "unknown"]);
+const legacyPendingAttachmentKey = "tool402-backing-pending-attachment-v1";
 const pendingAttachmentPrefix = "tool402-backing-pending-attachment-v2:";
 const preparedIntentPrefix = "tool402-backing-prepared-intent-v1:";
 type PendingAttachment = Readonly<{ canonicalSignerAddress: string; offeringPublicId: string; intent: Pick<BackingIntent, "idempotencyKey" | "parameters">; transactionHash: `0x${string}`; frozen?: FrozenBackingIntentInput }>;
+type LegacyPendingAttachment = Readonly<Pick<PendingAttachment, "intent" | "transactionHash">>;
 
 function pendingAttachmentKey(canonicalSignerAddress: string, offeringPublicId: string, attemptPublicId: string): string {
   return `${pendingAttachmentPrefix}${canonicalSignerAddress}:${offeringPublicId}:${attemptPublicId}`;
+}
+
+function isSameBackingConnection(left: Tool402WalletConnection, right: Tool402WalletConnection): boolean {
+  return left.generation === right.generation
+    && left.account === right.account
+    && left.chainId === right.chainId
+    && left.connector?.id === right.connector?.id
+    && right.status === "connected";
 }
 
 function pendingAttachment(canonicalSignerAddress: string | null, offeringPublicId: string): PendingAttachment | null {
@@ -69,6 +79,43 @@ function pendingAttachment(canonicalSignerAddress: string | null, offeringPublic
     }
     return null;
   } catch { return null; }
+}
+
+function legacyPendingAttachment(): LegacyPendingAttachment | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const value: unknown = JSON.parse(window.localStorage.getItem(legacyPendingAttachmentKey) ?? "null");
+    if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+    const record = value as Record<string, unknown>;
+    const intent = record.intent;
+    if (intent === null || typeof intent !== "object" || Array.isArray(intent)) return null;
+    const parameters = (intent as Record<string, unknown>).parameters;
+    if (
+      Object.keys(intent).length !== 2
+      || typeof (intent as Record<string, unknown>).idempotencyKey !== "string"
+      || !/^[A-Za-z0-9_-]{21}[AQgw]$/u.test((intent as Record<string, unknown>).idempotencyKey as string)
+      || parameters === null
+      || typeof parameters !== "object"
+      || Array.isArray(parameters)
+      || Object.keys(parameters).length !== 4
+      || typeof (parameters as Record<string, unknown>).offeringPublicId !== "string"
+      || typeof (parameters as Record<string, unknown>).units !== "string"
+      || typeof (parameters as Record<string, unknown>).tinybars !== "string"
+      || typeof (parameters as Record<string, unknown>).purchaseIntentId !== "string"
+      || typeof record.transactionHash !== "string"
+      || !/^0x[0-9a-f]{64}$/u.test(record.transactionHash)
+    ) return null;
+    return { intent: intent as LegacyPendingAttachment["intent"], transactionHash: record.transactionHash as `0x${string}` };
+  } catch { return null; }
+}
+
+function admittedPaymentRecord(value: unknown): BackingPaymentRecord | null {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  if ((record.status !== "CONFIRMED" && record.status !== "REJECTED" && record.status !== "SUBMITTED" && record.status !== "OUTCOME_UNKNOWN")
+    || typeof record.transactionHash !== "string" || !/^0x[0-9a-f]{64}$/u.test(record.transactionHash)
+    || typeof record.tinybars !== "string" || !/^(?:0|[1-9][0-9]*)$/u.test(record.tinybars)) return null;
+  return { status: record.status, transactionHash: record.transactionHash as `0x${string}`, tinybars: record.tinybars };
 }
 
 function recoveryFrozenIntent(intent: BackingIntent): FrozenBackingIntentInput {
@@ -130,8 +177,12 @@ function describeView(view: BackingView, payment: BackingPaymentRecord | null): 
 }
 
 function BackingForm({ offering, initialPayment, dashboardAddress }: { offering: BackingOffering; initialPayment: BackingPaymentRead; dashboardAddress: string | null }) {
-  const wallet = useWalletSession();
-  const session: WalletSession | null = connectedWalletSession(wallet);
+  const wallet = useTool402Wallet();
+  const connectionRef = useRef(wallet.connection);
+  connectionRef.current = wallet.connection;
+  const publicClient = usePublicClient({ chainId: 296 });
+  const { mutateAsync: sendTransaction } = useSendTransaction({ mutation: { retry: false } });
+  const connection = connectedTool402Wallet(wallet.connection, wallet.resolved);
   const presets = presetUnits(offering.terms);
   const [preset, setPreset] = useState<bigint | null>(offering.terms.minimumPurchaseUnits);
   const [unitsInput, setUnitsInput] = useState(offering.terms.minimumPurchaseUnits.toString());
@@ -147,14 +198,22 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   const [notice, setNotice] = useState<string | null>(null);
   const [payment, setPayment] = useState<BackingPaymentRecord | null>(initialPayment.kind === "FOUND" ? initialPayment.payment : null);
   const [pending, setPending] = useState<PendingAttachment | null>(recoveredPending);
+  const [legacyPending, setLegacyPending] = useState<LegacyPendingAttachment | null>(null);
+  const [recoveringLegacyPayment, setRecoveringLegacyPayment] = useState(false);
   const sendingRef = useRef(false);
+  const legacyRecoveryInFlight = useRef(false);
   const validation = validateUnits(offering, unitsInput);
   const label = payment?.status === "CONFIRMED" ? "payment_confirmed" : payment?.status === "REJECTED" ? "payment_rejected" : backingLifecycleLabels[view.kind];
   const committed = request ?? ("intent" in view ? view.intent : null);
   const resumedReservation = payment?.status === "PREPARED" && view.kind === "prepared";
   const paymentReadUnavailable = initialPayment.kind === "UNAVAILABLE";
   const locked = paymentReadUnavailable || (payment !== null && !resumedReservation) || view.kind !== "choosing" || request !== null || preparing;
-  const dashboardMatchesWallet = session !== null && dashboardAddress !== null && session.address === dashboardAddress;
+  const dashboardMatchesWallet = connection !== null && dashboardAddress !== null && connection.account === dashboardAddress;
+  const canRecoverLegacyPayment = legacyPending !== null
+    && dashboardMatchesWallet
+    && pending === null
+    && legacyPending.intent.parameters.offeringPublicId === offering.offeringPublicId
+    && (payment === null || payment.status === "PREPARED");
   const canPrepare = offering.fundingOpen && initialPayment.kind === "NONE" && payment === null && validation.ok && acknowledged && dashboardMatchesWallet && !locked;
   const readoutUnits = committed !== null ? committed.units : validation.ok ? validation.units : null;
   const readoutTinybars = committed !== null ? committed.tinybars : validation.ok ? paymentTinybars(offering, validation.units) : null;
@@ -162,6 +221,10 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
     ? "/explore/riskscan/back"
     : `/explore/provider/${encodeURIComponent(offering.offeringPublicId)}/back`;
   const signInHref = `/sign-in?returnTo=${encodeURIComponent(backingPath)}`;
+
+  useEffect(() => {
+    setLegacyPending(dashboardMatchesWallet ? legacyPendingAttachment() : null);
+  }, [dashboardMatchesWallet, connection?.account, connection?.chainId, connection?.generation]);
 
   async function prepare() {
     if (!validation.ok || !canPrepare) return;
@@ -196,21 +259,43 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       });
       if (!response.ok) throw new Error("backing payment record unavailable");
       const value: unknown = await response.json();
-      if (value !== null && typeof value === "object" && !Array.isArray(value)) {
-        const record = value as Record<string, unknown>;
-        if ((record.status === "CONFIRMED" || record.status === "REJECTED" || record.status === "SUBMITTED" || record.status === "OUTCOME_UNKNOWN")
-          && typeof record.transactionHash === "string" && /^0x[0-9a-f]{64}$/u.test(record.transactionHash)
-          && typeof record.tinybars === "string" && /^(?:0|[1-9][0-9]*)$/u.test(record.tinybars)) {
-          setPayment({ status: record.status, transactionHash: record.transactionHash as `0x${string}`, tinybars: record.tinybars });
-          try { window.localStorage.removeItem(pendingAttachmentKey(dashboardAddress ?? "", offering.offeringPublicId, intent.idempotencyKey)); } catch { /* recovery storage is best effort only */ }
-          try { window.localStorage.removeItem(preparedIntentKey(dashboardAddress ?? "", offering.offeringPublicId, intent.idempotencyKey)); } catch { /* recovery storage is best effort only */ }
-          setPending(null);
-          return;
-        }
-      }
-      throw new Error("invalid backing payment record");
+      const payment = admittedPaymentRecord(value);
+      if (payment === null) throw new Error("invalid backing payment record");
+      setPayment(payment);
+      try { window.localStorage.removeItem(pendingAttachmentKey(dashboardAddress ?? "", offering.offeringPublicId, intent.idempotencyKey)); } catch { /* recovery storage is best effort only */ }
+      try { window.localStorage.removeItem(preparedIntentKey(dashboardAddress ?? "", offering.offeringPublicId, intent.idempotencyKey)); } catch { /* recovery storage is best effort only */ }
+      setPending(null);
     } catch {
       setNotice("Payment was submitted, but its server status could not be recorded. Retry verification only; nothing is sent again.");
+    }
+  }
+
+  async function recoverLegacyPayment(): Promise<void> {
+    if (!canRecoverLegacyPayment || legacyPending === null || connection === null || connection.account !== dashboardAddress || legacyRecoveryInFlight.current) return;
+    const legacy = legacyPending;
+    legacyRecoveryInFlight.current = true;
+    setRecoveringLegacyPayment(true);
+    setNotice(null);
+    try {
+      const response = await fetch("/api/backing/payment", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ attemptPublicId: legacy.intent.idempotencyKey, transactionHash: legacy.transactionHash, parameters: legacy.intent.parameters }),
+      });
+      if (!response.ok) throw new Error("legacy recovery unavailable");
+      const value: unknown = await response.json();
+      const payment = admittedPaymentRecord(value);
+      if (payment === null) throw new Error("invalid legacy recovery record");
+      const active = connectionRef.current;
+      if (active.status !== "connected" || active.account !== connection.account || active.account !== dashboardAddress || active.chainId !== 296) return;
+      setPayment(payment);
+      try { window.localStorage.removeItem(legacyPendingAttachmentKey); } catch { /* the admitted record remains server-side */ }
+      setLegacyPending(null);
+    } catch {
+      setNotice("The legacy transaction was not admitted for this signed dashboard wallet. Nothing was sent and its local evidence was retained.");
+    } finally {
+      legacyRecoveryInFlight.current = false;
+      setRecoveringLegacyPayment(false);
     }
   }
 
@@ -264,8 +349,8 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   }
 
   async function send() {
-    if (session === null || dashboardAddress === null || session.address !== dashboardAddress || view.kind !== "prepared" || transferring || sendingRef.current) {
-      if (session !== null && dashboardAddress !== null && session.address !== dashboardAddress) setNotice("The connected MetaMask wallet differs from the signed dashboard wallet. Sign in with this backing wallet before funding; nothing was sent.");
+    if (connection === null || dashboardAddress === null || connection.account !== dashboardAddress || view.kind !== "prepared" || transferring || sendingRef.current) {
+      if (connection !== null && dashboardAddress !== null && connection.account !== dashboardAddress) setNotice("The connected MetaMask wallet differs from the signed dashboard wallet. Sign in with this backing wallet before funding; nothing was sent.");
       return;
     }
     if (!offering.fundingOpen) {
@@ -281,15 +366,23 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       setTransferring(false);
       return;
     }
-    const current = await readCurrentSession(session.provider);
-    if (current.state.kind !== "connected" || current.state.address !== session.address || current.state.address !== dashboardAddress) {
+    if (!isSameBackingConnection(connectionRef.current, connection) || connectionRef.current.account !== dashboardAddress) {
       setNotice("MetaMask's account or network changed after connecting. Reconnect on Hedera Testnet before sending; nothing was sent.");
       sendingRef.current = false;
       setTransferring(false);
       return;
     }
-    const request = transferRequest(view, session.address);
-    const initialBalance = await assessFundingBalance(session.provider, request);
+    if (publicClient === undefined) {
+      setNotice("Your testnet HBAR balance or fee estimate is unavailable. Nothing was sent.");
+      sendingRef.current = false;
+      setTransferring(false);
+      return;
+    }
+    const request = transferRequest(view);
+    const initialBalance = await assessFundingBalance(publicClient, {
+      account: connection.account as `0x${string}`,
+      ...request,
+    });
     if (initialBalance === "INSUFFICIENT") {
       setNotice("Insufficient testnet HBAR for this transfer and its estimated network fee. Nothing was sent.");
       sendingRef.current = false;
@@ -307,7 +400,10 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       setTransferring(false);
       return;
     }
-    const reservedBalance = await assessFundingBalance(session.provider, request);
+    const reservedBalance = await assessFundingBalance(publicClient, {
+      account: connection.account as `0x${string}`,
+      ...request,
+    });
     if (reservedBalance === "INSUFFICIENT") {
       setNotice("Insufficient testnet HBAR for this transfer and its estimated network fee. The funding reservation remains; nothing was sent.");
       sendingRef.current = false;
@@ -320,9 +416,8 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       setTransferring(false);
       return;
     }
-    const immediatelyBeforeDispatch = await readCurrentSession(session.provider);
-    if (immediatelyBeforeDispatch.state.kind !== "connected" || immediatelyBeforeDispatch.state.address !== session.address || immediatelyBeforeDispatch.state.address !== dashboardAddress) {
-      setNotice("MetaMask's account or network changed while funding was prepared. Nothing was sent.");
+    if (!isSameBackingConnection(connectionRef.current, connection) || connectionRef.current.account !== dashboardAddress) {
+      setNotice("MetaMask's account or network changed while the funding attempt was reserved. Nothing was sent.");
       sendingRef.current = false;
       setTransferring(false);
       return;
@@ -332,8 +427,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       setTransferring(false);
       return;
     }
-    const afterDispatchClaim = await readCurrentSession(session.provider);
-    if (afterDispatchClaim.state.kind !== "connected" || afterDispatchClaim.state.address !== session.address || afterDispatchClaim.state.address !== dashboardAddress) {
+    if (!isSameBackingConnection(connectionRef.current, connection) || connectionRef.current.account !== dashboardAddress) {
       setView({ kind: "payment_outcome_unknown", intent: view.intent, message: "The dispatch was reserved, but MetaMask changed before invocation. Nothing was sent." });
       setNotice("MetaMask's account or network changed before the wallet request. Nothing was sent.");
       setTransferring(false);
@@ -341,10 +435,16 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
     }
     let result: TransferResult;
     try {
-      const response = await session.provider.request(request);
+      const response = await sendTransaction({
+        ...request,
+        account: connection.account as `0x${string}`,
+        chainId: 296,
+      });
       result = typeof response === "string" ? { kind: "hash", hash: response } : { kind: "no_hash" };
     } catch (error) {
-      result = isUserRejection(error) ? { kind: "declined" } : { kind: "no_hash" };
+      result = isUserRejectedWalletRequest(error)
+        ? { kind: "declined" }
+        : { kind: "no_hash" };
     }
     try {
       setView(viewAfterTransfer(view, result));
@@ -440,9 +540,9 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
             <p className="text-xs text-muted-foreground">{dashboardAddress === null ? <><Link href={signInHref} className="font-semibold text-primary">Sign in</Link> to continue this backing route and restore a submitted payment.</> : dashboardMatchesWallet ? "Two confirmations: one signature, one HBAR transfer." : "The connected MetaMask wallet must match the signed dashboard wallet before funding."}</p>
           </div>
         ) : null}
-        {request !== null && session !== null ? <SignatureDialog provider={session.provider} request={request} onResult={onSignature} /> : null}
+        {request !== null && connection !== null ? <SignatureDialog request={request} onResult={onSignature} /> : null}
         {view.kind === "prepared" ? (
-          <Button disabled={transferring || session === null} aria-disabled={transferring || session === null} onClick={send}>
+          <Button disabled={transferring || connection === null} aria-disabled={transferring || connection === null} onClick={send}>
             Send {formatHbar(view.intent.tinybars)} to the treasury
           </Button>
         ) : null}
@@ -457,6 +557,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
           </div>
         ) : null}
         {pending !== null && payment?.status !== "CONFIRMED" && payment?.status !== "REJECTED" ? <Button variant="outline" onClick={() => void persistPayment(pending.intent, pending.transactionHash)}>Attach recorded transaction</Button> : null}
+        {canRecoverLegacyPayment ? <Button variant="outline" disabled={recoveringLegacyPayment} aria-disabled={recoveringLegacyPayment} onClick={() => void recoverLegacyPayment()}>Check legacy recorded transaction</Button> : null}
         {payment !== null && hashscanTransactionUrl(payment.transactionHash) !== null ? (
           <a href={hashscanTransactionUrl(payment.transactionHash)!} target="_blank" rel="noreferrer" className="inline-flex text-sm font-semibold text-primary hover:text-brand-purple">View on HashScan</a>
         ) : null}

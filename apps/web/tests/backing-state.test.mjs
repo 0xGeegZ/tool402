@@ -230,16 +230,14 @@ test("orders the two confirmations and preserves a declined wallet dispatch as a
   const state = await loadState();
   const offering = state.readBackingOffering(record());
   const intent = state.createBackingIntent(offering, 25n, nowMilliseconds, fixedBytes(2));
-  const backer = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf";
-
-  assert.throws(() => state.transferRequest({ kind: "choosing" }, backer), TypeError);
+  assert.throws(() => state.transferRequest({ kind: "choosing" }), TypeError);
 
   const prepared = state.viewAfterSignature({ phase: "complete", outcome: "ACCEPTED" }, intent);
   assert.equal(prepared.kind, "prepared");
   assert.equal(prepared.intent, intent);
-  assert.deepEqual(state.transferRequest(prepared, backer), {
-    method: "eth_sendTransaction",
-    params: [{ from: backer, to: treasury, value: intent.weibarHex }],
+  assert.deepEqual(state.transferRequest(prepared), {
+    to: treasury,
+    value: BigInt(intent.weibarHex),
   });
 
   const hash = `0x${"ab".repeat(32)}`;

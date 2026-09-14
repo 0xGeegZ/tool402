@@ -2,11 +2,12 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSignMessage } from "wagmi";
 
-import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
 import { Button } from "../ui/button";
 import { dashboardTourHref } from "../demo/demo-tour-navigation";
-import { connectedWalletSession, useWalletSession, type WalletSession } from "../wallet/wallet-session";
+import { connectedTool402Wallet, isTool402MetaMaskConnector, useTool402Wallet, type Tool402WalletConnection } from "../wallet/use-tool402-wallet";
+import { serializeDashboardSessionMutation } from "./dashboard-session-sync";
 
 const failureMessage = "Sign-in could not be completed. Please try again.";
 
@@ -22,14 +23,15 @@ function isChallenge(value: unknown): value is Readonly<{ message: string; chall
   );
 }
 
-function isAuthenticated(value: unknown): boolean {
+function authenticatedSessionIssuedAt(value: unknown): string | null {
   return (
     typeof value === "object" &&
     value !== null &&
     Object.getPrototypeOf(value) === Object.prototype &&
-    Object.keys(value).length === 1 &&
-    (value as { outcome?: unknown }).outcome === "authenticated"
-  );
+    Object.keys(value).length === 2 &&
+    (value as { outcome?: unknown }).outcome === "authenticated" &&
+    typeof (value as { sessionIssuedAt?: unknown }).sessionIssuedAt === "string"
+  ) ? (value as { sessionIssuedAt: string }).sessionIssuedAt : null;
 }
 
 async function postJson(path: string, body: object): Promise<unknown> {
@@ -49,12 +51,49 @@ async function postJson(path: string, body: object): Promise<unknown> {
   }
 }
 
-function MetaMaskSignInButton({ session, tour, demoStep, returnTo }: { session: WalletSession; tour: "1" | null; demoStep: string | null; returnTo: string | null }) {
+async function endStaleDashboardSession(address: string, issuedAt: string): Promise<void> {
+  const response = await fetch("/api/auth/logout", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ address, issuedAt }),
+  });
+  if (response.status !== 204 && response.status !== 409) throw new Error("stale dashboard session could not be cleared");
+}
+
+function isCurrentConnection(
+  current: Tool402WalletConnection,
+  expected: Tool402WalletConnection,
+): boolean {
+  return current.status === "connected"
+    && current.generation === expected.generation
+    && current.status === expected.status
+    && current.account === expected.account
+    && current.chainId === 296
+    && current.chainId === expected.chainId
+    && isTool402MetaMaskConnector(current.connector)
+    && current.connector?.id === expected.connector?.id;
+}
+
+function MetaMaskSignInButton({
+  connection,
+  readCurrentConnection,
+  tour,
+  demoStep,
+  returnTo,
+}: {
+  readonly connection: Tool402WalletConnection;
+  readonly readCurrentConnection: () => Tool402WalletConnection;
+  readonly tour: "1" | null;
+  readonly demoStep: string | null;
+  readonly returnTo: string | null;
+}) {
   const router = useRouter();
+  const { mutateAsync: signMessage } = useSignMessage({ mutation: { retry: false } });
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const inProgress = useRef(false);
-  const { address, provider } = session;
+  const address = connection.account;
 
   async function signIn() {
     if (pending || inProgress.current) {
@@ -65,36 +104,46 @@ function MetaMaskSignInButton({ session, tour, demoStep, returnTo }: { session: 
     setPending(true);
     setFailure(null);
     try {
-      const current = await readCurrentSession(provider);
-      if (current.state.kind !== "connected" || current.state.address !== address) {
-        throw new Error("wallet session changed");
-      }
+      await serializeDashboardSessionMutation(async () => {
+        if (address === undefined || !isCurrentConnection(readCurrentConnection(), connection)) {
+          throw new Error("wallet session changed");
+        }
 
-      const challenge = await postJson("/api/auth/metamask/challenge", { address });
-      if (!isChallenge(challenge)) {
-        throw new Error("challenge rejected");
-      }
+        const challenge = await postJson("/api/auth/metamask/challenge", { address });
+        if (!isChallenge(challenge)) {
+          throw new Error("challenge rejected");
+        }
 
-      const message = challenge.message;
-      const signature = await provider.request({
-        method: "personal_sign",
-        params: [message, address],
+        const message = challenge.message;
+        if (!isCurrentConnection(readCurrentConnection(), connection)) {
+          throw new Error("wallet session changed");
+        }
+        const signature = await signMessage({ message });
+        if (typeof signature !== "string") {
+          throw new Error("signature rejected");
+        }
+
+        if (!isCurrentConnection(readCurrentConnection(), connection)) {
+          throw new Error("wallet session changed");
+        }
+
+        const verification = await postJson("/api/auth/metamask/verify", {
+          message,
+          signature,
+          challenge: challenge.challenge,
+        });
+        const sessionIssuedAt = authenticatedSessionIssuedAt(verification);
+        if (sessionIssuedAt === null) {
+          throw new Error("verification rejected");
+        }
+        if (!isCurrentConnection(readCurrentConnection(), connection)) {
+          await endStaleDashboardSession(address, sessionIssuedAt);
+          throw new Error("wallet session changed");
+        }
+
+        router.replace(returnTo ?? dashboardTourHref(tour, demoStep));
+        router.refresh();
       });
-      if (typeof signature !== "string") {
-        throw new Error("signature rejected");
-      }
-
-      const verification = await postJson("/api/auth/metamask/verify", {
-        message,
-        signature,
-        challenge: challenge.challenge,
-      });
-      if (!isAuthenticated(verification)) {
-        throw new Error("verification rejected");
-      }
-
-      router.replace(returnTo ?? dashboardTourHref(tour, demoStep));
-      router.refresh();
     } catch {
       setFailure(failureMessage);
     } finally {
@@ -121,15 +170,32 @@ function MetaMaskSignInButton({ session, tour, demoStep, returnTo }: { session: 
 }
 
 export function MetaMaskDashboardSignIn({ tour = null, demoStep = null, returnTo = null }: { tour?: "1" | null; demoStep?: string | null; returnTo?: string | null }) {
-  const wallet = useWalletSession();
-  const session: WalletSession | null = connectedWalletSession(wallet);
+  const { connection, resolved, state, connect, connectErrorCode, switchToHedera } = useTool402Wallet();
+  const connectionRef = useRef(connection);
+  connectionRef.current = connection;
+  const canSignIn = connectedTool402Wallet(connection, resolved) !== null;
 
   return (
     <section aria-labelledby="metamask-dashboard-sign-in-title" className="space-y-3">
       <h2 id="metamask-dashboard-sign-in-title" className="text-lg font-semibold">Sign in with MetaMask</h2>
-      {session === null ? (
-        <p aria-live="polite" className="text-sm text-muted-foreground">Connect MetaMask from the header on Hedera Testnet, then sign to unlock the dashboard.</p>
-      ) : <MetaMaskSignInButton session={session} tour={tour} demoStep={demoStep} returnTo={returnTo} />}
+      {!canSignIn ? (
+        <div className="space-y-2">
+          <p aria-live="polite" className="text-sm text-muted-foreground">Connect MetaMask on Hedera Testnet, then sign to unlock the dashboard.</p>
+          <Button
+            disabled={state.kind === "resolving" || state.kind === "connecting"}
+            aria-disabled={state.kind === "resolving" || state.kind === "connecting"}
+            onClick={() => void (state.kind === "wrong_chain" ? switchToHedera() : connect())}
+          >
+            {state.kind === "connecting" ? "Waiting for MetaMask…" : state.kind === "wrong_chain" ? "Switch to Hedera Testnet" : state.kind === "request_failed" || state.kind === "no_provider" ? "Retry MetaMask connection" : "Connect MetaMask"}
+          </Button>
+          {state.kind === "connecting" ? <p className="text-sm text-muted-foreground">Accept or reject the connection request in MetaMask.</p> : null}
+          {state.kind === "request_failed" ? (
+            <p aria-live="polite" className="text-sm text-muted-foreground">
+              MetaMask rejected or could not complete the connection{connectErrorCode === null ? "." : ` (code ${connectErrorCode}).`}
+            </p>
+          ) : null}
+        </div>
+      ) : <MetaMaskSignInButton connection={connection} readCurrentConnection={() => connectionRef.current} tour={tour} demoStep={demoStep} returnTo={returnTo} />}
     </section>
   );
 }

@@ -281,3 +281,11 @@ address exactly matches the server-validated session address; otherwise it
 may call the existing same-origin logout route once. It adds no account
 request, signature, event-payload trust, storage, retry, transaction, relay,
 deployment, or M50/S26 source amendment.
+
+## W01 successor reconciliation
+
+W01-T010 owns the Wagmi transport replacement for this card's sign-in and
+dashboard-session synchronization paths. S40's established authentication
+protocol, sealed-cookie server gate, and explicit-signature boundary remain
+unchanged; the card no longer reserves the removed custom wallet-session
+transport.
