@@ -144,7 +144,6 @@ export async function DashboardCampaign() {
               {membership.outcome !== "ACTIVE" ? null : <Link href="/provider/deploy" className={buttonVariants({ variant: "outline", size: "lg", shape: "pill" })}>Prepare a tool</Link>}
               <Link href="/explore/riskscan" className="text-sm font-semibold text-primary transition-colors hover:text-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Explore RiskScan</Link>
             </div>
-            <div className="w-full border-t border-border pt-4 text-left"><p className="mb-3 text-sm font-semibold">Your tools</p><ProviderToolList /></div>
             <a href="https://portal.hedera.com/" target="_blank" rel="noreferrer" className="text-sm font-semibold text-primary transition-colors hover:text-brand-purple">Need test HBAR? Open the Hedera Portal faucet ↗</a>
           </CardContent>
         </Card>
