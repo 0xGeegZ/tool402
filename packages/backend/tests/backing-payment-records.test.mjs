@@ -133,6 +133,39 @@ test("refuses a replacement dispatch for an unscoped legacy unknown claim withou
   );
 });
 
+test("keeps an eligible RiskScan dispatch working when Convex permits only one native pagination call", async () => {
+  const { beginBackingPaymentDispatch } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const attemptPublicId = "BBBBBBBBBBBBBBBBBBBBBA";
+  const store = reservationStoreDatabase({
+    attempts: [{ _id: "externalPrepareCommandAttempts:current", idempotencyKey: attemptPublicId, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signer, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "b".repeat(64), state: "PREPARED", subjectPublicId: "riskscan_revenue_note_demo" }],
+    intents: [{ _id: "backingIntents:current", idempotencyKey: attemptPublicId, canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7" }],
+    authorities: [{ _id: "commandAuthorities:backer", canonicalSignerAddress: signer, chainId: 296, principalPublicId: "legacy_backer", role: "BACKER", authorityVersion: "legacy_v1", enabled: true }],
+    claims: [{ _id: "backingPaymentClaims:current", attemptId: "externalPrepareCommandAttempts:current", canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo", tinybars: "7", state: "PREPARED", claimedAt: 1n }],
+  }, { rejectSecondNativePagination: true });
+
+  assert.deepEqual(
+    await beginBackingPaymentDispatch._handler({ db: store.db }, { attemptPublicId, canonicalSignerAddress: signer, tinybars: "7" }),
+    { status: "OUTCOME_UNKNOWN", transactionHash: null, tinybars: "7" },
+  );
+});
+
+test("keeps legacy-aware payment and verification reads compatible with Convex's pagination limit", async () => {
+  const { readBackerPaymentForOffering, readBackingPaymentVerificationContextForOffering } = await import(storeUrl.href);
+  const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const paymentStore = reservationStoreDatabase({ attempts: [], intents: [], claims: [] }, { rejectSecondNativePagination: true });
+  const verificationStore = reservationStoreDatabase({ attempts: [], intents: [], claims: [] }, { rejectSecondNativePagination: true });
+
+  assert.equal(
+    await readBackerPaymentForOffering._handler({ db: paymentStore.db }, { canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo" }),
+    null,
+  );
+  assert.equal(
+    await readBackingPaymentVerificationContextForOffering._handler({ db: verificationStore.db }, { canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo" }),
+    null,
+  );
+});
+
 test("uses the original unscoped legacy payment for offer-scoped recovery", async () => {
   const { readBackerPaymentForOffering, readBackingPaymentVerificationContextForOffering } = await import(storeUrl.href);
   const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
@@ -269,7 +302,7 @@ test("finds an unresolved unscoped legacy RiskScan claim beyond one hundred newe
 });
 
 test("fails closed before Send when bounded legacy recovery is exhausted by foreign unscoped claims", async () => {
-  const { beginBackingPaymentDispatch } = await import(storeUrl.href);
+  const { beginBackingPaymentDispatch, readBackerPaymentForOffering } = await import(storeUrl.href);
   const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
   const legacyAttemptPublicId = "AAAAAAAAAAAAAAAAAAAAAA";
   const replacementAttemptPublicId = "BBBBBBBBBBBBBBBBBBBBBA";
@@ -314,6 +347,10 @@ test("fails closed before Send when bounded legacy recovery is exhausted by fore
     null,
   );
   assert.equal(store.rows.backingPaymentClaims.find((claim) => claim._id === "backingPaymentClaims:replacement").state, "PREPARED");
+  assert.deepEqual(
+    await readBackerPaymentForOffering._handler({ db: store.db }, { canonicalSignerAddress: signer, offeringPublicId: "riskscan_revenue_note_demo" }),
+    { status: "UNAVAILABLE" },
+  );
 });
 
 test("selects the oldest unresolved sibling for bounded recovery when historical uncertainty is duplicated", async () => {
@@ -344,7 +381,7 @@ test("selects the oldest unresolved sibling for bounded recovery when historical
   assert.equal(store.rows.backingPaymentClaims.find((claim) => claim._id === "backingPaymentClaims:c").state, "PREPARED");
 });
 
-test("keeps an unrelated offer dispatchable while another offer remains unresolved", async (t) => {
+test("keeps a generic offering dispatchable while another offer remains unresolved and native pagination is restricted", async (t) => {
   const { beginBackingPaymentDispatch } = await import(storeUrl.href);
   const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
   const recipient = "0x1111111111111111111111111111111111111111";
@@ -368,7 +405,7 @@ test("keeps an unrelated offer dispatchable while another offer remains unresolv
       { _id: "backingPaymentClaims:a", attemptId: "externalPrepareCommandAttempts:a", canonicalSignerAddress: signer, offeringPublicId: "offering_blocked", tinybars: "7", state: "OUTCOME_UNKNOWN", claimedAt: 1n },
       { _id: "backingPaymentClaims:b", attemptId: "externalPrepareCommandAttempts:b", canonicalSignerAddress: signer, offeringPublicId, tinybars: "7", state: "PREPARED", claimedAt: 2n },
     ],
-  });
+  }, { rejectSecondNativePagination: true });
 
   assert.deepEqual(
     await beginBackingPaymentDispatch._handler({ db: store.db }, { attemptPublicId: "BBBBBBBBBBBBBBBBBBBBBA", canonicalSignerAddress: signer, tinybars: "7" }),
@@ -444,7 +481,7 @@ function paymentStoreDatabase(claims) {
   };
 }
 
-function reservationStoreDatabase({ attempts, intents, accounts = [], authorities = [], offerings = [], claims = [] }) {
+function reservationStoreDatabase({ attempts, intents, accounts = [], authorities = [], offerings = [], claims = [] }, { rejectSecondNativePagination = false } = {}) {
   const rows = {
     externalPrepareCommandAttempts: structuredClone(attempts),
     backingIntents: structuredClone(intents),
@@ -454,6 +491,7 @@ function reservationStoreDatabase({ attempts, intents, accounts = [], authoritie
     backingPaymentClaims: structuredClone(claims),
   };
   const writes = [];
+  let nativePaginationCalls = 0;
   return {
     rows,
     writes,
@@ -476,6 +514,8 @@ function reservationStoreDatabase({ attempts, intents, accounts = [], authoritie
                 return {
                   async take(limit) { return ordered.slice(0, limit); },
                   async paginate({ cursor, numItems }) {
+                    nativePaginationCalls += 1;
+                    if (rejectSecondNativePagination && nativePaginationCalls > 1) throw new Error("MultiplePaginatedDatabaseQueries");
                     const start = cursor === null ? 0 : Number(cursor);
                     const page = ordered.slice(start, start + numItems);
                     return { page, isDone: start + page.length >= ordered.length, continueCursor: String(start + page.length) };

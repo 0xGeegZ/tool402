@@ -13,11 +13,11 @@ const addressPattern = /^0x[0-9a-f]{40}$/u;
 const hashPattern = /^0x[0-9a-f]{64}$/u;
 const integerPattern = /^(?:0|[1-9][0-9]*)$/u;
 const legacyRiskScanOfferingPublicId = "riskscan_revenue_note_demo";
-const legacyRiskScanClaimPageSize = 64;
-const legacyRiskScanClaimPageLimit = 2;
+const legacyRiskScanClaimLimit = 128;
 
 const outcomeValidator = v.union(v.literal("PREPARED"), v.literal("CONFIRMED"), v.literal("REJECTED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN"));
 const resultValidator = v.union(v.null(), v.object({ status: outcomeValidator, transactionHash: v.union(v.null(), v.string()), tinybars: v.string() }));
+const paymentReadResultValidator = v.union(resultValidator, v.object({ status: v.literal("UNAVAILABLE") }));
 const dispatchResultValidator = v.union(
   resultValidator,
   v.object({ status: v.literal("RECOVERY_REQUIRED"), recoveryAttemptPublicId: v.string(), transactionHash: v.union(v.null(), v.string()), tinybars: v.string() }),
@@ -26,6 +26,7 @@ const paymentListValidator = v.array(v.object({ offeringPublicId: v.string(), st
 type Status = "PREPARED" | "CONFIRMED" | "REJECTED" | "SUBMITTED" | "OUTCOME_UNKNOWN";
 type ExistingClaim = Readonly<{ attemptId: string; transactionHash?: string; tinybars: string; state: Status }>;
 type UnresolvedClaim = Readonly<{ attemptId: GenericId<"externalPrepareCommandAttempts">; transactionHash?: string; tinybars: string; state: Status; claimedAt: bigint }>;
+type PaymentReadResult = Readonly<{ status: Status; transactionHash: string | null; tinybars: string }> | Readonly<{ status: "UNAVAILABLE" }> | null;
 type DispatchResult = Readonly<{ status: "RECOVERY_REQUIRED"; recoveryAttemptPublicId: string; transactionHash: string | null; tinybars: string }> | Readonly<{ status: Status; transactionHash: string | null; tinybars: string }> | null;
 type Context = GenericMutationCtx<DataModelFromSchemaDefinition<typeof schema>>;
 type DatabaseContext = Pick<GenericMutationCtx<DataModelFromSchemaDefinition<typeof schema>>, "db"> | Pick<GenericQueryCtx<DataModelFromSchemaDefinition<typeof schema>>, "db">;
@@ -80,23 +81,19 @@ async function oldestUnscopedLegacyRiskScanClaim(
   state: "OUTCOME_UNKNOWN" | "SUBMITTED",
   excludedAttemptId: string | null,
 ): Promise<UnresolvedClaim | null | undefined> {
-  let cursor: string | null = null;
-  for (let pageNumber = 0; pageNumber < legacyRiskScanClaimPageLimit; pageNumber += 1) {
-    const page = await ctx.db.query(backingPaymentClaimStore)
-      .withIndex("by_backer_offering_state_and_claimed_at", (query) => (
-        query.eq("canonicalSignerAddress", canonicalSignerAddress).eq("offeringPublicId", undefined).eq("state", state)
-      ))
-      .order("asc")
-      .paginate({ cursor, numItems: legacyRiskScanClaimPageSize });
-    for (const claim of page.page) {
-      if (claim.attemptId === excludedAttemptId) continue;
-      const attempt = await ctx.db.get(claim.attemptId);
-      if (validLegacyRiskScanAttempt(attempt, canonicalSignerAddress)) return claim;
-    }
-    if (page.isDone) return undefined;
-    cursor = page.continueCursor;
+  const claims = await ctx.db.query(backingPaymentClaimStore)
+    .withIndex("by_backer_offering_state_and_claimed_at", (query) => (
+      query.eq("canonicalSignerAddress", canonicalSignerAddress).eq("offeringPublicId", undefined).eq("state", state)
+    ))
+    .order("asc")
+    .take(legacyRiskScanClaimLimit + 1);
+  if (claims.length > legacyRiskScanClaimLimit) return null;
+  for (const claim of claims) {
+    if (claim.attemptId === excludedAttemptId) continue;
+    const attempt = await ctx.db.get(claim.attemptId);
+    if (validLegacyRiskScanAttempt(attempt, canonicalSignerAddress)) return claim;
   }
-  return null;
+  return undefined;
 }
 
 function now(): bigint { return BigInt(Date.now()); }
@@ -420,11 +417,11 @@ export const readLegacyRiskScanPaymentVerificationContext = internalQuery({
 /** Reads a backer's latest durable payment record for one public offering only. */
 export const readBackerPaymentForOffering = internalQuery({
   args: { canonicalSignerAddress: v.string(), offeringPublicId: v.string() },
-  returns: resultValidator,
+  returns: paymentReadResultValidator,
   handler: async (ctx, args) => {
     if (!addressPattern.test(args.canonicalSignerAddress) || !/^[A-Za-z0-9_-]{1,96}$/u.test(args.offeringPublicId)) return null;
     const unresolved = await unresolvedSiblingBackingPaymentClaim(ctx, args.canonicalSignerAddress, args.offeringPublicId, null);
-    if (unresolved === null) return null;
+    if (unresolved === null) return { status: "UNAVAILABLE" } satisfies PaymentReadResult;
     const claims = unresolved === undefined ? await ctx.db.query(backingPaymentClaimStore)
       .withIndex("by_backer_offering_and_claimed_at", (query) => (
         query.eq("canonicalSignerAddress", args.canonicalSignerAddress).eq("offeringPublicId", args.offeringPublicId)

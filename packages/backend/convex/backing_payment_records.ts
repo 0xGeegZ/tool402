@@ -11,6 +11,7 @@ type Parameters = Readonly<{ offeringPublicId: string; units: string; tinybars: 
 type Status = "CONFIRMED" | "REJECTED" | "SUBMITTED" | "OUTCOME_UNKNOWN";
 type Outcome = Readonly<{ status: Status; transactionHash: string; tinybars: string }> | null;
 type Reservation = Readonly<{ status: "PREPARED" | Status; transactionHash: string | null; tinybars: string }> | null;
+type PaymentRead = Reservation | Readonly<{ status: "UNAVAILABLE" }>;
 type DispatchReservation = Reservation | Readonly<{ status: "RECOVERY_REQUIRED"; recoveryAttemptPublicId: string; transactionHash: string | null; tinybars: string }>;
 type ReceiptReader = (hash: `0x${string}`) => Promise<Readonly<{ from: string; to: string; value: bigint; status: "0x1" | "0x0" }> | null>;
 const addressPattern = /^0x[0-9a-f]{40}$/u;
@@ -24,7 +25,7 @@ const verificationContextReference = makeFunctionReference<"query", { canonicalS
 const paymentReference = makeFunctionReference<"query", { canonicalSignerAddress: string }, Reservation>("backing_payment_store:readBackerPayment");
 const legacyRiskScanPaymentReference = makeFunctionReference<"query", { canonicalSignerAddress: string }, Reservation>("backing_payment_store:readLegacyRiskScanPayment");
 const legacyRiskScanPaymentVerificationContextReference = makeFunctionReference<"query", { canonicalSignerAddress: string }, { attemptPublicId: string; expectedTarget: string; transactionHash: string; tinybars: string; state: Status } | null>("backing_payment_store:readLegacyRiskScanPaymentVerificationContext");
-const scopedPaymentReference = makeFunctionReference<"query", { canonicalSignerAddress: string; offeringPublicId: string }, Reservation>("backing_payment_store:readBackerPaymentForOffering");
+const scopedPaymentReference = makeFunctionReference<"query", { canonicalSignerAddress: string; offeringPublicId: string }, PaymentRead>("backing_payment_store:readBackerPaymentForOffering");
 const scopedVerificationContextReference = makeFunctionReference<"query", { canonicalSignerAddress: string; offeringPublicId: string }, { attemptPublicId: string; expectedTarget: string; transactionHash: string; tinybars: string; state: Status } | null>("backing_payment_store:readBackingPaymentVerificationContextForOffering");
 const paymentListReference = makeFunctionReference<"query", { canonicalSignerAddress: string }, Array<{ offeringPublicId: string; status: "PREPARED" | Status; transactionHash: string | null; tinybars: string }>>("backing_payment_store:listBackerPayments");
 
@@ -87,7 +88,7 @@ async function reverifyLegacyRiskScanPayment(ctx: Context, args: { canonicalSign
   });
 }
 
-async function reverifyOffering(ctx: Context, args: { canonicalSignerAddress: string; offeringPublicId: string }, readReceipt: ReceiptReader = createHederaFundingReceiptReader(globalThis.fetch)): Promise<Reservation> {
+async function reverifyOffering(ctx: Context, args: { canonicalSignerAddress: string; offeringPublicId: string }, readReceipt: ReceiptReader = createHederaFundingReceiptReader(globalThis.fetch)): Promise<PaymentRead> {
   if (!addressPattern.test(args.canonicalSignerAddress) || !/^[A-Za-z0-9_-]{1,96}$/u.test(args.offeringPublicId)) return null;
   const context = await ctx.runQuery(scopedVerificationContextReference, args);
   if (context === null) return ctx.runQuery(scopedPaymentReference, args);
@@ -132,7 +133,7 @@ export const reverifyBackerPayment = internalActionGeneric({
 
 export const readBackerPaymentForOffering = internalActionGeneric({
   args: { canonicalSignerAddress: v.string(), offeringPublicId: v.string() },
-  returns: v.union(v.null(), v.object({ status: v.union(v.literal("PREPARED"), v.literal("CONFIRMED"), v.literal("REJECTED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN")), transactionHash: v.union(v.null(), v.string()), tinybars: v.string() })),
+  returns: v.union(v.null(), v.object({ status: v.union(v.literal("PREPARED"), v.literal("CONFIRMED"), v.literal("REJECTED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN")), transactionHash: v.union(v.null(), v.string()), tinybars: v.string() }), v.object({ status: v.literal("UNAVAILABLE") })),
   handler: reverifyOffering,
 });
 
@@ -160,6 +161,6 @@ export function reverifyLegacyRiskScanPaymentForTest(ctx: Context, args: { canon
   return reverifyLegacyRiskScanPayment(ctx, args, readReceipt);
 }
 
-export function reverifyBackerPaymentForOfferingForTest(ctx: Context, args: { canonicalSignerAddress: string; offeringPublicId: string }, readReceipt: ReceiptReader): Promise<Reservation> {
+export function reverifyBackerPaymentForOfferingForTest(ctx: Context, args: { canonicalSignerAddress: string; offeringPublicId: string }, readReceipt: ReceiptReader): Promise<PaymentRead> {
   return reverifyOffering(ctx, args, readReceipt);
 }

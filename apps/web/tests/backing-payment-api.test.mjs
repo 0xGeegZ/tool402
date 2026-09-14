@@ -158,6 +158,16 @@ test("keeps an unavailable offer-scoped payment read distinct from a verified ab
   assert.deepEqual(none, { kind: "NONE" });
 });
 
+test("keeps a bounded legacy recovery scan unavailable instead of presenting it as no payment", async () => {
+  const { loadBackerPaymentForOffering } = await import(serverUrl.href);
+  const session = { address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" };
+  const result = await loadBackerPaymentForOffering(env, "session", "riskscan_revenue_note_demo", {
+    readSession: async () => session,
+    forward: async () => ({ status: "UNAVAILABLE" }),
+  });
+  assert.deepEqual(result, { kind: "UNAVAILABLE" });
+});
+
 test("fails closed for forged or expired sessions, oversized bodies, missing ingress configuration, and untrusted results", async () => {
   const { handleBackingPaymentRequest } = await import(serverUrl.href);
   const session = { address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" };
