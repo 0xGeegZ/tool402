@@ -102,10 +102,6 @@ function writeStageBRecovery(scope: StageBRecoveryScope, hash?: string): boolean
   }
 }
 
-export function beginStageBRecovery(scope: StageBRecoveryScope): boolean {
-  return writeStageBRecovery(scope);
-}
-
 export function persistStageBRecovery(scope: StageBRecoveryScope, hash: string): boolean {
   return writeStageBRecovery(scope, hash);
 }
@@ -119,6 +115,22 @@ export function hasStageBRecovery(scope: StageBRecoveryScope): boolean {
   } catch {
     return false;
   }
+}
+
+export type StageBRecoveryClaim = "claimed" | "existing" | "unavailable";
+
+export async function beginStageBRecovery(scope: StageBRecoveryScope): Promise<StageBRecoveryClaim> {
+  const local = storage();
+  if (local === null || typeof navigator === "undefined" || navigator.locks === undefined) return "unavailable";
+  return navigator.locks.request(`tool402:ats-create:${key(scope)}`, { mode: "exclusive" }, () => {
+    try {
+      const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
+      if (isRecord(parsed) && sameScope(parsed.scope, scope)) return "existing";
+      return writeStageBRecovery(scope) ? "claimed" : "unavailable";
+    } catch {
+      return "unavailable";
+    }
+  });
 }
 
 export function clearStageBRecovery(scope: StageBRecoveryScope, hash: string): void {

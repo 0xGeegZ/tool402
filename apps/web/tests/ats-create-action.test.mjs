@@ -35,6 +35,11 @@ async function actionHarness(stored = new Map()) {
       removeItem(key) { stored.delete(key); },
     },
   };
+  Object.defineProperty(globalThis, "navigator", { configurable: true, value: {
+    locks: {
+      request(_name, _options, callback) { return callback(); },
+    },
+  } });
   const bridge = await import("../src/lib/ats/stage-b-browser-provider-bridge.ts");
   const recovery = await import("../src/components/provider/deploy/stage-b-recovery.ts");
   const imports = {

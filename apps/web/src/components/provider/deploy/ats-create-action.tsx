@@ -158,13 +158,19 @@ export function AtsCreateAction({
     const actionContext = controllerContext.current;
     const actionRecoveryScope = recoveryScope(actionContext);
     if (!enabled || !recoveryResolved || submitted || actionRecoveryScope === null || actionContext.preparedAttemptPublicId === undefined || controller.current === null || actionInFlight.current !== null) return;
-    if (!beginStageBRecovery(actionRecoveryScope)) {
-      setFeedback("This browser cannot safely retain a submitted transaction for recovery. Creation remains blocked.");
+    actionInFlight.current = actionContext;
+    setInFlight(actionContext);
+    const claim = await beginStageBRecovery(actionRecoveryScope);
+    if (claim !== "claimed") {
+      actionInFlight.current = null;
+      setInFlight(null);
+      setSubmittedFor(actionContext);
+      setFeedback(claim === "existing"
+        ? "This prepared attempt already has a submitted transaction to reconcile. Creation remains blocked."
+        : "This browser cannot safely retain a submitted transaction for recovery. Creation remains blocked.");
       return;
     }
     setSubmittedFor(actionContext);
-    actionInFlight.current = actionContext;
-    setInFlight(actionContext);
     try {
       const outcome = await controller.current.execute();
       if (outcome.kind === "submission_unknown" && outcome.transactionHash !== undefined && actionRecoveryScope !== null) {
