@@ -261,13 +261,14 @@ implementedTest("routes a concurrent dashboard session through account-changed e
   assert.deepEqual(harness.navigations, [["replace", "/sign-in/account-changed"]]);
 });
 
-implementedTest("logs out a server session after restoration completes without a wallet", async () => {
+implementedTest("preserves a server session when passive restoration completes without a wallet", async () => {
   const harness = await loadSynchronizer({ wallet: { connection: { status: "disconnected", account: undefined, chainId: undefined, connector: undefined }, resolved: true } });
 
-  harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
+  const tree = harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
 
-  assertLogout(harness);
+  assert.equal(harness.requests.length, 0);
+  assert.equal(visibleText(tree), "dashboard content");
 });
 
 implementedTest("starts only one logout when Wagmi reports an explicit disconnect", async () => {
@@ -282,13 +283,14 @@ implementedTest("starts only one logout when Wagmi reports an explicit disconnec
   assertLogout(harness);
 });
 
-implementedTest("logs out a restored dashboard session on the wrong chain", async () => {
+implementedTest("blocks a restored dashboard session on the wrong chain without revoking it", async () => {
   const harness = await loadSynchronizer({ wallet: { connection: { status: "connected", account: "0xc89f87052c3e080b4a9b021d4930055031ef378e", chainId: 1, connector: { id: "metaMask" } }, resolved: true } });
 
-  harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
+  const tree = harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
 
-  assertLogout(harness);
+  assert.equal(harness.requests.length, 0);
+  assert.doesNotMatch(visibleText(tree), /dashboard content/u);
 });
 
 implementedTest("does not navigate when active-account logout is rejected or unavailable", async () => {

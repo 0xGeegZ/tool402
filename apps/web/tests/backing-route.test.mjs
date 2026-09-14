@@ -68,6 +68,7 @@ test("uses the Wagmi wallet context, signature dialog, and relay without a secon
   assert.match(flow, /connection\.account === dashboardAddress/);
   assert.match(flow, /assessFundingBalance/);
   assert.match(flow, /Insufficient testnet HBAR/);
+  assert.doesNotMatch(flow, /pending-attachment-v1|legacyPending|Verify legacy recorded transaction/);
 });
 
 test("renders the fixed copy and none of the canvas's sample or simulation content", async () => {

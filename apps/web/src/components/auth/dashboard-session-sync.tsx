@@ -81,10 +81,14 @@ export function DashboardSessionSync({
       hasMatchedSessionWallet.current = true;
       return;
     }
-    endSession();
-  }, [connection.status, currentSessionMatches, endSession, resolved]);
+    if (hasMatchedSessionWallet.current || (connection.status === "connected" && connection.account !== address)) {
+      endSession();
+    }
+  }, [address, connection.account, connection.status, currentSessionMatches, endSession, resolved]);
 
-  if (!resolved || currentSessionMatches) return children;
+  if (!resolved || currentSessionMatches || (!hasMatchedSessionWallet.current && connection.status !== "connected")) {
+    return children;
+  }
   return (
     <div role="alert" aria-live="polite" className="p-6 text-sm text-muted-foreground">
       <p>{logoutFailed
