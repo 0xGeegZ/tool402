@@ -176,16 +176,15 @@ export function useTool402Wallet() {
       }
     },
     async cancelConnection() {
+      // Clear this before disconnecting: a broken injected provider can leave
+      // its disconnect promise pending, but it must never be retried on reload.
+      await config.storage?.removeItem("recentConnectorId");
       try {
         // A connection request has no established connector yet. Omitting it clears Wagmi's
         // pending state without issuing another request to MetaMask.
         await disconnectAsync();
       } catch {
         // The current connection remains authoritative until Wagmi reports otherwise.
-      } finally {
-        // A cancelled request must not be selected again by Wagmi's automatic
-        // reconnect on the next refresh.
-        await config.storage?.removeItem("recentConnectorId");
       }
     },
     async switchToHedera() {

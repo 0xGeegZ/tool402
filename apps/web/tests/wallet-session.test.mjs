@@ -38,7 +38,7 @@ async function loadHook(hooks, hydrated = true) {
   return module.exports;
 }
 
-function harness({ connection, connectors, connectError, switchError } = {}) {
+function harness({ connection, connectors, connectError, switchError, disconnectNeverResolves = false } = {}) {
   const calls = { connect: [], disconnect: [], switchChain: [], removeStorage: [] };
   const metaMask = { id: "metaMask", rdns: "io.metamask" };
   let current = connection ?? { status: "disconnected", address: undefined, chainId: undefined, connector: undefined };
@@ -53,6 +53,7 @@ function harness({ connection, connectors, connectError, switchError } = {}) {
       useConnect: () => ({ error: connectError, mutateAsync: async (input) => { calls.connect.push(input); } }),
       useDisconnect: () => ({ mutateAsync: async (input) => {
         calls.disconnect.push(input);
+        if (disconnectNeverResolves) return await new Promise(() => {});
         current = { status: "disconnected", address: undefined, chainId: undefined, connector: undefined };
       } }),
       useSwitchChain: () => ({ error: switchError, mutateAsync: async (input) => { calls.switchChain.push(input); } }),
@@ -68,6 +69,15 @@ test("derives display state from Wagmi without connecting during passive restora
   assert.deepEqual({ ...wallet.state }, { kind: "resolving" });
   assert.equal(wallet.resolved, false);
   assert.deepEqual(instance.calls, { connect: [], disconnect: [], switchChain: [], removeStorage: [] });
+});
+
+test("clears the reconnect target before a broken provider can stall disconnect", async () => {
+  const instance = harness({ connection: { status: "connecting", address: undefined, chainId: undefined, connector: undefined }, disconnectNeverResolves: true });
+  const { useTool402Wallet } = await loadHook(instance.hooks);
+
+  void useTool402Wallet().cancelConnection();
+  await Promise.resolve();
+  assert.deepEqual(instance.calls.removeStorage, ["recentConnectorId"]);
 });
 
 test("selects the Wagmi-discovered MetaMask connector rather than another injected wallet", async () => {
