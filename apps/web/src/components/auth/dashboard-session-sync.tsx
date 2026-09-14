@@ -66,10 +66,13 @@ export function DashboardSessionSync({
         return;
       }
       if (response.status === 409) {
-        // The browser has already established a newer signed session. Do not
-        // let this stale logout redirect or mask that current account.
+        // This layout was rendered for an older session. The ordinary sign-in
+        // route redirects whenever any session cookie exists, so it would send
+        // this stale layout straight back here. The account-change route is
+        // deliberately a prompt and lets the active wallet establish its own
+        // session.
         logoutStarted.current = false;
-        router.refresh();
+        router.replace("/sign-in/account-changed");
         return;
       }
       setLogoutFailed(true);

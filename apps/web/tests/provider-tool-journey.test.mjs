@@ -354,6 +354,9 @@ test("a self-service provider reaches independent OPEN tools through signed orch
     const walletContext = walletContextFor(activeProvider);
     return relayCommand(walletContext, request, {
       readCurrentContext: () => walletContext,
+      // The offline fixture keys are mapped to the public test accounts at the
+      // wallet seam; command ingress still verifies the actual signature.
+      recoverSigner: async () => walletContext.address,
       signTypedData: async (typedData) => activeProvider.request({
         method: "eth_signTypedData_v4",
         params: [typedData.message.signer, JSON.stringify({

@@ -143,7 +143,8 @@ export async function persistStageBRecovery(scope: StageBRecoveryScope, claimId:
   return withStageBRecoveryLock(scope, false, (local) => {
     try {
       const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
-      if (!isRecord(parsed) || !sameScope(parsed.scope, scope) || parsed.claimId !== claimId || parsed.state !== "reserved") return false;
+      if (!isRecord(parsed) || !sameScope(parsed.scope, scope) || parsed.claimId !== claimId) return false;
+      if (parsed.state === "submitted") return parsed.hash === hash;
       if (parsed.recoveryHash !== undefined && parsed.recoveryHash !== hash) return false;
       return writeStageBRecovery(local, Object.freeze({ version: 2, claimId, state: "submitted", hash, scope }));
     } catch {

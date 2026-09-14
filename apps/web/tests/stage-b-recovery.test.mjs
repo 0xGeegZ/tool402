@@ -133,22 +133,27 @@ test("retains a corroborated hash on the original hashless reservation without r
   }
 });
 
-test("serializes reconcile, persist, and release so a retained hash cannot be deleted", async () => {
+test("serializes competing claims, reconciliation, persistence, and release so a retained hash cannot be deleted", async () => {
   const store = installStore();
   try {
     const scope = createStageBRecoveryScope({ address, selectedToolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", preparedAttemptPublicId: attempt });
     assert.ok(scope);
-    const claim = await beginStageBRecovery(scope);
-    assert.equal(claim.kind, "claimed");
+    const claims = await Promise.all([beginStageBRecovery(scope), beginStageBRecovery(scope)]);
+    assert.equal(claims.filter((claim) => claim.kind === "claimed").length, 1);
+    assert.equal(claims.filter((claim) => claim.kind === "existing").length, 1);
+    const claim = claims.find((result) => result.kind === "claimed");
+    assert.ok(claim);
     if (claim.kind !== "claimed") return;
-    const [reconciled, released] = await Promise.all([
+    const [reconciled, persisted, released] = await Promise.all([
       reconcileStageBRecovery(scope, hash),
+      persistStageBRecovery(scope, claim.claimId, hash),
       releaseStageBRecoveryReservation(scope, claim.claimId),
     ]);
-    assert.deepEqual(reconciled, { kind: "reconciled" });
+    assert.ok(reconciled.kind === "reconciled" || reconciled.kind === "existing");
+    assert.equal(persisted, true);
     assert.equal(released, false);
     assert.equal(readStageBRecovery(scope), hash);
-    assert.equal(await persistStageBRecovery(scope, claim.claimId, hash), true);
+    assert.equal(await persistStageBRecovery(scope, claim.claimId, hash), true, "a repeated retained hash is idempotent");
     assert.deepEqual(await beginStageBRecovery(scope), { kind: "existing" });
   } finally { store.restore(); }
 });

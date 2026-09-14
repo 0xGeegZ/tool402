@@ -27,7 +27,7 @@ function elements(node) {
   return [node, ...elements(node.props.children)];
 }
 
-async function backingHarness({ stored = new Map(), payment, response }) {
+async function backingHarness({ stored = new Map(), payment, response, offeringPublicId = "riskscan" }) {
   const flowPath = join(appRoot, "src/components/backing/backing-flow.tsx");
   const slots = [];
   const fetchCalls = [];
@@ -41,6 +41,7 @@ async function backingHarness({ stored = new Map(), payment, response }) {
     removeItem(key) { stored.delete(key); },
   };
   const offering = {
+    offeringPublicId,
     terms: { version: "v1", minimumPurchaseUnits: 1n, maximumNoteUnits: 10n, noteUnitPriceTinybars: 10n, payoutCapTinybars: 20n, reserveShareBps: 100n },
     maturityAt: "2026-12-31T00:00:00.000Z",
   };
@@ -196,7 +197,7 @@ test("uses the Wagmi wallet context, signature dialog, and relay without a secon
   assert.match(flow, /connection\.account === dashboardAddress/);
   assert.match(flow, /assessFundingBalance/);
   assert.match(flow, /Insufficient testnet HBAR/);
-  assert.doesNotMatch(flow, /pending-attachment-v1|legacyPending|Verify legacy recorded transaction/);
+  assert.match(flow, /Check legacy recorded transaction/, "a prepared legacy record can be verified without restoring the legacy wallet flow");
 });
 
 test("recovers legacy evidence for a prepared payment without signing or sending, while retaining it on rejection", async () => {
@@ -216,9 +217,10 @@ test("recovers legacy evidence for a prepared payment without signing or sending
   let recovery = elements(tree).find((element) => element.type === "Button" && element.props.children === "Check legacy recorded transaction");
   assert.ok(recovery, "a prepared reservation with only v1 evidence offers explicit recovery");
   recovery.props.onClick();
+  recovery.props.onClick();
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(success.sends(), 0, "recovery never signs or sends a transaction");
-  assert.equal(success.fetchCalls().length, 1);
+  assert.equal(success.fetchCalls().length, 1, "a repeated click cannot issue a concurrent legacy recovery");
   assert.equal(success.fetchCalls()[0][0], "/api/backing/payment");
   assert.deepEqual(JSON.parse(success.fetchCalls()[0][1].body), { attemptPublicId, transactionHash, parameters });
   tree = success.render();
@@ -239,6 +241,16 @@ test("recovers legacy evidence for a prepared payment without signing or sending
   assert.equal(rejection.stored().has(legacyKey), true, "a rejected verification retains the original legacy record");
   tree = rejection.render();
   assert.ok(elements(tree).some((element) => element.props.children === "The legacy transaction was not admitted for this signed dashboard wallet. Nothing was sent and its local evidence was retained."));
+
+  const wrongOffering = await backingHarness({
+    stored: new Map([[legacyKey, JSON.stringify({ intent: { idempotencyKey: attemptPublicId, parameters }, transactionHash })]]),
+    payment: initialPayment,
+    response: confirmed,
+    offeringPublicId: "another-offering",
+  });
+  tree = wrongOffering.render();
+  assert.equal(elements(tree).some((element) => element.type === "Button" && element.props.children === "Check legacy recorded transaction"), false, "legacy evidence cannot cross an offering boundary");
+  assert.equal(wrongOffering.fetchCalls().length, 0);
 });
 
 test("renders the fixed copy and none of the canvas's sample or simulation content", async () => {

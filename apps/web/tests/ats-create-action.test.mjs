@@ -496,6 +496,56 @@ test("reconciles a hashless ambiguous ATS reservation through public verificatio
   assert.equal(create?.props.disabled, true);
 });
 
+test("reconciles a hashless v1 ATS record through public verification without enabling a new send after remount", async () => {
+  const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const transactionHash = `0x${"a".repeat(64)}`;
+  const persisted = new Map();
+  const recovery = await import("../src/components/provider/deploy/stage-b-recovery.ts");
+  const scope = recovery.createStageBRecoveryScope({ address: issuer, selectedToolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", preparedAttemptPublicId: "CCCCCCCCCCCCCCCCCCCCCg" });
+  assert.ok(scope);
+  const recoveryKey = `tool402:ats-create-recovery:v1:${scope.address}:296:${scope.toolPublicId}:${scope.preparedAttemptPublicId}`;
+  persisted.set(recoveryKey, JSON.stringify({ version: 1, scope }));
+  let createCalls = 0;
+  let recoverCalls = 0;
+  const bridge = {
+    isCanonicalStageBTransactionHash: (value) => typeof value === "string" && /^0x[0-9a-f]{64}$/u.test(value),
+    createStageBBrowserProviderBridge: () => ({
+      async execute() { createCalls += 1; assert.fail("legacy recovery must not send a new transaction"); },
+      async recover(hash) {
+        recoverCalls += 1;
+        assert.equal(hash, transactionHash);
+        return { kind: "candidate", candidate: { transactionId: "0.0.9213391-1789430400-000000001", evmAddress: "0x52908400098527886e0f7030069857d2e4169ee7" } };
+      },
+    }),
+  };
+  const candidates = [];
+  const props = {
+    session: { provider: { async request() { assert.fail("legacy recovery must not request MetaMask"); } }, address: issuer },
+    selectedTool: false,
+    selectedToolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    stageTwoDone: true,
+    hasCandidate: false,
+    onCandidate: (candidate) => candidates.push(candidate),
+  };
+  const harness = await actionHarness(persisted, bridge);
+  const initial = harness.render(props);
+  const input = elements(initial).find((element) => element.props["data-stage-b-recovery-hash"] === "true");
+  assert.ok(input);
+  input.props.onChange({ target: { value: transactionHash } });
+  const armed = harness.render(props);
+  const recoverButton = elements(armed).find((element) => element.type === "Button" && element.props.children === "Recover candidate from transaction hash");
+  await recoverButton.props.onClick();
+
+  assert.equal(recoverCalls, 1);
+  assert.equal(createCalls, 0);
+  assert.equal(candidates.length, 1);
+  assert.equal(recovery.readStageBRecovery(scope), transactionHash);
+  const remounted = await actionHarness(persisted, bridge);
+  const restored = remounted.render({ ...props, onCandidate() { assert.fail("remount must not reattach automatically"); } });
+  const create = elements(restored).find((element) => element.type === "Button" && element.props.children === "Create the note in MetaMask");
+  assert.equal(create?.props.disabled, true);
+});
+
 test("keeps a hashless ambiguous ATS reservation when public verification is unavailable", async () => {
   const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
   const transactionHash = `0x${"5".repeat(64)}`;

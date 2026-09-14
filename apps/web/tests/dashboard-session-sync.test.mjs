@@ -274,7 +274,7 @@ implementedTest("redirects to sign-in when the active account remains different 
   assert.deepEqual(harness.navigations, [["replace", "/sign-in/account-changed"]]);
 });
 
-implementedTest("refreshes the server session when a stale logout reports a concurrent session", async () => {
+implementedTest("routes a stale logout to the explicit account-change prompt when a concurrent session exists", async () => {
   const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
   const switchedAddress = "0x0000000000000000000000000000000000000402";
   const harness = await loadSynchronizer({ responseStatus: 409, wallet: { connection: { status: "connected", account: address, chainId: 296, connector: { id: "metaMask" }, generation: 1 }, resolved: true } });
@@ -284,10 +284,10 @@ implementedTest("refreshes the server session when a stale logout reports a conc
   harness.render(address);
   await flushMicrotasks();
 
-  assert.deepEqual(harness.navigations, [["refresh"]]);
+  assert.deepEqual(harness.navigations, [["replace", "/sign-in/account-changed"]]);
 });
 
-implementedTest("refreshes a concurrent dashboard session even after the wallet recovers", async () => {
+implementedTest("routes a concurrent dashboard session to the account-change prompt even after the wallet recovers", async () => {
   const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
   const harness = await loadSynchronizer({ responseStatus: 409, wallet: { connection: { status: "connected", account: address, chainId: 296, connector: { id: "metaMask" }, generation: 1 }, resolved: true } });
 
@@ -296,7 +296,7 @@ implementedTest("refreshes a concurrent dashboard session even after the wallet 
   harness.render(address);
   await flushMicrotasks();
 
-  assert.deepEqual(harness.navigations, [["refresh"]]);
+  assert.deepEqual(harness.navigations, [["replace", "/sign-in/account-changed"]]);
 });
 
 implementedTest("preserves a server session when passive restoration completes without a wallet", async () => {

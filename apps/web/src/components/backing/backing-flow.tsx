@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { usePublicClient, useSendTransaction } from "wagmi";
 
@@ -41,9 +41,11 @@ import { BackingStepRail } from "./backing-step-rail";
 import { assessFundingBalance } from "./backing-balance";
 
 const finalPhases: ReadonlySet<SignatureResult["phase"]> = new Set(["complete", "rejected", "failed", "unknown"]);
+const legacyPendingAttachmentKey = "tool402-backing-pending-attachment-v1";
 const pendingAttachmentPrefix = "tool402-backing-pending-attachment-v2:";
 const preparedIntentPrefix = "tool402-backing-prepared-intent-v1:";
 type PendingAttachment = Readonly<{ canonicalSignerAddress: string; offeringPublicId: string; intent: Pick<BackingIntent, "idempotencyKey" | "parameters">; transactionHash: `0x${string}`; frozen?: FrozenBackingIntentInput }>;
+type LegacyPendingAttachment = Readonly<Pick<PendingAttachment, "intent" | "transactionHash">>;
 
 function pendingAttachmentKey(canonicalSignerAddress: string, offeringPublicId: string, attemptPublicId: string): string {
   return `${pendingAttachmentPrefix}${canonicalSignerAddress}:${offeringPublicId}:${attemptPublicId}`;
@@ -77,6 +79,43 @@ function pendingAttachment(canonicalSignerAddress: string | null, offeringPublic
     }
     return null;
   } catch { return null; }
+}
+
+function legacyPendingAttachment(): LegacyPendingAttachment | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const value: unknown = JSON.parse(window.localStorage.getItem(legacyPendingAttachmentKey) ?? "null");
+    if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+    const record = value as Record<string, unknown>;
+    const intent = record.intent;
+    if (intent === null || typeof intent !== "object" || Array.isArray(intent)) return null;
+    const parameters = (intent as Record<string, unknown>).parameters;
+    if (
+      Object.keys(intent).length !== 2
+      || typeof (intent as Record<string, unknown>).idempotencyKey !== "string"
+      || !/^[A-Za-z0-9_-]{21}[AQgw]$/u.test((intent as Record<string, unknown>).idempotencyKey as string)
+      || parameters === null
+      || typeof parameters !== "object"
+      || Array.isArray(parameters)
+      || Object.keys(parameters).length !== 4
+      || typeof (parameters as Record<string, unknown>).offeringPublicId !== "string"
+      || typeof (parameters as Record<string, unknown>).units !== "string"
+      || typeof (parameters as Record<string, unknown>).tinybars !== "string"
+      || typeof (parameters as Record<string, unknown>).purchaseIntentId !== "string"
+      || typeof record.transactionHash !== "string"
+      || !/^0x[0-9a-f]{64}$/u.test(record.transactionHash)
+    ) return null;
+    return { intent: intent as LegacyPendingAttachment["intent"], transactionHash: record.transactionHash as `0x${string}` };
+  } catch { return null; }
+}
+
+function admittedPaymentRecord(value: unknown): BackingPaymentRecord | null {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  if ((record.status !== "CONFIRMED" && record.status !== "REJECTED" && record.status !== "SUBMITTED" && record.status !== "OUTCOME_UNKNOWN")
+    || typeof record.transactionHash !== "string" || !/^0x[0-9a-f]{64}$/u.test(record.transactionHash)
+    || typeof record.tinybars !== "string" || !/^(?:0|[1-9][0-9]*)$/u.test(record.tinybars)) return null;
+  return { status: record.status, transactionHash: record.transactionHash as `0x${string}`, tinybars: record.tinybars };
 }
 
 function recoveryFrozenIntent(intent: BackingIntent): FrozenBackingIntentInput {
@@ -159,7 +198,10 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   const [notice, setNotice] = useState<string | null>(null);
   const [payment, setPayment] = useState<BackingPaymentRecord | null>(initialPayment.kind === "FOUND" ? initialPayment.payment : null);
   const [pending, setPending] = useState<PendingAttachment | null>(recoveredPending);
+  const [legacyPending, setLegacyPending] = useState<LegacyPendingAttachment | null>(null);
+  const [recoveringLegacyPayment, setRecoveringLegacyPayment] = useState(false);
   const sendingRef = useRef(false);
+  const legacyRecoveryInFlight = useRef(false);
   const validation = validateUnits(offering, unitsInput);
   const label = payment?.status === "CONFIRMED" ? "payment_confirmed" : payment?.status === "REJECTED" ? "payment_rejected" : backingLifecycleLabels[view.kind];
   const committed = request ?? ("intent" in view ? view.intent : null);
@@ -167,6 +209,11 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   const paymentReadUnavailable = initialPayment.kind === "UNAVAILABLE";
   const locked = paymentReadUnavailable || (payment !== null && !resumedReservation) || view.kind !== "choosing" || request !== null || preparing;
   const dashboardMatchesWallet = connection !== null && dashboardAddress !== null && connection.account === dashboardAddress;
+  const canRecoverLegacyPayment = legacyPending !== null
+    && dashboardMatchesWallet
+    && pending === null
+    && legacyPending.intent.parameters.offeringPublicId === offering.offeringPublicId
+    && (payment === null || payment.status === "PREPARED");
   const canPrepare = offering.fundingOpen && initialPayment.kind === "NONE" && payment === null && validation.ok && acknowledged && dashboardMatchesWallet && !locked;
   const readoutUnits = committed !== null ? committed.units : validation.ok ? validation.units : null;
   const readoutTinybars = committed !== null ? committed.tinybars : validation.ok ? paymentTinybars(offering, validation.units) : null;
@@ -174,6 +221,10 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
     ? "/explore/riskscan/back"
     : `/explore/provider/${encodeURIComponent(offering.offeringPublicId)}/back`;
   const signInHref = `/sign-in?returnTo=${encodeURIComponent(backingPath)}`;
+
+  useEffect(() => {
+    setLegacyPending(dashboardMatchesWallet ? legacyPendingAttachment() : null);
+  }, [dashboardMatchesWallet, connection?.account, connection?.chainId, connection?.generation]);
 
   async function prepare() {
     if (!validation.ok || !canPrepare) return;
@@ -208,21 +259,43 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
       });
       if (!response.ok) throw new Error("backing payment record unavailable");
       const value: unknown = await response.json();
-      if (value !== null && typeof value === "object" && !Array.isArray(value)) {
-        const record = value as Record<string, unknown>;
-        if ((record.status === "CONFIRMED" || record.status === "REJECTED" || record.status === "SUBMITTED" || record.status === "OUTCOME_UNKNOWN")
-          && typeof record.transactionHash === "string" && /^0x[0-9a-f]{64}$/u.test(record.transactionHash)
-          && typeof record.tinybars === "string" && /^(?:0|[1-9][0-9]*)$/u.test(record.tinybars)) {
-          setPayment({ status: record.status, transactionHash: record.transactionHash as `0x${string}`, tinybars: record.tinybars });
-          try { window.localStorage.removeItem(pendingAttachmentKey(dashboardAddress ?? "", offering.offeringPublicId, intent.idempotencyKey)); } catch { /* recovery storage is best effort only */ }
-          try { window.localStorage.removeItem(preparedIntentKey(dashboardAddress ?? "", offering.offeringPublicId, intent.idempotencyKey)); } catch { /* recovery storage is best effort only */ }
-          setPending(null);
-          return;
-        }
-      }
-      throw new Error("invalid backing payment record");
+      const payment = admittedPaymentRecord(value);
+      if (payment === null) throw new Error("invalid backing payment record");
+      setPayment(payment);
+      try { window.localStorage.removeItem(pendingAttachmentKey(dashboardAddress ?? "", offering.offeringPublicId, intent.idempotencyKey)); } catch { /* recovery storage is best effort only */ }
+      try { window.localStorage.removeItem(preparedIntentKey(dashboardAddress ?? "", offering.offeringPublicId, intent.idempotencyKey)); } catch { /* recovery storage is best effort only */ }
+      setPending(null);
     } catch {
       setNotice("Payment was submitted, but its server status could not be recorded. Retry verification only; nothing is sent again.");
+    }
+  }
+
+  async function recoverLegacyPayment(): Promise<void> {
+    if (!canRecoverLegacyPayment || legacyPending === null || connection === null || connection.account !== dashboardAddress || legacyRecoveryInFlight.current) return;
+    const legacy = legacyPending;
+    legacyRecoveryInFlight.current = true;
+    setRecoveringLegacyPayment(true);
+    setNotice(null);
+    try {
+      const response = await fetch("/api/backing/payment", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ attemptPublicId: legacy.intent.idempotencyKey, transactionHash: legacy.transactionHash, parameters: legacy.intent.parameters }),
+      });
+      if (!response.ok) throw new Error("legacy recovery unavailable");
+      const value: unknown = await response.json();
+      const payment = admittedPaymentRecord(value);
+      if (payment === null) throw new Error("invalid legacy recovery record");
+      const active = connectionRef.current;
+      if (active.status !== "connected" || active.account !== connection.account || active.account !== dashboardAddress || active.chainId !== 296) return;
+      setPayment(payment);
+      try { window.localStorage.removeItem(legacyPendingAttachmentKey); } catch { /* the admitted record remains server-side */ }
+      setLegacyPending(null);
+    } catch {
+      setNotice("The legacy transaction was not admitted for this signed dashboard wallet. Nothing was sent and its local evidence was retained.");
+    } finally {
+      legacyRecoveryInFlight.current = false;
+      setRecoveringLegacyPayment(false);
     }
   }
 
@@ -484,6 +557,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
           </div>
         ) : null}
         {pending !== null && payment?.status !== "CONFIRMED" && payment?.status !== "REJECTED" ? <Button variant="outline" onClick={() => void persistPayment(pending.intent, pending.transactionHash)}>Attach recorded transaction</Button> : null}
+        {canRecoverLegacyPayment ? <Button variant="outline" disabled={recoveringLegacyPayment} aria-disabled={recoveringLegacyPayment} onClick={() => void recoverLegacyPayment()}>Check legacy recorded transaction</Button> : null}
         {payment !== null && hashscanTransactionUrl(payment.transactionHash) !== null ? (
           <a href={hashscanTransactionUrl(payment.transactionHash)!} target="_blank" rel="noreferrer" className="inline-flex text-sm font-semibold text-primary hover:text-brand-purple">View on HashScan</a>
         ) : null}
