@@ -82,7 +82,6 @@ export function AtsCreateAction({
 }) {
   const wallet = useTool402Wallet();
   const walletRef = useRef(wallet);
-  walletRef.current = wallet;
   const currentWallet = stageBWalletContext(wallet);
   const publicClient = usePublicClient({ chainId: 296 });
   const { mutateAsync: sendTransaction } = useSendTransaction({ mutation: { retry: false } });
@@ -96,23 +95,54 @@ export function AtsCreateAction({
   const [recoveryResolvedFor, setRecoveryResolvedFor] = useState<ControllerContext | null>(null);
   const [submittedFor, setSubmittedFor] = useState<ControllerContext | null>(null);
   const [, setInFlight] = useState<ControllerContext | null>(null);
+  const [, setControllerVersion] = useState(0);
 
   const nextControllerContext = { preparedAttemptPublicId, selectedToolPublicId, wallet: currentWallet };
-  if (
-    controllerContext.current.selectedToolPublicId !== selectedToolPublicId
-    || controllerContext.current.preparedAttemptPublicId !== preparedAttemptPublicId
-  ) {
-    controller.current = null;
-    actionInFlight.current = null;
-    sessionChanged.current = false;
-    controllerContext.current = nextControllerContext;
-  } else if (controller.current === null) {
-    controllerContext.current = nextControllerContext;
-  } else if (!isSameControllerContext(controllerContext.current, nextControllerContext)) {
-    sessionChanged.current = true;
-  }
+  const contextMatchesRender = isSameControllerContext(controllerContext.current, nextControllerContext);
+  const currentRecoveryScope = recoveryScope(nextControllerContext);
 
-  const currentRecoveryScope = recoveryScope(controllerContext.current);
+  useEffect(() => {
+    walletRef.current = wallet;
+  }, [wallet]);
+
+  useEffect(() => {
+    let changed = false;
+    if (
+      controllerContext.current.selectedToolPublicId !== selectedToolPublicId
+      || controllerContext.current.preparedAttemptPublicId !== preparedAttemptPublicId
+    ) {
+      controller.current = null;
+      actionInFlight.current = null;
+      sessionChanged.current = false;
+      controllerContext.current = nextControllerContext;
+      changed = true;
+    } else if (controller.current === null) {
+      controllerContext.current = nextControllerContext;
+      changed = true;
+    } else if (!isSameControllerContext(controllerContext.current, nextControllerContext)) {
+      sessionChanged.current = true;
+      changed = true;
+    }
+
+    if (controller.current === null && currentWallet !== null && publicClient !== undefined && (!selectedTool || configuration !== undefined)) {
+      const bridge = createStageBBrowserProviderBridge({
+        wallet: currentWallet,
+        readCurrentWallet: () => stageBWalletContext(walletRef.current),
+        sendTransaction: (request) => sendTransaction(request),
+        getTransactionReceipt: ({ hash }) => publicClient.getTransactionReceipt({ hash }),
+        fetch,
+        configuration,
+      });
+      controller.current = Object.freeze({
+        wallet: currentWallet,
+        execute: bridge.execute,
+        recover: bridge.recover,
+      });
+      changed = true;
+    }
+    if (changed) setControllerVersion((version) => version + 1);
+  }, [configuration, currentWallet?.address, currentWallet?.connectorId, currentWallet?.generation, preparedAttemptPublicId, publicClient, selectedTool, selectedToolPublicId, sendTransaction]);
+
   useEffect(() => {
     if (currentRecoveryScope !== null) {
       const hash = readStageBRecovery(currentRecoveryScope);
@@ -121,22 +151,6 @@ export function AtsCreateAction({
     }
     setRecoveryResolvedFor(controllerContext.current);
   }, [currentRecoveryScope?.address, currentRecoveryScope?.preparedAttemptPublicId, currentRecoveryScope?.toolPublicId]);
-
-  if (controller.current === null && currentWallet !== null && publicClient !== undefined && (!selectedTool || configuration !== undefined)) {
-    const bridge = createStageBBrowserProviderBridge({
-      wallet: currentWallet,
-      readCurrentWallet: () => stageBWalletContext(walletRef.current),
-      sendTransaction: (request) => sendTransaction(request),
-      getTransactionReceipt: ({ hash }) => publicClient.getTransactionReceipt({ hash }),
-      fetch,
-      configuration,
-    });
-    controller.current = Object.freeze({
-      wallet: currentWallet,
-      execute: bridge.execute,
-      recover: bridge.recover,
-    });
-  }
 
   const terminalForCurrentContext = terminalOutcome !== null && isSameControllerContext(terminalOutcome, controllerContext.current);
   const currentRecovery = recovery !== null && isSameControllerContext(recovery.context, controllerContext.current)
@@ -147,7 +161,7 @@ export function AtsCreateAction({
   const publicAtsExecutionBlocked = selectedTool;
   const recoveryAvailable = stageTwoDone && currentWallet !== null && (!selectedTool || configuration !== undefined) && !hasCandidate && !sessionChanged.current && controller.current !== null;
   const recoveryStorageStatus = currentRecoveryScope === null ? "unavailable" : stageBRecoveryStatus(currentRecoveryScope);
-  const candidateActionAvailable = recoveryAvailable && !publicAtsExecutionBlocked && recoveryStorageStatus !== "unavailable";
+  const candidateActionAvailable = contextMatchesRender && recoveryAvailable && !publicAtsExecutionBlocked && recoveryStorageStatus !== "unavailable";
   const recoveryResolved = recoveryResolvedFor !== null && isSameControllerContext(recoveryResolvedFor, controllerContext.current);
   const submitted = submittedFor !== null && isSameControllerContext(submittedFor, controllerContext.current);
   const enabled = candidateActionAvailable && recoveryResolved && !submitted && !terminalForCurrentContext && !inFlightForCurrentContext && currentRecoveryScope !== null;

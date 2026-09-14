@@ -22,14 +22,15 @@ function isChallenge(value: unknown): value is Readonly<{ message: string; chall
   );
 }
 
-function isAuthenticated(value: unknown): boolean {
+function authenticatedSessionIssuedAt(value: unknown): string | null {
   return (
     typeof value === "object" &&
     value !== null &&
     Object.getPrototypeOf(value) === Object.prototype &&
-    Object.keys(value).length === 1 &&
-    (value as { outcome?: unknown }).outcome === "authenticated"
-  );
+    Object.keys(value).length === 2 &&
+    (value as { outcome?: unknown }).outcome === "authenticated" &&
+    typeof (value as { sessionIssuedAt?: unknown }).sessionIssuedAt === "string"
+  ) ? (value as { sessionIssuedAt: string }).sessionIssuedAt : null;
 }
 
 async function postJson(path: string, body: object): Promise<unknown> {
@@ -49,12 +50,14 @@ async function postJson(path: string, body: object): Promise<unknown> {
   }
 }
 
-async function endStaleDashboardSession(): Promise<void> {
+async function endStaleDashboardSession(address: string, issuedAt: string): Promise<void> {
   const response = await fetch("/api/auth/logout", {
     method: "POST",
+    headers: { "content-type": "application/json" },
     credentials: "same-origin",
+    body: JSON.stringify({ address, issuedAt }),
   });
-  if (response.status !== 204) throw new Error("stale dashboard session could not be cleared");
+  if (response.status !== 204 && response.status !== 409) throw new Error("stale dashboard session could not be cleared");
 }
 
 async function serializeDashboardSessionMutation<T>(operation: () => Promise<T>): Promise<T> {
@@ -135,12 +138,13 @@ function MetaMaskSignInButton({
           signature,
           challenge: challenge.challenge,
         });
-        if (!isCurrentConnection(readCurrentConnection(), connection)) {
-          await endStaleDashboardSession();
-          throw new Error("wallet session changed");
-        }
-        if (!isAuthenticated(verification)) {
+        const sessionIssuedAt = authenticatedSessionIssuedAt(verification);
+        if (sessionIssuedAt === null) {
           throw new Error("verification rejected");
+        }
+        if (!isCurrentConnection(readCurrentConnection(), connection)) {
+          await endStaleDashboardSession(address, sessionIssuedAt);
+          throw new Error("wallet session changed");
         }
 
         router.replace(returnTo ?? dashboardTourHref(tour, demoStep));

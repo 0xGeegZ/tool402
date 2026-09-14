@@ -32,7 +32,7 @@ test("mounts the dashboard session synchronizer from the server-validated dashbo
     readFile(navigationUrl, "utf8"),
   ]);
   assert.match(layout, /import\s*\{\s*DashboardSessionSync\s*\}\s*from\s*["'][^"']*dashboard-session-sync["']/u);
-  assert.equal((layout.match(/<DashboardSessionSync\s+address=\{session\.address\}\s*>/gu) ?? []).length, 1);
+  assert.equal((layout.match(/<DashboardSessionSync\s+address=\{session\.address\}\s+issuedAt=\{session\.issuedAt\}\s*>/gu) ?? []).length, 1);
   assert.doesNotMatch(navigation, /\bDashboardSessionSync\b/u);
 });
 
@@ -128,9 +128,9 @@ async function loadSynchronizer({
     setWallet(next) {
       Object.assign(wallet, next);
     },
-    render(address) {
+    render(address, issuedAt = "2026-09-14T10:00:00.000Z") {
       cursor = 0;
-      const tree = module.exports.DashboardSessionSync({ address, children: "dashboard content" });
+      const tree = module.exports.DashboardSessionSync({ address, issuedAt, children: "dashboard content" });
       for (const effect of effects) {
         if (effect?.pending) {
           effect.pending = false;
@@ -153,10 +153,13 @@ function visibleText(node) {
 }
 
 function assertLogout(harness) {
-  assert.deepEqual(harness.requests.map(([url, init]) => [url, { ...init }]), [["/api/auth/logout", {
-    method: "POST",
-    credentials: "same-origin",
-  }]]);
+  assert.equal(harness.requests.length, 1);
+  const [url, init] = harness.requests[0];
+  assert.equal(url, "/api/auth/logout");
+  assert.equal(init.method, "POST");
+  assert.equal(init.credentials, "same-origin");
+  assert.equal(init.headers["content-type"], "application/json");
+  assert.equal(init.body, '{"address":"0xc89f87052c3e080b4a9b021d4930055031ef378e","issuedAt":"2026-09-14T10:00:00.000Z"}');
   assert.deepEqual(harness.navigations, [["replace", "/sign-in"]]);
 }
 

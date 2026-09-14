@@ -3,6 +3,7 @@ import {
   readDashboardAuthCookieNames,
   createChallenge as createCoreChallenge,
   readDashboardAuthOrigin,
+  readDashboardSession,
   SESSION_MAX_AGE_SECONDS,
   type DashboardAuthEnvironment,
   verifyChallenge as verifyCoreChallenge,
@@ -122,7 +123,7 @@ export async function handleVerifyPost(request: Request, env: DashboardAuthEnvir
       env,
     }, coreDependencies(dependencies));
     if (verification.kind !== "authenticated" || !isBoundedCookieValue(verification.sessionCookie)) return rejected(settings, true);
-    return response(200, { outcome: "authenticated" }, [
+    return response(200, { outcome: "authenticated", sessionIssuedAt: verification.sessionIssuedAt }, [
       clearCookie(settings.cookieNames.challenge, settings.cookieNames.secure),
       cookie(settings.cookieNames.session, verification.sessionCookie, SESSION_MAX_AGE_SECONDS, settings.cookieNames.secure),
     ]);
@@ -134,7 +135,12 @@ export async function handleVerifyPost(request: Request, env: DashboardAuthEnvir
 export async function handleLogoutPost(request: Request, env: DashboardAuthEnvironment): Promise<Response> {
   const settings = configuredAuth(env);
   if (settings === null) return notConfigured();
-  if (request.headers.get("origin") !== settings.origin) return rejected(settings);
+  const body = await exactJsonBody(request, ["address", "issuedAt"]);
+  if (body === null || request.headers.get("origin") !== settings.origin) return rejected(settings);
+  const session = await readDashboardSession(challengeCookieFrom(request, settings.cookieNames.session), env);
+  if (session === null || session.address !== body.address || session.issuedAt !== body.issuedAt) {
+    return response(409, { outcome: "not_current" });
+  }
   const headers = new Headers({ "cache-control": "no-store" });
   headers.append("set-cookie", clearCookie(settings.cookieNames.challenge, settings.cookieNames.secure));
   headers.append("set-cookie", clearCookie(settings.cookieNames.session, settings.cookieNames.secure));

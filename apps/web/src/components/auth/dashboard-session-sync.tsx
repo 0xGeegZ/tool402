@@ -7,9 +7,11 @@ import { useTool402Wallet } from "../wallet/use-tool402-wallet";
 
 export function DashboardSessionSync({
   address,
+  issuedAt,
   children,
 }: {
   readonly address: string;
+  readonly issuedAt: string;
   readonly children: ReactNode;
 }) {
   const { connection, resolved } = useTool402Wallet();
@@ -28,9 +30,15 @@ export function DashboardSessionSync({
     const logoutGeneration = connectionRef.current.generation;
     void fetch("/api/auth/logout", {
       method: "POST",
+      headers: { "content-type": "application/json" },
       credentials: "same-origin",
+      body: JSON.stringify({ address, issuedAt }),
     }).then((response) => {
       if (connectionRef.current.generation !== logoutGeneration) {
+        setLogoutInvalidated(true);
+        return;
+      }
+      if (response.status === 409) {
         setLogoutInvalidated(true);
         return;
       }
