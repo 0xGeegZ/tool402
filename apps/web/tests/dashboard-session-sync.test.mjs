@@ -39,6 +39,7 @@ test("mounts the dashboard session synchronizer from the server-validated dashbo
 async function loadSynchronizer({
   responseStatus = 204,
   reject = false,
+  deferLogout = false,
   wallet = {
     connection: { status: "disconnected", account: undefined, chainId: undefined, connector: undefined },
     resolved: true,
@@ -58,6 +59,7 @@ async function loadSynchronizer({
   const connectionEffects = [];
   const requests = [];
   const navigations = [];
+  let resolveLogout;
   let cursor = 0;
   const react = {
     useRef(initial) {
@@ -94,6 +96,7 @@ async function loadSynchronizer({
     },
     fetch: async (...arguments_) => {
       requests.push(arguments_);
+      if (deferLogout) return new Promise((resolve) => { resolveLogout = () => resolve({ status: responseStatus }); });
       if (reject) throw new Error("network unavailable");
       return { status: responseStatus };
     },
@@ -118,6 +121,9 @@ async function loadSynchronizer({
     navigations,
     disconnect() {
       connectionEffects.at(-1)?.onDisconnect?.();
+    },
+    resolveLogout() {
+      resolveLogout?.();
     },
     setWallet(next) {
       Object.assign(wallet, next);
@@ -195,6 +201,25 @@ implementedTest("logs out after the selected MetaMask account changes", async ()
   await flushMicrotasks();
 
   assertLogout(harness);
+});
+
+implementedTest("does not redirect when a stale logout completes after the wallet recovers", async () => {
+  const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const harness = await loadSynchronizer({ deferLogout: true, wallet: { connection: { status: "connected", account: address, chainId: 296, connector: { id: "metaMask" }, generation: 1 }, resolved: true } });
+
+  harness.render(address);
+  harness.setWallet({ connection: { status: "connected", account: "0x0000000000000000000000000000000000000402", chainId: 296, connector: { id: "metaMask" }, generation: 2 } });
+  harness.render(address);
+  await flushMicrotasks();
+  assert.equal(harness.requests.length, 1);
+
+  harness.setWallet({ connection: { status: "connected", account: address, chainId: 296, connector: { id: "metaMask" }, generation: 3 } });
+  harness.render(address);
+  harness.resolveLogout();
+  await flushMicrotasks();
+
+  assert.deepEqual(harness.navigations, []);
+  assert.match(visibleText(harness.render(address)), /changed while ending/u);
 });
 
 implementedTest("logs out a restored dashboard session without a MetaMask account", async () => {

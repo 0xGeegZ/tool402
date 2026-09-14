@@ -29,7 +29,7 @@ async function loadHook(hooks, hydrated = true) {
     exports: module.exports,
     module,
     require(specifier) {
-      if (specifier === "react") return { useRef: (initial) => ({ current: initial }) };
+      if (specifier === "react") return { useEffect: () => {}, useRef: (initial) => ({ current: initial }) };
       if (specifier === "wagmi") return hooks;
       if (specifier === "./wallet-providers") return { useWalletHydrated: () => hydrated };
       assert.fail(`unexpected hook import: ${specifier}`);
@@ -90,6 +90,15 @@ test("holds the UI in a resolving state until Wagmi persistence hydrates", async
 
   assert.deepEqual({ ...wallet.state }, { kind: "resolving" });
   assert.equal(wallet.resolved, false);
+});
+
+test("bounds only a passive connection that remains pending after hydration", async () => {
+  const source = await readFile(join(appRoot, hookPath), "utf8");
+
+  assert.match(source, /export const passiveConnectionTimeoutMs = 5_000/u);
+  assert.match(source, /!hydrated \|\| explicitConnectionRef\.current/u);
+  assert.match(source, /window\.setTimeout\(\(\) => \{ void disconnectRef\.current\(\); \}, passiveConnectionTimeoutMs\)/u);
+  assert.match(source, /explicitConnectionRef\.current = true/u);
 });
 
 test("can clear a connection attempt that has not established a connector", async () => {
@@ -163,7 +172,7 @@ test("removes the legacy wallet store and mounts only the shared Wagmi provider"
   ]);
 
   assert.match(hook, /from\s+["']wagmi["']/u);
-  assert.doesNotMatch(hook, /(?:useState|useEffect|accountsChanged|chainChanged|eip6963|window\.ethereum)/u);
+  assert.doesNotMatch(hook, /(?:useState|accountsChanged|chainChanged|eip6963|window\.ethereum)/u);
   assert.match(layout, /<WalletProviders>/u);
   assert.doesNotMatch(layout, /WalletSessionProvider|wallet-session/u);
   for (const path of legacyPaths) assert.equal(existsSync(join(appRoot, path)), false, `legacy wallet path remains: ${path}`);

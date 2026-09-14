@@ -14,7 +14,10 @@ export function DashboardSessionSync({
 }) {
   const { connection, resolved } = useTool402Wallet();
   const logoutStarted = useRef(false);
+  const connectionRef = useRef(connection);
+  connectionRef.current = connection;
   const [logoutFailed, setLogoutFailed] = useState(false);
+  const [logoutInvalidated, setLogoutInvalidated] = useState(false);
   const currentSessionMatches = connection.status === "connected"
     && connection.chainId === 296
     && connection.account === address;
@@ -22,10 +25,15 @@ export function DashboardSessionSync({
   const endSession = useCallback(() => {
     if (logoutStarted.current) return;
     logoutStarted.current = true;
+    const logoutGeneration = connectionRef.current.generation;
     void fetch("/api/auth/logout", {
       method: "POST",
       credentials: "same-origin",
     }).then((response) => {
+      if (connectionRef.current.generation !== logoutGeneration) {
+        setLogoutInvalidated(true);
+        return;
+      }
       if (response.status !== 204) {
         setLogoutFailed(true);
         return;
@@ -46,17 +54,23 @@ export function DashboardSessionSync({
 
   useEffect(() => {
     if (!resolved) return;
-    if (currentSessionMatches) return;
+    if (currentSessionMatches) {
+      if (logoutStarted.current) setLogoutInvalidated(true);
+      return;
+    }
     endSession();
   }, [currentSessionMatches, endSession, resolved]);
 
-  if (!resolved || currentSessionMatches) return children;
+  if (!resolved || (currentSessionMatches && !logoutInvalidated)) return children;
   return (
     <div role="alert" aria-live="polite" className="p-6 text-sm text-muted-foreground">
-      <p>{logoutFailed
+      <p>{logoutInvalidated
+        ? "Your wallet changed while ending the dashboard session. Reload the page to check the signed session."
+        : logoutFailed
         ? "Your dashboard session could not be ended safely. Retry ending it before continuing."
         : "Ending the dashboard session safely…"}</p>
-      {logoutFailed ? <button type="button" onClick={retryLogout}>Retry ending dashboard session</button> : null}
+      {logoutInvalidated ? <button type="button" onClick={() => window.location.reload()}>Reload dashboard session</button> : null}
+      {logoutFailed && !logoutInvalidated ? <button type="button" onClick={retryLogout}>Retry ending dashboard session</button> : null}
     </div>
   );
 }
