@@ -6,8 +6,8 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 import { DashboardNavigation } from "../components/auth/dashboard-navigation";
 import { DemoTourBar } from "../components/demo/demo-tour-bar";
-import { LocalNavigation } from "../components/discovery/local-navigation";
 import { Logo } from "../components/tool402/logo";
+import { buttonVariants } from "../components/ui/button";
 import { WalletIsland } from "../components/wallet/wallet-connect";
 import { WalletSessionProvider } from "../components/wallet/wallet-session";
 
@@ -40,10 +40,10 @@ export default function RootLayout({
                 <Logo />
               </Link>
               <div className="flex flex-wrap items-center justify-end gap-2">
-                <Suspense fallback={<LocalNavigation />}>
+                <Suspense fallback={null}>
                   <DashboardNavigation />
                 </Suspense>
-                <Link href="/provider/deploy" className="hidden min-h-9 touch-target items-center rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-brand-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:inline-flex">
+                <Link href="/provider/deploy" className={buttonVariants({ variant: "outline", size: "sm", shape: "pill", className: "hidden whitespace-nowrap lg:inline-flex" })}>
                   Prepare a tool
                 </Link>
                 <WalletIsland />

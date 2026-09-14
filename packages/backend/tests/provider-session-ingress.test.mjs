@@ -82,6 +82,61 @@ implementedTest("accepts one valid provider-session assertion and binds its requ
   assert.deepEqual(allocations, [{ canonicalSignerAddress, requestId }]);
 });
 
+implementedTest("forwards a signed self-service ensure assertion only to the private membership mutation", async () => {
+  const { handleProviderSessionIngressForTest } = await import(ingressUrl.href);
+  const { request, key } = await signedRequest(JSON.stringify({
+    type: "self_service_ensure", canonicalSignerAddress,
+    sessionExpiresAt: "2026-01-01T08:00:00.000Z",
+  }));
+  const calls = [];
+  const response = await handleProviderSessionIngressForTest({}, request, {
+    nowMilliseconds: () => 1_735_689_600_000,
+    resolveIngressKey: () => key,
+    claimReplay: () => "claimed",
+    allocate: async () => { throw new Error("must not allocate"); },
+    list: async () => { throw new Error("must not list"); },
+    read: async () => { throw new Error("must not read"); },
+    deployment: async () => { throw new Error("must not read deployment"); },
+    backing: async () => { throw new Error("must not back"); },
+    backingReserve: async () => { throw new Error("must not reserve"); },
+    backingRead: async () => { throw new Error("must not read backing"); },
+    ensureSelfService: async (input) => { calls.push(input); return { outcome: "ACTIVE" }; },
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { outcome: "ACTIVE" });
+  assert.deepEqual(calls, [{ canonicalSignerAddress }]);
+});
+
+implementedTest("provisions direct backing idempotently before forwarding only to the server-side term freezer", async () => {
+  const { handleProviderSessionIngressForTest } = await import(ingressUrl.href);
+  const body = JSON.stringify({
+    type: "backing_intent", canonicalSignerAddress, offeringPublicId: "riskscan_revenue_note_demo", units: "10",
+    idempotencyKey: nonce, purchaseIntentId: "ZyXwVuTsRqPoNmLkJiHgFw", expiresAt: "2025-01-01T00:05:00.000Z",
+    sessionExpiresAt: "2025-01-01T08:00:00.000Z",
+  });
+  const { request, key } = await signedRequest(body);
+  const calls = [];
+  const response = await handleProviderSessionIngressForTest({}, request, {
+    nowMilliseconds: () => 1_735_689_600_000,
+    resolveIngressKey: () => key, claimReplay: () => "claimed",
+    allocate: async () => { throw new Error("must not allocate"); },
+    list: async () => { throw new Error("must not list"); },
+    read: async () => { throw new Error("must not read"); },
+    deployment: async () => { throw new Error("must not deploy"); },
+    ensureSelfService: async (input) => { calls.push({ ensure: input }); return { outcome: "ACTIVE" }; },
+    backing: async () => { throw new Error("must not record"); },
+    backingReserve: async () => { throw new Error("must not reserve"); },
+    backingRead: async () => { throw new Error("must not read payment"); },
+    freezeBackingIntent: async (input) => { calls.push(input); return { outcome: "PREPARED" }; },
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { outcome: "PREPARED" });
+  assert.deepEqual(calls, [{ ensure: { canonicalSignerAddress } }, {
+    canonicalSignerAddress, offeringPublicId: "riskscan_revenue_note_demo", units: "10",
+    idempotencyKey: nonce, purchaseIntentId: "ZyXwVuTsRqPoNmLkJiHgFw", expiresAt: "2025-01-01T00:05:00.000Z",
+  }]);
+});
+
 implementedTest("forwards signed backing writes and reload-safe backing reads only after HMAC, expiry, and replay checks", async () => {
   const { handleProviderSessionIngressForTest } = await import(ingressUrl.href);
   const transactionHash = `0x${"ab".repeat(32)}`;

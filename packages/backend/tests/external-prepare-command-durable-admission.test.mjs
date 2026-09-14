@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { keccak256, stringToHex } from "viem";
+import { canonicalizeRequirements } from "@tool402/core";
 
 import { createProviderToolAtsConfiguration } from "../src/ats/provider-tool-ats-configuration.ts";
 
@@ -20,6 +21,7 @@ function registeredMutationSource(name, nextName) {
   return source.slice(start, end);
 }
 const signer = "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454";
+const selfServiceSigner = "0x1111111111111111111111111111111111111111";
 const now = Date.parse("2026-09-07T19:00:30.000Z");
 const attemptId = "externalPrepareCommandAttempts:accepted";
 const payloadHash = "0xfe32ed7989dfa94699ffc6529b4f5c6214721ef63d4f1a2d08f028366fe19b18";
@@ -133,6 +135,33 @@ function selectedAtsCreateInput(suffix, nonce = "CCCCCCCCCCCCCCCCCCCCCg") {
   return args;
 }
 
+function selectedSelfServiceAtsCreateInput(suffix, nonce = "DDDDDDDDDDDDDDDDDDDDDQ") {
+  const args = m47AtsCreateInput();
+  const toolPublicId = `tool_${suffix}`;
+  const principalPublicId = `self_service_${selfServiceSigner.slice(2)}`;
+  const configuration = createProviderToolAtsConfiguration({
+    toolPublicId,
+    subjectPublicId: toolPublicId,
+    title: "RiskScan Revenue Note",
+    canonicalSignerAddress: selfServiceSigner,
+  });
+  args.canonicalSignerAddress = selfServiceSigner;
+  args.principalPublicId = principalPublicId;
+  args.authorityVersion = "public_testnet_v1";
+  args.role = "ISSUER";
+  args.nonce = nonce;
+  args.replayIdentity = `tool402:wallet-command:v1:296:${selfServiceSigner}:${nonce}`;
+  args.payload = {
+    ...args.payload,
+    subjectPublicId: toolPublicId,
+    expectedTarget: configuration.atsCreateConfiguration.expectedTarget,
+    canonicalParametersHash: configuration.canonicalParametersHash,
+    idempotencyKey: nonce,
+  };
+  args.payloadHash = hashPayload(args.payload);
+  return args;
+}
+
 function selectedProviderTool(args, suffix = args.payload.subjectPublicId.slice("tool_".length)) {
   const toolPublicId = `tool_${suffix}`;
   return {
@@ -201,12 +230,15 @@ function selectedOffering(args, suffix, overrides = {}) {
 function selectedAtomicDatabase({
   args,
   offerings,
+  authorities = [authority(args)],
+  selfServiceAccounts = [],
   providerTools = [selectedProviderTool(args)],
   claims = [],
   attempts = [],
 }) {
   const rows = {
-    commandAuthorities: [authority(args)],
+    commandAuthorities: structuredClone(authorities),
+    selfServiceAccounts: structuredClone(selfServiceAccounts),
     providerTools: structuredClone(providerTools),
     offerings: structuredClone(offerings),
     externalPrepareCommandReplayClaims: structuredClone(claims),
@@ -277,8 +309,8 @@ function selectedAtomicDatabase({
 }
 
 // The double preserves inserts so a second real handler invocation observes durable replay.
-function database({ authorities = [authority()], claims = [], attempts = [] } = {}) {
-  const rows = { commandAuthorities: [...authorities], externalPrepareCommandReplayClaims: [...claims], externalPrepareCommandAttempts: [...attempts] };
+function database({ authorities = [authority()], selfServiceAccounts = [], backingIntents = [], claims = [], attempts = [] } = {}) {
+  const rows = { commandAuthorities: [...authorities], selfServiceAccounts: [...selfServiceAccounts], backingIntents: [...backingIntents], externalPrepareCommandReplayClaims: [...claims], externalPrepareCommandAttempts: [...attempts] };
   const reads = [];
   const writes = [];
   const accesses = [];
@@ -508,6 +540,83 @@ test("keeps HEDERA_FUNDING on the enabled BACKER durable path", async (t) => {
   assert.deepEqual(replay, { replayIdentity: args.replayIdentity, outcome: "NEW", attemptId, claimedAt: replay.claimedAt });
 });
 
+test("does not admit self-service HEDERA_FUNDING until offering-scoped terms are durably frozen", async (t) => {
+  const mutation = await loadMutation(t);
+  const principalPublicId = `self_service_${selfServiceSigner.slice(2)}`;
+  const args = input({
+    canonicalSignerAddress: selfServiceSigner,
+    principalPublicId,
+    role: "BACKER",
+    authorityVersion: "public_testnet_v1",
+    replayIdentity: `tool402:wallet-command:v1:296:${selfServiceSigner}:AAAAAAAAAAAAAAAAAAAAAA`,
+  });
+  const db = database({
+    authorities: [],
+    selfServiceAccounts: [{
+      _id: "selfServiceAccounts:active", _creationTime: now - 1,
+      canonicalSignerAddress: selfServiceSigner, chainId: 296, principalPublicId,
+      policyVersion: "public_testnet_v1", status: "ACTIVE", createdAt: 1n, updatedAt: 1n,
+    }],
+  });
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
+    await assert.rejects(() => mutation._handler(db.ctx, args), TypeError);
+  } finally {
+    process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous;
+  }
+  assert.deepEqual(db.writes, []);
+});
+
+test("admits self-service HEDERA_FUNDING only when the exact frozen attempt binds signer, recipient, and terms", async (t) => {
+  const mutation = await loadMutation(t);
+  const principalPublicId = `self_service_${selfServiceSigner.slice(2)}`;
+  const parameters = { offeringPublicId: "offering_public", units: "25", tinybars: "250", purchaseIntentId: "ZyXwVuTsRqPoNmLkJiHgFw" };
+  const args = input({
+    canonicalSignerAddress: selfServiceSigner, principalPublicId, role: "BACKER", authorityVersion: "public_testnet_v1",
+    replayIdentity: `tool402:wallet-command:v1:296:${selfServiceSigner}:AAAAAAAAAAAAAAAAAAAAAA`,
+  });
+  args.payload = { ...args.payload, subjectPublicId: `tool_${"c".repeat(32)}` };
+  args.payload = {
+    ...args.payload, expectedTarget: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    canonicalParametersHash: keccak256(new TextEncoder().encode(canonicalizeRequirements(parameters))).slice(2),
+  };
+  args.payloadHash = hashPayload(args.payload);
+  const backingIntent = {
+    _id: "backingIntents:frozen", _creationTime: now - 1,
+    idempotencyKey: args.payload.idempotencyKey, purchaseIntentId: parameters.purchaseIntentId,
+    canonicalSignerAddress: selfServiceSigner, offeringPublicId: parameters.offeringPublicId,
+    offeringVersion: 1, offeringTermsDigest: "c".repeat(64),
+    subjectPublicId: args.payload.subjectPublicId, recipient: args.payload.expectedTarget,
+    units: parameters.units, tinybars: parameters.tinybars,
+    canonicalParametersHash: args.payload.canonicalParametersHash, expiresAt: args.payload.expiresAt, createdAt: 1n,
+  };
+  const activeAccount = {
+    _id: "selfServiceAccounts:active", _creationTime: now - 1,
+    canonicalSignerAddress: selfServiceSigner, chainId: 296, principalPublicId,
+    policyVersion: "public_testnet_v1", status: "ACTIVE", createdAt: 1n, updatedAt: 1n,
+  };
+  const db = database({
+    authorities: [], backingIntents: [backingIntent],
+    selfServiceAccounts: [activeAccount],
+  });
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
+    assert.deepEqual(await mutation._handler(db.ctx, args), { status: "NEW", attemptId, state: "PREPARED" });
+  } finally {
+    process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous;
+  }
+  assert.deepEqual(db.accesses, ["commandAuthorities", "selfServiceAccounts", "backingIntents", "externalPrepareCommandReplayClaims", "externalPrepareCommandAttempts", "externalPrepareCommandAttempts", "externalPrepareCommandReplayClaims"]);
+  const altered = database({ authorities: [], backingIntents: [{ ...backingIntent, recipient: selfServiceSigner }], selfServiceAccounts: [activeAccount] });
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
+    await assert.rejects(() => mutation._handler(altered.ctx, args), TypeError);
+  } finally {
+    process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous;
+  }
+});
+
 test("returns replay before idempotency for all valid stored claim outcomes", async (t) => {
   const mutation = await loadMutation(t);
   for (const outcome of ["NEW", "IDEMPOTENCY_REPLAYED", "IDEMPOTENCY_CONFLICT"]) {
@@ -724,7 +833,7 @@ atomicTest("requires the M47 real-issuer binding after M32 authority revalidatio
     true,
     "the atomic mutation must consume the private M47 binding rather than a caller-selected configuration",
   );
-  const revalidated = atomic.indexOf("revalidateAuthority(authorities[0], bound)");
+  const revalidated = atomic.indexOf("revalidateAuthority(authority, bound)");
   const binding = atomic.indexOf("assertStageBAtsCreateRuntimeBinding(bound)");
   const m33 = atomic.indexOf("assertCurrentAtsPrepareAuthority(bound.payload)");
   const replay = atomic.indexOf('ctx.db.query("externalPrepareCommandReplayClaims")');
@@ -818,6 +927,40 @@ atomicTest("keeps selected Tool B atomic admission and command replay isolated f
   assert.equal(db.writes.length, writesAfterAdmission);
   assert.equal(db.rows.offerings[0].subjectPublicId, `tool_${suffixA}`);
   assert.equal(db.rows.offerings[1].subjectPublicId, `tool_${suffixB}`);
+});
+
+atomicTest("admits an active self-service owner's selected ATS_CREATE without a legacy authority", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now });
+  const { admitAtsCreateAndMarkAssetPending: atomic } = await import(moduleUrl);
+  const suffix = "c".repeat(32);
+  const args = selectedSelfServiceAtsCreateInput(suffix);
+  const db = selectedAtomicDatabase({
+    args,
+    authorities: [],
+    selfServiceAccounts: [{
+      _id: "selfServiceAccounts:active",
+      _creationTime: now - 1_000,
+      canonicalSignerAddress: selfServiceSigner,
+      chainId: 296,
+      principalPublicId: args.principalPublicId,
+      policyVersion: "public_testnet_v1",
+      status: "ACTIVE",
+      createdAt: 1n,
+      updatedAt: 1n,
+    }],
+    offerings: [selectedOffering(args, suffix)],
+  });
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
+    assert.deepEqual(
+      await atomic._handler(db.ctx, args),
+      { status: "NEW", attemptId: "externalPrepareCommandAttempts:selected", state: "PREPARED" },
+    );
+  } finally {
+    process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous;
+  }
+  assert.equal(db.rows.offerings[0].state, "ASSET_PENDING");
 });
 
 atomicTest("rejects M42/M47 payload and authority-context drift before replay or durable activity", async (t) => {

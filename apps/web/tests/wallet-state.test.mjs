@@ -336,7 +336,7 @@ test("keeps the state library free of network, storage, timers, and logging", as
   assert.doesNotMatch(source, /wallet_addEthereumChain|eip6963/u);
 });
 
-test("renders every wallet state from a client island that synchronizes only an explicitly selected session", async () => {
+test("renders every wallet state from a client island that passively restores or explicitly selects a session", async () => {
   const source = [
     await readAppFile("src/components/wallet/wallet-session.tsx"),
     await readAppFile("src/components/wallet/wallet-connect.tsx"),
@@ -368,14 +368,15 @@ test("renders every wallet state from a client island that synchronizes only an 
   assert.match(source, /\buseEffect\b/u);
   assert.equal(
     [...source.matchAll(/discoverMetaMaskProvider\(\s*window\s*\)/gu)].length,
-    1,
-    "provider discovery remains in the explicit Connect or Retry path",
+    2,
+    "provider discovery is limited to initial passive restoration and explicit Connect or Retry",
   );
   assert.match(
     source,
     /async function connect\(approvedIssuerAddress\?: string\)[\s\S]*?discoverMetaMaskProvider\(\s*window\s*\)/u,
   );
-  const effectStart = source.indexOf("useEffect(");
+  const initialEffectStart = source.indexOf("useEffect(");
+  const effectStart = source.indexOf("useEffect(", initialEffectStart + 1);
   assert.notEqual(effectStart, -1);
   const effectBody = extractBracedBody(source, source.indexOf("=>", effectStart));
   const cleanupBinding = effectBody.match(
@@ -407,7 +408,7 @@ test("renders every wallet state from a client island that synchronizes only an 
     new RegExp(`${escapeRegExp(cleanupRef)}\\.current\\?\\.\\s*\\(\\s*\\)`, "u"),
     "local disconnect invokes the shared listener cleanup",
   );
-  const sessionChangeStart = source.indexOf("watchWalletSessionChanges(");
+  const sessionChangeStart = source.lastIndexOf("watchWalletSessionChanges(");
   assert.notEqual(sessionChangeStart, -1);
   const sessionChangeHandler = extractBracedBody(source, sessionChangeStart);
   const connecting = sessionChangeHandler.search(

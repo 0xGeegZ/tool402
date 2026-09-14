@@ -3,6 +3,7 @@ import {
   handleActiveDirectory,
   handleCommandIngress,
   handleOfferingProjection,
+  handlePublicProviderBacking,
 } from "./command_dispatch.ts";
 import { handleProviderSessionIngress } from "./provider_session_ingress.ts";
 
@@ -27,6 +28,11 @@ http.route({
   pathPrefix: "/public/offerings/",
   method: "GET",
   handler: httpActionGeneric(handleOfferingProjection),
+});
+http.route({
+  path: "/public/backing-catalog",
+  method: "GET",
+  handler: httpActionGeneric(handlePublicProviderBacking),
 });
 
 export default http;

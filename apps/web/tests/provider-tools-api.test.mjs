@@ -44,6 +44,17 @@ implementedTest("exposes only the Next route methods and a server-only handler s
   assert.equal(typeof server.handleProviderToolDeploymentRequest, "function");
 });
 
+implementedTest("ensures self-service membership from a sealed dashboard session without a browser request", async () => {
+  const { ensureSelfServiceMembership } = await import(serverUrl.href);
+  const forwarded = [];
+  const outcome = await ensureSelfServiceMembership(environment, "sealed-session", {
+    readSession: async () => ({ address: "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454", issuedAt: "2026-09-12T10:00:00.000Z", expiresAt: "2026-09-12T18:00:00.000Z" }),
+    forward: async (input) => { forwarded.push(input); return new Response(JSON.stringify({ outcome: "ACTIVE" }), { headers: { "content-type": "application/json" } }); },
+  });
+  assert.deepEqual(outcome, { outcome: "ACTIVE" });
+  assert.deepEqual(forwarded, [{ canonicalSignerAddress: "0xbfb8ea59964b307a79d4f0b98201db95e6dfa454", ensureSelfService: true, sessionExpiresAt: "2026-09-12T18:00:00.000Z" }]);
+});
+
 implementedTest("forwards a selected-tool deployment read only after the dashboard session is accepted", async () => {
   const { handleProviderToolDeploymentRequest } = await import(serverUrl.href);
   const toolPublicId = `tool_${"ab".repeat(16)}`;

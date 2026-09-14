@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { encodeAbiParameters, encodeEventTopics } from "viem";
+import { createProviderToolAtsConfiguration } from "../../../packages/backend/src/ats/provider-tool-ats-configuration.ts";
 
 const require = createRequire(import.meta.url);
 const sourceUrl = new URL("../src/lib/ats/factory-deploy-bond.ts", import.meta.url);
@@ -201,6 +202,21 @@ implementedTest("maps every official deployBond tuple field from the accepted St
   assert.equal(Object.isFrozen(request.bondData), true);
   assert.equal(Object.isFrozen(request.bondData.security), true);
   assert.equal(Object.isFrozen(request.factoryRegulationData), true);
+});
+
+implementedTest("binds a selected self-service tool's Factory owner and administrator to its durable wallet", () => {
+  const owner = "0x1111111111111111111111111111111111111111";
+  const configuration = createProviderToolAtsConfiguration({
+    toolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    subjectPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    title: "RiskScan Revenue Note",
+    canonicalSignerAddress: owner,
+  }).atsCreateConfiguration;
+
+  const request = api.buildFactoryDeployBondRequest(configuration, { issuerEvmAddress: owner });
+  assert.equal(request.bondData.security.rbacs[0].members[0], owner);
+  assert.equal(configuration.parameters.diamondOwnerAccount, owner);
+  assert.throws(() => api.buildFactoryDeployBondRequest(configuration, { issuerEvmAddress: issuer }));
 });
 
 implementedTest("encodes the exact official deployBond selector without a handwritten ABI", () => {
