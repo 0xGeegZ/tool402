@@ -548,12 +548,23 @@ implementedProviderTest("runs a deterministic mock-wallet journey from connect t
     const refreshedConfig = configModule.getTool402WagmiConfig();
     const refreshedComponents = await journeyComponents(refreshedConfig);
     const refreshedRoot = createRoot(document.getElementById("root"));
+    const refreshedObservations = [];
+    function RefreshedProbe({ children }) {
+      const connection = useConnection();
+      refreshedObservations.push({
+        account: connection.address?.toLowerCase(),
+        restoring: refreshedComponents.usePassiveWalletRestore(),
+        status: connection.status,
+      });
+      return children;
+    }
     await act(async () => {
-      refreshedRoot.render(React.createElement(refreshedComponents.WalletProviders, null, React.createElement(refreshedComponents.DashboardSessionSync, {
+      refreshedRoot.render(React.createElement(refreshedComponents.WalletProviders, null, React.createElement(RefreshedProbe, null, React.createElement(refreshedComponents.DashboardSessionSync, {
         address,
         issuedAt: "2026-09-14T12:00:00.000Z",
-      }, "signed dashboard")));
+      }, "signed dashboard"))));
     });
+    await until(() => refreshedObservations.some((entry) => entry.restoring === false && entry.status === "connected" && entry.account === address));
     await until(() => document.body.textContent.includes("signed dashboard"));
     await act(async () => { wallet.switchAccount(switchedAddress); });
     await until(() => routes.includes("/sign-in/account-changed"));
