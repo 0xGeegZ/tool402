@@ -11,6 +11,7 @@ const coreUrl = new URL("../src/lib/dashboard-auth/dashboard-auth.ts", import.me
 const clientUrl = new URL("../src/components/auth/metamask-dashboard-sign-in.tsx", import.meta.url);
 const dashboardNavigationUrl = new URL("../src/components/auth/dashboard-navigation.tsx", import.meta.url);
 const signInUrl = new URL("../src/app/sign-in/page.tsx", import.meta.url);
+const accountChangedSignInUrl = new URL("../src/app/sign-in/account-changed/page.tsx", import.meta.url);
 const dashboardLayoutUrl = new URL("../src/app/dashboard/layout.tsx", import.meta.url);
 const rootLayoutUrl = new URL("../src/app/layout.tsx", import.meta.url);
 const localNavigationUrl = new URL("../src/components/discovery/local-navigation.tsx", import.meta.url);
@@ -621,9 +622,16 @@ signInTest("redirects valid sessions and otherwise renders the public sign-in bo
   assert.match(signIn, /redirect\(returnTo \?\? dashboardTourHref\(tour, demoStep\)\)/u);
   assert.match(signIn, /requestedTour === "1"/u);
   assert.match(signIn, /requestedDemoStep/u);
-  assert.match(signIn, /<MetaMaskDashboardSignIn tour=\{tour\} demoStep=\{demoStep\} returnTo=\{returnTo\}/u);
-  assert.match(signIn, /\bMetaMaskDashboardSignIn\b/u);
-  assert.match(signIn, /Unlock your dashboard/u);
+  assert.match(signIn, /<DashboardSignInPrompt tour=\{tour\} demoStep=\{demoStep\} returnTo=\{returnTo\}/u);
+  assert.match(signIn, /\bDashboardSignInPrompt\b/u);
+  assert.doesNotMatch(signIn, /\bswitch\b/u);
+});
+
+signInTest("uses a dedicated sign-in route when the active wallet changed", async () => {
+  const accountChangedSignIn = await readFile(accountChangedSignInUrl, "utf8");
+
+  assert.match(accountChangedSignIn, /<DashboardSignInPrompt\s+accountChanged\s*\/>/u);
+  assert.doesNotMatch(accountChangedSignIn, /\bcookies\(\)|\bredirect\(/u);
 });
 
 dashboardLayoutTest("guards dashboard descendants on the server before rendering them", async () => {

@@ -89,11 +89,6 @@ async function loadSynchronizer({
   const module = { exports: {} };
   runInNewContext(outputText, {
     exports: module.exports,
-    window: {
-      location: {
-        replace: (href) => navigations.push(["replace", href]),
-      },
-    },
     fetch: async (...arguments_) => {
       requests.push(arguments_);
       if (deferLogout) return new Promise((resolve) => { resolveLogout = () => resolve({ status: responseStatus }); });
@@ -108,6 +103,8 @@ async function loadSynchronizer({
           return jsxRuntime;
         case "wagmi":
           return { useConnectionEffect: (handlers) => connectionEffects.push(handlers) };
+        case "next/navigation":
+          return { useRouter: () => ({ replace: (href) => navigations.push(["replace", href]), refresh: () => navigations.push(["refresh"]) }) };
         case "../wallet/use-tool402-wallet":
           return { useTool402Wallet: () => wallet };
         default:
@@ -152,7 +149,7 @@ function visibleText(node) {
   return node && typeof node === "object" && "props" in node ? visibleText(node.props.children) : "";
 }
 
-function assertLogout(harness) {
+function assertLogout(harness, destination = "/sign-in") {
   assert.equal(harness.requests.length, 1);
   const [url, init] = harness.requests[0];
   assert.equal(url, "/api/auth/logout");
@@ -160,7 +157,7 @@ function assertLogout(harness) {
   assert.equal(init.credentials, "same-origin");
   assert.equal(init.headers["content-type"], "application/json");
   assert.equal(init.body, '{"address":"0xc89f87052c3e080b4a9b021d4930055031ef378e","issuedAt":"2026-09-14T10:00:00.000Z"}');
-  assert.deepEqual(harness.navigations, [["replace", "/sign-in"]]);
+  assert.deepEqual(harness.navigations, [["replace", destination]]);
 }
 
 implementedTest("waits for passive wallet restoration before comparing the dashboard session", async () => {
@@ -200,7 +197,7 @@ implementedTest("logs out after the selected MetaMask account changes", async ()
   harness.render(address);
   await flushMicrotasks();
 
-  assertLogout(harness);
+  assertLogout(harness, "/sign-in/account-changed");
 });
 
 implementedTest("does not redirect when a stale logout completes after the wallet recovers", async () => {
@@ -235,7 +232,7 @@ implementedTest("redirects to sign-in when the active account remains different 
   harness.resolveLogout();
   await flushMicrotasks();
 
-  assert.deepEqual(harness.navigations, [["replace", "/sign-in"]]);
+  assert.deepEqual(harness.navigations, [["replace", "/sign-in/account-changed"]]);
 });
 
 implementedTest("redirects to sign-in when logout reports a concurrent session and the wallet remains switched", async () => {
@@ -248,7 +245,7 @@ implementedTest("redirects to sign-in when logout reports a concurrent session a
   harness.render(address);
   await flushMicrotasks();
 
-  assert.deepEqual(harness.navigations, [["replace", "/sign-in?switch=1"]]);
+  assert.deepEqual(harness.navigations, [["replace", "/sign-in/account-changed"]]);
 });
 
 implementedTest("does not clear a server session merely because a refreshed wallet has not reconnected", async () => {
@@ -320,8 +317,10 @@ implementedTest("keeps sign-out synchronization inside the accepted local bounda
   assert.match(source, /fetch\(["']\/api\/auth\/logout["']/u);
   assert.match(source, /method:\s*["']POST["']/u);
   assert.match(source, /credentials:\s*["']same-origin["']/u);
-  assert.match(source, /window\.location\.replace\(["']\/sign-in["']\)/u);
+  assert.match(source, /import\s*\{\s*useRouter\s*\}\s*from\s*["']next\/navigation["']/u);
+  assert.match(source, /router\.replace\(/u);
+  assert.match(source, /["']\/sign-in\/account-changed["']/u);
   assert.match(source, /role=["']alert["']/u);
   assert.match(source, /could not be ended safely/u);
-  assert.doesNotMatch(source, /useRouter|router\.|document\.cookie|localStorage|sessionStorage|indexedDB|provider\.request|personal_sign|eth_requestAccounts|eth_sendTransaction|setTimeout|setInterval|console|discoverMetaMaskProvider|readCurrentSession|watchWalletSessionChanges|useWalletSession/u);
+  assert.doesNotMatch(source, /document\.cookie|localStorage|sessionStorage|indexedDB|provider\.request|personal_sign|eth_requestAccounts|eth_sendTransaction|setTimeout|setInterval|console|discoverMetaMaskProvider|readCurrentSession|watchWalletSessionChanges|useWalletSession/u);
 });

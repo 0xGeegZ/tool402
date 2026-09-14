@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { useConnectionEffect } from "wagmi";
 
 import { useTool402Wallet } from "../wallet/use-tool402-wallet";
@@ -14,6 +15,7 @@ export function DashboardSessionSync({
   readonly issuedAt: string;
   readonly children: ReactNode;
 }) {
+  const router = useRouter();
   const { connection, resolved } = useTool402Wallet();
   const logoutStarted = useRef(false);
   const hasMatchedSessionWallet = useRef(false);
@@ -24,6 +26,15 @@ export function DashboardSessionSync({
   const currentSessionMatches = connection.status === "connected"
     && connection.chainId === 296
     && connection.account === address;
+
+  const navigateToSignIn = useCallback(() => {
+    const wallet = connectionRef.current;
+    router.replace(
+      wallet.status === "connected" && wallet.account !== address
+        ? "/sign-in/account-changed"
+        : "/sign-in",
+    );
+  }, [address, router]);
 
   const endSession = useCallback(() => {
     if (logoutStarted.current) return;
@@ -38,7 +49,7 @@ export function DashboardSessionSync({
       const switchedWalletIsStillActive = connectionRef.current.status === "connected" && connectionRef.current.account !== address;
       if (connectionRef.current.generation !== logoutGeneration) {
         if (switchedWalletIsStillActive) {
-          window.location.replace("/sign-in?switch=1");
+          navigateToSignIn();
           return;
         }
         setLogoutInvalidated(true);
@@ -46,7 +57,7 @@ export function DashboardSessionSync({
       }
       if (response.status === 409) {
         if (switchedWalletIsStillActive) {
-          window.location.replace("/sign-in?switch=1");
+          navigateToSignIn();
           return;
         }
         setLogoutInvalidated(true);
@@ -56,11 +67,11 @@ export function DashboardSessionSync({
         setLogoutFailed(true);
         return;
       }
-      window.location.replace("/sign-in");
+      navigateToSignIn();
     }).catch(() => {
       setLogoutFailed(true);
     });
-  }, [address, issuedAt]);
+  }, [address, issuedAt, navigateToSignIn]);
 
   const retryLogout = useCallback(() => {
     logoutStarted.current = false;
@@ -95,7 +106,7 @@ export function DashboardSessionSync({
         : logoutFailed
         ? "Your dashboard session could not be ended safely. Retry ending it before continuing."
         : "Ending the dashboard session safely…"}</p>
-      {logoutInvalidated ? <button type="button" onClick={() => window.location.reload()}>Reload dashboard session</button> : null}
+      {logoutInvalidated ? <button type="button" onClick={() => router.refresh()}>Reload dashboard session</button> : null}
       {logoutFailed && !logoutInvalidated ? <button type="button" onClick={retryLogout}>Retry ending dashboard session</button> : null}
     </div>
   );
