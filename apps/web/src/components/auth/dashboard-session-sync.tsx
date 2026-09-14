@@ -36,6 +36,12 @@ export function DashboardSessionSync({
     });
   }, []);
 
+  const retryLogout = useCallback(() => {
+    logoutStarted.current = false;
+    setLogoutFailed(false);
+    endSession();
+  }, [endSession]);
+
   useConnectionEffect({ onDisconnect: endSession });
 
   useEffect(() => {
@@ -46,10 +52,11 @@ export function DashboardSessionSync({
 
   if (!resolved || currentSessionMatches) return children;
   return (
-    <p role="alert" aria-live="polite" className="p-6 text-sm text-muted-foreground">
-      {logoutFailed
-        ? "Your dashboard session could not be ended safely. Refresh this page or return to sign-in before continuing."
-        : "Ending the dashboard session safely…"}
-    </p>
+    <div role="alert" aria-live="polite" className="p-6 text-sm text-muted-foreground">
+      <p>{logoutFailed
+        ? "Your dashboard session could not be ended safely. Retry ending it before continuing."
+        : "Ending the dashboard session safely…"}</p>
+      {logoutFailed ? <button type="button" onClick={retryLogout}>Retry ending dashboard session</button> : null}
+    </div>
   );
 }

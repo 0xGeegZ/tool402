@@ -239,6 +239,19 @@ implementedTest("does not navigate when active-account logout is rejected or una
   }
 });
 
+implementedTest("offers an explicit retry after logout fails without restoring dashboard content", async () => {
+  const harness = await loadSynchronizer({ responseStatus: 401 });
+  harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
+  await flushMicrotasks();
+  const tree = harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
+  const retry = [tree].flatMap((node) => node?.props?.children ?? []).find((node) => node?.props?.children === "Retry ending dashboard session");
+  assert.ok(retry);
+  retry.props.onClick();
+  await flushMicrotasks();
+  assert.equal(harness.requests.length, 2);
+  assert.deepEqual(harness.navigations, []);
+});
+
 implementedTest("keeps sign-out synchronization inside the accepted local boundary", async () => {
   const source = await readFile(sourceUrl, "utf8");
 
