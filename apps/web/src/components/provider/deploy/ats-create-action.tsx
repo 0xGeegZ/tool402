@@ -14,8 +14,9 @@ import { Button } from "../../ui/button";
 import { StatusRegion } from "../../ui/status";
 import { connectedTool402Wallet, useTool402Wallet } from "../../wallet/use-tool402-wallet";
 import {
-  clearStageBRecovery,
+  beginStageBRecovery,
   createStageBRecoveryScope,
+  hasStageBRecovery,
   persistStageBRecovery,
   readStageBRecovery,
   type StageBRecoveryScope,
@@ -91,6 +92,7 @@ export function AtsCreateAction({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [recovery, setRecovery] = useState<Readonly<{ context: ControllerContext; hash: string; pending: boolean; persisted: boolean }> | null>(null);
   const [recoveryResolvedFor, setRecoveryResolvedFor] = useState<ControllerContext | null>(null);
+  const [submittedFor, setSubmittedFor] = useState<ControllerContext | null>(null);
   const [, setInFlight] = useState<ControllerContext | null>(null);
 
   const nextControllerContext = { preparedAttemptPublicId, selectedToolPublicId, wallet: currentWallet };
@@ -113,6 +115,7 @@ export function AtsCreateAction({
     if (currentRecoveryScope !== null) {
       const hash = readStageBRecovery(currentRecoveryScope);
       if (hash !== null) setRecovery({ context: controllerContext.current, hash, pending: false, persisted: true });
+      if (hasStageBRecovery(currentRecoveryScope)) setSubmittedFor(controllerContext.current);
     }
     setRecoveryResolvedFor(controllerContext.current);
   }, [currentRecoveryScope?.address, currentRecoveryScope?.preparedAttemptPublicId, currentRecoveryScope?.toolPublicId]);
@@ -143,17 +146,23 @@ export function AtsCreateAction({
   const recoveryAvailable = stageTwoDone && currentWallet !== null && (!selectedTool || configuration !== undefined) && !hasCandidate && !sessionChanged.current && controller.current !== null;
   const candidateActionAvailable = recoveryAvailable && !publicAtsExecutionBlocked;
   const recoveryResolved = recoveryResolvedFor !== null && isSameControllerContext(recoveryResolvedFor, controllerContext.current);
-  const enabled = candidateActionAvailable && recoveryResolved && currentRecovery?.persisted !== true && !terminalForCurrentContext && !inFlightForCurrentContext;
+  const submitted = submittedFor !== null && isSameControllerContext(submittedFor, controllerContext.current);
+  const enabled = candidateActionAvailable && recoveryResolved && !submitted && !terminalForCurrentContext && !inFlightForCurrentContext && currentRecoveryScope !== null;
   const recoveryEnabled = recoveryAvailable && !inFlightForCurrentContext && currentRecovery?.pending !== true && isCanonicalStageBTransactionHash(currentRecovery?.hash ?? "");
 
   async function requestCandidate() {
     const actionContext = controllerContext.current;
-    if (!enabled || !recoveryResolved || currentRecovery?.persisted === true || actionContext.preparedAttemptPublicId === undefined || controller.current === null || actionInFlight.current !== null) return;
+    const actionRecoveryScope = recoveryScope(actionContext);
+    if (!enabled || !recoveryResolved || submitted || actionRecoveryScope === null || actionContext.preparedAttemptPublicId === undefined || controller.current === null || actionInFlight.current !== null) return;
+    if (!beginStageBRecovery(actionRecoveryScope)) {
+      setFeedback("This browser cannot safely retain a submitted transaction for recovery. Creation remains blocked.");
+      return;
+    }
+    setSubmittedFor(actionContext);
     actionInFlight.current = actionContext;
     setInFlight(actionContext);
     try {
       const outcome = await controller.current.execute();
-      const actionRecoveryScope = recoveryScope(actionContext);
       if (outcome.kind === "submission_unknown" && outcome.transactionHash !== undefined && actionRecoveryScope !== null) {
         persistStageBRecovery(actionRecoveryScope, outcome.transactionHash);
       }
@@ -195,8 +204,6 @@ export function AtsCreateAction({
       const outcome = await controller.current.recover(recoveryHash);
       if (controllerContext.current !== actionContext || sessionChanged.current) return;
       if (outcome.kind === "candidate") {
-        const actionRecoveryScope = recoveryScope(actionContext);
-        if (actionRecoveryScope !== null) clearStageBRecovery(actionRecoveryScope, recoveryHash);
         setTerminalOutcome(controllerContext.current);
         onCandidate(outcome.candidate);
         setFeedback("The public transaction was corroborated. Attach the candidate with the separate signature step.");

@@ -314,6 +314,10 @@ test("blocks a second MetaMask send after remounting a persisted unknown transac
   assert.equal(calls.filter((method) => method === "eth_sendTransaction").length, 1);
 
   const remounted = await actionHarness(persisted);
+  const restoredTree = remounted.render(props);
+  const restoredInput = elements(restoredTree).find((element) => element.props["data-stage-b-recovery-hash"] === "true");
+  assert.ok(restoredInput);
+  restoredInput.props.onChange({ target: { value: "" } });
   const restored = elements(remounted.render(props)).find((element) => element.type === "Button" && element.props.children === "Create the note in MetaMask");
   assert.equal(restored?.props.disabled, true);
   await restored.props.onClick();

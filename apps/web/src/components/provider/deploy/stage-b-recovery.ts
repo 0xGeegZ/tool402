@@ -12,7 +12,8 @@ export type StageBRecoveryScope = Readonly<{
 
 type StageBRecoveryRecord = Readonly<{
   version: 1;
-  hash: string;
+  state: "submitted";
+  hash?: string;
   scope: StageBRecoveryScope;
 }>;
 
@@ -37,9 +38,10 @@ function isScope(value: unknown): value is StageBRecoveryScope {
 function isRecord(value: unknown): value is StageBRecoveryRecord {
   const record = exactRecord(value);
   return record !== null
-    && Object.keys(record).length === 3
+    && (Object.keys(record).length === 3 || Object.keys(record).length === 4)
     && record.version === 1
-    && isCanonicalStageBTransactionHash(record.hash)
+    && (record.state === undefined || record.state === "submitted")
+    && (record.hash === undefined || isCanonicalStageBTransactionHash(record.hash))
     && isScope(record.scope);
 }
 
@@ -81,21 +83,41 @@ export function readStageBRecovery(scope: StageBRecoveryScope): string | null {
   if (local === null) return null;
   try {
     const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
-    return isRecord(parsed) && sameScope(parsed.scope, scope) ? parsed.hash : null;
+    return isRecord(parsed) && sameScope(parsed.scope, scope) && typeof parsed.hash === "string" ? parsed.hash : null;
   } catch {
     return null;
   }
 }
 
-export function persistStageBRecovery(scope: StageBRecoveryScope, hash: string): void {
-  if (!isCanonicalStageBTransactionHash(hash)) return;
+function writeStageBRecovery(scope: StageBRecoveryScope, hash?: string): boolean {
+  if (hash !== undefined && !isCanonicalStageBTransactionHash(hash)) return false;
   const local = storage();
-  if (local === null) return;
-  const record: StageBRecoveryRecord = Object.freeze({ version: 1, hash, scope });
+  if (local === null) return false;
+  const record: StageBRecoveryRecord = Object.freeze({ version: 1, state: "submitted", ...(hash === undefined ? {} : { hash }), scope });
   try {
     local.setItem(key(scope), JSON.stringify(record));
+    return true;
   } catch {
-    // Recovery remains available in the current UI when browser storage is unavailable.
+    return false;
+  }
+}
+
+export function beginStageBRecovery(scope: StageBRecoveryScope): boolean {
+  return writeStageBRecovery(scope);
+}
+
+export function persistStageBRecovery(scope: StageBRecoveryScope, hash: string): boolean {
+  return writeStageBRecovery(scope, hash);
+}
+
+export function hasStageBRecovery(scope: StageBRecoveryScope): boolean {
+  const local = storage();
+  if (local === null) return false;
+  try {
+    const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
+    return isRecord(parsed) && sameScope(parsed.scope, scope);
+  } catch {
+    return false;
   }
 }
 
