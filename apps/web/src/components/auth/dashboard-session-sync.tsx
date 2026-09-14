@@ -36,6 +36,10 @@ export function DashboardSessionSync({
       body: JSON.stringify({ address, issuedAt }),
     }).then((response) => {
       if (connectionRef.current.generation !== logoutGeneration) {
+        if (connectionRef.current.status === "connected" && connectionRef.current.account !== address) {
+          window.location.replace("/sign-in");
+          return;
+        }
         setLogoutInvalidated(true);
         return;
       }

@@ -222,6 +222,22 @@ implementedTest("does not redirect when a stale logout completes after the walle
   assert.match(visibleText(harness.render(address)), /changed while ending/u);
 });
 
+implementedTest("redirects to sign-in when the active account remains different after logout changes generation", async () => {
+  const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const switchedAddress = "0x0000000000000000000000000000000000000402";
+  const harness = await loadSynchronizer({ deferLogout: true, wallet: { connection: { status: "connected", account: address, chainId: 296, connector: { id: "metaMask" }, generation: 1 }, resolved: true } });
+
+  harness.render(address);
+  harness.setWallet({ connection: { status: "connected", account: switchedAddress, chainId: 296, connector: { id: "metaMask" }, generation: 2 } });
+  harness.render(address);
+  await flushMicrotasks();
+  harness.setWallet({ connection: { status: "connected", account: switchedAddress, chainId: 296, connector: { id: "metaMask" }, generation: 3 } });
+  harness.resolveLogout();
+  await flushMicrotasks();
+
+  assert.deepEqual(harness.navigations, [["replace", "/sign-in"]]);
+});
+
 implementedTest("does not clear a server session merely because a refreshed wallet has not reconnected", async () => {
   const harness = await loadSynchronizer({ wallet: { connection: { status: "disconnected", account: undefined, chainId: undefined, connector: undefined }, resolved: true } });
 
