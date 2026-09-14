@@ -347,6 +347,9 @@ export async function signAndRelayCommand(
   if (currentAfterSignature === null || !sameContext(currentAfterSignature, context)) {
     return { kind: "no_account" };
   }
+  if (!((dependencies.nowMilliseconds ?? Date.now)() < Date.parse(request.expiresAt))) {
+    return { kind: "expired" };
+  }
   dependencies.onSigned?.();
   const outcome = await (dependencies.relay ?? relayCommandBody)(body);
   return { kind: "relayed", outcome };

@@ -121,10 +121,14 @@ export function AtsCreateAction({
   }, [currentRecoveryScope?.address, currentRecoveryScope?.preparedAttemptPublicId, currentRecoveryScope?.toolPublicId]);
 
   if (controller.current === null && currentWallet !== null && publicClient !== undefined && (!selectedTool || configuration !== undefined)) {
+    const bridgeRecoveryScope = recoveryScope(controllerContext.current);
     const bridge = createStageBBrowserProviderBridge({
       wallet: currentWallet,
       readCurrentWallet: () => stageBWalletContext(walletRef.current),
       sendTransaction: (request) => sendTransaction(request),
+      onTransactionHash: (hash) => {
+        if (bridgeRecoveryScope !== null) persistStageBRecovery(bridgeRecoveryScope, hash);
+      },
       getTransactionReceipt: ({ hash }) => publicClient.getTransactionReceipt({ hash }),
       fetch,
       configuration,

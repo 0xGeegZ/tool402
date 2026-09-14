@@ -74,6 +74,7 @@ export interface StageBBridgeInput {
   readonly getTransactionReceipt: StageBReceiptReader;
   readonly readCurrentWallet: () => StageBWalletContext | null;
   readonly sendTransaction: StageBTransactionSender;
+  readonly onTransactionHash?: (hash: `0x${string}`) => void;
   readonly wallet: StageBWalletContext;
   /** A selected-tool value is authenticated server output and is revalidated before wallet use. */
   readonly configuration?: unknown;
@@ -559,6 +560,7 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
     getTransactionReceipt,
     readCurrentWallet,
     sendTransaction,
+    onTransactionHash,
     wallet,
     wait = defaultWait,
     now = Date.now,
@@ -634,6 +636,12 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
         return terminal;
       }
       transactionHash = hash;
+      try {
+        onTransactionHash?.(hash as `0x${string}`);
+      } catch {
+        terminal = unknownOutcome(transactionHash);
+        return terminal;
+      }
       if (!isCurrentStageBWallet(readCurrentWallet(), wallet)) {
         terminal = unknownOutcome(transactionHash);
         return terminal;

@@ -711,6 +711,22 @@ test("signs and relays through one flow that rechecks Wagmi context, draws a fre
   assert.equal(expiredProvider.calls.length, 0);
   assert.equal(expiredRelay.bodies.length, 0);
 
+  const expiresDuringSigningProvider = stubProvider();
+  const expiresDuringSigningRelay = stubRelay();
+  let clockReads = 0;
+  assert.deepEqual(
+    await signAndRelayCommand(expiresDuringSigningProvider, request, {
+      relay: expiresDuringSigningRelay,
+      nowMilliseconds: () => {
+        clockReads += 1;
+        return Date.parse(clockReads === 1 ? "2026-09-07T19:01:00.000Z" : "2026-09-07T19:04:00.000Z");
+      },
+    }),
+    { kind: "expired" },
+  );
+  assert.equal(expiresDuringSigningProvider.calls.filter((call) => call.method === "eth_signTypedData_v4").length, 1);
+  assert.equal(expiresDuringSigningRelay.bodies.length, 0);
+
   const unknownRelay = stubRelay("transport_failure");
   assert.deepEqual(
     await signAndRelayCommand(stubProvider(), request, { relay: unknownRelay, nowMilliseconds: beforeExpiry }),
