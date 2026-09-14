@@ -79,9 +79,9 @@ async function captureConfigOptions() {
   return options;
 }
 
-implementedConfigTest("enables SSR and explicitly targets MetaMask", async () => {
+implementedConfigTest("uses client-side persistence and explicitly targets MetaMask", async () => {
   const options = await captureConfigOptions();
-  assert.equal(options?.ssr, true);
+  assert.equal(options?.ssr, false);
   assert.equal(options?.connectors?.length, 1);
   assert.equal(options?.connectors?.[0]?.type, "injected");
   assert.equal(options?.connectors?.[0]?.target, "metaMask");

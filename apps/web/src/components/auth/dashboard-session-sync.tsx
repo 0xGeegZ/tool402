@@ -50,7 +50,7 @@ export function DashboardSessionSync({
     }).catch(() => {
       setLogoutFailed(true);
     });
-  }, []);
+  }, [address, issuedAt]);
 
   const retryLogout = useCallback(() => {
     logoutStarted.current = false;

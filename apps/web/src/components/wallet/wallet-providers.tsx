@@ -7,9 +7,9 @@ import { WagmiProvider } from "wagmi";
 import { tool402WagmiConfig } from "../../lib/wallet/wagmi-config";
 
 export function useWalletHydrated(): boolean {
-  // Wagmi exposes restoration through its public `reconnecting` connection
-  // status. The domain hook keeps that status non-actionable; no private
-  // persistence store or parallel hydration state is needed.
+  // The client-only config restores persistence before its provider children
+  // render. While Wagmi reconnects, the domain hook still exposes a
+  // non-actionable `reconnecting` state.
   return true;
 }
 

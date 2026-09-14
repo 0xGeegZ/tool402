@@ -24,7 +24,10 @@ export const tool402HederaTestnet = {
 export const tool402WagmiConfig = createConfig({
   chains: [tool402HederaTestnet],
   connectors: [injected({ target: "metaMask" })],
-  ssr: true,
+  // This config is created only inside the client wallet boundary. Let Wagmi
+  // restore local persistence before the provider's children render instead of
+  // treating the server's disconnected snapshot as a settled wallet state.
+  ssr: false,
   transports: {
     [tool402HederaTestnet.id]: http(tool402HederaTestnet.rpcUrls.default.http[0]),
   },
