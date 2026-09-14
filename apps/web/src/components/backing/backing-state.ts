@@ -353,7 +353,11 @@ export function viewAfterTransfer(view: BackingView, result: TransferResult): Ba
   }
   switch (result.kind) {
     case "declined":
-      return view;
+      return Object.freeze({
+        kind: "payment_outcome_unknown",
+        intent: view.intent,
+        message: "MetaMask did not approve the request, but the one-time dispatch is retained for safe recovery. Nothing was sent and no second transaction is offered.",
+      });
     case "no_hash":
       return Object.freeze({ kind: "payment_outcome_unknown", intent: view.intent, message: unknownMessage });
     case "hash":

@@ -5,12 +5,13 @@ import Link from "next/link";
 
 import { isUserRejection } from "../../lib/wallet/metamask-provider.ts";
 import { hashscanTransactionUrl } from "../../lib/hashscan-links.ts";
-import type { BackingPaymentRecord } from "../../lib/backing-payment-server.ts";
+import type { BackingPaymentRead, BackingPaymentRecord } from "../../lib/backing-payment-server.ts";
 import { readCurrentSession } from "../../lib/wallet/wallet-state.ts";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { DetailList } from "../ui/detail-list";
+import { StatusRegion } from "../ui/status";
 import { SignatureDialog, type SignatureResult } from "../wallet/signature-dialog";
 import { WalletIsland } from "../wallet/wallet-connect";
 import { connectedWalletSession, useWalletSession, type WalletSession } from "../wallet/wallet-session";
@@ -128,7 +129,7 @@ function describeView(view: BackingView, payment: BackingPaymentRecord | null): 
   }
 }
 
-function BackingForm({ offering, initialPayment, dashboardAddress }: { offering: BackingOffering; initialPayment: BackingPaymentRecord | null; dashboardAddress: string | null }) {
+function BackingForm({ offering, initialPayment, dashboardAddress }: { offering: BackingOffering; initialPayment: BackingPaymentRead; dashboardAddress: string | null }) {
   const wallet = useWalletSession();
   const session: WalletSession | null = connectedWalletSession(wallet);
   const presets = presetUnits(offering.terms);
@@ -139,21 +140,22 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   const recoveredIntent = preparedIntent(dashboardAddress, offering) ?? (recoveredPending?.frozen === undefined ? null : (() => {
     try { return createRecoveredBackingIntent(offering, recoveredPending.frozen, Date.now()); } catch { return null; }
   })());
-  const [view, setView] = useState<BackingView>(() => viewForRecoveredPendingPayment(recoveredIntent, recoveredPending, initialPayment?.status ?? null));
+  const [view, setView] = useState<BackingView>(() => viewForRecoveredPendingPayment(recoveredIntent, recoveredPending, initialPayment.kind === "FOUND" ? initialPayment.payment.status : null));
   const [request, setRequest] = useState<BackingIntent | null>(null);
   const [preparing, setPreparing] = useState(false);
   const [transferring, setTransferring] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const [payment, setPayment] = useState<BackingPaymentRecord | null>(initialPayment);
+  const [payment, setPayment] = useState<BackingPaymentRecord | null>(initialPayment.kind === "FOUND" ? initialPayment.payment : null);
   const [pending, setPending] = useState<PendingAttachment | null>(recoveredPending);
   const sendingRef = useRef(false);
   const validation = validateUnits(offering, unitsInput);
   const label = payment?.status === "CONFIRMED" ? "payment_confirmed" : payment?.status === "REJECTED" ? "payment_rejected" : backingLifecycleLabels[view.kind];
   const committed = request ?? ("intent" in view ? view.intent : null);
   const resumedReservation = payment?.status === "PREPARED" && view.kind === "prepared";
-  const locked = (payment !== null && !resumedReservation) || view.kind !== "choosing" || request !== null || preparing;
+  const paymentReadUnavailable = initialPayment.kind === "UNAVAILABLE";
+  const locked = paymentReadUnavailable || (payment !== null && !resumedReservation) || view.kind !== "choosing" || request !== null || preparing;
   const dashboardMatchesWallet = session !== null && dashboardAddress !== null && session.address === dashboardAddress;
-  const canPrepare = offering.fundingOpen && payment === null && validation.ok && acknowledged && dashboardMatchesWallet && !locked;
+  const canPrepare = offering.fundingOpen && initialPayment.kind === "NONE" && payment === null && validation.ok && acknowledged && dashboardMatchesWallet && !locked;
   const readoutUnits = committed !== null ? committed.units : validation.ok ? validation.units : null;
   const readoutTinybars = committed !== null ? committed.tinybars : validation.ok ? paymentTinybars(offering, validation.units) : null;
   const backingPath = offering.offeringPublicId === "riskscan_revenue_note_demo"
@@ -357,6 +359,8 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
     <div className="space-y-6">
       <BackingStepRail {...railPosition(view.kind, request !== null)} />
 
+      {paymentReadUnavailable ? <StatusRegion>The payment status could not be read. Funding is unavailable until the existing attempt can be recovered or rechecked; nothing is sent.</StatusRegion> : null}
+
       <Card>
         <CardHeader>
           <CardTitle>Terms v{offering.terms.version.replace(/^v/u, "")}</CardTitle>
@@ -455,7 +459,7 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
   );
 }
 
-export function BackingFlow({ projection, initialPayment = null, dashboardAddress = null }: { projection: BackingProjection | null; initialPayment?: BackingPaymentRecord | null; dashboardAddress?: string | null }) {
+export function BackingFlow({ projection, initialPayment = { kind: "UNAVAILABLE" }, dashboardAddress = null }: { projection: BackingProjection | null; initialPayment?: BackingPaymentRead; dashboardAddress?: string | null }) {
   const offering = readBackingOffering(projection);
   if (offering === null) {
     return (

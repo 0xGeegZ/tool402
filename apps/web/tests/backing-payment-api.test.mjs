@@ -116,6 +116,21 @@ test("keeps a valid bounded 21-record backing history instead of relabeling it a
   assert.equal(result.length, 21);
 });
 
+test("keeps an unavailable offer-scoped payment read distinct from a verified absence", async () => {
+  const { loadBackerPaymentForOffering } = await import(serverUrl.href);
+  const session = { address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" };
+  const unavailable = await loadBackerPaymentForOffering(env, "session", "offering_test", {
+    readSession: async () => session,
+    forward: async () => undefined,
+  });
+  const none = await loadBackerPaymentForOffering(env, "session", "offering_test", {
+    readSession: async () => session,
+    forward: async () => null,
+  });
+  assert.deepEqual(unavailable, { kind: "UNAVAILABLE" });
+  assert.deepEqual(none, { kind: "NONE" });
+});
+
 test("fails closed for forged or expired sessions, oversized bodies, missing ingress configuration, and untrusted results", async () => {
   const { handleBackingPaymentRequest } = await import(serverUrl.href);
   const session = { address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" };

@@ -6,7 +6,10 @@
   provider/backer entry, and their focused contracts in that PR. This supersedes
   the earlier inbox-only statement; it records implementation work only, not a
   historical readiness or live acceptance. The policy remains disabled by
-  default. Existing RiskScan/privileged authority, B03/x402 behavior,
+  default. Public ATS deployment is explicitly gated until a separate durable
+  pre-wallet dispatch record can bind the exact tool, attempt, configuration,
+  owner, and returned hash across reloads and tabs; recovery remains read-only.
+  Existing RiskScan/privileged authority, B03/x402 behavior,
   deployment, migration, feature enablement, wallet actions, and live evidence
   remain separately controlled.
 

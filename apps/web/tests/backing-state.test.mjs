@@ -226,7 +226,7 @@ test("refuses to fund without an explicit lowercase treasury address and never d
   assert.doesNotMatch(source, /toLowerCase|getAddress|checksum|0\.0\.|padStart|parseHederaAccountId|Long|shard|realm/);
 });
 
-test("orders the two confirmations and moves a returned hash only to payment_submitted", async () => {
+test("orders the two confirmations and preserves a declined wallet dispatch as ambiguous", async () => {
   const state = await loadState();
   const offering = state.readBackingOffering(record());
   const intent = state.createBackingIntent(offering, 25n, nowMilliseconds, fixedBytes(2));
@@ -247,7 +247,7 @@ test("orders the two confirmations and moves a returned hash only to payment_sub
   assert.deepEqual(submitted, { kind: "payment_submitted", intent, transactionHash: hash });
   assert.throws(() => state.viewAfterTransfer(prepared, { kind: "hash", hash: "0xABC" }), TypeError);
   assert.throws(() => state.viewAfterTransfer({ kind: "choosing" }, { kind: "hash", hash }), TypeError);
-  assert.equal(state.viewAfterTransfer(prepared, { kind: "declined" }).kind, "prepared");
+  assert.equal(state.viewAfterTransfer(prepared, { kind: "declined" }).kind, "payment_outcome_unknown");
 
   for (const outcome of ["REJECTED", "CONFLICT", "UNSUPPORTED_TYPE", "not_configured", "REPLAYED"]) {
     const refused = state.viewAfterSignature({ phase: "failed", outcome }, intent);
@@ -319,6 +319,7 @@ test("retries nothing: an unknown wallet return, a transport failure, and an une
   const intent = state.createBackingIntent(offering, 25n, nowMilliseconds, fixedBytes(3));
   const prepared = state.viewAfterSignature({ phase: "complete", outcome: "ACCEPTED" }, intent);
 
+  assert.equal(state.viewAfterTransfer(prepared, { kind: "declined" }).kind, "payment_outcome_unknown");
   assert.equal(state.viewAfterTransfer(prepared, { kind: "no_hash" }).kind, "payment_outcome_unknown");
   assert.equal(state.viewAfterSignature({ phase: "failed", outcome: "transport_failure" }, intent).kind, "payment_outcome_unknown");
   assert.equal(state.viewAfterSignature({ phase: "failed", outcome: "unexpected_response" }, intent).kind, "payment_outcome_unknown");

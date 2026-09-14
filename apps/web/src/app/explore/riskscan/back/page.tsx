@@ -17,7 +17,13 @@ async function BackingFlowRegion() {
     loadBackerPaymentForOffering(process.env, sessionCookie, "riskscan_revenue_note_demo"),
     loadLegacyRiskScanPayment(process.env, sessionCookie),
   ]);
-  const payment = scopedPayment ?? legacyPayment;
+  const payment = scopedPayment.kind === "FOUND"
+    ? scopedPayment
+    : legacyPayment.kind === "FOUND"
+      ? legacyPayment
+      : scopedPayment.kind === "UNAVAILABLE" || legacyPayment.kind === "UNAVAILABLE"
+        ? { kind: "UNAVAILABLE" as const }
+        : { kind: "NONE" as const };
   return <BackingFlow projection={projection} dashboardAddress={session?.address ?? null} initialPayment={payment} />;
 }
 

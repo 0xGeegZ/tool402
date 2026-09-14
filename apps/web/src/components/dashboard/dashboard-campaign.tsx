@@ -108,9 +108,9 @@ export async function DashboardCampaign() {
     loadLegacyRiskScanPayment(process.env, sessionCookie),
     loadBackerPayments(process.env, sessionCookie),
   ]);
-  const backing = legacyBacking === null || backingHistory.some((record) => record.offeringPublicId === riskScanOfferingPublicId)
+  const backing = legacyBacking.kind !== "FOUND" || backingHistory.some((record) => record.offeringPublicId === riskScanOfferingPublicId)
     ? backingHistory
-    : [{ ...legacyBacking, offeringPublicId: riskScanOfferingPublicId, legacyEvidence: true }, ...backingHistory];
+    : [{ ...legacyBacking.payment, offeringPublicId: riskScanOfferingPublicId, legacyEvidence: true }, ...backingHistory];
   const campaign = projections.offering.outcome === "loaded"
     ? readDashboardCampaign(projections.offering.record, session.address)
     : null;

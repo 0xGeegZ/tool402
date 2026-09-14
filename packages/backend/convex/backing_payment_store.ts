@@ -207,10 +207,19 @@ export const recordBackingPayment = internalMutation({
     const rows = await ctx.db.query("externalPrepareCommandAttempts").withIndex("by_idempotency_key", (q) => q.eq("idempotencyKey", args.attemptPublicId)).take(2);
     if (rows.length !== 1 || !validAttempt(rows[0], args)) return null;
     const row = rows[0];
+    // Confirmed claims created before verifiedTransactionHash existed remain
+    // exclusively bound by their candidate hash. This bounded compatibility
+    // read fails closed when a hostile number of candidates shares a hash.
+    const historicHashClaims = await ctx.db.query(backingPaymentClaimStore)
+      .withIndex("by_transaction_hash", (q) => q.eq("transactionHash", args.transactionHash))
+      .take(100);
+    if (historicHashClaims.length === 100) return null;
     const verifiedClaims = await ctx.db.query(backingPaymentClaimStore)
       .withIndex("by_verified_transaction_hash", (q) => q.eq("verifiedTransactionHash", args.transactionHash))
       .take(2);
-    if (verifiedClaims.length > 1) return null;
+    const exclusiveClaims = [...historicHashClaims.filter((claim) => claim.state === "CONFIRMED"), ...verifiedClaims]
+      .filter((claim, index, claims) => claims.findIndex((candidate) => candidate._id === claim._id) === index);
+    if (exclusiveClaims.length > 1) return null;
     const attempts = await ctx.db.query(backingPaymentClaimStore).withIndex("by_attempt_id", (q) => q.eq("attemptId", row._id)).take(2);
     if (attempts.length > 1) return null;
     const claim = attempts[0];
@@ -234,7 +243,7 @@ export const recordBackingPayment = internalMutation({
       && (offeringPublicId !== legacyRiskScanOfferingPublicId
         || !await mayReserveNewBackingPayment(ctx, args.canonicalSignerAddress, offeringPublicId))
     ) return null;
-    const next = resolveBackingPaymentClaim(verifiedClaims[0], claim, { attemptId: row._id, transactionHash: args.transactionHash, tinybars: args.tinybars, outcome: args.outcome });
+    const next = resolveBackingPaymentClaim(exclusiveClaims[0], claim, { attemptId: row._id, transactionHash: args.transactionHash, tinybars: args.tinybars, outcome: args.outcome });
     if (next === null || (claim === undefined && (row.state === "CONFIRMED" || row.state === "REJECTED"))) return null;
     if (claim === undefined) {
       await ctx.db.insert(backingPaymentClaimStore, {

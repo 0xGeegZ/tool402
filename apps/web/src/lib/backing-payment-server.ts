@@ -20,10 +20,14 @@ export type FrozenBackingIntent = Readonly<{
 }>;
 export type BackingPaymentRecord = Readonly<{ status: "PREPARED" | "CONFIRMED" | "REJECTED" | "SUBMITTED" | "OUTCOME_UNKNOWN"; transactionHash: `0x${string}` | null; tinybars: string }>;
 export type BackingPaymentHistoryRecord = BackingPaymentRecord & Readonly<{ offeringPublicId: string }>;
+export type BackingPaymentRead =
+  | Readonly<{ kind: "FOUND"; payment: BackingPaymentRecord }>
+  | Readonly<{ kind: "NONE" }>
+  | Readonly<{ kind: "UNAVAILABLE" }>;
 type Session = Readonly<{ address: string; issuedAt: string; expiresAt: string }>;
 type Dependencies = Readonly<{
   readSession?: (value: string, env: DashboardAuthEnvironment) => Promise<Session | null>;
-  forward?: (payload: Record<string, unknown>) => Promise<unknown | null>;
+  forward?: (payload: Record<string, unknown>) => Promise<unknown | undefined>;
 }>;
 
 function json(body: unknown, status: number): Response {
@@ -91,9 +95,9 @@ function arrayBuffer(bytes: Uint8Array): ArrayBuffer {
   return copy.buffer;
 }
 
-async function forward(env: DashboardAuthEnvironment, payload: Record<string, unknown>): Promise<unknown | null> {
+async function forward(env: DashboardAuthEnvironment, payload: Record<string, unknown>): Promise<unknown | undefined> {
   const configuration = config(env);
-  if (configuration === null) return null;
+  if (configuration === null) return undefined;
   try {
     const bytes = new TextEncoder().encode(JSON.stringify(payload));
     const digest = Buffer.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))).toString("hex");
@@ -102,9 +106,9 @@ async function forward(env: DashboardAuthEnvironment, payload: Record<string, un
     const key = await crypto.subtle.importKey("raw", arrayBuffer(configuration.secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
     const signed = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`tool402:provider-session:v1\nPOST\n/internal/provider-tools\n${timestamp}\n${nonce}\n${digest}`));
     const response = await fetch(configuration.target, { method: "POST", headers: { "content-type": "application/json", "x-tool402-key-id": configuration.keyId, "x-tool402-timestamp": timestamp, "x-tool402-nonce": nonce, "x-tool402-content-sha256": digest, "x-tool402-signature": Buffer.from(new Uint8Array(signed)).toString("base64url") }, body: bytes, cache: "no-store", redirect: "error", signal: AbortSignal.timeout(10_000) });
-    if (!response.ok || !response.headers.get("content-type")?.toLowerCase().startsWith("application/json")) return null;
+    if (!response.ok || !response.headers.get("content-type")?.toLowerCase().startsWith("application/json")) return undefined;
     return await response.json();
-  } catch { return null; }
+  } catch { return undefined; }
 }
 
 function record(value: unknown): BackingPaymentRecord | null {
@@ -115,6 +119,33 @@ function record(value: unknown): BackingPaymentRecord | null {
     && typeof input.tinybars === "string" && integerPattern.test(input.tinybars)
     ? { status: input.status, transactionHash: input.transactionHash === null ? null : input.transactionHash as `0x${string}`, tinybars: input.tinybars }
     : null;
+}
+
+function paymentRead(value: unknown): BackingPaymentRead {
+  if (value === undefined) return { kind: "UNAVAILABLE" };
+  if (value === null) return { kind: "NONE" };
+  const payment = record(value);
+  return payment === null ? { kind: "UNAVAILABLE" } : { kind: "FOUND", payment };
+}
+
+async function readOfferScopedPayment(
+  env: DashboardAuthEnvironment,
+  sessionCookie: string | null,
+  offeringPublicId: string,
+  dependencies: Dependencies,
+  commandType: "backing_read_offering" | "backing_read_legacy",
+): Promise<BackingPaymentRead> {
+  const readSession = dependencies.readSession ?? ((value: string) => readDashboardSession(value, env));
+  const session = sessionCookie === null ? null : await readSession(sessionCookie, env);
+  if (session === null || !addressPattern.test(session.address)) return { kind: "UNAVAILABLE" };
+  try {
+    const payload = commandType === "backing_read_offering"
+      ? { type: commandType, canonicalSignerAddress: session.address, offeringPublicId, sessionExpiresAt: session.expiresAt }
+      : { type: commandType, canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt };
+    return paymentRead(await (dependencies.forward === undefined ? forward(env, payload) : dependencies.forward(payload)));
+  } catch {
+    return { kind: "UNAVAILABLE" };
+  }
 }
 
 function paymentHistory(value: unknown): BackingPaymentHistoryRecord[] | null {
@@ -226,10 +257,8 @@ export async function loadBackerPayment(env: DashboardAuthEnvironment, sessionCo
   return record(await forward(env, { type: "backing_read", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt }));
 }
 
-export async function loadLegacyRiskScanPayment(env: DashboardAuthEnvironment, sessionCookie: string | null): Promise<BackingPaymentRecord | null> {
-  const session = await readDashboardSession(sessionCookie, env);
-  if (session === null || !addressPattern.test(session.address)) return null;
-  return record(await forward(env, { type: "backing_read_legacy", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt }));
+export function loadLegacyRiskScanPayment(env: DashboardAuthEnvironment, sessionCookie: string | null, dependencies: Dependencies = {}): Promise<BackingPaymentRead> {
+  return readOfferScopedPayment(env, sessionCookie, "riskscan_revenue_note_demo", dependencies, "backing_read_legacy");
 }
 
 export async function loadBackerPayments(env: DashboardAuthEnvironment, sessionCookie: string | null, dependencies: Dependencies = {}): Promise<BackingPaymentHistoryRecord[]> {
@@ -240,11 +269,7 @@ export async function loadBackerPayments(env: DashboardAuthEnvironment, sessionC
   return paymentHistory(await (dependencies.forward === undefined ? forward(env, { type: "backing_list", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt }) : dependencies.forward({ type: "backing_list", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt }))) ?? [];
 }
 
-export async function loadBackerPaymentForOffering(env: DashboardAuthEnvironment, sessionCookie: string | null, offeringPublicId: string): Promise<BackingPaymentRecord | null> {
-  const session = await readDashboardSession(sessionCookie, env);
-  if (session === null || !addressPattern.test(session.address) || !/^[A-Za-z0-9_-]{1,96}$/u.test(offeringPublicId)) return null;
-  return record(await forward(env, {
-    type: "backing_read_offering", canonicalSignerAddress: session.address, offeringPublicId,
-    sessionExpiresAt: session.expiresAt,
-  }));
+export function loadBackerPaymentForOffering(env: DashboardAuthEnvironment, sessionCookie: string | null, offeringPublicId: string, dependencies: Dependencies = {}): Promise<BackingPaymentRead> {
+  if (!/^[A-Za-z0-9_-]{1,96}$/u.test(offeringPublicId)) return Promise.resolve({ kind: "UNAVAILABLE" });
+  return readOfferScopedPayment(env, sessionCookie, offeringPublicId, dependencies, "backing_read_offering");
 }
