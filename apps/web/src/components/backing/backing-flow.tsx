@@ -64,6 +64,8 @@ function isSameBackingConnection(left: Tool402WalletConnection, right: Tool402Wa
     && right.status === "connected";
 }
 
+function pendingAttachment(canonicalSignerAddress: string | null, offeringPublicId: string): PendingAttachment | null {
+  if (canonicalSignerAddress === null) return null;
   if (typeof window === "undefined") return null;
   try {
     const prefix = `${pendingAttachmentPrefix}${canonicalSignerAddress}:${offeringPublicId}:`;
