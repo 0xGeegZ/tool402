@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation";
 import { useConnectionEffect } from "wagmi";
 
+import { Button } from "../ui/button";
 import { useTool402Wallet } from "../wallet/use-tool402-wallet";
 
 export function DashboardSessionSync({
@@ -89,7 +90,7 @@ export function DashboardSessionSync({
       <p>{logoutFailed
         ? "Your dashboard session could not be ended safely. Retry ending it before continuing."
         : "Ending the dashboard session safely…"}</p>
-      {logoutFailed ? <button type="button" onClick={retryLogout}>Retry ending dashboard session</button> : null}
+      {logoutFailed ? <Button variant="outline" onClick={retryLogout}>Retry ending dashboard session</Button> : null}
     </div>
   );
 }

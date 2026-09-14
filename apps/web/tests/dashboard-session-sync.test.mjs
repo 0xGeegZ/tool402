@@ -107,6 +107,8 @@ async function loadSynchronizer({
           return { useRouter: () => ({ replace: (href) => navigations.push(["replace", href]), refresh: () => navigations.push(["refresh"]) }) };
         case "../wallet/use-tool402-wallet":
           return { useTool402Wallet: () => wallet };
+        case "../ui/button":
+          return { Button: ({ children, ...props }) => jsxRuntime.jsx("button", { ...props, children }) };
         default:
           throw new Error(`unexpected synchronizer import: ${specifier}`);
       }
