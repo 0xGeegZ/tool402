@@ -413,6 +413,39 @@ test("persists a manually corroborated recovery before exposing its candidate", 
   assert.equal(restoredInput?.props.value, transactionHash);
 });
 
+test("retains corroborated recovery evidence when the downstream candidate handoff fails", async () => {
+  const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const transactionHash = `0x${"9".repeat(64)}`;
+  const persisted = new Map();
+  const bridge = {
+    isCanonicalStageBTransactionHash: (value) => typeof value === "string" && /^0x[0-9a-f]{64}$/u.test(value),
+    createStageBBrowserProviderBridge: () => ({
+      async execute() { return { kind: "submission_unknown" }; },
+      async recover() { return { kind: "candidate", candidate: { transactionId: "0.0.9213391-1789430400-000000001", evmAddress: "0x52908400098527886e0f7030069857d2e4169ee7" } }; },
+    }),
+  };
+  const props = {
+    session: { provider: { async request() { assert.fail("manual recovery must not request MetaMask"); } }, address: issuer },
+    selectedTool: false,
+    selectedToolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    stageTwoDone: true,
+    hasCandidate: false,
+    onCandidate() { throw new Error("the later attachment handoff failed"); },
+  };
+  const harness = await actionHarness(persisted, bridge);
+  const initial = harness.render(props);
+  const input = elements(initial).find((element) => element.props["data-stage-b-recovery-hash"] === "true");
+  input.props.onChange({ target: { value: transactionHash } });
+  const armed = harness.render(props);
+  const recover = elements(armed).find((element) => element.type === "Button" && element.props.children === "Recover candidate from transaction hash");
+  await recover.props.onClick();
+
+  const recovery = await import("../src/components/provider/deploy/stage-b-recovery.ts");
+  const scope = recovery.createStageBRecoveryScope({ address: issuer, selectedToolPublicId: props.selectedToolPublicId, preparedAttemptPublicId: "CCCCCCCCCCCCCCCCCCCCCg" });
+  assert.ok(scope);
+  assert.equal(recovery.readStageBRecovery(scope), transactionHash);
+});
+
 test("keeps a conflicting persisted ATS recovery instead of accepting typed replacement evidence", async () => {
   const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
   const originalHash = `0x${"6".repeat(64)}`;

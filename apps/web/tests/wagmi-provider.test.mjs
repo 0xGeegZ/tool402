@@ -19,6 +19,7 @@ const configExists = existsSync(configPath);
 const providersUrl = new URL("../src/components/wallet/wallet-providers.tsx", import.meta.url);
 const providersPath = fileURLToPath(providersUrl);
 const providersExist = existsSync(providersPath);
+const dashboardSessionSyncUrl = new URL("../src/components/auth/dashboard-session-sync.tsx", import.meta.url);
 const implementedConfigTest = configExists ? test : test.skip;
 const implementedProviderTest = configExists && providersExist ? test : test.skip;
 let api;
@@ -425,6 +426,142 @@ implementedProviderTest("uses real React and Wagmi lifecycle state for passive r
     assert.equal(metaMask.calls.filter((method) => method === "eth_requestAccounts").length, explicitRequestCount);
     await act(async () => { refreshedRoot.unmount(); });
   } finally {
+    delete globalThis.__tool402WagmiTestConfig;
+    restoreDom();
+  }
+});
+
+function journeyMetaMask(address) {
+  const listeners = new Map();
+  let accounts = [];
+  const provider = {
+    isMetaMask: true,
+    async request({ method }) {
+      if (method === "eth_accounts") return accounts;
+      if (method === "eth_chainId") return "0x128";
+      if (method === "wallet_requestPermissions") return [];
+      if (method === "eth_requestAccounts") {
+        accounts = [address];
+        return accounts;
+      }
+      if (method === "personal_sign") return `0x${"11".repeat(65)}`;
+      if (method === "wallet_revokePermissions") return null;
+      throw new Error(`unexpected provider request: ${method}`);
+    },
+    on(event, listener) {
+      const values = listeners.get(event) ?? new Set();
+      values.add(listener);
+      listeners.set(event, values);
+    },
+    removeListener(event, listener) {
+      listeners.get(event)?.delete(listener);
+    },
+  };
+  return {
+    provider,
+    switchAccount(next) {
+      accounts = [next];
+      for (const listener of listeners.get("accountsChanged") ?? []) listener(accounts);
+    },
+  };
+}
+
+async function journeyComponents(config) {
+  const configStub = moduleUrl("export const getTool402WagmiConfig = () => globalThis.__tool402WagmiTestConfig;");
+  const providers = await transpiledModule(providersUrl, [
+    ...browserTestImports,
+    ["\"../../lib/wallet/wagmi-config\"", `"${configStub}"`],
+  ]);
+  const hook = await transpiledModule(new URL("../src/components/wallet/use-tool402-wallet.ts", import.meta.url), [
+    ...browserTestImports,
+    ["\"./wallet-providers\"", `"${providers}"`],
+  ]);
+  const button = moduleUrl(`import React from ${JSON.stringify(await import.meta.resolve("react"))}; export function Button({ children, ...props }) { return React.createElement("button", props, children); }`);
+  const navigation = moduleUrl("export const useRouter = () => globalThis.__tool402WalletJourneyRouter;");
+  const demo = moduleUrl("export const dashboardTourHref = () => \"/dashboard\";");
+  const synchronizer = await transpiledModule(dashboardSessionSyncUrl, [
+    ...browserTestImports,
+    ["\"../wallet/use-tool402-wallet\"", `"${hook}"`],
+    ["\"../ui/button\"", `"${button}"`],
+    ["\"next/navigation\"", `"${navigation}"`],
+  ]);
+  const signIn = await transpiledModule(new URL("../src/components/auth/metamask-dashboard-sign-in.tsx", import.meta.url), [
+    ...browserTestImports,
+    ["\"../wallet/use-tool402-wallet\"", `"${hook}"`],
+    ["\"../ui/button\"", `"${button}"`],
+    ["\"../demo/demo-tour-navigation\"", `"${demo}"`],
+    ["\"./dashboard-session-sync\"", `"${synchronizer}"`],
+    ["\"next/navigation\"", `"${navigation}"`],
+  ]);
+  globalThis.__tool402WagmiTestConfig = config;
+  return {
+    ...(await import(providers)),
+    ...(await import(synchronizer)),
+    ...(await import(signIn)),
+  };
+}
+
+function buttonByText(text) {
+  return [...document.querySelectorAll("button")].find((button) => button.textContent === text);
+}
+
+implementedProviderTest("runs a deterministic mock-wallet journey from connect through sign-in, refresh, and account change", async () => {
+  const restoreDom = installDom();
+  const originalFetch = globalThis.fetch;
+  try {
+    const address = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+    const switchedAddress = "0x0000000000000000000000000000000000000402";
+    const wallet = journeyMetaMask(address);
+    const routes = [];
+    const fetches = [];
+    Object.defineProperty(window, "ethereum", { configurable: true, value: wallet.provider });
+    globalThis.__tool402WalletJourneyRouter = { replace: (route) => routes.push(route), refresh() {} };
+    globalThis.fetch = async (path, init) => {
+      fetches.push([path, init]);
+      if (path === "/api/auth/metamask/challenge") {
+        return { ok: true, async json() { return { message: "Tool402 sign-in", challenge: "challenge", expiresAt: "2026-09-14T12:05:00.000Z" }; } };
+      }
+      if (path === "/api/auth/metamask/verify") {
+        return { ok: true, async json() { return { outcome: "authenticated", sessionIssuedAt: "2026-09-14T12:00:00.000Z" }; } };
+      }
+      if (path === "/api/auth/logout") return { status: 204 };
+      throw new Error(`unexpected route: ${path}`);
+    };
+
+    const configModule = await import(await transpiledModule(configUrl, browserTestImports));
+    const config = configModule.getTool402WagmiConfig();
+    await config.storage.setItem("tool402:wallet-journey", { restored: true });
+    assert.deepEqual(await configModule.getTool402WagmiConfig().storage.getItem("tool402:wallet-journey"), { restored: true });
+    const components = await journeyComponents(config);
+    const root = createRoot(document.getElementById("root"));
+    await act(async () => {
+      root.render(React.createElement(components.WalletProviders, null, React.createElement(components.MetaMaskDashboardSignIn)));
+    });
+    await until(() => buttonByText("Connect MetaMask")?.disabled === false);
+    await act(async () => { buttonByText("Connect MetaMask").click(); });
+    await until(() => buttonByText("Sign and open dashboard")?.disabled === false);
+    await act(async () => { buttonByText("Sign and open dashboard").click(); });
+    await until(() => routes.includes("/dashboard"));
+    assert.deepEqual(fetches.map(([path]) => path), ["/api/auth/metamask/challenge", "/api/auth/metamask/verify"]);
+
+    await act(async () => { root.unmount(); });
+    const refreshedConfig = configModule.getTool402WagmiConfig();
+    const refreshedComponents = await journeyComponents(refreshedConfig);
+    const refreshedRoot = createRoot(document.getElementById("root"));
+    await act(async () => {
+      refreshedRoot.render(React.createElement(refreshedComponents.WalletProviders, null, React.createElement(refreshedComponents.DashboardSessionSync, {
+        address,
+        issuedAt: "2026-09-14T12:00:00.000Z",
+      }, "signed dashboard")));
+    });
+    await until(() => document.body.textContent.includes("signed dashboard"));
+    await act(async () => { wallet.switchAccount(switchedAddress); });
+    await until(() => routes.includes("/sign-in/account-changed"));
+    assert.equal(fetches.at(-1)?.[0], "/api/auth/logout");
+    await act(async () => { refreshedRoot.unmount(); });
+  } finally {
+    globalThis.fetch = originalFetch;
+    delete globalThis.__tool402WalletJourneyRouter;
     delete globalThis.__tool402WagmiTestConfig;
     restoreDom();
   }

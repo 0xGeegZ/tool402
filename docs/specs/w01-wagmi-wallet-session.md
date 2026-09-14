@@ -85,6 +85,11 @@ projection, and transaction verification remain authoritative.
 - Redirect to `/sign-in` only after the existing logout endpoint returns its
   success status. If logout fails, keep sensitive actions blocked and show a
   recovery message; never claim that server logout occurred.
+- Dashboard logout, retry, sign-in and stale-session cleanup serialize cookie
+  mutations through the same browser lock. After waiting, a queued logout
+  confirms that its dashboard wallet is still stale before it can clear a
+  newer session; browsers without that API retain the server-side conditional
+  address/issued-at check.
 - Abort or generation-guard obsolete auth/logout/data requests. Account- and
   chain-scoped private query keys must be removed or invalidated on a relevant
   change without deleting durable payment/transaction evidence. Do not loop
@@ -144,6 +149,11 @@ corresponding source change. They must cover at least:
   rejected connect; wrong-chain and rejected switch; passive refresh reconnect;
   explicit disconnect followed by refresh; and one authoritative connection
   across navigation.
+- An actual React `StrictMode` + `WagmiProvider` mount with the installed
+  persistence adapter: slow neutral-to-restored connection, account/network
+  changes, a pending explicit connection, and an explicit disconnect refresh.
+  A deterministic mock-wallet journey covers connect, dashboard sign-in,
+  refresh and account-change logout without a real wallet prompt.
 - Slow hydration without logout; successful exact challenge/sign/verify;
   account change during authentication; expired/invalid session; failed logout
   recovery; no stale private cache/result crossing accounts.
