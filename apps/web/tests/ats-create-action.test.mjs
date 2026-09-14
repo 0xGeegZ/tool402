@@ -559,7 +559,7 @@ test("keeps a conflicting persisted ATS recovery instead of accepting typed repl
   assert.ok(scope);
   const claim = await recovery.beginStageBRecovery(scope);
   assert.equal(claim.kind, "claimed");
-  if (claim.kind === "claimed") assert.equal(recovery.persistStageBRecovery(scope, claim.claimId, originalHash), true);
+  if (claim.kind === "claimed") assert.equal(await recovery.persistStageBRecovery(scope, claim.claimId, originalHash), true);
   const bridge = {
     isCanonicalStageBTransactionHash: (value) => typeof value === "string" && /^0x[0-9a-f]{64}$/u.test(value),
     createStageBBrowserProviderBridge: () => ({

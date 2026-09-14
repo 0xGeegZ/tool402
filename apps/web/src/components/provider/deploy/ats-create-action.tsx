@@ -193,8 +193,8 @@ export function AtsCreateAction({
         wallet: actionController.wallet,
         readCurrentWallet: () => stageBWalletContext(walletRef.current),
         sendTransaction: (request) => sendTransaction(request),
-        onTransactionHash: (hash) => {
-          if (!persistStageBRecovery(actionRecoveryScope, claimId, hash)) throw new Error("Unable to retain the submitted transaction for recovery.");
+        onTransactionHash: async (hash) => {
+          if (!await persistStageBRecovery(actionRecoveryScope, claimId, hash)) throw new Error("Unable to retain the submitted transaction for recovery.");
         },
         getTransactionReceipt: ({ hash }) => publicClient?.getTransactionReceipt({ hash }) ?? Promise.resolve(null),
         fetch,
@@ -217,7 +217,7 @@ export function AtsCreateAction({
         }
       }
       if (outcome.kind === "rejected") {
-        releaseStageBRecoveryReservation(actionRecoveryScope, claimId);
+        await releaseStageBRecoveryReservation(actionRecoveryScope, claimId);
         setSubmittedFor(null);
       }
       setFeedback(outcome.kind === "rejected"
@@ -264,7 +264,7 @@ export function AtsCreateAction({
       const outcome = await controller.current.recover(recoveryHash);
       if (controllerContext.current !== actionContext || sessionChanged.current) return;
       if (outcome.kind === "candidate") {
-        if (claim.kind === "claimed" && !persistStageBRecovery(actionRecoveryScope, claim.claimId, recoveryHash)) {
+        if (claim.kind === "claimed" && !await persistStageBRecovery(actionRecoveryScope, claim.claimId, recoveryHash)) {
           setRecovery({ context: actionContext, hash: recoveryHash, pending: false, persisted: false });
           setFeedback("The corroborated transaction could not be retained safely. Creation remains blocked.");
           return;
@@ -292,11 +292,11 @@ export function AtsCreateAction({
         setFeedback("The public transaction was corroborated. Attach the candidate with the separate signature step.");
         return;
       }
-      if (claim.kind === "claimed") releaseStageBRecoveryReservation(actionRecoveryScope, claim.claimId);
+      if (claim.kind === "claimed") await releaseStageBRecoveryReservation(actionRecoveryScope, claim.claimId);
       setRecovery({ context: actionContext, hash: recoveryHash, pending: false, persisted: currentRecovery?.persisted === true });
       setFeedback("The public transaction could not be corroborated. No MetaMask request or new transaction was made.");
     } catch {
-      if (claim.kind === "claimed") releaseStageBRecoveryReservation(actionRecoveryScope, claim.claimId);
+      if (claim.kind === "claimed") await releaseStageBRecoveryReservation(actionRecoveryScope, claim.claimId);
       setRecovery({ context: actionContext, hash: recoveryHash, pending: false, persisted: currentRecovery?.persisted === true });
       setFeedback("The public transaction could not be corroborated. No MetaMask request or new transaction was made.");
     } finally {

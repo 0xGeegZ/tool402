@@ -47,7 +47,7 @@ function isScope(value: unknown): value is StageBRecoveryScope {
 function isLegacyRecord(value: unknown): value is LegacyStageBRecoveryRecord {
   const record = exactRecord(value);
   return record !== null
-    && (Object.keys(record).length === 3 || Object.keys(record).length === 4)
+    && (Object.keys(record).length === 2 || Object.keys(record).length === 3 || Object.keys(record).length === 4)
     && record.version === 1
     && (record.state === undefined || record.state === "submitted")
     && (record.hash === undefined || isCanonicalStageBTransactionHash(record.hash))
@@ -119,9 +119,7 @@ export function readStageBRecovery(scope: StageBRecoveryScope): string | null {
   }
 }
 
-function writeStageBRecovery(record: StageBRecoveryRecord): boolean {
-  const local = storage();
-  if (local === null) return false;
+function writeStageBRecovery(local: Storage, record: StageBRecoveryRecord): boolean {
   try {
     local.setItem(key(record.scope), JSON.stringify(record));
     return true;
@@ -130,18 +128,28 @@ function writeStageBRecovery(record: StageBRecoveryRecord): boolean {
   }
 }
 
-export function persistStageBRecovery(scope: StageBRecoveryScope, claimId: string, hash: string): boolean {
-  if (!isCanonicalStageBTransactionHash(hash)) return false;
+async function withStageBRecoveryLock<T>(scope: StageBRecoveryScope, unavailable: T, operation: (local: Storage) => T | Promise<T>): Promise<T> {
   const local = storage();
-  if (local === null) return false;
+  if (local === null || typeof navigator === "undefined" || navigator.locks === undefined) return unavailable;
   try {
-    const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
-    if (!isRecord(parsed) || !sameScope(parsed.scope, scope) || parsed.claimId !== claimId || parsed.state !== "reserved") return false;
-    if (parsed.recoveryHash !== undefined && parsed.recoveryHash !== hash) return false;
-    return writeStageBRecovery(Object.freeze({ version: 2, claimId, state: "submitted", hash, scope }));
+    return await navigator.locks.request(`tool402:ats-create:${key(scope)}`, { mode: "exclusive" }, () => operation(local));
   } catch {
-    return false;
+    return unavailable;
   }
+}
+
+export async function persistStageBRecovery(scope: StageBRecoveryScope, claimId: string, hash: string): Promise<boolean> {
+  if (!isCanonicalStageBTransactionHash(hash)) return false;
+  return withStageBRecoveryLock(scope, false, (local) => {
+    try {
+      const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
+      if (!isRecord(parsed) || !sameScope(parsed.scope, scope) || parsed.claimId !== claimId || parsed.state !== "reserved") return false;
+      if (parsed.recoveryHash !== undefined && parsed.recoveryHash !== hash) return false;
+      return writeStageBRecovery(local, Object.freeze({ version: 2, claimId, state: "submitted", hash, scope }));
+    } catch {
+      return false;
+    }
+  });
 }
 
 export function hasStageBRecovery(scope: StageBRecoveryScope): boolean {
@@ -182,68 +190,63 @@ function createClaimId(): string {
 }
 
 export async function beginStageBRecovery(scope: StageBRecoveryScope): Promise<StageBRecoveryClaim> {
-  const local = storage();
-  if (local === null || typeof navigator === "undefined" || navigator.locks === undefined) return { kind: "unavailable" };
-  try {
-    return await navigator.locks.request(`tool402:ats-create:${key(scope)}`, { mode: "exclusive" }, () => {
-      try {
-        const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
-        if (parsed !== null) return isKnownRecord(parsed) && sameScope(parsed.scope, scope) ? { kind: "existing" } : { kind: "unavailable" };
-        const claimId = createClaimId();
-        return writeStageBRecovery(Object.freeze({ version: 2, claimId, state: "reserved", scope }))
-          ? { kind: "claimed", claimId }
-          : { kind: "unavailable" };
-      } catch {
-        return { kind: "unavailable" };
-      }
-    });
-  } catch {
-    return { kind: "unavailable" };
-  }
+  return withStageBRecoveryLock(scope, { kind: "unavailable" }, (local) => {
+    try {
+      const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
+      if (parsed !== null) return isKnownRecord(parsed) && sameScope(parsed.scope, scope) ? { kind: "existing" } : { kind: "unavailable" };
+      const claimId = createClaimId();
+      return writeStageBRecovery(local, Object.freeze({ version: 2, claimId, state: "reserved", scope }))
+        ? { kind: "claimed", claimId }
+        : { kind: "unavailable" };
+    } catch {
+      return { kind: "unavailable" };
+    }
+  });
 }
 
 export async function reconcileStageBRecovery(scope: StageBRecoveryScope, hash: string): Promise<StageBRecoveryReconciliation> {
-  const local = storage();
-  if (!isCanonicalStageBTransactionHash(hash) || local === null || typeof navigator === "undefined" || navigator.locks === undefined) return { kind: "unavailable" };
-  try {
-    return await navigator.locks.request(`tool402:ats-create:${key(scope)}`, { mode: "exclusive" }, () => {
-      try {
-        const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
-        if (!isRecord(parsed) || !sameScope(parsed.scope, scope)) return { kind: "unavailable" };
-        if (parsed.state === "submitted") return parsed.hash === hash ? { kind: "existing" } : { kind: "conflict" };
-        if (parsed.recoveryHash !== undefined) return parsed.recoveryHash === hash ? { kind: "existing" } : { kind: "conflict" };
-        return writeStageBRecovery(Object.freeze({ ...parsed, recoveryHash: hash }))
+  if (!isCanonicalStageBTransactionHash(hash)) return { kind: "unavailable" };
+  return withStageBRecoveryLock(scope, { kind: "unavailable" }, (local) => {
+    try {
+      const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
+      if (!isKnownRecord(parsed) || !sameScope(parsed.scope, scope)) return { kind: "unavailable" };
+      if (isLegacyRecord(parsed)) {
+        if (parsed.hash !== undefined) return parsed.hash === hash ? { kind: "existing" } : { kind: "conflict" };
+        return writeStageBRecovery(local, Object.freeze({ version: 2, claimId: createClaimId(), state: "reserved", recoveryHash: hash, scope }))
           ? { kind: "reconciled" }
           : { kind: "unavailable" };
-      } catch {
-        return { kind: "unavailable" };
       }
-    });
-  } catch {
-    return { kind: "unavailable" };
-  }
+      if (parsed.state === "submitted") return parsed.hash === hash ? { kind: "existing" } : { kind: "conflict" };
+      if (parsed.recoveryHash !== undefined) return parsed.recoveryHash === hash ? { kind: "existing" } : { kind: "conflict" };
+      return writeStageBRecovery(local, Object.freeze({ ...parsed, recoveryHash: hash })) ? { kind: "reconciled" } : { kind: "unavailable" };
+    } catch {
+      return { kind: "unavailable" };
+    }
+  });
 }
 
-export function releaseStageBRecoveryReservation(scope: StageBRecoveryScope, claimId: string): boolean {
-  const local = storage();
-  if (local === null) return false;
-  try {
-    const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
-    if (!isRecord(parsed) || !sameScope(parsed.scope, scope) || parsed.claimId !== claimId || parsed.state !== "reserved" || parsed.recoveryHash !== undefined) return false;
-    local.removeItem(key(scope));
-    return true;
-  } catch {
-    return false;
-  }
+export async function releaseStageBRecoveryReservation(scope: StageBRecoveryScope, claimId: string): Promise<boolean> {
+  return withStageBRecoveryLock(scope, false, (local) => {
+    try {
+      const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
+      if (!isRecord(parsed) || !sameScope(parsed.scope, scope) || parsed.claimId !== claimId || parsed.state !== "reserved" || parsed.recoveryHash !== undefined) return false;
+      local.removeItem(key(scope));
+      return true;
+    } catch {
+      return false;
+    }
+  });
 }
 
-export function clearStageBRecovery(scope: StageBRecoveryScope, hash: string): void {
-  const local = storage();
-  if (local === null) return;
-  try {
-    const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
-    if (isKnownRecord(parsed) && sameScope(parsed.scope, scope) && parsed.hash === hash) local.removeItem(key(scope));
-  } catch {
-    // A malformed or unavailable browser store cannot affect the corroborated candidate.
-  }
+export async function clearStageBRecovery(scope: StageBRecoveryScope, hash: string): Promise<boolean> {
+  return withStageBRecoveryLock(scope, false, (local) => {
+    try {
+      const parsed: unknown = JSON.parse(local.getItem(key(scope)) ?? "null");
+      if (!isKnownRecord(parsed) || !sameScope(parsed.scope, scope) || parsed.hash !== hash) return false;
+      local.removeItem(key(scope));
+      return true;
+    } catch {
+      return false;
+    }
+  });
 }
