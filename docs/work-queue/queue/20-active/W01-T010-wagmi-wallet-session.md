@@ -41,6 +41,20 @@ authorized until a fresh independent RED review accepts intended W01 failures.
 The preexisting Stage-2 provider journey failure and legacy wallet discovery
 count failure are baseline facts, not W01 RED evidence.
 
+## Owner-directed final scope amendment
+
+The owner directs W01's final client-transport source, package, and lockfile
+scope, including the narrow S36 compatibility transfer and the same-origin
+Stage-B recovery helper recorded in `FILE-OWNERSHIP.md`. This supersedes only
+the preceding test-only prohibition. It preserves every M49/M50/M51/M53/M54/
+M56/M58/B04 invariant and does not authorize a real wallet request, signature,
+transaction, funding, deployment, merge, or submission. Independent final
+review and exact-head evidence remain required before delivery.
+
+The final acceptance evidence must record the exact tested head, browser mock
+journey, baseline limitations, and an independent review before this card can
+move out of `20-active`.
+
 ## Acceptance requirements
 
 - One Wagmi connection authority; no custom provider discovery, connection

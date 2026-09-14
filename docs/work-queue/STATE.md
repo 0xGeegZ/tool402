@@ -78,6 +78,17 @@
   RED review accepts the intended failures. The existing provider-journey
   Stage-2 and wallet-state discovery-count failures remain baseline context.
 
+- W01_FINAL_SCOPE_AMENDMENT: The owner directs the declared client-transport
+  source/package surface,
+  including the narrow S36 compatibility adaptation and same-origin Stage-B
+  claim helper recorded in FILE-OWNERSHIP.md. It supersedes only W01's
+  test-only source prohibition; it also narrowly supersedes M54's
+  browser-persistence prohibition for attempt-scoped, same-origin Stage-B
+  evidence only. All wallet, signature, transaction, funding, deployment,
+  merge, submission, and other human authority remain excluded. Final delivery
+  still requires exact-head validation, browser mock evidence, refreshed
+  records, and independent review.
+
 - S38_S39_S47_MERGED_LANE_RECONCILIATION: At `origin/main`
   `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, S38-T010, S39-T010, and
   S47-T010 are documented as completed local source deliveries. Their merged

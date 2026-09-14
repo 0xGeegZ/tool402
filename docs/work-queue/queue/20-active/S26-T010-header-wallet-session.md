@@ -102,6 +102,14 @@ so the server dashboard guard is evaluated on its click. Neither change may
 call `eth_requestAccounts`, sign, switch, store, retry, transact, or infer
 authority; an explicit header click remains required to request an account.
 
+## W01 successor reconciliation
+
+W01-T010 replaces this card's removed custom `wallet-session.tsx` with the
+shared Wagmi provider and derived hook. S26's historical presentation record
+remains intact, but its former session implementation and assertion no longer
+reserve a legacy fallback. The W01 card and FILE-OWNERSHIP record own the
+replacement boundary; this does not change S26's human-action exclusions.
+
 ## Human worktree lane request
 
 - Requested at `2026-09-10T19:00:00Z` by the human operator (repository

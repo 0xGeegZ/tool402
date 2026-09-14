@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import {
   ProviderNotFoundError,
   useConnect,
@@ -15,8 +15,6 @@ import { useWalletHydrated } from "./wallet-providers";
 export const tool402HederaTestnetChainId = 296;
 const metaMaskConnectorId = "metaMask";
 const metaMaskRdns = "io.metamask";
-export const passiveConnectionTimeoutMs = 5_000;
-
 type ConnectionStatus = "connected" | "connecting" | "disconnected" | "reconnecting";
 
 interface WalletStateInput {
@@ -127,9 +125,6 @@ export function useTool402Wallet() {
   const account = connection.address?.toLowerCase();
   const identity = `${connection.status}:${account ?? ""}:${connection.chainId ?? ""}:${connection.connector?.id ?? ""}`;
   const generationRef = useRef({ identity, generation: 0 });
-  const explicitConnectionRef = useRef(false);
-  const disconnectRef = useRef(disconnectAsync);
-  disconnectRef.current = disconnectAsync;
   if (generationRef.current.identity !== identity) {
     generationRef.current = {
       identity,
@@ -154,16 +149,6 @@ export function useTool402Wallet() {
   });
   const state: Tool402WalletState = hydrated ? derivedState : { kind: "resolving" };
 
-  useEffect(() => {
-    if (connection.status !== "connecting" && connection.status !== "reconnecting") {
-      explicitConnectionRef.current = false;
-      return;
-    }
-    if (!hydrated || explicitConnectionRef.current) return;
-    const timeout = window.setTimeout(() => { void disconnectRef.current(); }, passiveConnectionTimeoutMs);
-    return () => window.clearTimeout(timeout);
-  }, [connection.status, hydrated]);
-
   return {
     connection: currentConnection,
     resolved: hydrated && connection.status !== "reconnecting",
@@ -171,7 +156,6 @@ export function useTool402Wallet() {
     connectErrorCode: walletErrorCode(connectError),
     async connect() {
       if (metaMask !== undefined) {
-        explicitConnectionRef.current = true;
         try {
           await connectAsync({ connector: metaMask });
         } catch {
@@ -190,7 +174,6 @@ export function useTool402Wallet() {
       }
     },
     async cancelConnection() {
-      explicitConnectionRef.current = false;
       try {
         // A connection request has no established connector yet. Omitting it clears Wagmi's
         // pending state without issuing another request to MetaMask.

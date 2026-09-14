@@ -92,16 +92,6 @@ test("holds the UI in a resolving state until Wagmi persistence hydrates", async
   assert.equal(wallet.resolved, false);
 });
 
-test("bounds only a passive connection or reconnection that remains pending after hydration", async () => {
-  const source = await readFile(join(appRoot, hookPath), "utf8");
-
-  assert.match(source, /export const passiveConnectionTimeoutMs = 5_000/u);
-  assert.match(source, /connection\.status !== "connecting" && connection\.status !== "reconnecting"/u);
-  assert.match(source, /!hydrated \|\| explicitConnectionRef\.current/u);
-  assert.match(source, /window\.setTimeout\(\(\) => \{ void disconnectRef\.current\(\); \}, passiveConnectionTimeoutMs\)/u);
-  assert.match(source, /explicitConnectionRef\.current = true/u);
-});
-
 test("can clear a connection attempt that has not established a connector", async () => {
   const instance = harness({ connection: { status: "connecting", address: undefined, chainId: undefined, connector: undefined } });
   const { useTool402Wallet } = await loadHook(instance.hooks);

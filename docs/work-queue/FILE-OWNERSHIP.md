@@ -32,9 +32,13 @@ candidate source paths: `apps/web/src/app/layout.tsx`,
 `apps/web/src/components/auth/dashboard-session-sync.tsx`,
 `apps/web/src/components/provider/deploy/ats-create-action.tsx`,
 `apps/web/src/components/provider/deploy/deploy-stage-signing.tsx`,
+`apps/web/src/components/provider/deploy/provider-deploy-stages.tsx`,
+`apps/web/src/components/provider/deploy/stage-b-recovery.ts`,
 `apps/web/src/components/backing/backing-flow.tsx`,
 `apps/web/src/components/backing/backing-state.ts`, and
-`apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`. Its exact candidate
+`apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`,
+`apps/web/src/lib/wallet/wallet-error.ts`, and
+`apps/web/src/app/sign-in/page.tsx`. Its exact candidate
 test paths are `wagmi-provider.test.mjs`, `wallet-session.test.mjs`,
 `wallet-state.test.mjs`, `wallet-session-sync.test.mjs`,
 `metamask-provider.test.mjs`, `dashboard-auth.test.mjs`,
@@ -42,11 +46,15 @@ test paths are `wagmi-provider.test.mjs`, `wallet-session.test.mjs`,
 `tool402-command-wagmi-compatibility.test.mjs`, `commands-api.test.mjs`,
 `backing-route.test.mjs`, `backing-state.test.mjs`,
 `stage-b-browser-provider-bridge.test.mjs`, `ats-create-action.test.mjs`, and
-`deploy-stage-signing.test.mjs`, and `provider-tool-journey.test.mjs`, all
-under `apps/web/tests/`. All candidate
-source, package and lockfile changes are prohibited until RED acceptance. Its
-sixteen exact candidate test paths are reserved for durable RED; no other test
-path is active.
+`deploy-stage-signing.test.mjs`, `provider-tool-journey.test.mjs`,
+`stage-b-recovery.test.mjs`, `signature-dialog.test.mjs`, and
+`static-shell.test.mjs`, all
+under `apps/web/tests/`. The initial activation reserved its sixteen original
+test paths for durable RED and prohibited source, package, and lockfile
+changes. The owner-directed final W01 scope amendment below supersedes that
+initial test-only restriction: all nineteen named test paths and only the
+declared client-transport source/package paths are active; no other test or
+source path is active.
 
 The root transfers only client-transport migration seams to W01: S26 transfers
 the shared session/header/layout/deploy-signing/backing-flow composition;
@@ -56,10 +64,25 @@ transport adaptation in deploy-signing/test; M53 transfers only the bridge/
 bridge-test transport adaptation; M54 transfers only bridge, ATS action,
 deploy-signing and their tests; M56 transfers backing flow/state and backing
 tests; and B04 transfers only the overlapping bridge and bridge-test transport
-adaptation. S36's provider-stage handoff is not transferred or modified. W01
+adaptation. S36 transfers only the `provider-deploy-stages.tsx` compatibility
+surface: W01 may replace its shared-session input with the derived Wagmi
+connection while retaining the existing presentation, stage choice, and one
+activation callback. The S36 UI contract and its presentation-only boundary
+remain authoritative. W01
 must preserve M51 durable-resume, M53 receipt selection, M54 read-only
 recovery, M56/M58 reservation/hash evidence, B04 identity constraints, and
 accepted M49/M50 calldata/candidate/passive-session safety.
+
+The owner-directed final W01 scope amendment additionally transfers the
+minimal same-origin Stage-B recovery helper and its focused contract so the
+W01 transport migration can make a browser submission claim authoritative
+across tabs. It may reserve or release only its own proven pre-broadcast claim,
+and it must retain another operation's submitted or unknown hash. This is a
+browser-evidence boundary only: it grants no wallet authority, signature,
+transaction, deployment, or live action. The `wallet-error.ts`,
+`signature-dialog.test.mjs`, `static-shell.test.mjs`, and sign-in suspense
+amendments are W01 compatibility assertions only; they do not transfer any
+other S36/S40 behavior.
 
 Open PR #118 remains an external conflict record, not W01-owned source: at
 head `db83f47a` against `main` `9bd52322` it changes
@@ -102,7 +125,15 @@ pushes, plus only `apps/web/src/lib/ats/stage-b-browser-provider-bridge.ts`,
 four focused Web contracts. It may only recover a candidate from an explicit
 canonical public hash through existing bounded checks; it cannot send, sign,
 relay, attach, persist browser data, configure a runtime, or perform a live
-action. Stage 4 durable continuation remains outside M54.
+action. Stage 4 durable continuation remains outside M54. The owner-directed
+W01 successor amendment is the sole exception to M54's browser-persistence
+prohibition: `apps/web/src/components/provider/deploy/stage-b-recovery.ts` and
+its focused contract may retain same-origin, attempt-scoped browser evidence
+only to coordinate an atomic pre-broadcast claim across tabs. It is distinct
+from M54's canonical-public-hash recovery, cannot create a candidate, and may
+release only its own definitively rejected pre-broadcast claim; submitted or
+unknown hashes remain immutable. It grants no wallet, signature, relay,
+attachment, transaction, deployment, configuration, or live authority.
 
 M53-T010 is a root-owned `20-active` CORE_P0 receipt-decoder correction. It
 owns its card, specification, and queue/review records. Root transferred the
