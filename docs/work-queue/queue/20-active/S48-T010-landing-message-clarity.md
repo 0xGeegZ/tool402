@@ -46,6 +46,15 @@ record is [`S48-T010-red-activation`](../../evidence/S48-T010-red-activation.md)
 Production copy remains frozen until the focused test fails for the approved
 message contract and that RED result is recorded.
 
+## RED acceptance
+
+The focused contract at `10233dae` has the five expected message-absence
+failures recorded in
+[`S48-T010-red-acceptance`](../../evidence/S48-T010-red-acceptance.md). S48
+may amend only the hero, sections, footer, `metadata` object, and its two
+focused contracts for minimal GREEN. All routes, styling, S26's header and
+shell wrapper, and runtime boundaries remain unchanged.
+
 ## Boundary
 
 This card changes English public copy only. It must present Tool402 as a

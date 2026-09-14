@@ -23,6 +23,13 @@
   observed message-contract RED. The S26 header and shell-wrapper reservation
   remains unchanged.
 
+- S48_LANDING_MESSAGE_CLARITY_RED_ACCEPTANCE: At test-only source `10233dae`,
+  focused Node 22 landing contracts pass 7/12 and fail 5/12 solely for the
+  absent approved marketplace copy, CTA labels, card facts, metadata, and
+  benefits heading. The observed RED is accepted; only the four static copy
+  seams and two focused contracts may now change for GREEN. S26's header and
+  shell wrapper remain excluded.
+
 - S38_S39_S47_MERGED_LANE_RECONCILIATION: At `origin/main`
   `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, S38-T010, S39-T010, and
   S47-T010 are documented as completed local source deliveries. Their merged
