@@ -90,6 +90,7 @@ export function AtsCreateAction({
   const controllerContext = useRef<ControllerContext>({ preparedAttemptPublicId, selectedToolPublicId, wallet: currentWallet });
   const actionInFlight = useRef<ControllerContext | null>(null);
   const sessionChanged = useRef(false);
+  const mounted = useRef(false);
   const [terminalOutcome, setTerminalOutcome] = useState<ControllerContext | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [recovery, setRecovery] = useState<Readonly<{ context: ControllerContext; hash: string; pending: boolean; persisted: boolean }> | null>(null);
@@ -101,6 +102,13 @@ export function AtsCreateAction({
   const nextControllerContext = { preparedAttemptPublicId, selectedToolPublicId, wallet: currentWallet };
   const contextMatchesRender = isSameControllerContext(controllerContext.current, nextControllerContext);
   const currentRecoveryScope = recoveryScope(nextControllerContext);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     walletRef.current = wallet;
@@ -168,16 +176,33 @@ export function AtsCreateAction({
   const enabled = candidateActionAvailable && recoveryResolved && !submitted && !terminalForCurrentContext && !inFlightForCurrentContext && currentRecoveryScope !== null;
   const recoveryEnabled = recoveryAvailable && !inFlightForCurrentContext && currentRecovery?.pending !== true && isCanonicalStageBTransactionHash(currentRecovery?.hash ?? "");
 
+  function operationIsCurrent(actionContext: ControllerContext): boolean {
+    return mounted.current
+      && !sessionChanged.current
+      && isSameControllerContext(controllerContext.current, actionContext);
+  }
+
+  function finishAction(actionContext: ControllerContext) {
+    if (actionInFlight.current !== actionContext) return;
+    actionInFlight.current = null;
+    if (operationIsCurrent(actionContext)) setInFlight(null);
+  }
+
   async function requestCandidate() {
     const actionContext = controllerContext.current;
     const actionRecoveryScope = recoveryScope(actionContext);
-    if (!enabled || !recoveryResolved || submitted || actionRecoveryScope === null || actionContext.preparedAttemptPublicId === undefined || controller.current === null || actionInFlight.current !== null || stageBRecoveryStatus(actionRecoveryScope) !== "clear") return;
+    const actionController = controller.current;
+    if (!enabled || !recoveryResolved || submitted || actionRecoveryScope === null || actionContext.preparedAttemptPublicId === undefined || actionController === null || actionInFlight.current !== null || stageBRecoveryStatus(actionRecoveryScope) !== "clear") return;
     actionInFlight.current = actionContext;
     setInFlight(actionContext);
     const claim = await beginStageBRecovery(actionRecoveryScope);
+    if (!operationIsCurrent(actionContext)) {
+      if (claim.kind === "claimed") await releaseStageBRecoveryReservation(actionRecoveryScope, claim.claimId);
+      finishAction(actionContext);
+      return;
+    }
     if (claim.kind !== "claimed") {
-      actionInFlight.current = null;
-      setInFlight(null);
+      finishAction(actionContext);
       setSubmittedFor(actionContext);
       setFeedback(claim.kind === "existing"
         ? "This prepared attempt already has a submitted transaction to reconcile. Creation remains blocked."
@@ -187,8 +212,6 @@ export function AtsCreateAction({
     setSubmittedFor(actionContext);
     try {
       const claimId = claim.claimId;
-      const actionController = controller.current;
-      if (actionController === null) return;
       const bridge = createStageBBrowserProviderBridge({
         wallet: actionController.wallet,
         readCurrentWallet: () => stageBWalletContext(walletRef.current),
@@ -201,15 +224,15 @@ export function AtsCreateAction({
         configuration,
       });
       const outcome = await bridge.execute();
-      if (controllerContext.current !== actionContext || sessionChanged.current) return;
+      if (!operationIsCurrent(actionContext)) return;
       if (outcome.kind === "candidate") {
-        setTerminalOutcome(controllerContext.current);
+        setTerminalOutcome(actionContext);
         onCandidate(outcome.candidate);
         setFeedback("A local candidate was observed for this session. Attach it with the separate signature step.");
         return;
       }
       if (outcome.kind === "submission_unknown") {
-        setTerminalOutcome(controllerContext.current);
+        setTerminalOutcome(actionContext);
         if (outcome.transactionHash !== undefined) {
           setRecovery({ context: actionContext, hash: outcome.transactionHash, pending: false, persisted: true });
           setFeedback("The submitted transaction hash is ready for public recovery. No second transaction was made.");
@@ -218,21 +241,20 @@ export function AtsCreateAction({
       }
       if (outcome.kind === "rejected") {
         await releaseStageBRecoveryReservation(actionRecoveryScope, claimId);
+        if (!operationIsCurrent(actionContext)) return;
         setSubmittedFor(null);
       }
       setFeedback(outcome.kind === "rejected"
         ? "The wallet did not approve this local request. Nothing was submitted."
         : "The local result is unknown. Reload before choosing any new action; nothing is attached automatically.");
     } finally {
-      if (actionInFlight.current === actionContext) {
-        actionInFlight.current = null;
-        if (isSameControllerContext(controllerContext.current, actionContext)) setInFlight(null);
-      }
+      finishAction(actionContext);
     }
   }
 
   async function recoverCandidate() {
-    if (!recoveryEnabled || controller.current === null || actionInFlight.current !== null) return;
+    const actionController = controller.current;
+    if (!recoveryEnabled || actionController === null || actionInFlight.current !== null) return;
     const actionContext = controllerContext.current;
     const actionRecoveryScope = recoveryScope(actionContext);
     const recoveryHash = currentRecovery?.hash;
@@ -241,9 +263,13 @@ export function AtsCreateAction({
     setInFlight(actionContext);
     setRecovery({ context: actionContext, hash: recoveryHash, pending: true, persisted: currentRecovery?.persisted === true });
     const claim = await beginStageBRecovery(actionRecoveryScope);
+    if (!operationIsCurrent(actionContext)) {
+      if (claim.kind === "claimed") await releaseStageBRecoveryReservation(actionRecoveryScope, claim.claimId);
+      finishAction(actionContext);
+      return;
+    }
     if (claim.kind === "unavailable") {
-      actionInFlight.current = null;
-      setInFlight(null);
+      finishAction(actionContext);
       setRecovery({ context: actionContext, hash: recoveryHash, pending: false, persisted: currentRecovery?.persisted === true });
       setFeedback("This browser cannot safely retain transaction recovery evidence. Creation remains blocked.");
       return;
@@ -251,8 +277,7 @@ export function AtsCreateAction({
     if (claim.kind === "existing") {
       const existingHash = readStageBRecovery(actionRecoveryScope);
       if (existingHash !== null && existingHash !== recoveryHash) {
-        actionInFlight.current = null;
-        setInFlight(null);
+        finishAction(actionContext);
         setRecovery({ context: actionContext, hash: existingHash, pending: false, persisted: true });
         setSubmittedFor(actionContext);
         setFeedback("A different transaction is already retained for this prepared attempt. Creation remains blocked.");
@@ -261,17 +286,21 @@ export function AtsCreateAction({
       if (existingHash === null) setFeedback("The retained submission has no transaction hash. Verifying the supplied public hash; creation remains blocked.");
     }
     try {
-      const outcome = await controller.current.recover(recoveryHash);
-      if (controllerContext.current !== actionContext || sessionChanged.current) return;
+      const outcome = await actionController.recover(recoveryHash);
+      if (!operationIsCurrent(actionContext)) return;
       if (outcome.kind === "candidate") {
-        if (claim.kind === "claimed" && !await persistStageBRecovery(actionRecoveryScope, claim.claimId, recoveryHash)) {
-          setRecovery({ context: actionContext, hash: recoveryHash, pending: false, persisted: false });
-          setFeedback("The corroborated transaction could not be retained safely. Creation remains blocked.");
-          return;
+        if (claim.kind === "claimed") {
+          const persisted = await persistStageBRecovery(actionRecoveryScope, claim.claimId, recoveryHash);
+          if (!operationIsCurrent(actionContext)) return;
+          if (!persisted) {
+            setRecovery({ context: actionContext, hash: recoveryHash, pending: false, persisted: false });
+            setFeedback("The corroborated transaction could not be retained safely. Creation remains blocked.");
+            return;
+          }
         }
         if (claim.kind === "existing") {
           const reconciliation = await reconcileStageBRecovery(actionRecoveryScope, recoveryHash);
-          if (controllerContext.current !== actionContext || sessionChanged.current) return;
+          if (!operationIsCurrent(actionContext)) return;
           if (reconciliation.kind === "conflict") {
             const existingHash = readStageBRecovery(actionRecoveryScope);
             setRecovery({ context: actionContext, hash: existingHash ?? recoveryHash, pending: false, persisted: existingHash !== null });
@@ -285,25 +314,29 @@ export function AtsCreateAction({
             return;
           }
         }
+        if (!operationIsCurrent(actionContext)) return;
         setRecovery({ context: actionContext, hash: recoveryHash, pending: false, persisted: true });
         setSubmittedFor(actionContext);
-        setTerminalOutcome(controllerContext.current);
+        setTerminalOutcome(actionContext);
         onCandidate(outcome.candidate);
         setFeedback("The public transaction was corroborated. Attach the candidate with the separate signature step.");
         return;
       }
-      if (claim.kind === "claimed") await releaseStageBRecoveryReservation(actionRecoveryScope, claim.claimId);
+      if (claim.kind === "claimed") {
+        await releaseStageBRecoveryReservation(actionRecoveryScope, claim.claimId);
+        if (!operationIsCurrent(actionContext)) return;
+      }
       setRecovery({ context: actionContext, hash: recoveryHash, pending: false, persisted: currentRecovery?.persisted === true });
       setFeedback("The public transaction could not be corroborated. No MetaMask request or new transaction was made.");
     } catch {
-      if (claim.kind === "claimed") await releaseStageBRecoveryReservation(actionRecoveryScope, claim.claimId);
+      if (claim.kind === "claimed") {
+        await releaseStageBRecoveryReservation(actionRecoveryScope, claim.claimId);
+        if (!operationIsCurrent(actionContext)) return;
+      }
       setRecovery({ context: actionContext, hash: recoveryHash, pending: false, persisted: currentRecovery?.persisted === true });
       setFeedback("The public transaction could not be corroborated. No MetaMask request or new transaction was made.");
     } finally {
-      if (actionInFlight.current === actionContext) {
-        actionInFlight.current = null;
-        if (isSameControllerContext(controllerContext.current, actionContext)) setInFlight(null);
-      }
+      finishAction(actionContext);
     }
   }
 
