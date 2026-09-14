@@ -155,7 +155,7 @@ export function useTool402Wallet() {
   const state: Tool402WalletState = hydrated ? derivedState : { kind: "resolving" };
 
   useEffect(() => {
-    if (connection.status !== "connecting") {
+    if (connection.status !== "connecting" && connection.status !== "reconnecting") {
       explicitConnectionRef.current = false;
       return;
     }
