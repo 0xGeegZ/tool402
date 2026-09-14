@@ -526,7 +526,7 @@ dashboardNavigationTest("shows Dashboard only after server-side session validati
   assert.doesNotMatch(dashboardNavigation, /from\s*["'][^"']*\/wallet\//u);
 
   assert.match(rootLayout, /\bDashboardNavigation\b/u);
-  assert.match(rootLayout, /<Suspense\s+fallback=\{\s*<LocalNavigation\s*\/>\s*\}>\s*<DashboardNavigation\s*\/>\s*<\/Suspense>/u);
+  assert.match(rootLayout, /<Suspense\s+fallback=\{null\}>\s*<DashboardNavigation\s*\/>\s*<\/Suspense>/u);
   assert.doesNotMatch(rootLayout, /\b(?:cookieToInitialState|cookies)\(/u);
   assert.doesNotMatch(rootLayout, /export const instant = false;/u);
   assert.doesNotMatch(rootLayout, /\breadDashboardSession\b/u);

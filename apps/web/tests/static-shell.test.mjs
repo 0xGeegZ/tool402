@@ -40,6 +40,7 @@ test("declares the strict Next workspace boundary", async () => {
     "@types/node": "22.15.0",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
+    jsdom: "29.0.1",
     postcss: "8.5.28",
     tailwindcss: "4.3.3",
     typescript: "5.9.3",

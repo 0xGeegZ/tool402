@@ -47,10 +47,6 @@ export function DashboardSessionSync({
     );
   }, [address, router]);
 
-  const navigateToAccountChangedSignIn = useCallback(() => {
-    router.replace("/sign-in/account-changed");
-  }, [router]);
-
   const endSession = useCallback(() => {
     if (logoutStarted.current) return;
     logoutStarted.current = true;
@@ -70,14 +66,17 @@ export function DashboardSessionSync({
         return;
       }
       if (response.status === 409) {
-        navigateToAccountChangedSignIn();
+        // The browser has already established a newer signed session. Do not
+        // let this stale logout redirect or mask that current account.
+        logoutStarted.current = false;
+        router.refresh();
         return;
       }
       setLogoutFailed(true);
     }).catch(() => {
       setLogoutFailed(true);
     });
-  }, [address, issuedAt, navigateToAccountChangedSignIn, navigateToSignIn]);
+  }, [address, issuedAt, navigateToSignIn, router]);
 
   const retryLogout = useCallback(() => {
     logoutStarted.current = false;

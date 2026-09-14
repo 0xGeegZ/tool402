@@ -66,13 +66,18 @@ async function backingHarness({ stored = new Map(), payment, response }) {
       useEffect(effect) { effect(); },
     },
     "react/jsx-runtime": jsxRuntime,
-    wagmi: { useSendTransaction: () => ({ mutateAsync: async () => { sends += 1; throw new Error("a legacy recovery must never send"); } }) },
+    wagmi: {
+      usePublicClient: () => ({ getBalance: async () => 0n, estimateGas: async () => 0n, getGasPrice: async () => 0n }),
+      useSendTransaction: () => ({ mutateAsync: async () => { sends += 1; throw new Error("a legacy recovery must never send"); } }),
+    },
+    "next/link": "Link",
     "../../lib/hashscan-links.ts": { hashscanTransactionUrl: () => null },
     "../../lib/wallet/wallet-error.ts": { isUserRejectedWalletRequest: () => false },
     "../ui/badge": { Badge: "Badge" },
     "../ui/button": { Button: "Button" },
     "../ui/card": { Card: "Card", CardContent: "CardContent", CardDescription: "CardDescription", CardHeader: "CardHeader", CardTitle: "CardTitle" },
     "../ui/detail-list": { DetailList: "DetailList" },
+    "../ui/status": { StatusRegion: "StatusRegion" },
     "../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
     "../wallet/wallet-connect": { WalletIsland: "WalletIsland" },
     "../wallet/use-tool402-wallet": {
@@ -83,6 +88,8 @@ async function backingHarness({ stored = new Map(), payment, response }) {
     "./backing-state": {
       backingLifecycleLabels: { choosing: "choosing", prepared: "prepared", payment_submitted: "payment_submitted", payment_outcome_unknown: "payment_outcome_unknown", refused: "refused", allocation_pending: "allocation_pending", complete: "complete", offering_unavailable: "offering_unavailable" },
       createBackingIntent: () => { throw new Error("not used by recovery"); },
+      createFrozenBackingIntent: () => { throw new Error("not used by recovery"); },
+      createRecoveredBackingIntent: () => { throw new Error("not used by recovery"); },
       formatHbar: (value) => `${value.toString()} HBAR`,
       formatShare: (value) => value.toString(),
       isCurrentBackingIntent: () => true,
@@ -92,8 +99,10 @@ async function backingHarness({ stored = new Map(), payment, response }) {
       validateUnits: () => ({ ok: true, units: 1n }),
       viewAfterSignature: () => ({ kind: "choosing" }),
       viewAfterTransfer: () => ({ kind: "choosing" }),
+      viewForRecoveredPendingPayment: () => ({ kind: "choosing" }),
     },
     "./backing-step-rail": { BackingStepRail: "BackingStepRail" },
+    "./backing-balance": { assessFundingBalance: async () => "UNAVAILABLE" },
   };
   const { outputText } = typescript.transpileModule(await readFile(flowPath, "utf8"), {
     fileName: flowPath,
@@ -178,7 +187,7 @@ test("uses the Wagmi wallet context, signature dialog, and relay without a secon
   assert.match(flow, /transferRequest\(view\)/);
   assert.match(flow, /account: connection\.account/);
   assert.match(flow, /chainId: 296/);
-  assert.equal((flow.match(/isSameBackingConnection\(connectionRef\.current, connection\)/g) ?? []).length, 2, "the current wallet is checked again after reservation and before sending");
+  assert.equal((flow.match(/isSameBackingConnection\(connectionRef\.current, connection\)/g) ?? []).length, 3, "the current wallet is checked before and after reservation and before sending");
   assert.doesNotMatch(flow, /process\.env|setTimeout|setInterval|sessionStorage|https?:\/\//);
   assert.match(flow, /localStorage/);
   assert.match(flow, /Attach recorded transaction/);
