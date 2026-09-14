@@ -114,12 +114,19 @@ async function loadProviders() {
   });
   const wagmiCalls = [];
   const queryCalls = [];
+  const reconnectCalls = [];
+  const metaMask = { id: "io.metamask", rdns: "io.metamask" };
+  const rabby = { id: "io.rabby", rdns: "io.rabby" };
   const module = { exports: {} };
   class QueryClient {}
   let queryClient;
   let config;
   runInNewContext(outputText, {
     exports: module.exports,
+    window: {
+      setTimeout(callback) { callback(); return 1; },
+      clearTimeout() {},
+    },
     require(specifier) {
       switch (specifier) {
         case "react":
@@ -142,19 +149,26 @@ async function loadProviders() {
           return jsxRuntime;
         case "wagmi":
           return { WagmiProvider: (props) => { wagmiCalls.push(props); return props.children; } };
+        case "wagmi/actions":
+          return { reconnect: (...args) => { reconnectCalls.push(args); return []; } };
         case "@tanstack/react-query":
           return {
             QueryClient,
             QueryClientProvider: (props) => { queryCalls.push(props); return props.children; },
           };
         case "../../lib/wallet/wagmi-config":
-          return { getTool402WagmiConfig: () => ({ name: "tool402-config" }) };
+          return {
+            getTool402WagmiConfig: () => ({
+              name: "tool402-config",
+              connectors: [rabby, metaMask],
+            }),
+          };
         default:
           throw new Error(`unexpected provider import: ${specifier}`);
       }
     },
   }, { filename: providersPath });
-  return { WalletProviders: module.exports.WalletProviders, QueryClient, queryCalls, wagmiCalls };
+  return { WalletProviders: module.exports.WalletProviders, QueryClient, queryCalls, reconnectCalls, wagmiCalls };
 }
 
 implementedProviderTest("mounts one Wagmi config around one browser QueryClient", async () => {
@@ -168,6 +182,8 @@ implementedProviderTest("mounts one Wagmi config around one browser QueryClient"
   assert.equal(harness.wagmiCalls.length, 2);
   assert.equal(harness.wagmiCalls[0]?.config?.name, "tool402-config");
   assert.equal(harness.wagmiCalls[1]?.config?.name, "tool402-config");
+  assert.equal(harness.reconnectCalls.length, 2);
+  assert.deepEqual(harness.reconnectCalls[0]?.[1]?.connectors, [{ id: "io.metamask", rdns: "io.metamask" }]);
   assert.equal(harness.queryCalls.length, 2);
   assert.equal(harness.queryCalls[0]?.client instanceof harness.QueryClient, true);
   assert.equal(harness.queryCalls[0]?.client, harness.queryCalls[1]?.client);
@@ -181,8 +197,14 @@ implementedProviderTest("mounts the client provider once from the root layout", 
   assert.match(layout, /<WalletProviders initialState=\{initialState\}><ApplicationShell>\{children\}<\/ApplicationShell><\/WalletProviders>/u);
 });
 
-implementedProviderTest("hydrates cookie state before reconnecting on client mount", async () => {
+implementedProviderTest("delays the passive reconnect until the injected wallet is ready", async () => {
   const providers = await readFile(providersUrl, "utf8");
 
-  assert.match(providers, /<WagmiProvider\s+config=\{config\}\s+initialState=\{initialState\}>/u);
+  assert.match(providers, /import\s+\{\s*reconnect\s*\}\s+from\s+["']wagmi\/actions["']/u);
+  assert.match(providers, /passiveReconnectTimeoutMs\s*=\s*8_000/u);
+  assert.match(providers, /const connectors = config\.connectors\.filter\(isMetaMaskConnector\);/u);
+  assert.match(providers, /Promise\.race\(\[\s*reconnect\(config, \{ connectors \}\),/u);
+  assert.match(providers, /connector\.rdns === metaMaskRdns/u);
+  assert.match(providers, /status:\s*["']disconnected["']/u);
+  assert.match(providers, /<WagmiProvider\s+config=\{config\}\s+initialState=\{initialState\}\s+reconnectOnMount=\{false\}>/u);
 });

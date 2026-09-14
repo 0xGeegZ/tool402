@@ -7,7 +7,6 @@ import {
   useConfig,
   useConnection,
   useConnectors,
-  useDisconnect,
   useSwitchChain,
 } from "wagmi";
 
@@ -117,7 +116,6 @@ export function useTool402Wallet() {
   const connection = useConnection();
   const connectors = useConnectors();
   const { mutateAsync: connectAsync, error: connectError } = useConnect();
-  const { mutateAsync: disconnectAsync } = useDisconnect();
   const { mutateAsync: switchChainAsync, error: switchError } = useSwitchChain();
   const metaMask = connectors.find((connector) => connector.id === metaMaskRdns || hasMetaMaskRdns(connector))
     ?? connectors.find((connector) => connector.id === metaMaskConnectorId);
@@ -146,6 +144,19 @@ export function useTool402Wallet() {
     connectError,
     switchError,
   });
+  async function clearConnection(connector: typeof metaMask | Tool402WalletConnection["connector"]) {
+    if (connector !== undefined) {
+      await config.storage?.setItem(`${connector.id}.disconnected`, true);
+    }
+    await config.storage?.removeItem("recentConnectorId");
+    config.setState((current) => ({
+      ...current,
+      connections: new Map(),
+      current: null,
+      status: "disconnected",
+    }));
+  }
+
   return {
     connection: currentConnection,
     resolved: connection.status !== "reconnecting" && connection.status !== "connecting",
@@ -161,30 +172,12 @@ export function useTool402Wallet() {
       }
     },
     async disconnect() {
-      const connector = connection.connector ?? metaMask;
-      if (connector !== undefined) {
-        try {
-          await disconnectAsync({ connector });
-        } catch {
-          // The current connection remains authoritative until Wagmi reports otherwise.
-        }
-      }
+      await clearConnection(connection.connector ?? metaMask);
     },
     async cancelConnection() {
-      // Clear this before disconnecting: a broken injected provider can leave
-      // its disconnect promise pending, but it must never be retried on reload.
-      const connector = connection.connector ?? metaMask;
-      if (connector !== undefined) {
-        await config.storage?.setItem(`${connector.id}.disconnected`, true);
-      }
-      await config.storage?.removeItem("recentConnectorId");
-      try {
-        // A connection request has no established connector yet. Omitting it clears Wagmi's
-        // pending state without issuing another request to MetaMask.
-        await disconnectAsync();
-      } catch {
-        // The current connection remains authoritative until Wagmi reports otherwise.
-      }
+      // This only abandons the app's pending reconnect. It must not revoke
+      // the site's existing MetaMask permission through an injected-wallet RPC.
+      await clearConnection(connection.connector ?? metaMask);
     },
     async switchToHedera() {
       try {

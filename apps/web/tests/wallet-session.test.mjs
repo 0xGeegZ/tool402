@@ -37,7 +37,7 @@ async function loadHook(hooks) {
   return module.exports;
 }
 
-function harness({ connection, connectors, connectError, switchError, disconnectNeverResolves = false } = {}) {
+function harness({ connection, connectors, connectError, switchError } = {}) {
   const calls = { connect: [], disconnect: [], switchChain: [], removeStorage: [], setStorage: [] };
   const metaMask = { id: "metaMask", rdns: "io.metamask" };
   let current = connection ?? { status: "disconnected", address: undefined, chainId: undefined, connector: undefined };
@@ -46,18 +46,16 @@ function harness({ connection, connectors, connectError, switchError, disconnect
     metaMask,
     hooks: {
       ProviderNotFoundError,
-      useConfig: () => ({ storage: {
+      useConfig: () => ({
+        setState: (updater) => { current = updater(current); },
+        storage: {
         removeItem: async (key) => { calls.removeStorage.push(key); },
         setItem: async (key, value) => { calls.setStorage.push([key, value]); },
-      } }),
+        },
+      }),
       useConnection: () => current,
       useConnectors: () => connectors ?? [metaMask],
       useConnect: () => ({ error: connectError, mutateAsync: async (input) => { calls.connect.push(input); } }),
-      useDisconnect: () => ({ mutateAsync: async (input) => {
-        calls.disconnect.push(input);
-        if (disconnectNeverResolves) return await new Promise(() => {});
-        current = { status: "disconnected", address: undefined, chainId: undefined, connector: undefined };
-      } }),
       useSwitchChain: () => ({ error: switchError, mutateAsync: async (input) => { calls.switchChain.push(input); } }),
     },
   };
@@ -73,14 +71,15 @@ test("derives display state from Wagmi without connecting during passive restora
   assert.deepEqual(instance.calls, { connect: [], disconnect: [], switchChain: [], removeStorage: [], setStorage: [] });
 });
 
-test("clears the reconnect target before a broken provider can stall disconnect", async () => {
-  const instance = harness({ connection: { status: "connecting", address: undefined, chainId: undefined, connector: undefined }, disconnectNeverResolves: true });
+test("clears the reconnect target without revoking the wallet's site permission", async () => {
+  const instance = harness({ connection: { status: "connecting", address: undefined, chainId: undefined, connector: undefined } });
   const { useTool402Wallet } = await loadHook(instance.hooks);
 
   void useTool402Wallet().cancelConnection();
   await new Promise(setImmediate);
   assert.deepEqual(instance.calls.setStorage, [["metaMask.disconnected", true]]);
   assert.deepEqual(instance.calls.removeStorage, ["recentConnectorId"]);
+  assert.deepEqual(instance.calls.disconnect, []);
 });
 
 test("selects the Wagmi-discovered MetaMask connector rather than another injected wallet", async () => {
@@ -103,8 +102,7 @@ test("cancels a connection attempt and clears its persisted reconnect target", a
   const wallet = useTool402Wallet();
 
   await wallet.cancelConnection();
-  assert.equal(instance.calls.disconnect.length, 1);
-  assert.equal(instance.calls.disconnect[0], undefined);
+  assert.equal(instance.calls.disconnect.length, 0);
   assert.deepEqual(instance.calls.setStorage, [["metaMask.disconnected", true]]);
   assert.deepEqual(instance.calls.removeStorage, ["recentConnectorId"]);
 });
@@ -135,8 +133,8 @@ test("uses only explicit Wagmi mutations and normalizes the connected identity",
   await wallet.disconnect();
   assert.equal(instance.calls.switchChain.length, 1);
   assert.equal(instance.calls.switchChain[0]?.chainId, 296);
-  assert.equal(instance.calls.disconnect.length, 1);
-  assert.equal(instance.calls.disconnect[0]?.connector?.id, "metaMask");
+  assert.equal(instance.calls.disconnect.length, 0);
+  assert.deepEqual(instance.calls.setStorage, [["metaMask.disconnected", true]]);
 });
 
 test("reports a missing provider or rejected Wagmi operation without a fallback provider store", async () => {
