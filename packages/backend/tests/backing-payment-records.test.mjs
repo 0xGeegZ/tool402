@@ -221,6 +221,31 @@ test("refuses a second confirmation for a legacy confirmed hash without verified
   assert.equal(store.rows.backingPaymentClaims[0].state, "CONFIRMED");
 });
 
+test("refuses a second confirmation for a verified confirmed hash", async () => {
+  const { recordBackingPayment } = await import(storeUrl.href);
+  const signerA = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
+  const signerB = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const hash = `0x${"ab".repeat(32)}`;
+  const attemptB = "BBBBBBBBBBBBBBBBBBBBBA";
+  const store = reservationStoreDatabase({
+    attempts: [
+      { _id: "externalPrepareCommandAttempts:a", idempotencyKey: "AAAAAAAAAAAAAAAAAAAAAA", operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signerA, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "a".repeat(64), state: "CONFIRMED" },
+      { _id: "externalPrepareCommandAttempts:b", idempotencyKey: attemptB, operationKind: "HEDERA_FUNDING", role: "BACKER", chainId: 296, canonicalSignerAddress: signerB, expectedTarget: "0x1111111111111111111111111111111111111111", canonicalParametersHash: "b".repeat(64), state: "PREPARED" },
+    ],
+    intents: [{ _id: "backingIntents:b", idempotencyKey: attemptB, canonicalSignerAddress: signerB, offeringPublicId: "offering_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", tinybars: "7" }],
+    claims: [
+      { _id: "backingPaymentClaims:a", attemptId: "externalPrepareCommandAttempts:a", canonicalSignerAddress: signerA, offeringPublicId: "offering_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", tinybars: "7", state: "CONFIRMED", transactionHash: hash, verifiedTransactionHash: hash, claimedAt: 1n },
+      { _id: "backingPaymentClaims:b", attemptId: "externalPrepareCommandAttempts:b", canonicalSignerAddress: signerB, offeringPublicId: "offering_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", tinybars: "7", state: "PREPARED", claimedAt: 2n },
+    ],
+  });
+  assert.equal(
+    await recordBackingPayment._handler({ db: store.db }, { attemptPublicId: attemptB, canonicalSignerAddress: signerB, transactionHash: hash, tinybars: "7", outcome: "CONFIRMED" }),
+    null,
+  );
+  assert.equal(store.rows.backingPaymentClaims[0].verifiedTransactionHash, hash);
+  assert.equal(store.rows.backingPaymentClaims[0].state, "CONFIRMED");
+});
+
 test("keeps the shared ATS prepare attempt PREPARED while the dedicated backing claim changes state", async () => {
   const source = await readFile(storeUrl, "utf8");
   assert.match(source, /by_verified_transaction_hash/u);
