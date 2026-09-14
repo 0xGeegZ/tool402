@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { Suspense } from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { cookieToInitialState } from "wagmi";
 
 import "./globals.css";
 import { DashboardNavigation } from "../components/auth/dashboard-navigation";
@@ -9,6 +11,7 @@ import { DemoTourBar } from "../components/demo/demo-tour-bar";
 import { Logo } from "../components/tool402/logo";
 import { WalletIsland } from "../components/wallet/wallet-connect";
 import { WalletProviders } from "../components/wallet/wallet-providers";
+import { getTool402WagmiConfig } from "../lib/wallet/wagmi-config";
 
 export const metadata: Metadata = {
   title: "Tool402 | Tools AI agents can pay to use",
@@ -54,6 +57,15 @@ function ApplicationShell({ children }: Readonly<{ children: React.ReactNode }>)
   );
 }
 
+async function WalletApplication({ children }: Readonly<{ children: React.ReactNode }>) {
+  const initialState = cookieToInitialState(
+    getTool402WagmiConfig(),
+    (await cookies()).toString(),
+  );
+
+  return <WalletProviders initialState={initialState}><ApplicationShell>{children}</ApplicationShell></WalletProviders>;
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -62,7 +74,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-svh bg-background text-foreground antialiased">
-        <WalletProviders><ApplicationShell>{children}</ApplicationShell></WalletProviders>
+        <Suspense fallback={null}>
+          <WalletApplication>{children}</WalletApplication>
+        </Suspense>
       </body>
     </html>
   );

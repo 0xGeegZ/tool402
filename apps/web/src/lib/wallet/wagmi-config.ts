@@ -1,5 +1,4 @@
-import { cookieStorage, createConfig, createStorage, http } from "wagmi";
-import { metaMask } from "wagmi/connectors";
+import { cookieStorage, createConfig, createStorage, http, injected } from "wagmi";
 
 export const tool402HederaTestnet = {
   id: 296,
@@ -57,7 +56,7 @@ const walletStorage = {
 export function getTool402WagmiConfig() {
   return createConfig({
     chains: [tool402HederaTestnet],
-    connectors: [metaMask()],
+    connectors: [injected({ target: "metaMask" })],
     ssr: true,
     storage: createStorage({ storage: walletStorage }),
     transports: {

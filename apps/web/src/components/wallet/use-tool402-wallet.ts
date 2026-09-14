@@ -11,8 +11,6 @@ import {
   useSwitchChain,
 } from "wagmi";
 
-import { useWalletHydrated } from "./wallet-providers";
-
 export const tool402HederaTestnetChainId = 296;
 const metaMaskConnectorId = "metaMask";
 const metaMaskRdns = "io.metamask";
@@ -116,7 +114,6 @@ export function deriveTool402WalletState(input: WalletStateInput): Tool402Wallet
 
 export function useTool402Wallet() {
   const config = useConfig();
-  const hydrated = useWalletHydrated();
   const connection = useConnection();
   const connectors = useConnectors();
   const { mutateAsync: connectAsync, error: connectError } = useConnect();
@@ -149,11 +146,11 @@ export function useTool402Wallet() {
     connectError,
     switchError,
   });
-  const state: Tool402WalletState = hydrated ? derivedState : { kind: "resolving" };
+  const state = derivedState;
 
   return {
     connection: currentConnection,
-    resolved: hydrated && connection.status !== "reconnecting" && connection.status !== "connecting",
+    resolved: connection.status !== "reconnecting" && connection.status !== "connecting",
     state,
     connectErrorCode: walletErrorCode(connectError),
     async connect() {
@@ -178,6 +175,10 @@ export function useTool402Wallet() {
     async cancelConnection() {
       // Clear this before disconnecting: a broken injected provider can leave
       // its disconnect promise pending, but it must never be retried on reload.
+      const connector = connection.connector ?? metaMask;
+      if (connector !== undefined) {
+        await config.storage?.setItem(`${connector.id}.disconnected`, true);
+      }
       await config.storage?.removeItem("recentConnectorId");
       try {
         // A connection request has no established connector yet. Omitting it clears Wagmi's

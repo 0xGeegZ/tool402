@@ -44,15 +44,15 @@ implementedConfigTest("configures the one supported Hedera Testnet chain", () =>
   assert.equal(api.tool402HederaTestnet.name, "Hedera Testnet");
 });
 
-implementedConfigTest("starts server-neutral with one MetaMask connector", () => {
+implementedConfigTest("starts server-neutral with one injected MetaMask connector", () => {
   const config = api.getTool402WagmiConfig();
   assert.equal(config.state.status, "disconnected");
   assert.equal(config.state.current, null);
   assert.equal(config.state.connections.size, 0);
   const connectors = getConnectors(config);
   assert.equal(connectors.length, 1);
-  assert.equal(connectors[0]?.type, "metaMask");
-  assert.equal(connectors[0]?.id, "metaMaskSDK");
+  assert.equal(connectors[0]?.type, "injected");
+  assert.equal(connectors[0]?.id, "metaMask");
 });
 
 implementedConfigTest("uses the configured Hashio transport for its public client", () => {
@@ -74,9 +74,9 @@ async function captureConfigOptions() {
         createConfig: (value) => { options = value; return value; },
         createStorage: (value) => ({ ...value, configuredStorage: true }),
         cookieStorage: { kind: "cookieStorage" },
+        injected: (value) => ({ type: "injected", ...value }),
         http: (url) => ({ url }),
       };
-      if (specifier === "wagmi/connectors") return { metaMask: () => ({ type: "metaMask" }) };
       throw new Error(`unexpected config import: ${specifier}`);
     },
   }, { filename: configPath });
@@ -84,13 +84,14 @@ async function captureConfigOptions() {
   return options;
 }
 
-implementedConfigTest("uses SSR cookie persistence and the MetaMask connector", async () => {
+implementedConfigTest("uses SSR cookie persistence and explicitly targets MetaMask", async () => {
   const options = await captureConfigOptions();
   assert.equal(options?.ssr, true);
   assert.equal(options?.storage?.configuredStorage, true);
   assert.equal(typeof options?.storage?.storage?.getItem, "function");
   assert.equal(options?.connectors?.length, 1);
-  assert.equal(options?.connectors?.[0]?.type, "metaMask");
+  assert.equal(options?.connectors?.[0]?.type, "injected");
+  assert.equal(options?.connectors?.[0]?.target, "metaMask");
   assert.equal(options?.transports?.[296]?.url, "https://testnet.hashio.io/api");
 });
 
@@ -162,8 +163,8 @@ implementedProviderTest("mounts one Wagmi config around one browser QueryClient"
     node !== null && typeof node === "object" && typeof node.type === "function"
       ? render(node.type(node.props))
       : node;
-  assert.equal(render(harness.WalletProviders({ children: "shell" })), "shell");
-  assert.equal(render(harness.WalletProviders({ children: "shell" })), "shell");
+  assert.equal(render(harness.WalletProviders({ children: "shell", initialState: undefined })), "shell");
+  assert.equal(render(harness.WalletProviders({ children: "shell", initialState: undefined })), "shell");
   assert.equal(harness.wagmiCalls.length, 2);
   assert.equal(harness.wagmiCalls[0]?.config?.name, "tool402-config");
   assert.equal(harness.wagmiCalls[1]?.config?.name, "tool402-config");
@@ -175,13 +176,13 @@ implementedProviderTest("mounts one Wagmi config around one browser QueryClient"
 implementedProviderTest("mounts the client provider once from the root layout", async () => {
   const layout = await readFile(new URL("../src/app/layout.tsx", import.meta.url), "utf8");
 
-  assert.match(layout, /<WalletProviders><ApplicationShell>\{children\}<\/ApplicationShell><\/WalletProviders>/u);
-  assert.doesNotMatch(layout, /from\s+["']next\/headers["']/u);
+  assert.match(layout, /cookieToInitialState\(/u);
+  assert.match(layout, /<WalletProviders initialState=\{initialState\}><ApplicationShell>\{children\}<\/ApplicationShell><\/WalletProviders>/u);
+  assert.match(layout, /<Suspense fallback=\{null\}>/u);
 });
 
-implementedProviderTest("lets Wagmi restore cookie persistence after client mount", async () => {
+implementedProviderTest("hydrates cookie state before reconnecting on client mount", async () => {
   const providers = await readFile(providersUrl, "utf8");
 
-  assert.match(providers, /<WagmiProvider\s+config=\{config\}>/u);
-  assert.doesNotMatch(providers, /initialState=/u);
+  assert.match(providers, /<WagmiProvider\s+config=\{config\}\s+initialState=\{initialState\}>/u);
 });
