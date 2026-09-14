@@ -67,11 +67,13 @@ test("renders the static Tool402 shell and home composition", async () => {
   assert.match(layout, />\s*Prepare a tool\s*</);
   assert.match(layout, /<html\s+lang=["']en["']>/);
   assert.match(layout, /<body\b/);
+  assert.match(layout, /title:\s*["']Tool402 \| Tools AI agents can pay to use["']/);
+  assert.match(layout, /description:\s*["']Discover tools for AI agents, inspect their payment requests, and see how x402 payments on Hedera testnet work\.["']/);
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
   assert.match(page, /<LandingHero\s*\/>/);
   assert.doesNotMatch(
     `${layout}\n${page}`,
-    /\b(?:payment|credential|onboarding|analytics|evidence|metric)\b/i,
+    /\b(?:credential|onboarding|analytics|evidence|metric)\b/i,
   );
 });
 

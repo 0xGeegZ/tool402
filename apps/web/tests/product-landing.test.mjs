@@ -43,9 +43,10 @@ test("explains the agent-paid marketplace in a developer-first landing journey",
   assert.match(hero, /<h1\b[^>]*className=["'][^"']*\bfont-extrabold\b[^"']*\bleading-\[1\.04\][^"']*["']/);
   assert.match(hero, /hero-trio\.png/);
   assert.match(hero, /Let your AI agent find a tool, check the price, and pay to use it under the spending rules you configure/);
-  assert.match(hero, /x402 payment requests tell an agent what it needs to pay/i);
+  assert.doesNotMatch(hero, /x402 payment requests tell an agent what it needs to pay/i);
   assert.match(landing, /id=["']how-it-works["']/);
   assert.match(landing, /How agents find, pay for, and use tools/i);
+  assert.match(sections, /x402 payment requests tell an agent what it needs to pay/i);
   assert.match(landing, /Find a tool/i);
   assert.match(landing, /Check the price and rules/i);
   assert.match(landing, /Pay and get the result/i);
@@ -150,9 +151,14 @@ test("states EntityCheck's plain-language company and sanctions outcomes", async
 test("connects provider preparation to agent discovery without promising publication", async () => {
   const sections = await readAppFile("src/components/landing/landing-sections.tsx");
 
-  assert.match(sections, /so agents can understand what you offer/i);
-  assert.match(sections, /tool details, prices, and terms/i);
-  assert.match(sections, /preparing it does not publish a live tool/i);
+  assert.match(sections, /Add your tool’s details, prices, and terms, then review the offering\./);
+  assert.match(sections, /Preparing it does not publish a live tool\./);
+});
+
+test("states the payment benefit as tool understanding plus configured rules", async () => {
+  const sections = await readAppFile("src/components/landing/landing-sections.tsx");
+
+  assert.match(sections, /Understand what a tool does and what it costs\. Your agent checks payment requests against the spending rules you configure\./);
 });
 
 test("explains the agent flow without turning HTTP 402 into the product explanation", async () => {

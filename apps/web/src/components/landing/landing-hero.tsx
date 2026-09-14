@@ -16,10 +16,6 @@ export function LandingHero() {
               <span aria-hidden="true" className="flex size-4 items-center justify-center rounded-full bg-brand-green text-[11px] font-bold text-white">H</span>
               Hedera testnet preview
             </span>
-            <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-border bg-card px-3 text-xs font-medium text-muted-foreground">
-              <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-4 text-foreground"><path d="M4 1.75h5.5L12.5 5v9.25H4z" /><path d="M9.5 1.75V5h3M6.25 8h4M6.25 10.5h4" strokeLinecap="round" /></svg>
-              x402 payment requests tell an agent what it needs to pay.
-            </span>
           </div>
           <h1 id="landing-title" className="max-w-[36rem] text-4xl font-extrabold leading-[1.04] tracking-[-0.04em] sm:text-5xl lg:text-[4.35rem] lg:leading-[0.86]">
             A marketplace for tools <span className="text-brand-purple">AI agents can pay</span> to use.

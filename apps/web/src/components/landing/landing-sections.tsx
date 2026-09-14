@@ -64,6 +64,9 @@ export function LandingSections() {
             <h2 id="how-it-works-title" className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
               How agents find, pay for, and use tools
             </h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              x402 payment requests tell an agent what it needs to pay.
+            </p>
           </div>
           <div className="relative mt-12">
             <div aria-hidden="true" className="absolute left-[16.5%] right-[16.5%] top-[2.4rem] hidden border-t border-dashed border-border sm:block" />
@@ -151,7 +154,7 @@ export function LandingSections() {
                 Know what your agent is paying for
               </h2>
               <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-                Before your agent pays, decide whether a tool fits the job, the price, and the rules you set.
+                Understand what a tool does and what it costs. Your agent checks payment requests against the spending rules you configure.
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
                 <Link href="/explore" className={buttonVariants({ size: "sm" })}>
@@ -206,7 +209,7 @@ export function LandingSections() {
                 Building a tool for AI agents?
               </h2>
               <p className="mx-auto max-w-md text-sm leading-relaxed text-muted-foreground">
-                Prepare your tool details, prices, and terms so agents can understand what you offer. The next step lets you review the offering before any provider action; preparing it does not publish a live tool.
+                Add your tool’s details, prices, and terms, then review the offering. Preparing it does not publish a live tool.
               </p>
               <div className="flex flex-wrap justify-center gap-3 pt-2">
                 <Link
