@@ -153,7 +153,7 @@ export function useTool402Wallet() {
 
   return {
     connection: currentConnection,
-    resolved: hydrated && connection.status !== "reconnecting",
+    resolved: hydrated && connection.status !== "reconnecting" && connection.status !== "connecting",
     state,
     connectErrorCode: walletErrorCode(connectError),
     async connect() {
