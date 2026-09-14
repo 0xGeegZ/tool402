@@ -44,7 +44,7 @@ export function WalletIsland() {
     <div data-slot="wallet-island" className="flex items-center gap-2">
       {state.kind === "disconnected" && !isCheckingConnection ? (
         <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap" onClick={() => void connect()}>
-          <Image src="/brand/metamask-fox.svg" alt="" aria-hidden="true" width={18} height={18} />
+          <Image src="/brand/metamask-fox.svg" alt="" aria-hidden="true" width={18} height={17} />
           Connect MetaMask
         </Button>
       ) : null}

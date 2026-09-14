@@ -183,4 +183,5 @@ test("shows a neutral connection check instead of the MetaMask button during pas
   assert.match(source, /state\.kind === "disconnected" && !isCheckingConnection/u);
   assert.match(source, /animate-spin/u);
   assert.match(source, /Checking MetaMask/u);
+  assert.match(source, /width=\{18\} height=\{17\}/u);
 });
