@@ -133,6 +133,21 @@ test("gives each tool card a concrete task, output, and truthful state", async (
   assert.doesNotMatch(sections, /RiskScan Quick|No public route|Campaign preparation/);
 });
 
+test("states EntityCheck's company and sanctions outcomes", async () => {
+  const sections = await readAppFile("src/components/landing/landing-sections.tsx");
+
+  assert.match(sections, /found, ambiguous, or not found plus a clear, hit, or not-screened result/i);
+  assert.match(sections, /\["Returns", "Match \+ sanctions result"\]/);
+  assert.match(sections, /not a compliance decision/i);
+});
+
+test("connects provider preparation to agent discovery without promising publication", async () => {
+  const sections = await readAppFile("src/components/landing/landing-sections.tsx");
+
+  assert.match(sections, /so agents can discover and access it/i);
+  assert.match(sections, /preparing it does not publish a live tool/i);
+});
+
 test("keeps the selected visual asset decorative, local, and free of runtime behaviour", async () => {
   const [page, hero, sections, footer] = await readLandingSources();
   const sources = [page, hero, sections, footer];

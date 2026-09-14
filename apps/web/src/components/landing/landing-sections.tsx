@@ -40,10 +40,10 @@ const campaignCards = [
   },
   {
     name: "EntityCheck France",
-    description: "Preview a French company lookup that uses a public registry and an OFAC sanctions screen. It can return found, ambiguous, or not found; it is not a compliance decision.",
+    description: "Preview a French company lookup against a public registry and an OFAC sanctions screen. It returns found, ambiguous, or not found plus a clear, hit, or not-screened result; it is not a compliance decision.",
     status: "Tool preview",
     mode: "Source configuration required",
-    facts: [["Sources", "Registry + sanctions"], ["Returns", "Found / ambiguous / not found"]],
+    facts: [["Sources", "Registry + OFAC"], ["Returns", "Match + sanctions result"]],
     action: "View EntityCheck",
     href: "/explore/entitycheck",
     tone: "bg-brand-green/15 text-brand-green",
@@ -215,7 +215,7 @@ export function LandingSections() {
                 Building a tool for AI agents?
               </h2>
               <p className="mx-auto max-w-md text-sm leading-relaxed text-muted-foreground">
-                Prepare an offering that explains what your tool does and how agents can access it. Review the preview before any provider action; preparing it does not publish a live tool.
+                Prepare an offering that explains what your tool does so agents can discover and access it. Review the preview before any provider action; preparing it does not publish a live tool.
               </p>
               <div className="flex flex-wrap justify-center gap-3 pt-2">
                 <Link
