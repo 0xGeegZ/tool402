@@ -312,7 +312,7 @@ test("a self-service provider reaches independent OPEN tools through signed orch
         data: viem.encodeAbiParameters(event.inputs.filter((item) => !item.indexed), [asset, ...decoded.args]),
         topics: viem.encodeEventTopics({ abi: factoryArtifact.abi, eventName: "BondDeployed", args: { deployer: issuer } }),
       };
-      selectedTransaction = { hash, asset, timestamp, transactionId, log, transaction: { hash, chainId: "0x128", from: issuer, to: factory, input: tx.data }, receipt: { transactionHash: hash, status: "0x1", to: factory, logs: [log] } };
+      selectedTransaction = { hash, asset, timestamp, transactionId, log, transaction: { hash, chainId: "0x128", from: issuer, to: factory, input: tx.data }, receipt: { transactionHash: hash, status: "success", to: factory, logs: [log] } };
       transactions.set(hash, selectedTransaction);
       return hash;
     }

@@ -19,6 +19,8 @@ import {
   hasStageBRecovery,
   persistStageBRecovery,
   readStageBRecovery,
+  releaseStageBRecoveryReservation,
+  stageBRecoveryStatus,
   type StageBRecoveryScope,
 } from "./stage-b-recovery";
 
@@ -121,14 +123,10 @@ export function AtsCreateAction({
   }, [currentRecoveryScope?.address, currentRecoveryScope?.preparedAttemptPublicId, currentRecoveryScope?.toolPublicId]);
 
   if (controller.current === null && currentWallet !== null && publicClient !== undefined && (!selectedTool || configuration !== undefined)) {
-    const bridgeRecoveryScope = recoveryScope(controllerContext.current);
     const bridge = createStageBBrowserProviderBridge({
       wallet: currentWallet,
       readCurrentWallet: () => stageBWalletContext(walletRef.current),
       sendTransaction: (request) => sendTransaction(request),
-      onTransactionHash: (hash) => {
-        if (bridgeRecoveryScope !== null) persistStageBRecovery(bridgeRecoveryScope, hash);
-      },
       getTransactionReceipt: ({ hash }) => publicClient.getTransactionReceipt({ hash }),
       fetch,
       configuration,
@@ -148,7 +146,8 @@ export function AtsCreateAction({
     && isSameControllerContext(actionInFlight.current, controllerContext.current);
   const publicAtsExecutionBlocked = selectedTool;
   const recoveryAvailable = stageTwoDone && currentWallet !== null && (!selectedTool || configuration !== undefined) && !hasCandidate && !sessionChanged.current && controller.current !== null;
-  const candidateActionAvailable = recoveryAvailable && !publicAtsExecutionBlocked;
+  const recoveryStorageStatus = currentRecoveryScope === null ? "unavailable" : stageBRecoveryStatus(currentRecoveryScope);
+  const candidateActionAvailable = recoveryAvailable && !publicAtsExecutionBlocked && recoveryStorageStatus !== "unavailable";
   const recoveryResolved = recoveryResolvedFor !== null && isSameControllerContext(recoveryResolvedFor, controllerContext.current);
   const submitted = submittedFor !== null && isSameControllerContext(submittedFor, controllerContext.current);
   const enabled = candidateActionAvailable && recoveryResolved && !submitted && !terminalForCurrentContext && !inFlightForCurrentContext && currentRecoveryScope !== null;
@@ -157,25 +156,36 @@ export function AtsCreateAction({
   async function requestCandidate() {
     const actionContext = controllerContext.current;
     const actionRecoveryScope = recoveryScope(actionContext);
-    if (!enabled || !recoveryResolved || submitted || actionRecoveryScope === null || actionContext.preparedAttemptPublicId === undefined || controller.current === null || actionInFlight.current !== null) return;
+    if (!enabled || !recoveryResolved || submitted || actionRecoveryScope === null || actionContext.preparedAttemptPublicId === undefined || controller.current === null || actionInFlight.current !== null || stageBRecoveryStatus(actionRecoveryScope) !== "clear") return;
     actionInFlight.current = actionContext;
     setInFlight(actionContext);
     const claim = await beginStageBRecovery(actionRecoveryScope);
-    if (claim !== "claimed") {
+    if (claim.kind !== "claimed") {
       actionInFlight.current = null;
       setInFlight(null);
       setSubmittedFor(actionContext);
-      setFeedback(claim === "existing"
+      setFeedback(claim.kind === "existing"
         ? "This prepared attempt already has a submitted transaction to reconcile. Creation remains blocked."
         : "This browser cannot safely retain a submitted transaction for recovery. Creation remains blocked.");
       return;
     }
     setSubmittedFor(actionContext);
     try {
-      const outcome = await controller.current.execute();
-      if (outcome.kind === "submission_unknown" && outcome.transactionHash !== undefined && actionRecoveryScope !== null) {
-        persistStageBRecovery(actionRecoveryScope, outcome.transactionHash);
-      }
+      const claimId = claim.claimId;
+      const actionController = controller.current;
+      if (actionController === null) return;
+      const bridge = createStageBBrowserProviderBridge({
+        wallet: actionController.wallet,
+        readCurrentWallet: () => stageBWalletContext(walletRef.current),
+        sendTransaction: (request) => sendTransaction(request),
+        onTransactionHash: (hash) => {
+          if (!persistStageBRecovery(actionRecoveryScope, claimId, hash)) throw new Error("Unable to retain the submitted transaction for recovery.");
+        },
+        getTransactionReceipt: ({ hash }) => publicClient?.getTransactionReceipt({ hash }) ?? Promise.resolve(null),
+        fetch,
+        configuration,
+      });
+      const outcome = await bridge.execute();
       if (controllerContext.current !== actionContext || sessionChanged.current) return;
       if (outcome.kind === "candidate") {
         setTerminalOutcome(controllerContext.current);
@@ -190,6 +200,10 @@ export function AtsCreateAction({
           setFeedback("The submitted transaction hash is ready for public recovery. No second transaction was made.");
           return;
         }
+      }
+      if (outcome.kind === "rejected") {
+        releaseStageBRecoveryReservation(actionRecoveryScope, claimId);
+        setSubmittedFor(null);
       }
       setFeedback(outcome.kind === "rejected"
         ? "The wallet did not approve this local request. Nothing was submitted."
@@ -262,7 +276,8 @@ export function AtsCreateAction({
       ) : null}
       <StatusRegion className="mt-2 text-sm text-muted-foreground">{feedback ?? (publicAtsExecutionBlocked
         ? "Public ATS deployment is unavailable until a durable pre-wallet dispatch record prevents reload or multi-tab redeployment. Existing transaction recovery remains read-only."
-        : sessionChanged.current ? "The wallet session changed. Reload before choosing any new action." : null)}</StatusRegion>
+        : recoveryStorageStatus === "unavailable" ? "Transaction recovery storage is unavailable or corrupt. Creation remains blocked."
+          : sessionChanged.current ? "The wallet session changed. Reload before choosing any new action." : null)}</StatusRegion>
     </div>
   );
 }

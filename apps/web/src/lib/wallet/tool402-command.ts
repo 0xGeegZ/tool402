@@ -1,4 +1,4 @@
-import { keccak256 } from "viem";
+import { keccak256, recoverTypedDataAddress } from "viem";
 
 export const TOOL402_TYPED_DATA_DOMAIN = Object.freeze({
   name: "Tool402",
@@ -339,6 +339,30 @@ export async function signCommand(
   });
   signedCommands.add(signed);
   return signed;
+}
+
+export async function recoverTool402CommandSigner(
+  command: SignedTool402Command,
+): Promise<string> {
+  if (!signedCommands.has(command)) {
+    throw new TypeError("a signer is recovered only from signCommand output");
+  }
+  const signer = await recoverTypedDataAddress({
+    domain: TOOL402_TYPED_DATA_DOMAIN,
+    primaryType: TOOL402_COMMAND_PRIMARY_TYPE,
+    types: { Tool402Command: TOOL402_TYPED_DATA_TYPES.Tool402Command },
+    message: {
+      version: command.version,
+      type: command.type,
+      signer: command.signer,
+      nonce: command.nonce,
+      issuedAt: command.issuedAt,
+      expiresAt: command.expiresAt,
+      payloadHash: command.payloadHash,
+    },
+    signature: command.signature,
+  });
+  return signer;
 }
 
 export function createCommandBody(

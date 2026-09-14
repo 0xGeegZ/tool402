@@ -49,9 +49,6 @@ function pendingAttachmentKey(canonicalSignerAddress: string, offeringPublicId: 
   return `${pendingAttachmentPrefix}${canonicalSignerAddress}:${offeringPublicId}:${attemptPublicId}`;
 }
 
-function pendingAttachment(canonicalSignerAddress: string | null, offeringPublicId: string): PendingAttachment | null {
-  if (canonicalSignerAddress === null) return null;
-
 function currentBackingConnection(connection: Tool402WalletConnection, resolved: boolean): Tool402WalletConnection | null {
   return connectedTool402Wallet(connection, resolved);
 }

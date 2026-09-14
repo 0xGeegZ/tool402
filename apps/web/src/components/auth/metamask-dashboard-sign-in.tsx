@@ -49,6 +49,21 @@ async function postJson(path: string, body: object): Promise<unknown> {
   }
 }
 
+async function endStaleDashboardSession(): Promise<void> {
+  const response = await fetch("/api/auth/logout", {
+    method: "POST",
+    credentials: "same-origin",
+  });
+  if (response.status !== 204) throw new Error("stale dashboard session could not be cleared");
+}
+
+async function serializeDashboardSessionMutation<T>(operation: () => Promise<T>): Promise<T> {
+  if (typeof navigator === "undefined" || navigator.locks === undefined) {
+    return await operation();
+  }
+  return await navigator.locks.request("tool402:dashboard-session", { mode: "exclusive" }, operation);
+}
+
 function isCurrentConnection(
   current: Tool402WalletConnection,
   expected: Tool402WalletConnection,
@@ -68,6 +83,7 @@ function MetaMaskSignInButton({
   readCurrentConnection,
   tour,
   demoStep,
+  returnTo,
 }: {
   readonly connection: Tool402WalletConnection;
   readonly readCurrentConnection: () => Tool402WalletConnection;
@@ -91,42 +107,45 @@ function MetaMaskSignInButton({
     setPending(true);
     setFailure(null);
     try {
-      if (address === undefined || !isCurrentConnection(readCurrentConnection(), connection)) {
-        throw new Error("wallet session changed");
-      }
+      await serializeDashboardSessionMutation(async () => {
+        if (address === undefined || !isCurrentConnection(readCurrentConnection(), connection)) {
+          throw new Error("wallet session changed");
+        }
 
-      const challenge = await postJson("/api/auth/metamask/challenge", { address });
-      if (!isChallenge(challenge)) {
-        throw new Error("challenge rejected");
-      }
+        const challenge = await postJson("/api/auth/metamask/challenge", { address });
+        if (!isChallenge(challenge)) {
+          throw new Error("challenge rejected");
+        }
 
-      const message = challenge.message;
-      if (!isCurrentConnection(readCurrentConnection(), connection)) {
-        throw new Error("wallet session changed");
-      }
-      const signature = await signMessage({ message });
-      if (typeof signature !== "string") {
-        throw new Error("signature rejected");
-      }
+        const message = challenge.message;
+        if (!isCurrentConnection(readCurrentConnection(), connection)) {
+          throw new Error("wallet session changed");
+        }
+        const signature = await signMessage({ message });
+        if (typeof signature !== "string") {
+          throw new Error("signature rejected");
+        }
 
-      if (!isCurrentConnection(readCurrentConnection(), connection)) {
-        throw new Error("wallet session changed");
-      }
+        if (!isCurrentConnection(readCurrentConnection(), connection)) {
+          throw new Error("wallet session changed");
+        }
 
-      const verification = await postJson("/api/auth/metamask/verify", {
-        message,
-        signature,
-        challenge: challenge.challenge,
+        const verification = await postJson("/api/auth/metamask/verify", {
+          message,
+          signature,
+          challenge: challenge.challenge,
+        });
+        if (!isCurrentConnection(readCurrentConnection(), connection)) {
+          await endStaleDashboardSession();
+          throw new Error("wallet session changed");
+        }
+        if (!isAuthenticated(verification)) {
+          throw new Error("verification rejected");
+        }
+
+        router.replace(returnTo ?? dashboardTourHref(tour, demoStep));
+        router.refresh();
       });
-      if (!isCurrentConnection(readCurrentConnection(), connection)) {
-        throw new Error("wallet session changed");
-      }
-      if (!isAuthenticated(verification)) {
-        throw new Error("verification rejected");
-      }
-
-      router.replace(returnTo ?? dashboardTourHref(tour, demoStep));
-      router.refresh();
     } catch {
       setFailure(failureMessage);
     } finally {

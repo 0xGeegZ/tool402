@@ -6,7 +6,9 @@ import {
   createUnsignedCommand,
   encodeBase64Url,
   isTool402CommandType,
+  recoverTool402CommandSigner,
   signCommand,
+  type SignedTool402Command,
   type RandomBytes,
   type Tool402TypedDataSigner,
 } from "./tool402-command.ts";
@@ -288,6 +290,7 @@ export interface SignatureFlowDependencies {
   readonly onSigned?: () => void;
   readonly nowMilliseconds?: () => number;
   readonly randomBytes?: RandomBytes;
+  readonly recoverSigner?: (command: SignedTool402Command) => Promise<string>;
   readonly signTypedData: Tool402TypedDataSigner;
   readonly readCurrentContext: () => WalletActionContext | null;
 }
@@ -339,6 +342,10 @@ export async function signAndRelayCommand(
       canonicalPayloadBytes: request.canonicalPayloadBytes,
     });
     const signed = await signCommand(command, dependencies.signTypedData);
+    const recoveredSigner = await (dependencies.recoverSigner ?? recoverTool402CommandSigner)(signed);
+    if (recoveredSigner.toLowerCase() !== context.address) {
+      return { kind: "signing_failed" };
+    }
     body = createCommandBody(signed, request.canonicalPayloadBytes);
   } catch (error) {
     return { kind: isUserRejectedWalletRequest(error) ? "declined" : "signing_failed" };

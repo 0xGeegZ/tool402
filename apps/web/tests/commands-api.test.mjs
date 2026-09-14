@@ -630,6 +630,7 @@ test("signs and relays through one flow that rechecks Wagmi context, draws a fre
       generation: 0,
     }, nextRequest, {
       ...dependencies,
+      recoverSigner: dependencies.recoverSigner ?? (async () => context?.address ?? signerAddress),
       readCurrentContext,
       signTypedData: async (typedData) => provider.request({
         method: "eth_signTypedData_v4",
@@ -726,6 +727,17 @@ test("signs and relays through one flow that rechecks Wagmi context, draws a fre
   );
   assert.equal(expiresDuringSigningProvider.calls.filter((call) => call.method === "eth_signTypedData_v4").length, 1);
   assert.equal(expiresDuringSigningRelay.bodies.length, 0);
+
+  const wrongSignerRelay = stubRelay();
+  assert.deepEqual(
+    await signAndRelayCommand(stubProvider(), request, {
+      relay: wrongSignerRelay,
+      nowMilliseconds: beforeExpiry,
+      recoverSigner: async () => `0x${"0".repeat(40)}`,
+    }),
+    { kind: "signing_failed" },
+  );
+  assert.equal(wrongSignerRelay.bodies.length, 0);
 
   const unknownRelay = stubRelay("transport_failure");
   assert.deepEqual(
