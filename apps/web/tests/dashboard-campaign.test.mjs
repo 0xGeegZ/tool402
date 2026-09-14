@@ -100,13 +100,13 @@ implementedTest("renders one local empty card when the signed session has no cam
   assert.match(source, /Need test HBAR\? Open the Hedera Portal faucet/u);
 });
 
-implementedTest("keeps the empty campaign state usable for fresh entry and existing self-service tools", async () => {
+implementedTest("keeps the empty campaign state static without a provider-tools read", async () => {
   const source = await readFile(componentUrl, "utf8");
   const emptyState = source.match(/<section aria-label="No campaign yet">([\s\S]*?)<\/section>/u)?.[1];
 
   assert.ok(emptyState, "the dashboard must retain its empty campaign state");
-  assert.match(emptyState, /ProviderToolList/u);
-  assert.match(emptyState, />Your tools</u);
+  assert.doesNotMatch(emptyState, /ProviderToolList/u);
+  assert.doesNotMatch(emptyState, />Your tools</u);
 });
 
 implementedTest("keeps campaign and backing projections independent in all four dashboard combinations", async () => {
