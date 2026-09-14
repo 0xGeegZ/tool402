@@ -1,5 +1,15 @@
 # Runtime queue state
 
+- S48_LANDING_MESSAGE_CLARITY_INTAKE: The repository owner requests a
+  `dev`-based draft PR that rewrites the public landing for first-time
+  developers and tool creators. S48-T010 is `00-inbox`; its card,
+  specification, and UI manifest define only static English copy, exact
+  existing CTA destinations, and the root `metadata` object. No source or test
+  reservation exists until readiness and RED activation. S26 retains the
+  layout header and shell wrapper; this card excludes them. No product,
+  wallet, payment, provider, transaction, deployment, or live authority is
+  added.
+
 - S38_S39_S47_MERGED_LANE_RECONCILIATION: At `origin/main`
   `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, S38-T010, S39-T010, and
   S47-T010 are documented as completed local source deliveries. Their merged
