@@ -12,8 +12,8 @@ import { WalletIsland } from "../components/wallet/wallet-connect";
 import { WalletSessionProvider } from "../components/wallet/wallet-session";
 
 export const metadata: Metadata = {
-  title: "Tool402",
-  description: "A starting point for thoughtful tool discovery.",
+  title: "Tool402 | Tools AI agents can pay to use",
+  description: "Discover tools for AI agents, inspect their payment requests, and see how x402 payments on Hedera testnet work.",
 };
 
 export default function RootLayout({

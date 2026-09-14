@@ -84,8 +84,6 @@ test("keeps one demo-first CTA hierarchy on existing local destinations", async 
     ["/dashboard", "Dashboard"],
   ]);
   assert.match(landing, /href=\{campaign\.href\}/);
-  assert.match(landing, /route: "\/explore\/riskscan"/);
-  assert.match(landing, /route: "\/explore\/entitycheck"/);
   assert.doesNotMatch(landing, /<Link\b[^>]*>\s*<Button\b/);
 });
 
@@ -109,7 +107,7 @@ test("keeps the fuller footer limited to existing local routes", async () => {
     ["/dashboard", "Dashboard"],
   ]);
   assert.match(footer, /aria-label="Dashboard links"/);
-  assert.match(footer, /Hedera testnet prototype/);
+  assert.match(footer, /Hedera testnet preview/);
   assert.doesNotMatch(footer, /new Date\s*\(/);
   assert.doesNotMatch(footer, /https?:\/\/|href=["']\/api\//i);
 });
@@ -147,7 +145,7 @@ test("keeps the selected visual asset decorative, local, and free of runtime beh
   assert.doesNotMatch(landing, /(?:https?:\/\/|\/api\/)/i);
   assert.doesNotMatch(
     landing,
-    /\b(?:wallet|account|metric|testimonial|partner|balance|evidence|deployed|guaranteed|mock|transaction|receipt|funding|asset|backer|revenue|payout|availability)\b|\b(?:holder return|investment return|return on investment|financial returns?|return to backers?|live service|available now|user session)\b/i,
+    /\b(?:wallet|account|metric|testimonial|partner|balance|deployed|guaranteed|mock|transaction|receipt|funding|asset|backer|revenue|payout|availability)\b|\b(?:holder return|investment return|return on investment|financial returns?|return to backers?|live service|available now|user session)\b/i,
   );
 });
 

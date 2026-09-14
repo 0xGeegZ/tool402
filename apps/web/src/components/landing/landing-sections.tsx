@@ -6,20 +6,20 @@ import { Card } from "../ui/card";
 
 const steps = [
   {
-    title: "Explore a current tool",
-    description: "Open RiskScan or EntityCheck and read what each one answers, the inputs it needs, and where it stops.",
+    title: "Find a tool",
+    description: "Your agent reads what the tool does, the input it needs, and the limits it states.",
     number: "01",
     tone: "bg-secondary text-primary",
   },
   {
-    title: "Inspect its boundary",
-    description: "Send a bounded request and read the 402 challenge the tool returns before anything is released.",
+    title: "Check the price and rules",
+    description: "The tool sends a 402 Payment Required response. Your agent checks the quoted payment against the spending rules you configured.",
     number: "02",
     tone: "bg-secondary text-primary",
   },
   {
-    title: "Choose a local next step",
-    description: "Continue to the guided demo, the guest dashboard, or the provider wizard; each names what it can show today.",
+    title: "Pay and get the result",
+    description: "Your agent sends payment proof. The tool service verifies settlement before it returns its response.",
     number: "03",
     tone: "bg-secondary text-primary",
   },
@@ -28,12 +28,11 @@ const steps = [
 const campaignCards = [
   {
     name: "RiskScan",
-    description: "A bounded assessment route for reviewing caller-supplied context before choosing the next local step.",
-    status: "Campaign preview",
-    mode: "Public detail",
-    route: "/explore/riskscan",
-    scope: "Risk assessment",
-    action: "View tool",
+    description: "Check whether a request includes the identity, pricing, limitations, and evidence declarations RiskScan needs. It returns reported disclosure gaps, not an independent assessment.",
+    status: "Agent directory",
+    mode: "Tool detail",
+    facts: [["Checks", "Caller disclosures"], ["Returns", "Disclosure status"]],
+    action: "View RiskScan",
     href: "/explore/riskscan",
     tone: "bg-brand-purple/15 text-brand-purple",
     icon: "◇",
@@ -41,12 +40,11 @@ const campaignCards = [
   },
   {
     name: "EntityCheck France",
-    description: "A source-bounded French entity assessment for agent workflows, with clear limits on what a screen can establish.",
-    status: "Campaign preview",
-    mode: "Protected API",
-    route: "/explore/entitycheck",
-    scope: "Entity assessment",
-    action: "View tool",
+    description: "Preview a French company lookup that uses a public registry and an OFAC sanctions screen. It can return found, ambiguous, or not found; it is not a compliance decision.",
+    status: "Tool preview",
+    mode: "Source configuration required",
+    facts: [["Sources", "Registry + sanctions"], ["Returns", "Found / ambiguous / not found"]],
+    action: "View EntityCheck",
     href: "/explore/entitycheck",
     tone: "bg-brand-green/15 text-brand-green",
     icon: "↗",
@@ -66,7 +64,7 @@ export function LandingSections() {
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-xs font-semibold uppercase tracking-wide text-primary">How it works</p>
             <h2 id="how-it-works-title" className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
-              Three clear steps, one current route at a time
+              How agents find, pay for, and use tools
             </h2>
           </div>
           <div className="relative mt-12">
@@ -98,16 +96,16 @@ export function LandingSections() {
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Campaign marketplace</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Tool marketplace</p>
               <h2 id="campaigns-title" className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-                Back the next tools agents will pay to use
+                Tools to explore
               </h2>
             </div>
             <Link
               href="/explore"
               className={buttonVariants({ variant: "outline", size: "sm", className: "shrink-0" })}
             >
-              Browse all tools →
+              Explore the directory →
             </Link>
           </div>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -126,17 +124,15 @@ export function LandingSections() {
                 </div>
                 <div className="mt-5 space-y-2">
                   <div aria-hidden="true" className="h-1 rounded-full bg-secondary"><div className={`h-full w-full rounded-full ${campaign.line}`} /></div>
-                  <p className="text-xs text-muted-foreground">Campaign preparation</p>
+                  <p className="text-xs text-muted-foreground">{campaign.status}</p>
                 </div>
                 <dl className="mt-5 grid grid-cols-2 gap-4 rounded-control border border-dashed border-border bg-secondary/30 p-3 text-xs">
-                  <div className="min-w-0">
-                    <dt className="uppercase tracking-wide text-muted-foreground">Route</dt>
-                    <dd className="mt-1 truncate font-medium text-foreground">{campaign.route}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="uppercase tracking-wide text-muted-foreground">Scope</dt>
-                    <dd className="mt-1 font-medium text-foreground">{campaign.scope}</dd>
-                  </div>
+                  {campaign.facts.map(([label, value]) => (
+                    <div key={label} className="min-w-0">
+                      <dt className="uppercase tracking-wide text-muted-foreground">{label}</dt>
+                      <dd className="mt-1 font-medium text-foreground">{value}</dd>
+                    </div>
+                  ))}
                 </dl>
                 <div className="mt-auto flex items-center justify-between gap-4 pt-5">
                   <span className="text-xs text-muted-foreground">by Tool402</span>
@@ -156,20 +152,19 @@ export function LandingSections() {
       >
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_1.1fr] lg:px-8 lg:py-20">
             <div className="max-w-xl space-y-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Current scope</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Agent controls</p>
               <h2 id="inspectable-scope-title" className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-                Every current route has a clear boundary
+                Know what your agent is paying for
               </h2>
               <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-                Tool402 labels the current catalogue, guided demo, and local route boundaries directly. A clear screen is
-                an orientation surface, not proof of an action beyond that route.
+                Tool402 makes each request easier to inspect before your agent acts. You can see what a tool needs, what it says it returns, and the payment it asks for.
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
                 <Link href="/explore" className={buttonVariants({ size: "sm" })}>
                   Explore tools
                 </Link>
                 <Link href="/demo" className={buttonVariants({ variant: "outline", size: "sm" })}>
-                  Open guided demo
+                  See the demo
                 </Link>
               </div>
             </div>
@@ -179,8 +174,8 @@ export function LandingSections() {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-5"><path d="M7 3h8l3 3v15H7z" /><path d="M15 3v4h4M10 12h5M10 16h5" /></svg>
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold">Catalogue</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Begin with the current tool entry and its local boundary.</p>
+                  <h3 className="text-sm font-bold">Understand the tool first</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Read the inputs, result types, and stated limits before your agent uses it.</p>
                 </div>
               </li>
               <li className="flex min-h-28 gap-4 rounded-card border border-border bg-card p-5 transition-colors hover:border-foreground/15 motion-reduce:transition-none">
@@ -188,8 +183,8 @@ export function LandingSections() {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-5"><path d="M7 3h8l3 3v15H7z" /><path d="M15 3v4h4M10 12h5M10 16h3" /><circle cx="16" cy="16" r="3" /></svg>
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold">Guided demo</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Follow the local route map at your pace.</p>
+                  <h3 className="text-sm font-bold">See the payment request</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">A 402 response describes what the tool asks for before it releases a result.</p>
                 </div>
               </li>
               <li className="flex min-h-28 gap-4 rounded-card border border-border bg-card p-5 transition-colors hover:border-foreground/15 motion-reduce:transition-none">
@@ -197,8 +192,8 @@ export function LandingSections() {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-5"><path d="M4 5h8l2 2h6v12H4z" /><path d="M4 5v12M9 16h7" /><circle cx="17" cy="17" r="2" /></svg>
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold">Provider path</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Prepare an offering preview without an automatic action.</p>
+                  <h3 className="text-sm font-bold">Apply your rules</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Your agent compares that request with the spending rules you configure.</p>
                 </div>
               </li>
             </ul>
@@ -217,10 +212,10 @@ export function LandingSections() {
             </div>
             <div className="relative mx-auto max-w-2xl space-y-4">
               <h2 id="provider-path-title" className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-                Building an agent-native tool? Add it to the Tool402 directory.
+                Building a tool for AI agents?
               </h2>
               <p className="mx-auto max-w-md text-sm leading-relaxed text-muted-foreground">
-                The provider journey keeps the offering preview editable and clear about what has not run.
+                Prepare an offering that explains what your tool does and how agents can access it. Review the preview before any provider action; preparing it does not publish a live tool.
               </p>
               <div className="flex flex-wrap justify-center gap-3 pt-2">
                 <Link

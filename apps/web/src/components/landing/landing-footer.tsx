@@ -15,7 +15,7 @@ export function LandingFooter() {
             </div>
           </div>
           <p className="text-sm leading-6 text-muted-foreground">
-            A clear starting point for the tools agents use.
+            A Hedera testnet marketplace for tools AI agents can discover, pay for, and use.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5 lg:gap-12">
@@ -51,16 +51,16 @@ export function LandingFooter() {
             </ul>
           </nav>
           <aside>
-            <p className="text-sm font-semibold">Current scope</p>
+            <p className="text-sm font-semibold">Testnet preview</p>
             <p className="mt-3 max-w-40 text-sm leading-6 text-muted-foreground">
-              Local routes and their boundaries are labelled directly.
+              Tool previews and provider preparation are clearly labelled.
             </p>
           </aside>
         </div>
       </div>
       <div className="mt-10 flex flex-col gap-3 border-t border-border pt-6 text-xs leading-relaxed text-muted-foreground lg:flex-row lg:items-center lg:justify-between lg:gap-8">
-        <p>© 2026 Tool402. Hedera testnet prototype.</p>
-        <p className="max-w-xl lg:text-right">Current local routes are labelled with their boundaries.</p>
+        <p>© 2026 Tool402. Hedera testnet preview.</p>
+        <p className="max-w-xl lg:text-right">Explore tools, see the demo, or prepare an offering.</p>
       </div>
     </footer>
   );
