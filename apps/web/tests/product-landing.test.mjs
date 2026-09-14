@@ -42,7 +42,8 @@ test("explains the agent-paid marketplace in a developer-first landing journey",
   assert.match(hero, /<h1\b[^>]*>\s*A marketplace for tools\s*<span className=["'][^"']*\btext-brand-purple\b[^"']*["']>AI agents can pay<\/span>\s*to use\./);
   assert.match(hero, /<h1\b[^>]*className=["'][^"']*\bfont-extrabold\b[^"']*\bleading-\[1\.04\][^"']*["']/);
   assert.match(hero, /hero-trio\.png/);
-  assert.match(hero, /Build an agent that discovers a tool, checks its payment request against the rules you set/);
+  assert.match(hero, /Let your AI agent find a tool, check the price, and pay to use it under the spending rules you configure/);
+  assert.match(hero, /x402 payment requests tell an agent what it needs to pay/i);
   assert.match(landing, /id=["']how-it-works["']/);
   assert.match(landing, /How agents find, pay for, and use tools/i);
   assert.match(landing, /Find a tool/i);
@@ -56,24 +57,23 @@ test("explains the agent-paid marketplace in a developer-first landing journey",
   assert.match(landing, /Prepare a tool offering/i);
 });
 
-test("keeps one demo-first CTA hierarchy on existing local destinations", async () => {
-  const sources = await readLandingSources();
-  const landing = sources.join("\n");
+test("keeps an exploration-first CTA hierarchy on existing local destinations", async () => {
+  const [page, hero, sections, footer] = await readLandingSources();
+  const landing = [page, hero, sections, footer].join("\n");
   const ctas = [...landing.matchAll(/<Link\b[^>]*href=["']([^"']+)["'][^>]*>\s*([^<]+?)\s*<\/Link>/g)].map(
     ([, href, label]) => [href, label.trim()],
   );
 
   assert.deepEqual(ctas, [
-    ["/demo", "See the demo"],
     ["/explore", "Explore tools"],
+    ["#how-it-works", "How it works"],
     ["/explore", "Explore the directory →"],
     ["/explore", "Explore tools"],
-    ["/demo", "See the demo"],
     ["/provider/deploy", "Prepare a tool offering"],
     ["/provider", "Provider overview"],
     ["/explore", "Explore tools"],
     ["/explore/riskscan", "RiskScan"],
-    ["/demo", "See the demo"],
+    ["/demo", "Presenter guide"],
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
     ["/docs/providers", "Provider documentation"],
@@ -83,6 +83,9 @@ test("keeps one demo-first CTA hierarchy on existing local destinations", async 
     ["/", "Home"],
     ["/dashboard", "Dashboard"],
   ]);
+  assert.match(hero, /href="\/explore"[\s\S]*buttonVariants\(\{ size: "lg"/);
+  assert.match(hero, /href="#how-it-works"[\s\S]*buttonVariants\(\{ variant: "outline", size: "lg"/);
+  assert.doesNotMatch(sections, /href="\/demo"/);
   assert.match(landing, /href=\{campaign\.href\}/);
   assert.doesNotMatch(landing, /<Link\b[^>]*>\s*<Button\b/);
 });
@@ -96,7 +99,7 @@ test("keeps the fuller footer limited to existing local routes", async () => {
   assert.deepEqual(links, [
     ["/explore", "Explore tools"],
     ["/explore/riskscan", "RiskScan"],
-    ["/demo", "See the demo"],
+    ["/demo", "Presenter guide"],
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
     ["/docs/providers", "Provider documentation"],
@@ -125,27 +128,50 @@ test("gives each tool card a concrete task, output, and truthful state", async (
   assert.match(sections, /const campaignCards = \[/);
   assert.match(sections, /name: "RiskScan"/);
   assert.match(sections, /name: "EntityCheck France"/);
-  assert.match(sections, /status: "Agent directory"/);
-  assert.match(sections, /status: "Tool preview"/);
-  assert.match(sections, /Checks/);
+  assert.match(sections, /status: "Testnet tool"/);
+  assert.match(sections, /status: "Preview only"/);
+  assert.match(sections, /Input/);
   assert.match(sections, /Returns/);
+  assert.match(sections, /Example: pricing marked as not provided → missing pricing disclosure\./);
+  assert.match(sections, /U\.S\. sanctions list/);
   assert.match(sections, /grid grid-cols-2 gap-4 rounded-control border border-dashed/);
   assert.doesNotMatch(sections, /RiskScan Quick|No public route|Campaign preparation/);
 });
 
-test("states EntityCheck's company and sanctions outcomes", async () => {
+test("states EntityCheck's plain-language company and sanctions outcomes", async () => {
   const sections = await readAppFile("src/components/landing/landing-sections.tsx");
 
-  assert.match(sections, /found, ambiguous, or not found plus a clear, hit, or not-screened result/i);
-  assert.match(sections, /\["Returns", "Match \+ sanctions result"\]/);
-  assert.match(sections, /not a compliance decision/i);
+  assert.match(sections, /company lookup and possible matches on a U\.S\. sanctions list/i);
+  assert.match(sections, /It cannot search live sources until configured/i);
+  assert.match(sections, /\["Returns", "Company and sanctions matches"\]/);
+  assert.match(sections, /does not make a compliance decision/i);
 });
 
 test("connects provider preparation to agent discovery without promising publication", async () => {
   const sections = await readAppFile("src/components/landing/landing-sections.tsx");
 
-  assert.match(sections, /so agents can discover and access it/i);
+  assert.match(sections, /so agents can understand what you offer/i);
+  assert.match(sections, /tool details, prices, and terms/i);
   assert.match(sections, /preparing it does not publish a live tool/i);
+});
+
+test("explains the agent flow without turning HTTP 402 into the product explanation", async () => {
+  const sections = await readAppFile("src/components/landing/landing-sections.tsx");
+
+  assert.match(sections, /Your agent checks what the tool does and the information it needs\./);
+  assert.match(sections, /It compares the requested price with the spending rules you configured\./);
+  assert.match(sections, /The tool returns its response after the service verifies payment\./);
+  assert.doesNotMatch(sections, /402 Payment Required/);
+});
+
+test("replaces decorative hero progress bars with concrete tool context", async () => {
+  const hero = await readAppFile("src/components/landing/landing-hero.tsx");
+
+  assert.match(hero, /Checks declared information/);
+  assert.match(hero, /Reports missing disclosures/);
+  assert.match(hero, /Before payment/);
+  assert.match(hero, /Check the price/);
+  assert.doesNotMatch(hero, /w-1\/4/);
 });
 
 test("keeps the selected visual asset decorative, local, and free of runtime behaviour", async () => {

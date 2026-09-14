@@ -20,13 +20,14 @@ The exact message contract is defined by
 [`s48-landing-message-clarity`](../../../specs/s48-landing-message-clarity.md)
 and [`UI-S48`](../../../ui/UI-S48.md). S48 may amend only the landing hero,
 sections, footer, the root `metadata` object, and the two focused landing
-contracts named there.
+contracts named there. Its CTA changes may use only the existing `/explore`
+route, the existing `#how-it-works` anchor, and the footer-only `/demo`
+presenter guide.
 
 The `layout.tsx` amendment is limited to `metadata`. S26 retains its active
 header and shell-wrapper reservation; S48 must not change either region.
-Existing layout, styles, illustrations, links, destination routes, navigation,
-wallet/session behaviour, APIs, configuration, data, and dependencies remain
-unchanged.
+Existing layout, styles, illustrations, navigation, wallet/session behaviour,
+APIs, configuration, data, and dependencies remain unchanged.
 
 ## Intake
 

@@ -9,21 +9,23 @@ visitor can do today.
 ## Audience and primary action
 
 The primary reader is a developer configuring an AI agent. A tool creator is
-a secondary reader. The primary action is **See the demo**, which links to the
-existing `/demo` recording guide. **Explore tools** remains the secondary
-action. The provider entry remains separate and links only to the existing
-`/provider/deploy` preparation journey.
+a secondary reader. The primary action is **Explore tools**, which links to
+the existing `/explore` directory. **How it works** is the secondary action
+and links to the existing `#how-it-works` section. The `/demo` recording guide
+is a clearly labelled footer-only **Presenter guide**. The provider entry
+remains separate and links only to the existing `/provider/deploy` preparation
+journey.
 
 ## Message contract
 
 1. The hero describes Tool402 as a marketplace for tools AI agents can pay to
-   use. Its supporting copy identifies the developer, agent, tool, x402
-   payment request, and result in plain language. It retains a concise
-   Hedera-testnet preview signal.
+   use. Its supporting copy identifies the developer, agent, tool, payment,
+   and result in plain language, and explains x402 once as the payment request
+   an agent can inspect. It retains a concise Hedera-testnet preview signal.
 2. The three-step section describes the agent flow: find a tool; compare an
-   x402 price with configured spending rules; send payment proof and receive a
-   result only after service-side settlement verification. It must not suggest
-   that clicking the landing runs this flow.
+   requested price with configured spending rules; send payment proof and
+   receive a result after service-side payment verification. It must not
+   suggest that clicking the landing runs this flow.
 3. The tool cards state the concrete task, inputs or sources, output, and
    limit. RiskScan must not be called an independent security audit or external
    verification. EntityCheck must not be called a compliance certification;

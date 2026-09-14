@@ -7,19 +7,19 @@ import { Card } from "../ui/card";
 const steps = [
   {
     title: "Find a tool",
-    description: "Your agent reads what the tool does, the input it needs, and the limits it states.",
+    description: "Your agent checks what the tool does and the information it needs.",
     number: "01",
     tone: "bg-secondary text-primary",
   },
   {
     title: "Check the price and rules",
-    description: "The tool sends a 402 Payment Required response. Your agent checks the quoted payment against the spending rules you configured.",
+    description: "It compares the requested price with the spending rules you configured.",
     number: "02",
     tone: "bg-secondary text-primary",
   },
   {
     title: "Pay and get the result",
-    description: "Your agent sends payment proof. The tool service verifies settlement before it returns its response.",
+    description: "The tool returns its response after the service verifies payment.",
     number: "03",
     tone: "bg-secondary text-primary",
   },
@@ -28,27 +28,25 @@ const steps = [
 const campaignCards = [
   {
     name: "RiskScan",
-    description: "Check whether a request includes the identity, pricing, limitations, and evidence declarations RiskScan needs. It returns reported disclosure gaps, not an independent assessment.",
-    status: "Agent directory",
-    mode: "Tool detail",
-    facts: [["Checks", "Caller disclosures"], ["Returns", "Disclosure status"]],
+    description: "RiskScan reviews four declarations: identity, pricing, limitations, and evidence. It reports what is missing; it does not independently assess a tool.",
+    status: "Testnet tool",
+    facts: [["Input", "Four declarations"], ["Returns", "Missing disclosures"]],
+    example: "Example: pricing marked as not provided → missing pricing disclosure.",
     action: "View RiskScan",
     href: "/explore/riskscan",
     tone: "bg-brand-purple/15 text-brand-purple",
     icon: "◇",
-    line: "bg-brand-purple",
   },
   {
     name: "EntityCheck France",
-    description: "Preview a French company lookup against a public registry and an OFAC sanctions screen. It returns found, ambiguous, or not found plus a clear, hit, or not-screened result; it is not a compliance decision.",
-    status: "Tool preview",
-    mode: "Source configuration required",
-    facts: [["Sources", "Registry + OFAC"], ["Returns", "Match + sanctions result"]],
+    description: "Preview a French company lookup and possible matches on a U.S. sanctions list. It cannot search live sources until configured and does not make a compliance decision.",
+    status: "Preview only",
+    facts: [["Input", "Company name or registration"], ["Returns", "Company and sanctions matches"]],
+    example: null,
     action: "View EntityCheck",
     href: "/explore/entitycheck",
     tone: "bg-brand-green/15 text-brand-green",
     icon: "↗",
-    line: "bg-brand-green",
   },
 ] as const;
 
@@ -115,17 +113,13 @@ export function LandingSections() {
                   <span aria-hidden="true" className={`flex size-11 items-center justify-center rounded-field text-lg font-bold ${campaign.tone}`}>{campaign.icon}</span>
                   <div className="flex flex-wrap justify-end gap-2">
                     <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground">{campaign.status}</span>
-                    <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground">{campaign.mode}</span>
                   </div>
                 </div>
                 <div className="mt-6 space-y-2">
                   <h3 className="text-xl font-semibold tracking-tight">{campaign.name}</h3>
                   <p className="min-h-16 text-sm leading-6 text-muted-foreground">{campaign.description}</p>
                 </div>
-                <div className="mt-5 space-y-2">
-                  <div aria-hidden="true" className="h-1 rounded-full bg-secondary"><div className={`h-full w-full rounded-full ${campaign.line}`} /></div>
-                  <p className="text-xs text-muted-foreground">{campaign.status}</p>
-                </div>
+                {campaign.example === null ? null : <p className="mt-5 text-xs leading-5 text-muted-foreground">{campaign.example}</p>}
                 <dl className="mt-5 grid grid-cols-2 gap-4 rounded-control border border-dashed border-border bg-secondary/30 p-3 text-xs">
                   {campaign.facts.map(([label, value]) => (
                     <div key={label} className="min-w-0">
@@ -157,14 +151,11 @@ export function LandingSections() {
                 Know what your agent is paying for
               </h2>
               <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-                Tool402 makes each request easier to inspect before your agent acts. You can see what a tool needs, what it says it returns, and the payment it asks for.
+                Before your agent pays, decide whether a tool fits the job, the price, and the rules you set.
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
                 <Link href="/explore" className={buttonVariants({ size: "sm" })}>
                   Explore tools
-                </Link>
-                <Link href="/demo" className={buttonVariants({ variant: "outline", size: "sm" })}>
-                  See the demo
                 </Link>
               </div>
             </div>
@@ -174,8 +165,8 @@ export function LandingSections() {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-5"><path d="M7 3h8l3 3v15H7z" /><path d="M15 3v4h4M10 12h5M10 16h5" /></svg>
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold">Understand the tool first</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Read the inputs, result types, and stated limits before your agent uses it.</p>
+                  <h3 className="text-sm font-bold">Check the fit first</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Read what a tool does, what it needs, and its stated limits before your agent uses it.</p>
                 </div>
               </li>
               <li className="flex min-h-28 gap-4 rounded-card border border-border bg-card p-5 transition-colors hover:border-foreground/15 motion-reduce:transition-none">
@@ -183,8 +174,8 @@ export function LandingSections() {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-5"><path d="M7 3h8l3 3v15H7z" /><path d="M15 3v4h4M10 12h5M10 16h3" /><circle cx="16" cy="16" r="3" /></svg>
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold">See the payment request</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">A 402 response describes what the tool asks for before it releases a result.</p>
+                  <h3 className="text-sm font-bold">Know the cost before paying</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">See the requested price before your agent sends payment.</p>
                 </div>
               </li>
               <li className="flex min-h-28 gap-4 rounded-card border border-border bg-card p-5 transition-colors hover:border-foreground/15 motion-reduce:transition-none">
@@ -192,8 +183,8 @@ export function LandingSections() {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-5"><path d="M4 5h8l2 2h6v12H4z" /><path d="M4 5v12M9 16h7" /><circle cx="17" cy="17" r="2" /></svg>
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold">Apply your rules</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Your agent compares that request with the spending rules you configure.</p>
+                  <h3 className="text-sm font-bold">Reject requests outside your rules</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Your agent can decline a request that does not match the spending rules you configure.</p>
                 </div>
               </li>
             </ul>
@@ -215,7 +206,7 @@ export function LandingSections() {
                 Building a tool for AI agents?
               </h2>
               <p className="mx-auto max-w-md text-sm leading-relaxed text-muted-foreground">
-                Prepare an offering that explains what your tool does so agents can discover and access it. Review the preview before any provider action; preparing it does not publish a live tool.
+                Prepare your tool details, prices, and terms so agents can understand what you offer. The next step lets you review the offering before any provider action; preparing it does not publish a live tool.
               </p>
               <div className="flex flex-wrap justify-center gap-3 pt-2">
                 <Link

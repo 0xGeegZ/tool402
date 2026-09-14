@@ -24,7 +24,7 @@ export function LandingFooter() {
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
               <li><Link href="/explore" className="transition-colors hover:text-foreground touch-target">Explore tools</Link></li>
               <li><Link href="/explore/riskscan" className="transition-colors hover:text-foreground touch-target">RiskScan</Link></li>
-              <li><Link href="/demo" className="transition-colors hover:text-foreground touch-target">See the demo</Link></li>
+              <li><Link href="/demo" className="transition-colors hover:text-foreground touch-target">Presenter guide</Link></li>
             </ul>
           </nav>
           <nav aria-label="Provider links">
@@ -60,7 +60,7 @@ export function LandingFooter() {
       </div>
       <div className="mt-10 flex flex-col gap-3 border-t border-border pt-6 text-xs leading-relaxed text-muted-foreground lg:flex-row lg:items-center lg:justify-between lg:gap-8">
         <p>© 2026 Tool402. Hedera testnet preview.</p>
-        <p className="max-w-xl lg:text-right">Explore tools, see the demo, or prepare an offering.</p>
+        <p className="max-w-xl lg:text-right">Explore tools, read the presenter guide, or prepare an offering.</p>
       </div>
     </footer>
   );

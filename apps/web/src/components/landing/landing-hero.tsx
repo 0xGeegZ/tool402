@@ -18,27 +18,27 @@ export function LandingHero() {
             </span>
             <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-border bg-card px-3 text-xs font-medium text-muted-foreground">
               <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-4 text-foreground"><path d="M4 1.75h5.5L12.5 5v9.25H4z" /><path d="M9.5 1.75V5h3M6.25 8h4M6.25 10.5h4" strokeLinecap="round" /></svg>
-              x402 payment request
+              x402 payment requests tell an agent what it needs to pay.
             </span>
           </div>
           <h1 id="landing-title" className="max-w-[36rem] text-4xl font-extrabold leading-[1.04] tracking-[-0.04em] sm:text-5xl lg:text-[4.35rem] lg:leading-[0.86]">
             A marketplace for tools <span className="text-brand-purple">AI agents can pay</span> to use.
           </h1>
           <p className="max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Build an agent that discovers a tool, checks its payment request against the rules you set, and gets a result after the tool service verifies payment. Tool402 runs on Hedera testnet.
+            Let your AI agent find a tool, check the price, and pay to use it under the spending rules you configure.
           </p>
           <div className="flex flex-col items-start gap-3 sm:flex-row">
             <Link
-              href="/demo"
+              href="/explore"
               className={buttonVariants({ size: "lg", shape: "pill", className: "font-semibold" })}
             >
-              See the demo
+              Explore tools
             </Link>
             <Link
-              href="/explore"
+              href="#how-it-works"
               className={buttonVariants({ variant: "outline", size: "lg", shape: "pill", className: "bg-card shadow-sm" })}
             >
-              Explore tools
+              How it works
             </Link>
           </div>
         </div>
@@ -56,13 +56,12 @@ export function LandingHero() {
           </div>
           <div className="absolute -left-2 top-2 z-20 w-52 rounded-card border border-border/80 bg-card/95 p-3.5 shadow-lg backdrop-blur sm:-left-6 sm:top-6 sm:w-60 sm:p-4">
             <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">RiskScan</span>
-            <span className="mt-1 block text-lg font-bold tracking-tight">Agent tool</span>
-            <span aria-hidden="true" className="mt-3 block h-1.5 overflow-hidden rounded-full bg-secondary"><span className="block h-full w-1/4 rounded-full bg-brand-purple" /></span>
-            <span className="mt-2 block text-[11px] text-muted-foreground">Tool directory entry</span>
+            <span className="mt-1 block text-lg font-bold tracking-tight">Checks declared information</span>
+            <span className="mt-2 block text-[11px] text-muted-foreground">Reports missing disclosures</span>
           </div>
           <div className="absolute -right-2 bottom-2 z-20 rounded-card border border-border bg-card p-3 shadow-md sm:-right-4 sm:bottom-8 sm:p-3.5">
-            <span className="block text-[11px] font-semibold uppercase tracking-wide text-primary">x402</span>
-            <span className="mt-1 flex items-center gap-2 text-sm font-semibold"><svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="size-4"><rect x="3.5" y="7" width="9" height="6.5" rx="1.25" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" strokeLinecap="round" /></svg>Payment request</span>
+            <span className="block text-[11px] font-semibold uppercase tracking-wide text-primary">Before payment</span>
+            <span className="mt-1 flex items-center gap-2 text-sm font-semibold"><svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="size-4"><rect x="3.5" y="7" width="9" height="6.5" rx="1.25" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" strokeLinecap="round" /></svg>Check the price</span>
           </div>
         </div>
       </div>
@@ -70,7 +69,7 @@ export function LandingHero() {
         <ul className="grid gap-3 border-t border-border pt-5 sm:grid-cols-3 sm:gap-0 sm:pt-6">
           <li className="flex items-center gap-3 sm:border-r sm:border-border sm:pr-6"><span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-field bg-brand-purple/15 text-brand-purple"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" className="size-5"><path d="m11.5 1.75-6 9h4l-1 7.5 6-9h-4z" strokeLinecap="round" strokeLinejoin="round" /></svg></span><span className="text-sm font-medium text-muted-foreground">Tool discovery</span></li>
           <li className="flex items-center gap-3 sm:border-r sm:border-border sm:px-6"><span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-field bg-brand-purple/15 text-brand-purple"><span className="text-xs font-bold">H</span></span><span className="text-sm font-medium text-muted-foreground">Hedera testnet</span></li>
-          <li className="flex items-center gap-3 sm:pl-6"><span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-field bg-brand-purple/15 text-brand-purple"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-5"><path d="M5 2.5h7l3 3V17.5H5z" /><path d="M12 2.5v3h3M7.5 10h5M7.5 13h5" strokeLinecap="round" /></svg></span><span className="text-sm font-medium text-muted-foreground">x402 payments</span></li>
+          <li className="flex items-center gap-3 sm:pl-6"><span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-field bg-brand-purple/15 text-brand-purple"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-5"><path d="M5 2.5h7l3 3V17.5H5z" /><path d="M12 2.5v3h3M7.5 10h5M7.5 13h5" strokeLinecap="round" /></svg></span><span className="text-sm font-medium text-muted-foreground">Pay for tool use</span></li>
         </ul>
       </div>
     </section>
