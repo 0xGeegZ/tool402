@@ -1,4 +1,4 @@
-import { isAddress } from "viem";
+import { isAddress, TransactionReceiptNotFoundError } from "viem";
 
 import { isUserRejectedWalletRequest } from "../wallet/wallet-error.ts";
 import { STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH } from "./stage-b-ats-create-canonical-identity.ts";
@@ -649,7 +649,14 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
         const remaining = remainingMilliseconds(receiptDeadline, now);
         if (remaining === null || remaining <= 0) break;
         const receipt = await settleBeforeDeadline(
-          Promise.resolve().then(() => getTransactionReceipt({ hash: hash as `0x${string}` })),
+          Promise.resolve().then(async () => {
+            try {
+              return await getTransactionReceipt({ hash: hash as `0x${string}` });
+            } catch (error) {
+              if (error instanceof TransactionReceiptNotFoundError) return null;
+              throw error;
+            }
+          }),
           receiptDeadline,
           now,
           timers,

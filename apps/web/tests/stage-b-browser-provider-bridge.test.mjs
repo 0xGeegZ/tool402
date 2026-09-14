@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import test from "node:test";
+import { TransactionReceiptNotFoundError } from "viem";
 import { fileURLToPath } from "node:url";
 import { runInNewContext } from "node:vm";
 
@@ -639,6 +640,24 @@ implementedTest("only accepts Viem-formatted successful receipts after temporary
 
   assert.equal(outcome.kind, "candidate");
   assert.equal(provider.calls.filter(({ method }) => method === "eth_getTransactionReceipt").length, 2);
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
+});
+
+implementedTest("continues bounded receipt polling after Viem reports a not-yet-indexed receipt", async () => {
+  const log = createBondDeployedLog(factoryApi, projectionApi);
+  let reads = 0;
+  const provider = fakeProvider({ receipt: () => {
+    reads += 1;
+    if (reads === 1) throw new TransactionReceiptNotFoundError({ hash: transactionHash });
+    return { transactionHash, status: "success", to: factory, logs: [log] };
+  } });
+  const mirror = responseQueue(mirrorCandidateResponses({ input: factoryCalldata(projectionApi.createStageBAtsCreateExecutionProjection().configuration), log }));
+  const bridge = createBridge(api, provider, mirror.fetch);
+
+  const outcome = await bridge.execute();
+
+  assert.equal(outcome.kind, "candidate");
+  assert.equal(reads, 2);
   assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
 });
 

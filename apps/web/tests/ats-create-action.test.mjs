@@ -22,13 +22,19 @@ function elements(node) {
   return [node, ...elements(node.props.children)];
 }
 
-async function actionHarness() {
+async function actionHarness(stored = new Map()) {
   const slots = [];
   let cursor = 0;
   const fetchCalls = [];
   let activeSession = null;
   let generation = 0;
-  const stored = new Map();
+  globalThis.window = {
+    localStorage: {
+      getItem(key) { return stored.get(key) ?? null; },
+      setItem(key, value) { stored.set(key, value); },
+      removeItem(key) { stored.delete(key); },
+    },
+  };
   const bridge = await import("../src/lib/ats/stage-b-browser-provider-bridge.ts");
   const recovery = await import("../src/components/provider/deploy/stage-b-recovery.ts");
   const imports = {
@@ -117,7 +123,9 @@ async function actionHarness() {
         generation += 1;
       }
       cursor = 0;
-      return module.exports.AtsCreateAction(props);
+      module.exports.AtsCreateAction({ preparedAttemptPublicId: "CCCCCCCCCCCCCCCCCCCCCg", ...props });
+      cursor = 0;
+      return module.exports.AtsCreateAction({ preparedAttemptPublicId: "CCCCCCCCCCCCCCCCCCCCCg", ...props });
     },
     fetchCalls() { return fetchCalls; },
     stored() { return new Map(stored); },
@@ -275,6 +283,41 @@ test("prefills recovery with the MetaMask hash when verification remains unknown
   const afterUnknown = harness.render(props);
   const recoveryInput = elements(afterUnknown).find((element) => element.props["data-stage-b-recovery-hash"] === "true");
   assert.equal(recoveryInput?.props.value, transactionHash);
+});
+
+test("blocks a second MetaMask send after remounting a persisted unknown transaction", async () => {
+  const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+  const transactionHash = `0x${"9".repeat(64)}`;
+  const calls = [];
+  const provider = {
+    async request({ method }) {
+      calls.push(method);
+      if (method === "eth_sendTransaction") return transactionHash;
+      if (method === "eth_getTransactionReceipt") return {};
+      assert.fail(`unexpected provider request: ${method}`);
+    },
+  };
+  const persisted = new Map();
+  const props = {
+    session: { provider, address: issuer },
+    preparedAttemptPublicId: "CCCCCCCCCCCCCCCCCCCCCg",
+    selectedTool: false,
+    selectedToolPublicId: "tool_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    stageTwoDone: true,
+    hasCandidate: false,
+    onCandidate() { assert.fail("unknown evidence cannot attach a candidate"); },
+  };
+  const first = await actionHarness(persisted);
+  const create = elements(first.render(props)).find((element) => element.type === "Button" && element.props.children === "Create the note in MetaMask");
+  assert.equal(create?.props.disabled, false);
+  await create.props.onClick();
+  assert.equal(calls.filter((method) => method === "eth_sendTransaction").length, 1);
+
+  const remounted = await actionHarness(persisted);
+  const restored = elements(remounted.render(props)).find((element) => element.type === "Button" && element.props.children === "Create the note in MetaMask");
+  assert.equal(restored?.props.disabled, true);
+  await restored.props.onClick();
+  assert.equal(calls.filter((method) => method === "eth_sendTransaction").length, 1);
 });
 
 test("retains an uncorroborated recovery hash for an explicit retry without sending another transaction", async () => {

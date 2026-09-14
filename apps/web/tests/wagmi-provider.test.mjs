@@ -108,6 +108,9 @@ async function loadProviders() {
       switch (specifier) {
         case "react":
           return {
+            createContext: (value) => ({ Provider: ({ children }) => children, value }),
+            useContext: (context) => context.value,
+            useEffect: (effect) => { effect(); },
             useState: (create) => {
               queryClient ??= create();
               return [queryClient];
