@@ -31,7 +31,7 @@ test("gives the reconciled landing the selected five-part marketplace hierarchy"
     "provider-path-title",
   ]);
   assert.deepEqual(headingIds, sectionLabels);
-  assert.match(sections, /Every current route has a clear boundary/);
+  assert.match(sections, /Know what your agent is paying for/);
   assert.match(sections, /Prepare a tool offering/);
 });
 
