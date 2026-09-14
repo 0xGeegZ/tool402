@@ -238,8 +238,14 @@ function BackingForm({ offering, initialPayment, dashboardAddress }: { offering:
         body: JSON.stringify({ attemptPublicId: intent.idempotencyKey, parameters: intent.parameters }),
       });
       const value: unknown = await response.json();
-      if (!response.ok || value === null || typeof value !== "object" || Array.isArray(value)
-        || (value as Record<string, unknown>).status !== "OUTCOME_UNKNOWN") throw new Error("dispatch claim unavailable");
+      if (!response.ok || value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("dispatch claim unavailable");
+      const record = value as Record<string, unknown>;
+      if (record.status === "RECOVERY_REQUIRED" && typeof record.recoveryAttemptPublicId === "string" && /^[A-Za-z0-9_-]{21}[AQgw]$/u.test(record.recoveryAttemptPublicId)) {
+        setView({ kind: "payment_outcome_unknown", intent, message: "A previous funding attempt is unresolved. Reloading its server recovery state; nothing is sent again." });
+        window.location.assign(backingPath);
+        return false;
+      }
+      if (record.status !== "OUTCOME_UNKNOWN") throw new Error("dispatch claim unavailable");
       return true;
     } catch {
       setNotice("The funding dispatch could not be claimed. Nothing was sent.");

@@ -1,5 +1,5 @@
-import { internalMutationGeneric, internalQueryGeneric, type DataModelFromSchemaDefinition, type GenericMutationCtx, type MutationBuilder, type QueryBuilder } from "convex/server";
-import { v } from "convex/values";
+import { internalMutationGeneric, internalQueryGeneric, type DataModelFromSchemaDefinition, type GenericMutationCtx, type GenericQueryCtx, type MutationBuilder, type QueryBuilder } from "convex/server";
+import { v, type GenericId } from "convex/values";
 import { canonicalizeRequirements, createOfferingTerms } from "@tool402/core";
 import { keccak256 } from "viem";
 import { isInt64, readStoredRecord } from "../src/offering-command-admission.ts";
@@ -16,10 +16,17 @@ const legacyRiskScanOfferingPublicId = "riskscan_revenue_note_demo";
 
 const outcomeValidator = v.union(v.literal("PREPARED"), v.literal("CONFIRMED"), v.literal("REJECTED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN"));
 const resultValidator = v.union(v.null(), v.object({ status: outcomeValidator, transactionHash: v.union(v.null(), v.string()), tinybars: v.string() }));
+const dispatchResultValidator = v.union(
+  resultValidator,
+  v.object({ status: v.literal("RECOVERY_REQUIRED"), recoveryAttemptPublicId: v.string(), transactionHash: v.union(v.null(), v.string()), tinybars: v.string() }),
+);
 const paymentListValidator = v.array(v.object({ offeringPublicId: v.string(), status: outcomeValidator, transactionHash: v.union(v.null(), v.string()), tinybars: v.string() }));
 type Status = "PREPARED" | "CONFIRMED" | "REJECTED" | "SUBMITTED" | "OUTCOME_UNKNOWN";
 type ExistingClaim = Readonly<{ attemptId: string; transactionHash?: string; tinybars: string; state: Status }>;
+type UnresolvedClaim = Readonly<{ attemptId: GenericId<"externalPrepareCommandAttempts">; transactionHash?: string; tinybars: string; state: Status; claimedAt: bigint }>;
+type DispatchResult = Readonly<{ status: "RECOVERY_REQUIRED"; recoveryAttemptPublicId: string; transactionHash: string | null; tinybars: string }> | Readonly<{ status: Status; transactionHash: string | null; tinybars: string }> | null;
 type Context = GenericMutationCtx<DataModelFromSchemaDefinition<typeof schema>>;
+type DatabaseContext = Pick<GenericMutationCtx<DataModelFromSchemaDefinition<typeof schema>>, "db"> | Pick<GenericQueryCtx<DataModelFromSchemaDefinition<typeof schema>>, "db">;
 
 type FrozenIntent = Readonly<{ offeringPublicId: string; offeringVersion?: 1; offeringTermsDigest?: string; recipient?: string; expiresAt?: string }>;
 
@@ -126,6 +133,27 @@ async function mayBeginNewBackingPaymentDispatch(
   }
 }
 
+/** The oldest unresolved claim owns bounded recovery for this wallet and offering until resolution. */
+async function unresolvedSiblingBackingPaymentClaim(
+  ctx: DatabaseContext,
+  canonicalSignerAddress: string,
+  offeringPublicId: string,
+  excludedAttemptId: string | null,
+): Promise<UnresolvedClaim | undefined> {
+  const candidates: UnresolvedClaim[] = [];
+  for (const state of ["OUTCOME_UNKNOWN", "SUBMITTED"] as const) {
+    const claims = await ctx.db.query(backingPaymentClaimStore)
+      .withIndex("by_backer_offering_and_state", (query) => (
+        query.eq("canonicalSignerAddress", canonicalSignerAddress).eq("offeringPublicId", offeringPublicId).eq("state", state)
+      ))
+      .order("asc")
+      .take(2);
+    const claim = claims[0];
+    if (claim !== undefined && claim.attemptId !== excludedAttemptId) candidates.push(claim);
+  }
+  return candidates.sort((left, right) => left.claimedAt === right.claimedAt ? 0 : left.claimedAt < right.claimedAt ? -1 : 1)[0];
+}
+
 /** Pure admission policy; the mutation applies it while reading both indexed claims transactionally. */
 export function resolveBackingPaymentClaim(
   claimedHash: ExistingClaim | undefined,
@@ -167,7 +195,7 @@ export const reserveBackingPayment = internalMutation({
 /** Atomically consumes the one Send permit before the browser invokes MetaMask. */
 export const beginBackingPaymentDispatch = internalMutation({
   args: { attemptPublicId: v.string(), canonicalSignerAddress: v.string(), tinybars: v.string() },
-  returns: resultValidator,
+  returns: dispatchResultValidator,
   handler: async (ctx, args) => {
     if (!addressPattern.test(args.canonicalSignerAddress) || !integerPattern.test(args.tinybars) || BigInt(args.tinybars) < 1n) return null;
     const rows = await ctx.db.query("externalPrepareCommandAttempts").withIndex("by_idempotency_key", (q) => q.eq("idempotencyKey", args.attemptPublicId)).take(2);
@@ -175,6 +203,17 @@ export const beginBackingPaymentDispatch = internalMutation({
     const intents = await ctx.db.query("backingIntents").withIndex("by_idempotency_key", (q) => q.eq("idempotencyKey", args.attemptPublicId)).take(2);
     if (intents.length !== 1 || !validFrozenIntent(intents[0], { idempotencyKey: args.attemptPublicId, canonicalSignerAddress: args.canonicalSignerAddress, tinybars: args.tinybars })) return null;
     const intent = intents[0]!;
+    const sibling = await unresolvedSiblingBackingPaymentClaim(ctx, args.canonicalSignerAddress, intent.offeringPublicId, rows[0]!._id);
+    if (sibling !== undefined) {
+      const recoveryAttempt = await ctx.db.get(sibling.attemptId);
+      if (!validAttempt(recoveryAttempt, { attemptPublicId: recoveryAttempt?.idempotencyKey ?? "", canonicalSignerAddress: args.canonicalSignerAddress })) return null;
+      return {
+        status: "RECOVERY_REQUIRED" as const,
+        recoveryAttemptPublicId: recoveryAttempt.idempotencyKey,
+        transactionHash: sibling.transactionHash ?? null,
+        tinybars: sibling.tinybars,
+      } satisfies DispatchResult;
+    }
     if ((intent.offeringPublicId !== legacyRiskScanOfferingPublicId && !hasLiveSelfServiceBackingIntent(intent))
       || !await mayBeginNewBackingPaymentDispatch(ctx, args.canonicalSignerAddress, intent)) return null;
     const claims = await ctx.db.query(backingPaymentClaimStore).withIndex("by_attempt_id", (q) => q.eq("attemptId", rows[0]!._id)).take(2);
@@ -208,16 +247,15 @@ export const recordBackingPayment = internalMutation({
     if (rows.length !== 1 || !validAttempt(rows[0], args)) return null;
     const row = rows[0];
     // Confirmed claims created before verifiedTransactionHash existed remain
-    // exclusively bound by their candidate hash. This bounded compatibility
-    // read fails closed when a hostile number of candidates shares a hash.
+    // exclusively bound by their candidate hash. Query only confirmed legacy
+    // owners: rejected or provisional candidates never consume this bound.
     const historicHashClaims = await ctx.db.query(backingPaymentClaimStore)
-      .withIndex("by_transaction_hash", (q) => q.eq("transactionHash", args.transactionHash))
-      .take(100);
-    if (historicHashClaims.length === 100) return null;
+      .withIndex("by_transaction_hash_and_state", (q) => q.eq("transactionHash", args.transactionHash).eq("state", "CONFIRMED"))
+      .take(2);
     const verifiedClaims = await ctx.db.query(backingPaymentClaimStore)
       .withIndex("by_verified_transaction_hash", (q) => q.eq("verifiedTransactionHash", args.transactionHash))
       .take(2);
-    const exclusiveClaims = [...historicHashClaims.filter((claim) => claim.state === "CONFIRMED"), ...verifiedClaims]
+    const exclusiveClaims = [...historicHashClaims, ...verifiedClaims]
       .filter((claim, index, claims) => claims.findIndex((candidate) => candidate._id === claim._id) === index);
     if (exclusiveClaims.length > 1) return null;
     const attempts = await ctx.db.query(backingPaymentClaimStore).withIndex("by_attempt_id", (q) => q.eq("attemptId", row._id)).take(2);
@@ -342,13 +380,14 @@ export const readBackerPaymentForOffering = internalQuery({
   returns: resultValidator,
   handler: async (ctx, args) => {
     if (!addressPattern.test(args.canonicalSignerAddress) || !/^[A-Za-z0-9_-]{1,96}$/u.test(args.offeringPublicId)) return null;
-    const claims = await ctx.db.query(backingPaymentClaimStore)
+    const unresolved = await unresolvedSiblingBackingPaymentClaim(ctx, args.canonicalSignerAddress, args.offeringPublicId, null);
+    const claims = unresolved === undefined ? await ctx.db.query(backingPaymentClaimStore)
       .withIndex("by_backer_offering_and_claimed_at", (query) => (
         query.eq("canonicalSignerAddress", args.canonicalSignerAddress).eq("offeringPublicId", args.offeringPublicId)
       ))
       .order("desc")
-      .take(1);
-    const claim = claims[0];
+      .take(1) : [];
+    const claim = unresolved ?? claims[0];
     if (claim !== undefined && integerPattern.test(claim.tinybars)
       && (claim.transactionHash === undefined || hashPattern.test(claim.transactionHash))) {
       return { status: claim.state, transactionHash: claim.transactionHash ?? null, tinybars: claim.tinybars };
@@ -387,12 +426,13 @@ export const readBackingPaymentVerificationContextForOffering = internalQuery({
   })),
   handler: async (ctx, args) => {
     if (!addressPattern.test(args.canonicalSignerAddress) || !/^[A-Za-z0-9_-]{1,96}$/u.test(args.offeringPublicId)) return null;
-    const claims = await ctx.db.query(backingPaymentClaimStore)
+    const unresolved = await unresolvedSiblingBackingPaymentClaim(ctx, args.canonicalSignerAddress, args.offeringPublicId, null);
+    const claims = unresolved === undefined ? await ctx.db.query(backingPaymentClaimStore)
       .withIndex("by_backer_offering_and_claimed_at", (query) => (
         query.eq("canonicalSignerAddress", args.canonicalSignerAddress).eq("offeringPublicId", args.offeringPublicId)
       ))
-      .order("desc").take(1);
-    const claim = claims[0];
+      .order("desc").take(1) : [];
+    const claim = unresolved ?? claims[0];
     const transactionHash = claim?.transactionHash;
     if (claim === undefined || claim.state === "PREPARED" || claim.state === "CONFIRMED" || claim.state === "REJECTED"
       || transactionHash === undefined || !hashPattern.test(transactionHash) || !integerPattern.test(claim.tinybars)) return null;

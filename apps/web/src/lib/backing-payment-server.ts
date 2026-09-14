@@ -19,6 +19,7 @@ export type FrozenBackingIntent = Readonly<{
   expiresAt: string;
 }>;
 export type BackingPaymentRecord = Readonly<{ status: "PREPARED" | "CONFIRMED" | "REJECTED" | "SUBMITTED" | "OUTCOME_UNKNOWN"; transactionHash: `0x${string}` | null; tinybars: string }>;
+export type BackingDispatchRecord = BackingPaymentRecord | Readonly<{ status: "RECOVERY_REQUIRED"; recoveryAttemptPublicId: string; transactionHash: `0x${string}` | null; tinybars: string }>;
 export type BackingPaymentHistoryRecord = BackingPaymentRecord & Readonly<{ offeringPublicId: string }>;
 export type BackingPaymentRead =
   | Readonly<{ kind: "FOUND"; payment: BackingPaymentRecord }>
@@ -121,6 +122,19 @@ function record(value: unknown): BackingPaymentRecord | null {
     : null;
 }
 
+function dispatchRecord(value: unknown): BackingDispatchRecord | null {
+  const payment = record(value);
+  if (payment !== null) return payment;
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+  const input = value as Record<string, unknown>;
+  return input.status === "RECOVERY_REQUIRED"
+    && typeof input.recoveryAttemptPublicId === "string" && attemptPattern.test(input.recoveryAttemptPublicId)
+    && (input.transactionHash === null || (typeof input.transactionHash === "string" && hashPattern.test(input.transactionHash)))
+    && typeof input.tinybars === "string" && integerPattern.test(input.tinybars)
+    ? { status: "RECOVERY_REQUIRED", recoveryAttemptPublicId: input.recoveryAttemptPublicId, transactionHash: input.transactionHash === null ? null : input.transactionHash as `0x${string}`, tinybars: input.tinybars }
+    : null;
+}
+
 function paymentRead(value: unknown): BackingPaymentRead {
   if (value === undefined) return { kind: "UNAVAILABLE" };
   if (value === null) return { kind: "NONE" };
@@ -216,7 +230,7 @@ async function handle(request: Request, env: DashboardAuthEnvironment, dependenc
     : dispatch === "begin"
       ? { type: "backing_dispatch", canonicalSignerAddress: session.address, attemptPublicId: input.attemptPublicId, parameters: input.parameters, sessionExpiresAt: session.expiresAt }
       : { type: "backing", canonicalSignerAddress: session.address, attemptPublicId: input.attemptPublicId, transactionHash: input.transactionHash!, parameters: input.parameters, sessionExpiresAt: session.expiresAt };
-  const result = record(await (dependencies.forward === undefined ? forward(env, payload) : dependencies.forward(payload)));
+  const result = (dispatch === "begin" ? dispatchRecord : record)(await (dependencies.forward === undefined ? forward(env, payload) : dependencies.forward(payload)));
   return result === null ? json({ outcome: "unavailable" }, 503) : json(result, 200);
 }
 

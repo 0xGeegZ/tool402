@@ -11,6 +11,7 @@ type Parameters = Readonly<{ offeringPublicId: string; units: string; tinybars: 
 type Status = "CONFIRMED" | "REJECTED" | "SUBMITTED" | "OUTCOME_UNKNOWN";
 type Outcome = Readonly<{ status: Status; transactionHash: string; tinybars: string }> | null;
 type Reservation = Readonly<{ status: "PREPARED" | Status; transactionHash: string | null; tinybars: string }> | null;
+type DispatchReservation = Reservation | Readonly<{ status: "RECOVERY_REQUIRED"; recoveryAttemptPublicId: string; transactionHash: string | null; tinybars: string }>;
 type ReceiptReader = (hash: `0x${string}`) => Promise<Readonly<{ from: string; to: string; value: bigint; status: "0x1" | "0x0" }> | null>;
 const addressPattern = /^0x[0-9a-f]{40}$/u;
 const hashPattern = /^0x[0-9a-f]{64}$/u;
@@ -18,7 +19,7 @@ const integerPattern = /^(?:0|[1-9][0-9]*)$/u;
 const contextReference = makeFunctionReference<"query", { attemptPublicId: string; canonicalSignerAddress: string }, { expectedTarget: string; canonicalParametersHash: string } | null>("backing_payment_store:readBackingPaymentContext");
 const recordReference = makeFunctionReference<"mutation", { attemptPublicId: string; canonicalSignerAddress: string; transactionHash: string; tinybars: string; outcome: Status }, Outcome>("backing_payment_store:recordBackingPayment");
 const reserveReference = makeFunctionReference<"mutation", { attemptPublicId: string; canonicalSignerAddress: string; tinybars: string }, Reservation>("backing_payment_store:reserveBackingPayment");
-const beginDispatchReference = makeFunctionReference<"mutation", { attemptPublicId: string; canonicalSignerAddress: string; tinybars: string }, Reservation>("backing_payment_store:beginBackingPaymentDispatch");
+const beginDispatchReference = makeFunctionReference<"mutation", { attemptPublicId: string; canonicalSignerAddress: string; tinybars: string }, DispatchReservation>("backing_payment_store:beginBackingPaymentDispatch");
 const verificationContextReference = makeFunctionReference<"query", { canonicalSignerAddress: string }, { attemptPublicId: string; expectedTarget: string; transactionHash: string; tinybars: string; state: Status } | null>("backing_payment_store:readBackingPaymentVerificationContext");
 const paymentReference = makeFunctionReference<"query", { canonicalSignerAddress: string }, Reservation>("backing_payment_store:readBackerPayment");
 const legacyRiskScanPaymentReference = makeFunctionReference<"query", { canonicalSignerAddress: string }, Reservation>("backing_payment_store:readLegacyRiskScanPayment");
@@ -115,7 +116,11 @@ export const reserveBackingPayment = internalActionGeneric({
 
 export const beginBackingPaymentDispatch = internalActionGeneric({
   args: { attemptPublicId: v.string(), canonicalSignerAddress: v.string(), parameters: v.object({ offeringPublicId: v.string(), units: v.string(), tinybars: v.string(), purchaseIntentId: v.string() }) },
-  returns: v.union(v.null(), v.object({ status: v.union(v.literal("PREPARED"), v.literal("CONFIRMED"), v.literal("REJECTED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN")), transactionHash: v.union(v.null(), v.string()), tinybars: v.string() })),
+  returns: v.union(
+    v.null(),
+    v.object({ status: v.union(v.literal("PREPARED"), v.literal("CONFIRMED"), v.literal("REJECTED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN")), transactionHash: v.union(v.null(), v.string()), tinybars: v.string() }),
+    v.object({ status: v.literal("RECOVERY_REQUIRED"), recoveryAttemptPublicId: v.string(), transactionHash: v.union(v.null(), v.string()), tinybars: v.string() }),
+  ),
   handler: async (ctx, args) => ctx.runMutation(beginDispatchReference, { attemptPublicId: args.attemptPublicId, canonicalSignerAddress: args.canonicalSignerAddress, tinybars: args.parameters.tinybars }),
 });
 

@@ -112,11 +112,12 @@ export default defineSchema({
     tinybars: v.string(),
     state: v.union(v.literal("PREPARED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN"), v.literal("CONFIRMED"), v.literal("REJECTED")),
     claimedAt: v.int64(),
-  }).index("by_transaction_hash", ["transactionHash"])
+  }).index("by_transaction_hash_and_state", ["transactionHash", "state"])
     .index("by_verified_transaction_hash", ["verifiedTransactionHash"])
     .index("by_attempt_id", ["attemptId"])
     .index("by_canonical_signer_address", ["canonicalSignerAddress"])
-    .index("by_backer_offering_and_claimed_at", ["canonicalSignerAddress", "offeringPublicId", "claimedAt"]),
+    .index("by_backer_offering_and_claimed_at", ["canonicalSignerAddress", "offeringPublicId", "claimedAt"])
+    .index("by_backer_offering_and_state", ["canonicalSignerAddress", "offeringPublicId", "state"]),
   backingIntents: defineTable({
     idempotencyKey: v.string(),
     purchaseIntentId: v.string(),

@@ -5,6 +5,7 @@ import { convexToJson, jsonToConvex } from "convex/values";
 
 const serverUrl = new URL("../src/lib/backing-payment-server.ts", import.meta.url);
 const routeUrl = new URL("../src/app/api/backing/payment/route.ts", import.meta.url);
+const flowUrl = new URL("../src/components/backing/backing-flow.tsx", import.meta.url);
 
 const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
 const env = {
@@ -25,6 +26,14 @@ function intentRequest(body = JSON.stringify({ offeringPublicId: "riskscan_reven
   return new Request("https://tool402.test/api/backing/intent", { method: "POST", headers: { "content-type": "application/json", origin, cookie: "__Host-tool402-dashboard-session=session" }, body });
 }
 
+function dispatchRequest() {
+  return new Request("https://tool402.test/api/backing/payment/dispatch", {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: "https://tool402.test", cookie: "__Host-tool402-dashboard-session=session" },
+    body: JSON.stringify({ attemptPublicId: payload.attemptPublicId, parameters: payload.parameters }),
+  });
+}
+
 test("requires a valid same-origin dashboard session and forwards only its signer", async () => {
   const { handleBackingPaymentRequest } = await import(serverUrl.href);
   const forwarded = [];
@@ -36,6 +45,24 @@ test("requires a valid same-origin dashboard session and forwards only its signe
   assert.deepEqual(await response.json(), { status: "CONFIRMED", transactionHash: payload.transactionHash, tinybars: "1000000000" });
   assert.equal(forwarded[0].canonicalSignerAddress, signer);
   assert.equal(forwarded[0].type, "backing");
+});
+
+test("returns a bounded recovery instruction instead of authorizing a replacement wallet dispatch", async () => {
+  const { beginBackingPaymentDispatchRequest } = await import(serverUrl.href);
+  const recoveryAttemptPublicId = "ZyXwVuTsRqPoNmLkJiHgFw";
+  const response = await beginBackingPaymentDispatchRequest(dispatchRequest(), env, {
+    readSession: async () => ({ address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" }),
+    forward: async () => ({ status: "RECOVERY_REQUIRED", recoveryAttemptPublicId, transactionHash: payload.transactionHash, tinybars: "1000000000" }),
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { status: "RECOVERY_REQUIRED", recoveryAttemptPublicId, transactionHash: payload.transactionHash, tinybars: "1000000000" });
+});
+
+test("directs a refused replacement dispatch through a server-state recovery reload without a wallet request", async () => {
+  const source = await readFile(flowUrl, "utf8");
+  assert.match(source, /record\.status === "RECOVERY_REQUIRED"/u);
+  assert.match(source, /window\.location\.assign\(backingPath\)/u);
+  assert.doesNotMatch(source, /RECOVERY_REQUIRED[\s\S]{0,400}session\.provider\.request/u);
 });
 
 test("freezes a backing intent server-side and never accepts a browser-supplied recipient or price", async () => {
