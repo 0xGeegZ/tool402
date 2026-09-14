@@ -283,14 +283,13 @@ implementedTest("starts only one logout when Wagmi reports an explicit disconnec
   assertLogout(harness);
 });
 
-implementedTest("blocks a restored dashboard session on the wrong chain without revoking it", async () => {
+implementedTest("logs out a restored dashboard session on the wrong chain", async () => {
   const harness = await loadSynchronizer({ wallet: { connection: { status: "connected", account: "0xc89f87052c3e080b4a9b021d4930055031ef378e", chainId: 1, connector: { id: "metaMask" } }, resolved: true } });
 
-  const tree = harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
+  harness.render("0xc89f87052c3e080b4a9b021d4930055031ef378e");
   await flushMicrotasks();
 
-  assert.equal(harness.requests.length, 0);
-  assert.doesNotMatch(visibleText(tree), /dashboard content/u);
+  assertLogout(harness);
 });
 
 implementedTest("does not navigate when active-account logout is rejected or unavailable", async () => {

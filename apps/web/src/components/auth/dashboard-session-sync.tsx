@@ -81,10 +81,13 @@ export function DashboardSessionSync({
       hasMatchedSessionWallet.current = true;
       return;
     }
-    if (hasMatchedSessionWallet.current || (connection.status === "connected" && connection.account !== address)) {
+    if (hasMatchedSessionWallet.current || (
+      connection.status === "connected"
+      && (connection.account !== address || connection.chainId !== 296)
+    )) {
       endSession();
     }
-  }, [address, connection.account, connection.status, currentSessionMatches, endSession, resolved]);
+  }, [address, connection.account, connection.chainId, connection.status, currentSessionMatches, endSession, resolved]);
 
   if (!resolved || currentSessionMatches || (!hasMatchedSessionWallet.current && connection.status !== "connected")) {
     return children;
