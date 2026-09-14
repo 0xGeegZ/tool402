@@ -177,8 +177,8 @@ implementedProviderTest("mounts the client provider once from the root layout", 
   const layout = await readFile(new URL("../src/app/layout.tsx", import.meta.url), "utf8");
 
   assert.match(layout, /cookieToInitialState\(/u);
+  assert.match(layout, /export const instant = false;/u);
   assert.match(layout, /<WalletProviders initialState=\{initialState\}><ApplicationShell>\{children\}<\/ApplicationShell><\/WalletProviders>/u);
-  assert.match(layout, /<Suspense fallback=\{null\}>/u);
 });
 
 implementedProviderTest("hydrates cookie state before reconnecting on client mount", async () => {

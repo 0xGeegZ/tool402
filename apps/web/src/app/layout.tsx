@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description: "Discover tools for AI agents, inspect their payment requests, and see how x402 payments on Hedera testnet work.",
 };
 
+export const instant = false;
+
 function ApplicationShell({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div data-ui-shell="s00" className="min-h-svh">
@@ -57,26 +59,20 @@ function ApplicationShell({ children }: Readonly<{ children: React.ReactNode }>)
   );
 }
 
-async function WalletApplication({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   const initialState = cookieToInitialState(
     getTool402WagmiConfig(),
     (await cookies()).toString(),
   );
 
-  return <WalletProviders initialState={initialState}><ApplicationShell>{children}</ApplicationShell></WalletProviders>;
-}
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
   return (
     <html lang="en">
       <body className="min-h-svh bg-background text-foreground antialiased">
-        <Suspense fallback={null}>
-          <WalletApplication>{children}</WalletApplication>
-        </Suspense>
+        <WalletProviders initialState={initialState}><ApplicationShell>{children}</ApplicationShell></WalletProviders>
       </body>
     </html>
   );
