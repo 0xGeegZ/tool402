@@ -17,6 +17,7 @@ test("declares the strict Next workspace boundary", async () => {
   assert.equal(manifest.private, true);
   assert.equal(manifest.scripts.typecheck, "next typegen && tsc --noEmit");
   assert.deepEqual(manifest.dependencies, {
+    "@tanstack/react-query": "5.102.8",
     "@tool402/agent": "file:../agent",
     "@tool402/core": "file:../../packages/core",
     "@hashgraph/asset-tokenization-contracts": "8.0.0",
@@ -32,12 +33,14 @@ test("declares the strict Next workspace boundary", async () => {
     "react-dom": "19.2.8",
     "tailwind-merge": "3.6.0",
     viem: "2.56.1",
+    wagmi: "3.7.7",
   });
   assert.deepEqual(manifest.devDependencies, {
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "22.15.0",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
+    jsdom: "29.0.1",
     postcss: "8.5.28",
     tailwindcss: "4.3.3",
     typescript: "5.9.3",
@@ -67,11 +70,13 @@ test("renders the static Tool402 shell and home composition", async () => {
   assert.match(layout, />\s*Prepare a tool\s*</);
   assert.match(layout, /<html\s+lang=["']en["']>/);
   assert.match(layout, /<body\b/);
+  assert.match(layout, /title:\s*["']Tool402 \| Tools AI agents can pay to use["']/);
+  assert.match(layout, /description:\s*["']Discover tools for AI agents, inspect their payment requests, and see how x402 payments on Hedera testnet work\.["']/);
   assert.equal((page.match(/<main\b/g) ?? []).length, 1);
   assert.match(page, /<LandingHero\s*\/>/);
   assert.doesNotMatch(
     `${layout}\n${page}`,
-    /\b(?:payment|credential|onboarding|analytics|evidence|metric)\b/i,
+    /\b(?:credential|onboarding|analytics|evidence|metric)\b/i,
   );
 });
 

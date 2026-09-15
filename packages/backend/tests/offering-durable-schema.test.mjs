@@ -101,12 +101,14 @@ const expectedM40 = {
       definition: offeringDefinition,
       narrative: offeringNarrative,
       state: union("DRAFT", "ASSET_PENDING", "READY", "OPEN", "CLOSED"),
+      fundingRecipient: optional(string),
       atsAttemptId: optional(id("externalPrepareCommandAttempts")),
       atsAssetEvmAddress: optional(string),
       activeDirectoryVersionId: optional(id("directoryVersions")),
     }),
     indexes: [
       ["by_offering_public_id_and_version", ["offeringPublicId", "version"]],
+      ["by_state_and_updated_at", ["state", "updatedAt"]],
       ["by_ats_attempt_id", ["atsAttemptId"]],
       [
         "by_ats_create_draft_binding",
@@ -344,7 +346,7 @@ const expectedM32 = {
       nextReconciliationAt: optional(bigint),
       acceptedAt: bigint,
     }),
-    indexes: [["by_idempotency_key", ["idempotencyKey"]], ["by_operation_kind_and_canonical_signer_address", ["operationKind", "canonicalSignerAddress"]]],
+    indexes: [["by_idempotency_key", ["idempotencyKey"]], ["by_operation_kind_and_canonical_signer_address", ["operationKind", "canonicalSignerAddress"]], ["by_funding_backer_and_subject", ["operationKind", "canonicalSignerAddress", "subjectPublicId"]]],
     searchIndexes: [],
     vectorIndexes: [],
   },

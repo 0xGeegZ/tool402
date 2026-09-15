@@ -98,6 +98,7 @@ function assertExpectedConfiguration(configuration: RecordValue, issuerEvmAddres
     ? configuration.subjectPublicId
     : null;
   const selected = selectedToolPublicId !== null;
+  const expectedOwner = selected ? readCanonicalAddress(issuerEvmAddress) : canonicalIssuer;
 
   const expectedRoot: Record<string, unknown> = {
     protocol: "tool402:ats-parameters:v1", network: "hedera:testnet", chainId: 296,
@@ -121,7 +122,7 @@ function assertExpectedConfiguration(configuration: RecordValue, issuerEvmAddres
   const expectedParameters: Record<string, unknown> = {
     name: selected ? parameters.name : "Tool402 RiskScan Revenue Note Demo", symbol: "T402RN", isin: "XS402RISKN02", decimals: 0,
     isWhiteList: true, erc20VotesActivated: false, isControllable: false, arePartitionsProtected: false,
-    isMultiPartition: false, clearingActive: false, internalKycActivated: false, diamondOwnerAccount: canonicalIssuer,
+    isMultiPartition: false, clearingActive: false, internalKycActivated: false, diamondOwnerAccount: expectedOwner,
     currency: "0x555344", numberOfUnits: "1000", nominalValue: "1", nominalValueDecimals: 0,
     startingDate: "1789430400", maturityDate: "1798675200", regulationType: 1, regulationSubType: 0,
     isCountryControlListWhiteList: false, countries: "",
@@ -139,8 +140,8 @@ function assertExpectedConfiguration(configuration: RecordValue, issuerEvmAddres
   }
   if (
     JSON.stringify(descriptor.omittedOptionalFields) !== JSON.stringify(["complianceId", "identityRegistryId"]) ||
-    readCanonicalAddress(parameters.diamondOwnerAccount) !== canonicalIssuer ||
-    readCanonicalAddress(issuerEvmAddress) !== canonicalIssuer
+    readCanonicalAddress(parameters.diamondOwnerAccount) !== expectedOwner ||
+    readCanonicalAddress(issuerEvmAddress) !== expectedOwner
   ) {
     throw new TypeError("unexpected ATS issuer compatibility");
   }
@@ -190,7 +191,7 @@ export function buildFactoryDeployBondRequest(configuration: unknown, context: {
         erc20MetadataInfo: {
           name: parameters.name, symbol: parameters.symbol, isin: parameters.isin, decimals: parameters.decimals,
         },
-        rbacs: [{ role: defaultAdminRole, members: [canonicalIssuer] }],
+        rbacs: [{ role: defaultAdminRole, members: [parameters.diamondOwnerAccount as Address] }],
         externalPauses: readExactArray(parameters.externalPausesIds, []),
         externalControlLists: readExactArray(parameters.externalControlListsIds, []),
         externalKycLists: readExactArray(parameters.externalKycListsIds, []),

@@ -1,4 +1,5 @@
 import { readDashboardAuthOrigin, readDashboardSession, readDashboardSessionCookieName, type DashboardAuthEnvironment } from "./dashboard-auth/dashboard-auth.ts";
+import { createCommandNonce, createCommandTimestamps } from "./wallet/tool402-command.ts";
 
 const addressPattern = /^0x[0-9a-f]{40}$/u;
 const attemptPattern = /^[A-Za-z0-9_-]{21}[AQgw]$/u;
@@ -6,11 +7,28 @@ const hashPattern = /^0x[0-9a-f]{64}$/u;
 const integerPattern = /^(?:0|[1-9][0-9]*)$/u;
 const maximumBytes = 4096;
 type Parameters = Readonly<{ offeringPublicId: string; units: string; tinybars: string; purchaseIntentId: string }>;
+export type FrozenBackingIntent = Readonly<{
+  idempotencyKey: string;
+  purchaseIntentId: string;
+  offeringPublicId: string;
+  subjectPublicId: string;
+  recipient: `0x${string}`;
+  units: string;
+  tinybars: string;
+  canonicalParametersHash: string;
+  expiresAt: string;
+}>;
 export type BackingPaymentRecord = Readonly<{ status: "PREPARED" | "CONFIRMED" | "REJECTED" | "SUBMITTED" | "OUTCOME_UNKNOWN"; transactionHash: `0x${string}` | null; tinybars: string }>;
+export type BackingDispatchRecord = BackingPaymentRecord | Readonly<{ status: "RECOVERY_REQUIRED"; recoveryAttemptPublicId: string; transactionHash: `0x${string}` | null; tinybars: string }>;
+export type BackingPaymentHistoryRecord = BackingPaymentRecord & Readonly<{ offeringPublicId: string }>;
+export type BackingPaymentRead =
+  | Readonly<{ kind: "FOUND"; payment: BackingPaymentRecord }>
+  | Readonly<{ kind: "NONE" }>
+  | Readonly<{ kind: "UNAVAILABLE" }>;
 type Session = Readonly<{ address: string; issuedAt: string; expiresAt: string }>;
 type Dependencies = Readonly<{
   readSession?: (value: string, env: DashboardAuthEnvironment) => Promise<Session | null>;
-  forward?: (payload: Record<string, unknown>) => Promise<unknown | null>;
+  forward?: (payload: Record<string, unknown>) => Promise<unknown | undefined>;
 }>;
 
 function json(body: unknown, status: number): Response {
@@ -43,6 +61,22 @@ async function body(request: Request, requiresHash: boolean): Promise<{ attemptP
   } catch { return null; }
 }
 
+async function intentBody(request: Request): Promise<{ offeringPublicId: string; units: string } | null> {
+  try {
+    const length = request.headers.get("content-length");
+    if (length !== null && (!/^(?:0|[1-9][0-9]*)$/u.test(length) || Number(length) > maximumBytes)) return null;
+    const text = await request.text();
+    if (new TextEncoder().encode(text).byteLength > maximumBytes) return null;
+    const value: unknown = JSON.parse(text);
+    if (value === null || typeof value !== "object" || Array.isArray(value) || JSON.stringify(Object.keys(value)) !== JSON.stringify(["offeringPublicId", "units"])) return null;
+    const input = value as Record<string, unknown>;
+    return typeof input.offeringPublicId === "string" && /^[A-Za-z0-9_-]{1,96}$/u.test(input.offeringPublicId)
+      && typeof input.units === "string" && integerPattern.test(input.units) && BigInt(input.units) >= 1n
+      ? { offeringPublicId: input.offeringPublicId, units: input.units }
+      : null;
+  } catch { return null; }
+}
+
 function config(env: DashboardAuthEnvironment): { keyId: string; secret: Uint8Array; target: string } | null {
   const keyId = env.TOOL402_INGRESS_KEY_ID;
   const secret = env.TOOL402_INGRESS_SECRET;
@@ -62,9 +96,9 @@ function arrayBuffer(bytes: Uint8Array): ArrayBuffer {
   return copy.buffer;
 }
 
-async function forward(env: DashboardAuthEnvironment, payload: Record<string, unknown>): Promise<unknown | null> {
+async function forward(env: DashboardAuthEnvironment, payload: Record<string, unknown>): Promise<unknown | undefined> {
   const configuration = config(env);
-  if (configuration === null) return null;
+  if (configuration === null) return undefined;
   try {
     const bytes = new TextEncoder().encode(JSON.stringify(payload));
     const digest = Buffer.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))).toString("hex");
@@ -73,19 +107,110 @@ async function forward(env: DashboardAuthEnvironment, payload: Record<string, un
     const key = await crypto.subtle.importKey("raw", arrayBuffer(configuration.secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
     const signed = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`tool402:provider-session:v1\nPOST\n/internal/provider-tools\n${timestamp}\n${nonce}\n${digest}`));
     const response = await fetch(configuration.target, { method: "POST", headers: { "content-type": "application/json", "x-tool402-key-id": configuration.keyId, "x-tool402-timestamp": timestamp, "x-tool402-nonce": nonce, "x-tool402-content-sha256": digest, "x-tool402-signature": Buffer.from(new Uint8Array(signed)).toString("base64url") }, body: bytes, cache: "no-store", redirect: "error", signal: AbortSignal.timeout(10_000) });
-    if (!response.ok || !response.headers.get("content-type")?.toLowerCase().startsWith("application/json")) return null;
+    if (!response.ok || !response.headers.get("content-type")?.toLowerCase().startsWith("application/json")) return undefined;
     return await response.json();
-  } catch { return null; }
+  } catch { return undefined; }
 }
 
 function record(value: unknown): BackingPaymentRecord | null {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
   const input = value as Record<string, unknown>;
   return (input.status === "PREPARED" || input.status === "CONFIRMED" || input.status === "REJECTED" || input.status === "SUBMITTED" || input.status === "OUTCOME_UNKNOWN")
-    && (input.status === "PREPARED" ? input.transactionHash === null : typeof input.transactionHash === "string" && hashPattern.test(input.transactionHash))
+    && ((input.status === "PREPARED" || input.status === "OUTCOME_UNKNOWN") ? input.transactionHash === null || (typeof input.transactionHash === "string" && hashPattern.test(input.transactionHash)) : typeof input.transactionHash === "string" && hashPattern.test(input.transactionHash))
     && typeof input.tinybars === "string" && integerPattern.test(input.tinybars)
     ? { status: input.status, transactionHash: input.transactionHash === null ? null : input.transactionHash as `0x${string}`, tinybars: input.tinybars }
     : null;
+}
+
+function dispatchRecord(value: unknown): BackingDispatchRecord | null {
+  const payment = record(value);
+  if (payment !== null) return payment;
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+  const input = value as Record<string, unknown>;
+  return input.status === "RECOVERY_REQUIRED"
+    && typeof input.recoveryAttemptPublicId === "string" && attemptPattern.test(input.recoveryAttemptPublicId)
+    && (input.transactionHash === null || (typeof input.transactionHash === "string" && hashPattern.test(input.transactionHash)))
+    && typeof input.tinybars === "string" && integerPattern.test(input.tinybars)
+    ? { status: "RECOVERY_REQUIRED", recoveryAttemptPublicId: input.recoveryAttemptPublicId, transactionHash: input.transactionHash === null ? null : input.transactionHash as `0x${string}`, tinybars: input.tinybars }
+    : null;
+}
+
+function paymentRead(value: unknown): BackingPaymentRead {
+  if (value === undefined) return { kind: "UNAVAILABLE" };
+  if (value === null) return { kind: "NONE" };
+  const payment = record(value);
+  return payment === null ? { kind: "UNAVAILABLE" } : { kind: "FOUND", payment };
+}
+
+async function readOfferScopedPayment(
+  env: DashboardAuthEnvironment,
+  sessionCookie: string | null,
+  offeringPublicId: string,
+  dependencies: Dependencies,
+  commandType: "backing_read_offering" | "backing_read_legacy",
+): Promise<BackingPaymentRead> {
+  const readSession = dependencies.readSession ?? ((value: string) => readDashboardSession(value, env));
+  const session = sessionCookie === null ? null : await readSession(sessionCookie, env);
+  if (session === null || !addressPattern.test(session.address)) return { kind: "UNAVAILABLE" };
+  try {
+    const payload = commandType === "backing_read_offering"
+      ? { type: commandType, canonicalSignerAddress: session.address, offeringPublicId, sessionExpiresAt: session.expiresAt }
+      : { type: commandType, canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt };
+    return paymentRead(await (dependencies.forward === undefined ? forward(env, payload) : dependencies.forward(payload)));
+  } catch {
+    return { kind: "UNAVAILABLE" };
+  }
+}
+
+function paymentHistory(value: unknown): BackingPaymentHistoryRecord[] | null {
+  // Match the bounded Convex projection. A large valid history is distinct
+  // from an unavailable or malformed response.
+  if (!Array.isArray(value) || value.length > 100) return null;
+  const seen = new Set<string>();
+  const records: BackingPaymentHistoryRecord[] = [];
+  for (const item of value) {
+    if (item === null || typeof item !== "object" || Array.isArray(item)) return null;
+    const input = item as Record<string, unknown>;
+    const payment = record(input);
+    if (payment === null || typeof input.offeringPublicId !== "string" || !/^[A-Za-z0-9_-]{1,96}$/u.test(input.offeringPublicId) || seen.has(input.offeringPublicId)) return null;
+    seen.add(input.offeringPublicId);
+    records.push({ ...payment, offeringPublicId: input.offeringPublicId });
+  }
+  return records;
+}
+
+function hasExactlyEnumerableDataFields(value: object, fields: readonly string[]): boolean {
+  const keys = Reflect.ownKeys(value);
+  if (keys.length !== fields.length || keys.some((key) => typeof key !== "string" || !fields.includes(key))) return false;
+  return fields.every((field) => {
+    const descriptor = Object.getOwnPropertyDescriptor(value, field);
+    return descriptor?.enumerable === true && Object.hasOwn(descriptor, "value")
+      && !Object.hasOwn(descriptor, "get") && !Object.hasOwn(descriptor, "set");
+  });
+}
+
+function frozenIntent(value: unknown): FrozenBackingIntent | null {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+  const outer = value as Record<string, unknown>;
+  if (outer.outcome !== "PREPARED" || outer.intent === null || typeof outer.intent !== "object" || Array.isArray(outer.intent)) return null;
+  const intent = outer.intent as Record<string, unknown>;
+  if (!hasExactlyEnumerableDataFields(intent, ["idempotencyKey", "purchaseIntentId", "offeringPublicId", "subjectPublicId", "recipient", "units", "tinybars", "canonicalParametersHash", "expiresAt"])
+    || typeof intent.idempotencyKey !== "string" || !attemptPattern.test(intent.idempotencyKey)
+    || typeof intent.purchaseIntentId !== "string" || !attemptPattern.test(intent.purchaseIntentId)
+    || typeof intent.offeringPublicId !== "string" || !/^[A-Za-z0-9_-]{1,96}$/u.test(intent.offeringPublicId)
+    || typeof intent.subjectPublicId !== "string" || !/^[A-Za-z0-9_-]{1,96}$/u.test(intent.subjectPublicId)
+    || typeof intent.recipient !== "string" || !addressPattern.test(intent.recipient)
+    || typeof intent.units !== "string" || !integerPattern.test(intent.units) || BigInt(intent.units) < 1n
+    || typeof intent.tinybars !== "string" || !integerPattern.test(intent.tinybars) || BigInt(intent.tinybars) < 1n
+    || typeof intent.canonicalParametersHash !== "string" || !/^[0-9a-f]{64}$/u.test(intent.canonicalParametersHash)
+    || typeof intent.expiresAt !== "string" || new Date(Date.parse(intent.expiresAt)).toISOString() !== intent.expiresAt
+  ) return null;
+  return {
+    idempotencyKey: intent.idempotencyKey, purchaseIntentId: intent.purchaseIntentId,
+    offeringPublicId: intent.offeringPublicId, subjectPublicId: intent.subjectPublicId,
+    recipient: intent.recipient as `0x${string}`, units: intent.units, tinybars: intent.tinybars,
+    canonicalParametersHash: intent.canonicalParametersHash, expiresAt: intent.expiresAt,
+  };
 }
 
 async function sessionFor(request: Request, env: DashboardAuthEnvironment, readSession: Dependencies["readSession"] = readDashboardSession): Promise<Session | null> {
@@ -96,27 +221,69 @@ async function sessionFor(request: Request, env: DashboardAuthEnvironment, readS
   return value === null ? null : readSession(value, env);
 }
 
-async function handle(request: Request, env: DashboardAuthEnvironment, dependencies: Dependencies, reserve: boolean): Promise<Response> {
+async function handle(request: Request, env: DashboardAuthEnvironment, dependencies: Dependencies, dispatch: "reserve" | "begin" | "record"): Promise<Response> {
   if (request.method !== "POST") return json({ outcome: "rejected" }, 401);
-  const [session, input] = await Promise.all([sessionFor(request, env, dependencies.readSession), body(request, !reserve)]);
+  const [session, input] = await Promise.all([sessionFor(request, env, dependencies.readSession), body(request, dispatch === "record")]);
   if (session === null || input === null) return json({ outcome: "rejected" }, 401);
-  const payload = reserve
+  const payload = dispatch === "reserve"
     ? { type: "backing_reserve", canonicalSignerAddress: session.address, attemptPublicId: input.attemptPublicId, parameters: input.parameters, sessionExpiresAt: session.expiresAt }
-    : { type: "backing", canonicalSignerAddress: session.address, attemptPublicId: input.attemptPublicId, transactionHash: input.transactionHash!, parameters: input.parameters, sessionExpiresAt: session.expiresAt };
-  const result = record(await (dependencies.forward === undefined ? forward(env, payload) : dependencies.forward(payload)));
+    : dispatch === "begin"
+      ? { type: "backing_dispatch", canonicalSignerAddress: session.address, attemptPublicId: input.attemptPublicId, parameters: input.parameters, sessionExpiresAt: session.expiresAt }
+      : { type: "backing", canonicalSignerAddress: session.address, attemptPublicId: input.attemptPublicId, transactionHash: input.transactionHash!, parameters: input.parameters, sessionExpiresAt: session.expiresAt };
+  const result = (dispatch === "begin" ? dispatchRecord : record)(await (dependencies.forward === undefined ? forward(env, payload) : dependencies.forward(payload)));
   return result === null ? json({ outcome: "unavailable" }, 503) : json(result, 200);
 }
 
 export function handleBackingPaymentRequest(request: Request, env: DashboardAuthEnvironment, dependencies: Dependencies = {}): Promise<Response> {
-  return handle(request, env, dependencies, false);
+  return handle(request, env, dependencies, "record");
 }
 
 export function reserveBackingPaymentRequest(request: Request, env: DashboardAuthEnvironment, dependencies: Dependencies = {}): Promise<Response> {
-  return handle(request, env, dependencies, true);
+  return handle(request, env, dependencies, "reserve");
+}
+
+export function beginBackingPaymentDispatchRequest(request: Request, env: DashboardAuthEnvironment, dependencies: Dependencies = {}): Promise<Response> {
+  return handle(request, env, dependencies, "begin");
+}
+
+export async function prepareBackingIntentRequest(request: Request, env: DashboardAuthEnvironment, dependencies: Dependencies = {}): Promise<Response> {
+  if (request.method !== "POST") return json({ outcome: "rejected" }, 401);
+  const [session, input] = await Promise.all([sessionFor(request, env, dependencies.readSession), intentBody(request)]);
+  if (session === null || input === null) return json({ outcome: "rejected" }, 401);
+  try {
+    const { expiresAt } = createCommandTimestamps(Date.now());
+    const result = frozenIntent(await (dependencies.forward === undefined ? forward(env, {
+      type: "backing_intent", canonicalSignerAddress: session.address, offeringPublicId: input.offeringPublicId,
+      units: input.units, idempotencyKey: createCommandNonce(), purchaseIntentId: createCommandNonce(),
+      expiresAt, sessionExpiresAt: session.expiresAt,
+    }) : dependencies.forward({
+      type: "backing_intent", canonicalSignerAddress: session.address, offeringPublicId: input.offeringPublicId,
+      units: input.units, idempotencyKey: createCommandNonce(), purchaseIntentId: createCommandNonce(),
+      expiresAt, sessionExpiresAt: session.expiresAt,
+    })));
+    return result === null ? json({ outcome: "unavailable" }, 503) : json({ intent: result }, 200);
+  } catch { return json({ outcome: "unavailable" }, 503); }
 }
 
 export async function loadBackerPayment(env: DashboardAuthEnvironment, sessionCookie: string | null): Promise<BackingPaymentRecord | null> {
   const session = await readDashboardSession(sessionCookie, env);
   if (session === null || !addressPattern.test(session.address)) return null;
   return record(await forward(env, { type: "backing_read", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt }));
+}
+
+export function loadLegacyRiskScanPayment(env: DashboardAuthEnvironment, sessionCookie: string | null, dependencies: Dependencies = {}): Promise<BackingPaymentRead> {
+  return readOfferScopedPayment(env, sessionCookie, "riskscan_revenue_note_demo", dependencies, "backing_read_legacy");
+}
+
+export async function loadBackerPayments(env: DashboardAuthEnvironment, sessionCookie: string | null, dependencies: Dependencies = {}): Promise<BackingPaymentHistoryRecord[]> {
+  if (sessionCookie === null) return [];
+  const readSession = dependencies.readSession ?? ((value: string) => readDashboardSession(value, env));
+  const session = await readSession(sessionCookie, env);
+  if (session === null || !addressPattern.test(session.address)) return [];
+  return paymentHistory(await (dependencies.forward === undefined ? forward(env, { type: "backing_list", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt }) : dependencies.forward({ type: "backing_list", canonicalSignerAddress: session.address, sessionExpiresAt: session.expiresAt }))) ?? [];
+}
+
+export function loadBackerPaymentForOffering(env: DashboardAuthEnvironment, sessionCookie: string | null, offeringPublicId: string, dependencies: Dependencies = {}): Promise<BackingPaymentRead> {
+  if (!/^[A-Za-z0-9_-]{1,96}$/u.test(offeringPublicId)) return Promise.resolve({ kind: "UNAVAILABLE" });
+  return readOfferScopedPayment(env, sessionCookie, offeringPublicId, dependencies, "backing_read_offering");
 }

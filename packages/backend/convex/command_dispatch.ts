@@ -88,6 +88,9 @@ const verifyAtsCandidateReceiptReference = makeFunctionReference<"action">(
 const getOfferingProjectionReference = makeFunctionReference<"query">(
   "offerings:getPublicProjection",
 );
+const listPublicProviderBackingReference = makeFunctionReference<"query">(
+  "offerings:listPublicProviderBacking",
+);
 const getActiveDirectoryReference = makeFunctionReference<"query">(
   "directory_versions:getActive",
 );
@@ -465,9 +468,9 @@ export async function handleCommandIngress(
       claimIngressReplayReference,
       { replayIdentity },
     ),
-    resolveCommandAuthorities: (chainId, canonicalSignerAddress, selection) => ctx.runQuery(
+    resolveCommandAuthorities: (chainId, canonicalSignerAddress, selection, purpose) => ctx.runQuery(
       readCommandAuthoritiesReference,
-      { chainId, canonicalSignerAddress, ...(selection === undefined ? {} : { selection }) },
+      { chainId, canonicalSignerAddress, ...(selection === undefined ? {} : { selection }), ...(purpose === undefined ? {} : { purpose }) },
     ) as Promise<readonly CommandAuthorityRecord[]>,
     serverNowMilliseconds: () => Date.now(),
   });
@@ -684,7 +687,7 @@ function offeringRecord(input: unknown) {
     "canonicalSignerAddress",
     "acceptedAt",
     "updatedAt",
-  ], ["atsAssetEvmAddress", "atsAttemptPublicId"]);
+  ], ["atsAssetEvmAddress", "atsAttemptPublicId", "fundingRecipient"]);
   if (
     record === null
     || typeof record.offeringPublicId !== "string" || !publicIdPattern.test(record.offeringPublicId)
@@ -694,6 +697,9 @@ function offeringRecord(input: unknown) {
     || typeof record.advertisedQuickPriceTinybars !== "string"
     || typeof record.advertisedStandardPriceTinybars !== "string"
     || typeof record.canonicalSignerAddress !== "string" || !canonicalAddressPattern.test(record.canonicalSignerAddress)
+    || (Object.hasOwn(record, "fundingRecipient")
+      && (typeof record.fundingRecipient !== "string" || !canonicalAddressPattern.test(record.fundingRecipient)
+        || record.fundingRecipient !== record.canonicalSignerAddress))
     || (Object.hasOwn(record, "atsAssetEvmAddress")
       && (typeof record.atsAssetEvmAddress !== "string" || !canonicalAddressPattern.test(record.atsAssetEvmAddress)))
     || (Object.hasOwn(record, "atsAttemptPublicId")
@@ -720,6 +726,9 @@ function offeringRecord(input: unknown) {
     advertisedQuickPriceTinybars: record.advertisedQuickPriceTinybars,
     advertisedStandardPriceTinybars: record.advertisedStandardPriceTinybars,
     canonicalSignerAddress: record.canonicalSignerAddress,
+    ...(Object.hasOwn(record, "fundingRecipient")
+      ? { fundingRecipient: record.fundingRecipient }
+      : {}),
     ...(Object.hasOwn(record, "atsAssetEvmAddress")
       ? { atsAssetEvmAddress: record.atsAssetEvmAddress }
       : {}),
@@ -729,6 +738,21 @@ function offeringRecord(input: unknown) {
     acceptedAt,
     updatedAt,
   };
+}
+
+function backingCatalogRecords(input: unknown): Array<{ offeringPublicId: string; title: string }> | null {
+  const rows = capturePlainArray(input);
+  if (rows === null || rows.length > 24) return null;
+  const entries: Array<{ offeringPublicId: string; title: string }> = [];
+  for (const row of rows) {
+    const record = exactRecord(row, ["offeringPublicId", "title"]);
+    if (
+      record === null || typeof record.offeringPublicId !== "string" || !/^offering_[0-9a-f]{32}$/u.test(record.offeringPublicId)
+      || typeof record.title !== "string" || record.title.length === 0 || record.title.length > 160
+    ) return null;
+    entries.push({ offeringPublicId: record.offeringPublicId, title: record.title });
+  }
+  return entries;
 }
 
 function activeDirectoryRecord(input: unknown, serviceSlug: string) {
@@ -804,6 +828,20 @@ export async function handleOfferingProjection(
     if (result === null) return notFound();
     const record = offeringRecord(result);
     return record === null ? unavailable() : response({ outcome: "FOUND", record });
+  } catch {
+    return unavailable();
+  }
+}
+
+export async function handlePublicProviderBacking(
+  ctx: ActionContext,
+  request: Request,
+): Promise<Response> {
+  try {
+    const url = new URL(request.url);
+    if (url.pathname !== "/public/backing-catalog" || url.search !== "" || url.hash !== "") return notFound();
+    const records = backingCatalogRecords(await ctx.runQuery(listPublicProviderBackingReference, {}));
+    return records === null ? unavailable() : response({ outcome: "FOUND", records });
   } catch {
     return unavailable();
   }

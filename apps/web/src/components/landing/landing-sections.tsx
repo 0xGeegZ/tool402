@@ -6,20 +6,20 @@ import { Card } from "../ui/card";
 
 const steps = [
   {
-    title: "Explore a current tool",
-    description: "Open RiskScan or EntityCheck and read what each one answers, the inputs it needs, and where it stops.",
+    title: "Find a tool",
+    description: "Your agent checks what the tool does and the information it needs.",
     number: "01",
     tone: "bg-secondary text-primary",
   },
   {
-    title: "Inspect its boundary",
-    description: "Send a bounded request and read the 402 challenge the tool returns before anything is released.",
+    title: "Check the price and rules",
+    description: "It compares the requested price with the spending rules you configured.",
     number: "02",
     tone: "bg-secondary text-primary",
   },
   {
-    title: "Choose a local next step",
-    description: "Continue to the guided demo, the guest dashboard, or the provider wizard; each names what it can show today.",
+    title: "Pay and get the result",
+    description: "The tool returns its response after the service verifies payment.",
     number: "03",
     tone: "bg-secondary text-primary",
   },
@@ -28,29 +28,25 @@ const steps = [
 const campaignCards = [
   {
     name: "RiskScan",
-    description: "A bounded assessment route for reviewing caller-supplied context before choosing the next local step.",
-    status: "Campaign preview",
-    mode: "Public detail",
-    route: "/explore/riskscan",
-    scope: "Risk assessment",
-    action: "View tool",
+    description: "RiskScan reviews four declarations: identity, pricing, limitations, and evidence. It reports what is missing; it does not independently assess a tool.",
+    status: "Testnet tool",
+    facts: [["Input", "Four declarations"], ["Returns", "Missing disclosures"]],
+    example: "Example: pricing marked as not provided → missing pricing disclosure.",
+    action: "View RiskScan",
     href: "/explore/riskscan",
     tone: "bg-brand-purple/15 text-brand-purple",
     icon: "◇",
-    line: "bg-brand-purple",
   },
   {
     name: "EntityCheck France",
-    description: "A source-bounded French entity assessment for agent workflows, with clear limits on what a screen can establish.",
-    status: "Campaign preview",
-    mode: "Protected API",
-    route: "/explore/entitycheck",
-    scope: "Entity assessment",
-    action: "View tool",
+    description: "Preview a French company lookup and possible matches on a U.S. sanctions list. It cannot search live sources until configured and does not make a compliance decision.",
+    status: "Preview only",
+    facts: [["Input", "Company name or registration"], ["Returns", "Company and sanctions matches"]],
+    example: null,
+    action: "View EntityCheck",
     href: "/explore/entitycheck",
     tone: "bg-brand-green/15 text-brand-green",
     icon: "↗",
-    line: "bg-brand-green",
   },
 ] as const;
 
@@ -66,8 +62,11 @@ export function LandingSections() {
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-xs font-semibold uppercase tracking-wide text-primary">How it works</p>
             <h2 id="how-it-works-title" className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
-              Three clear steps, one current route at a time
+              How agents find, pay for, and use tools
             </h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              x402 payment requests tell an agent what it needs to pay.
+            </p>
           </div>
           <div className="relative mt-12">
             <div aria-hidden="true" className="absolute left-[16.5%] right-[16.5%] top-[2.4rem] hidden border-t border-dashed border-border sm:block" />
@@ -98,16 +97,16 @@ export function LandingSections() {
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Campaign marketplace</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Tool marketplace</p>
               <h2 id="campaigns-title" className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-                Back the next tools agents will pay to use
+                Tools to explore
               </h2>
             </div>
             <Link
               href="/explore"
               className={buttonVariants({ variant: "outline", size: "sm", className: "shrink-0" })}
             >
-              Browse all tools →
+              Explore the directory →
             </Link>
           </div>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -117,26 +116,20 @@ export function LandingSections() {
                   <span aria-hidden="true" className={`flex size-11 items-center justify-center rounded-field text-lg font-bold ${campaign.tone}`}>{campaign.icon}</span>
                   <div className="flex flex-wrap justify-end gap-2">
                     <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground">{campaign.status}</span>
-                    <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground">{campaign.mode}</span>
                   </div>
                 </div>
                 <div className="mt-6 space-y-2">
                   <h3 className="text-xl font-semibold tracking-tight">{campaign.name}</h3>
                   <p className="min-h-16 text-sm leading-6 text-muted-foreground">{campaign.description}</p>
                 </div>
-                <div className="mt-5 space-y-2">
-                  <div aria-hidden="true" className="h-1 rounded-full bg-secondary"><div className={`h-full w-full rounded-full ${campaign.line}`} /></div>
-                  <p className="text-xs text-muted-foreground">Campaign preparation</p>
-                </div>
+                {campaign.example === null ? null : <p className="mt-5 text-xs leading-5 text-muted-foreground">{campaign.example}</p>}
                 <dl className="mt-5 grid grid-cols-2 gap-4 rounded-control border border-dashed border-border bg-secondary/30 p-3 text-xs">
-                  <div className="min-w-0">
-                    <dt className="uppercase tracking-wide text-muted-foreground">Route</dt>
-                    <dd className="mt-1 truncate font-medium text-foreground">{campaign.route}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="uppercase tracking-wide text-muted-foreground">Scope</dt>
-                    <dd className="mt-1 font-medium text-foreground">{campaign.scope}</dd>
-                  </div>
+                  {campaign.facts.map(([label, value]) => (
+                    <div key={label} className="min-w-0">
+                      <dt className="uppercase tracking-wide text-muted-foreground">{label}</dt>
+                      <dd className="mt-1 font-medium text-foreground">{value}</dd>
+                    </div>
+                  ))}
                 </dl>
                 <div className="mt-auto flex items-center justify-between gap-4 pt-5">
                   <span className="text-xs text-muted-foreground">by Tool402</span>
@@ -156,20 +149,16 @@ export function LandingSections() {
       >
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_1.1fr] lg:px-8 lg:py-20">
             <div className="max-w-xl space-y-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Current scope</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Agent controls</p>
               <h2 id="inspectable-scope-title" className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-                Every current route has a clear boundary
+                Know what your agent is paying for
               </h2>
               <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-                Tool402 labels the current catalogue, guided demo, and local route boundaries directly. A clear screen is
-                an orientation surface, not proof of an action beyond that route.
+                Understand what a tool does and what it costs. Your agent checks payment requests against the spending rules you configure.
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
                 <Link href="/explore" className={buttonVariants({ size: "sm" })}>
                   Explore tools
-                </Link>
-                <Link href="/demo" className={buttonVariants({ variant: "outline", size: "sm" })}>
-                  Open guided demo
                 </Link>
               </div>
             </div>
@@ -179,8 +168,8 @@ export function LandingSections() {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-5"><path d="M7 3h8l3 3v15H7z" /><path d="M15 3v4h4M10 12h5M10 16h5" /></svg>
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold">Catalogue</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Begin with the current tool entry and its local boundary.</p>
+                  <h3 className="text-sm font-bold">Check the fit first</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Read what a tool does, what it needs, and its stated limits before your agent uses it.</p>
                 </div>
               </li>
               <li className="flex min-h-28 gap-4 rounded-card border border-border bg-card p-5 transition-colors hover:border-foreground/15 motion-reduce:transition-none">
@@ -188,8 +177,8 @@ export function LandingSections() {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-5"><path d="M7 3h8l3 3v15H7z" /><path d="M15 3v4h4M10 12h5M10 16h3" /><circle cx="16" cy="16" r="3" /></svg>
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold">Guided demo</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Follow the local route map at your pace.</p>
+                  <h3 className="text-sm font-bold">Know the cost before paying</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">See the requested price before your agent sends payment.</p>
                 </div>
               </li>
               <li className="flex min-h-28 gap-4 rounded-card border border-border bg-card p-5 transition-colors hover:border-foreground/15 motion-reduce:transition-none">
@@ -197,8 +186,8 @@ export function LandingSections() {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-5"><path d="M4 5h8l2 2h6v12H4z" /><path d="M4 5v12M9 16h7" /><circle cx="17" cy="17" r="2" /></svg>
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold">Provider path</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Prepare an offering preview without an automatic action.</p>
+                  <h3 className="text-sm font-bold">Reject requests outside your rules</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Your agent can decline a request that does not match the spending rules you configure.</p>
                 </div>
               </li>
             </ul>
@@ -217,10 +206,10 @@ export function LandingSections() {
             </div>
             <div className="relative mx-auto max-w-2xl space-y-4">
               <h2 id="provider-path-title" className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-                Building an agent-native tool? Add it to the Tool402 directory.
+                Building a tool for AI agents?
               </h2>
               <p className="mx-auto max-w-md text-sm leading-relaxed text-muted-foreground">
-                The provider journey keeps the offering preview editable and clear about what has not run.
+                Add your tool’s details, prices, and terms, then review the offering. Preparing it does not publish a live tool.
               </p>
               <div className="flex flex-wrap justify-center gap-3 pt-2">
                 <Link

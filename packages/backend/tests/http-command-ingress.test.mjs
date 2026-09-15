@@ -139,13 +139,14 @@ test("reserves exactly the M41 transport-replay table and bounded lookup index",
   });
 });
 
-implementedTest("registers exactly the protected command route and the two public read prefixes", async () => {
+implementedTest("registers exactly the protected command route and public read prefixes", async () => {
   const http = await import(httpUrl);
   assert.deepEqual(Object.keys(http), ["default"]);
   const routes = http.default.getRoutes().map(([path, method]) => [path, method]);
   assert.deepEqual(routes, [
     ["/internal/commands", "POST"],
     ["/internal/provider-tools", "POST"],
+    ["/public/backing-catalog", "GET"],
     ["/public/directory/*", "GET"],
     ["/public/offerings/*", "GET"],
   ]);
@@ -203,9 +204,11 @@ implementedTest("registers the exact internal transport-replay and authority-rea
     chainId: literal(296),
     canonicalSignerAddress: string,
     selection: optional(object({
-      subjectPublicId: string,
+      subjectPublicId: optional(string),
       offeringPublicId: optional(string),
+      attemptPublicId: optional(string),
     })),
+    purpose: optional(union("BACKING", "OWNER")),
   }));
   assert.deepEqual(JSON.parse(authorities.exportReturns()), array(object({
     principalPublicId: string,

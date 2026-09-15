@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import test from "node:test";
+import { TransactionReceiptNotFoundError } from "viem";
 import { fileURLToPath } from "node:url";
 import { runInNewContext } from "node:vm";
 
@@ -46,12 +47,14 @@ function fakeProvider({
   const calls = [];
   return {
     calls,
+    chainId,
+    accounts,
     async request({ method, params = [] }) {
       calls.push({ method, params });
       if (method === "eth_chainId") return chainId;
       if (method === "eth_accounts") return accounts;
       if (method === "eth_sendTransaction") return send();
-      if (method === "eth_getTransactionReceipt") return receipt;
+      if (method === "eth_getTransactionReceipt") return typeof receipt === "function" ? receipt(params[0]) : receipt;
       assert.fail(`unexpected provider request: ${method}`);
     },
   };
@@ -128,16 +131,41 @@ async function withJsonParse(parse, operation) {
   }
 }
 
-function createBridge(api, provider, fetch, wait = async () => {}, configuration) {
-  return api.createStageBBrowserProviderBridge({ provider, fetch, wait, ...(configuration === undefined ? {} : { configuration }) });
+function bridgeInput(provider, fetch, wait = async () => {}, configuration, options = {}) {
+  const wallet = {
+    address: String(provider.accounts[0] ?? "").toLowerCase(),
+    chainId: Number.parseInt(provider.chainId, 16),
+    connectorId: "metaMask",
+    generation: 0,
+  };
+  return {
+    wallet,
+    readCurrentWallet: () => wallet,
+    sendTransaction: async ({ account, to, data, value }) => provider.request({
+      method: "eth_sendTransaction",
+      params: [{ from: account, to, data, value: `0x${value.toString(16)}` }],
+    }),
+    getTransactionReceipt: async ({ hash }) => provider.request({
+      method: "eth_getTransactionReceipt",
+      params: [hash],
+    }),
+    fetch,
+    wait,
+    ...(configuration === undefined ? {} : { configuration }),
+    ...options,
+  };
 }
 
-function selectedConfiguration(suffix, title = "Same RiskScan Title") {
+function createBridge(api, provider, fetch, wait = async () => {}, configuration) {
+  return api.createStageBBrowserProviderBridge(bridgeInput(provider, fetch, wait, configuration));
+}
+
+function selectedConfiguration(suffix, title = "Same RiskScan Title", owner = issuer) {
   return createProviderToolAtsConfiguration({
     toolPublicId: `tool_${suffix}`,
     subjectPublicId: `tool_${suffix}`,
     title,
-    canonicalSignerAddress: issuer,
+    canonicalSignerAddress: owner,
   }).atsCreateConfiguration;
 }
 
@@ -269,6 +297,9 @@ async function loadBridgeWithM44Spy(decodeBondDeployed, { parse = JSON.parse } =
   };
   const actualViem = await import("viem");
   const imports = {
+    "../wallet/wallet-error.ts": {
+      isUserRejectedWalletRequest(error) { return error?.code === 4001; },
+    },
     "./stage-b-ats-create-canonical-identity": {
       STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH: "1880065c5ae64b3fc6279cfdd8c85a6880d43e98ce129ed697c72372204296f9",
     },
@@ -340,7 +371,7 @@ implementedTest("rejects a wrong wallet chain before any send, receipt, or Mirro
   const outcome = await createBridge(api, provider, mirror.fetch).execute();
 
   assert.equal(outcome.kind, "rejected");
-  assert.deepEqual(provider.calls.map(({ method }) => method), ["eth_chainId"]);
+  assert.deepEqual(provider.calls, []);
   assert.equal(mirror.calls.length, 0);
 });
 
@@ -351,7 +382,7 @@ implementedTest("rejects a valid but unauthorized wallet account before a send",
   const outcome = await createBridge(api, provider, mirror.fetch).execute();
 
   assert.equal(outcome.kind, "rejected");
-  assert.deepEqual(provider.calls.map(({ method }) => method), ["eth_chainId", "eth_accounts"]);
+  assert.deepEqual(provider.calls, []);
   assert.equal(mirror.calls.length, 0);
 });
 
@@ -368,10 +399,26 @@ implementedTest("accepts the fixed issuer once among other valid MetaMask accoun
   const outcome = await createBridge(api, provider, mirror.fetch).execute();
 
   assert.equal(outcome.kind, "submission_unknown");
-  assert.deepEqual(provider.calls.map(({ method }) => method).slice(0, 3), ["eth_chainId", "eth_accounts", "eth_sendTransaction"]);
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
   assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
   assert.equal(provider.calls.find(({ method }) => method === "eth_sendTransaction")?.params[0].from, issuer);
   assert.equal(mirror.calls.length, 0);
+});
+
+implementedTest("uses the selected self-service tool owner for the one explicit MetaMask deployment", async () => {
+  const api = await import(sourceUrl.href);
+  const configuration = selectedConfiguration("c".repeat(32), "Same RiskScan Title", otherEmitter);
+  const provider = fakeProvider({
+    accounts: [otherEmitter],
+    send: () => { throw { code: 4001 }; },
+  });
+  const bridge = createBridge(api, provider, async () => { throw new Error("Mirror must not be called after a rejected send"); }, async () => {}, configuration);
+
+  assert.deepEqual(await bridge.execute(), { kind: "rejected" });
+  const send = provider.calls.find(({ method }) => method === "eth_sendTransaction");
+  assert.notEqual(send, undefined);
+  assert.equal(send.params[0].from, otherEmitter);
+  assert.equal(send.params[0].to, factory);
 });
 
 implementedTest("retains the MetaMask hash when bounded verification is unknown", async () => {
@@ -385,25 +432,25 @@ implementedTest("retains the MetaMask hash when bounded verification is unknown"
   assert.equal(mirror.calls.length, 0);
 });
 
-implementedTest("rejects duplicate issuer entries before a send", async () => {
+implementedTest("uses Wagmi's selected account without inspecting unrelated wallet accounts", async () => {
   const provider = fakeProvider({ accounts: [checksummedIssuer, issuer] });
   const mirror = responseQueue([]);
 
   const outcome = await createBridge(api, provider, mirror.fetch).execute();
 
-  assert.equal(outcome.kind, "rejected");
-  assert.deepEqual(provider.calls.map(({ method }) => method), ["eth_chainId", "eth_accounts"]);
+  assert.equal(outcome.kind, "submission_unknown");
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
   assert.equal(mirror.calls.length, 0);
 });
 
-implementedTest("rejects a malformed account entry before a send", async () => {
+implementedTest("does not inspect unrelated malformed wallet accounts after Wagmi selected one", async () => {
   const provider = fakeProvider({ accounts: [checksummedIssuer, "not-an-address"] });
   const mirror = responseQueue([]);
 
   const outcome = await createBridge(api, provider, mirror.fetch).execute();
 
-  assert.equal(outcome.kind, "rejected");
-  assert.deepEqual(provider.calls.map(({ method }) => method), ["eth_chainId", "eth_accounts"]);
+  assert.equal(outcome.kind, "submission_unknown");
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
   assert.equal(mirror.calls.length, 0);
 });
 
@@ -486,12 +533,9 @@ implementedTest("bounds a hung receipt to the injected receipt deadline and igno
   });
   const mirror = responseQueue([]);
   const deadlines = controlledTimers();
-  const bridge = api.createStageBBrowserProviderBridge({
-    provider,
-    fetch: mirror.fetch,
-    wait: async () => {},
+  const bridge = api.createStageBBrowserProviderBridge(bridgeInput(provider, mirror.fetch, async () => {}, undefined, {
     timers: deadlines.api,
-  });
+  }));
 
   const pending = bridge.execute();
   await waitsFor(
@@ -536,7 +580,7 @@ implementedTest("takes its invocation lock before the first await so same-tick c
 implementedTest("correlates a bounded, fake-only Mirror candidate and never follows its pagination link", async () => {
   const log = createBondDeployedLog(factoryApi, projectionApi);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const waitCalls = [];
   const mirror = responseQueue([
@@ -582,12 +626,64 @@ implementedTest("correlates a bounded, fake-only Mirror candidate and never foll
   assert.equal(Object.hasOwn(outcome, "attach"), false);
 });
 
+implementedTest("only accepts Viem-formatted successful receipts after temporary absence", async () => {
+  const log = createBondDeployedLog(factoryApi, projectionApi);
+  const receipts = [
+    null,
+    { transactionHash, status: "success", to: factory, logs: [log] },
+  ];
+  const provider = fakeProvider({ receipt: () => receipts.shift() ?? null });
+  const mirror = responseQueue(mirrorCandidateResponses({ input: factoryCalldata(projectionApi.createStageBAtsCreateExecutionProjection().configuration), log }));
+  const bridge = createBridge(api, provider, mirror.fetch);
+
+  const outcome = await bridge.execute();
+
+  assert.equal(outcome.kind, "candidate");
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_getTransactionReceipt").length, 2);
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
+});
+
+implementedTest("continues bounded receipt polling after Viem reports a not-yet-indexed receipt", async () => {
+  const log = createBondDeployedLog(factoryApi, projectionApi);
+  let reads = 0;
+  const provider = fakeProvider({ receipt: () => {
+    reads += 1;
+    if (reads === 1) throw new TransactionReceiptNotFoundError({ hash: transactionHash });
+    return { transactionHash, status: "success", to: factory, logs: [log] };
+  } });
+  const mirror = responseQueue(mirrorCandidateResponses({ input: factoryCalldata(projectionApi.createStageBAtsCreateExecutionProjection().configuration), log }));
+  const bridge = createBridge(api, provider, mirror.fetch);
+
+  const outcome = await bridge.execute();
+
+  assert.equal(outcome.kind, "candidate");
+  assert.equal(reads, 2);
+  assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
+});
+
+implementedTest("keeps reverted or malformed Viem receipt results recoverable without a second send", async () => {
+  for (const receipt of [
+    { transactionHash, status: "reverted", to: factory, logs: [] },
+    { transactionHash, status: "0x1", to: factory, logs: [] },
+  ]) {
+    const provider = fakeProvider({ receipt });
+    const mirror = responseQueue([]);
+    const bridge = createBridge(api, provider, mirror.fetch);
+
+    const outcome = await bridge.execute();
+
+    assert.deepEqual(outcome, { kind: "submission_unknown", transactionHash });
+    assert.equal(provider.calls.filter(({ method }) => method === "eth_sendTransaction").length, 1);
+    assert.equal(mirror.calls.length, 0);
+  }
+});
+
 implementedTest("selects one Factory BondDeployed event among unrelated receipt and Mirror logs", async () => {
   const log = createBondDeployedLog(factoryApi, projectionApi);
   const unrelatedLog = { address: otherEmitter, data: "0x", topics: [] };
   const logs = [unrelatedLog, log, unrelatedLog];
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs },
+    receipt: { transactionHash, status: "success", to: factory, logs },
   });
   const mirror = responseQueue([
     new Response("", { status: 404 }),
@@ -674,7 +770,7 @@ implementedTest("keeps the sent hash pending when Mirror function parameters do 
   const configurationB = selectedConfiguration("b".repeat(32));
   const log = createBondDeployedLog(factoryApi, projectionApi);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue(mirrorCandidateResponses({ input: factoryCalldata(configurationA), log }));
 
@@ -763,7 +859,7 @@ implementedTest("returns no candidate for an absent public transaction without u
 });
 implementedTest("bounds all Mirror cycles to one five-second deadline through the injected timing seam", async () => {
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },
   });
   let now = 0;
   const mirror = responseQueue([() => {
@@ -771,15 +867,10 @@ implementedTest("bounds all Mirror cycles to one five-second deadline through th
     return new Response("", { status: 404 });
   }]);
   const waits = [];
-  const bridge = api.createStageBBrowserProviderBridge({
-    provider,
-    fetch: mirror.fetch,
-    now: () => now,
-    wait: async (milliseconds) => {
+  const bridge = api.createStageBBrowserProviderBridge(bridgeInput(provider, mirror.fetch, async (milliseconds) => {
       waits.push(milliseconds);
       now += milliseconds;
-    },
-  });
+    }, undefined, { now: () => now }));
 
   const outcome = await bridge.execute();
 
@@ -791,7 +882,7 @@ implementedTest("bounds all Mirror cycles to one five-second deadline through th
 
 implementedTest("keeps the one remaining Mirror deadline armed through a headers-first stalled body", async () => {
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },
   });
   const deadlines = controlledTimers();
   let bodyReadStarted = false;
@@ -809,12 +900,9 @@ implementedTest("keeps the one remaining Mirror deadline armed through a headers
       },
     }),
   }]);
-  const bridge = api.createStageBBrowserProviderBridge({
-    provider,
-    fetch: mirror.fetch,
-    wait: async () => {},
+  const bridge = api.createStageBBrowserProviderBridge(bridgeInput(provider, mirror.fetch, async () => {}, undefined, {
     timers: deadlines.api,
-  });
+  }));
 
   const pending = bridge.execute();
   await waitsFor(() => bodyReadStarted, "the JSON body must be consumed under the Mirror deadline");
@@ -845,9 +933,7 @@ implementedTest("rejects or ignores caller-supplied routing and transaction over
   let bridge;
   try {
     bridge = api.createStageBBrowserProviderBridge({
-      provider,
-      fetch: mirror.fetch,
-      wait: async () => {},
+      ...bridgeInput(provider, mirror.fetch, async () => {}),
       ...overrides,
     });
   } catch (error) {
@@ -875,7 +961,7 @@ implementedTest("rejects or ignores caller-supplied routing and transaction over
 implementedTest("rejects a non-Factory BondDeployed emitter before any Mirror read and latches the post-hash session", async () => {
   const log = createBondDeployedLog(factoryApi, projectionApi, otherEmitter);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue([]);
   const bridge = createBridge(api, provider, mirror.fetch);
@@ -897,7 +983,7 @@ implementedTest("validates a Factory event emitter before it can hand a valid-lo
   });
   const log = createBondDeployedLog(factoryApi, projectionApi, otherEmitter);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue([]);
 
@@ -913,7 +999,7 @@ implementedTest("rejects an accessor-backed Mirror ContractResult field before F
   const log = createBondDeployedLog(factoryApi, projectionApi);
   const hostile = accessorBackedRecord(mirrorContractResult(log), "hash", reads);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue([jsonResponse({ ignored: true })]);
 
@@ -935,7 +1021,7 @@ implementedTest("rejects an inherited Mirror ContractResult field before Factory
     value: "0x128",
   });
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue([jsonResponse({ ignored: true })]);
 
@@ -956,7 +1042,7 @@ implementedTest("rejects an accessor-backed Mirror log field before it can reach
   const reads = [];
   const hostileLog = accessorBackedRecord(createBondDeployedLog(factoryApi, projectionApi), "address", reads);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [createBondDeployedLog(factoryApi, projectionApi)] },
   });
   const mirror = responseQueue([jsonResponse({ ignored: true })]);
 
@@ -981,7 +1067,7 @@ implementedTest("rejects a non-enumerable Mirror transactions envelope before a 
   }] }, "transactions");
   const documents = [mirrorContractResult(log), hostileEnvelope];
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue([jsonResponse({ ignored: true }), jsonResponse({ ignored: true })]);
 
@@ -1003,7 +1089,7 @@ implementedTest("rejects an accessor-backed Mirror transaction entry before it c
   }, "transaction_id", reads);
   const documents = [mirrorContractResult(log), { transactions: [hostileTransaction] }];
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue([jsonResponse({ ignored: true }), jsonResponse({ ignored: true })]);
 
@@ -1017,7 +1103,7 @@ implementedTest("rejects an accessor-backed Mirror transaction entry before it c
 implementedTest("treats ambiguous Mirror transaction records as terminal with no candidate or resend", async () => {
   const log = createBondDeployedLog(factoryApi, projectionApi);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [log] },
   });
   const mirror = responseQueue([
     jsonResponse(mirrorContractResult(log)),
@@ -1064,7 +1150,7 @@ implementedTest("fails closed on every malformed first Mirror result without can
 
   for (const [name, makeResponse] of vectors) {
     const provider = fakeProvider({
-      receipt: { transactionHash, status: "0x1", to: factory, logs: [log] },
+      receipt: { transactionHash, status: "success", to: factory, logs: [log] },
     });
     const mirror = responseQueue([makeResponse]);
     const bridge = createBridge(api, provider, mirror.fetch);
@@ -1116,7 +1202,7 @@ implementedTest("rejects an invalid returned Mirror transaction id and a final e
 
   for (const [name, makeResponses] of vectors) {
     const provider = fakeProvider({
-      receipt: { transactionHash, status: "0x1", to: factory, logs: [receiptLog] },
+      receipt: { transactionHash, status: "success", to: factory, logs: [receiptLog] },
     });
     const mirror = responseQueue(makeResponses());
     const bridge = createBridge(api, provider, mirror.fetch);
@@ -1140,7 +1226,7 @@ implementedTest("rejects an invalid returned Mirror transaction id and a final e
 implementedTest("validates a returned Mirror transaction id before it can contribute to a final URL path", async () => {
   const receiptLog = createBondDeployedLog(factoryApi, projectionApi);
   const provider = fakeProvider({
-    receipt: { transactionHash, status: "0x1", to: factory, logs: [receiptLog] },
+    receipt: { transactionHash, status: "success", to: factory, logs: [receiptLog] },
   });
   const mirror = responseQueue([
     jsonResponse(mirrorContractResult(receiptLog)),
@@ -1165,10 +1251,10 @@ implementedTest("contains the closed receipt, Factory-emitter, and bounded Mirro
   const source = readFileSync(sourcePath, "utf8");
 
   for (const requiredBoundary of [
-    "eth_getTransactionReceipt",
+    "getTransactionReceipt",
     "decodeBondDeployed",
     "normalizeHederaCandidateTransactionId",
   ]) assert.equal(source.includes(requiredBoundary), true, `missing boundary: ${requiredBoundary}`);
 
-  assert.doesNotMatch(source, /(?:window|globalThis\.fetch|localStorage|sessionStorage|indexedDB|process\.env|import\.meta\.env|setInterval|WalletConnect|createWalletClient|createPublicClient)/u);
+  assert.doesNotMatch(source, /(?:window|globalThis\.fetch|localStorage|sessionStorage|indexedDB|process\.env|import\.meta\.env|setInterval|WalletConnect|createWalletClient|createPublicClient|\.request\()/u);
 });

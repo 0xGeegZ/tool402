@@ -37,3 +37,11 @@ handoff region. It authorizes minimal GREEN only in the two declared paths.
 This card is presentation-only. It creates no new action, authority, wallet
 request, signature, relay, state transition, record, API call, payment,
 transaction, ATS activity, deployment, or live claim.
+
+## W01 compatibility transfer
+
+W01-T010 may adapt this component's shared-session input to its derived Wagmi
+connection. It must retain S36's existing stage selection and single
+activation callback exactly; no new Stage-B action or presentation behavior is
+transferred. This narrow source compatibility transfer leaves every S36 human
+and runtime boundary unchanged.

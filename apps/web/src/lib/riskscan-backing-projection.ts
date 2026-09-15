@@ -33,7 +33,7 @@ function fundingTreasury(environment: unknown): string | null {
 function isCanonicalRiskScanOffering(record: OfferingRecord): boolean {
   return record.offeringPublicId === riskScanOfferingPublicId
     && record.subjectPublicId === riskScanOfferingPublicId
-    && record.state === "OPEN"
+    && (record.state === "OPEN" || record.state === "CLOSED")
     && canonicalEvmAddressPattern.test(record.canonicalSignerAddress);
 }
 
