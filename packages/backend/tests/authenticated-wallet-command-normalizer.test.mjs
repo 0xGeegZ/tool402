@@ -1879,6 +1879,25 @@ implementedTest("binds allocated-tool normalization to one exact subject and off
   );
 });
 
+implementedTest("normalizes a public tool funding command as a backer without selecting the provider tool", async () => {
+  const suffix = "d".repeat(32);
+  const subjectPublicId = `tool_${suffix}`;
+  const selections = [];
+  const payload = fundingPayload({ subjectPublicId });
+  const command = await signedExternalPrepareCommand(payload, "SSSSSSSSSSSSSSSSSSSSSQ", fundingSigner);
+  const normalized = await api.normalizeClaimedWalletCommand(
+    await claimText(transportText(command, payload)),
+    serverNow,
+    (chainId, signer, selection) => {
+      selections.push({ chainId, signer, selection });
+      return selection === undefined ? [authorityFor(signer, "BACKER", [])] : [];
+    },
+  );
+  assert.equal(normalized?.type, "external.prepare");
+  assert.equal(normalized?.role, "BACKER");
+  assert.deepEqual(selections, [{ chainId: 296, signer: command.signer, selection: undefined }]);
+});
+
 implementedTest("returns only the required deferred ownership references for subjectless commands", async () => {
   const directoryPayload = directoryPublishPayload();
   const directoryCommand = await signedCommand(

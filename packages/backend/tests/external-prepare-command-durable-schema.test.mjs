@@ -60,7 +60,7 @@ test("declares exactly the three additive M32 tables with closed validators and 
         candidateTransactionId: optional(string), candidateEvmAddress: optional(string), verifiedEvmTransactionHash: optional(string),
         nextReconciliationAt: optional({ type: "bigint" }), acceptedAt: { type: "bigint" },
       }),
-      indexes: [["by_idempotency_key", ["idempotencyKey"]], ["by_operation_kind_and_canonical_signer_address", ["operationKind", "canonicalSignerAddress"]]], searchIndexes: [], vectorIndexes: [],
+      indexes: [["by_idempotency_key", ["idempotencyKey"]], ["by_operation_kind_and_canonical_signer_address", ["operationKind", "canonicalSignerAddress"]], ["by_funding_backer_and_subject", ["operationKind", "canonicalSignerAddress", "subjectPublicId"]]], searchIndexes: [], vectorIndexes: [],
     },
   });
 });

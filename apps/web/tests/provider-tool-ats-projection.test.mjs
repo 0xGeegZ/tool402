@@ -14,15 +14,16 @@ import {
 } from "../src/lib/ats/factory-deploy-bond.ts";
 
 const signer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+const selfServiceSigner = "0x1111111111111111111111111111111111111111";
 const suffixA = "a".repeat(32);
 const suffixB = "b".repeat(32);
 
-function durableProjection(suffix) {
+function durableProjection(suffix, owner = signer) {
   const configured = createProviderToolAtsConfiguration({
     toolPublicId: `tool_${suffix}`,
     subjectPublicId: `tool_${suffix}`,
     title: "RiskScan Revenue Note",
-    canonicalSignerAddress: signer,
+    canonicalSignerAddress: owner,
   });
   return {
     toolPublicId: `tool_${suffix}`,
@@ -57,6 +58,14 @@ test("validates selected-tool deployment projection, omits authority, and produc
   assert.equal(decoded.args[0].security.rbacs[0].members.length, 1);
   assert.equal(decoded.args[0].security.rbacs[0].members[0].toLowerCase(), signer);
   assert.equal(decoded.args[0].security.maxSupply, 1000n);
+});
+
+test("preserves a self-service tool's durable owner in the executable Factory projection", () => {
+  const projection = createProviderToolAtsProjection(durableProjection(suffixA, selfServiceSigner));
+  const request = buildFactoryDeployBondRequest(projection.configuration, { issuerEvmAddress: selfServiceSigner });
+
+  assert.equal(request.bondData.security.rbacs[0].members[0], selfServiceSigner);
+  assert.equal(projection.configuration.parameters.diamondOwnerAccount, selfServiceSigner);
 });
 
 test("fails closed on identity/configuration mismatch and surplus public fields", () => {

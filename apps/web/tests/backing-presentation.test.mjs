@@ -142,10 +142,11 @@ test("carries none of the excluded literals in the presentation slice", async ()
   const flow = await readAppFile(flowPath);
   const sources = `${presentation}\n${rail}\n${flow}`;
 
-  assert.doesNotMatch(sources, /sample|simulat|mirror-node|units remain|raised|funded|balance|capacity|remaining|countdown|perk|\btier\b|progress|explorer/i);
+  assert.doesNotMatch(sources, /sample|simulat|mirror-node|units remain|raised|funded|capacity|remaining|countdown|perk|\btier\b|progress|explorer/i);
   assert.doesNotMatch(sources, /\b(?:paid|settled|verified|allocated|(?<!aria-)live)\b(?! only| record)/i);
   assert.doesNotMatch(sources, /Connected\b/);
   assert.doesNotMatch(sources, /https?:\/\/|process\.env/);
   assert.match(flow, /fetch\("\/api\/backing\/payment"/);
   assert.match(flow, /hashscanTransactionUrl/);
+  assert.match(flow, /Insufficient testnet HBAR/);
 });

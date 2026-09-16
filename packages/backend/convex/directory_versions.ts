@@ -24,6 +24,7 @@ import {
   isSelectedProviderToolSubject,
   resolveSelectedProviderToolSubject,
 } from "./provider_tool_authority.ts";
+import { isPublicTestnetSelfServiceEnabled } from "./self_service_accounts.ts";
 import type { DirectoryCommandBinding } from "../src/offering-command-admission.ts";
 import type schema from "./schema.ts";
 
@@ -94,6 +95,7 @@ const offeringOptionalFields = [
   "atsAttemptId",
   "atsAssetEvmAddress",
   "activeDirectoryVersionId",
+  "fundingRecipient",
 ] as const;
 const directoryFields = [
   "offeringPublicId",
@@ -125,6 +127,7 @@ interface StoredOffering {
   readonly atsAttemptId: unknown;
   readonly atsAssetEvmAddress: unknown;
   readonly activeDirectoryVersionId: unknown;
+  readonly fundingRecipient: string | undefined;
 }
 
 interface StoredDirectory {
@@ -185,6 +188,7 @@ function readOffering(input: unknown): StoredOffering {
     || !isCanonicalHash(record.payloadHash)
     || !isInt64(record.acceptedAt) || !isInt64(record.updatedAt)
     || !isOfferingState(record.state)
+    || (record.fundingRecipient !== undefined && (!isCanonicalEvmAddress(record.fundingRecipient) || record.fundingRecipient !== record.canonicalSignerAddress))
   ) return reject();
 
   return Object.freeze({
@@ -199,6 +203,7 @@ function readOffering(input: unknown): StoredOffering {
     atsAttemptId: record.atsAttemptId,
     atsAssetEvmAddress: record.atsAssetEvmAddress,
     activeDirectoryVersionId: record.activeDirectoryVersionId,
+    fundingRecipient: record.fundingRecipient as string | undefined,
   });
 }
 
@@ -363,8 +368,31 @@ export const admitDirectoryPublish = internalMutation({
       .withIndex("by_chain_id_and_canonical_signer_address", (index) =>
         index.eq("chainId", 296).eq("canonicalSignerAddress", command.canonicalSignerAddress))
       .take(2);
-    if (authorities.length !== 1) return reject();
-    const ownedSubjectPublicIds = revalidateOfferingAuthority(authorities[0], command, false);
+    let authority: unknown;
+    if (authorities.length === 1
+      && authorities[0]?.principalPublicId === command.principalPublicId
+      && authorities[0]?.authorityVersion === command.authorityVersion) {
+      authority = authorities[0];
+    } else if (isPublicTestnetSelfServiceEnabled()) {
+      const accounts = await ctx.db.query("selfServiceAccounts")
+        .withIndex("by_chain_id_and_canonical_signer_address", (index) => (
+          index.eq("chainId", 296).eq("canonicalSignerAddress", command.canonicalSignerAddress)
+        )).take(2);
+      const account = accounts[0];
+      if (
+        accounts.length !== 1 || account === undefined
+        || account.canonicalSignerAddress !== command.canonicalSignerAddress
+        || account.chainId !== 296
+        || account.principalPublicId !== `self_service_${command.canonicalSignerAddress.slice(2)}`
+        || account.principalPublicId !== command.principalPublicId
+        || account.policyVersion !== "public_testnet_v1"
+        || account.policyVersion !== command.authorityVersion
+        || account.status !== "ACTIVE"
+        || !isInt64(account.createdAt) || !isInt64(account.updatedAt)
+      ) return reject();
+      authority = { _id: account._id, _creationTime: account._creationTime, principalPublicId: account.principalPublicId, canonicalSignerAddress: account.canonicalSignerAddress, chainId: 296, role: "ISSUER", ownedSubjectPublicIds: [], authorityVersion: account.policyVersion, enabled: true };
+    } else return reject();
+    const ownedSubjectPublicIds = revalidateOfferingAuthority(authority, command, false);
 
     const claims = await ctx.db.query("walletCommandReplayClaims")
       .withIndex("by_replay_identity", (index) => index.eq("replayIdentity", command.replayIdentity))
@@ -383,7 +411,7 @@ export const admitDirectoryPublish = internalMutation({
     if (offerings.length === 0) return { status: "PRECONDITION_UNMET" as const };
     const offering = readOffering(offerings[0]);
     if (isSelectedProviderToolSubject(offering.subjectPublicId)) {
-      const selected = await resolveSelectedProviderToolSubject(ctx, authorities[0], {
+      const selected = await resolveSelectedProviderToolSubject(ctx, authority, {
         subjectPublicId: offering.subjectPublicId,
         offeringPublicId: offering.offeringPublicId,
       });

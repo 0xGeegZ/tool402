@@ -9,7 +9,7 @@ import typescript from "typescript";
 import * as viem from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { getFunctionName } from "convex/server";
-import { canonicalizeRequirements } from "@tool402/core";
+import { canonicalDirectoryPublishPayloadBytes, canonicalizeRequirements, parseDirectoryPublishPayload } from "@tool402/core";
 import factoryArtifact from "@hashgraph/asset-tokenization-contracts/artifacts/contracts/factory/Factory.sol/Factory.json" with { type: "json" };
 
 import * as providerTools from "../../../packages/backend/convex/provider_tools.ts";
@@ -18,20 +18,24 @@ import * as offerings from "../../../packages/backend/convex/offerings.ts";
 import * as prepare from "../../../packages/backend/convex/external_prepare_command_admission.ts";
 import * as receipts from "../../../packages/backend/convex/ats_candidate_receipts.ts";
 import * as verification from "../../../packages/backend/convex/ats_receipt_verification.ts";
+import * as providerToolRecheck from "../../../packages/backend/convex/provider_tool_recheck.ts";
 import * as directories from "../../../packages/backend/convex/directory_versions.ts";
+import * as backingIntents from "../../../packages/backend/convex/backing_intents.ts";
 import { handleProviderSessionIngress } from "../../../packages/backend/convex/provider_session_ingress.ts";
 import { handleProviderToolsRequest, handleProviderToolDeploymentRequest } from "../src/lib/provider-tools-server.ts";
 import { createChallenge, verifyChallenge } from "../src/lib/dashboard-auth/dashboard-auth.ts";
-import { handleCommandRelayPost, signAndRelayCommand } from "../src/lib/wallet/command-relay.ts";
+import { handleCommandRelayPost, signAndRelayCommand as relayCommand } from "../src/lib/wallet/command-relay.ts";
 import { buildStageSignatureRequest, providerDeploymentTarget } from "../src/lib/wallet/command-bridge.ts";
 import { completeDirectoryRecordLiteral, directoryRecordForProviderTool } from "../src/components/provider/deploy/directory-record-literal.ts";
 import { createStageBBrowserProviderBridge } from "../src/lib/ats/stage-b-browser-provider-bridge.ts";
-import { loadProviderToolDeployment } from "../src/lib/provider-tool-deployment-client.ts";
+import { loadProviderToolDeployment, recheckProviderToolDeployment } from "../src/lib/provider-tool-deployment-client.ts";
 import { readProviderProjections } from "../src/lib/offering-projection.ts";
 import { createProviderToolAllocationRequest, parseProviderToolAllocation } from "../src/lib/provider-tools-client.ts";
 import { campaignFixture } from "../src/components/provider/deploy/campaign-fixture.ts";
+import { createFrozenBackingIntent, readBackingOffering } from "../src/components/backing/backing-state.ts";
 
 const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+const backer = "0x80b87c1ab59ae3f47e357cad2f8f32af855dc0a3";
 const factory = "0xd1f118a40f3b02883d35909ef2517e7edd78379d";
 const origin = "http://localhost:3000";
 const site = "https://journey.convex.test";
@@ -40,6 +44,7 @@ const rpc = "https://testnet.hashio.io/api";
 const now = Date.parse("2026-09-12T10:00:00.000Z");
 // Public, offline-only fixture key already used by command-dispatch.test.mjs.
 const signer = privateKeyToAccount("0x59c6995e998f97a5a0044966f094538e2f7d9fca7ca9293b3ff0b8f9b5b0a5b9");
+const backerSigner = privateKeyToAccount("0x8b3a350cf5c34c9194ca3a9d1b4ca73d7f5aa3dd36730a5d1ba9c3d7458b1f20");
 const environment = {
   NODE_ENV: "development",
   TOOL402_DASHBOARD_AUTH_ORIGIN: origin,
@@ -47,6 +52,10 @@ const environment = {
   TOOL402_INGRESS_KEY_ID: "journey",
   TOOL402_INGRESS_SECRET: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
   TOOL402_CONVEX_SITE_URL: site,
+  TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED: "true",
+  TOOL402_SELF_SERVICE_MAX_TOOLS: "8",
+  TOOL402_SELF_SERVICE_MAX_PENDING_ATTEMPTS: "3",
+  TOOL402_SELF_SERVICE_MAX_BACKING_INTENTS_PER_HOUR: "3",
 };
 const values = Object.freeze({
   ...Object.fromEntries(["toolName", "customerProblem", "qualifyingResource", "quickPrice", "standardPrice"].map((key) => [key, campaignFixture[key]])),
@@ -124,12 +133,16 @@ async function settled(render, ready) {
 
 // Only persistence and Convex function routing are emulated. Every admission,
 // authority, replay, lifecycle and receipt decision belongs to its real handler.
-function runtime() {
-  const modules = { provider_tools: providerTools, wallet_command_replay: replay, offerings, external_prepare_command_admission: prepare, ats_candidate_receipts: receipts, ats_receipt_verification: verification, directory_versions: directories };
+function runtime({ selfService = false } = {}) {
+  const modules = { provider_tools: providerTools, provider_tool_recheck: providerToolRecheck, wallet_command_replay: replay, offerings, external_prepare_command_admission: prepare, ats_candidate_receipts: receipts, ats_receipt_verification: verification, directory_versions: directories };
   let rows = {
-    commandAuthorities: [{ _id: "commandAuthorities:issuer", _creationTime: 1, principalPublicId: "tool402_ats_issuer_testnet_v1", canonicalSignerAddress: issuer, chainId: 296, role: "ISSUER", ownedSubjectPublicIds: ["riskscan_revenue_note_demo"], authorityVersion: "ats_issuer_testnet_v1", enabled: true }],
+    commandAuthorities: selfService ? [] : [{ _id: "commandAuthorities:issuer", _creationTime: 1, principalPublicId: "tool402_ats_issuer_testnet_v1", canonicalSignerAddress: issuer, chainId: 296, role: "ISSUER", ownedSubjectPublicIds: ["riskscan_revenue_note_demo"], authorityVersion: "ats_issuer_testnet_v1", enabled: true }],
+    selfServiceAccounts: selfService ? [
+      { _id: "selfServiceAccounts:issuer", _creationTime: 1, canonicalSignerAddress: issuer, chainId: 296, principalPublicId: `self_service_${issuer.slice(2)}`, policyVersion: "public_testnet_v1", status: "ACTIVE", createdAt: 1n, updatedAt: 1n },
+      { _id: "selfServiceAccounts:backer", _creationTime: 1, canonicalSignerAddress: backer, chainId: 296, principalPublicId: `self_service_${backer.slice(2)}`, policyVersion: "public_testnet_v1", status: "ACTIVE", createdAt: 1n, updatedAt: 1n },
+    ] : [],
     providerTools: [], offerings: [], externalPrepareCommandAttempts: [], providerToolReceiptBindings: [], directoryVersions: [],
-    ingressCommandReplayClaims: [], walletCommandReplayClaims: [], externalPrepareCommandReplayClaims: [],
+    ingressCommandReplayClaims: [], walletCommandReplayClaims: [], externalPrepareCommandReplayClaims: [], backingIntents: [], selfServiceWriteRateLimits: [],
   };
   // Existing legacy records are fixtures, never generated by the A/B journey.
   const legacyOffering = {
@@ -173,9 +186,9 @@ function runtime() {
       assert.ok(Object.hasOwn(rows, table), `unexpected database table ${table}`);
       return { withIndex(_index, select) {
         const filters = [];
-        const range = { eq(field, value) { filters.push([field, value]); return range; } };
+        const range = { eq(field, value) { filters.push(["eq", field, value]); return range; }, gt(field, value) { filters.push(["gt", field, value]); return range; } };
         select(range);
-        const matches = () => rows[table].filter((row) => filters.every(([field, value]) => row[field] === value));
+        const matches = () => rows[table].filter((row) => filters.every(([kind, field, value]) => kind === "eq" ? row[field] === value : row[field] > value));
         return {
           async take(limit) { return structuredClone(matches().slice(0, limit)); },
           order(direction) {
@@ -217,6 +230,7 @@ function runtime() {
     db,
     runQuery: (reference, args) => invoke(reference, args),
     runMutation: (reference, args) => invoke(reference, args, true),
+    runAction: (reference, args) => invoke(reference, args),
     scheduler: { async runAfter(delay, reference, args) {
       assert.equal(delay, 0);
       scheduled.push({ reference, args });
@@ -232,10 +246,13 @@ function runtime() {
       assert.equal(getFunctionName(job.reference), "ats_receipt_verification:verifyAtsCandidateReceipt");
       return invoke(job.reference, job.args);
     },
+    async reverify(attemptId) {
+      return verification.verifyAtsCandidateReceipt._handler(ctx, { attemptId });
+    },
   };
 }
 
-test("two identical forms reach independent OPEN tools through signed orchestration; reloaded C needs an explicit receipt recheck", async (t) => {
+test("a self-service provider reaches independent OPEN tools through signed orchestration; reloaded C needs an explicit receipt recheck", async (t) => {
   t.mock.method(Date, "now", () => now);
   const previousEnvironment = Object.fromEntries(Object.keys(environment).map((key) => [key, process.env[key]]));
   Object.assign(process.env, environment);
@@ -244,7 +261,7 @@ test("two identical forms reach independent OPEN tools through signed orchestrat
       if (value === undefined) delete process.env[key]; else process.env[key] = value;
     }
   });
-  const state = runtime();
+  const state = runtime({ selfService: true });
   const legacyRows = structuredClone(Object.values(state.rows).flat());
   const walletCalls = [];
   const wireCommands = [];
@@ -260,8 +277,9 @@ test("two identical forms reach independent OPEN tools through signed orchestrat
   const normalizer = loadSource("../../../packages/backend/src/ingress/authenticated-wallet-command-normalizer.ts", {
     viem: { ...viem, async recoverTypedDataAddress(input) {
       const recovered = await viem.recoverTypedDataAddress(input);
-      assert.equal(recovered.toLowerCase(), signer.address.toLowerCase());
-      return issuer;
+      if (recovered.toLowerCase() === signer.address.toLowerCase()) return issuer;
+      if (recovered.toLowerCase() === backerSigner.address.toLowerCase()) return backer;
+      assert.fail(`unexpected recovered wallet ${recovered}`);
     } },
   });
   const dispatch = loadSource("../../../packages/backend/convex/command_dispatch.ts", {
@@ -294,13 +312,67 @@ test("two identical forms reach independent OPEN tools through signed orchestrat
         data: viem.encodeAbiParameters(event.inputs.filter((item) => !item.indexed), [asset, ...decoded.args]),
         topics: viem.encodeEventTopics({ abi: factoryArtifact.abi, eventName: "BondDeployed", args: { deployer: issuer } }),
       };
-      selectedTransaction = { hash, asset, timestamp, transactionId, log, transaction: { hash, chainId: "0x128", from: issuer, to: factory, input: tx.data }, receipt: { transactionHash: hash, status: "0x1", to: factory, logs: [log] } };
+      selectedTransaction = { hash, asset, timestamp, transactionId, log, transaction: { hash, chainId: "0x128", from: issuer, to: factory, input: tx.data }, viemReceipt: { transactionHash: hash, status: "success", to: factory, logs: [log] }, receipt: { transactionHash: hash, status: "0x1", to: factory, logs: [log] } };
       transactions.set(hash, selectedTransaction);
       return hash;
     }
-    if (input.method === "eth_getTransactionReceipt") return transactions.get(input.params[0]).receipt;
+    if (input.method === "eth_getTransactionReceipt") return transactions.get(input.params[0]).viemReceipt;
     assert.fail(`unexpected wallet operation ${input.method}`);
   } };
+  const backerProvider = { async request(input) {
+    if (input.method === "eth_chainId") return "0x128";
+    if (input.method === "eth_accounts") return [backer];
+    if (input.method === "eth_signTypedData_v4") {
+      assert.equal(input.params[0], backer);
+      return backerSigner.signTypedData(JSON.parse(input.params[1]));
+    }
+    assert.fail(`unexpected backer wallet operation ${input.method}`);
+  } };
+  function walletContextFor(activeProvider) {
+    return {
+      address: activeProvider === backerProvider ? backer : issuer,
+      chainId: 296,
+      connectorId: "metaMask",
+      generation: 0,
+    };
+  }
+  function createStageBBridge(configuration, fetch) {
+    const walletContext = walletContextFor(provider);
+    return createStageBBrowserProviderBridge({
+      wallet: walletContext,
+      readCurrentWallet: () => walletContext,
+      sendTransaction: ({ account, to, data, value }) => provider.request({
+        method: "eth_sendTransaction",
+        params: [{ from: account, to, data, value: `0x${value.toString(16)}` }],
+      }),
+      getTransactionReceipt: ({ hash }) => provider.request({ method: "eth_getTransactionReceipt", params: [hash] }),
+      configuration,
+      fetch,
+    });
+  }
+  async function signAndRelayCommand(activeProvider, request) {
+    const walletContext = walletContextFor(activeProvider);
+    return relayCommand(walletContext, request, {
+      readCurrentContext: () => walletContext,
+      // The offline fixture keys are mapped to the public test accounts at the
+      // wallet seam; command ingress still verifies the actual signature.
+      recoverSigner: async () => walletContext.address,
+      signTypedData: async (typedData) => activeProvider.request({
+        method: "eth_signTypedData_v4",
+        params: [typedData.message.signer, JSON.stringify({
+          ...typedData,
+          types: {
+            EIP712Domain: [
+              { name: "name", type: "string" },
+              { name: "version", type: "string" },
+              { name: "chainId", type: "uint256" },
+            ],
+            ...typedData.types,
+          },
+        })],
+      }),
+    });
+  }
 
   const challenge = await createChallenge({ address: issuer, env: environment });
   const session = await verifyChallenge({ challengeCookie: challenge.cookie, message: challenge.message, signature: await signer.signMessage({ message: challenge.message }), origin, env: environment }, {
@@ -360,7 +432,15 @@ test("two identical forms reach independent OPEN tools through signed orchestrat
     const renderer = hooks();
     const component = loadSource("../src/components/provider/deploy/deploy-stage-signing.tsx", {
       react: renderer.react, "react/jsx-runtime": jsxRuntime,
-      "../../wallet/wallet-session": { useWalletSession: () => ({ state: { kind: "connected", address: issuer }, provider }), connectedWalletSession: (wallet) => ({ address: wallet.state.address, provider: wallet.provider }) },
+      "../../wallet/use-tool402-wallet": {
+        connectedTool402Wallet: (connection, resolved) => resolved && connection.status === "connected" && connection.account !== undefined && connection.chainId === 296 && connection.connector?.id === "metaMask" ? connection : null,
+        useTool402Wallet: () => ({
+          resolved: true,
+          state: { kind: "connected", address: issuer },
+          connection: { status: "connected", account: issuer, chainId: 296, connector: { id: "metaMask" }, generation: 0 },
+          connect: async () => {},
+        }),
+      },
       "../../wallet/signature-dialog": { SignatureDialog: "SignatureDialog" },
       "../../ui/button": { Button: "Button" },
       "./provider-icon": { ProviderGlyph: "ProviderGlyph" },
@@ -401,14 +481,14 @@ test("two identical forms reach independent OPEN tools through signed orchestrat
     assert.deepEqual(deployment.durableValues, values, "the actual form data must survive protected reload");
     await signStage(mounted, 1);
     assert.equal((await loadProviderToolDeployment(tool.toolPublicId)).state, "ASSET_PENDING");
-    const bridge = createStageBBrowserProviderBridge({ provider, configuration: deployment.ats.configuration, async fetch(input) {
+    const bridge = createStageBBridge(deployment.ats.configuration, async (input) => {
       const url = new URL(input);
       assert.equal(url.origin + "/api/v1/", mirror);
       const tx = selectedTransaction;
       if (url.pathname.endsWith("/transactions")) return json({ transactions: [{ name: "ETHEREUMTRANSACTION", result: "SUCCESS", nonce: 0, consensus_timestamp: tx.timestamp, transaction_id: tx.transactionId }] });
       assert.ok(url.pathname.endsWith(tx.hash) || url.pathname.endsWith(tx.transactionId));
       return json({ hash: tx.hash, chain_id: "0x128", result: "SUCCESS", status: "0x1", from: issuer, to: factory, timestamp: tx.timestamp, logs: [tx.log], function_parameters: tx.transaction.input });
-    } });
+    });
     const created = await bridge.execute();
     assert.equal(created.kind, "candidate");
     const transaction = selectedTransaction;
@@ -457,10 +537,12 @@ test("two identical forms reach independent OPEN tools through signed orchestrat
     return links.map((node) => node.props.href);
   }
 
-  async function verifyAndPublish(result) {
-    const readsBefore = serverReads.length;
-    assert.deepEqual(await state.verifyNext(), { outcome: "CONFIRMED" });
-    assert.equal(serverReads.length - readsBefore, 3, "verification must independently read Mirror, transaction and receipt");
+  async function verifyAndPublish(result, { alreadyVerified = false } = {}) {
+    if (!alreadyVerified) {
+      const readsBefore = serverReads.length;
+      assert.deepEqual(await state.verifyNext(), { outcome: "CONFIRMED" });
+      assert.equal(serverReads.length - readsBefore, 3, "verification must independently read Mirror, transaction and receipt");
+    }
     const durable = await loadProviderToolDeployment(result.tool.toolPublicId);
     assert.equal(durable.state, "READY");
     assert.equal(state.rows.directoryVersions.filter((row) => row.offeringPublicId === result.tool.offeringPublicId).length, 0);
@@ -498,6 +580,52 @@ test("two identical forms reach independent OPEN tools through signed orchestrat
   assert.deepEqual(await signAndRelayCommand(provider, earlyPublish), { kind: "relayed", outcome: "REJECTED" }, "even a signed browser-forced publication cannot bypass durable READY");
   assert.equal((await loadProviderToolDeployment(a.tool.toolPublicId)).state, "ASSET_PENDING");
   await verifyAndPublish(a);
+  const aOffering = state.rows.offerings.find((offering) => offering.offeringPublicId === a.tool.offeringPublicId);
+  assert.ok(aOffering?.fundingRecipient, "self-service publication must durably bind A's funding recipient");
+  const backingOffering = readBackingOffering({ ...aOffering, fundingTreasuryAddress: aOffering.fundingRecipient });
+  assert.ok(backingOffering, "B can read A's published offer without inheriting A's authority");
+  const frozenBacking = await backingIntents.freezeBackingIntent._handler(state.ctx, {
+    canonicalSignerAddress: backer,
+    offeringPublicId: a.tool.offeringPublicId,
+    units: "10",
+    idempotencyKey: "QkJCQkJCQkJCQkJCQkJCQg",
+    purchaseIntentId: "RERERERERERERERERERERA",
+    expiresAt: new Date(now + 60_000).toISOString(),
+  });
+  assert.equal(frozenBacking.outcome, "PREPARED");
+  const backerFundingIntent = createFrozenBackingIntent(backingOffering, frozenBacking.intent, now);
+  assert.deepEqual(await signAndRelayCommand(backerProvider, backerFundingIntent), { kind: "relayed", outcome: "ACCEPTED" });
+  const backerAttempt = state.rows.externalPrepareCommandAttempts.find((attempt) => attempt.idempotencyKey === backerFundingIntent.idempotencyKey);
+  assert.equal(backerAttempt?.canonicalSignerAddress, backer);
+  assert.equal(backerAttempt?.role, "BACKER");
+  assert.equal(backerAttempt?.subjectPublicId, a.tool.subjectPublicId);
+  const backerTool = await providerTools.allocateForIssuer._handler(state.ctx, {
+    canonicalSignerAddress: backer,
+    requestId: "a13d5c4d-21d9-4f02-a62b-47f49f3b17a1",
+  });
+  assert.equal(backerTool.outcome, "allocated", "B's active membership can also own a new provider tool without a legacy authority");
+  assert.equal(state.rows.providerTools.find((tool) => tool.toolPublicId === backerTool.tool.toolPublicId)?.canonicalSignerAddress, backer);
+  const aDirectory = state.rows.directoryVersions.find((directory) => directory.offeringPublicId === a.tool.offeringPublicId);
+  assert.ok(aDirectory, "A's publication must exist before B's cross-owner denial is evaluated");
+  const deniedPublishPayload = {
+    schemaVersion: 1,
+    offeringPublicId: a.tool.offeringPublicId,
+    offeringVersion: 1,
+    directoryVersion: 1,
+    record: aDirectory.record,
+    idempotencyKey: "SEVFRUVFRUVFRUVFRUVFRQ",
+    expiresAt: new Date(now + 60_000).toISOString(),
+  };
+  assert.deepEqual(
+    await signAndRelayCommand(backerProvider, {
+      type: "directory.publish",
+      issuedAt: new Date(now).toISOString(),
+      expiresAt: deniedPublishPayload.expiresAt,
+      canonicalPayloadBytes: canonicalDirectoryPublishPayloadBytes(parseDirectoryPublishPayload(deniedPublishPayload)),
+    }),
+    { kind: "relayed", outcome: "REJECTED" },
+    "B cannot publish A's offering despite having an active self-service membership",
+  );
   const aRows = structuredClone(Object.values(state.rows).flat().filter((row) => row.offeringPublicId === a.tool.offeringPublicId || row.subjectPublicId === a.tool.subjectPublicId));
   const b = await allocateAndAttach(2, false);
   const bAttemptBeforeRecovery = structuredClone(state.rows.externalPrepareCommandAttempts.find((row) => row.subjectPublicId === b.tool.subjectPublicId));
@@ -506,13 +634,13 @@ test("two identical forms reach independent OPEN tools through signed orchestrat
     ({ command }) => command.type === "external.attachCandidate",
   ).length;
   async function recoverCandidate(configuration, transaction) {
-    return createStageBBrowserProviderBridge({ provider, configuration, async fetch(input) {
+    return createStageBBridge(configuration, async (input) => {
       const url = new URL(input);
       assert.equal(url.origin + "/api/v1/", mirror);
       if (url.pathname.endsWith("/transactions")) return json({ transactions: [{ name: "ETHEREUMTRANSACTION", result: "SUCCESS", nonce: 0, consensus_timestamp: transaction.timestamp, transaction_id: transaction.transactionId }] });
       assert.ok(url.pathname.endsWith(transaction.hash) || url.pathname.endsWith(transaction.transactionId));
       return json({ hash: transaction.hash, chain_id: "0x128", result: "SUCCESS", status: "0x1", from: issuer, to: factory, timestamp: transaction.timestamp, logs: [transaction.log], function_parameters: transaction.transaction.input });
-    } }).recover(transaction.hash);
+    }).recover(transaction.hash);
   }
   assert.deepEqual(
     await recoverCandidate(b.deployment.ats.configuration, a.transaction),
@@ -536,8 +664,14 @@ test("two identical forms reach independent OPEN tools through signed orchestrat
   assert.equal((await loadProviderToolDeployment(b.tool.toolPublicId)).state, "ASSET_PENDING");
   assert.equal(state.rows.providerToolReceiptBindings.length, 1);
   receiptAlias = null;
-  await signStage(b.mounted, 2, "REPLAYED");
-  await verifyAndPublish(b);
+  const signaturesBeforeReceiptRecheck = wireCommands.length;
+  const recheckedB = await recheckProviderToolDeployment(b.tool.toolPublicId);
+  assert.equal(recheckedB?.state, "READY", "the authenticated deployment POST must invoke the verifier");
+  assert.equal(wireCommands.length, signaturesBeforeReceiptRecheck, "receipt recheck must not require another attachment signature");
+  assert.equal((await loadProviderToolDeployment(b.tool.toolPublicId)).state, "READY", "the authenticated deployment POST must invoke the verifier");
+  (await b.mounted.ready()).stages.props.onActivate(2);
+  await b.mounted.ready();
+  await verifyAndPublish(b, { alreadyVerified: true });
   assert.deepEqual(Object.values(state.rows).flat().filter((row) => row.offeringPublicId === a.tool.offeringPublicId || row.subjectPublicId === a.tool.subjectPublicId), aRows, "B must not overwrite any A record");
   for (const field of ["toolPublicId", "subjectPublicId", "offeringPublicId", "serviceId", "serviceSlug"]) assert.notEqual(a.tool[field], b.tool[field], field);
   assert.notEqual(a.deployment.ats.command.canonicalParametersHash, b.deployment.ats.command.canonicalParametersHash);
@@ -569,10 +703,10 @@ test("two identical forms reach independent OPEN tools through signed orchestrat
   assert.equal(state.scheduled.length, 0, "an unknown reader outcome must not schedule retries");
   assert.equal(state.rows.providerToolReceiptBindings.length, 2);
   const signaturesBefore = wireCommands.length;
-  await signStage(c.mounted, 2, "REPLAYED");
-  assert.equal(wireCommands.length, signaturesBefore + 1);
-  assert.equal(wireCommands.at(-1).command.type, "external.attachCandidate");
-  assert.deepEqual(await state.verifyNext(), { outcome: "OUTCOME_UNKNOWN" });
+  const recheckedC = await recheckProviderToolDeployment(c.tool.toolPublicId);
+  assert.equal(recheckedC?.state, "ASSET_PENDING", "the authenticated deployment POST retains unknown evidence without another wallet request");
+  assert.equal(wireCommands.length, signaturesBefore, "an unknown receipt recheck must not request another attachment signature");
+  assert.equal((await loadProviderToolDeployment(c.tool.toolPublicId)).state, "ASSET_PENDING", "the authenticated deployment POST retains unknown evidence without another wallet request");
   layout = await c.mounted.ready();
   assert.equal(layout.stages.props.enabledStage, 2);
   assert.equal(layout.stages.props.states[3].kind, "blocked");

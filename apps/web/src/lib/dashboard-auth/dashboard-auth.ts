@@ -229,7 +229,7 @@ export async function createChallenge(
 export async function verifyChallenge(
   input: Readonly<{ challengeCookie: string; message: string; signature: string; origin: string; env: DashboardAuthEnvironment }>,
   dependencies: AuthDependencies = {},
-): Promise<Readonly<{ kind: "rejected" }> | Readonly<{ kind: "authenticated"; sessionCookie: string }>> {
+): Promise<Readonly<{ kind: "rejected" }> | Readonly<{ kind: "authenticated"; sessionCookie: string; sessionIssuedAt: string }>> {
   const configuration = readConfiguration(input.env);
   if (configuration === null || input.origin !== configuration.origin || typeof input.challengeCookie !== "string" || typeof input.message !== "string" || !signaturePattern.test(input.signature)) return { kind: "rejected" };
   const payload = await unseal(input.challengeCookie, configuration, dependencies, parseChallengePayload);
@@ -246,7 +246,7 @@ export async function verifyChallenge(
   const expiresAt = timestamp(now + SESSION_MAX_AGE_SECONDS * 1000);
   if (issuedAt === null || expiresAt === null) return { kind: "rejected" };
   const session: SessionPayload = { v: 1, address: payload.address, issuedAt, expiresAt };
-  return { kind: "authenticated", sessionCookie: await seal(session, configuration, dependencies) };
+  return { kind: "authenticated", sessionCookie: await seal(session, configuration, dependencies), sessionIssuedAt: issuedAt };
 }
 
 export async function readDashboardSession(cookie: string | null, env: DashboardAuthEnvironment, now: number = Date.now()): Promise<Readonly<{ address: string; issuedAt: string; expiresAt: string }> | null> {

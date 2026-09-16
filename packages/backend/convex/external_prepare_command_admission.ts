@@ -14,6 +14,8 @@ import {
   isSelectedProviderToolSubject,
   resolveSelectedProviderToolSubject,
 } from "./provider_tool_authority.ts";
+import { isPublicTestnetSelfServiceEnabled } from "./self_service_accounts.ts";
+import { matchesFrozenBackingIntent } from "./backing_intents.ts";
 import type schema from "./schema.ts";
 
 const contextValidators = {
@@ -206,6 +208,52 @@ function revalidateAuthority(input: unknown, command: ReturnType<typeof bindCont
   ) reject();
 }
 
+async function resolveCurrentAuthority(
+  ctx: Parameters<typeof resolveSelectedProviderToolSubject>[0],
+  command: ReturnType<typeof bindContext>,
+): Promise<unknown> {
+  const authorities = await ctx.db.query("commandAuthorities")
+    .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+      query.eq("chainId", command.chainId).eq("canonicalSignerAddress", command.canonicalSignerAddress)
+    ))
+    .take(2);
+  if (authorities.length === 1 && authorities[0]?.principalPublicId === command.principalPublicId
+    && authorities[0]?.authorityVersion === command.authorityVersion) return authorities[0];
+  if (!isPublicTestnetSelfServiceEnabled()) return reject();
+
+  const accounts = await ctx.db.query("selfServiceAccounts")
+    .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+      query.eq("chainId", 296).eq("canonicalSignerAddress", command.canonicalSignerAddress)
+    ))
+    .take(2);
+  if (accounts.length !== 1 || accounts[0] === undefined) return reject();
+  const account = readRecord(accounts[0], [
+    "canonicalSignerAddress", "chainId", "principalPublicId", "policyVersion", "status", "createdAt", "updatedAt",
+  ], true);
+  if (
+    account.chainId !== 296
+    || account.canonicalSignerAddress !== command.canonicalSignerAddress
+    || account.principalPublicId !== `self_service_${command.canonicalSignerAddress.slice(2)}`
+    || account.principalPublicId !== command.principalPublicId
+    || account.policyVersion !== "public_testnet_v1"
+    || account.policyVersion !== command.authorityVersion
+    || account.status !== "ACTIVE"
+    || !isInt64(account.createdAt)
+    || !isInt64(account.updatedAt)
+  ) return reject();
+  return {
+    _id: account._id,
+    _creationTime: account._creationTime,
+    principalPublicId: account.principalPublicId,
+    canonicalSignerAddress: account.canonicalSignerAddress,
+    chainId: 296,
+    role: command.payload.operationKind === "HEDERA_FUNDING" ? "BACKER" : "ISSUER",
+    ownedSubjectPublicIds: [],
+    authorityVersion: account.policyVersion,
+    enabled: true,
+  };
+}
+
 async function revalidateSelectedPrepareAuthority(
   ctx: Parameters<typeof resolveSelectedProviderToolSubject>[0],
   input: unknown,
@@ -219,6 +267,31 @@ async function revalidateSelectedPrepareAuthority(
     command,
   );
   return selected;
+}
+
+async function assertFrozenSelfServiceFundingIntent(
+  ctx: Parameters<typeof resolveSelectedProviderToolSubject>[0],
+  command: ReturnType<typeof bindContext>,
+): Promise<void> {
+  if (
+    command.payload.operationKind !== "HEDERA_FUNDING"
+    || command.authorityVersion !== "public_testnet_v1"
+    || command.principalPublicId !== `self_service_${command.canonicalSignerAddress.slice(2)}`
+  ) return;
+  const intents = await ctx.db.query("backingIntents")
+    .withIndex("by_idempotency_key", (query) => query.eq("idempotencyKey", command.payload.idempotencyKey))
+    .take(2);
+  if (
+    intents.length !== 1
+    || !matchesFrozenBackingIntent(intents[0], {
+      canonicalSignerAddress: command.canonicalSignerAddress,
+      idempotencyKey: command.payload.idempotencyKey,
+      subjectPublicId: command.payload.subjectPublicId,
+      expectedTarget: command.payload.expectedTarget,
+      canonicalParametersHash: command.payload.canonicalParametersHash,
+      expiresAt: command.payload.expiresAt,
+    })
+  ) return reject();
 }
 
 async function assertSelectedAtsCreateConfiguration(
@@ -283,17 +356,17 @@ export const admitExternalPrepareCommand = internalMutation({
   ),
   handler: async (ctx, args) => {
     const { bound, replayIdentity, durableNow } = bindCommand(args);
-    const authorities = await ctx.db.query("commandAuthorities")
-      .withIndex("by_chain_id_and_canonical_signer_address", (query) =>
-        query.eq("chainId", bound.chainId).eq("canonicalSignerAddress", bound.canonicalSignerAddress))
-      .take(2);
-    if (authorities.length !== 1) return reject();
-    const selected = isSelectedProviderToolSubject(bound.payload.subjectPublicId)
-      ? await revalidateSelectedPrepareAuthority(ctx, authorities[0], bound)
+    const authority = await resolveCurrentAuthority(ctx, bound);
+    // A funding backer must bind to the server-frozen offering, not become the
+    // provider-tool issuer. Resolving tool ownership here would reject the
+    // deliberately BACKER-scoped self-service authority before that binding.
+    const selected = bound.payload.operationKind !== "HEDERA_FUNDING" && isSelectedProviderToolSubject(bound.payload.subjectPublicId)
+      ? await revalidateSelectedPrepareAuthority(ctx, authority, bound)
       : null;
-    if (selected === null) revalidateAuthority(authorities[0], bound);
+    if (selected === null) revalidateAuthority(authority, bound);
     if (bound.payload.operationKind === "ATS_CREATE") return reject();
     assertCurrentAtsPrepareAuthority(bound.payload);
+    await assertFrozenSelfServiceFundingIntent(ctx, bound);
 
     const claims = await ctx.db.query("externalPrepareCommandReplayClaims")
       .withIndex("by_replay_identity", (query) => query.eq("replayIdentity", replayIdentity))
@@ -355,15 +428,11 @@ export const admitAtsCreateAndMarkAssetPending = internalMutation({
     const { bound, replayIdentity, durableNow } = bindCommand(args);
     if (bound.payload.operationKind !== "ATS_CREATE") return reject();
 
-    const authorities = await ctx.db.query("commandAuthorities")
-      .withIndex("by_chain_id_and_canonical_signer_address", (query) =>
-        query.eq("chainId", bound.chainId).eq("canonicalSignerAddress", bound.canonicalSignerAddress))
-      .take(2);
-    if (authorities.length !== 1) return reject();
+    const authority = await resolveCurrentAuthority(ctx, bound);
     const selected = isSelectedProviderToolSubject(bound.payload.subjectPublicId)
-      ? await revalidateSelectedPrepareAuthority(ctx, authorities[0], bound)
+      ? await revalidateSelectedPrepareAuthority(ctx, authority, bound)
       : null;
-    if (selected === null) revalidateAuthority(authorities[0], bound);
+    if (selected === null) revalidateAuthority(authority, bound);
     if (selected === null) {
       assertStageBAtsCreateRuntimeBinding(bound);
       assertCurrentAtsPrepareAuthority(bound.payload);

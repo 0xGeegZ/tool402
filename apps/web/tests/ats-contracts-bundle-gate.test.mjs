@@ -57,6 +57,13 @@ implementedTest("mounts one M49 action through the accepted Factory artifact and
   assert.doesNotMatch(action, /(?:WalletConnect|createWalletClient|createPublicClient|process\.env|import\.meta\.env)/u);
 });
 
+implementedTest("gates public ATS deployment until its dispatch is durably reload-safe", async () => {
+  const action = await readFile(join(appRoot, "src/components/provider/deploy/ats-create-action.tsx"), "utf8");
+  assert.match(action, /const publicAtsExecutionBlocked = selectedTool;/u);
+  assert.match(action, /publicAtsExecutionBlocked/u);
+  assert.match(action, /durable pre-wallet dispatch record/u);
+});
+
 implementedTest("removes the SDK compatibility implementation instead of carrying it into Turbopack", async () => {
   const [config, legacySdkGate] = await Promise.all([
     readFile(join(appRoot, "next.config.ts"), "utf8"),

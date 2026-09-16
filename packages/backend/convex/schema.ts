@@ -13,6 +13,22 @@ export default defineSchema({
     authorityVersion: v.string(),
     enabled: v.boolean(),
   }).index("by_chain_id_and_canonical_signer_address", ["chainId", "canonicalSignerAddress"]),
+  selfServiceAccounts: defineTable({
+    canonicalSignerAddress: v.string(),
+    chainId: v.literal(296),
+    principalPublicId: v.string(),
+    policyVersion: v.literal("public_testnet_v1"),
+    status: v.union(v.literal("ACTIVE"), v.literal("SUSPENDED"), v.literal("REVOKED")),
+    createdAt: v.int64(),
+    updatedAt: v.int64(),
+  }).index("by_chain_id_and_canonical_signer_address", ["chainId", "canonicalSignerAddress"]),
+  selfServiceWriteRateLimits: defineTable({
+    canonicalSignerAddress: v.string(),
+    operation: v.literal("BACKING_INTENT"),
+    windowStartedAt: v.int64(),
+    count: v.number(),
+    updatedAt: v.int64(),
+  }).index("by_signer_operation_and_window", ["canonicalSignerAddress", "operation", "windowStartedAt"]),
   externalPrepareCommandReplayClaims: defineTable({
     replayIdentity: v.string(),
     outcome: v.union(v.literal("NEW"), v.literal("IDEMPOTENCY_REPLAYED"), v.literal("IDEMPOTENCY_CONFLICT")),
@@ -81,17 +97,46 @@ export default defineSchema({
     nextReconciliationAt: v.optional(v.int64()),
     acceptedAt: v.int64(),
   }).index("by_idempotency_key", ["idempotencyKey"])
-    .index("by_operation_kind_and_canonical_signer_address", ["operationKind", "canonicalSignerAddress"]),
+    .index("by_operation_kind_and_canonical_signer_address", ["operationKind", "canonicalSignerAddress"])
+    .index("by_funding_backer_and_subject", ["operationKind", "canonicalSignerAddress", "subjectPublicId"]),
   backingPaymentClaims: defineTable({
     transactionHash: v.optional(v.string()),
+    // A submitted hash is candidate evidence. Only a receipt verified against
+    // the immutable attempt receives globally exclusive ownership.
+    verifiedTransactionHash: v.optional(v.string()),
     attemptId: v.id("externalPrepareCommandAttempts"),
     canonicalSignerAddress: v.string(),
+    // Added after the first legacy claims. New claims are deliberately
+    // offer-scoped; historic rows remain readable through their attempt.
+    offeringPublicId: v.optional(v.string()),
     tinybars: v.string(),
     state: v.union(v.literal("PREPARED"), v.literal("SUBMITTED"), v.literal("OUTCOME_UNKNOWN"), v.literal("CONFIRMED"), v.literal("REJECTED")),
     claimedAt: v.int64(),
-  }).index("by_transaction_hash", ["transactionHash"])
+  }).index("by_transaction_hash_and_state", ["transactionHash", "state"])
+    .index("by_verified_transaction_hash", ["verifiedTransactionHash"])
     .index("by_attempt_id", ["attemptId"])
-    .index("by_canonical_signer_address", ["canonicalSignerAddress"]),
+    .index("by_canonical_signer_address", ["canonicalSignerAddress"])
+    .index("by_backer_offering_and_claimed_at", ["canonicalSignerAddress", "offeringPublicId", "claimedAt"])
+    .index("by_backer_offering_and_state", ["canonicalSignerAddress", "offeringPublicId", "state"])
+    .index("by_backer_offering_state_and_claimed_at", ["canonicalSignerAddress", "offeringPublicId", "state", "claimedAt"]),
+  backingIntents: defineTable({
+    idempotencyKey: v.string(),
+    purchaseIntentId: v.string(),
+    canonicalSignerAddress: v.string(),
+    offeringPublicId: v.string(),
+    offeringVersion: v.literal(1),
+    offeringTermsDigest: v.string(),
+    subjectPublicId: v.string(),
+    recipient: v.string(),
+    units: v.string(),
+    tinybars: v.string(),
+    canonicalParametersHash: v.string(),
+    expiresAt: v.string(),
+    createdAt: v.int64(),
+  }).index("by_idempotency_key", ["idempotencyKey"])
+    .index("by_canonical_signer_address_and_created_at", ["canonicalSignerAddress", "createdAt"])
+    .index("by_canonical_signer_address_and_expires_at", ["canonicalSignerAddress", "expiresAt"])
+    .index("by_backer_offering_created", ["canonicalSignerAddress", "offeringPublicId", "createdAt"]),
   offerings: defineTable({
     offeringPublicId: v.string(),
     subjectPublicId: v.string(),
@@ -132,10 +177,12 @@ export default defineSchema({
       v.literal("DRAFT"), v.literal("ASSET_PENDING"), v.literal("READY"),
       v.literal("OPEN"), v.literal("CLOSED"),
     ),
+    fundingRecipient: v.optional(v.string()),
     atsAttemptId: v.optional(v.id("externalPrepareCommandAttempts")),
     atsAssetEvmAddress: v.optional(v.string()),
     activeDirectoryVersionId: v.optional(v.id("directoryVersions")),
   }).index("by_offering_public_id_and_version", ["offeringPublicId", "version"])
+    .index("by_state_and_updated_at", ["state", "updatedAt"])
     .index("by_ats_attempt_id", ["atsAttemptId"])
     .index("by_ats_create_draft_binding", [
       "subjectPublicId",

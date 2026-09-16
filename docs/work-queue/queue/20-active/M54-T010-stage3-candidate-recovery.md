@@ -46,6 +46,17 @@ attachment mutation, offering projection, storage, configuration, package, or
 lockfile paths. Stage 4 durable continuation is a separate successor after
 M51 and is excluded.
 
+## W01 successor reconciliation
+
+The owner-directed W01 amendment is the sole exception to this card's storage
+boundary. `apps/web/src/components/provider/deploy/stage-b-recovery.ts` and
+its focused contract may retain same-origin, attempt-scoped browser evidence
+only to make an atomic pre-broadcast claim authoritative across tabs. This is
+not M54 canonical-public-hash recovery and cannot create a candidate, send,
+sign, relay, attach, configure, transact, deploy, or perform a live action.
+It may release only the operation's own definitively rejected pre-broadcast
+claim; submitted and unknown hashes remain immutable.
+
 ## Acceptance requirements
 
 - Recovery starts only from an explicit user click with a canonical public

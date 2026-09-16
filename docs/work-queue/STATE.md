@@ -1,5 +1,94 @@
 # Runtime queue state
 
+- S48_LANDING_MESSAGE_CLARITY_INTAKE: The repository owner requests a
+  `dev`-based draft PR that rewrites the public landing for first-time
+  developers and tool creators. S48-T010 is `00-inbox`; its card,
+  specification, and UI manifest define only static English copy, exact
+  existing CTA destinations, and the root `metadata` object. No source or test
+  reservation exists until readiness and RED activation. S26 retains the
+  layout header and shell wrapper; this card excludes them. No product,
+  wallet, payment, provider, transaction, deployment, or live authority is
+  added.
+
+- S48_LANDING_MESSAGE_CLARITY_READY: At control source `29d9713f`, the
+  `dev` baseline and M11/S22/S43 dependencies are accepted; S26's active
+  header and shell-wrapper reservation is disjoint from S48's metadata-only
+  seam. Node 22 focused landing tests pass 11/11 and queue validation is
+  clear. S48-T010 moves to `10-ready`; no production copy or test path is
+  reserved until separate RED activation.
+
+- S48_LANDING_MESSAGE_CLARITY_RED_ACTIVATION: At ready source `b1c4d995`, the
+  root moves S48-T010 to `20-active` solely for the two focused landing test
+  files. Hero, sections, footer, and metadata remain frozen pending an
+  observed message-contract RED. The S26 header and shell-wrapper reservation
+  remains unchanged.
+
+- S48_LANDING_MESSAGE_CLARITY_RED_ACCEPTANCE: At test-only source `10233dae`,
+  focused Node 22 landing contracts pass 7/12 and fail 5/12 solely for the
+  absent approved marketplace copy, CTA labels, card facts, metadata, and
+  benefits heading. The observed RED is accepted; only the four static copy
+  seams and two focused contracts may now change for GREEN. S26's header and
+  shell wrapper remain excluded.
+- M59_PUBLIC_TESTNET_SELF_SERVICE_ONBOARDING_CURRENT: M59-T010 is `20-active`
+  on PR #130 against `dev`. Root owns the implementation-local self-service
+  membership, command/durable admission, offer-scoped backing recovery,
+  provider/backer entry, and their focused contracts in that PR. This supersedes
+  the earlier inbox-only statement; it records implementation work only, not a
+  historical readiness or live acceptance. The policy remains disabled by
+  default. Public ATS deployment is explicitly gated until a separate durable
+  pre-wallet dispatch record can bind the exact tool, attempt, configuration,
+  owner, and returned hash across reloads and tabs; recovery remains read-only.
+  Existing RiskScan/privileged authority, B03/x402 behavior,
+  deployment, migration, feature enablement, wallet actions, and live evidence
+  remain separately controlled.
+
+- W01_WAGMI_WALLET_SESSION_INTAKE: At `origin/dev`
+  `b52829e5a390ca49f09de3986d9157b19eacb716`, the owner requests replacing
+  the in-house MetaMask connection/session transport with Wagmi v3 and Viem.
+  W01-T010 begins in `00-inbox` with its committed local specification and
+  design only. No application source, dependency, lockfile, wallet request,
+  signature, transaction, authority, deployment, merge or live action is
+  authorized until a separate root readiness and RED activation reconciles
+  active S26/S36/S40/M49/M50/M58 ownership and open PR #118.
+
+- W01_WAGMI_WALLET_SESSION_READY: Independent readiness records the rebase on
+  `origin/dev` `b52829e5`, source/test ownership, successor transfers for
+  transport transfers from S26/S40/M51/M53/M54/M56/M58/B04, the preserved S36
+  boundary, M49/M50 invariant preservation, the live
+  PR #118 overlap/disposition, behavioral RED requirements and two preexisting
+  Web baseline failures. W01-T010 moves to `10-ready` only; every package,
+  source, wallet, signature, transaction, authority, deployment, merge and
+  live action remains prohibited pending separate test-only activation. That
+  activation may reserve only `wagmi-provider.test.mjs`,
+  `wallet-session.test.mjs`, `wallet-state.test.mjs`,
+  `wallet-session-sync.test.mjs`, `metamask-provider.test.mjs`,
+  `dashboard-auth.test.mjs`, `dashboard-session-sync.test.mjs`,
+  `tool402-command.test.mjs`, `tool402-command-wagmi-compatibility.test.mjs`,
+  `commands-api.test.mjs`, `backing-route.test.mjs`, `backing-state.test.mjs`,
+  `stage-b-browser-provider-bridge.test.mjs`, `ats-create-action.test.mjs`,
+  `deploy-stage-signing.test.mjs`, and `provider-tool-journey.test.mjs`, all
+  below `apps/web/tests/`; no source
+  path is authorized until a later RED acceptance.
+
+- W01_WAGMI_WALLET_SESSION_ACTIVATION: Fresh independent activation review at
+  `966847b3` accepts only the sixteen exact W01 Web test paths listed in
+  `W01-T010-wagmi-wallet-session.md` for durable RED. W01 moves to `20-active`.
+  Every source, package, lockfile, wallet, signature, transaction, authority,
+  deployment, merge and live boundary remains prohibited until an independent
+  RED review accepts the intended failures. The existing provider-journey
+  Stage-2 and wallet-state discovery-count failures remain baseline context.
+
+- W01_FINAL_SCOPE_AMENDMENT: The owner directs the declared client-transport
+  source/package surface,
+  including the narrow S36 compatibility adaptation and same-origin Stage-B
+  claim helper recorded in FILE-OWNERSHIP.md. It supersedes only W01's
+  test-only source prohibition; it also narrowly supersedes M54's
+  browser-persistence prohibition for attempt-scoped, same-origin Stage-B
+  evidence only. All wallet, signature, transaction, funding, deployment,
+  merge, submission, and other human authority remain excluded. Final delivery
+  still requires exact-head validation, browser mock evidence, refreshed
+  records, and independent review.
+
 - S38_S39_S47_MERGED_LANE_RECONCILIATION: At `origin/main`
   `689ffbbe3d0abd11197c9d90676cf56a58b6b3ae`, S38-T010, S39-T010, and
   S47-T010 are documented as completed local source deliveries. Their merged
@@ -351,6 +440,22 @@
   are reserved as documentation-only templates for the fixed dashboard-auth
   keys; they do not configure a runtime, contain a secret, or authorize TLS
   trust, wallet permission, signature, transaction, deployment, or live action.
+
+- ROOT_ENVIRONMENT_TEMPLATE_PARITY_AMENDMENT: The repository owner explicitly
+  directs the root `.env.example` to add only the eight missing names from the
+  root `.env.local`: `TOOL402_CONVEX_SITE_URL`, `TOOL402_INGRESS_KEY_ID`,
+  `TOOL402_INGRESS_SECRET`, `WORLD_APP_ID`, `WORLD_RP_ID`,
+  `WORLD_RP_SIGNING_KEY`, `WORLD_ACTION`, and `WORLD_ENVIRONMENT`. Their
+  assignments remain empty; no local value enters the repository. This is
+  documentation only and adds no runtime configuration, TLS trust, wallet
+  permission, signature, relay, transaction, deployment, or live authority.
+
+- ROOT_ENVIRONMENT_TEMPLATE_GROUPING_AMENDMENT: The repository owner explicitly
+  directs a presentation-only regrouping of every existing root `.env.example`
+  placeholder under descriptive comments. It may reorder comments and existing
+  assignments only; it may not add, remove, rename, or populate any name. This
+  adds no runtime configuration, secret, wallet permission, signature, relay,
+  transaction, deployment, or live authority.
 
 - S40_VERCEL_PREVIEW_ORIGIN_AMENDMENT: The repository owner explicitly
   requires ephemeral Vercel previews to derive their exact canonical origin

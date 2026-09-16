@@ -31,7 +31,7 @@ test("composes one static product landing with one main landmark and heading", a
   assert.doesNotMatch(landing, /["']use client["']/);
 });
 
-test("translates the selected marketplace composition through current local orientation steps", async () => {
+test("explains the agent-paid marketplace in a developer-first landing journey", async () => {
   const [page, hero, sections, footer] = await readLandingSources();
   const landing = [page, hero, sections, footer].join("\n");
 
@@ -39,13 +39,18 @@ test("translates the selected marketplace composition through current local orie
   assert.match(landing, /RiskScan/);
   assert.match(hero, /<section\b[^>]*className=["'][^"']*radial-gradient[^"']*["']/);
   assert.match(hero, /<section\b[^>]*className=["'][^"']*\bborder-b\b[^"']*\bbg-card\/35\b[^"']*["']/);
-  assert.match(hero, /<h1\b[^>]*>\s*Back the tools\s*<span className=["'][^"']*\btext-brand-purple\b[^"']*["']>agents pay<\/span>\s*to use\./);
+  assert.match(hero, /<h1\b[^>]*>\s*A marketplace for tools\s*<span className=["'][^"']*\btext-brand-purple\b[^"']*["']>AI agents can pay<\/span>\s*to use\./);
   assert.match(hero, /<h1\b[^>]*className=["'][^"']*\bfont-extrabold\b[^"']*\bleading-\[1\.04\][^"']*["']/);
   assert.match(hero, /hero-trio\.png/);
+  assert.match(hero, /Let your AI agent find a tool, check the price, and pay to use it under the spending rules you configure/);
+  assert.doesNotMatch(hero, /x402 payment requests tell an agent what it needs to pay/i);
   assert.match(landing, /id=["']how-it-works["']/);
-  assert.match(landing, /Explore a current tool/i);
-  assert.match(landing, /Inspect its boundary/i);
-  assert.match(landing, /Choose a local next step/i);
+  assert.match(landing, /How agents find, pay for, and use tools/i);
+  assert.match(sections, /x402 payment requests tell an agent what it needs to pay/i);
+  assert.match(landing, /Find a tool/i);
+  assert.match(landing, /Check the price and rules/i);
+  assert.match(landing, /Pay and get the result/i);
+  assert.match(landing, /Know what your agent is paying for/i);
   assert.match(sections, /id=["']how-it-works["'][^>]*className=["'][^"']*\bbg-muted\/40\b[^"']*/);
   assert.match(sections, /<ol\b[^>]*className=["'][^"']*\bgrid\b[^"']*\blg:grid-cols-3\b[^"']*["']/);
   assert.match(sections, /border-t border-dashed border-border/);
@@ -53,24 +58,23 @@ test("translates the selected marketplace composition through current local orie
   assert.match(landing, /Prepare a tool offering/i);
 });
 
-test("offers only the specified current local CTA destinations", async () => {
-  const sources = await readLandingSources();
-  const landing = sources.join("\n");
+test("keeps an exploration-first CTA hierarchy on existing local destinations", async () => {
+  const [page, hero, sections, footer] = await readLandingSources();
+  const landing = [page, hero, sections, footer].join("\n");
   const ctas = [...landing.matchAll(/<Link\b[^>]*href=["']([^"']+)["'][^>]*>\s*([^<]+?)\s*<\/Link>/g)].map(
     ([, href, label]) => [href, label.trim()],
   );
 
   assert.deepEqual(ctas, [
-    ["/demo", "Follow the hackathon demo"],
     ["/explore", "Explore tools"],
-    ["/explore", "Browse all tools →"],
+    ["#how-it-works", "How it works"],
+    ["/explore", "Explore the directory →"],
     ["/explore", "Explore tools"],
-    ["/demo", "Open guided demo"],
     ["/provider/deploy", "Prepare a tool offering"],
     ["/provider", "Provider overview"],
     ["/explore", "Explore tools"],
     ["/explore/riskscan", "RiskScan"],
-    ["/demo", "Guided demo"],
+    ["/demo", "Presenter guide"],
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
     ["/docs/providers", "Provider documentation"],
@@ -80,9 +84,10 @@ test("offers only the specified current local CTA destinations", async () => {
     ["/", "Home"],
     ["/dashboard", "Dashboard"],
   ]);
+  assert.match(hero, /href="\/explore"[\s\S]*buttonVariants\(\{ size: "lg"/);
+  assert.match(hero, /href="#how-it-works"[\s\S]*buttonVariants\(\{ variant: "outline", size: "lg"/);
+  assert.doesNotMatch(sections, /href="\/demo"/);
   assert.match(landing, /href=\{campaign\.href\}/);
-  assert.match(landing, /route: "\/explore\/riskscan"/);
-  assert.match(landing, /route: "\/explore\/entitycheck"/);
   assert.doesNotMatch(landing, /<Link\b[^>]*>\s*<Button\b/);
 });
 
@@ -95,7 +100,7 @@ test("keeps the fuller footer limited to existing local routes", async () => {
   assert.deepEqual(links, [
     ["/explore", "Explore tools"],
     ["/explore/riskscan", "RiskScan"],
-    ["/demo", "Guided demo"],
+    ["/demo", "Presenter guide"],
     ["/provider", "Provider overview"],
     ["/provider/deploy", "Prepare a tool offering"],
     ["/docs/providers", "Provider documentation"],
@@ -106,7 +111,7 @@ test("keeps the fuller footer limited to existing local routes", async () => {
     ["/dashboard", "Dashboard"],
   ]);
   assert.match(footer, /aria-label="Dashboard links"/);
-  assert.match(footer, /Hedera testnet prototype/);
+  assert.match(footer, /Hedera testnet preview/);
   assert.doesNotMatch(footer, /new Date\s*\(/);
   assert.doesNotMatch(footer, /https?:\/\/|href=["']\/api\//i);
 });
@@ -118,19 +123,64 @@ test("keeps each repeated step heading subordinate to the how-it-works heading",
   assert.doesNotMatch(sections, /<CardTitle>\{step\.title\}<\/CardTitle>/);
 });
 
-test("keeps campaign cards limited to current routes and truthful preparation states", async () => {
+test("gives each tool card a concrete task, output, and truthful state", async () => {
   const sections = await readAppFile("src/components/landing/landing-sections.tsx");
 
   assert.match(sections, /const campaignCards = \[/);
   assert.match(sections, /name: "RiskScan"/);
   assert.match(sections, /name: "EntityCheck France"/);
-  assert.match(sections, /status: "Campaign preview"/);
-  assert.match(sections, /Campaign preparation/);
+  assert.match(sections, /status: "Testnet tool"/);
+  assert.match(sections, /status: "Preview only"/);
+  assert.match(sections, /Input/);
+  assert.match(sections, /Returns/);
+  assert.match(sections, /Example: pricing marked as not provided → missing pricing disclosure\./);
+  assert.match(sections, /U\.S\. sanctions list/);
   assert.match(sections, /grid grid-cols-2 gap-4 rounded-control border border-dashed/);
-  assert.doesNotMatch(sections, /RiskScan Quick|No public route/);
+  assert.doesNotMatch(sections, /RiskScan Quick|No public route|Campaign preparation/);
 });
 
-test("keeps the selected visual asset decorative, local, and free of unsupported claims", async () => {
+test("states EntityCheck's plain-language company and sanctions outcomes", async () => {
+  const sections = await readAppFile("src/components/landing/landing-sections.tsx");
+
+  assert.match(sections, /company lookup and possible matches on a U\.S\. sanctions list/i);
+  assert.match(sections, /It cannot search live sources until configured/i);
+  assert.match(sections, /\["Returns", "Company and sanctions matches"\]/);
+  assert.match(sections, /does not make a compliance decision/i);
+});
+
+test("connects provider preparation to agent discovery without promising publication", async () => {
+  const sections = await readAppFile("src/components/landing/landing-sections.tsx");
+
+  assert.match(sections, /Add your tool’s details, prices, and terms, then review the offering\./);
+  assert.match(sections, /Preparing it does not publish a live tool\./);
+});
+
+test("states the payment benefit as tool understanding plus configured rules", async () => {
+  const sections = await readAppFile("src/components/landing/landing-sections.tsx");
+
+  assert.match(sections, /Understand what a tool does and what it costs\. Your agent checks payment requests against the spending rules you configure\./);
+});
+
+test("explains the agent flow without turning HTTP 402 into the product explanation", async () => {
+  const sections = await readAppFile("src/components/landing/landing-sections.tsx");
+
+  assert.match(sections, /Your agent checks what the tool does and the information it needs\./);
+  assert.match(sections, /It compares the requested price with the spending rules you configured\./);
+  assert.match(sections, /The tool returns its response after the service verifies payment\./);
+  assert.doesNotMatch(sections, /402 Payment Required/);
+});
+
+test("replaces decorative hero progress bars with concrete tool context", async () => {
+  const hero = await readAppFile("src/components/landing/landing-hero.tsx");
+
+  assert.match(hero, /Checks declared information/);
+  assert.match(hero, /Reports missing disclosures/);
+  assert.match(hero, /Before payment/);
+  assert.match(hero, /Check the price/);
+  assert.doesNotMatch(hero, /w-1\/4/);
+});
+
+test("keeps the selected visual asset decorative, local, and free of runtime behaviour", async () => {
   const [page, hero, sections, footer] = await readLandingSources();
   const sources = [page, hero, sections, footer];
   const landing = sources.join("\n").replaceAll("Payment Required", "402");
@@ -142,6 +192,13 @@ test("keeps the selected visual asset decorative, local, and free of unsupported
   assert.doesNotMatch(landing, /(?:https?:\/\/|\/api\/)/i);
   assert.doesNotMatch(
     landing,
-    /\b(?:wallet|account|price|payment|settlement|result|metric|testimonial|partner|balance|evidence|deployed|guaranteed|mock|paid|verified|transaction|receipt|funding|asset|backer|revenue|payout|availability)\b|\b(?:holder return|investment return|return on investment|financial returns?|return to backers?|live service|available now|user session)\b/i,
+    /\b(?:wallet|account|metric|testimonial|partner|balance|deployed|guaranteed|mock|transaction|receipt|funding|asset|backer|revenue|payout|availability)\b|\b(?:holder return|investment return|return on investment|financial returns?|return to backers?|live service|available now|user session)\b/i,
   );
+});
+
+test("uses marketplace copy in root metadata", async () => {
+  const layout = await readAppFile("src/app/layout.tsx");
+
+  assert.match(layout, /title: "Tool402 \| Tools AI agents can pay to use"/);
+  assert.match(layout, /Discover tools for AI agents, inspect their payment requests/);
 });

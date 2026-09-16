@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
+import { convexToJson, jsonToConvex } from "convex/values";
 
 const serverUrl = new URL("../src/lib/backing-payment-server.ts", import.meta.url);
 const routeUrl = new URL("../src/app/api/backing/payment/route.ts", import.meta.url);
+const flowUrl = new URL("../src/components/backing/backing-flow.tsx", import.meta.url);
 
 const signer = "0x834c6e958c608eabb461d887c2eb0bef75a48734";
 const env = {
@@ -20,6 +22,18 @@ function request(body = JSON.stringify(payload), origin = "https://tool402.test"
   return new Request("https://tool402.test/api/backing/payment", { method: "POST", headers: { "content-type": "application/json", origin, cookie: "__Host-tool402-dashboard-session=session" }, body });
 }
 
+function intentRequest(body = JSON.stringify({ offeringPublicId: "riskscan_revenue_note_demo", units: "10" }), origin = "https://tool402.test") {
+  return new Request("https://tool402.test/api/backing/intent", { method: "POST", headers: { "content-type": "application/json", origin, cookie: "__Host-tool402-dashboard-session=session" }, body });
+}
+
+function dispatchRequest() {
+  return new Request("https://tool402.test/api/backing/payment/dispatch", {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: "https://tool402.test", cookie: "__Host-tool402-dashboard-session=session" },
+    body: JSON.stringify({ attemptPublicId: payload.attemptPublicId, parameters: payload.parameters }),
+  });
+}
+
 test("requires a valid same-origin dashboard session and forwards only its signer", async () => {
   const { handleBackingPaymentRequest } = await import(serverUrl.href);
   const forwarded = [];
@@ -31,6 +45,81 @@ test("requires a valid same-origin dashboard session and forwards only its signe
   assert.deepEqual(await response.json(), { status: "CONFIRMED", transactionHash: payload.transactionHash, tinybars: "1000000000" });
   assert.equal(forwarded[0].canonicalSignerAddress, signer);
   assert.equal(forwarded[0].type, "backing");
+});
+
+test("returns a bounded recovery instruction instead of authorizing a replacement wallet dispatch", async () => {
+  const { beginBackingPaymentDispatchRequest } = await import(serverUrl.href);
+  const recoveryAttemptPublicId = "ZyXwVuTsRqPoNmLkJiHgFw";
+  const response = await beginBackingPaymentDispatchRequest(dispatchRequest(), env, {
+    readSession: async () => ({ address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" }),
+    forward: async () => ({ status: "RECOVERY_REQUIRED", recoveryAttemptPublicId, transactionHash: payload.transactionHash, tinybars: "1000000000" }),
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { status: "RECOVERY_REQUIRED", recoveryAttemptPublicId, transactionHash: payload.transactionHash, tinybars: "1000000000" });
+});
+
+test("directs a refused replacement dispatch through a server-state recovery reload without a wallet request", async () => {
+  const source = await readFile(flowUrl, "utf8");
+  assert.match(source, /record\.status === "RECOVERY_REQUIRED"/u);
+  assert.match(source, /window\.location\.assign\(backingPath\)/u);
+  assert.doesNotMatch(source, /RECOVERY_REQUIRED[\s\S]{0,400}session\.provider\.request/u);
+});
+
+test("freezes a backing intent server-side and never accepts a browser-supplied recipient or price", async () => {
+  const { prepareBackingIntentRequest } = await import(serverUrl.href);
+  const forwarded = [];
+  const session = { address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" };
+  const response = await prepareBackingIntentRequest(intentRequest(), env, {
+    readSession: async () => session,
+    forward: async (input) => {
+      forwarded.push(input);
+      return {
+        outcome: "PREPARED",
+        intent: {
+          idempotencyKey: input.idempotencyKey, purchaseIntentId: input.purchaseIntentId,
+          offeringPublicId: input.offeringPublicId, subjectPublicId: "riskscan_revenue_note_demo",
+          recipient: "0xc89f87052c3e080b4a9b021d4930055031ef378e", units: input.units,
+          tinybars: "1000000000", canonicalParametersHash: "a".repeat(64), expiresAt: input.expiresAt,
+        },
+      };
+    },
+  });
+  assert.equal(response.status, 200);
+  const value = await response.json();
+  assert.equal(value.intent.tinybars, "1000000000");
+  assert.deepEqual(Object.keys(forwarded[0]), ["type", "canonicalSignerAddress", "offeringPublicId", "units", "idempotencyKey", "purchaseIntentId", "expiresAt", "sessionExpiresAt"]);
+  assert.equal(forwarded[0].canonicalSignerAddress, signer);
+  assert.equal(forwarded[0].offeringPublicId, "riskscan_revenue_note_demo");
+  assert.equal(forwarded[0].units, "10");
+  assert.match(forwarded[0].idempotencyKey, /^[A-Za-z0-9_-]{21}[AQgw]$/);
+  assert.match(forwarded[0].purchaseIntentId, /^[A-Za-z0-9_-]{21}[AQgw]$/);
+  assert.notEqual(forwarded[0].idempotencyKey, forwarded[0].purchaseIntentId);
+  const malformed = await prepareBackingIntentRequest(intentRequest(JSON.stringify({ offeringPublicId: "riskscan_revenue_note_demo", units: "10", recipient: signer })), env, { readSession: async () => session });
+  assert.equal(malformed.status, 401);
+});
+
+test("accepts a frozen intent after the installed Convex JSON round trip", async () => {
+  const { prepareBackingIntentRequest } = await import(serverUrl.href);
+  const session = { address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" };
+  const response = await prepareBackingIntentRequest(intentRequest(), env, {
+    readSession: async () => session,
+    forward: async (input) => jsonToConvex(convexToJson({
+      outcome: "PREPARED",
+      intent: {
+        idempotencyKey: input.idempotencyKey,
+        purchaseIntentId: input.purchaseIntentId,
+        offeringPublicId: input.offeringPublicId,
+        subjectPublicId: "riskscan_revenue_note_demo",
+        recipient: "0xc89f87052c3e080b4a9b021d4930055031ef378e",
+        units: input.units,
+        tinybars: "1000000000",
+        canonicalParametersHash: "a".repeat(64),
+        expiresAt: input.expiresAt,
+      },
+    })),
+  });
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).intent.offeringPublicId, "riskscan_revenue_note_demo");
 });
 
 test("rejects missing session, wrong origin, malformed body, and unavailable upstream without exposing secrets", async () => {
@@ -45,6 +134,38 @@ test("rejects missing session, wrong origin, malformed body, and unavailable ups
   assert.deepEqual(await upstream.json(), { outcome: "unavailable" });
   const source = await readFile(routeUrl, "utf8");
   assert.doesNotMatch(source, /TOOL402_INGRESS_SECRET|TOOL402_DASHBOARD_AUTH_SECRET/);
+});
+
+test("keeps a valid bounded 21-record backing history instead of relabeling it as empty", async () => {
+  const { loadBackerPayments } = await import(serverUrl.href);
+  const records = Array.from({ length: 21 }, (_, index) => ({ offeringPublicId: `offering_${index}`, status: "CONFIRMED", transactionHash: `0x${index.toString(16).padStart(2, "0").repeat(32)}`, tinybars: "7" }));
+  const result = await loadBackerPayments(env, "session", { readSession: async () => ({ address: signer, issuedAt: "2026-09-10T00:00:00.000Z", expiresAt: "2026-09-11T00:00:00.000Z" }), forward: async () => records });
+  assert.equal(result.length, 21);
+});
+
+test("keeps an unavailable offer-scoped payment read distinct from a verified absence", async () => {
+  const { loadBackerPaymentForOffering } = await import(serverUrl.href);
+  const session = { address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" };
+  const unavailable = await loadBackerPaymentForOffering(env, "session", "offering_test", {
+    readSession: async () => session,
+    forward: async () => undefined,
+  });
+  const none = await loadBackerPaymentForOffering(env, "session", "offering_test", {
+    readSession: async () => session,
+    forward: async () => null,
+  });
+  assert.deepEqual(unavailable, { kind: "UNAVAILABLE" });
+  assert.deepEqual(none, { kind: "NONE" });
+});
+
+test("keeps a bounded legacy recovery scan unavailable instead of presenting it as no payment", async () => {
+  const { loadBackerPaymentForOffering } = await import(serverUrl.href);
+  const session = { address: signer, issuedAt: "2026-09-13T00:00:00.000Z", expiresAt: "2026-09-13T08:00:00.000Z" };
+  const result = await loadBackerPaymentForOffering(env, "session", "riskscan_revenue_note_demo", {
+    readSession: async () => session,
+    forward: async () => ({ status: "UNAVAILABLE" }),
+  });
+  assert.deepEqual(result, { kind: "UNAVAILABLE" });
 });
 
 test("fails closed for forged or expired sessions, oversized bodies, missing ingress configuration, and untrusted results", async () => {

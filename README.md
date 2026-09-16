@@ -124,6 +124,33 @@ Run the web app:
 npm run dev --workspace=@tool402/web
 ```
 
+### Wallet connection and dashboard sign-in
+
+The web client uses one Wagmi v3 provider, an injected MetaMask connector, and
+Hedera Testnet (`chainId` 296). Wagmi owns connection, reconnect, account, and
+network state; it is never evidence of dashboard authentication, a Tool402
+role, a payment, or an allocation.
+
+Dashboard sign-in remains server-owned: an explicit user action obtains the
+existing challenge, signs that exact message in MetaMask, and submits it to the
+existing verification endpoint that creates the session cookie. Wagmi's local
+connection persistence is separate from that cookie. During hydration, the UI
+waits for connection resolution; a changed account, explicit disconnect, or
+wrong network safely ends an existing dashboard session only after the logout
+endpoint succeeds.
+
+For a local non-signing check, start the app, open
+`http://localhost:3000/sign-in`, connect MetaMask on Hedera Testnet, and verify
+the visible connected state. Do not approve a signature or transaction merely
+to test connection. Run the focused regression checks with:
+
+```sh
+node --test apps/web/tests/wallet-session.test.mjs apps/web/tests/wagmi-provider.test.mjs apps/web/tests/dashboard-session-sync.test.mjs
+```
+
+If the migration must be rolled back, revert its PR. Do not keep a legacy
+wallet provider, a compatibility mount, or a feature flag alongside Wagmi.
+
 Run the consumer Agent exercise only after Human Ops has provided approved,
 ignored testnet configuration:
 

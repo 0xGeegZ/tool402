@@ -21,8 +21,7 @@ async function DashboardGate({
 
   return (
     <>
-      <DashboardSessionSync address={session.address} />
-      {children}
+      <DashboardSessionSync address={session.address} issuedAt={session.issuedAt}>{children}</DashboardSessionSync>
     </>
   );
 }

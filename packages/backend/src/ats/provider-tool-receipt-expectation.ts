@@ -52,14 +52,14 @@ export function createProviderToolReceiptExpectation(input: Readonly<{
     || configuration.expectedTarget !== "0xd1f118a40f3b02883d35909ef2517e7edd78379d"
     || configuration.resolverEvmAddress !== "0xba2d5fc2083a0b8f164c50e65d782087fba18e0a"
     || parameters === undefined
-    || canonicalAddress(parameters.diamondOwnerAccount) !== "0xc89f87052c3e080b4a9b021d4930055031ef378e"
   ) return reject();
+  const owner = canonicalAddress(parameters.diamondOwnerAccount);
 
   const rebuilt = createProviderToolAtsConfiguration({
     toolPublicId: configuration.subjectPublicId,
     subjectPublicId: configuration.subjectPublicId,
     title: parameters.name,
-    canonicalSignerAddress: parameters.diamondOwnerAccount,
+    canonicalSignerAddress: owner,
   }).atsCreateConfiguration;
   if (configuration.canonicalParametersHash !== rebuilt.canonicalParametersHash) return reject();
   const admittedConfiguration = rebuilt;

@@ -402,8 +402,49 @@ async function readSelectedProviderToolReceiptContext(
       query.eq("chainId", 296).eq("canonicalSignerAddress", attempt.canonicalSignerAddress)
     ))
     .take(2);
-  if (authorities.length !== 1) return reject();
-  const selected = await resolveSelectedProviderToolSubject(ctx, authorities[0], {
+  let authority: unknown = authorities.length === 1 ? authorities[0] : null;
+  // This is recovery for an already-submitted attempt, not admission for a new
+  // self-service command. A later kill switch or membership suspension must not
+  // erase the immutable attempt/offer binding needed to corroborate its receipt.
+  // A legacy row may coexist with a self-service tool but cannot corroborate
+  // it unless its immutable principal/version exactly match the attempt.
+  if (authority === null || (authorities.length === 1
+    && ((authority as Record<string, unknown>).principalPublicId !== attempt.principalPublicId
+      || (authority as Record<string, unknown>).authorityVersion !== attempt.authorityVersion))) {
+    const accounts = await ctx.db.query("selfServiceAccounts")
+      .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+        query.eq("chainId", 296).eq("canonicalSignerAddress", attempt.canonicalSignerAddress)
+      ))
+      .take(2);
+    if (accounts.length !== 1 || accounts[0] === undefined) return reject();
+    const account = readStoredRecord(accounts[0], [
+      "canonicalSignerAddress", "chainId", "principalPublicId", "policyVersion", "status", "createdAt", "updatedAt",
+    ]);
+    if (
+      account.chainId !== 296
+      || account.canonicalSignerAddress !== attempt.canonicalSignerAddress
+      || account.principalPublicId !== `self_service_${attempt.canonicalSignerAddress.slice(2)}`
+      || account.principalPublicId !== attempt.principalPublicId
+      || account.policyVersion !== "public_testnet_v1"
+      || account.policyVersion !== attempt.authorityVersion
+      || (account.status !== "ACTIVE" && account.status !== "SUSPENDED" && account.status !== "REVOKED")
+      || !isInt64(account.createdAt)
+      || !isInt64(account.updatedAt)
+    ) return reject();
+    authority = {
+      _id: account._id,
+      _creationTime: account._creationTime,
+      principalPublicId: account.principalPublicId,
+      canonicalSignerAddress: account.canonicalSignerAddress,
+      chainId: 296,
+      role: "ISSUER",
+      ownedSubjectPublicIds: [],
+      authorityVersion: account.policyVersion,
+      enabled: true,
+    };
+  }
+  if (authority === null) return reject();
+  const selected = await resolveSelectedProviderToolSubject(ctx, authority, {
     subjectPublicId: attempt.subjectPublicId,
   });
   const offerings = await ctx.db.query("offerings")

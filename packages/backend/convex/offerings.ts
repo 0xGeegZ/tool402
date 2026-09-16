@@ -28,6 +28,7 @@ import {
   isSelectedProviderToolSubject,
   resolveSelectedProviderToolSubject,
 } from "./provider_tool_authority.ts";
+import { isPublicTestnetSelfServiceEnabled } from "./self_service_accounts.ts";
 import type schema from "./schema.ts";
 
 const definitionValidator = v.object({
@@ -100,11 +101,16 @@ const projectionValidator = v.object({
   advertisedQuickPriceTinybars: v.string(),
   advertisedStandardPriceTinybars: v.string(),
   canonicalSignerAddress: v.string(),
+  fundingRecipient: v.optional(v.string()),
   atsAssetEvmAddress: v.optional(v.string()),
   atsAttemptPublicId: v.optional(v.string()),
   acceptedAt: v.int64(),
   updatedAt: v.int64(),
 });
+const publicBackingCatalogValidator = v.array(v.object({
+  offeringPublicId: v.string(),
+  title: v.string(),
+}));
 const offeringFields = [
   "offeringPublicId",
   "subjectPublicId",
@@ -126,6 +132,7 @@ const offeringOptionalFields = [
   "atsAttemptId",
   "atsAssetEvmAddress",
   "activeDirectoryVersionId",
+  "fundingRecipient",
 ] as const;
 const externalPrepareAttemptFields = [
   "version",
@@ -182,6 +189,7 @@ interface SafeOffering {
   readonly atsAttemptId?: GenericId<"externalPrepareCommandAttempts">;
   readonly atsAssetEvmAddress?: string;
   readonly activeDirectoryVersionId?: GenericId<"directoryVersions">;
+  readonly fundingRecipient?: string;
 }
 
 function reject(): never {
@@ -269,6 +277,9 @@ function readSafeOffering(input: unknown): SafeOffering {
   const activeDirectoryVersionId = Object.hasOwn(record, "activeDirectoryVersionId")
     ? opaqueId<"directoryVersions">(record.activeDirectoryVersionId)
     : undefined;
+  const fundingRecipient = Object.hasOwn(record, "fundingRecipient")
+    ? record.fundingRecipient
+    : undefined;
   if (
     !isCanonicalEvmAddress(record.canonicalSignerAddress)
     || typeof record.principalPublicId !== "string"
@@ -281,6 +292,7 @@ function readSafeOffering(input: unknown): SafeOffering {
     || !isInt64(record.updatedAt)
     || !["DRAFT", "ASSET_PENDING", "READY", "OPEN", "CLOSED"].includes(state as OfferingState)
     || (atsAssetEvmAddress !== undefined && !isCanonicalEvmAddress(atsAssetEvmAddress))
+    || (fundingRecipient !== undefined && (!isCanonicalEvmAddress(fundingRecipient) || fundingRecipient !== record.canonicalSignerAddress))
   ) {
     return reject();
   }
@@ -314,6 +326,7 @@ function readSafeOffering(input: unknown): SafeOffering {
     ...(atsAttemptId === undefined ? {} : { atsAttemptId }),
     ...(atsAssetEvmAddress === undefined ? {} : { atsAssetEvmAddress }),
     ...(activeDirectoryVersionId === undefined ? {} : { activeDirectoryVersionId }),
+    ...(fundingRecipient === undefined ? {} : { fundingRecipient }),
   });
 }
 
@@ -614,10 +627,35 @@ export const admitOfferingCreate = internalMutation({
         query.eq("chainId", 296).eq("canonicalSignerAddress", command.canonicalSignerAddress)
       ))
       .take(2);
-    if (authorities.length !== 1) {
-      return reject();
+    let authority: unknown = authorities.length === 1
+      && authorities[0]?.principalPublicId === command.principalPublicId
+      && authorities[0]?.authorityVersion === command.authorityVersion
+      ? authorities[0] : null;
+    if (authority === null && isPublicTestnetSelfServiceEnabled()) {
+      const accounts = await ctx.db.query("selfServiceAccounts")
+        .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+          query.eq("chainId", 296).eq("canonicalSignerAddress", command.canonicalSignerAddress)
+        )).take(2);
+      const account = accounts[0];
+      if (accounts.length === 1 && account !== undefined && account.status === "ACTIVE" && account.policyVersion === "public_testnet_v1"
+        && account.principalPublicId === command.principalPublicId
+        && account.principalPublicId === `self_service_${command.canonicalSignerAddress.slice(2)}`
+        && command.authorityVersion === account.policyVersion) {
+        authority = {
+          _id: account._id,
+          _creationTime: account._creationTime,
+          principalPublicId: account.principalPublicId,
+          canonicalSignerAddress: command.canonicalSignerAddress,
+          chainId: 296,
+          role: "ISSUER",
+          ownedSubjectPublicIds: [],
+          authorityVersion: account.policyVersion,
+          enabled: true,
+        };
+      }
     }
-    const selected = await revalidateSelectedOfferingAuthority(ctx, authorities[0], command);
+    if (authority === null) return reject();
+    const selected = await revalidateSelectedOfferingAuthority(ctx, authority, command);
 
     const claims = await ctx.db.query("walletCommandReplayClaims")
       .withIndex("by_replay_identity", (query) => query.eq("replayIdentity", command.replayIdentity))
@@ -668,6 +706,9 @@ export const admitOfferingCreate = internalMutation({
         definition: storedDefinition(payload),
         narrative: storedNarrative(payload),
         state: "DRAFT" as const,
+        ...(selected !== null && command.authorityVersion === "public_testnet_v1"
+          ? { fundingRecipient: command.canonicalSignerAddress }
+          : {}),
       });
       await ctx.db.insert("walletCommandReplayClaims", {
         replayIdentity: command.replayIdentity,
@@ -770,14 +811,45 @@ export async function linkAtsCreateAttemptToDraftOffering(
         query.eq("chainId", 296).eq("canonicalSignerAddress", binding.canonicalSignerAddress)
       ))
       .take(2);
-    if (authorities.length !== 1) return reject();
-    const selected = await resolveSelectedProviderToolSubject(ctx, authorities[0], {
+    let authority: unknown = authorities.length === 1
+      && authorities[0]?.principalPublicId === binding.principalPublicId
+      && authorities[0]?.authorityVersion === binding.authorityVersion
+      ? authorities[0] : null;
+    if (authority === null && isPublicTestnetSelfServiceEnabled()) {
+      const accounts = await ctx.db.query("selfServiceAccounts")
+        .withIndex("by_chain_id_and_canonical_signer_address", (query) => (
+          query.eq("chainId", 296).eq("canonicalSignerAddress", binding.canonicalSignerAddress)
+        ))
+        .take(2);
+      const account = accounts[0];
+      if (
+        accounts.length === 1 && account !== undefined
+        && account.status === "ACTIVE" && account.policyVersion === "public_testnet_v1"
+        && account.principalPublicId === binding.principalPublicId
+        && account.principalPublicId === `self_service_${binding.canonicalSignerAddress.slice(2)}`
+        && account.policyVersion === binding.authorityVersion
+      ) {
+        authority = {
+          _id: account._id,
+          _creationTime: account._creationTime,
+          principalPublicId: account.principalPublicId,
+          canonicalSignerAddress: binding.canonicalSignerAddress,
+          chainId: 296,
+          role: "ISSUER",
+          ownedSubjectPublicIds: [],
+          authorityVersion: account.policyVersion,
+          enabled: true,
+        };
+      }
+    }
+    if (authority === null) return reject();
+    const selected = await resolveSelectedProviderToolSubject(ctx, authority, {
       subjectPublicId: binding.subjectPublicId,
     });
     if (
       selected.subjectPublicId !== binding.subjectPublicId
-      || (authorities[0]?.principalPublicId !== binding.principalPublicId)
-      || (authorities[0]?.authorityVersion !== binding.authorityVersion)
+      || ((authority as Record<string, unknown>).principalPublicId !== binding.principalPublicId)
+      || ((authority as Record<string, unknown>).authorityVersion !== binding.authorityVersion)
     ) return reject();
     selectedOfferingPublicId = selected.offeringPublicId;
   }
@@ -893,6 +965,9 @@ export const getPublicProjection = publicQuery({
       advertisedQuickPriceTinybars: highest.advertisedQuickPriceTinybars,
       advertisedStandardPriceTinybars: highest.advertisedStandardPriceTinybars,
       canonicalSignerAddress: highest.canonicalSignerAddress,
+      ...(highest.fundingRecipient === undefined
+        ? {}
+        : { fundingRecipient: highest.fundingRecipient }),
       ...(highest.atsAssetEvmAddress === undefined
         ? {}
         : { atsAssetEvmAddress: highest.atsAssetEvmAddress }),
@@ -900,5 +975,27 @@ export const getPublicProjection = publicQuery({
       acceptedAt: highest.acceptedAt,
       updatedAt: highest.updatedAt,
     };
+  },
+});
+
+/** Public, bounded discovery surface for OPEN self-service provider offerings. */
+export const listPublicProviderBacking = publicQuery({
+  args: {},
+  returns: publicBackingCatalogValidator,
+  handler: async (ctx) => {
+    const rows = await ctx.db.query("offerings")
+      .withIndex("by_state_and_updated_at", (query) => query.eq("state", "OPEN"))
+      .order("desc")
+      .take(24);
+    const entries: Array<{ offeringPublicId: string; title: string }> = [];
+    for (const row of rows) {
+      const offering = readSafeOffering(row);
+      if (
+        !isSelectedProviderToolSubject(offering.subjectPublicId)
+        || offering.state !== "OPEN" || offering.fundingRecipient === undefined
+      ) continue;
+      entries.push({ offeringPublicId: offering.offeringPublicId, title: offering.narrative.title });
+    }
+    return entries;
   },
 });

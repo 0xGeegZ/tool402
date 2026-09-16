@@ -5,17 +5,25 @@ import { cookies } from "next/headers";
 import { BackingFlow } from "../../../../components/backing/backing-flow";
 import { loadRiskScanBackingProjection } from "../../../../lib/riskscan-backing-projection";
 import { readDashboardSession, readDashboardSessionCookieName } from "../../../../lib/dashboard-auth/dashboard-auth";
-import { loadBackerPayment } from "../../../../lib/backing-payment-server";
+import { loadLegacyRiskScanPayment, loadBackerPaymentForOffering } from "../../../../lib/backing-payment-server";
 
 async function BackingFlowRegion() {
   const cookieStore = await cookies();
   const name = readDashboardSessionCookieName(process.env);
   const sessionCookie = name === null ? null : cookieStore.get(name)?.value ?? null;
-  const [projection, session, payment] = await Promise.all([
+  const [projection, session, scopedPayment, legacyPayment] = await Promise.all([
     loadRiskScanBackingProjection(process.env, globalThis.fetch),
     readDashboardSession(sessionCookie, process.env),
-    loadBackerPayment(process.env, sessionCookie),
+    loadBackerPaymentForOffering(process.env, sessionCookie, "riskscan_revenue_note_demo"),
+    loadLegacyRiskScanPayment(process.env, sessionCookie),
   ]);
+  const payment = scopedPayment.kind === "FOUND"
+    ? scopedPayment
+    : legacyPayment.kind === "FOUND"
+      ? legacyPayment
+      : scopedPayment.kind === "UNAVAILABLE" || legacyPayment.kind === "UNAVAILABLE"
+        ? { kind: "UNAVAILABLE" as const }
+        : { kind: "NONE" as const };
   return <BackingFlow projection={projection} dashboardAddress={session?.address ?? null} initialPayment={payment} />;
 }
 

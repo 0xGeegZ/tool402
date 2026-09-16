@@ -49,6 +49,15 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
+function configurationOwner(configuration: unknown): string {
+  if (configuration === null || typeof configuration !== "object") return reject();
+  const parameters = (configuration as Record<string, unknown>).parameters;
+  if (parameters === null || typeof parameters !== "object") return reject();
+  const owner = (parameters as Record<string, unknown>).diamondOwnerAccount;
+  if (typeof owner !== "string" || !/^0x[0-9a-f]{40}$/u.test(owner)) return reject();
+  return owner;
+}
+
 export function createProviderToolAtsProjection(input: unknown): ProviderToolAtsProjection {
   if (input === null || typeof input !== "object" || Object.getPrototypeOf(input) !== Object.prototype) return reject();
   const keys = Reflect.ownKeys(input);
@@ -59,7 +68,7 @@ export function createProviderToolAtsProjection(input: unknown): ProviderToolAts
   if (toolPublicId === null || suffix === undefined || record.offeringPublicId !== `offering_${suffix}`) return reject();
   const configuration = structuredClone(record.configuration);
   // Factory validation rehashes the exact selected-tool configuration before it can enter execution.
-  buildFactoryDeployBondRequest(configuration, { issuerEvmAddress: "0xc89f87052c3e080b4a9b021d4930055031ef378e" });
+  buildFactoryDeployBondRequest(configuration, { issuerEvmAddress: configurationOwner(configuration) });
   if (
     configuration === null || typeof configuration !== "object"
     || (configuration as Record<string, unknown>).subjectPublicId !== toolPublicId

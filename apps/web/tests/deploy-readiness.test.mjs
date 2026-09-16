@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 const appRoot = fileURLToPath(new URL("..", import.meta.url));
 
 const finalRuntimePaths = [
+  "src/app/favicon.ico",
   "src/app/icon.svg",
   "src/app/apple-icon.png",
   "src/app/not-found.tsx",

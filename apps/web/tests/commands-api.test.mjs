@@ -562,8 +562,8 @@ test("relays a signed body from the browser to the route once and maps the answe
   assert.equal(thrown.calls.length, 1);
 });
 
-test("signs and relays through one flow that re-reads the session, draws a fresh nonce, and never relays without a signature", async () => {
-  const { signAndRelayCommand } = await loadRelayModule();
+test("signs and relays through one flow that rechecks Wagmi context, draws a fresh nonce, and never relays without a signature", async () => {
+  const { signAndRelayCommand: relayCommand } = await loadRelayModule();
   const signerAddress = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf";
   const payloadText = '{"expiresAt":"2026-09-07T19:04:00.000Z","operationKind":"ATS_CREATE"}';
   const request = {
@@ -580,6 +580,8 @@ test("signs and relays through one flow that re-reads the session, draws a fresh
     return {
       isMetaMask: true,
       calls,
+      chainId,
+      accounts,
       async request({ method, params }) {
         calls.push({ method, params });
         switch (method) {
@@ -609,6 +611,34 @@ test("signs and relays through one flow that re-reads the session, draws a fresh
     return relay;
   }
 
+  function signAndRelayCommand(provider, nextRequest, dependencies) {
+    const readCurrentContext = () => {
+      const account = provider.accounts[0];
+      if (account === undefined) return null;
+      return {
+        address: account,
+        chainId: provider.chainId === "0x128" ? 296 : 1,
+        connectorId: "metaMask",
+        generation: 0,
+      };
+    };
+    const context = readCurrentContext();
+    return relayCommand(context ?? {
+      address: signerAddress,
+      chainId: 296,
+      connectorId: "metaMask",
+      generation: 0,
+    }, nextRequest, {
+      ...dependencies,
+      recoverSigner: dependencies.recoverSigner ?? (async () => context?.address ?? signerAddress),
+      readCurrentContext,
+      signTypedData: async (typedData) => provider.request({
+        method: "eth_signTypedData_v4",
+        params: [typedData.message.signer, JSON.stringify(typedData)],
+      }),
+    });
+  }
+
   const provider = stubProvider();
   const relay = stubRelay();
   const events = [];
@@ -620,7 +650,7 @@ test("signs and relays through one flow that re-reads the session, draws a fresh
   assert.deepEqual(result, { kind: "relayed", outcome: "ACCEPTED" });
   assert.deepEqual(
     provider.calls.map((call) => call.method),
-    ["eth_chainId", "eth_accounts", "eth_signTypedData_v4"],
+    ["eth_signTypedData_v4"],
   );
   assert.deepEqual(events, ["signed"]);
   assert.equal(relay.bodies.length, 1);
@@ -635,8 +665,8 @@ test("signs and relays through one flow that re-reads the session, draws a fresh
   const secondBody = JSON.parse(relay.bodies[1]);
   assert.notEqual(secondBody.command.nonce, firstBody.command.nonce);
   assert.deepEqual(
-    provider.calls.slice(3).map((call) => call.method),
-    ["eth_chainId", "eth_accounts", "eth_signTypedData_v4"],
+    provider.calls.slice(1).map((call) => call.method),
+    ["eth_signTypedData_v4"],
   );
 
   const declined = stubProvider({ signError: { code: 4001, message: "User rejected the request." } });
@@ -661,7 +691,7 @@ test("signs and relays through one flow that re-reads the session, draws a fresh
     await signAndRelayCommand(wrongChain, request, { relay: wrongChainRelay, nowMilliseconds: beforeExpiry }),
     { kind: "wrong_chain" },
   );
-  assert.deepEqual(wrongChain.calls.map((call) => call.method), ["eth_chainId"]);
+  assert.deepEqual(wrongChain.calls.map((call) => call.method), []);
   assert.equal(wrongChainRelay.bodies.length, 0);
 
   const noAccount = stubProvider({ accounts: [] });
@@ -681,6 +711,33 @@ test("signs and relays through one flow that re-reads the session, draws a fresh
   );
   assert.equal(expiredProvider.calls.length, 0);
   assert.equal(expiredRelay.bodies.length, 0);
+
+  const expiresDuringSigningProvider = stubProvider();
+  const expiresDuringSigningRelay = stubRelay();
+  let clockReads = 0;
+  assert.deepEqual(
+    await signAndRelayCommand(expiresDuringSigningProvider, request, {
+      relay: expiresDuringSigningRelay,
+      nowMilliseconds: () => {
+        clockReads += 1;
+        return Date.parse(clockReads === 1 ? "2026-09-07T19:01:00.000Z" : "2026-09-07T19:04:00.000Z");
+      },
+    }),
+    { kind: "expired" },
+  );
+  assert.equal(expiresDuringSigningProvider.calls.filter((call) => call.method === "eth_signTypedData_v4").length, 1);
+  assert.equal(expiresDuringSigningRelay.bodies.length, 0);
+
+  const wrongSignerRelay = stubRelay();
+  assert.deepEqual(
+    await signAndRelayCommand(stubProvider(), request, {
+      relay: wrongSignerRelay,
+      nowMilliseconds: beforeExpiry,
+      recoverSigner: async () => `0x${"0".repeat(40)}`,
+    }),
+    { kind: "signing_failed" },
+  );
+  assert.equal(wrongSignerRelay.bodies.length, 0);
 
   const unknownRelay = stubRelay("transport_failure");
   assert.deepEqual(

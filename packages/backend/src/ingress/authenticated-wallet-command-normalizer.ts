@@ -87,9 +87,11 @@ export type ResolveWalletCommandAuthorities = (
   chainId: 296,
   canonicalSignerAddress: string,
   selection?: Readonly<{
-    subjectPublicId: string;
+    subjectPublicId?: string;
     offeringPublicId?: string;
+    attemptPublicId?: string;
   }>,
+  purpose?: "BACKING" | "OWNER",
 ) => ReturnType<ResolveCommandAuthorities>;
 
 export type NormalizedWalletCommand =
@@ -1061,17 +1063,31 @@ async function resolveAuthority(
   if (typeof resolver !== "function") {
     return null;
   }
-  const subjectPublicId = envelope.type === "offering.create" || envelope.type === "external.prepare"
+  const subjectPublicId = envelope.type === "offering.create"
+    || (envelope.type === "external.prepare" && envelope.payload.operationKind !== "HEDERA_FUNDING")
     ? parseProviderToolId(envelope.payload.subjectPublicId)
     : null;
-  const selection = subjectPublicId === null
-    ? undefined
-    : envelope.type === "offering.create"
+  const directoryTool = envelope.type === "directory.publish"
+    ? parseProviderToolId(`tool_${envelope.payload.offeringPublicId.slice("offering_".length)}`)
+    : null;
+  const directoryOfferingPublicId = envelope.type === "directory.publish"
+    ? envelope.payload.offeringPublicId
+    : undefined;
+  const selection = subjectPublicId !== null
+    ? envelope.type === "offering.create"
       ? { subjectPublicId, offeringPublicId: envelope.payload.offeringPublicId }
-      : { subjectPublicId };
+      : { subjectPublicId }
+    : directoryTool !== null
+      ? { subjectPublicId: directoryTool, offeringPublicId: directoryOfferingPublicId! }
+      : envelope.type === "external.attachCandidate"
+        ? { attemptPublicId: envelope.payload.attemptPublicId }
+        : undefined;
+  const purpose = envelope.type === "external.prepare" && envelope.payload.operationKind === "HEDERA_FUNDING"
+    ? "BACKING" as const
+    : "OWNER" as const;
   const records = selection === undefined
-    ? await resolver(296, signer)
-    : await resolver(296, signer, selection);
+    ? await resolver(296, signer, undefined, purpose)
+    : await resolver(296, signer, selection, purpose);
   const record = captureOneAuthority(records);
   return record === null ? null : parseAuthorityRecord(record, signer, envelope);
 }

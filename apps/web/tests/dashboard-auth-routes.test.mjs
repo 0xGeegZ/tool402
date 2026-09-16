@@ -261,7 +261,9 @@ routesTest("authenticates once and sets only the declared eight-hour session coo
     headers: { cookie: `__Host-tool402-dashboard-challenge=${challengeCookie}` },
   }), env, { verifyMessage: async () => { verifierCalls += 1; return true; } });
   assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { outcome: "authenticated" });
+  const verified = await response.json();
+  assert.equal(verified.outcome, "authenticated");
+  assert.match(verified.sessionIssuedAt, /^\d{4}-\d{2}-\d{2}T/u);
   assert.equal(response.headers.get("cache-control"), "no-store");
   assert.equal(verifierCalls, 1);
   const cookies = cookieValues(response).join("\n");
@@ -269,9 +271,19 @@ routesTest("authenticates once and sets only the declared eight-hour session coo
   assert.match(cookies, /__Host-tool402-dashboard-session=.*Path=\/.*Secure.*HttpOnly.*SameSite=Strict.*Max-Age=28800/u);
 });
 
-routesTest("clears both host-only cookies with an empty no-store logout response", async () => {
+routesTest("clears only the current addressed host-only session with an empty no-store logout response", async () => {
   const routes = await loadRoutes();
-  const response = await routes.handleLogoutPost(post("/api/auth/logout", {}), env);
+  const challenge = await routes.handleChallengePost(post("/api/auth/metamask/challenge", { address }), env);
+  const { message } = await challenge.json();
+  const challengeCookie = cookieValues(challenge)[0].match(/^__Host-tool402-dashboard-challenge=([^;]+)/u)[1];
+  const verification = await routes.handleVerifyPost(post("/api/auth/metamask/verify", { message, signature: `0x${"11".repeat(65)}` }, {
+    headers: { cookie: `__Host-tool402-dashboard-challenge=${challengeCookie}` },
+  }), env, { verifyMessage: async () => true });
+  const sessionCookie = cookieValues(verification).find((value) => value.startsWith("__Host-tool402-dashboard-session=")).match(/^__Host-tool402-dashboard-session=([^;]+)/u)[1];
+  const { sessionIssuedAt } = await verification.json();
+  const response = await routes.handleLogoutPost(post("/api/auth/logout", { address, issuedAt: sessionIssuedAt }, {
+    headers: { cookie: `__Host-tool402-dashboard-session=${sessionCookie}` },
+  }), env);
   assert.equal(response.status, 204);
   assert.equal(await response.text(), "");
   assert.equal(response.headers.get("cache-control"), "no-store");

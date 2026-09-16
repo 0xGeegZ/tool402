@@ -9,6 +9,7 @@ import {
 } from "../src/ats/provider-tool-ats-configuration.ts";
 
 const signer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+const selfServiceSigner = "0x1111111111111111111111111111111111111111";
 const suffixA = "a".repeat(32);
 const suffixB = "b".repeat(32);
 
@@ -72,12 +73,26 @@ test("derives detached deterministic selected-tool configurations from durable a
   assert.equal(first.atsCreateConfiguration.canonicalParametersHash, first.canonicalParametersHash);
 });
 
+test("binds each selected-tool configuration to its canonical durable owner", () => {
+  const legacy = createProviderToolAtsConfiguration(input(suffixA));
+  const selfService = createProviderToolAtsConfiguration(input(suffixB, {
+    canonicalSignerAddress: selfServiceSigner,
+  }));
+
+  assert.equal(legacy.atsCreateConfiguration.parameters.diamondOwnerAccount, signer);
+  assert.equal(selfService.atsCreateConfiguration.parameters.diamondOwnerAccount, selfServiceSigner);
+  assert.notEqual(selfService.canonicalParametersHash, legacy.canonicalParametersHash);
+  assert.notEqual(
+    selfService.atsCreateConfiguration.parameters.info,
+    legacy.atsCreateConfiguration.parameters.info,
+  );
+});
+
 test("rejects invalid selected-tool identities, title, and signer at the private boundary", () => {
   for (const overrides of [
     { toolPublicId: `tool_${suffixA}`, subjectPublicId: `tool_${suffixB}` },
     { toolPublicId: "riskscan_revenue_note_demo" },
     { toolPublicId: `tool_${suffixA.toUpperCase()}` },
-    { canonicalSignerAddress: "0x1111111111111111111111111111111111111111" },
     { canonicalSignerAddress: signer.toUpperCase() },
     { title: "" },
     { title: "x".repeat(101) },

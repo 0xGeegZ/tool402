@@ -147,9 +147,9 @@ test("keeps the marketplace thesis local while discovery remains read-only", asy
   ]);
   const [page, hero, discoveryCard] = sources;
 
-  assert.match(hero, /Back the tools\s*<span[^>]*>agents pay<\/span>\s*to use\./);
-  assert.match(hero, /<span className=["'][^"']*\btext-brand-purple\b[^"']*["']>agents pay<\/span>/);
-  assert.match(hero, /<Link\b[^>]*href=["']\/demo["'][^>]*>\s*Follow the hackathon demo\s*<\/Link>/);
+  assert.match(hero, /A marketplace for tools\s*<span[^>]*>AI agents can pay<\/span>\s*to use\./);
+  assert.match(hero, /<span className=["'][^"']*\btext-brand-purple\b[^"']*["']>AI agents can pay<\/span>/);
+  assert.match(hero, /<Link\b[^>]*href=["']\/explore["'][^>]*>\s*Explore tools\s*<\/Link>/);
   assert.match(discoveryCard, /read-only/i);
   assert.match(page, /<LandingHero\s*\/>/);
 });
@@ -158,11 +158,11 @@ test("renders factual campaign context around the landing hero", async () => {
   const hero = await readAppFile("src/components/landing/landing-hero.tsx");
 
   assert.match(hero, /Hedera testnet preview/);
-  assert.match(hero, /402 · Payment Required/);
-  assert.match(hero, /Campaign preparation/);
-  assert.match(hero, /Testnet · not live/);
-  assert.match(hero, /x402 boundary/);
-  assert.doesNotMatch(hero, /text-\[11px\][^"']*\btext-brand-purple\b/, "an 11px label in brand purple is 4.42:1 on cream; use text-primary");
-  assert.match(hero, /Provider campaign preparation/);
+  assert.match(hero, /RiskScan/);
+  assert.match(hero, /Checks declared information/);
+  assert.match(hero, /Reports missing disclosures/);
+  assert.match(hero, /Before payment/);
+  assert.match(hero, /Check the price/);
+  assert.doesNotMatch(hero, /x402 payment requests tell an agent what it needs to pay/i);
   assert.doesNotMatch(hero, /\$68,200|68% funded|12,561/);
 });

@@ -1,16 +1,18 @@
 import { bytesToHex } from "viem";
 
-import { isUserRejection, type Eip1193Provider } from "./metamask-provider.ts";
 import {
   createCommandBody,
   createCommandNonce,
   createUnsignedCommand,
   encodeBase64Url,
   isTool402CommandType,
+  recoverTool402CommandSigner,
   signCommand,
+  type SignedTool402Command,
   type RandomBytes,
+  type Tool402TypedDataSigner,
 } from "./tool402-command.ts";
-import { readCurrentSession } from "./wallet-state.ts";
+import { isUserRejectedWalletRequest } from "./wallet-error.ts";
 
 export const RELAY_OUTCOMES = Object.freeze([
   "ACCEPTED",
@@ -288,12 +290,29 @@ export interface SignatureFlowDependencies {
   readonly onSigned?: () => void;
   readonly nowMilliseconds?: () => number;
   readonly randomBytes?: RandomBytes;
+  readonly recoverSigner?: (command: SignedTool402Command) => Promise<string>;
+  readonly signTypedData: Tool402TypedDataSigner;
+  readonly readCurrentContext: () => WalletActionContext | null;
+}
+
+export interface WalletActionContext {
+  readonly address: string;
+  readonly chainId: 296;
+  readonly connectorId: string;
+  readonly generation: number;
+}
+
+function sameContext(left: WalletActionContext, right: WalletActionContext): boolean {
+  return left.address === right.address
+    && left.chainId === right.chainId
+    && left.connectorId === right.connectorId
+    && left.generation === right.generation;
 }
 
 export async function signAndRelayCommand(
-  provider: Eip1193Provider,
+  context: WalletActionContext,
   request: SignatureRequest,
-  dependencies: SignatureFlowDependencies = {},
+  dependencies: SignatureFlowDependencies,
 ): Promise<SignatureFlowResult> {
   if (!isTool402CommandType(request.type)) {
     return { kind: "signing_failed" };
@@ -302,27 +321,41 @@ export async function signAndRelayCommand(
   if (!(now < Date.parse(request.expiresAt))) {
     return { kind: "expired" };
   }
-  const session = await readCurrentSession(provider);
-  if (session.state.kind === "wrong_chain") {
+  const current = dependencies.readCurrentContext();
+  if (current === null) {
+    return { kind: "no_account" };
+  }
+  if (current.chainId !== 296) {
     return { kind: "wrong_chain" };
   }
-  if (session.state.kind !== "connected") {
+  if (!sameContext(current, context)) {
     return { kind: "no_account" };
   }
   let body: string;
   try {
     const command = createUnsignedCommand({
       type: request.type,
-      signer: session.state.address,
+      signer: context.address,
       nonce: createCommandNonce(dependencies.randomBytes),
       issuedAt: request.issuedAt,
       expiresAt: request.expiresAt,
       canonicalPayloadBytes: request.canonicalPayloadBytes,
     });
-    const signed = await signCommand(provider, command);
+    const signed = await signCommand(command, dependencies.signTypedData);
+    const recoveredSigner = await (dependencies.recoverSigner ?? recoverTool402CommandSigner)(signed);
+    if (recoveredSigner.toLowerCase() !== context.address) {
+      return { kind: "signing_failed" };
+    }
     body = createCommandBody(signed, request.canonicalPayloadBytes);
   } catch (error) {
-    return { kind: isUserRejection(error) ? "declined" : "signing_failed" };
+    return { kind: isUserRejectedWalletRequest(error) ? "declined" : "signing_failed" };
+  }
+  const currentAfterSignature = dependencies.readCurrentContext();
+  if (currentAfterSignature === null || !sameContext(currentAfterSignature, context)) {
+    return { kind: "no_account" };
+  }
+  if (!((dependencies.nowMilliseconds ?? Date.now)() < Date.parse(request.expiresAt))) {
+    return { kind: "expired" };
   }
   dependencies.onSigned?.();
   const outcome = await (dependencies.relay ?? relayCommandBody)(body);

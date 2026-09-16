@@ -134,12 +134,16 @@ implementedTest("closes the campaign command type set on the builder and the rel
   }
 
   const calls = [];
-  const provider = { isMetaMask: true, async request(input) { calls.push(input); return "0x128"; } };
   const bodies = [];
   const result = await relay.signAndRelayCommand(
-    provider,
+    { address: signer, chainId: 296, connectorId: "metaMask", generation: 0 },
     { type: "offering.delete", canonicalPayloadBytes: new TextEncoder().encode(`{"expiresAt":"${expiresAt}"}`), issuedAt, expiresAt },
-    { relay: async (body) => { bodies.push(body); return "ACCEPTED"; }, nowMilliseconds: () => nowMilliseconds },
+    {
+      relay: async (body) => { bodies.push(body); return "ACCEPTED"; },
+      nowMilliseconds: () => nowMilliseconds,
+      readCurrentContext: () => ({ address: signer, chainId: 296, connectorId: "metaMask", generation: 0 }),
+      signTypedData: async (input) => { calls.push(input); return "0x"; },
+    },
   );
   assert.deepEqual(result, { kind: "signing_failed" });
   assert.deepEqual(calls, []);

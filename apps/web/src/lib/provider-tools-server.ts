@@ -4,6 +4,8 @@ import {
   readDashboardSessionCookieName,
   type DashboardAuthEnvironment,
 } from "./dashboard-auth/dashboard-auth.ts";
+import { readDashboardCampaign, riskScanOfferingPublicId } from "./dashboard-campaign.ts";
+import { readProviderProjections } from "./offering-projection.ts";
 
 type Session = Readonly<{ address: string; issuedAt: string; expiresAt: string }>;
 type ForwardInput = Readonly<{
@@ -12,6 +14,8 @@ type ForwardInput = Readonly<{
   cursor?: string | null;
   toolPublicId?: string;
   deploymentToolPublicId?: string;
+  deploymentRecheckToolPublicId?: string;
+  ensureSelfService?: true;
   sessionExpiresAt: string;
 }>;
 type Dependencies = Readonly<{
@@ -158,8 +162,12 @@ async function forwardAssertion(input: ForwardInput, env: DashboardAuthEnvironme
   try {
     const configuration = ingressConfiguration(env);
     if (configuration === null) return json({ outcome: "not_configured" }, 503);
-    const payload = input.requestId === undefined
-      ? input.deploymentToolPublicId !== undefined
+    const payload = input.ensureSelfService === true
+      ? { type: "self_service_ensure", canonicalSignerAddress: input.canonicalSignerAddress, sessionExpiresAt: input.sessionExpiresAt }
+      : input.requestId === undefined
+      ? input.deploymentRecheckToolPublicId !== undefined
+        ? { type: "deployment_recheck", canonicalSignerAddress: input.canonicalSignerAddress, toolPublicId: input.deploymentRecheckToolPublicId, sessionExpiresAt: input.sessionExpiresAt }
+        : input.deploymentToolPublicId !== undefined
         ? { type: "deployment", canonicalSignerAddress: input.canonicalSignerAddress, toolPublicId: input.deploymentToolPublicId, sessionExpiresAt: input.sessionExpiresAt }
         : input.toolPublicId === undefined
           ? { type: "list", canonicalSignerAddress: input.canonicalSignerAddress, cursor: input.cursor ?? null, sessionExpiresAt: input.sessionExpiresAt }
@@ -216,7 +224,7 @@ export async function handleProviderToolDeploymentRequest(
   toolPublicId: string,
   dependencies: Dependencies = {},
 ): Promise<Response> {
-  if (request.method !== "GET" || !toolIdPattern.test(toolPublicId)) return json({ outcome: "rejected" }, 401);
+  if ((request.method !== "GET" && request.method !== "POST") || !toolIdPattern.test(toolPublicId)) return json({ outcome: "rejected" }, 401);
   try {
     if (new URL(request.url).search !== "") return json({ outcome: "rejected" }, 401);
   } catch {
@@ -232,10 +240,41 @@ export async function handleProviderToolDeploymentRequest(
   try {
     return boundedResponse(await forward({
       canonicalSignerAddress: session.address,
-      deploymentToolPublicId: toolPublicId,
+      ...(request.method === "POST" ? { deploymentRecheckToolPublicId: toolPublicId } : { deploymentToolPublicId: toolPublicId }),
       sessionExpiresAt: session.expiresAt,
     }));
   } catch {
     return json({ outcome: "unavailable" }, 503);
   }
+}
+
+export async function ensureSelfServiceMembership(
+  env: DashboardAuthEnvironment,
+  sessionCookie: string | null,
+  dependencies: Dependencies = {},
+): Promise<{ outcome: string }> {
+  const readSession = dependencies.readSession ?? ((cookie) => readDashboardSession(cookie, env));
+  let session: Session | null;
+  try { session = await readSession(sessionCookie); } catch { session = null; }
+  if (session === null) return { outcome: "rejected" };
+  const forward = dependencies.forward ?? ((input) => forwardAssertion(input, env));
+  try {
+    const response = await boundedResponse(await forward({ canonicalSignerAddress: session.address, ensureSelfService: true, sessionExpiresAt: session.expiresAt }));
+    if (response.status !== 200) return { outcome: "unavailable" };
+    const value: unknown = await response.json();
+    return value !== null && typeof value === "object" && typeof (value as { outcome?: unknown }).outcome === "string"
+      ? { outcome: (value as { outcome: string }).outcome }
+      : { outcome: "unavailable" };
+  } catch { return { outcome: "unavailable" }; }
+}
+
+export async function canResumeLegacyProviderCampaign(
+  env: DashboardAuthEnvironment,
+  canonicalSignerAddress: string,
+): Promise<boolean> {
+  const projections = await readProviderProjections(env as NodeJS.ProcessEnv, globalThis.fetch, riskScanOfferingPublicId);
+  const campaign = projections.offering.outcome === "loaded"
+    ? readDashboardCampaign(projections.offering.record, canonicalSignerAddress)
+    : null;
+  return campaign?.href === "/provider/deploy?resume=legacy";
 }

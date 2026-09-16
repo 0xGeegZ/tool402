@@ -40,7 +40,7 @@ async function load() {
   return import(sourceUrl.href);
 }
 
-test("selects only the canonical OPEN RiskScan offering with a server-owned treasury", async () => {
+test("selects canonical OPEN and CLOSED RiskScan evidence with a server-owned treasury", async () => {
   const { selectRiskScanBackingProjection } = await load();
   const selected = selectRiskScanBackingProjection(projections(), environment);
 
@@ -48,6 +48,7 @@ test("selects only the canonical OPEN RiskScan offering with a server-owned trea
   assert.equal(selected?.state, "OPEN");
   assert.equal(selected?.fundingTreasuryAddress, treasury);
   assert.notEqual(selected, projections().offering.record);
+  assert.equal(selectRiskScanBackingProjection(projections(record({ state: "CLOSED" })), environment)?.state, "CLOSED");
 });
 
 test("fails closed for unavailable, non-OPEN, mismatched, or malformed campaign projections", async () => {
@@ -58,7 +59,7 @@ test("fails closed for unavailable, non-OPEN, mismatched, or malformed campaign 
   assert.equal(selectRiskScanBackingProjection({ offering: null }, environment), null);
   assert.equal(selectRiskScanBackingProjection({ offering: { outcome: "loaded", record: null } }, environment), null);
   for (const candidate of [
-    record({ state: "DRAFT" }), record({ state: "ASSET_PENDING" }), record({ state: "READY" }), record({ state: "CLOSED" }),
+    record({ state: "DRAFT" }), record({ state: "ASSET_PENDING" }), record({ state: "READY" }),
     record({ offeringPublicId: "other_offering" }), record({ subjectPublicId: "other_subject" }),
     record({ canonicalSignerAddress: "0xABC" }), record({ definition: { ...record().definition, terms: { ...record().definition.terms, noteUnitPriceTinybars: "1.5" } } }),
   ]) {

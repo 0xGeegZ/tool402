@@ -216,6 +216,7 @@ function database({
   offerings = [],
   directoryVersions = [],
   providerTools = [],
+  selfServiceAccounts = [],
   directoryPatchRows = [],
 } = {}) {
   const rows = {
@@ -224,6 +225,7 @@ function database({
     offerings: [...offerings],
     directoryVersions,
     providerTools: [...providerTools],
+    selfServiceAccounts: [...selfServiceAccounts],
   };
   const reads = [];
   const writes = [];
@@ -712,6 +714,29 @@ implementedTest("rechecks one current issuer and defers ownership to the referen
   await assert.rejects(() => directory.admitDirectoryPublish._handler(mismatchedPrincipalDb.ctx, input), undefined);
   assert.deepEqual(mismatchedPrincipalDb.reads, expectedDirectoryReads(input).slice(0, 3));
   assert.deepEqual(mismatchedPrincipalDb.writes, []);
+});
+
+implementedTest("publishes an owned self-service tool without a legacy command authority", async (t) => {
+  const directory = await loadDirectory(t);
+  const suffix = "e".repeat(32);
+  const subjectPublicId = `tool_${suffix}`;
+  const offeringPublicId = `offering_${suffix}`;
+  const principalPublicId = `self_service_${canonicalSignerAddress.slice(2)}`;
+  const payload = directoryPayload({
+    offeringPublicId,
+    record: { ...directoryPayload().record, serviceId: subjectPublicId, serviceSlug: `tool-${suffix}`, offeringPublicId },
+  });
+  const input = admissionInput({ payload, principalPublicId, authorityVersion: "public_testnet_v1" });
+  const db = database({
+    offerings: [offeringDocument(input, { offeringPublicId, subjectPublicId, principalPublicId, authorityVersion: "public_testnet_v1", fundingRecipient: canonicalSignerAddress })],
+    providerTools: [{ _id: "providerTools:self-service", _creationTime: 1, toolPublicId: subjectPublicId, subjectPublicId, offeringPublicId, serviceId: subjectPublicId, serviceSlug: `tool-${suffix}`, canonicalSignerAddress, chainId: 296, principalPublicId, authorityVersion: "public_testnet_v1", requestId: "00000000-0000-4000-8000-000000000000", offeringVersion: 1, directoryVersion: 1, createdAt: 1n }],
+    selfServiceAccounts: [{ _id: "selfServiceAccounts:active", _creationTime: 1, canonicalSignerAddress, chainId: 296, principalPublicId, policyVersion: "public_testnet_v1", status: "ACTIVE", createdAt: 1n, updatedAt: 1n }],
+  });
+  const previous = process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED;
+  process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = "true";
+  try {
+    assert.deepEqual(await directory.admitDirectoryPublish._handler(db.ctx, input), { status: "NEW", targetId: directoryId, state: "ACTIVE" });
+  } finally { process.env.TOOL402_PUBLIC_TESTNET_SELF_SERVICE_ENABLED = previous; }
 });
 
 implementedTest("fails closed on malformed, duplicate, and descriptor-backed authority or replay rows", async (t) => {

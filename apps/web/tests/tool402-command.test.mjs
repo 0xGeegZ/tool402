@@ -193,6 +193,18 @@ function createSigningProvider(options = {}) {
   };
 }
 
+function signWith(provider) {
+  return async (typedData) => provider.request({
+    method: "eth_signTypedData_v4",
+    params: [typedData.message.signer, JSON.stringify({
+      domain: typedData.domain,
+      primaryType: typedData.primaryType,
+      types: { EIP712Domain: expectedTypes.EIP712Domain, ...typedData.types },
+      message: typedData.message,
+    })],
+  });
+}
+
 test("fixes the EIP-712 domain, primary type, and the seven message fields in order", async () => {
   const {
     TOOL402_COMMAND_PRIMARY_TYPE,
@@ -392,7 +404,7 @@ test("signs through eth_signTypedData_v4 only and submits the nine-field command
   const command = createUnsignedCommand(unsignedInput());
   const provider = createSigningProvider();
 
-  const signed = await signCommand(provider, command);
+  const signed = await signCommand(command, signWith(provider));
   assert.deepEqual(
     provider.calls.map((call) => call.method),
     ["eth_signTypedData_v4"],
@@ -426,13 +438,13 @@ test("signs through eth_signTypedData_v4 only and submits the nine-field command
   const upperCase = createSigningProvider({
     signature: `0x${"A".repeat(130)}`,
   });
-  await assert.rejects(signCommand(upperCase, command));
+  await assert.rejects(signCommand(command, signWith(upperCase)));
   const shortSignature = createSigningProvider({
     signature: `0x${"a".repeat(128)}`,
   });
-  await assert.rejects(signCommand(shortSignature, command));
+  await assert.rejects(signCommand(command, signWith(shortSignature)));
   const nonString = createSigningProvider({ signature: 42 });
-  await assert.rejects(signCommand(nonString, command));
+  await assert.rejects(signCommand(command, signWith(nonString)));
 
   const highS =
     "0x" +
@@ -440,20 +452,17 @@ test("signs through eth_signTypedData_v4 only and submits the nine-field command
     "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141" +
     "1b";
   await assert.rejects(
-    signCommand(createSigningProvider({ signature: highS }), command),
+    signCommand(command, signWith(createSigningProvider({ signature: highS }))),
   );
 
   const invalidRecovery = `${signed.signature.slice(0, -2)}02`;
   await assert.rejects(
-    signCommand(createSigningProvider({ signature: invalidRecovery }), command),
+    signCommand(command, signWith(createSigningProvider({ signature: invalidRecovery }))),
   );
 
   for (const recovery of ["00", "01", "1b", "1c"]) {
     const wireSignature = `${signed.signature.slice(0, -2)}${recovery}`;
-    const accepted = await signCommand(
-      createSigningProvider({ signature: wireSignature }),
-      command,
-    );
+    const accepted = await signCommand(command, signWith(createSigningProvider({ signature: wireSignature })));
     assert.equal(accepted.signature, wireSignature);
   }
 });
@@ -462,7 +471,7 @@ test("creates the two-key transport body with the canonical payload text embedde
   const { createCommandBody, createUnsignedCommand, signCommand } =
     await loadCommandModule();
   const command = createUnsignedCommand(unsignedInput());
-  const signed = await signCommand(createSigningProvider(), command);
+  const signed = await signCommand(command, signWith(createSigningProvider()));
 
   const body = createCommandBody(signed, canonicalPayloadBytes);
   assert.equal(
@@ -488,7 +497,7 @@ test("creates the two-key transport body with the canonical payload text embedde
   assert.throws(() => createCommandBody({ ...signed }, canonicalPayloadBytes));
 });
 
-test("holds no provider, storage, network, or logging reference and signs with one method only", async () => {
+test("holds no provider, storage, network, or logging reference and signs through an injected seam", async () => {
   const source = await readAppFile("src/lib/wallet/tool402-command.ts");
 
   assert.doesNotMatch(
@@ -496,10 +505,8 @@ test("holds no provider, storage, network, or logging reference and signs with o
     /\b(?:window|document|localStorage|sessionStorage|fetch|console)\b/u,
   );
   assert.doesNotMatch(source, /\bfrom\s+["']node:/u);
-  assert.deepEqual(
-    [...source.matchAll(/["']eth_[A-Za-z0-9_]+["']/gu)].map(([match]) => match),
-    ['"eth_signTypedData_v4"'],
-  );
+  assert.doesNotMatch(source, /eth_[A-Za-z0-9_]+|provider\.request|metamask-provider/u);
+  assert.match(source, /Tool402TypedDataSigner/u);
   assert.doesNotMatch(source, /toLowerCase\(\)/u);
 });
 }

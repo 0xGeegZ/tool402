@@ -1,5 +1,6 @@
-import { isAddress } from "viem";
+import { isAddress, TransactionReceiptNotFoundError } from "viem";
 
+import { isUserRejectedWalletRequest } from "../wallet/wallet-error.ts";
 import { STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH } from "./stage-b-ats-create-canonical-identity.ts";
 import { createStageBAtsCreateExecutionProjection } from "./stage-b-ats-create-execution-projection.ts";
 import {
@@ -9,8 +10,8 @@ import {
   normalizeHederaCandidateTransactionId,
 } from "./factory-deploy-bond.ts";
 
-const chainId = "0x128";
 const issuer = "0xc89f87052c3e080b4a9b021d4930055031ef378e";
+const hederaTestnetHexChainId = "0x128";
 const factory = "0xd1f118a40f3b02883d35909ef2517e7edd78379d";
 const mirrorBase = "https://testnet.mirrornode.hedera.com/api/v1/";
 const expectedHash = STAGE_B_ATS_CREATE_CANONICAL_PARAMETERS_HASH;
@@ -24,9 +25,34 @@ const receiptObservationWaitMilliseconds = 1000;
 const mirrorObservationLimitMilliseconds = 5000;
 const mirrorObservationWaitMilliseconds = 2000;
 
-export interface StageBEip1193Provider {
-  request(input: { readonly method: string; readonly params?: readonly unknown[] }): Promise<unknown>;
+export interface StageBWalletContext {
+  readonly address: string;
+  readonly chainId: 296;
+  readonly connectorId: string;
+  readonly generation: number;
 }
+
+export type StageBTransactionSender = (request: Readonly<{
+  account: `0x${string}`;
+  chainId: 296;
+  data: `0x${string}`;
+  to: `0x${string}`;
+  value: bigint;
+}>) => Promise<unknown>;
+
+/**
+ * Viem formats receipt statuses as semantic values. Mirror-node responses are
+ * deliberately parsed separately below because their REST status remains a
+ * JSON-RPC hex quantity.
+ */
+export type StageBViemReceipt = Readonly<{
+  transactionHash: `0x${string}`;
+  status: "success" | "reverted";
+  to: `0x${string}` | null;
+  logs: readonly unknown[];
+}>;
+
+export type StageBReceiptReader = (request: Readonly<{ hash: `0x${string}` }>) => Promise<StageBViemReceipt | null>;
 
 export interface StageBDeadlineTimers {
   readonly set: (callback: () => void, milliseconds: number) => unknown;
@@ -44,8 +70,12 @@ export type StageBBridgeOutcome =
   | Readonly<{ kind: "candidate"; candidate: StageBCandidate }>;
 
 export interface StageBBridgeInput {
-  readonly provider: StageBEip1193Provider;
   readonly fetch: (input: string, init: RequestInit) => Promise<unknown>;
+  readonly getTransactionReceipt: StageBReceiptReader;
+  readonly readCurrentWallet: () => StageBWalletContext | null;
+  readonly sendTransaction: StageBTransactionSender;
+  readonly onTransactionHash?: (hash: `0x${string}`) => void | Promise<void>;
+  readonly wallet: StageBWalletContext;
   /** A selected-tool value is authenticated server output and is revalidated before wallet use. */
   readonly configuration?: unknown;
   readonly wait?: (milliseconds: number) => Promise<void>;
@@ -80,28 +110,34 @@ function canonicalAddress(value: unknown): string | null {
 
 const issuerMirrorAddress = "0x00000000000000000000000000000000009f29a7";
 
-function isIssuerAddress(value: unknown): boolean {
+function isExpectedSender(value: unknown, expectedSender: string): boolean {
   const address = canonicalAddress(value);
-  return address === issuer || address === issuerMirrorAddress;
+  return address === expectedSender || (expectedSender === issuer && address === issuerMirrorAddress);
 }
 
-function hasExactlyOneIssuerAccount(value: unknown): boolean {
-  if (!Array.isArray(value) || value.length === 0) return false;
-  let issuerCount = 0;
-  for (const account of value) {
-    const address = canonicalAddress(account);
-    if (address === null) return false;
-    if (address === issuer) issuerCount += 1;
-  }
-  return issuerCount === 1;
+function configurationOwner(configuration: unknown): string | null {
+  if (configuration === null || typeof configuration !== "object") return null;
+  const parameters = (configuration as Record<string, unknown>).parameters;
+  if (parameters === null || typeof parameters !== "object") return null;
+  return canonicalAddress((parameters as Record<string, unknown>).diamondOwnerAccount);
 }
-
 export function isCanonicalStageBTransactionHash(value: unknown): value is string {
   return typeof value === "string" && transactionHashPattern.test(value);
 }
 
 function canonicalTransactionHash(value: unknown): string | null {
   return isCanonicalStageBTransactionHash(value) ? value : null;
+}
+
+function isCurrentStageBWallet(
+  current: StageBWalletContext | null,
+  expected: StageBWalletContext,
+): boolean {
+  return current !== null
+    && current.address === expected.address
+    && current.chainId === expected.chainId
+    && current.connectorId === expected.connectorId
+    && current.generation === expected.generation;
 }
 
 function exactRecord(value: unknown): Record<string, unknown> | null {
@@ -294,15 +330,6 @@ async function readBoundedJson(body: unknown, deadline: AbortSignal): Promise<un
   }
 }
 
-function isExplicitUserRejection(error: unknown): boolean {
-  if (error === null || typeof error !== "object") return false;
-  try {
-    return (error as { readonly code?: unknown }).code === 4001;
-  } catch {
-    return false;
-  }
-}
-
 function eligibleFactoryLog(value: unknown): { readonly data: `0x${string}`; readonly topics: readonly `0x${string}`[] } | null {
   const fields = captureOwnEnumerableDataFields(value, ["address", "data", "topics"]);
   if (fields === null) return null;
@@ -347,6 +374,7 @@ function eligibleContractResult(
   value: unknown,
   transactionHash: string,
   expectedInput: string,
+  expectedSender: string,
   expectedTimestamp?: string,
 ): { readonly timestamp: string; readonly evmAddress: string } | null {
   const fields = captureOwnEnumerableDataFields(
@@ -357,10 +385,10 @@ function eligibleContractResult(
   const [hash, resultChainId, resultValue, status, from, to, timestamp, logs, functionParameters] = fields;
   if (
     hash !== transactionHash ||
-    resultChainId !== chainId ||
+    resultChainId !== hederaTestnetHexChainId ||
     resultValue !== "SUCCESS" ||
     status !== "0x1" ||
-    !isIssuerAddress(from) ||
+    !isExpectedSender(from, expectedSender) ||
     canonicalAddress(to) !== factory ||
     functionParameters !== expectedInput ||
     typeof timestamp !== "string" ||
@@ -478,6 +506,7 @@ async function resolveMirrorCandidate(
   timers: StageBDeadlineTimers,
   transactionHash: string,
   expectedInput: string,
+  expectedSender: string,
   expectedReceiptAddress?: string,
 ): Promise<StageBCandidate | null> {
   const deadline = deadlineFrom(now, mirrorObservationLimitMilliseconds);
@@ -489,7 +518,7 @@ async function resolveMirrorCandidate(
       return null;
     }
     if (first.kind !== "value") return null;
-    const firstResult = eligibleContractResult(first.value, transactionHash, expectedInput);
+    const firstResult = eligibleContractResult(first.value, transactionHash, expectedInput, expectedSender);
     if (firstResult === null) return null;
     const receiptAddress = expectedReceiptAddress ?? firstResult.evmAddress;
     if (firstResult.evmAddress !== receiptAddress) return null;
@@ -517,7 +546,7 @@ async function resolveMirrorCandidate(
       return null;
     }
     if (final.kind !== "value") return null;
-    const finalResult = eligibleContractResult(final.value, transactionHash, expectedInput, firstResult.timestamp);
+    const finalResult = eligibleContractResult(final.value, transactionHash, expectedInput, expectedSender, firstResult.timestamp);
     if (finalResult === null || finalResult.evmAddress !== receiptAddress) return null;
     return Object.freeze({ transactionId: normalizedTransactionId, evmAddress: receiptAddress });
   }
@@ -525,7 +554,18 @@ async function resolveMirrorCandidate(
 }
 
 export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
-  const { provider, fetch: fetcher, configuration, wait = defaultWait, now = Date.now, timers = defaultTimers } = input;
+  const {
+    fetch: fetcher,
+    configuration,
+    getTransactionReceipt,
+    readCurrentWallet,
+    sendTransaction,
+    onTransactionHash,
+    wallet,
+    wait = defaultWait,
+    now = Date.now,
+    timers = defaultTimers,
+  } = input;
   let inFlight = false;
   let recoveryInFlight = false;
   let terminal: StageBBridgeOutcome | null = null;
@@ -533,15 +573,17 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
   function expectedDeploymentInput(): string | null {
     const legacyProjection = configuration === undefined ? createStageBAtsCreateExecutionProjection() : null;
     const configured = legacyProjection?.configuration ?? configuration;
+    const owner = legacyProjection?.issuerEvmAddress ?? configurationOwner(configured);
     if (
       legacyProjection !== null && (
         legacyProjection.issuerEvmAddress !== issuer
         || legacyProjection.mirrorNodeBaseUrl !== mirrorBase
         || legacyProjection.configuration.canonicalParametersHash !== expectedHash
       )
+      || owner === null
     ) return null;
     try {
-      return encodeFactoryDeployBond(buildFactoryDeployBondRequest(configured, { issuerEvmAddress: issuer }));
+      return encodeFactoryDeployBond(buildFactoryDeployBondRequest(configured, { issuerEvmAddress: owner }));
     } catch {
       return null;
     }
@@ -552,8 +594,9 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
     recoveryInFlight = true;
     try {
       const expectedInput = expectedDeploymentInput();
-      if (expectedInput === null) return unknownOutcome(transactionHash);
-      const candidate = await resolveMirrorCandidate(fetcher, wait, now, timers, transactionHash, expectedInput);
+      const owner = configuration === undefined ? issuer : configurationOwner(configuration);
+      if (expectedInput === null || owner === null) return unknownOutcome(transactionHash);
+      const candidate = await resolveMirrorCandidate(fetcher, wait, now, timers, transactionHash, expectedInput, owner);
       return candidate === null ? unknownOutcome(transactionHash) : Object.freeze({ kind: "candidate", candidate });
     } catch {
       return unknownOutcome(transactionHash);
@@ -568,20 +611,22 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
     inFlight = true;
     let transactionHash: string | null = null;
     try {
-      if (await provider.request({ method: "eth_chainId" }) !== chainId) return rejectedOutcome();
-      const accounts = await provider.request({ method: "eth_accounts" });
-      if (!hasExactlyOneIssuerAccount(accounts)) return rejectedOutcome();
+      const owner = configuration === undefined ? issuer : configurationOwner(configuration);
+      if (owner === null || wallet.address !== owner || wallet.chainId !== 296 || !isCurrentStageBWallet(readCurrentWallet(), wallet)) return rejectedOutcome();
 
       const data = expectedDeploymentInput();
       if (data === null) return rejectedOutcome();
       let returnedHash: unknown;
       try {
-        returnedHash = await provider.request({
-          method: "eth_sendTransaction",
-          params: [{ from: issuer, to: factory, data, value: "0x0" }],
+        returnedHash = await sendTransaction({
+          account: owner as `0x${string}`,
+          chainId: 296,
+          data: data as `0x${string}`,
+          to: factory,
+          value: 0n,
         });
       } catch (error) {
-        if (isExplicitUserRejection(error)) return rejectedOutcome();
+        if (isUserRejectedWalletRequest(error)) return rejectedOutcome();
         terminal = unknownOutcome();
         return terminal;
       }
@@ -591,6 +636,16 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
         return terminal;
       }
       transactionHash = hash;
+      try {
+        await onTransactionHash?.(hash as `0x${string}`);
+      } catch {
+        terminal = unknownOutcome(transactionHash);
+        return terminal;
+      }
+      if (!isCurrentStageBWallet(readCurrentWallet(), wallet)) {
+        terminal = unknownOutcome(transactionHash);
+        return terminal;
+      }
 
       let receiptAddress: string | null = null;
       const receiptDeadline = deadlineFrom(now, receiptObservationLimitMilliseconds);
@@ -602,7 +657,14 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
         const remaining = remainingMilliseconds(receiptDeadline, now);
         if (remaining === null || remaining <= 0) break;
         const receipt = await settleBeforeDeadline(
-          Promise.resolve().then(() => provider.request({ method: "eth_getTransactionReceipt", params: [hash] })),
+          Promise.resolve().then(async () => {
+            try {
+              return await getTransactionReceipt({ hash: hash as `0x${string}` });
+            } catch (error) {
+              if (error instanceof TransactionReceiptNotFoundError) return null;
+              throw error;
+            }
+          }),
           receiptDeadline,
           now,
           timers,
@@ -614,7 +676,7 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
           const fields = captureOwnEnumerableDataFields(record, ["transactionHash", "status", "to", "logs"]);
           if (fields === null) break;
           const [receiptHash, status, to, logs] = fields;
-          if (receiptHash !== hash || status !== "0x1" || canonicalAddress(to) !== factory) break;
+          if (receiptHash !== hash || status !== "success" || canonicalAddress(to) !== factory) break;
           receiptAddress = decodeSingleFactoryEvent(logs);
           break;
         }
@@ -627,7 +689,7 @@ export function createStageBBrowserProviderBridge(input: StageBBridgeInput) {
         terminal = unknownOutcome(transactionHash);
         return terminal;
       }
-      const candidate = await resolveMirrorCandidate(fetcher, wait, now, timers, hash, data, receiptAddress);
+      const candidate = await resolveMirrorCandidate(fetcher, wait, now, timers, hash, data, owner, receiptAddress);
       terminal = candidate === null ? unknownOutcome(transactionHash) : Object.freeze({ kind: "candidate", candidate });
       return terminal;
     } catch {

@@ -54,6 +54,7 @@ export interface BackingOffering {
   readonly terms: OfferingTerms;
   readonly maturityAt: string;
   readonly treasury: string;
+  readonly fundingOpen: boolean;
 }
 
 export interface BackingParameters {
@@ -71,6 +72,23 @@ export interface BackingIntent extends SignatureDialogRequest {
   readonly weibarHex: `0x${string}`;
   readonly treasury: string;
   readonly parameters: BackingParameters;
+}
+
+export interface RecoveredPendingBackingPayment {
+  readonly intent: Pick<BackingIntent, "idempotencyKey" | "parameters">;
+  readonly transactionHash: `0x${string}`;
+}
+
+export interface FrozenBackingIntentInput {
+  readonly idempotencyKey: string;
+  readonly purchaseIntentId: string;
+  readonly offeringPublicId: string;
+  readonly subjectPublicId: string;
+  readonly recipient: string;
+  readonly units: string;
+  readonly tinybars: string;
+  readonly canonicalParametersHash: string;
+  readonly expiresAt: string;
 }
 
 type ViewOf<Kind extends BackingViewKind, Extra = object> = Readonly<{ kind: Kind } & Extra>;
@@ -93,8 +111,8 @@ export type TransferResult =
   | Readonly<{ kind: "declined" }>;
 
 export interface TransferRequest {
-  readonly method: "eth_sendTransaction";
-  readonly params: readonly [Readonly<{ from: string; to: string; value: `0x${string}` }>];
+  readonly to: `0x${string}`;
+  readonly value: bigint;
 }
 
 const treasuryPattern = /^0x[0-9a-f]{40}$/u;
@@ -115,7 +133,7 @@ const refusalMessages: Readonly<Record<Exclude<RelayOutcome, "ACCEPTED" | "trans
 
 export function readBackingOffering(projection: BackingProjection | null | undefined): BackingOffering | null {
   if (projection === null || projection === undefined) return null;
-  if (projection.state !== "OPEN") return null;
+  if (projection.state !== "OPEN" && projection.state !== "CLOSED") return null;
   const treasury = projection.fundingTreasuryAddress;
   if (typeof treasury !== "string" || !treasuryPattern.test(treasury)) return null;
   let terms: OfferingTerms;
@@ -130,6 +148,7 @@ export function readBackingOffering(projection: BackingProjection | null | undef
     terms,
     maturityAt: projection.definition.maturityAt,
     treasury,
+    fundingOpen: projection.state === "OPEN",
   });
 }
 
@@ -196,6 +215,66 @@ export function createBackingIntent(
   });
 }
 
+/** Builds the signing request only from terms the server has already frozen. */
+export function createFrozenBackingIntent(
+  offering: BackingOffering,
+  frozen: FrozenBackingIntentInput,
+  nowMilliseconds: number,
+): BackingIntent {
+  return createFrozenBackingIntentAt(offering, frozen, nowMilliseconds, true);
+}
+
+/** Rebuilds immutable evidence for attachment/reconciliation only; it never grants Send. */
+export function createRecoveredBackingIntent(
+  offering: BackingOffering,
+  frozen: FrozenBackingIntentInput,
+  nowMilliseconds: number,
+): BackingIntent {
+  return createFrozenBackingIntentAt(offering, frozen, nowMilliseconds, false);
+}
+
+function createFrozenBackingIntentAt(
+  offering: BackingOffering,
+  frozen: FrozenBackingIntentInput,
+  nowMilliseconds: number,
+  requiresLiveExpiry: boolean,
+): BackingIntent {
+  if (!Number.isSafeInteger(nowMilliseconds) || nowMilliseconds < 0) throw new TypeError("a frozen backing intent needs a canonical current time");
+  if (
+    frozen.offeringPublicId !== offering.offeringPublicId || frozen.subjectPublicId !== offering.subjectPublicId
+    || frozen.recipient !== offering.treasury || !/^[A-Za-z0-9_-]{21}[AQgw]$/u.test(frozen.idempotencyKey)
+    || !/^[A-Za-z0-9_-]{21}[AQgw]$/u.test(frozen.purchaseIntentId) || !wholeUnitsPattern.test(frozen.units)
+    || !wholeUnitsPattern.test(frozen.tinybars) || BigInt(frozen.units) < 1n || BigInt(frozen.tinybars) < 1n
+    || !/^[0-9a-f]{64}$/u.test(frozen.canonicalParametersHash) || !Number.isFinite(Date.parse(frozen.expiresAt))
+    || new Date(Date.parse(frozen.expiresAt)).toISOString() !== frozen.expiresAt || (requiresLiveExpiry && nowMilliseconds >= Date.parse(frozen.expiresAt))
+  ) throw new TypeError("invalid frozen backing intent");
+  const units = BigInt(frozen.units);
+  const validation = validateUnits(offering, frozen.units);
+  const tinybars = BigInt(frozen.tinybars);
+  if (!validation.ok || tinybars !== paymentTinybars(offering, units)) throw new RangeError("the frozen amount no longer matches the offering");
+  const parameters: BackingParameters = Object.freeze({
+    offeringPublicId: frozen.offeringPublicId, units: frozen.units, tinybars: frozen.tinybars,
+    purchaseIntentId: frozen.purchaseIntentId,
+  });
+  if (keccak256(new TextEncoder().encode(canonicalizeRequirements(parameters))).slice(2) !== frozen.canonicalParametersHash) {
+    throw new TypeError("the frozen parameter hash does not match the frozen payment");
+  }
+  const payload = parseExternalPreparePayload({
+    operationKind: "HEDERA_FUNDING", subjectPublicId: frozen.subjectPublicId, network: "hedera:testnet", chainId: 296,
+    expectedTarget: frozen.recipient, canonicalParametersHash: frozen.canonicalParametersHash,
+    idempotencyKey: frozen.idempotencyKey, expiresAt: frozen.expiresAt,
+  });
+  return Object.freeze({
+    type: "external.prepare",
+    canonicalPayloadBytes: new TextEncoder().encode(canonicalizeRequirements(payload)),
+    issuedAt: new Date(nowMilliseconds).toISOString(), expiresAt: frozen.expiresAt,
+    title: "Prepare the funding intent",
+    description: "Signs one server-frozen external.prepare command for HEDERA_FUNDING. It sends no HBAR.",
+    idempotencyKey: frozen.idempotencyKey, purchaseIntentId: frozen.purchaseIntentId, units, tinybars,
+    weibarHex: weibarQuantity(tinybars), treasury: frozen.recipient, parameters,
+  });
+}
+
 function viewForRelayOutcome(outcome: RelayOutcome, phase: SignatureResult["phase"], intent: BackingIntent): BackingView {
   if (outcome === "transport_failure" || outcome === "unexpected_response") {
     return Object.freeze({ kind: "payment_outcome_unknown", intent, message: unknownMessage });
@@ -226,13 +305,13 @@ export function viewAfterSignature(result: SignatureResult, intent: BackingInten
   return viewForRelayOutcome(result.outcome, result.phase, intent);
 }
 
-export function transferRequest(view: BackingView, from: string): TransferRequest {
+export function transferRequest(view: BackingView): TransferRequest {
   if (view.kind !== "prepared") {
     throw new TypeError("a transfer is requested only after the funding command is accepted");
   }
   return Object.freeze({
-    method: "eth_sendTransaction",
-    params: [Object.freeze({ from, to: view.intent.treasury, value: view.intent.weibarHex })] as const,
+    to: view.intent.treasury as `0x${string}`,
+    value: BigInt(view.intent.weibarHex),
   });
 }
 
@@ -247,13 +326,38 @@ export function isCurrentBackingIntent(offering: BackingOffering, intent: Backin
     && intent.parameters.tinybars === intent.tinybars.toString();
 }
 
+/** A locally persisted hash means the wallet already sent; recovery must never reopen Send. */
+export function viewForRecoveredPendingPayment(
+  intent: BackingIntent | null,
+  pending: RecoveredPendingBackingPayment | null,
+  durableStatus: "PREPARED" | "CONFIRMED" | "REJECTED" | "SUBMITTED" | "OUTCOME_UNKNOWN" | null = null,
+): BackingView {
+  if (intent === null) return Object.freeze({ kind: "choosing" });
+  if (
+    pending !== null
+    && pending.intent.idempotencyKey === intent.idempotencyKey
+    && pending.intent.parameters.offeringPublicId === intent.parameters.offeringPublicId
+    && pending.intent.parameters.units === intent.parameters.units
+    && pending.intent.parameters.tinybars === intent.parameters.tinybars
+    && pending.intent.parameters.purchaseIntentId === intent.parameters.purchaseIntentId
+  ) return Object.freeze({ kind: "payment_submitted", intent, transactionHash: pending.transactionHash });
+  if (durableStatus === "OUTCOME_UNKNOWN" || durableStatus === "SUBMITTED" || durableStatus === "CONFIRMED" || durableStatus === "REJECTED") {
+    return Object.freeze({ kind: "payment_outcome_unknown", intent, message: unknownMessage });
+  }
+  return Object.freeze({ kind: "prepared", intent });
+}
+
 export function viewAfterTransfer(view: BackingView, result: TransferResult): BackingView {
   if (view.kind !== "prepared") {
     throw new TypeError("a transfer result applies only to a prepared funding intent");
   }
   switch (result.kind) {
     case "declined":
-      return view;
+      return Object.freeze({
+        kind: "payment_outcome_unknown",
+        intent: view.intent,
+        message: "MetaMask did not approve the request, but the one-time dispatch is retained for safe recovery. Nothing was sent and no second transaction is offered.",
+      });
     case "no_hash":
       return Object.freeze({ kind: "payment_outcome_unknown", intent: view.intent, message: unknownMessage });
     case "hash":
